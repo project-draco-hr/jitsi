@@ -1,0 +1,26 @@
+{
+  configurationService.setProperty(addedPropertyPath + addedProperty,addedPropertyValue2);
+  configurationService.setProperty(property1Path + property1,property1Value2);
+  configurationService.setProperty(systemPropertyPath + systemProperty,systemPropertyValue2);
+  configurationService.setProperty(innerPropertyPath + innerProperty,innerPropertyValue2);
+  configurationService.storeConfiguration();
+  configurationService.reloadConfiguration();
+  DocumentBuilderFactory factory=DocumentBuilderFactory.newInstance();
+  DocumentBuilder builder=factory.newDocumentBuilder();
+  Document document=builder.parse(confFile);
+  Node root=document.getFirstChild();
+  Node parent=XMLUtils.findChild((Element)root,"parent");
+  Node property1Node=XMLUtils.findChild((Element)parent,property1);
+  Node systemPropertyNode=XMLUtils.findChild((Element)parent,systemProperty);
+  Node addedPropertyNode=XMLUtils.findChild((Element)parent,addedProperty);
+  Node innerpropNode=XMLUtils.findChild((Element)parent,"innerprops");
+  Node innerPropertyNode=XMLUtils.findChild((Element)innerpropNode,innerProperty);
+  String xmlProp1Value=XMLUtils.getAttribute(property1Node,"value");
+  String xmlProp2Value=XMLUtils.getAttribute(systemPropertyNode,"value");
+  String xmlAddedPropertyValue=XMLUtils.getAttribute(addedPropertyNode,"value");
+  String xmlInnerPropertyValue=XMLUtils.getAttribute(innerPropertyNode,"value");
+  assertEquals("property1 was incorrectly stored",property1Value2,xmlProp1Value);
+  assertEquals("System property was incorrectly stored",systemPropertyValue2,xmlProp2Value);
+  assertEquals("The added property was incorrectly stored",addedPropertyValue2,xmlAddedPropertyValue);
+  assertEquals("The inner property was incorrectly stored",innerPropertyValue2,xmlInnerPropertyValue);
+}

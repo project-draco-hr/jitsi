@@ -1,0 +1,30 @@
+{
+  ArrayList al=new ArrayList();
+  Iterator i=this.historyService.getExistingIDs();
+  while (i.hasNext()) {
+    HistoryID id=(HistoryID)i.next();
+    String[] components=id.getID();
+    if (components.length == 2 && "test".equals(components[0])) {
+      al.add(components[1]);
+    }
+  }
+  int count=al.size();
+  boolean unique=false;
+  String lastComp=null;
+  while (!unique) {
+    lastComp=Integer.toHexString(random.nextInt());
+    for (int j=0; j < count; j++) {
+      if (lastComp.equals(al.get(j))) {
+        continue;
+      }
+    }
+    unique=true;
+  }
+  HistoryID id=HistoryID.createFromRawID(new String[]{"test",lastComp});
+  try {
+    this.historyService.createHistory(id,recordStructure);
+  }
+ catch (  Exception e) {
+    fail("Could not create database with id " + id + " with error "+ e);
+  }
+}

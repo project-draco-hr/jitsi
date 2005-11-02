@@ -1,0 +1,31 @@
+{
+  propertyChangeEvent=null;
+  configurationService.addVetoableChangeListener(rudeVetoListener);
+  configurationService.addPropertyChangeListener(pListener);
+  PropertyVetoException exception=null;
+  try {
+    configurationService.setProperty(propertyName,propertyValue);
+  }
+ catch (  PropertyVetoException ex) {
+    exception=ex;
+  }
+  assertNotNull("A vetoable change event was not dispatched or an " + "exception was not let through.",exception);
+  assertNull("A property change event was delivered even after " + "the property change was vetoed.",propertyChangeEvent);
+  assertNull("A property was changed even avfter vetoing the change.",configurationService.getProperty(propertyName));
+  propertyChangeEvent=null;
+  configurationService.removeVetoableChangeListener(rudeVetoListener);
+  VetoableChangeListener vcListener=new VetoableChangeListener(){
+    public void vetoableChange(    PropertyChangeEvent event){
+      assertNull("propertyChangeEvent was not null which means that it has " + "bean delivered to the propertyChangeListener prior to " + "being delivered to the vetoable change listener.",propertyChangeEvent);
+    }
+  }
+;
+  try {
+    configurationService.setProperty(propertyName,propertyNewValue);
+  }
+ catch (  PropertyVetoException ex1) {
+    ex1.printStackTrace();
+    fail("unexpected veto exception. message:" + ex1.getMessage());
+  }
+  configurationService.removeVetoableChangeListener(vcListener);
+}

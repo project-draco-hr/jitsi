@@ -1,0 +1,37 @@
+{
+  Double listenedPropertyValue=new Double(19.2598);
+  Double listenedPropertyNewValue=new Double(19.29581);
+  VetoableChangeListener vetoListener=new VetoableChangeListener(){
+    public void vetoableChange(    PropertyChangeEvent event){
+      propertyChangeEvent=event;
+    }
+  }
+;
+  configurationService.addVetoableChangeListener(listenedPropertyName,vetoListener);
+  propertyChangeEvent=null;
+  configurationService.setProperty(propertyName,propertyValue);
+  assertNull("setting prop:" + propertyName + " caused an event notif. to "+ "listener registered for prop:"+ listenedPropertyName,propertyChangeEvent);
+  configurationService.setProperty(listenedPropertyName,listenedPropertyValue);
+  assertNotNull("No event was dispatched upon modification of prop:" + listenedPropertyName,propertyChangeEvent);
+  assertNull("oldValue must be null",propertyChangeEvent.getOldValue());
+  assertEquals("wrong newValue",listenedPropertyValue,propertyChangeEvent.getNewValue());
+  propertyChangeEvent=null;
+  configurationService.removeVetoableChangeListener(vetoListener);
+  configurationService.setProperty(listenedPropertyName,listenedPropertyNewValue);
+  assertNotNull("No event was dispatched upon modification of prop:" + listenedPropertyName + ". The listener was wrongfully removed.",propertyChangeEvent);
+  assertEquals("wrong oldValue",listenedPropertyValue,propertyChangeEvent.getOldValue());
+  assertEquals("wrong newValue",listenedPropertyNewValue,propertyChangeEvent.getNewValue());
+  propertyChangeEvent=null;
+  configurationService.removeVetoableChangeListener(listenedPropertyName,vetoListener);
+  configurationService.setProperty(listenedPropertyName,listenedPropertyValue);
+  assertNull("An event was wrongfully dispatched after removing a listener",propertyChangeEvent);
+  propertyChangeEvent=null;
+  configurationService.addVetoableChangeListener(vetoListener);
+  configurationService.addVetoableChangeListener(listenedPropertyName,vetoListener);
+  configurationService.removeVetoableChangeListener(listenedPropertyName,vetoListener);
+  configurationService.setProperty(listenedPropertyName,listenedPropertyNewValue);
+  assertNotNull("No event was dispatched upon modification of prop:" + listenedPropertyName + ". The global listener was wrongfully removed.",propertyChangeEvent);
+  assertEquals("wrong propertyName",listenedPropertyName,propertyChangeEvent.getPropertyName());
+  assertEquals("wrong oldValue",listenedPropertyValue,propertyChangeEvent.getOldValue());
+  assertEquals("wrong newValue",listenedPropertyNewValue,propertyChangeEvent.getNewValue());
+}

@@ -1,0 +1,22 @@
+{
+  Double listenedPropertyValue=new Double(19.2598);
+  Double listenedPropertyNewValue=new Double(19.29581);
+  configurationService.addPropertyChangeListener(listenedPropertyName,pListener);
+  propertyChangeEvent=null;
+  configurationService.setProperty(propertyName,propertyValue);
+  assertNull("setting prop:" + propertyName + " caused an event notif. to "+ "listener registered for prop:"+ listenedPropertyName,propertyChangeEvent);
+  configurationService.setProperty(listenedPropertyName,listenedPropertyValue);
+  assertNotNull("No event was dispatched upon modification of prop:" + listenedPropertyName,propertyChangeEvent);
+  assertNull("oldValue must be null",propertyChangeEvent.getOldValue());
+  assertEquals("wrong newValue",listenedPropertyValue,propertyChangeEvent.getNewValue());
+  propertyChangeEvent=null;
+  configurationService.removePropertyChangeListener(pListener);
+  configurationService.setProperty(listenedPropertyName,listenedPropertyNewValue);
+  assertNotNull("No event was dispatched upon modification of prop:" + listenedPropertyName + ". The listener was wrongfully removed.",propertyChangeEvent);
+  assertEquals("wrong oldValue",listenedPropertyValue,propertyChangeEvent.getOldValue());
+  assertEquals("wrong newValue",listenedPropertyNewValue,propertyChangeEvent.getNewValue());
+  propertyChangeEvent=null;
+  configurationService.removePropertyChangeListener(listenedPropertyName,pListener);
+  configurationService.setProperty(listenedPropertyName,propertyValue);
+  assertNull("An event was wrongfully dispatched after removing a listener",propertyChangeEvent);
+}

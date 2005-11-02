@@ -1,0 +1,61 @@
+{
+  logger.logEntry();
+  try {
+    bundleContext=bc;
+    setName(getClass().getName());
+    String tests=System.getProperty(TEST_LIST_PROPERTY_NAME);
+    if (tests == null || tests.trim().length() == 0) {
+      tests="";
+    }
+    logger.debug("specfied test list is: " + tests);
+    StringTokenizer st=new StringTokenizer(tests);
+    String[] ids=new String[st.countTokens()];
+    int n=0;
+    while (st.hasMoreTokens()) {
+      ids[n++]=st.nextToken().trim();
+    }
+    String outputDirName=System.getProperty(OUTPUT_DIR_PROPERTY_NAME);
+    if (outputDirName == null || outputDirName.trim().length() == 0) {
+      outputDirName=DEFAULT_OUTPUT_DIR;
+    }
+    File outputDir=new File(outputDirName);
+    if (!outputDir.exists()) {
+      outputDir.mkdirs();
+    }
+    for (int i=0; i < ids.length; i++) {
+      logger.debug("Retrieving test suite: " + ids[i]);
+      TestSuite slick=getTestSuite(bc,ids[i]);
+      logger.debug("with " + slick.countTestCases() + " tests.");
+      File outputFile=new File(outputDir,"SC-TEST-" + ids[i] + ".xml");
+      if (!outputFile.exists()) {
+        outputFile.createNewFile();
+      }
+      logger.debug("specified reports file: " + outputFile.getCanonicalFile());
+      OutputStream out=new FileOutputStream(outputFile);
+      XmlFormatter fmtr=new XmlFormatter(new PrintStream(out));
+      TestResult res=ScTestRunner.run(slick,fmtr);
+      errCount+=res.errorCount() + res.failureCount();
+      runCount+=res.runCount();
+      out.flush();
+      out.close();
+    }
+    logger.info("We ran " + runCount + " tests and encountered "+ errCount+ " errors and failures.");
+    bc.addFrameworkListener(new FrameworkListener(){
+      public void frameworkEvent(      FrameworkEvent event){
+        if (event.getType() == FrameworkEvent.STARTED) {
+          try {
+            bundleContext.getBundle(0).stop();
+          }
+ catch (          BundleException ex) {
+            logger.error("Failed to gently shutdown Oscar",ex);
+          }
+          System.exit(errCount > 0 ? -1 : 0);
+        }
+      }
+    }
+);
+  }
+  finally {
+    logger.logExit();
+  }
+}

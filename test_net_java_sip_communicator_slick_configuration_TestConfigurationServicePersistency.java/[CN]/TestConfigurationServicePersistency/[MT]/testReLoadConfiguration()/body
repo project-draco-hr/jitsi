@@ -1,0 +1,28 @@
+{
+  configurationService.setProperty(addedPropertyPath + addedProperty,addedPropertyValue);
+  FileOutputStream out=new FileOutputStream(confFile);
+  out.write(confFileContent2.getBytes());
+  out.flush();
+  out.close();
+  configurationService.reloadConfiguration();
+  Object returnedValueObj=configurationService.getProperty(property1Path + property1);
+  assertNotNull("configuration not properly loaded",returnedValueObj);
+  assertTrue("returned prop is not a String",returnedValueObj instanceof String);
+  String returnedValue=returnedValueObj.toString();
+  assertEquals("configuration not properly reloaded",property1Value2,returnedValue);
+  returnedValueObj=configurationService.getProperty(systemPropertyPath + systemProperty);
+  assertNotNull("configuration not properly reloaded",returnedValueObj);
+  assertTrue("returned prop is not a String",returnedValueObj instanceof String);
+  returnedValue=returnedValueObj.toString();
+  assertEquals("configuration not properly reloaded",systemPropertyValue2,returnedValue);
+  returnedValue=System.getProperty(systemPropertyPath + systemProperty);
+  assertNotNull("A system property was not resolved",returnedValue);
+  assertEquals("A system property was not resolved",systemPropertyValue2,returnedValue);
+  returnedValueObj=configurationService.getProperty(innerPropertyPath + innerProperty);
+  assertNotNull("configuration not properly reloaded",returnedValueObj);
+  assertTrue("returned prop is not a String",returnedValueObj instanceof String);
+  returnedValue=returnedValueObj.toString();
+  assertEquals("configuration not properly reloaded",innerPropertyValue2,returnedValue);
+  returnedValueObj=configurationService.getProperty(addedPropertyPath + addedProperty);
+  assertNull("reload didn't remove newly added properties",returnedValueObj);
+}

@@ -1,0 +1,33 @@
+{
+  propertyChangeEvent=null;
+  configurationService.addPropertyChangeListener(pListener);
+  try {
+    configurationService.setProperty(propertyName,propertyValue);
+  }
+ catch (  PropertyVetoException ex) {
+    fail("A PropertyVetoException came from nowhere. Exc=" + ex.getMessage());
+  }
+  assertNotNull("No PropertyChangeEvent was delivered upon setProperty",propertyChangeEvent);
+  assertNull("oldValue must be null",propertyChangeEvent.getOldValue());
+  assertEquals("newValue is not the value we just set!",propertyValue,propertyChangeEvent.getNewValue());
+  assertEquals("propertyName is not the value we just set!",propertyName,propertyChangeEvent.getPropertyName());
+  propertyChangeEvent=null;
+  try {
+    configurationService.setProperty(propertyName,propertyNewValue);
+  }
+ catch (  PropertyVetoException ex) {
+    fail("A PropertyVetoException came from nowhere. Exc=" + ex.getMessage());
+  }
+  assertNotNull("No PropertyChangeEvent was delivered upon setProperty",propertyChangeEvent);
+  assertEquals("incorrect oldValue",propertyValue,propertyChangeEvent.getOldValue());
+  assertEquals("newValue is not the value we just set!",propertyNewValue,propertyChangeEvent.getNewValue());
+  propertyChangeEvent=null;
+  configurationService.removePropertyChangeListener(pListener);
+  try {
+    configurationService.setProperty(propertyName,propertyValue);
+  }
+ catch (  PropertyVetoException ex) {
+    fail("A PropertyVetoException came from nowhere. Exc=" + ex.getMessage());
+  }
+  assertNull("A PropertyChangeEvent after unregistering a listener.",propertyChangeEvent);
+}
