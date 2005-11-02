@@ -1,0 +1,18 @@
+{
+  History retVal=null;
+synchronized (this.histories) {
+    if (this.histories.containsKey(id)) {
+      throw new IllegalArgumentException("There is already a history with the specified ID.");
+    }
+ else {
+      File dir=this.createHistoryDirectories(id);
+      HistoryImpl history=new HistoryImpl(id,dir,recordStructure,this);
+      File dbDatFile=new File(dir,HistoryServiceImpl.DATA_FILE);
+      DBStructSerializer dbss=new DBStructSerializer(this);
+      dbss.writeHistory(dbDatFile,history);
+      this.histories.put(id,history);
+      retVal=history;
+    }
+  }
+  return retVal;
+}

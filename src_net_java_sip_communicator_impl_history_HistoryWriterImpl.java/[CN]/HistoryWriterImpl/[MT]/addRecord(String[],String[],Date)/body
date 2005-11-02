@@ -1,0 +1,25 @@
+{
+synchronized (docCreateLock) {
+    if (this.currentDoc == null || this.currentDocElements > MAX_RECORDS_PER_FILE) {
+      this.createNewDoc(date,this.currentDoc == null);
+    }
+  }
+synchronized (this.currentDoc) {
+    Node root=this.currentDoc.getFirstChild();
+synchronized (root) {
+      Element elem=this.currentDoc.createElement("record");
+      elem.setAttribute("timestamp",Long.toString(date.getTime()));
+      for (int i=0; i < propertyNames.length; i++) {
+        Element propertyElement=this.currentDoc.createElement(propertyNames[i]);
+        Text value=this.currentDoc.createTextNode(propertyValues[i]);
+        propertyElement.appendChild(value);
+        elem.appendChild(propertyElement);
+      }
+      root.appendChild(elem);
+      this.currentDocElements++;
+    }
+  }
+synchronized (docWriteLock) {
+    this.historyImpl.writeFile(this.currentFile);
+  }
+}

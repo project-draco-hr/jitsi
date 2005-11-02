@@ -1,0 +1,34 @@
+{
+  Vector vect=new Vector();
+  File histDir=null;
+  try {
+    histDir=this.fileAccessService.getPrivatePersistentDirectory(DATA_DIRECTORY);
+    findDatFiles(vect,histDir);
+  }
+ catch (  Exception e) {
+    log.error("Error opening directory",e);
+  }
+  DBStructSerializer structParse=new DBStructSerializer(this);
+  int size=vect.size();
+  for (int i=0; i < size; i++) {
+    File f=(File)vect.get(i);
+synchronized (this.loadedFiles) {
+      if (!this.loadedFiles.contains(f)) {
+synchronized (this.histories) {
+          try {
+            History hist=structParse.loadHistory(f);
+            if (!this.histories.containsKey(hist.getID())) {
+              this.histories.put(hist.getID(),hist);
+            }
+          }
+ catch (          Exception e) {
+            log.error("Could not load history from file: " + f.getAbsolutePath(),e);
+          }
+        }
+      }
+    }
+  }
+synchronized (this.histories) {
+    return this.histories.keySet().iterator();
+  }
+}

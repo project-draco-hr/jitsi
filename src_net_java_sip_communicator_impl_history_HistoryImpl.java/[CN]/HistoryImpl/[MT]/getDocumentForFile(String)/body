@@ -1,0 +1,27 @@
+{
+  Document retVal=null;
+synchronized (this.historyDocuments) {
+    if (!this.historyDocuments.containsKey(filename)) {
+      throw new InvalidParameterException("The requested " + "filename does not exist in the document list.");
+    }
+    Object obj=this.historyDocuments.get(filename);
+    if (obj instanceof Document) {
+      retVal=(Document)obj;
+    }
+ else     if (obj instanceof File) {
+      File file=(File)obj;
+      DocumentBuilder builder=this.historyServiceImpl.getDocumentBuilder();
+      try {
+        retVal=builder.parse(file);
+      }
+ catch (      Exception e) {
+        throw new RuntimeException("Error occured while " + "parsing XML document.",e);
+      }
+      this.historyDocuments.put(filename,retVal);
+    }
+ else {
+      Assert.fail("Internal error - the data type " + "should be either Document or File.");
+    }
+  }
+  return retVal;
+}

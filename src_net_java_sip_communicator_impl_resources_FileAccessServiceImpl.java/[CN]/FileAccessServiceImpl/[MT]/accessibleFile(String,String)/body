@@ -1,0 +1,31 @@
+{
+  File file=null;
+  try {
+    logger.logEntry();
+    homedir=homedir.trim();
+    if (!homedir.endsWith(File.separator)) {
+      homedir+=File.separator;
+    }
+    file=new File(homedir + fileName);
+    if (file.canRead() || file.canWrite()) {
+      return file;
+    }
+    File homedirFile=new File(homedir);
+    if (!homedirFile.exists()) {
+      logger.debug("Creating home directory : " + homedirFile.getAbsolutePath());
+      if (!homedirFile.mkdirs()) {
+        String message="Could not create the home directory : " + homedirFile.getAbsolutePath();
+        logger.debug(message);
+        throw new IOException(message);
+      }
+      logger.debug("Home directory created : " + homedirFile.getAbsolutePath());
+    }
+ else     if (!homedirFile.canWrite()) {
+      file=null;
+    }
+  }
+  finally {
+    logger.logExit();
+  }
+  return file;
+}

@@ -1,0 +1,22 @@
+{
+  Enumeration localIfaces=null;
+  try {
+    localIfaces=NetworkInterface.getNetworkInterfaces();
+  }
+ catch (  SocketException ex) {
+    throw new RuntimeException("Failed to retrieve local interfaces!");
+  }
+  while (localIfaces.hasMoreElements()) {
+    NetworkInterface iFace=(NetworkInterface)localIfaces.nextElement();
+    Enumeration addresses=iFace.getInetAddresses();
+    while (addresses.hasMoreElements()) {
+      InetAddress address=(InetAddress)addresses.nextElement();
+      if (address.isLoopbackAddress())       continue;
+      AddressPoolEntry addrEntry=new AddressPoolEntry(address,iFace);
+      AddressDiagnosticsKit diagKit=new AddressDiagnosticsKit(addrEntry);
+      addressEntries.add(addrEntry);
+      diagnosticsKits.put(addrEntry,diagKit);
+      diagKit.start();
+    }
+  }
+}

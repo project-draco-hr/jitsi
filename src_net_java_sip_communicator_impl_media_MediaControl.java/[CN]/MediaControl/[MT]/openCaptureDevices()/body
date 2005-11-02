@@ -1,0 +1,33 @@
+{
+  DataSource audioDataSource=null;
+  DataSource videoDataSource=null;
+  CaptureDeviceInfo audioDeviceInfo=null;
+  CaptureDeviceInfo videoDeviceInfo=null;
+  audioDeviceInfo=mediaConfiguration.getAudioCaptureDevice();
+  if (audioDeviceInfo != null) {
+    audioDataSource=createDataSource(audioDeviceInfo.getLocator());
+    audioCaptureDevice=(CaptureDevice)audioDataSource;
+  }
+  videoDeviceInfo=mediaConfiguration.getVideoCaptureDevice();
+  if (videoDeviceInfo != null) {
+    videoDataSource=createDataSource(videoDeviceInfo.getLocator());
+    videoCaptureDevice=(CaptureDevice)videoDataSource;
+  }
+  if (audioDataSource != null && videoDataSource != null) {
+    DataSource[] allDS=new DataSource[]{audioDataSource,videoDataSource};
+    try {
+      avDataSource=Manager.createMergingDataSource(allDS);
+    }
+ catch (    IncompatibleSourceException exc) {
+      System.out.println("Failed to create a media data source!" + "Media transmission won't be enabled!");
+    }
+  }
+ else {
+    if (audioDataSource != null) {
+      avDataSource=audioDataSource;
+    }
+    if (videoDataSource != null) {
+      avDataSource=videoDataSource;
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  try {
+    logger.logEntry();
+    String stunAddressStr=null;
+    int port=-1;
+    stunAddressStr=configurationService.getString(PROP_STUN_SERVER_ADDRESS);
+    String portStr=configurationService.getString(PROP_STUN_SERVER_PORT);
+    boolean preferIPv6Addresses=Boolean.getBoolean(PROP_PREF_IPV6_ADDRS);
+    if (stunAddressStr == null || portStr == null || preferIPv6Addresses) {
+      useStun=false;
+      return;
+    }
+    port=Integer.valueOf(portStr).intValue();
+    detector=new SimpleAddressDetector(new StunAddress(stunAddressStr,port));
+    if (logger.isDebugEnabled())     logger.debug("Created a STUN Address detector for the following " + "STUN server: " + stunAddressStr + ":"+ port);
+    try {
+      detector.start();
+      logger.debug("STUN server started;");
+    }
+ catch (    StunException ex) {
+      logger.error("Failed to start the STUN Address Detector. " + detector.toString());
+      logger.debug("Disabling stun and continuing bravely!");
+      detector=null;
+      useStun=false;
+    }
+    configurationService.addVetoableChangeListener(PROP_STUN_SERVER_ADDRESS,this);
+    configurationService.addVetoableChangeListener(PROP_STUN_SERVER_PORT,this);
+  }
+  finally {
+    logger.logExit();
+  }
+}

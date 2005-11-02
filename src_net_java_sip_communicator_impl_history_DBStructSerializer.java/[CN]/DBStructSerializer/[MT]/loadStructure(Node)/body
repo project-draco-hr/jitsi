@@ -1,0 +1,32 @@
+{
+  Element structNode=findElement(root,"structure");
+  if (structNode == null) {
+    throw new ParseException("There is not structure tag defined!",0);
+  }
+  NodeList nodes=structNode.getChildNodes();
+  int count=nodes.getLength();
+  ArrayList propertyNames=new ArrayList(count);
+  ArrayList propertyTypes=new ArrayList(count);
+  for (int i=0; i < count; i++) {
+    Node node=nodes.item(i);
+    if (node.getNodeType() == Node.ELEMENT_NODE && "property".equals(node.getNodeName())) {
+      Element parameter=(Element)node;
+      String paramName=parameter.getAttribute("name");
+      String paramType=parameter.getAttribute("type");
+      if (paramName == null) {
+        continue;
+      }
+      TextType type=(TextType)EnumerationBase.fromString(TextType.class,paramType);
+      if (type == null) {
+        type=HistoryRecordStructure.DEFAULT_TEXT_TYPE;
+      }
+      propertyNames.add(paramName);
+      propertyTypes.add(type);
+    }
+  }
+  String[] names=new String[propertyNames.size()];
+  TextType[] types=new TextType[propertyTypes.size()];
+  propertyNames.toArray(names);
+  propertyTypes.toArray(types);
+  return new HistoryRecordStructure(names,types);
+}
