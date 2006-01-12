@@ -1,7 +1,7 @@
 {
   for (int i=0; i < this.clist.getAllContacts().size(); i++) {
     ContactPanel cpanel=new ContactPanel((ContactItem)this.clist.getAllContacts().get(i));
-    cpanel.setPreferredSize(new Dimension(LookAndFeelConstants.CONTACTPANEL_WIDTH,LookAndFeelConstants.CONTACTPANEL_HEIGHT));
+    cpanel.setPreferredSize(new Dimension(Constants.CONTACTPANEL_WIDTH,Constants.CONTACTPANEL_HEIGHT));
     cpanel.addMouseListener(new MouseAdapter(){
       public void mouseEntered(      MouseEvent e){
         ContactPanel cpanel=(ContactPanel)e.getSource();
@@ -17,6 +17,19 @@
         ContactPanel cpanel=(ContactPanel)e.getSource();
         cpanel.setSelected(true);
         refreshContactsStatus(cpanel);
+        if ((e.getModifiers() & InputEvent.BUTTON1_MASK) == InputEvent.BUTTON1_MASK) {
+          MessageWindow msgWindow=new MessageWindow(parent);
+          msgWindow.addContactToChat(cpanel.getContactItem());
+          msgWindow.setVisible(true);
+          msgWindow.getWriteMessagePanel().getEditorPane().requestFocus();
+          msgWindow.enableKeyboardSending();
+        }
+ else         if ((e.getModifiers() & InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
+          ContactRightButtonMenu popupMenu=new ContactRightButtonMenu(parent,cpanel.getContactItem());
+          popupMenu.setInvoker(cpanel);
+          popupMenu.setLocation(popupMenu.calculatePopupLocation());
+          popupMenu.setVisible(true);
+        }
       }
     }
 );
