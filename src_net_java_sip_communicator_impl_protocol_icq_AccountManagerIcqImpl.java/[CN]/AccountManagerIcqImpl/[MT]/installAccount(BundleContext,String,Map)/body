@@ -1,0 +1,15 @@
+{
+  if (context == null)   throw new NullPointerException("The specified BundleContext was null");
+  if (accountIDStr == null)   throw new NullPointerException("The specified AccountID was null");
+  if (accountIDStr == null)   throw new NullPointerException("The specified property map was null");
+  AccountID accountID=new IcqAccountID(accountIDStr,accountProperties);
+  if (registeredAccounts.containsKey(accountID))   throw new IllegalStateException("An account for id " + accountIDStr + " was already installed!");
+  Hashtable properties=new Hashtable();
+  properties.put(AccountManager.PROTOCOL_PROPERTY_NAME,ProtocolNames.ICQ);
+  properties.put(AccountManager.ACCOUNT_ID_PROPERTY_NAME,accountIDStr);
+  ProtocolProviderServiceIcqImpl icqProtocolProvider=new ProtocolProviderServiceIcqImpl();
+  icqProtocolProvider.initialize(accountIDStr,accountProperties);
+  ServiceRegistration registration=context.registerService(ProtocolProviderService.class.getName(),icqProtocolProvider,properties);
+  registeredAccounts.put(accountID,registration);
+  return accountID;
+}

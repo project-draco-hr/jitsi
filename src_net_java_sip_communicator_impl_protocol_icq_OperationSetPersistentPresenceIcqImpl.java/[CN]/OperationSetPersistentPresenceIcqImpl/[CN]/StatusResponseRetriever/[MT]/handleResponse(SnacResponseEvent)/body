@@ -1,0 +1,25 @@
+{
+  SnacCommand snac=e.getSnacCommand();
+synchronized (this) {
+    if (ran)     return;
+    ran=true;
+  }
+  Object value=null;
+  if (snac instanceof UserInfoCmd) {
+    UserInfoCmd uic=(UserInfoCmd)snac;
+    FullUserInfo userInfo=uic.getUserInfo();
+    if (userInfo != null) {
+      this.status=userInfo.getIcqStatus();
+      if (this.status == -1)       status=ICQ_ONLINE_MASK;
+synchronized (this) {
+        this.notifyAll();
+      }
+    }
+  }
+ else   if (snac instanceof SnacError) {
+    logger.debug("status is" + status);
+synchronized (this) {
+      this.notifyAll();
+    }
+  }
+}

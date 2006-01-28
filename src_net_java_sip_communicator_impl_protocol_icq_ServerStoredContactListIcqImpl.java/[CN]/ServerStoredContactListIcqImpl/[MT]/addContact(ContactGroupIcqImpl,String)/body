@@ -1,0 +1,17 @@
+{
+  logger.trace("Addint contact " + screenname + " to parent="+ parent.getGroupName());
+  final ContactIcqImpl existingContact=findContactByScreenName(screenname);
+  if (existingContact != null) {
+    logger.debug("Contact " + screenname + " already exists. Gen. evt.");
+    new Thread(){
+      public void run(){
+        parentOperationSet.fireSubscriptionEvent(SubscriptionEvent.SUBSCRIPTION_CREATED,existingContact,findContactGroup(existingContact));
+      }
+    }
+.start();
+    return;
+  }
+  logger.trace("Adding the contact to the specified group.");
+  AddMutableGroup group=parent.getJoustSimSourceGroup();
+  group.addBuddy(screenname);
+}

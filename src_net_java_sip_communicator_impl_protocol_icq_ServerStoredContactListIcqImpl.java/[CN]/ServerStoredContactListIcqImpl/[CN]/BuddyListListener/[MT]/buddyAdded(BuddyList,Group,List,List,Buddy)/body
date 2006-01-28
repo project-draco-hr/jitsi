@@ -1,0 +1,25 @@
+{
+  ContactIcqImpl newContact=new ContactIcqImpl(buddy);
+  ContactGroupIcqImpl parentGroup=findContactGroup(joustSimGroup);
+  if (parentGroup == null) {
+    logger.debug("no parent group " + joustSimGroup + " found for buddy: "+ buddy);
+    return;
+  }
+  int buddyIndex=newItems.indexOf(buddy);
+  if (buddyIndex == -1) {
+    logger.debug(buddy + " was not present in newItems" + newItems);
+  }
+  int insertPos=0;
+  if (buddyIndex == 0) {
+    parentGroup.addContact(insertPos,newContact);
+  }
+ else {
+    for (; buddyIndex >= 0; buddyIndex--) {
+      int prevContactIndex=parentGroup.findContactIndex((Buddy)newItems.get(buddyIndex));
+      if (prevContactIndex != -1)       insertPos=prevContactIndex + 1;
+    }
+    parentGroup.addContact(insertPos,newContact);
+  }
+  buddy.addBuddyListener(jsimBuddyListener);
+  fireContactAdded(parentGroup,newContact,insertPos);
+}
