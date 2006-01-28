@@ -1,0 +1,19 @@
+{
+  BosEventNotifier bosEventNotifier=new BosEventNotifier();
+  conn.getBosService().addMainBosServiceListener(bosEventNotifier);
+synchronized (bosEventNotifier.infoLock) {
+    conn.getBosService().sendSnac(new SetExtraInfoCmd(icqStatus));
+    try {
+      bosEventNotifier.infoLock.wait(10000);
+    }
+ catch (    InterruptedException ex) {
+      logger.debug("Strange!");
+    }
+    conn.getBosService().removeMainBosServiceListener(bosEventNotifier);
+    if (bosEventNotifier.lastUserInfo == null) {
+      logger.debug("Status change was not confirmed by AIM server.");
+      return false;
+    }
+    return true;
+  }
+}

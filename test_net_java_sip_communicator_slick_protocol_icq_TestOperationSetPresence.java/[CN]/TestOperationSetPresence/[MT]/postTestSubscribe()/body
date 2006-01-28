@@ -1,0 +1,42 @@
+{
+  logger.debug("Testing Subscription and Subscription Event Dispatch.");
+  SubscriptionEventCollector subEvtCollector=new SubscriptionEventCollector();
+  operationSetPresence.addSubsciptionListener(subEvtCollector);
+synchronized (subEvtCollector) {
+    operationSetPresence.subscribe(fixture.testerAgent.getIcqUIN());
+    subEvtCollector.waitForEvent(10000);
+    operationSetPresence.removeSubsciptionListener(subEvtCollector);
+  }
+  assertEquals("Subscription event dispatching failed.",1,subEvtCollector.collectedEvents.size());
+  SubscriptionEvent subEvt=(SubscriptionEvent)subEvtCollector.collectedEvents.get(0);
+  assertEquals("SubscriptionEvent Source:",fixture.testerAgent.getIcqUIN(),((Contact)subEvt.getSource()).getAddress());
+  assertEquals("SubscriptionEvent Source Contact:",fixture.testerAgent.getIcqUIN(),subEvt.getSourceContact().getAddress());
+  assertSame("SubscriptionEvent Source Provider:",fixture.provider,subEvt.getSourceProvider());
+  subEvtCollector.collectedEvents.clear();
+  logger.debug("Testing presence notifications.");
+  IcqStatusEnum testerAgentOldStatus=fixture.testerAgent.getPresneceStatus();
+  IcqStatusEnum testerAgentNewStatus=IcqStatusEnum.FREE_FOR_CHAT;
+  long testerAgentNewStatusLong=FullUserInfo.ICQSTATUS_FFC;
+  if (testerAgentOldStatus.equals(testerAgentNewStatus)) {
+    testerAgentNewStatus=IcqStatusEnum.DO_NOT_DISTURB;
+    testerAgentNewStatusLong=FullUserInfo.ICQSTATUS_DND;
+  }
+  ContactPresenceEventCollector contactPresEvtCollector=new ContactPresenceEventCollector(fixture.testerAgent.getIcqUIN(),testerAgentNewStatus);
+  operationSetPresence.addContactPresenceStatusListener(contactPresEvtCollector);
+synchronized (contactPresEvtCollector) {
+    if (!fixture.testerAgent.enterStatus(testerAgentNewStatusLong)) {
+      throw new RuntimeException("Tester UserAgent Failed to switch to the " + testerAgentNewStatus.getStatusName() + " state.");
+    }
+    contactPresEvtCollector.waitForEvent(10000);
+    operationSetPresence.removeContactPresenceStatusListener(contactPresEvtCollector);
+  }
+  assertEquals("Presence Notif. event dispatching failed.",1,contactPresEvtCollector.collectedEvents.size());
+  ContactPresenceStatusChangeEvent presEvt=(ContactPresenceStatusChangeEvent)contactPresEvtCollector.collectedEvents.get(0);
+  assertEquals("Presence Notif. event  Source:",fixture.testerAgent.getIcqUIN(),((Contact)presEvt.getSource()).getAddress());
+  assertEquals("Presence Notif. event  Source Contact:",fixture.testerAgent.getIcqUIN(),presEvt.getSourceContact().getAddress());
+  assertSame("Presence Notif. event  Source Provider:",fixture.provider,presEvt.getSourceProvider());
+  PresenceStatus reportedNewStatus=presEvt.getNewStatus();
+  PresenceStatus reportedOldStatus=presEvt.getOldStatus();
+  assertEquals("Reported new PresenceStatus: ",testerAgentNewStatus,reportedNewStatus);
+  assertNotNull("Reported old PresenceStatus: ",reportedOldStatus);
+}

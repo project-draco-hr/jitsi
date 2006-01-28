@@ -1,0 +1,14 @@
+{
+synchronized (connectionLock) {
+    AimConnection conn=event.getAimConnection();
+    logger.debug("EchoUser change state from:" + event.getOldState() + " to "+ event.getNewState());
+    if (event.getNewState() == State.ONLINE) {
+      icbmService=conn.getIcbmService();
+      connectionLock.notifyAll();
+    }
+ else     if (event.getNewState() == State.FAILED || event.getNewState() == State.DISCONNECTED) {
+      logger.error("AIM Connection DISCONNECTED for " + getIcqUIN() + "!");
+      connectionLock.notifyAll();
+    }
+  }
+}

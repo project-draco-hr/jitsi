@@ -1,0 +1,36 @@
+{
+  logger.debug("Will Create the following contact list:\n" + listContents);
+  MutableBuddyList joustSimBuddyList=(MutableBuddyList)conn.getSsiService().getBuddyList();
+  List groups=joustSimBuddyList.getGroups();
+  Iterator groupsIter=groups.iterator();
+  while (groupsIter.hasNext()) {
+    Group group=(Group)groupsIter.next();
+    joustSimBuddyList.deleteGroupAndBuddies(group);
+  }
+  Enumeration newGroupsEnum=listContents.keys();
+  LayoutEventCollector evtCollector=new LayoutEventCollector();
+  while (newGroupsEnum.hasMoreElements()) {
+    String groupName=(String)newGroupsEnum.nextElement();
+    logger.debug("Will add group " + groupName);
+    evtCollector.addedGroups.removeAllElements();
+    joustSimBuddyList.addLayoutListener(evtCollector);
+    joustSimBuddyList.addGroup(groupName);
+    evtCollector.waitForANewGroup(10000);
+    joustSimBuddyList.removeLayoutListener(evtCollector);
+    MutableGroup newlyCreatedGroup=null;
+    if (evtCollector.addedGroups.size() == 0 || (newlyCreatedGroup=(MutableGroup)evtCollector.addedGroups.get(0)) == null)     throw new NullPointerException("Couldn't create group " + groupName);
+    Iterator contactsToAddToThisGroup=((List)listContents.get(groupName)).iterator();
+    while (contactsToAddToThisGroup.hasNext()) {
+      String screenname=(String)contactsToAddToThisGroup.next();
+      evtCollector.addedBuddies.removeAllElements();
+      joustSimBuddyList.addLayoutListener(evtCollector);
+      logger.debug("Will add buddy " + screenname);
+      newlyCreatedGroup.addBuddy(screenname);
+      evtCollector.waitForANewBuddy(10000);
+      joustSimBuddyList.removeLayoutListener(evtCollector);
+      if (evtCollector.addedBuddies.size() == 0 || evtCollector.addedBuddies.get(0) == null) {
+        if (findBuddyInBuddyList(joustSimBuddyList,screenname) == null)         throw new NullPointerException("Couldn't add buddy " + screenname);
+      }
+    }
+  }
+}

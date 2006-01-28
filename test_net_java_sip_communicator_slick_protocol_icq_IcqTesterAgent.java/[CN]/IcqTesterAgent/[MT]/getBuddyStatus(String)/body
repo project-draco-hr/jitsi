@@ -1,0 +1,17 @@
+{
+  if (!registered)   throw new IllegalStateException("You need to register before querying a buddy's status");
+  StatusResponseRetriever responseRetriever=new StatusResponseRetriever();
+  GetInfoCmd getInfoCmd=new GetInfoCmd(GetInfoCmd.CMD_NEW_GET_INFO | GetInfoCmd.FLAG_AWAYMSG | GetInfoCmd.FLAG_INFO,new Screenname(screenname).getFormatted());
+  conn.getInfoService().sendSnacRequest(getInfoCmd,responseRetriever);
+synchronized (responseRetriever.waitingForResponseLock) {
+    try {
+      logger.debug("waiting to receive status for " + screenname);
+      responseRetriever.waitingForResponseLock.wait(100000);
+    }
+ catch (    InterruptedException ex) {
+      logger.debug("Couldn't wait upon a response retriver",ex);
+    }
+  }
+  logger.debug("Done. we'll return status " + responseRetriever.status);
+  return responseRetriever.status == null ? IcqStatusEnum.OFFLINE : responseRetriever.status;
+}

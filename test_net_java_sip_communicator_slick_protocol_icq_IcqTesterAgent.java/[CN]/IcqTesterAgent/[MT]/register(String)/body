@@ -1,0 +1,22 @@
+{
+  if (registered)   return true;
+  DefaultAppSession session=new DefaultAppSession();
+  AimSession aimSession=session.openAimSession(icqUIN);
+  aimSession.openConnection(new AimConnectionProperties(icqUIN,password));
+  conn=aimSession.getConnection();
+  conn.addStateListener(new AimConnStateListener());
+  conn.getBuddyInfoManager().addGlobalBuddyInfoListener(new GlobalBuddyListener());
+  conn.connect();
+synchronized (connectionLock) {
+    try {
+      connectionLock.wait(10000);
+    }
+ catch (    InterruptedException ex) {
+    }
+  }
+  if (icbmService == null) {
+    return (registered=false);
+  }
+  conn.getBuddyService().addBuddyListener(new BuddyListener());
+  return (registered=true);
+}

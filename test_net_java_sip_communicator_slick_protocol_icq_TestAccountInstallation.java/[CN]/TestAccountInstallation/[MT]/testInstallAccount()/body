@@ -1,0 +1,49 @@
+{
+  ServiceReference[] serRefs=null;
+  String osgiFilter="(" + AccountManager.PROTOCOL_PROPERTY_NAME + "="+ ProtocolNames.ICQ+ ")";
+  try {
+    serRefs=IcqSlickFixture.bc.getServiceReferences(AccountManager.class.getName(),osgiFilter);
+  }
+ catch (  InvalidSyntaxException ex) {
+    fail(osgiFilter + " is not a valid osgi filter");
+  }
+  assertTrue("Failed to find an account manager service for protocol ICQ",serRefs != null || serRefs.length > 0);
+  icqAccountManager=(AccountManager)IcqSlickFixture.bc.getService(serRefs[0]);
+  assertTrue("There was an account registered with the account mananger " + "before we've installed any",icqAccountManager.getRegisteredAcounts().size() == 0);
+  String passwd=System.getProperty(IcqProtocolProviderSlick.TESTED_IMPL_PWD_PROP_NAME,null);
+  String uin=System.getProperty(IcqProtocolProviderSlick.TESTED_IMPL_ACCOUNT_ID_PROP_NAME,null);
+  assertNotNull("In the " + IcqProtocolProviderSlick.TESTED_IMPL_ACCOUNT_ID_PROP_NAME + " system property, you need to provide a valid icq UIN for the "+ " slick to use when signing on icq. It's passwd must be set in "+ IcqProtocolProviderSlick.TESTED_IMPL_PWD_PROP_NAME,uin);
+  assertNotNull("In the " + IcqProtocolProviderSlick.TESTED_IMPL_PWD_PROP_NAME + " system property, you need to provide a password for the "+ uin+ " account.",passwd);
+  Hashtable icqAccountProperties=new Hashtable();
+  icqAccountProperties.put(AccountProperties.PASSWORD,passwd);
+  try {
+    icqAccountManager.installAccount(null,uin,icqAccountProperties);
+    fail("installing an account with a null BundleContext must result " + "in a NullPointerException");
+  }
+ catch (  NullPointerException exc) {
+  }
+  try {
+    icqAccountManager.installAccount(IcqSlickFixture.bc,null,icqAccountProperties);
+    fail("installing an account with a null account id must result " + "in a NullPointerException");
+  }
+ catch (  NullPointerException exc) {
+  }
+  IcqSlickFixture.icqAccountID=icqAccountManager.installAccount(IcqSlickFixture.bc,uin,icqAccountProperties);
+  try {
+    IcqSlickFixture.icqAccountID=icqAccountManager.installAccount(IcqSlickFixture.bc,uin,icqAccountProperties);
+    fail("An IllegalStateException must be thrown when trying to " + "install a duplicate account");
+  }
+ catch (  IllegalStateException exc) {
+  }
+  assertTrue("The newly installed account was not in the acc man's " + "registered accounts!",icqAccountManager.getRegisteredAcounts().size() == 1);
+  osgiFilter="(&(" + AccountManager.PROTOCOL_PROPERTY_NAME + "="+ ProtocolNames.ICQ+ ")"+ "("+ AccountManager.ACCOUNT_ID_PROPERTY_NAME+ "="+ IcqSlickFixture.icqAccountID.getAccountID()+ "))";
+  try {
+    serRefs=IcqSlickFixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),osgiFilter);
+  }
+ catch (  InvalidSyntaxException ex) {
+    fail(osgiFilter + "is not a valid osgi filter");
+  }
+  assertTrue("An ICQ protocol provider was apparently not installed as " + "requested.",serRefs != null && serRefs.length > 0);
+  Object icqProtocolProvider=IcqSlickFixture.bc.getService(serRefs[0]);
+  assertTrue("The installed protocol provider does not implement " + "the protocol provider service.",icqProtocolProvider instanceof ProtocolProviderService);
+}
