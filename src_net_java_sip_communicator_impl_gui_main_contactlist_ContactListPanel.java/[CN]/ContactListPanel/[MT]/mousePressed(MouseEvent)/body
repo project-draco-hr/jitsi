@@ -1,0 +1,40 @@
+{
+  int selRow=this.contactListTree.getRowForLocation(e.getX(),e.getY());
+  TreePath selPath=this.contactListTree.getPathForLocation(e.getX(),e.getY());
+  if (selRow != -1) {
+    if (e.getClickCount() == 1) {
+      DefaultMutableTreeNode node=(DefaultMutableTreeNode)contactListTree.getLastSelectedPathComponent();
+      if (node == null)       return;
+      if (node.isLeaf()) {
+        ContactListCellRenderer renderer=(ContactListCellRenderer)this.contactListTree.getCellRenderer().getTreeCellRendererComponent(this.contactListTree,selPath.getLastPathComponent(),false,false,true,selRow,true);
+        int translatedX=(int)e.getX() - (int)this.contactListTree.getPathBounds(selPath).getX();
+        int translatedY=(int)e.getY() - (int)this.contactListTree.getPathBounds(selPath).getY();
+        Component component=renderer.findComponentAt(translatedX,translatedY);
+        ContactItem contactItem=(ContactItem)node.getUserObject();
+        if (component instanceof JLabel) {
+          if ((e.getModifiers() & InputEvent.BUTTON1_MASK) == InputEvent.BUTTON1_MASK) {
+            SwingUtilities.invokeLater(new RunMessageWindow(contactItem));
+          }
+ else           if ((e.getModifiers() & InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
+            ContactRightButtonMenu popupMenu=new ContactRightButtonMenu(parent,contactItem);
+            popupMenu.setInvoker(this.contactListTree);
+            popupMenu.setLocation(popupMenu.getPopupLocation());
+            popupMenu.setVisible(true);
+          }
+        }
+ else         if (component instanceof JButton) {
+          ContactInfoPanel contactInfoPanel=new ContactInfoPanel(contactItem);
+          Point p=new Point();
+          p.x=(int)this.contactListTree.getPathBounds(selPath).getX();
+          p.y=(int)this.contactListTree.getPathBounds(selPath).getY();
+          SwingUtilities.convertPointToScreen(p,this.contactListTree);
+          contactInfoPanel.setLocation(p.x - 140,p.y - 15);
+          contactInfoPanel.setVisible(true);
+          contactInfoPanel.requestFocus();
+        }
+      }
+    }
+ else     if (e.getClickCount() == 2) {
+    }
+  }
+}
