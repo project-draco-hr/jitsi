@@ -3,6 +3,12 @@
   logger.trace("Received a service event for: " + sService.getClass().getName());
   if (!(sService instanceof ProtocolProviderService))   return;
   if (event.getType() == ServiceEvent.REGISTERED) {
+    String providerMask=System.getProperty(MetaContactListService.PROVIDER_MASK_PROPERTY);
+    if (providerMask != null && providerMask.trim().length() > 0) {
+      if (event.getServiceReference().getProperty(MetaContactListService.PROVIDER_MASK_PROPERTY).equals(providerMask)) {
+        return;
+      }
+    }
     this.handleProviderAdded((ProtocolProviderService)sService);
   }
  else   if (event.getType() == ServiceEvent.UNREGISTERING) {
