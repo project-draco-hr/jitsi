@@ -1,22 +1,14 @@
 {
+  this.bundleContext=bundleContext;
+  this.loginManager=new LoginManager(bundleContext);
   try {
     logger.logEntry();
     this.uiService=new UIServiceImpl();
-    ServiceReference[] serRefs=null;
-    String osgiFilter="(" + AccountManager.PROTOCOL_PROPERTY_NAME + "="+ ProtocolNames.ICQ+ ")";
-    serRefs=bundleContext.getServiceReferences(AccountManager.class.getName(),osgiFilter);
-    icqAccountManager=(AccountManager)bundleContext.getService(serRefs[0]);
-    Hashtable icqAccountProperties=new Hashtable();
-    icqAccountProperties.put(AccountProperties.PASSWORD,"parolata");
-    icqAccountID=icqAccountManager.installAccount(bundleContext,"85450845",icqAccountProperties);
-    osgiFilter="(&(" + AccountManager.PROTOCOL_PROPERTY_NAME + "="+ ProtocolNames.ICQ+ ")"+ "("+ AccountManager.ACCOUNT_ID_PROPERTY_NAME+ "="+ icqAccountID.getAccountID()+ "))";
-    serRefs=bundleContext.getServiceReferences(ProtocolProviderService.class.getName(),osgiFilter);
-    ProtocolProviderService icqProtocolProvider=(ProtocolProviderService)bundleContext.getService(serRefs[0]);
     logger.info("UI Service...[  STARTED ]");
     bundleContext.registerService(UIService.class.getName(),this.uiService,null);
     logger.info("UI Service ...[REGISTERED]");
-    communicatorMain.show();
-    loginWindow.showLoginWindow();
+    communicatorMain.showCommunicator();
+    loginManager.showLoginWindow(communicatorMain.getMainFrame());
   }
   finally {
     logger.logExit();
