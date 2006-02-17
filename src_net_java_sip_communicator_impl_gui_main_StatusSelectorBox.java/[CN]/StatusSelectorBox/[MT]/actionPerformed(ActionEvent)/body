@@ -1,0 +1,31 @@
+{
+  if (e.getSource() instanceof SIPCommButton) {
+    if (!this.popup.isVisible()) {
+      this.popup.setLocation(this.calculatePopupLocation());
+      this.popup.setVisible(true);
+    }
+  }
+ else   if (e.getSource() instanceof JMenuItem) {
+    JMenuItem menuItem=(JMenuItem)e.getSource();
+    Iterator statusSet=this.presence.getSupportedStatusSet();
+    while (statusSet.hasNext()) {
+      PresenceStatus status=((PresenceStatus)statusSet.next());
+      if (status.getStatusName().equals(menuItem.getText())) {
+        try {
+          this.presence.publishPresenceStatus(status,"");
+        }
+ catch (        IllegalArgumentException e1) {
+          e1.printStackTrace();
+        }
+catch (        IllegalStateException e1) {
+          e1.printStackTrace();
+        }
+catch (        OperationFailedException e1) {
+          e1.printStackTrace();
+        }
+        break;
+      }
+    }
+    this.setIconImage(((ImageIcon)menuItem.getIcon()).getImage());
+  }
+}
