@@ -1,8 +1,9 @@
 {
   ContactGroup rootProtoGroup=presenceOpSet.getServerStoredContactListRoot();
   logger.trace("subgroups: " + rootProtoGroup.countSubGroups());
-  rootMetaGroup.registerProtocolSpecificRoot(provider,presenceOpSet.getServerStoredContactListRoot());
-  Iterator subgroupsIter=rootMetaGroup.getSubgroups();
+  logger.trace("child contacts: " + rootProtoGroup.countContacts());
+  rootMetaGroup.addProtoGroup(provider,presenceOpSet.getServerStoredContactListRoot());
+  Iterator subgroupsIter=rootProtoGroup.subGroups();
   while (subgroupsIter.hasNext()) {
     ContactGroup group=(ContactGroup)subgroupsIter.next();
     MetaContactGroupImpl newMetaGroup=new MetaContactGroupImpl(group.getGroupName());
@@ -12,6 +13,17 @@
       Contact contact=(Contact)contactsIter.next();
       MetaContactImpl newMetaContact=new MetaContactImpl();
       newMetaContact.addProtoContact(contact);
+      newMetaContact.setDisplayName(contact.getAlias());
+      newMetaGroup.addMetaContact(newMetaContact);
     }
+    rootMetaGroup.addSubgroup(newMetaGroup);
+  }
+  Iterator contactsIter=rootProtoGroup.contacts();
+  while (contactsIter.hasNext()) {
+    Contact contact=(Contact)contactsIter.next();
+    MetaContactImpl newMetaContact=new MetaContactImpl();
+    newMetaContact.addProtoContact(contact);
+    newMetaContact.setDisplayName(contact.getAlias());
+    rootMetaGroup.addMetaContact(newMetaContact);
   }
 }
