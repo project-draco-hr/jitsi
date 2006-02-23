@@ -1,0 +1,47 @@
+{
+  if (e.getSource() instanceof JMenuItem) {
+    JMenuItem menuItem=(JMenuItem)e.getSource();
+    Iterator statusSet=mainFrame.getPresence().getSupportedStatusSet();
+    while (statusSet.hasNext()) {
+      PresenceStatus status=((PresenceStatus)statusSet.next());
+      if (status.getStatusName().equals(menuItem.getText()) && !mainFrame.getPresence().getPresenceStatus().equals(status)) {
+        try {
+          if (status.equals(IcqStatusEnum.ONLINE)) {
+            if (mainFrame.getProtocolProvider().isRegistered()) {
+              mainFrame.getPresence().publishPresenceStatus(status,"");
+            }
+ else {
+              mainFrame.getProtocolProvider().register(null);
+            }
+          }
+ else           if (status.equals(IcqStatusEnum.OFFLINE)) {
+            mainFrame.getProtocolProvider().unregister();
+          }
+ else {
+            mainFrame.getPresence().publishPresenceStatus(status,"");
+          }
+        }
+ catch (        IllegalArgumentException e1) {
+          logger.error("Error - changing status",e1);
+        }
+catch (        IllegalStateException e1) {
+          logger.error("Error - changing status",e1);
+        }
+catch (        OperationFailedException e1) {
+          if (e1.getErrorCode() == OperationFailedException.GENERAL_ERROR) {
+            JOptionPane.showMessageDialog(null,Messages.getString("statusChangeGeneralError"),Messages.getString("generalError"),JOptionPane.ERROR_MESSAGE);
+          }
+ else           if (e1.getErrorCode() == OperationFailedException.NETWORK_FAILURE) {
+            JOptionPane.showMessageDialog(null,Messages.getString("statusChangeNetworkFailure"),Messages.getString("networkFailure"),JOptionPane.ERROR_MESSAGE);
+          }
+ else           if (e1.getErrorCode() == OperationFailedException.PROVIDER_NOT_REGISTERED) {
+            JOptionPane.showMessageDialog(null,Messages.getString("statusChangeNetworkFailure"),Messages.getString("networkFailure"),JOptionPane.ERROR_MESSAGE);
+          }
+          logger.error("Error - changing status",e1);
+        }
+        break;
+      }
+    }
+    setIcon(menuItem.getIcon());
+  }
+}

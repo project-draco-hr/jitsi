@@ -5,12 +5,13 @@
     Map.Entry entry=(Map.Entry)entrySetIter.next();
     Object key=entry.getKey();
     Object value=entry.getValue();
-    if (key.equals(OperationSetPersistentPresence.class.getName())) {
-      OperationSetPersistentPresence persistentPresence=(OperationSetPersistentPresence)value;
-      this.statusPanel.setPresence(persistentPresence);
-      persistentPresence.addProviderPresenceStatusListener(new ProviderPresenceStatusAdapter());
+    if (key.equals(OperationSetPersistentPresence.class.getName()) || key.equals(OperationSetPresence.class.getName())) {
+      OperationSetPresence presence=(OperationSetPresence)value;
+      presence.addProviderPresenceStatusListener(new ProviderPresenceStatusAdapter());
+      this.setPresence(presence);
       try {
-        persistentPresence.publishPresenceStatus(IcqStatusEnum.ONLINE,"");
+        presence.publishPresenceStatus(IcqStatusEnum.ONLINE,"");
+        this.getStatusPanel().stopConnecting(Constants.ICQ);
         this.statusPanel.setSelectedStatus(Constants.ICQ,Constants.ONLINE_STATUS);
       }
  catch (      IllegalArgumentException e) {
