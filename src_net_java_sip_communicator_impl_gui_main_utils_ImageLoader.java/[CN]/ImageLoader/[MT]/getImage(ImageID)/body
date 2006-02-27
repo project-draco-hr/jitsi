@@ -1,21 +1,17 @@
 {
-  String path=Images.getString(imageID.getId());
   BufferedImage image=null;
-  try {
-    log.logEntry();
-    if (log.isTraceEnabled()) {
-      log.trace("Loading image : " + path + "...");
-    }
-    image=ImageIO.read(ImageLoader.class.getClassLoader().getResource(path));
-    if (log.isTraceEnabled()) {
-      log.trace("Loading image : " + path + "... [ DONE ]");
-    }
+  if (loadedImages.containsKey(imageID)) {
+    image=(BufferedImage)loadedImages.get(imageID);
   }
- catch (  IOException e) {
-    log.error("Failed to load image:" + path,e);
-  }
- finally {
-    log.logExit();
+ else {
+    String path=Images.getString(imageID.getId());
+    try {
+      image=ImageIO.read(ImageLoader.class.getClassLoader().getResource(path));
+      loadedImages.put(imageID,image);
+    }
+ catch (    IOException e) {
+      log.error("Failed to load image:" + path,e);
+    }
   }
   return image;
 }
