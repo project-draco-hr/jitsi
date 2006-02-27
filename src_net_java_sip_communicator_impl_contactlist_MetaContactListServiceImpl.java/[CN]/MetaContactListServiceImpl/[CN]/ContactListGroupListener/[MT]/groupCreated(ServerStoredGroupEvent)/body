@@ -1,0 +1,15 @@
+{
+  logger.trace("ContactGroup created: " + evt);
+  MetaContactGroupImpl newMetaGroup=new MetaContactGroupImpl(evt.getSrouceGroup().getGroupName());
+  newMetaGroup.addProtoGroup(evt.getSourceProvider(),evt.getSrouceGroup());
+  Iterator contactsIter=evt.getSrouceGroup().contacts();
+  while (contactsIter.hasNext()) {
+    Contact contact=(Contact)contactsIter.next();
+    MetaContactImpl newMetaContact=new MetaContactImpl();
+    newMetaContact.addProtoContact(contact);
+    newMetaContact.setDisplayName(contact.getAlias());
+    newMetaGroup.addMetaContact(newMetaContact);
+  }
+  rootMetaGroup.addSubgroup(newMetaGroup);
+  fireMetaContactGroupEvent(newMetaGroup,evt.getSourceProvider(),MetaContactGroupEvent.METACONTACT_GROUP_ADDED);
+}
