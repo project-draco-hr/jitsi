@@ -1,4 +1,20 @@
 {
-  MetaContactGroup listRoot=fixture.metaClService.getRoot();
-  System.out.println("!!! Meta Contact List Root = " + listRoot);
+  ContactGroup root=opSetPersPresence.getServerStoredContactListRoot();
+  logger.debug("============== Predefined contact List ==============");
+  logger.debug("rootGroup=" + root.getGroupName() + " rootGroup.childContacts="+ root.countContacts()+ "rootGroup.childGroups="+ root.countSubGroups()+ "Printing rootGroupContents=\n"+ root.toString());
+  MetaContactGroup expectedRoot=fixture.metaClService.getRoot();
+  logger.debug("================ Meta Contact List =================");
+  logger.debug("rootGroup=" + expectedRoot.getGroupName() + " rootGroup.childContacts="+ expectedRoot.countChildContacts()+ "rootGroup.childGroups="+ expectedRoot.countSubgroups()+ "Printing rootGroupContents=\n"+ expectedRoot.toString());
+  Iterator groups=root.subGroups();
+  while (groups.hasNext()) {
+    ContactGroup group=(ContactGroup)groups.next();
+    MetaContactGroup expectedGroup=expectedRoot.getMetaContactSubgroup(group.getGroupName());
+    assertNotNull("Group " + group.getGroupName() + " was returned by "+ "the server but was not in the expected contact list.",expectedGroup);
+    Iterator contactsIter=group.contacts();
+    while (contactsIter.hasNext()) {
+      String contactID=((Contact)contactsIter.next()).getAddress();
+      MetaContact expectedContact=expectedGroup.getMetaContact(contactID);
+      assertNotNull("Contact " + contactID + " was returned by "+ "the server but was not in the expected contact list.",expectedContact);
+    }
+  }
 }
