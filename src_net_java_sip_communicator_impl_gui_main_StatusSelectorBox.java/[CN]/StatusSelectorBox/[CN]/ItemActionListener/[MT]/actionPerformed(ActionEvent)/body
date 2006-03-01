@@ -1,24 +1,25 @@
 {
   if (e.getSource() instanceof JMenuItem) {
     JMenuItem menuItem=(JMenuItem)e.getSource();
-    Iterator statusSet=mainFrame.getPresence().getSupportedStatusSet();
+    OperationSetPresence presence=mainFrame.getProtocolPresence(account.getProtocolProvider());
+    Iterator statusSet=presence.getSupportedStatusSet();
     while (statusSet.hasNext()) {
       PresenceStatus status=((PresenceStatus)statusSet.next());
-      if (status.getStatusName().equals(menuItem.getText()) && !mainFrame.getPresence().getPresenceStatus().equals(status)) {
+      if (status.getStatusName().equals(menuItem.getText()) && !presence.getPresenceStatus().equals(status)) {
         try {
           if (status.equals(IcqStatusEnum.ONLINE)) {
-            if (mainFrame.getProtocolProvider().isRegistered()) {
-              mainFrame.getPresence().publishPresenceStatus(status,"");
+            if (account.getProtocolProvider().isRegistered()) {
+              presence.publishPresenceStatus(status,"");
             }
  else {
-              mainFrame.getProtocolProvider().register(null);
+              account.getProtocolProvider().register(null);
             }
           }
  else           if (status.equals(IcqStatusEnum.OFFLINE)) {
-            mainFrame.getProtocolProvider().unregister();
+            account.getProtocolProvider().unregister();
           }
  else {
-            mainFrame.getPresence().publishPresenceStatus(status,"");
+            presence.publishPresenceStatus(status,"");
           }
         }
  catch (        IllegalArgumentException e1) {

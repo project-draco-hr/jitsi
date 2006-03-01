@@ -1,11 +1,14 @@
 {
   this.bc=bc;
-  this.osgiFilter="(" + AccountManager.PROTOCOL_PROPERTY_NAME + "="+ ProtocolNames.ICQ+ ")";
+  ServiceReference[] serRefs=null;
   try {
-    this.serRefs=this.bc.getServiceReferences(AccountManager.class.getName(),osgiFilter);
+    serRefs=this.bc.getServiceReferences(AccountManager.class.getName(),null);
   }
  catch (  InvalidSyntaxException e) {
-    logger.error("LoginManager : " + e.getMessage());
+    logger.error("LoginManager : " + e);
   }
-  this.accountManager=(AccountManager)this.bc.getService(serRefs[0]);
+  for (int i=0; i < serRefs.length; i++) {
+    AccountManager accountManager=(AccountManager)this.bc.getService(serRefs[i]);
+    this.accountManagersMap.put(serRefs[i].getProperty(AccountManager.PROTOCOL_PROPERTY_NAME),accountManager);
+  }
 }

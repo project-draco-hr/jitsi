@@ -1,0 +1,29 @@
+{
+  this.protocolSupportedOperationSets.put(protocolProvider,supportedOperationSets);
+  Iterator entrySetIter=supportedOperationSets.entrySet().iterator();
+  for (int i=0; i < supportedOperationSets.size(); i++) {
+    Map.Entry entry=(Map.Entry)entrySetIter.next();
+    Object key=entry.getKey();
+    Object value=entry.getValue();
+    if (key.equals(OperationSetPersistentPresence.class.getName()) || key.equals(OperationSetPresence.class.getName())) {
+      OperationSetPresence presence=(OperationSetPresence)value;
+      this.protocolPresenceSets.put(protocolProvider,presence);
+      presence.addProviderPresenceStatusListener(new ProviderPresenceStatusAdapter());
+      presence.addContactPresenceStatusListener(new ContactPresenceStatusAdapter());
+      try {
+        presence.publishPresenceStatus(IcqStatusEnum.ONLINE,"");
+        this.getStatusPanel().stopConnecting(protocolProvider.getProtocolName());
+        this.statusPanel.setSelectedStatus(protocolProvider.getProtocolName(),Constants.ONLINE_STATUS);
+      }
+ catch (      IllegalArgumentException e) {
+        e.printStackTrace();
+      }
+catch (      IllegalStateException e) {
+        e.printStackTrace();
+      }
+catch (      OperationFailedException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+}
