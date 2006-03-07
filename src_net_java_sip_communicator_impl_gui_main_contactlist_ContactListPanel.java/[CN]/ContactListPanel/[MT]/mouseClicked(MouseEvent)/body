@@ -1,2 +1,22 @@
 {
+  if (e.getClickCount() > 1) {
+    int selectedIndex=this.contactList.locationToIndex(e.getPoint());
+    ListModel listModel=this.contactList.getModel();
+    Object element=listModel.getElementAt(selectedIndex);
+    if (element instanceof MetaContactGroup) {
+      MetaContactGroup group=(MetaContactGroup)element;
+      if (group.countChildContacts() > 0) {
+        if (selectedIndex == listModel.getSize() - 1 || listModel.getElementAt(selectedIndex + 1) instanceof MetaContactGroup) {
+          Iterator iter=group.getChildContacts();
+          while (iter.hasNext()) {
+            MetaContact contact=(MetaContact)iter.next();
+            this.contactList.addChild(group,new MetaContactNode(contact));
+          }
+        }
+ else {
+          ((ContactListModel)listModel).removeRange(selectedIndex + 1,selectedIndex + group.countChildContacts());
+        }
+      }
+    }
+  }
 }

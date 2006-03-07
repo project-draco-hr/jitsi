@@ -1,36 +1,25 @@
 {
-  int selRow=this.contactListTree.getRowForLocation(e.getX(),e.getY());
-  TreePath selPath=this.contactListTree.getPathForLocation(e.getX(),e.getY());
-  if (selRow != -1) {
-    if (e.getClickCount() == 1) {
-      DefaultMutableTreeNode node=(DefaultMutableTreeNode)contactListTree.getLastSelectedPathComponent();
-      if (node == null)       return;
-      if (node.isLeaf()) {
-        ContactListCellRenderer renderer=(ContactListCellRenderer)this.contactListTree.getCellRenderer().getTreeCellRendererComponent(this.contactListTree,selPath.getLastPathComponent(),false,false,true,selRow,true);
-        int translatedX=(int)e.getX() - (int)this.contactListTree.getPathBounds(selPath).getX();
-        int translatedY=(int)e.getY() - (int)this.contactListTree.getPathBounds(selPath).getY();
-        Component component=renderer.findComponentAt(translatedX,translatedY);
-        MetaContact contactItem=(MetaContact)node.getUserObject();
-        if (component instanceof JLabel) {
-          if ((e.getModifiers() & InputEvent.BUTTON1_MASK) == InputEvent.BUTTON1_MASK) {
-            SwingUtilities.invokeLater(new RunMessageWindow(contactItem));
-          }
- else           if ((e.getModifiers() & InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
-            ContactRightButtonMenu popupMenu=new ContactRightButtonMenu(parent,contactItem);
-            popupMenu.setInvoker(this.contactListTree);
-            popupMenu.setLocation(popupMenu.getPopupLocation());
-            popupMenu.setVisible(true);
-          }
-        }
- else         if (component instanceof JButton) {
-          Point p=new Point();
-          p.x=(int)contactListTree.getPathBounds(selPath).getX();
-          p.y=(int)contactListTree.getPathBounds(selPath).getY();
-          SwingUtilities.invokeLater(new RunInfoWindow(p,contactItem));
-        }
+  if (this.contactList.getSelectedValue() instanceof MetaContactNode) {
+    MetaContactNode contactNode=(MetaContactNode)this.contactList.getSelectedValue();
+    int selectedIndex=this.contactList.getSelectedIndex();
+    ContactListCellRenderer renderer=(ContactListCellRenderer)this.contactList.getCellRenderer().getListCellRendererComponent(this.contactList,contactNode,selectedIndex,true,true);
+    Point selectedCellPoint=this.contactList.indexToLocation(selectedIndex);
+    int translatedX=e.getX() - selectedCellPoint.x;
+    int translatedY=e.getY() - selectedCellPoint.y;
+    Component component=renderer.getComponentAt(translatedX,translatedY);
+    if (component instanceof JLabel) {
+      if ((e.getModifiers() & InputEvent.BUTTON1_MASK) == InputEvent.BUTTON1_MASK) {
+        SwingUtilities.invokeLater(new RunMessageWindow(contactNode.getContact()));
+      }
+ else       if ((e.getModifiers() & InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
+        ContactRightButtonMenu popupMenu=new ContactRightButtonMenu(parent,contactNode.getContact());
+        popupMenu.setInvoker(this.contactList);
+        popupMenu.setLocation(popupMenu.getPopupLocation());
+        popupMenu.setVisible(true);
       }
     }
- else     if (e.getClickCount() == 2) {
+ else     if (component instanceof JButton) {
+      SwingUtilities.invokeLater(new RunInfoWindow(selectedCellPoint,contactNode.getContact()));
     }
   }
 }
