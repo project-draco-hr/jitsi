@@ -1,0 +1,38 @@
+{
+  MclEventCollector mclEvtCollector=new MclEventCollector();
+  fixture.metaClService.addContactListListener(mclEvtCollector);
+  opSetPersPresence.createServerStoredContactGroup(opSetPersPresence.getServerStoredContactListRoot(),newGroupName);
+  fixture.metaClService.removeContactListListener(mclEvtCollector);
+  assertEquals("Number of evts dispatched while adding a contact group",1,mclEvtCollector.collectedEvents.size());
+  MetaContactGroupEvent evt=(MetaContactGroupEvent)mclEvtCollector.collectedEvents.get(0);
+  assertEquals("ID of the generated event",MetaContactGroupEvent.META_CONTACT_GROUP_ADDED,evt.getEventID());
+  assertEquals("Source group of the AddEvent.",newGroupName,evt.getSourceMetaContactGroup().getGroupName());
+  MetaContactGroup newMetaGroup=evt.getSourceMetaContactGroup();
+  assertEquals("Source provider for the add event.",fixture.mockProvider,evt.getSourceProvider());
+  ContactGroup newProtoGroup=newMetaGroup.getContactGroup(newGroupName,fixture.mockProvider);
+  assertNotNull("The new meta contact group did not contain a proto group",newProtoGroup);
+  assertEquals("The new meta contact group did not seem to contain " + "the right protocol contact group.",newProtoGroup.getGroupName(),newGroupName);
+  assertEquals("The new meta contact group did not seem to contain " + "the right protocol contact group.",newProtoGroup.getProtocolProvider(),fixture.mockProvider);
+  mclEvtCollector.collectedEvents.clear();
+  fixture.metaClService.addContactListListener(mclEvtCollector);
+  opSetPersPresence.renameServerStoredContactGroup(newProtoGroup,renamedGroupName);
+  fixture.metaClService.removeContactListListener(mclEvtCollector);
+  assertEquals("Number of evts dispatched while renaming a contact group",1,mclEvtCollector.collectedEvents.size());
+  evt=(MetaContactGroupEvent)mclEvtCollector.collectedEvents.get(0);
+  assertEquals("ID of the generated event",MetaContactGroupEvent.CONTACT_GROUP_RENAMED_IN_META_GROUP,evt.getEventID());
+  assertEquals("Source group for the RemoveEvent.",newMetaGroup,evt.getSourceMetaContactGroup());
+  assertEquals("Source provider for the remove event.",fixture.mockProvider,evt.getSourceProvider());
+  Iterator groupsIter=evt.getSourceMetaContactGroup().getContactGroupsForProvider(fixture.mockProvider);
+  assertTrue("A proto group was unexplicably removed after renaming.",groupsIter.hasNext());
+  assertEquals("The name of a protocol group after renaming.",renamedGroupName,((MockContactGroup)groupsIter.next()).getGroupName());
+  mclEvtCollector.collectedEvents.clear();
+  fixture.metaClService.addContactListListener(mclEvtCollector);
+  opSetPersPresence.removeServerStoredContactGroup(newProtoGroup);
+  fixture.metaClService.removeContactListListener(mclEvtCollector);
+  assertEquals("Number of evts dispatched while removing a contact group",1,mclEvtCollector.collectedEvents.size());
+  evt=(MetaContactGroupEvent)mclEvtCollector.collectedEvents.get(0);
+  assertEquals("ID of the generated event",MetaContactGroupEvent.CONTACT_GROUP_REMOVED_FROM_META_GROUP,evt.getEventID());
+  assertEquals("Source group for the RemoveEvent.",newMetaGroup,evt.getSourceMetaContactGroup());
+  assertEquals("Source provider for the remove event.",fixture.mockProvider,evt.getSourceProvider());
+  mclEvtCollector.collectedEvents.clear();
+}
