@@ -1,6 +1,13 @@
 {
   logger.trace("Subscription removed: " + evt);
-  MetaContact metaContact=findMetaContactByContact(evt.getSourceContact());
-  MetaContactGroup metaContactGroup=findMetaContactGroupByContactGroup(evt.getParentGroup());
-  fireMetaContactEvent(metaContact,evt.getSourceProvider(),metaContactGroup,MetaContactEvent.METACONTACT_REMOVED);
+  MetaContactImpl metaContact=(MetaContactImpl)findMetaContactByContact(evt.getSourceContact());
+  MetaContactGroupImpl metaContactGroup=(MetaContactGroupImpl)findMetaContactGroupByContactGroup(evt.getParentGroup());
+  metaContact.removeProtoContact(evt.getSourceContact());
+  if (metaContact.getContactCount() == 0) {
+    metaContactGroup.removeMetaContact(metaContact);
+    fireMetaContactEvent(metaContact,evt.getSourceProvider(),metaContactGroup,MetaContactEvent.META_CONTACT_REMOVED);
+  }
+ else {
+    fireMetaContactEvent(metaContact,evt.getSourceProvider(),metaContactGroup,MetaContactEvent.PROTO_CONTACT_REMOVED);
+  }
 }

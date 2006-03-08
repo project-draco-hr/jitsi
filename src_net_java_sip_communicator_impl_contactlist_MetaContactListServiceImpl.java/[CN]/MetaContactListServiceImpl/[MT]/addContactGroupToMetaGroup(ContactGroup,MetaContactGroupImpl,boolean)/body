@@ -1,0 +1,20 @@
+{
+  metaGroup.addProtoGroup(protoGroup);
+  Iterator subgroupsIter=protoGroup.subGroups();
+  while (subgroupsIter.hasNext()) {
+    ContactGroup group=(ContactGroup)subgroupsIter.next();
+    MetaContactGroupImpl newMetaGroup=new MetaContactGroupImpl(group.getGroupName());
+    metaGroup.addSubgroup(newMetaGroup);
+    addContactGroupToMetaGroup(group,newMetaGroup,false);
+    if (fireEvents)     this.fireMetaContactGroupEvent(newMetaGroup,group.getProtocolProvider(),MetaContactGroupEvent.META_CONTACT_GROUP_ADDED);
+  }
+  Iterator contactsIter=protoGroup.contacts();
+  while (contactsIter.hasNext()) {
+    Contact contact=(Contact)contactsIter.next();
+    MetaContactImpl newMetaContact=new MetaContactImpl();
+    newMetaContact.addProtoContact(contact);
+    newMetaContact.setDisplayName(contact.getDisplayName());
+    metaGroup.addMetaContact(newMetaContact);
+    if (fireEvents)     this.fireMetaContactEvent(newMetaContact,protoGroup.getProtocolProvider(),metaGroup,MetaContactEvent.META_CONTACT_ADDED);
+  }
+}

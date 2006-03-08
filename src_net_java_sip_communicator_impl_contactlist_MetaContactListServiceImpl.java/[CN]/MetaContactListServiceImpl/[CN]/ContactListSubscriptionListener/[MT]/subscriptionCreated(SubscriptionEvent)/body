@@ -1,9 +1,13 @@
 {
   logger.trace("Subscription created: " + evt);
-  MetaContactGroupImpl parentGroup=(MetaContactGroupImpl)rootMetaGroup.getMetaContactSubgroup(evt.getParentGroup().getGroupName());
+  MetaContactGroupImpl parentGroup=(MetaContactGroupImpl)findMetaContactGroupByContactGroup(evt.getParentGroup());
+  if (parentGroup == null) {
+    logger.error("Received a subscription for a group that we " + "hadn't seen before! " + evt);
+    return;
+  }
   MetaContactImpl newMetaContact=new MetaContactImpl();
   newMetaContact.addProtoContact(evt.getSourceContact());
   newMetaContact.setDisplayName(evt.getSourceContact().getDisplayName());
   parentGroup.addMetaContact(newMetaContact);
-  fireMetaContactEvent(newMetaContact,evt.getSourceProvider(),parentGroup,MetaContactEvent.METACONTACT_ADDED);
+  fireMetaContactEvent(newMetaContact,evt.getSourceProvider(),parentGroup,MetaContactEvent.META_CONTACT_ADDED);
 }

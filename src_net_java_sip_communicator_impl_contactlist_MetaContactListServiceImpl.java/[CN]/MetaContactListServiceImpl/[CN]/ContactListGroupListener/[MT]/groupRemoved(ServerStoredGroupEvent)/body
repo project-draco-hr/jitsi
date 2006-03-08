@@ -1,8 +1,9 @@
 {
   logger.trace("ContactGroup removed: " + evt);
-  MetaContactGroup metaContactGroup=findMetaContactGroupByContactGroup(evt.getSrouceGroup());
-  if (metaContactGroup != null) {
-    removeMetaContactGroup(metaContactGroup);
-    fireMetaContactGroupEvent(metaContactGroup,evt.getSourceProvider(),MetaContactGroupEvent.METACONTACT_GROUP_REMOVED);
+  MetaContactGroupImpl metaContactGroup=(MetaContactGroupImpl)findMetaContactGroupByContactGroup(evt.getSrouceGroup());
+  if (metaContactGroup == null) {
+    logger.error("Received a RemovedGroup event for an orphan grp: " + evt.getSrouceGroup());
+    return;
   }
+  removeContactGroupFromMetaContactGroup(metaContactGroup,evt.getSrouceGroup(),evt.getSourceProvider());
 }
