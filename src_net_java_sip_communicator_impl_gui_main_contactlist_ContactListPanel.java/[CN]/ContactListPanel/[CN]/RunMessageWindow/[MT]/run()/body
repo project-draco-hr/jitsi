@@ -1,14 +1,40 @@
 {
-  if (contactMsgWindows.containsKey(this.contactItem)) {
-    MessageWindow msgWindow=(MessageWindow)contactMsgWindows.get(this.contactItem);
-    if (msgWindow.getExtendedState() == JFrame.ICONIFIED)     msgWindow.setExtendedState(JFrame.NORMAL);
-    msgWindow.setVisible(true);
+  if (!Constants.TABBED_CHAT_WINDOW) {
+    if (contactMsgWindows.containsKey(this.contactItem)) {
+      ChatWindow msgWindow=(ChatWindow)contactMsgWindows.get(this.contactItem);
+      if (msgWindow.getExtendedState() == JFrame.ICONIFIED)       msgWindow.setExtendedState(JFrame.NORMAL);
+      if (!msgWindow.isVisible())       msgWindow.setVisible(true);
+    }
+ else {
+      ChatWindow msgWindow=new ChatWindow(parent);
+      contactMsgWindows.put(this.contactItem,msgWindow);
+      msgWindow.addChat(this.contactItem);
+      msgWindow.setVisible(true);
+      msgWindow.getWriteMessagePanel().getEditorPane().requestFocus();
+    }
   }
  else {
-    MessageWindow msgWindow=new MessageWindow(parent);
-    contactMsgWindows.put(this.contactItem,msgWindow);
-    msgWindow.addContactToChat(this.contactItem);
-    msgWindow.setVisible(true);
-    msgWindow.getWriteMessagePanel().getEditorPane().requestFocus();
+    if (tabbedChatWindow == null) {
+      tabbedChatWindow=new ChatWindow(parent);
+      tabbedChatWindow.addWindowListener(new WindowAdapter(){
+        public void windowClosing(        WindowEvent e){
+          tabbedChatWindow=null;
+        }
+      }
+);
+    }
+    Hashtable contactTabsTable=tabbedChatWindow.getContactTabsTable();
+    if (contactTabsTable.get(this.contactItem.getDisplayName()) == null) {
+      tabbedChatWindow.addChatTab(this.contactItem);
+      if (tabbedChatWindow.getExtendedState() == JFrame.ICONIFIED)       tabbedChatWindow.setExtendedState(JFrame.NORMAL);
+      if (!tabbedChatWindow.isVisible())       tabbedChatWindow.setVisible(true);
+      tabbedChatWindow.getWriteMessagePanel().getEditorPane().requestFocus();
+    }
+ else {
+      tabbedChatWindow.setSelectedContactTab(this.contactItem);
+      if (tabbedChatWindow.getExtendedState() == JFrame.ICONIFIED)       tabbedChatWindow.setExtendedState(JFrame.NORMAL);
+      tabbedChatWindow.setVisible(true);
+      tabbedChatWindow.getWriteMessagePanel().getEditorPane().requestFocus();
+    }
   }
 }
