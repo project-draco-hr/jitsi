@@ -1,0 +1,87 @@
+{
+  int tabPlacement=tabPane.getTabPlacement();
+  int tabCount=tabPane.getTabCount();
+  Insets insets=tabPane.getInsets();
+  int selectedIndex=tabPane.getSelectedIndex();
+  Component visibleComponent=getVisibleComponent();
+  calculateLayoutInfo();
+  if (selectedIndex < 0) {
+    if (visibleComponent != null) {
+      setVisibleComponent(null);
+    }
+  }
+ else {
+    Component selectedComponent=tabPane.getComponentAt(selectedIndex);
+    boolean shouldChangeFocus=false;
+    if (selectedComponent != null) {
+      if (selectedComponent != visibleComponent && visibleComponent != null) {
+        if (KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner() != null) {
+          shouldChangeFocus=true;
+        }
+      }
+      setVisibleComponent(selectedComponent);
+    }
+    int tx, ty, tw, th;
+    int cx, cy, cw, ch;
+    Insets contentInsets=getContentBorderInsets(tabPlacement);
+    Rectangle bounds=tabPane.getBounds();
+    int numChildren=tabPane.getComponentCount();
+    if (numChildren > 0) {
+      tw=bounds.width - insets.left - insets.right;
+      th=calculateTabAreaHeight(tabPlacement,runCount,maxTabHeight);
+      tx=insets.left;
+      ty=insets.top;
+      cx=tx + contentInsets.left;
+      cy=ty + th + contentInsets.top;
+      cw=bounds.width - insets.left - insets.right- contentInsets.left- contentInsets.right;
+      ch=bounds.height - insets.top - insets.bottom- th- contentInsets.top- contentInsets.bottom;
+      for (int i=0; i < numChildren; i++) {
+        Component child=tabPane.getComponent(i);
+        if (child instanceof ScrollableTabViewport) {
+          JViewport viewport=(JViewport)child;
+          Rectangle viewRect=viewport.getViewRect();
+          int vw=tw;
+          int vh=th;
+          int totalTabWidth=rects[tabCount - 1].x + rects[tabCount - 1].width;
+          if (totalTabWidth > tw) {
+            vw=Math.max(tw - 36,36);
+            ;
+            if (totalTabWidth - viewRect.x <= vw) {
+              vw=totalTabWidth - viewRect.x;
+            }
+          }
+          child.setBounds(tx,ty,vw,vh);
+        }
+ else         if (child instanceof ScrollableTabButton) {
+          ScrollableTabButton scrollbutton=(ScrollableTabButton)child;
+          Dimension bsize=scrollbutton.getPreferredSize();
+          int bx=0;
+          int by=0;
+          int bw=bsize.width;
+          int bh=bsize.height;
+          boolean visible=false;
+          int totalTabWidth=rects[tabCount - 1].x + rects[tabCount - 1].width;
+          if (totalTabWidth > tw) {
+            int dir=scrollbutton.scrollsForward() ? EAST : WEST;
+            scrollbutton.setDirection(dir);
+            visible=true;
+            bx=dir == EAST ? bounds.width - insets.left - bsize.width : bounds.width - insets.left - 2 * bsize.width;
+            by=(tabPlacement == TOP ? ty + th - bsize.height : ty);
+          }
+          child.setVisible(visible);
+          if (visible) {
+            child.setBounds(bx,by,bw,bh);
+          }
+        }
+ else {
+          child.setBounds(cx,cy,cw,ch);
+        }
+      }
+      if (shouldChangeFocus) {
+        if (!requestMyFocusForVisibleComponent()) {
+          tabPane.requestFocus();
+        }
+      }
+    }
+  }
+}

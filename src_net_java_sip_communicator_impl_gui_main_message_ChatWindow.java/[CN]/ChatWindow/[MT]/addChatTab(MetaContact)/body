@@ -1,0 +1,48 @@
+{
+  if (chatTabbedPane == null) {
+    this.setCurrentChatPanel(new ChatPanel(this));
+    this.currentChatPanel.addContactToChat(contact);
+    chatTabbedPane=new SIPCommTabbedPane(true);
+    chatTabbedPane.addCloseListener(new CloseListener(){
+      public void closeOperation(      MouseEvent e){
+        int selectedIndex=chatTabbedPane.getOverTabIndex();
+        removeContactTab(selectedIndex);
+      }
+    }
+);
+    chatTabbedPane.addChangeListener(new ChangeListener(){
+      public void stateChanged(      ChangeEvent e){
+        ChatPanel chatPanel=(ChatPanel)chatTabbedPane.getSelectedComponent();
+        if (chatPanel != null) {
+          setTitle(chatPanel.getDefaultContact().getDisplayName());
+          setCurrentChatPanel(chatPanel);
+        }
+      }
+    }
+);
+    this.getContentPane().add(this.currentChatPanel,BorderLayout.CENTER);
+    this.currentChatPanel.setTabIndex(0);
+    this.contactTabsTable.put(contact.getDisplayName(),currentChatPanel);
+    this.setTitle(contact.getDisplayName());
+  }
+ else {
+    if (chatTabbedPane.getTabCount() > 0) {
+      this.setCurrentChatPanel(new ChatPanel(this));
+      this.currentChatPanel.addContactToChat(contact);
+      chatTabbedPane.addTab(contact.getDisplayName(),currentChatPanel);
+      this.currentChatPanel.setTabIndex(chatTabbedPane.getTabCount() - 1);
+      this.contactTabsTable.put(contact.getDisplayName(),currentChatPanel);
+      this.setSelectedContactTab(contact);
+    }
+ else {
+      chatTabbedPane.addTab(currentChatPanel.getDefaultContact().getDisplayName(),currentChatPanel);
+      this.setCurrentChatPanel(new ChatPanel(this));
+      this.currentChatPanel.addContactToChat(contact);
+      chatTabbedPane.addTab(contact.getDisplayName(),currentChatPanel);
+      currentChatPanel.setTabIndex(chatTabbedPane.getTabCount() - 1);
+      this.contactTabsTable.put(contact.getDisplayName(),currentChatPanel);
+      this.setSelectedContactTab(contact);
+    }
+    this.getContentPane().add(chatTabbedPane,BorderLayout.CENTER);
+  }
+}

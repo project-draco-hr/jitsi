@@ -1,0 +1,43 @@
+{
+  if (index < 0 || index >= getTabCount())   return;
+  final JFrame frame=new JFrame();
+  Window parentWindow=SwingUtilities.windowForComponent(this);
+  final int tabIndex=index;
+  final JComponent c=(JComponent)getComponentAt(tabIndex);
+  final Icon icon=getIconAt(tabIndex);
+  final String title=getTitleAt(tabIndex);
+  final String toolTip=getToolTipTextAt(tabIndex);
+  final Border border=c.getBorder();
+  removeTabAt(index);
+  c.setPreferredSize(c.getSize());
+  frame.setTitle(title);
+  frame.getContentPane().add(c);
+  frame.setLocation(parentWindow.getLocation());
+  frame.pack();
+  frame.addWindowListener(new WindowAdapter(){
+    public void windowClosing(    WindowEvent event){
+      frame.dispose();
+      insertTab(title,icon,c,toolTip,Math.min(tabIndex,getTabCount()));
+      c.setBorder(border);
+      setSelectedComponent(c);
+    }
+  }
+);
+  WindowFocusListener windowFocusListener=new WindowFocusListener(){
+    long start;
+    long end;
+    public void windowGainedFocus(    WindowEvent e){
+      start=System.currentTimeMillis();
+    }
+    public void windowLostFocus(    WindowEvent e){
+      end=System.currentTimeMillis();
+      long elapsed=end - start;
+      if (elapsed < 100)       frame.toFront();
+      frame.removeWindowFocusListener(this);
+    }
+  }
+;
+  frame.addWindowFocusListener(windowFocusListener);
+  frame.show();
+  frame.toFront();
+}
