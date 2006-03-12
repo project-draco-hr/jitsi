@@ -1,10 +1,13 @@
 {
-  MetaContact metaContact=contactList.findMetaContactByContact(evt.getSourceContact());
+  Contact sourceContact=evt.getSourceContact();
+  PresenceStatus newStatus=evt.getNewStatus();
+  MetaContact metaContact=contactList.findMetaContactByContact(sourceContact);
   if (metaContact != null) {
     ContactListModel model=(ContactListModel)tabbedPane.getContactListPanel().getContactList().getModel();
     MetaContactNode node=model.getContactNodeByContact(metaContact);
     if (node != null) {
-      node.setStatusIcon(new ImageIcon(Constants.getStatusIcon(evt.getNewStatus())));
+      node.setStatusIcon(new ImageIcon(Constants.getStatusIcon(newStatus)));
+      node.changeProtocolContactStatus(sourceContact.getProtocolProvider().getProtocolName(),newStatus);
       model.contactStatusChanged(model.indexOf(node));
     }
   }
