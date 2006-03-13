@@ -1,2 +1,16 @@
 {
+  String newContactID="testCreateMoveRemoveMetaContact.ContactID";
+  MetaContactGroup parentMetaGroup=fixture.metaClService.getRoot().getMetaContactSubgroup(MetaContactListServiceLick.topLevelGroupName);
+  fixture.metaClService.createMetaContact(fixture.mockProvider,parentMetaGroup,newContactID);
+  MetaContact newMetaContact=parentMetaGroup.getMetaContact(fixture.mockProvider,newContactID);
+  assertNotNull("create failed. couldn't find the new contact.",newMetaContact);
+  assertEquals("create() created a meta contact with the wrong name.",newContactID,newMetaContact.getDisplayName());
+  fixture.metaClService.moveMetaContact(newMetaContact,fixture.metaClService.getRoot());
+  assertNull(newMetaContact.getDisplayName() + " was still in its old location after moving it.",parentMetaGroup.getMetaContact(newMetaContact.getMetaUID()));
+  assertNotNull(newMetaContact.getDisplayName() + " was not in the new location after moving it.",fixture.metaClService.getRoot().getMetaContact(newMetaContact.getMetaUID()));
+  assertNull("The mock contact corresponding to: " + newMetaContact.getDisplayName() + " was still in its old location after its "+ "encapsulating meta contact was moved",MetaContactListServiceLick.topLevelMockGroup.getContact(newContactID));
+  assertNotNull("The mock contact corresponding to: " + newMetaContact.getDisplayName() + " was not moved to its new location after its "+ "encapsulating meta contact was.",opSetPersPresence.getServerStoredContactListRoot().getContact(newContactID));
+  fixture.metaClService.removeMetaContact(newMetaContact);
+  assertNull(newMetaContact.getDisplayName() + " was still in its old location after it was removed.",fixture.metaClService.getRoot().getMetaContact(newMetaContact.getMetaUID()));
+  assertNull("The mock contact corresponding to: " + newMetaContact.getDisplayName() + " was not removed after its encapsulating meta contact was.",opSetPersPresence.getServerStoredContactListRoot().getContact(newContactID));
 }

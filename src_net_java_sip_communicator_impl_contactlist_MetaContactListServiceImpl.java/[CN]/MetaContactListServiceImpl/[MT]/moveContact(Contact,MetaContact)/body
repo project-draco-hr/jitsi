@@ -1,3 +1,15 @@
 {
-  System.out.println("@todo implement moveContact()");
+  if (!(newParentMetaContact instanceof MetaContactImpl))   throw new IllegalArgumentException(newParentMetaContact + " is not a MetaContactImpl instance.");
+  MetaContactImpl currentParentMetaContact=(MetaContactImpl)this.findMetaContactByContact(contact);
+  currentParentMetaContact.removeProtoContact(contact);
+  MetaContactGroup currentParentMetaGroup=this.findParentMetaContactGroup(currentParentMetaContact);
+  OperationSetPersistentPresence opSetPresence=(OperationSetPersistentPresence)contact.getProtocolProvider().getSupportedOperationSets().get(OperationSetPersistentPresence.class.getName());
+  if (opSetPresence == null) {
+  }
+  MetaContactGroup newParentGroup=findParentMetaContactGroup(newParentMetaContact);
+  ContactGroup parentProtoGroup=resolveProtoPath(contact.getProtocolProvider(),(MetaContactGroupImpl)newParentGroup);
+  opSetPresence.moveContactToGroup(contact,parentProtoGroup);
+  ((MetaContactImpl)newParentMetaContact).addProtoContact(contact);
+  MetaContactGroup newParentMetaGroup=this.findParentMetaContactGroup(newParentMetaContact);
+  fireMetaContactEvent(newParentMetaContact,contact.getProtocolProvider(),newParentMetaGroup,MetaContactEvent.PROTO_CONTACT_MOVED);
 }

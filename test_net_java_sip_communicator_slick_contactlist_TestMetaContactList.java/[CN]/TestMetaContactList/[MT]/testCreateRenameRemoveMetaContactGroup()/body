@@ -1,0 +1,21 @@
+{
+  String newGroupName="testCRRMetaContactGroup.NewContactGroup";
+  String newContactID="testCRRMetaContactGroup.NewContactID";
+  fixture.metaClService.createMetaContactGroup(fixture.metaClService.getRoot(),newGroupName);
+  MetaContactGroup newMetaGroup=fixture.metaClService.getRoot().getMetaContactSubgroup(newGroupName);
+  assertNotNull("createMetaContactGroup failed - no group was created.",newMetaGroup);
+  assertNull("createMetaContactGroup tried to create a proto group too early.",opSetPersPresence.getServerStoredContactListRoot().getGroup(newGroupName));
+  fixture.metaClService.createMetaContact(fixture.mockProvider,newMetaGroup,newContactID);
+  MockContactGroup newMockGroup=(MockContactGroup)opSetPersPresence.getServerStoredContactListRoot().getGroup(newGroupName);
+  assertNotNull("createMetaContact did not create a parent proto group " + "when it had to.",newMockGroup);
+  assertSame("createMetaContact created a proto group but did not add it to the " + "right meta contact group.",newMockGroup,newMetaGroup.getContactGroup(newGroupName,fixture.mockProvider));
+  MetaContact newMetaContact=newMetaGroup.getMetaContact(fixture.mockProvider,newContactID);
+  assertNotNull("createMetaContact failed",newMetaContact);
+  String renamedGroupName="new" + newGroupName;
+  fixture.metaClService.renameMetaContactGroup(newMetaGroup,renamedGroupName);
+  assertEquals("renameMetaContactGroup failed",newMetaGroup.getGroupName(),renamedGroupName);
+  assertEquals("renameMetaContactGroup renamed a proto group!",newMockGroup.getGroupName(),newGroupName);
+  fixture.metaClService.removeMetaContactGroup(newMetaGroup);
+  assertNull("removeMetaContactGroup failed - group not removed.",fixture.metaClService.getRoot().getMetaContactSubgroup(newGroupName));
+  assertNull("removeMetaContact did not remove the corresp. proto group.",opSetPersPresence.getServerStoredContactListRoot().getGroup(newGroupName));
+}

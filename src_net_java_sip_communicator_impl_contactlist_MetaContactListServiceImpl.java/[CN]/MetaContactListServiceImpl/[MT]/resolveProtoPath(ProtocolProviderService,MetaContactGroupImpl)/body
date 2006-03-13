@@ -1,0 +1,29 @@
+{
+  Iterator contactGroupsForProv=metaGroup.getContactGroupsForProvider(protoProvider);
+  if (contactGroupsForProv.hasNext()) {
+    return (ContactGroup)contactGroupsForProv.next();
+  }
+  MetaContactGroupImpl parentMetaGroup=(MetaContactGroupImpl)findParentMetaContactGroup(metaGroup);
+  if (parentMetaGroup == null)   throw new NullPointerException("Internal Error. Orphan group.");
+  ContactGroup parentProtoGroup=resolveProtoPath(protoProvider,parentMetaGroup);
+  OperationSetPersistentPresence opSetPersPresence=(OperationSetPersistentPresence)protoProvider.getSupportedOperationSets().get(OperationSetPersistentPresence.class.getName());
+  if (opSetPersPresence == null)   return null;
+  BlockingGroupEventRetriever evtRetriever=new BlockingGroupEventRetriever(metaGroup.getGroupName());
+  opSetPersPresence.addServerStoredGroupChangeListener(evtRetriever);
+  addGroupToEventIgnoreList(metaGroup.getGroupName(),protoProvider);
+  try {
+    opSetPersPresence.createServerStoredContactGroup(parentProtoGroup,metaGroup.getGroupName());
+    evtRetriever.waitForEvent(CONTACT_LIST_MODIFICATION_TIMEOUT);
+  }
+ catch (  Exception ex) {
+    throw new MetaContactListException("failed to create contact group " + metaGroup.getGroupName(),ex,MetaContactListException.CODE_NETWORK_ERROR);
+  }
+ finally {
+    removeGroupFromEventIgnoreList(metaGroup.getGroupName(),protoProvider);
+    opSetPersPresence.removeServerStoredGroupChangeListener(evtRetriever);
+  }
+  removeGroupFromEventIgnoreList(metaGroup.getGroupName(),protoProvider);
+  if (evtRetriever.evt == null)   throw new MetaContactListException("Failed to create a proto group named: " + metaGroup.getGroupName(),null,MetaContactListException.CODE_NETWORK_ERROR);
+  metaGroup.addProtoGroup(evtRetriever.evt.getSrouceGroup());
+  return evtRetriever.evt.getSrouceGroup();
+}
