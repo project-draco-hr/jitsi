@@ -1,0 +1,19 @@
+{
+  if (joustSimConnState == State.ONLINE)   return RegistrationState.REGISTERED;
+ else   if (joustSimConnState == State.CONNECTING)   return RegistrationState.REGISTERING;
+ else   if (joustSimConnState == State.AUTHORIZING)   return RegistrationState.AUTHENTICATING;
+ else   if (joustSimConnState == State.CONNECTINGAUTH)   return RegistrationState.AUTHENTICATING;
+ else   if (joustSimConnState == State.SIGNINGON)   return RegistrationState.REGISTERING;
+ else   if (joustSimConnState == State.DISCONNECTED || joustSimConnState == State.NOTCONNECTED)   return RegistrationState.UNREGISTERED;
+ else   if (joustSimConnState == State.FAILED) {
+    if (joustSimConnStateInfo != null && joustSimConnStateInfo instanceof LoginFailureStateInfo) {
+      LoginFailureInfo lfInfo=((LoginFailureStateInfo)joustSimConnStateInfo).getLoginFailureInfo();
+      if (lfInfo instanceof AuthFailureInfo)       return RegistrationState.AUTHENTICATION_FAILED;
+    }
+    return RegistrationState.CONNECTION_FAILED;
+  }
+ else {
+    logger.warn("Unknown state " + joustSimConnState + ". Defaulting to "+ RegistrationState.UNREGISTERED);
+    return RegistrationState.UNREGISTERED;
+  }
+}
