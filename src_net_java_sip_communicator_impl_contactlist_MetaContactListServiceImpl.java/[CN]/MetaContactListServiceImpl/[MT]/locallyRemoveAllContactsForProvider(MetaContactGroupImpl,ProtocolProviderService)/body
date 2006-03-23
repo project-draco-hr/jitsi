@@ -2,12 +2,16 @@
   Iterator childrenContactsIter=parent.getChildContacts();
   while (childrenContactsIter.hasNext()) {
     MetaContactImpl child=(MetaContactImpl)childrenContactsIter.next();
+    Iterator contactsToRemove=child.getContactsForProvider(sourceProvider);
     child.removeContactsForProvider(sourceProvider);
-    int eventID=MetaContactEvent.PROTO_CONTACT_REMOVED;
     if (child.getContactCount() == 0) {
       parent.removeMetaContact(child);
-      eventID=MetaContactEvent.META_CONTACT_REMOVED;
+      fireMetaContactEvent(child,parent,MetaContactEvent.META_CONTACT_REMOVED);
     }
-    fireMetaContactEvent(child,sourceProvider,parent,eventID);
+ else {
+      while (contactsToRemove.hasNext()) {
+        fireProtoContactEvent((Contact)contactsToRemove.next(),ProtoContactEvent.PROTO_CONTACT_REMOVED,child,null);
+      }
+    }
   }
 }

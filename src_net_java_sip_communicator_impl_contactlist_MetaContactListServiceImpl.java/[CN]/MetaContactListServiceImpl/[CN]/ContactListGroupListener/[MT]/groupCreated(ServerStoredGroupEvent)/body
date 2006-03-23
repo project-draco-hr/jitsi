@@ -3,16 +3,10 @@
   if (isGroupInEventIgnoreList(evt.getSrouceGroup().getGroupName(),evt.getSourceProvider())) {
     return;
   }
-  MetaContactGroupImpl newMetaGroup=new MetaContactGroupImpl(evt.getSrouceGroup().getGroupName());
-  newMetaGroup.addProtoGroup(evt.getSrouceGroup());
-  Iterator contactsIter=evt.getSrouceGroup().contacts();
-  while (contactsIter.hasNext()) {
-    Contact contact=(Contact)contactsIter.next();
-    MetaContactImpl newMetaContact=new MetaContactImpl();
-    newMetaContact.addProtoContact(contact);
-    newMetaContact.setDisplayName(contact.getDisplayName());
-    newMetaGroup.addMetaContact(newMetaContact);
+  MetaContactGroupImpl parentMetaGroup=(MetaContactGroupImpl)findMetaContactGroupByContactGroup(evt.getParentGroup());
+  if (parentMetaGroup == null) {
+    logger.error("Failed to identify a parent where group " + evt.getSrouceGroup().getGroupName() + "should be placed.");
   }
-  rootMetaGroup.addSubgroup(newMetaGroup);
+  MetaContactGroup newMetaGroup=handleGroupCreatedEvent(parentMetaGroup,evt.getSrouceGroup());
   fireMetaContactGroupEvent(newMetaGroup,evt.getSourceProvider(),MetaContactGroupEvent.META_CONTACT_GROUP_ADDED);
 }
