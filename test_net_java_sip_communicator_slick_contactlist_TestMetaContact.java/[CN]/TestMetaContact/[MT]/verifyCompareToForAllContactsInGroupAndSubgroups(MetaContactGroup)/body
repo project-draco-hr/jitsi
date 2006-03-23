@@ -1,0 +1,23 @@
+{
+  Iterator contacts=group.getChildContacts();
+  MetaContact previousContact=null;
+  int previousContactStatusSum=0;
+  while (contacts.hasNext()) {
+    MetaContact currentContact=(MetaContact)contacts.next();
+    Iterator protoContacts=currentContact.getContacts();
+    int currentContactStatusSum=0;
+    while (protoContacts.hasNext()) {
+      currentContactStatusSum+=((Contact)protoContacts.next()).getPresenceStatus().getStatus();
+    }
+    if (previousContact != null) {
+      assertTrue(previousContact + " with status=" + previousContactStatusSum+ " was wrongfully before "+ currentContact+ " with status="+ currentContactStatusSum,previousContactStatusSum <= currentContactStatusSum);
+      if (previousContactStatusSum == currentContactStatusSum)       assertTrue("The display name: " + previousContact.getDisplayName() + " should be considered less than "+ currentContact.getDisplayName(),previousContact.getDisplayName().compareToIgnoreCase(currentContact.getDisplayName()) <= 0);
+    }
+    previousContact=currentContact;
+    previousContactStatusSum=currentContactStatusSum;
+  }
+  Iterator subgroups=group.getSubgroups();
+  while (subgroups.hasNext()) {
+    verifyCompareToForAllContactsInGroupAndSubgroups((MetaContactGroup)subgroups.next());
+  }
+}

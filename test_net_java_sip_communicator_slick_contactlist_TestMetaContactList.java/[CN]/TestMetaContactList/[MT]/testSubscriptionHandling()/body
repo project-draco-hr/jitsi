@@ -6,21 +6,18 @@
   MockContact newProtoContact=(MockContact)opSetPersPresence.findContactByID(newSubscriptionName);
   MetaContact newMetaContact=fixture.metaClService.findMetaContactByContact(newProtoContact);
   assertNotNull("The meta contact list was not updated after adding " + "contact " + newProtoContact + " to the mock provider.",newMetaContact);
-  assertEquals("Number of evts dispatched while adding a contact",1,mclEvtCollector.collectedEvents.size());
-  MetaContactEvent evt=(MetaContactEvent)mclEvtCollector.collectedEvents.get(0);
+  assertEquals("Number of evts dispatched while adding a contact",1,mclEvtCollector.collectedMetaContactEvents.size());
+  MetaContactEvent evt=(MetaContactEvent)mclEvtCollector.collectedMetaContactEvents.remove(0);
   assertEquals("ID of the generated event",MetaContactEvent.META_CONTACT_ADDED,evt.getEventID());
   assertEquals("Parent group of the source contact",fixture.metaClService.getRoot(),evt.getParentGroup());
   assertEquals("Source meta contact.",newMetaContact,evt.getSourceContact());
-  assertEquals("Source provider",fixture.mockProvider,evt.getSourceProvider());
-  mclEvtCollector.collectedEvents.clear();
   fixture.metaClService.addContactListListener(mclEvtCollector);
   opSetPersPresence.unsubscribe(newProtoContact);
   fixture.metaClService.removeContactListListener(mclEvtCollector);
   assertNull("The impl contact list did not update after a subscr. was removed.",fixture.metaClService.findMetaContactByContact(newProtoContact));
-  assertEquals("Number of evts dispatched while adding a contact",1,mclEvtCollector.collectedEvents.size());
-  evt=(MetaContactEvent)mclEvtCollector.collectedEvents.get(0);
+  assertEquals("Number of evts dispatched while adding a contact",1,mclEvtCollector.collectedMetaContactEvents.size());
+  evt=(MetaContactEvent)mclEvtCollector.collectedMetaContactEvents.remove(0);
   assertEquals("ID of the generated event",MetaContactEvent.META_CONTACT_REMOVED,evt.getEventID());
   assertEquals("Parent group of the source contact",fixture.metaClService.getRoot(),evt.getParentGroup());
   assertEquals("Source meta contact.",newMetaContact,evt.getSourceContact());
-  assertEquals("Source provider",fixture.mockProvider,evt.getSourceProvider());
 }
