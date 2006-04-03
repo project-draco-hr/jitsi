@@ -1,0 +1,28 @@
+{
+  ContactListModel model=(ContactListModel)this.getModel();
+  int max=model.getSize();
+  if (prefix == null) {
+    throw new IllegalArgumentException();
+  }
+  if (startIndex < 0 || startIndex >= max) {
+    throw new IllegalArgumentException();
+  }
+  prefix=prefix.toUpperCase();
+  int increment=(bias == Position.Bias.Forward) ? 1 : -1;
+  int index=startIndex;
+  do {
+    Object o=model.getElementAt(index);
+    if (o != null) {
+      String contactName=null;
+      if (o instanceof MetaContact) {
+        contactName=((MetaContact)o).getDisplayName().toUpperCase();
+      }
+      if (contactName != null && contactName.startsWith(prefix)) {
+        return index;
+      }
+    }
+    index=(index + increment + max) % max;
+  }
+ while (index != startIndex);
+  return -1;
+}
