@@ -1,0 +1,35 @@
+{
+  String notificationMsg="";
+  notificationMsg+=this.mainFrame.getContactList().findMetaContactByContact(evt.getSourceContact()).getDisplayName() + " ";
+  if (notificationMsg.equals("")) {
+    notificationMsg+=Messages.getString("unknown") + " ";
+  }
+  int typingState=evt.getTypingState();
+  MetaContact metaContact=mainFrame.getContactList().findMetaContactByContact(evt.getSourceContact());
+  if (typingState == OperationSetTypingNotifications.STATE_TYPING) {
+    notificationMsg+=Messages.getString("contactTyping");
+  }
+ else   if (typingState == OperationSetTypingNotifications.STATE_PAUSED) {
+    notificationMsg+=Messages.getString("contactPausedTyping");
+  }
+ else   if (typingState == OperationSetTypingNotifications.STATE_STOPPED) {
+    notificationMsg="";
+  }
+ else   if (typingState == OperationSetTypingNotifications.STATE_STALE) {
+    notificationMsg+=Messages.getString("contactTypingStateStale");
+  }
+ else   if (typingState == OperationSetTypingNotifications.STATE_UNKNOWN) {
+  }
+  if (!Constants.TABBED_CHAT_WINDOW) {
+    if (contactMsgWindows.containsKey(metaContact)) {
+      ChatWindow msgWindow=(ChatWindow)contactMsgWindows.get(metaContact);
+      msgWindow.getChatPanel(metaContact).getSendPanel().setTypingStatus(notificationMsg);
+    }
+  }
+ else   if (tabbedChatWindow != null) {
+    Hashtable contactTabsTable=tabbedChatWindow.getContactTabsTable();
+    if (contactTabsTable.get(metaContact.getDisplayName()) != null) {
+      tabbedChatWindow.getChatPanel(metaContact).getSendPanel().setTypingStatus(notificationMsg);
+    }
+  }
+}
