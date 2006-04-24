@@ -2,7 +2,7 @@
   OperationSetBasicInstantMessaging contactIMOperationSet=this.mainFrame.getProtocolIM(contact.getDefaultContact().getProtocolProvider());
   if (chatTabbedPane == null) {
     this.setCurrentChatPanel(new ChatPanel(this,contactIMOperationSet));
-    this.currentChatPanel.addContactToChat(contact);
+    this.currentChatPanel.addContactToChat(contact,status);
     chatTabbedPane=new SIPCommTabbedPane(true);
     chatTabbedPane.addCloseListener(new CloseListener(){
       public void closeOperation(      MouseEvent e){
@@ -27,19 +27,21 @@
     this.setTitle(contact.getDisplayName());
   }
  else {
+    PresenceStatus defaultStatus=contact.getDefaultContact().getPresenceStatus();
     if (chatTabbedPane.getTabCount() > 0) {
       this.setCurrentChatPanel(new ChatPanel(this,contactIMOperationSet));
-      this.currentChatPanel.addContactToChat(contact);
-      chatTabbedPane.addTab(contact.getDisplayName(),currentChatPanel);
+      this.currentChatPanel.addContactToChat(contact,status);
+      chatTabbedPane.addTab(contact.getDisplayName(),new ImageIcon(Constants.getStatusIcon(defaultStatus)),currentChatPanel);
       chatTabbedPane.getParent().validate();
       this.currentChatPanel.setTabIndex(chatTabbedPane.getTabCount() - 1);
       this.contactTabsTable.put(contact.getDisplayName(),currentChatPanel);
     }
  else {
-      chatTabbedPane.addTab(currentChatPanel.getDefaultContact().getDisplayName(),currentChatPanel);
+      PresenceStatus currentContactStatus=currentChatPanel.getDefaultContact().getDefaultContact().getPresenceStatus();
+      chatTabbedPane.addTab(currentChatPanel.getDefaultContact().getDisplayName(),new ImageIcon(Constants.getStatusIcon(currentContactStatus)),currentChatPanel);
       this.setCurrentChatPanel(new ChatPanel(this,contactIMOperationSet));
-      this.currentChatPanel.addContactToChat(contact);
-      chatTabbedPane.addTab(contact.getDisplayName(),currentChatPanel);
+      this.currentChatPanel.addContactToChat(contact,status);
+      chatTabbedPane.addTab(contact.getDisplayName(),new ImageIcon(Constants.getStatusIcon(defaultStatus)),currentChatPanel);
       currentChatPanel.setTabIndex(chatTabbedPane.getTabCount() - 1);
       this.contactTabsTable.put(contact.getDisplayName(),currentChatPanel);
     }
