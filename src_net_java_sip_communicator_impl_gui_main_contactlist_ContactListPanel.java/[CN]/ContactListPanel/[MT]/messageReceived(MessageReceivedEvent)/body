@@ -2,6 +2,7 @@
   Calendar calendar=Calendar.getInstance();
   calendar.setTime(evt.getTimestamp());
   MetaContact metaContact=mainFrame.getContactList().findMetaContactByContact(evt.getSourceContact());
+  PresenceStatus contactStatus=((ContactListModel)this.contactList.getModel()).getMetaContactStatus(metaContact);
   if (!Constants.TABBED_CHAT_WINDOW) {
     if (contactMsgWindows.containsKey(metaContact)) {
       ChatWindow msgWindow=(ChatWindow)contactMsgWindows.get(metaContact);
@@ -11,7 +12,7 @@
  else {
       ChatWindow msgWindow=new ChatWindow(mainFrame);
       contactMsgWindows.put(metaContact,msgWindow);
-      msgWindow.addChat(metaContact);
+      msgWindow.addChat(metaContact,contactStatus);
       msgWindow.getCurrentChatPanel().getConversationPanel().processMessage(evt.getSourceContact().getDisplayName(),calendar,ChatMessage.INCOMING_MESSAGE,evt.getSourceMessage().getContent());
       msgWindow.pack();
       msgWindow.setVisible(true);
@@ -29,7 +30,7 @@
     }
     Hashtable contactTabsTable=tabbedChatWindow.getContactTabsTable();
     if (contactTabsTable.get(metaContact.getDisplayName()) == null) {
-      tabbedChatWindow.addChatTab(metaContact);
+      tabbedChatWindow.addChatTab(metaContact,contactStatus);
       tabbedChatWindow.getCurrentChatPanel().getConversationPanel().processMessage(evt.getSourceContact().getDisplayName(),calendar,ChatMessage.INCOMING_MESSAGE,evt.getSourceMessage().getContent());
       if (!tabbedChatWindow.isVisible())       tabbedChatWindow.setVisible(true);
       tabbedChatWindow.getWriteMessagePanel().getEditorPane().requestFocus();
