@@ -1,0 +1,15 @@
+{
+  super(21,3);
+  if (packet.getType().equals(AbstractIcqCmd.CMD_OFFLINE_MSG_DONE)) {
+    endOfOfflineMessages=true;
+  }
+ else {
+    ByteBlock block=packet.getIcqData();
+    uin=LEBinaryTools.getUInt(block,0);
+    cal=new GregorianCalendar(LEBinaryTools.getUShort(block,4),LEBinaryTools.getUByte(block,6),LEBinaryTools.getUByte(block,7),LEBinaryTools.getUByte(block,8),LEBinaryTools.getUByte(block,9));
+    msgType=LEBinaryTools.getUShort(block,10);
+    final int textlen=LEBinaryTools.getUShort(block,12) - 1;
+    block=block.subBlock(14,textlen);
+    contents=OscarTools.getString(block,"US-ASCII");
+  }
+}

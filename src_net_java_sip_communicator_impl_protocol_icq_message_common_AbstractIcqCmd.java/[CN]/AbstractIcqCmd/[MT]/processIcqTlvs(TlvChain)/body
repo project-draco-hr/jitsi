@@ -1,0 +1,34 @@
+{
+  DefensiveTools.checkNull(chain,"chain");
+  Tlv icqDataTlv=chain.getLastTlv(TYPE_ICQ_DATA);
+  if (icqDataTlv == null) {
+    icqUIN=-1;
+    icqType=null;
+    icqID=-1;
+  }
+ else {
+    ByteBlock icqBlock=icqDataTlv.getData();
+    int hdrlen=8;
+    icqUIN=LEBinaryTools.getUInt(icqBlock,2);
+    icqID=LEBinaryTools.getUShort(icqBlock,8);
+    int primary=LEBinaryTools.getUShort(icqBlock,6);
+    if (-1 == primary) {
+      icqType=null;
+    }
+ else     if (primary < 1000) {
+      icqType=new IcqType(primary);
+    }
+ else {
+      int secondary=LEBinaryTools.getUShort(icqBlock,10);
+      icqType=-1 == secondary ? null : new IcqType(primary,secondary);
+      hdrlen=10;
+    }
+    if (icqBlock.getLength() >= hdrlen + 2) {
+      icqData=icqBlock.subBlock(hdrlen + 2);
+    }
+ else {
+      icqData=null;
+    }
+    icqDataWriter=icqData;
+  }
+}
