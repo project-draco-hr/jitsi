@@ -1,8 +1,9 @@
 {
   OperationSetBasicInstantMessaging contactIMOperationSet=this.mainFrame.getProtocolIM(contact.getDefaultContact().getProtocolProvider());
+  ChatPanel chatPanel=null;
   if (chatTabbedPane == null) {
-    this.setCurrentChatPanel(new ChatPanel(this,contactIMOperationSet));
-    this.currentChatPanel.addContactToChat(contact,status);
+    chatPanel=new ChatPanel(this,contactIMOperationSet);
+    chatPanel.addContactToChat(contact,status);
     chatTabbedPane=new SIPCommTabbedPane(true);
     chatTabbedPane.addCloseListener(new CloseListener(){
       public void closeOperation(      MouseEvent e){
@@ -11,31 +12,33 @@
       }
     }
 );
-    this.getContentPane().add(this.currentChatPanel,BorderLayout.CENTER);
-    this.currentChatPanel.setTabIndex(0);
-    this.contactTabsTable.put(contact.getMetaUID(),currentChatPanel);
+    this.getContentPane().add(chatPanel,BorderLayout.CENTER);
+    chatPanel.setTabIndex(0);
+    this.contactTabsTable.put(contact.getMetaUID(),chatPanel);
     this.setTitle(contact.getDisplayName());
   }
  else {
     PresenceStatus defaultStatus=contact.getDefaultContact().getPresenceStatus();
     if (chatTabbedPane.getTabCount() > 0) {
-      this.setCurrentChatPanel(new ChatPanel(this,contactIMOperationSet));
-      this.currentChatPanel.addContactToChat(contact,status);
-      chatTabbedPane.addTab(contact.getDisplayName(),new ImageIcon(Constants.getStatusIcon(defaultStatus)),currentChatPanel);
+      chatPanel=new ChatPanel(this,contactIMOperationSet);
+      chatPanel.addContactToChat(contact,status);
+      chatTabbedPane.addTab(contact.getDisplayName(),new ImageIcon(Constants.getStatusIcon(defaultStatus)),chatPanel);
       chatTabbedPane.getParent().validate();
-      this.currentChatPanel.setTabIndex(chatTabbedPane.getTabCount() - 1);
-      this.contactTabsTable.put(contact.getMetaUID(),currentChatPanel);
+      chatPanel.setTabIndex(chatTabbedPane.getTabCount() - 1);
+      this.contactTabsTable.put(contact.getMetaUID(),chatPanel);
     }
  else {
-      PresenceStatus currentContactStatus=currentChatPanel.getDefaultContact().getDefaultContact().getPresenceStatus();
+      ChatPanel firstChatPanel=(ChatPanel)contactTabsTable.elements().nextElement();
+      PresenceStatus currentContactStatus=firstChatPanel.getDefaultContact().getDefaultContact().getPresenceStatus();
       chatTabbedPane.addTab(currentChatPanel.getDefaultContact().getDisplayName(),new ImageIcon(Constants.getStatusIcon(currentContactStatus)),currentChatPanel);
-      this.setCurrentChatPanel(new ChatPanel(this,contactIMOperationSet));
-      this.currentChatPanel.addContactToChat(contact,status);
-      chatTabbedPane.addTab(contact.getDisplayName(),new ImageIcon(Constants.getStatusIcon(defaultStatus)),currentChatPanel);
-      currentChatPanel.setTabIndex(chatTabbedPane.getTabCount() - 1);
+      chatPanel=new ChatPanel(this,contactIMOperationSet);
+      chatPanel.addContactToChat(contact,status);
+      chatTabbedPane.addTab(contact.getDisplayName(),new ImageIcon(Constants.getStatusIcon(defaultStatus)),chatPanel);
+      chatPanel.setTabIndex(chatTabbedPane.getTabCount() - 1);
       this.contactTabsTable.put(contact.getMetaUID(),currentChatPanel);
     }
     this.getContentPane().add(chatTabbedPane,BorderLayout.CENTER);
     this.getContentPane().validate();
   }
+  return chatPanel;
 }
