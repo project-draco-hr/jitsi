@@ -1,3 +1,23 @@
 {
-  return URLRecognitionManager.processURL(message);
+  String wwwURL="(\\bwww\\.\\S+\\.\\S+/*[?#]*(\\w+[&=;?]\\w+)*\\b)";
+  String protocolURL="(\\b\\w+://\\S+/*[?#]*(\\w+[&=;?]\\w+)*\\b)";
+  String url="(" + wwwURL + "|"+ protocolURL+ ")";
+  Pattern p=Pattern.compile(url);
+  Matcher m=p.matcher(message);
+  StringBuffer msgBuffer=new StringBuffer();
+  boolean matchSuccessfull=false;
+  while (m.find()) {
+    if (!matchSuccessfull)     matchSuccessfull=true;
+    String matchGroup=m.group().trim();
+    String replacement;
+    if (matchGroup.startsWith("www")) {
+      replacement="<A href=\"" + "http://" + matchGroup + "\">"+ matchGroup+ "</A>";
+    }
+ else {
+      replacement="<A href=\"" + matchGroup + "\">"+ matchGroup+ "</A>";
+    }
+    m.appendReplacement(msgBuffer,replacement);
+  }
+  m.appendTail(msgBuffer);
+  return msgBuffer.toString();
 }
