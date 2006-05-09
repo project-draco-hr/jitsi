@@ -1,0 +1,14 @@
+{
+  MetaContactImpl newMetaContact=new MetaContactImpl(metaUID);
+  newMetaContact.setDisplayName(displayName);
+  ProtocolProviderService sourceProvider=(ProtocolProviderService)currentlyInstalledProviders.get(accountID);
+  OperationSetPersistentPresence presenceOpSet=(OperationSetPersistentPresence)sourceProvider.getSupportedOperationSets().get(OperationSetPersistentPresence.class.getName());
+  Iterator contactsIter=protoContacts.iterator();
+  while (contactsIter.hasNext()) {
+    MclStorageManager.StoredProtoContactDescriptor contactDescriptor=(MclStorageManager.StoredProtoContactDescriptor)contactsIter.next();
+    Contact protoContact=presenceOpSet.createUnresolvedContact(contactDescriptor.contactAddress,contactDescriptor.persistentData,contactDescriptor.parentProtoGroup);
+    newMetaContact.addProtoContact(protoContact);
+  }
+  parentGroup.addMetaContact(newMetaContact);
+  logger.trace("Created meta contact: " + newMetaContact);
+}
