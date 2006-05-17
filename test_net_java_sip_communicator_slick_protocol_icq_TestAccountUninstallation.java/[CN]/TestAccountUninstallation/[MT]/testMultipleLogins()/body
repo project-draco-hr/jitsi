@@ -1,0 +1,20 @@
+{
+  fixture.provider.addRegistrationStateChangeListener(regEvtCollector);
+  String passwd=System.getProperty(IcqProtocolProviderSlick.TESTED_IMPL_PWD_PROP_NAME,null);
+  String uin=System.getProperty(IcqProtocolProviderSlick.TESTED_IMPL_ACCOUNT_ID_PROP_NAME,null);
+  IcqTesterAgent testerAgent=new IcqTesterAgent(uin);
+  testerAgent.register(passwd);
+  Object lock=new Object();
+synchronized (lock) {
+    try {
+      logger.debug("Giving the aim server time to notify for our arrival!");
+      lock.wait(5000);
+    }
+ catch (    Exception ex) {
+    }
+  }
+  testerAgent.unregister();
+  assertTrue("No event was dispatched",regEvtCollector.stateRecieved != null);
+  assertTrue("Event is not UNREGISTERED event",regEvtCollector.stateRecieved.equals(RegistrationState.UNREGISTERED));
+  assertTrue("No registration event notifying of Multiple logins dispatched ",regEvtCollector.eventReason == RegistrationStateChangeEvent.REASON_MULTIPLE_LOGINS);
+}
