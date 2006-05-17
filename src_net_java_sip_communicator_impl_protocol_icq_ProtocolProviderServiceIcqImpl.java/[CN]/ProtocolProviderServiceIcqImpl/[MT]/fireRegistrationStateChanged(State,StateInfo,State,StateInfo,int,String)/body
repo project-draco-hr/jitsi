@@ -1,5 +1,13 @@
 {
   RegistrationState oldRegistrationState=joustSimStateToRegistrationState(oldJoustSimState,oldJoustSimStateInfo);
   RegistrationState newRegistrationState=joustSimStateToRegistrationState(newJoustSimState,newJoustSimStateInfo);
+  if (newJoustSimStateInfo instanceof LoginFailureStateInfo) {
+    LoginFailureInfo loginFailer=((LoginFailureStateInfo)newJoustSimStateInfo).getLoginFailureInfo();
+    if (loginFailer instanceof AuthFailureInfo) {
+      int code=ConnectionClosedListener.convertAuthCodeToReasonCode((AuthFailureInfo)loginFailer);
+      reasonCode=ConnectionClosedListener.convertCodeToRegistrationStateChangeEvent(code);
+      reason=ConnectionClosedListener.convertCodeToStringReason(code);
+    }
+  }
   fireRegistrationStateChanged(oldRegistrationState,newRegistrationState,reasonCode,reason);
 }

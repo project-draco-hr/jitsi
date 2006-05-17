@@ -3,13 +3,26 @@
   State oldState=event.getOldState();
   AimConnection conn=event.getAimConnection();
   logger.debug("ICQ protocol provider " + getProtocolName() + " changed registration status from "+ oldState+ " to "+ newState);
+  int reasonCode=RegistrationStateChangeEvent.REASON_NOT_SPECIFIED;
+  String reasonStr=null;
   if (newState == State.ONLINE) {
     icbmService=conn.getIcbmService();
     icbmService.addIcbmListener(aimIcbmListener);
     conn.getInfoService().getOscarConnection().getSnacProcessor().getCmdFactoryMgr().getDefaultFactoryList().registerAll(new DefaultCmdFactory());
+    conn.getInfoService().getOscarConnection().getSnacProcessor().getFlapProcessor().addPacketListener(new ConnectionClosedListener(conn));
   }
- else   if (newState == State.DISCONNECTED || newState == State.FAILED) {
-    logger.debug("The aim Connection was disconnected!");
+ else   if (newState == State.DISCONNECTED) {
+    Service service=aimConnection.getBosService();
+    if (service != null) {
+      int discconectCode=service.getOscarConnection().getLastCloseCode();
+      reasonCode=ConnectionClosedListener.convertCodeToRegistrationStateChangeEvent(discconectCode);
+      reasonStr=ConnectionClosedListener.convertCodeToStringReason(discconectCode);
+      logger.debug("The aim Connection was disconnected! with reason : " + reasonStr);
+    }
+ else     logger.debug("The aim Connection was disconnected!");
   }
-  fireRegistrationStateChanged(oldState,event.getOldStateInfo(),newState,event.getNewStateInfo(),RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
+ else   if (newState == State.FAILED) {
+    logger.debug("The aim Connection failed! " + event.getNewStateInfo());
+  }
+  fireRegistrationStateChanged(oldState,event.getOldStateInfo(),newState,event.getNewStateInfo(),reasonCode,reasonStr);
 }
