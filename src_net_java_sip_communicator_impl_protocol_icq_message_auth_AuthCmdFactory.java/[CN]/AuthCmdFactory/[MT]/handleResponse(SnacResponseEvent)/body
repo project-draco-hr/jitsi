@@ -1,0 +1,23 @@
+{
+  if (snacResponseEvent.getSnacCommand() instanceof SsiDataModResponse) {
+    SsiDataModResponse dataModResponse=(SsiDataModResponse)snacResponseEvent.getSnacCommand();
+    int[] results=dataModResponse.getResults();
+    List items=((ItemsCmd)snacResponseEvent.getRequest().getCommand()).getItems();
+    for (int i=0; i < results.length; i++) {
+      int result=results[i];
+      if (result == SsiDataModResponse.RESULT_ICQ_AUTH_REQUIRED) {
+        SsiItem buddyItem=(SsiItem)items.get(i);
+        String uinToAskForAuth=buddyItem.getName();
+        AuthorizationRequest authRequest=authorizationHandler.createAuthorizationRequest(operationSetPresence.findContactByID(uinToAskForAuth));
+        aimConnection.getIcbmService().sendSnac(new AuthFutureCmd(uinToAskForAuth,authRequest.getReason()));
+        aimConnection.getIcbmService().sendSnac(new RequestAuthCmd(uinToAskForAuth,authRequest.getReason()));
+        Vector buddiesToBeAdded=new Vector();
+        BuddyAwaitingAuth newBuddy=new BuddyAwaitingAuth(buddyItem);
+        items.add(newBuddy);
+        CreateItemsCmd addCMD=new CreateItemsCmd(buddiesToBeAdded);
+        aimConnection.getIcbmService().sendSnac(addCMD);
+        return;
+      }
+    }
+  }
+}
