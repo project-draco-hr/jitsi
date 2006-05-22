@@ -1,0 +1,31 @@
+{
+  if ((e.getModifiers() & KeyEvent.CTRL_MASK) == KeyEvent.CTRL_MASK && (e.getKeyCode() == KeyEvent.VK_ENTER)) {
+    stopTyping();
+    JButton sendButton=chatPanel.getSendPanel().getSendButton();
+    sendButton.requestFocus();
+    sendButton.doClick();
+  }
+ else   if ((e.getModifiers() & KeyEvent.CTRL_MASK) == KeyEvent.CTRL_MASK && (e.getKeyCode() == KeyEvent.VK_Z)) {
+    if (undo.canUndo()) {
+      undo();
+    }
+  }
+ else   if ((e.getModifiers() & KeyEvent.CTRL_MASK) == KeyEvent.CTRL_MASK && (e.getKeyCode() == KeyEvent.VK_R)) {
+    if (undo.canRedo()) {
+      redo();
+    }
+  }
+ else {
+    if (typingState != OperationSetTypingNotifications.STATE_TYPING) {
+      typingTimer.setDelay(2 * 1000);
+      typingState=OperationSetTypingNotifications.STATE_TYPING;
+      chatPanel.getTnOperationSet().sendTypingNotification(chatPanel.getProtocolContact(),typingState);
+    }
+    if (!typingTimer.isRunning()) {
+      typingTimer.start();
+    }
+ else {
+      typingTimer.restart();
+    }
+  }
+}
