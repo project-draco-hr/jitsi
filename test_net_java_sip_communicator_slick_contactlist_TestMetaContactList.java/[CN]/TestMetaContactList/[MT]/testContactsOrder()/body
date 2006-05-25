@@ -1,9 +1,9 @@
 {
   assertContactsOrder(fixture.metaClService.getRoot());
   MclEventCollector evtCollector=new MclEventCollector();
-  fixture.metaClService.addContactListListener(evtCollector);
-  ((MockPersistentPresenceOperationSet)opSetPersPresence).changePresenceStatusForContact(MetaContactListServiceLick.mockContactToReorder,MockStatusEnum.MOCK_STATUS_100);
-  fixture.metaClService.removeContactListListener(evtCollector);
+  fixture.metaClService.addMetaContactListListener(evtCollector);
+  ((MockPersistentPresenceOperationSet)fixture.mockPresOpSet).changePresenceStatusForContact(MetaContactListServiceLick.mockContactToReorder,MockStatusEnum.MOCK_STATUS_100);
+  fixture.metaClService.removeMetaContactListListener(evtCollector);
   assertEquals("Number of evts dispatched after a contact changed its status",1,evtCollector.collectedMetaContactGroupEvents.size());
   MetaContactGroupEvent evt=(MetaContactGroupEvent)evtCollector.collectedMetaContactGroupEvents.remove(0);
   assertEquals("ID of the generated event",MetaContactGroupEvent.CHILD_CONTACTS_REORDERED,evt.getEventID());
@@ -11,10 +11,10 @@
   MetaContact theReorderedContact=fixture.metaClService.getRoot().getMetaContact(0);
   assertEquals(MetaContactListServiceLick.mockContactToReorder + " was not moved to the top of the list after being " + "assigned the highest possible presence status",MetaContactListServiceLick.mockContactToReorder.getDisplayName(),theReorderedContact.getDisplayName());
   assertContactsOrder(fixture.metaClService.getRoot());
-  ((MockPersistentPresenceOperationSet)opSetPersPresence).changePresenceStatusForContact(MetaContactListServiceLick.mockContactToReorder,MockStatusEnum.MOCK_STATUS_50);
-  fixture.metaClService.addContactListListener(evtCollector);
+  ((MockPersistentPresenceOperationSet)fixture.mockPresOpSet).changePresenceStatusForContact(MetaContactListServiceLick.mockContactToReorder,MockStatusEnum.MOCK_STATUS_50);
+  fixture.metaClService.addMetaContactListListener(evtCollector);
   fixture.metaClService.renameMetaContact(theReorderedContact,"zzzzzz");
-  fixture.metaClService.removeContactListListener(evtCollector);
+  fixture.metaClService.removeMetaContactListListener(evtCollector);
   assertEquals("Number of evts dispatched after a contact changed its " + "display name",1,evtCollector.collectedMetaContactGroupEvents.size());
   evt=(MetaContactGroupEvent)evtCollector.collectedMetaContactGroupEvents.remove(0);
   assertEquals("ID of the generated event",MetaContactGroupEvent.CHILD_CONTACTS_REORDERED,evt.getEventID());

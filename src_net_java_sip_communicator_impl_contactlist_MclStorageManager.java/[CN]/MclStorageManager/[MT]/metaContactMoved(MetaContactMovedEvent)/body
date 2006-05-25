@@ -1,0 +1,22 @@
+{
+  Element metaContactNode=findMetaContactNode(evt.getSourceMetaContact().getMetaUID());
+  Element newParentNode=findMetaContactGroupNode(evt.getNewParent().getMetaUID());
+  if (metaContactNode == null) {
+    logger.error("Save after metacontact moved. Contact not found: " + evt.getSourceMetaContact());
+    return;
+  }
+  if (newParentNode == null) {
+    logger.error("Save after metacontact moved. new parent not found: " + evt.getNewParent());
+    return;
+  }
+  metaContactNode.getParentNode().removeChild(metaContactNode);
+  updateParentsForMetaContactNode(metaContactNode,evt.getNewParent());
+  Element childContacts=XMLUtils.findChild(newParentNode,CHILD_CONTACTS_NODE_NAME);
+  childContacts.appendChild(metaContactNode);
+  try {
+    storeContactList();
+  }
+ catch (  IOException ex) {
+    logger.error("Writing CL failed after moving " + evt.getSourceMetaContact(),ex);
+  }
+}

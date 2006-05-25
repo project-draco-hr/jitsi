@@ -10,7 +10,12 @@
   }
   MetaContactGroup newParentGroup=findParentMetaContactGroup(newParentMetaContact);
   ContactGroup parentProtoGroup=resolveProtoPath(contact.getProtocolProvider(),(MetaContactGroupImpl)newParentGroup);
-  opSetPresence.moveContactToGroup(contact,parentProtoGroup);
+  if (contact.getParentContactGroup() != parentProtoGroup)   opSetPresence.moveContactToGroup(contact,parentProtoGroup);
   ((MetaContactImpl)newParentMetaContact).addProtoContact(contact);
   fireProtoContactEvent(contact,ProtoContactEvent.PROTO_CONTACT_MOVED,currentParentMetaContact,newParentMetaContact);
+  if (currentParentMetaContact.getContactCount() == 0) {
+    MetaContactGroupImpl parentMetaGroup=currentParentMetaContact.getParentGroup();
+    parentMetaGroup.removeMetaContact(currentParentMetaContact);
+    fireMetaContactEvent(currentParentMetaContact,parentMetaGroup,MetaContactEvent.META_CONTACT_REMOVED);
+  }
 }

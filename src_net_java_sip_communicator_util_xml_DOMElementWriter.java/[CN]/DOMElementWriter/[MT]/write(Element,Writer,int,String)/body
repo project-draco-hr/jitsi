@@ -1,0 +1,69 @@
+{
+  for (int i=0; i < indent; i++) {
+    out.write(indentWith);
+  }
+  out.write("<");
+  out.write(element.getTagName());
+  NamedNodeMap attrs=element.getAttributes();
+  for (int i=0; i < attrs.getLength(); i++) {
+    Attr attr=(Attr)attrs.item(i);
+    out.write(" ");
+    out.write(attr.getName());
+    out.write("=\"");
+    out.write(encode(attr.getValue()));
+    out.write("\"");
+  }
+  out.write(">");
+  boolean hasChildren=false;
+  NodeList children=element.getChildNodes();
+  for (int i=0; i < children.getLength(); i++) {
+    Node child=children.item(i);
+switch (child.getNodeType()) {
+case Node.ELEMENT_NODE:
+      if (!hasChildren) {
+        out.write(lSep);
+        hasChildren=true;
+      }
+    write((Element)child,out,indent + 1,indentWith);
+  break;
+case Node.TEXT_NODE:
+if (child.getNodeValue().indexOf(lSep) == -1) out.write(encode(child.getNodeValue()));
+break;
+case Node.COMMENT_NODE:
+out.write("<!--");
+out.write(encode(child.getNodeValue()));
+out.write("-->");
+break;
+case Node.CDATA_SECTION_NODE:
+out.write("<![CDATA[");
+out.write(encodedata(((Text)child).getData()));
+out.write("]]>");
+break;
+case Node.ENTITY_REFERENCE_NODE:
+out.write('&');
+out.write(child.getNodeName());
+out.write(';');
+break;
+case Node.PROCESSING_INSTRUCTION_NODE:
+out.write("<?");
+out.write(child.getNodeName());
+String data=child.getNodeValue();
+if (data != null && data.length() > 0) {
+out.write(' ');
+out.write(data);
+}
+out.write("?>");
+break;
+}
+}
+if (hasChildren) {
+for (int i=0; i < indent; i++) {
+out.write(indentWith);
+}
+}
+out.write("</");
+out.write(element.getTagName());
+out.write(">");
+out.write(lSep);
+out.flush();
+}

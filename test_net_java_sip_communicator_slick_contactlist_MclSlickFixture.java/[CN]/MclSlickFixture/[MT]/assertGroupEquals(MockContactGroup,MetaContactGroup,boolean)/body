@@ -1,0 +1,30 @@
+{
+  assertNotNull("Group " + expectedGroup.getGroupName() + " was "+ "returned by the MetaContactListService implementation "+ "but was not in the expected contact list.",actualGroup);
+  assertEquals("Group " + expectedGroup.getGroupName() + ",  number of member contacts: ",expectedGroup.countContacts(),actualGroup.countChildContacts());
+  if (!ignoreEmptyMetaGroups) {
+    assertEquals("Group " + expectedGroup.getGroupName() + ", numbber of subgroups: ",expectedGroup.countSubgroups(),actualGroup.countSubgroups());
+  }
+ else {
+    int emptyMetaGroups=0;
+    for (int i=0; i < actualGroup.countSubgroups(); i++) {
+      if (actualGroup.getMetaContactSubgroup(i).countContactGroups() == 0)       emptyMetaGroups++;
+    }
+    assertEquals("Group " + expectedGroup.getGroupName() + ", numbber of subgroups: ",expectedGroup.countSubgroups(),actualGroup.countSubgroups() - emptyMetaGroups);
+  }
+  Iterator expectedSubgroups=expectedGroup.subgroups();
+  while (expectedSubgroups.hasNext()) {
+    MockContactGroup expectedSubGroup=(MockContactGroup)expectedSubgroups.next();
+    MetaContactGroup actualSubGroup=actualGroup.getMetaContactSubgroup(expectedSubGroup.getGroupName());
+    assertGroupEquals(expectedSubGroup,actualSubGroup,ignoreEmptyMetaGroups);
+  }
+  Iterator actualContactsIter=actualGroup.getChildContacts();
+  while (actualContactsIter.hasNext()) {
+    MetaContact actualMetaContact=(MetaContact)actualContactsIter.next();
+    assertEquals("Number of protocol specific contacts in a MetaContact",1,actualMetaContact.getContactCount());
+    assertTrue("No contacts were encapsulated by MetaContact: " + actualMetaContact,actualMetaContact.getContacts().hasNext());
+    Contact actualProtoContact=(Contact)actualMetaContact.getContacts().next();
+    assertNotNull("getContactForProvider returned null for MockProvider",actualProtoContact);
+    Contact expectedProtoContact=expectedGroup.getContact(actualProtoContact.getAddress());
+    assertNotNull("Contact " + actualMetaContact.getDisplayName() + " was returned by "+ "the MetaContactListService implementation but was "+ "not in the expected contact list.",expectedProtoContact);
+  }
+}

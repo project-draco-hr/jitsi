@@ -1,0 +1,39 @@
+{
+  bundleContext=bc;
+  ServiceReference faServiceReference=bundleContext.getServiceReference(FileAccessService.class.getName());
+  faService=(FileAccessService)bundleContext.getService(faServiceReference);
+  ServiceReference confServiceRefs=bundleContext.getServiceReference(ConfigurationService.class.getName());
+  configurationService=(ConfigurationService)bundleContext.getService(confServiceRefs);
+  String fileName=configurationService.getString(FILE_NAME_PROPERTY);
+  if (fileName == null)   fileName=DEFAULT_FILE_NAME;
+  try {
+    contactlistFile=faService.getPrivatePersistentFile(fileName);
+    if (!contactlistFile.exists())     if (!contactlistFile.createNewFile())     throw new IOException("Failed to create file" + contactlistFile.getAbsolutePath());
+  }
+ catch (  Exception ex) {
+    logger.error("Failed to get a reference to the contact list file.",ex);
+    throw new IOException("Failed to get a reference to the contact " + "list file=" + fileName + ". error was:"+ ex.getMessage());
+  }
+  try {
+    DocumentBuilderFactory factory=DocumentBuilderFactory.newInstance();
+    DocumentBuilder builder=factory.newDocumentBuilder();
+    if (contactlistFile.length() == 0) {
+      contactListDocument=builder.newDocument();
+      initVirginDocument(mclServiceImpl,contactListDocument);
+      storeContactList();
+    }
+ else {
+      contactListDocument=builder.parse(contactlistFile);
+    }
+  }
+ catch (  SAXException ex) {
+    logger.error("Error parsing configuration file",ex);
+    throw new XMLException(ex.getMessage(),ex);
+  }
+catch (  ParserConfigurationException ex) {
+    logger.error("Error finding configuration for default parsers",ex);
+  }
+  mclServiceImpl.addMetaContactListListener(this);
+  this.mclServiceImpl=mclServiceImpl;
+  started=true;
+}

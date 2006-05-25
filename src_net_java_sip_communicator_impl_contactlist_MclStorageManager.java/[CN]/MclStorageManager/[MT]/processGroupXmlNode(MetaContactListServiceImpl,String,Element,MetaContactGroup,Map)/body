@@ -1,28 +1,34 @@
 {
-  String groupMetaUID=XMLUtils.getAttribute(groupNode,GROUP_UID_ATTR_NAME);
-  String groupDisplayName=XMLUtils.getAttribute(groupNode,GROUP_NAME_ATTR_NAME);
-  MetaContactGroupImpl currentMetaGroup=mclServiceImpl.loadStoredMetaContactGroup(parentGroup,groupMetaUID,groupDisplayName);
-  Node protoGroupsNode=XMLUtils.findChild(groupNode,PROTO_GROUPS_NODE_NAME);
-  NodeList protoGroups=protoGroupsNode.getChildNodes();
+  MetaContactGroupImpl currentMetaGroup=null;
   Map protoGroupsMap=new Hashtable();
-  for (int i=0; i < protoGroups.getLength(); i++) {
-    Node currentProtoGroupNode=protoGroups.item(i);
-    if (currentProtoGroupNode.getNodeType() != Node.ELEMENT_NODE)     continue;
-    String groupAccountID=XMLUtils.getAttribute(currentProtoGroupNode,ACCOUNT_ID_ATTR_NAME);
-    if (!accountID.equals(groupAccountID))     continue;
-    String protoGroupUID=XMLUtils.getAttribute(currentProtoGroupNode,UID_ATTR_NAME);
-    String parentProtoGroupUID=XMLUtils.getAttribute(currentProtoGroupNode,PARENT_PROTO_GROUP_UID_ATTR_NAME);
-    Element persistentDataNode=XMLUtils.findChild((Element)currentProtoGroupNode,PERSISTENT_DATA_NODE_NAME);
-    String persistentData="";
-    if (persistentDataNode != null) {
-      persistentData=XMLUtils.getText(persistentDataNode);
-    }
-    ContactGroup parentProtoGroup=null;
-    if (parentProtoGroups != null && parentProtoGroups.size() > 0)     parentProtoGroup=(ContactGroup)parentProtoGroups.get(parentProtoGroupUID);
-    ContactGroup newProtoGroup=mclServiceImpl.loadStoredContactGroup(currentMetaGroup,protoGroupUID,parentProtoGroup,persistentData,accountID);
-    protoGroupsMap.put(protoGroupUID,newProtoGroup);
+  if (parentGroup == null) {
+    currentMetaGroup=mclServiceImpl.rootMetaGroup;
   }
-  if (protoGroupsMap.size() == 0)   return;
+ else {
+    String groupMetaUID=XMLUtils.getAttribute(groupNode,GROUP_UID_ATTR_NAME);
+    String groupDisplayName=XMLUtils.getAttribute(groupNode,GROUP_NAME_ATTR_NAME);
+    currentMetaGroup=mclServiceImpl.loadStoredMetaContactGroup(parentGroup,groupMetaUID,groupDisplayName);
+    Node protoGroupsNode=XMLUtils.findChild(groupNode,PROTO_GROUPS_NODE_NAME);
+    NodeList protoGroups=protoGroupsNode.getChildNodes();
+    for (int i=0; i < protoGroups.getLength(); i++) {
+      Node currentProtoGroupNode=protoGroups.item(i);
+      if (currentProtoGroupNode.getNodeType() != Node.ELEMENT_NODE)       continue;
+      String groupAccountID=XMLUtils.getAttribute(currentProtoGroupNode,ACCOUNT_ID_ATTR_NAME);
+      if (!accountID.equals(groupAccountID))       continue;
+      String protoGroupUID=XMLUtils.getAttribute(currentProtoGroupNode,UID_ATTR_NAME);
+      String parentProtoGroupUID=XMLUtils.getAttribute(currentProtoGroupNode,PARENT_PROTO_GROUP_UID_ATTR_NAME);
+      Element persistentDataNode=XMLUtils.findChild((Element)currentProtoGroupNode,PERSISTENT_DATA_NODE_NAME);
+      String persistentData="";
+      if (persistentDataNode != null) {
+        persistentData=XMLUtils.getText(persistentDataNode);
+      }
+      ContactGroup parentProtoGroup=null;
+      if (parentProtoGroups != null && parentProtoGroups.size() > 0)       parentProtoGroup=(ContactGroup)parentProtoGroups.get(parentProtoGroupUID);
+      ContactGroup newProtoGroup=mclServiceImpl.loadStoredContactGroup(currentMetaGroup,protoGroupUID,parentProtoGroup,persistentData,accountID);
+      protoGroupsMap.put(protoGroupUID,newProtoGroup);
+    }
+    if (protoGroupsMap.size() == 0)     return;
+  }
   Node childContactsNode=XMLUtils.findChild(groupNode,CHILD_CONTACTS_NODE_NAME);
   NodeList childContacts=childContactsNode.getChildNodes();
   for (int i=0; i < childContacts.getLength(); i++) {
@@ -32,13 +38,15 @@
     Element displayNameNode=XMLUtils.findChild((Element)currentMetaContactNode,META_CONTACT_DISPLAY_NAME_NODE_NAME);
     String displayName=XMLUtils.getText(displayNameNode);
     List protoContacts=extractProtoContacts((Element)currentMetaContactNode,accountID,protoGroupsMap);
+    if (protoContacts.size() < 1)     continue;
     mclServiceImpl.loadStoredMetaContact(currentMetaGroup,uid,displayName,protoContacts,accountID);
   }
   Node subgroupsNode=XMLUtils.findChild(groupNode,SUBGROUPS_NODE_NAME);
   if (subgroupsNode == null)   return;
-  for (int i=0; i < childContacts.getLength(); i++) {
-    Node currentGroupNode=childContacts.item(i);
+  NodeList subgroups=subgroupsNode.getChildNodes();
+  for (int i=0; i < subgroups.getLength(); i++) {
+    Node currentGroupNode=subgroups.item(i);
     if (currentGroupNode.getNodeType() != Node.ELEMENT_NODE || !currentGroupNode.getNodeName().equals(GROUP_NODE_NAME))     continue;
-    processGroupXmlNode(mclServiceImpl,accountID,(Element)currentGroupNode,parentGroup,protoGroupsMap);
+    processGroupXmlNode(mclServiceImpl,accountID,(Element)currentGroupNode,currentMetaGroup,protoGroupsMap);
   }
 }

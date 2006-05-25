@@ -1,0 +1,17 @@
+{
+  MetaContactGroup parentGroup=evt.getSourceMetaContactGroup().getParentMetaContactGroup();
+  Element parentGroupNode=findMetaContactGroupNode(parentGroup.getMetaUID());
+  if (parentGroupNode == null) {
+    logger.error("Couldn't find parent of a newly added group: " + parentGroup);
+    return;
+  }
+  Element newGroupElement=createMetaContactGroupNode(evt.getSourceMetaContactGroup());
+  Element subgroupsNode=XMLUtils.findChild(parentGroupNode,SUBGROUPS_NODE_NAME);
+  subgroupsNode.appendChild(newGroupElement);
+  try {
+    storeContactList();
+  }
+ catch (  IOException ex) {
+    logger.error("Writing CL failed after adding contact " + evt.getSourceMetaContactGroup(),ex);
+  }
+}

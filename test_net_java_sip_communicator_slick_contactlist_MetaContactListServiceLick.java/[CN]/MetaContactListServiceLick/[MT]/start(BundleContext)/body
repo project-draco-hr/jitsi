@@ -4,10 +4,17 @@
   Hashtable slickServiceProperties=new Hashtable();
   slickServiceProperties.put("service.pid",getName());
   logger.debug("Service  " + getClass().getName() + " [  STARTED ]");
-  initMockProvider(context);
+  MockProvider provider=new MockProvider("SlickMockUser");
+  fillMockContactList(provider);
+  MclSlickFixture.mockPrServiceRegistration=registerMockProviderService(provider);
+  MclSlickFixture.mockProvider=provider;
+  Map supportedOperationSets=MclSlickFixture.mockProvider.getSupportedOperationSets();
+  MclSlickFixture.mockPresOpSet=(MockPersistentPresenceOperationSet)supportedOperationSets.get(OperationSetPersistentPresence.class.getName());
   addTestSuite(TestMetaContactList.class);
   addTestSuite(TestMetaContact.class);
   addTestSuite(TestMetaContactGroup.class);
+  addTest(TestSupportForMultipleProviders.suite());
+  addTest(TestMetaContactListPersistence.suite());
   context.registerService(getClass().getName(),this,slickServiceProperties);
   logger.debug("Service  " + getClass().getName() + " [REGISTERED]");
 }
