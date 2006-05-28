@@ -1,0 +1,27 @@
+{
+  logger.trace("Subscription moved: " + evt);
+  if (isContactInEventIgnoreList(evt.getSourceContact().getAddress(),evt.getSourceProvider())) {
+    return;
+  }
+  MetaContactGroupImpl oldParentGroup=(MetaContactGroupImpl)findMetaContactGroupByContactGroup(evt.getOldParentGroup());
+  MetaContactGroupImpl newParentGroup=(MetaContactGroupImpl)findMetaContactGroupByContactGroup(evt.getNewParentGroup());
+  if (newParentGroup == null || oldParentGroup == null) {
+    logger.error("Received a subscription for a group that we " + "hadn't seen before! ");
+    return;
+  }
+  MetaContactImpl currentMetaContact=(MetaContactImpl)findMetaContactByContact(evt.getSourceContact());
+  if (currentMetaContact.getContactCount() == 1) {
+    oldParentGroup.removeMetaContact(currentMetaContact);
+    newParentGroup.addMetaContact(currentMetaContact);
+    fireMetaContactEvent(new MetaContactMovedEvent(currentMetaContact,oldParentGroup,newParentGroup));
+  }
+ else {
+    MetaContactImpl newMetaContact=new MetaContactImpl();
+    newMetaContact.setDisplayName(evt.getSourceContact().getDisplayName());
+    newParentGroup.addMetaContact(newMetaContact);
+    fireMetaContactEvent(newMetaContact,newParentGroup,MetaContactEvent.META_CONTACT_ADDED);
+    currentMetaContact.removeProtoContact(evt.getSourceContact());
+    newMetaContact.addProtoContact(evt.getSourceContact());
+    fireProtoContactEvent(evt.getSourceContact(),ProtoContactEvent.PROTO_CONTACT_MOVED,currentMetaContact,newMetaContact);
+  }
+}
