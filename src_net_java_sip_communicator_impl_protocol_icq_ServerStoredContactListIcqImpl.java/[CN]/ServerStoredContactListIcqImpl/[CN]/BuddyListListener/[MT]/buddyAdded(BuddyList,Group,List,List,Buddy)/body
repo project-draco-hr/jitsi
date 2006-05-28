@@ -1,5 +1,14 @@
 {
-  ContactIcqImpl newContact=new ContactIcqImpl(buddy,ServerStoredContactListIcqImpl.this,true);
+  ContactGroupIcqImpl oldParentGroup=null;
+  ContactIcqImpl newContact=findContactByScreenName(buddy.getScreenname().getFormatted());
+  if (newContact == null) {
+    newContact=new ContactIcqImpl(buddy,ServerStoredContactListIcqImpl.this,true);
+  }
+ else {
+    oldParentGroup=findContactGroup(newContact);
+    newContact.setJoustSimBuddy(buddy);
+    newContact.setPersistent(true);
+  }
   ContactGroupIcqImpl parentGroup=findContactGroup(joustSimGroup);
   if (parentGroup == null) {
     logger.debug("no parent group " + joustSimGroup + " found for buddy: "+ buddy);
@@ -21,5 +30,10 @@
     parentGroup.addContact(insertPos,newContact);
   }
   buddy.addBuddyListener(jsimBuddyListener);
-  fireContactAdded(parentGroup,newContact,insertPos);
+  if (oldParentGroup == null) {
+    fireContactAdded(parentGroup,newContact,insertPos);
+  }
+ else {
+    fireContactMoved(oldParentGroup,parentGroup,newContact,insertPos);
+  }
 }
