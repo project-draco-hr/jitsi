@@ -1,5 +1,7 @@
 {
   super();
+  this.chatPanel=chatPanel;
+  this.rightButtonMenu=new ChatRightButtonMenu(chatPanel.getChatWindow());
   this.document=(HTMLDocument)editorKit.createDefaultDocument();
   this.chatEditorPane.setContentType("text/html");
   this.chatEditorPane.setEditable(false);
@@ -9,12 +11,18 @@
   Constants.loadStyle(document.getStyleSheet());
   this.initEditor();
   this.chatEditorPane.addHyperlinkListener(this);
+  this.chatEditorPane.addMouseListener(this);
   this.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
   this.setWheelScrollingEnabled(true);
   this.getViewport().add(chatEditorPane);
   this.getVerticalScrollBar().setUnitIncrement(30);
   ToolTipManager.sharedInstance().registerComponent(chatEditorPane);
-  this.hrefItem.setLineWrap(true);
-  this.linkPopup.add(hrefItem);
-  this.hrefItem.setSize(new Dimension(hrefPopupMaxWidth,hrefPopupInitialHeight));
+  copyLinkItem.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      StringSelection stringSelection=new StringSelection(currentHref);
+      Clipboard clipboard=Toolkit.getDefaultToolkit().getSystemClipboard();
+      clipboard.setContents(stringSelection,ChatConversationPanel.this);
+    }
+  }
+);
 }
