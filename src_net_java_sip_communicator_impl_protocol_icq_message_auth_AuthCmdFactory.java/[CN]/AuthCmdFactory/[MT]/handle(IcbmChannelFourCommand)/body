@@ -1,0 +1,26 @@
+{
+  int messageType=messageCommand.getMessageType();
+  String uin=String.valueOf(messageCommand.getSender());
+  Contact srcContact=operationSetPresence.findContactByID(uin);
+  if (srcContact == null)   srcContact=operationSetPresence.createVolatileContact(uin);
+  if (messageType == IcbmChannelFourCommand.MTYPE_AUTHREQ) {
+    AuthorizationRequest authRequest=new AuthorizationRequest();
+    authRequest.setReason(messageCommand.getReason());
+    AuthorizationResponse authResponse=authorizationHandler.processAuthorisationRequest(authRequest,srcContact);
+    if (authResponse.getResponseCode() == AuthorizationResponse.ACCEPT) {
+      aimConnection.getInfoService().sendSnac(new AuthReplyCmd(String.valueOf(icqProvider.getAccountID().getAccountUserID()),authResponse.getReason(),true));
+    }
+ else     if (authResponse.getResponseCode() == AuthorizationResponse.REJECT) {
+      aimConnection.getInfoService().sendSnac(new AuthReplyCmd(String.valueOf(icqProvider.getAccountID().getAccountUserID()),authResponse.getReason(),false));
+    }
+  }
+ else   if (messageType == IcbmChannelFourCommand.MTYPE_AUTHDENY) {
+    AuthorizationResponse authResponse=new AuthorizationResponse(AuthorizationResponse.REJECT,messageCommand.getReason());
+    authorizationHandler.processAuthorizationResponse(authResponse,srcContact);
+  }
+ else   if (messageType == IcbmChannelFourCommand.MTYPE_AUTHOK) {
+    AuthorizationResponse authResponse=new AuthorizationResponse(AuthorizationResponse.ACCEPT,messageCommand.getReason());
+    authorizationHandler.processAuthorizationResponse(authResponse,srcContact);
+  }
+  return messageCommand;
+}
