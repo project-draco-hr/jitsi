@@ -1,7 +1,7 @@
 {
-  super(communicator.getMainFrame(),Messages.getString("warning"));
+  super(c.getMainFrame(),Messages.getString("warning"));
   this.bc=context;
-  this.communicator=communicator;
+  this.communicator=c;
   this.loginManager=loginManager;
   this.continueButton.addActionListener(this);
   this.exitButton.addActionListener(this);
@@ -17,14 +17,13 @@
   this.setDefaultCloseOperation(JDialog.EXIT_ON_CLOSE);
   this.addWindowListener(new WindowAdapter(){
     public void windowClosing(    WindowEvent e){
-      try {
-        bc.getBundle(0).stop();
-      }
- catch (      BundleException ex) {
-        logger.error("Failed to gently shutdown Oscar",ex);
-      }
-      System.exit(0);
+      dispose();
+      communicator.showCommunicator(true);
+      SwingUtilities.invokeLater(new RunLogin());
     }
   }
 );
+  getRootPane().getActionMap().put("close",new CloseAction());
+  InputMap imap=this.getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+  imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0),"close");
 }
