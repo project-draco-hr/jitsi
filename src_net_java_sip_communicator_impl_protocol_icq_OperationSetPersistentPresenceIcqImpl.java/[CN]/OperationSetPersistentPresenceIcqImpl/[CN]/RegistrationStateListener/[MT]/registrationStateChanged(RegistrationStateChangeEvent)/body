@@ -7,4 +7,21 @@
     icqProvider.getAimConnection().getBuddyService().addBuddyListener(joustSimBuddySerListener);
     icqProvider.getAimConnection().getBuddyInfoManager().addGlobalBuddyInfoListener(new GlobalBuddyInfoListener());
   }
+ else   if (evt.getNewState() == RegistrationState.UNREGISTERED || evt.getNewState() == RegistrationState.AUTHENTICATION_FAILED || evt.getNewState() == RegistrationState.CONNECTION_FAILED) {
+    long oldStatus=currentIcqStatus;
+    currentIcqStatus=-1;
+    if (oldStatus != -1)     fireProviderPresenceStatusChangeEvent(oldStatus,currentIcqStatus);
+    Iterator groupsIter=getServerStoredContactListRoot().subgroups();
+    while (groupsIter.hasNext()) {
+      ContactGroupIcqImpl group=(ContactGroupIcqImpl)groupsIter.next();
+      Iterator contactsIter=group.contacts();
+      while (contactsIter.hasNext()) {
+        ContactIcqImpl contact=(ContactIcqImpl)contactsIter.next();
+        PresenceStatus oldContactStatus=contact.getPresenceStatus();
+        if (!oldContactStatus.isOnline())         continue;
+        contact.updatePresenceStatus(IcqStatusEnum.OFFLINE);
+        fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldContactStatus,IcqStatusEnum.OFFLINE);
+      }
+    }
+  }
 }
