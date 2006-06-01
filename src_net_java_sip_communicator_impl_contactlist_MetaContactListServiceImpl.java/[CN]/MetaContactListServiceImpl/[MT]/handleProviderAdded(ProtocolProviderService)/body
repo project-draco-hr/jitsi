@@ -3,7 +3,12 @@
   OperationSetPersistentPresence opSetPersPresence=(OperationSetPersistentPresence)provider.getSupportedOperationSets().get(OperationSetPersistentPresence.class.getName());
   this.currentlyInstalledProviders.put(provider.getAccountID().getAccountUID(),provider);
   if (opSetPersPresence != null) {
-    storageManager.extractContactsForAccount(provider.getAccountID().getAccountUID());
+    try {
+      storageManager.extractContactsForAccount(provider.getAccountID().getAccountUID());
+    }
+ catch (    XMLException exc) {
+      logger.error("Failed to load contacts for account " + provider.getAccountID().getAccountUID(),exc);
+    }
     synchronizeOpSetWithLocalContactList(opSetPersPresence);
   }
  else {
