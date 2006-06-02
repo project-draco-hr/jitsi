@@ -8,10 +8,25 @@ synchronized (subEvtCollector) {
     operationSetPresence.removeSubscriptionListener(subEvtCollector);
   }
   assertEquals("Subscription event dispatching failed.",1,subEvtCollector.collectedEvents.size());
-  SubscriptionEvent subEvt=(SubscriptionEvent)subEvtCollector.collectedEvents.get(0);
-  assertEquals("SubscriptionEvent Source:",fixture.testerAgent.getIcqUIN(),((Contact)subEvt.getSource()).getAddress());
-  assertEquals("SubscriptionEvent Source Contact:",fixture.testerAgent.getIcqUIN(),subEvt.getSourceContact().getAddress());
-  assertSame("SubscriptionEvent Source Provider:",fixture.provider,subEvt.getSourceProvider());
+  EventObject evt=(EventObject)subEvtCollector.collectedEvents.get(0);
+  Object source=null;
+  Contact srcContact=null;
+  ProtocolProviderService srcProvider=null;
+  if (evt instanceof SubscriptionEvent) {
+    SubscriptionEvent subEvt=(SubscriptionEvent)evt;
+    source=subEvt.getSource();
+    srcContact=subEvt.getSourceContact();
+    srcProvider=subEvt.getSourceProvider();
+  }
+ else   if (evt instanceof SubscriptionMovedEvent) {
+    SubscriptionMovedEvent mvEvt=(SubscriptionMovedEvent)evt;
+    source=mvEvt.getSource();
+    srcContact=mvEvt.getSourceContact();
+    srcProvider=mvEvt.getSourceProvider();
+  }
+  assertEquals("SubscriptionEvent Source:",fixture.testerAgent.getIcqUIN(),((Contact)source).getAddress());
+  assertEquals("SubscriptionEvent Source Contact:",fixture.testerAgent.getIcqUIN(),srcContact.getAddress());
+  assertSame("SubscriptionEvent Source Provider:",fixture.provider,srcProvider);
   subEvtCollector.collectedEvents.clear();
   logger.debug("Testing presence notifications.");
   IcqStatusEnum testerAgentOldStatus=fixture.testerAgent.getPresneceStatus();
