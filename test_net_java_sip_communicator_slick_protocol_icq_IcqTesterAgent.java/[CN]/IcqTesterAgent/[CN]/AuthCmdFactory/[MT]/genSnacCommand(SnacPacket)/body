@@ -1,17 +1,19 @@
 {
-  if (AbstractIcbm.getIcbmChannel(packet) == CHANNEL_AUTH) {
-    AuthOldMsgCmd messageCommand=new AuthOldMsgCmd(packet);
-    int messageType=messageCommand.messageType;
-    if (messageType == AuthOldMsgCmd.MTYPE_AUTHREQ) {
-      requestReasonStr=messageCommand.reason;
-      logger.trace("sending authorization " + ACCEPT);
-      conn.sendSnac(new AuthReplyCmd(String.valueOf(messageCommand.sender),responseReasonStr,ACCEPT));
-    }
- else     if (messageType == AuthOldMsgCmd.MTYPE_AUTHDENY) {
-    }
- else     if (messageType == AuthOldMsgCmd.MTYPE_AUTHOK) {
-    }
- else     return messageCommand;
+  int command=packet.getCommand();
+  if (command == 25) {
+    RequestAuthCmd cmd=new RequestAuthCmd(packet);
+    requestReasonStr=cmd.reason;
+    System.out.println("sending authorization " + ACCEPT);
+    logger.trace("sending authorization " + ACCEPT);
+    conn.sendSnac(new AuthReplyCmd(String.valueOf(cmd.uin),responseReasonStr,ACCEPT));
+    return cmd;
+  }
+ else   if (command == 26) {
+    AuthReplyCmd cmd=new AuthReplyCmd(packet);
+    System.out.println("cmd " + cmd);
+    System.out.println("is accepted " + cmd.accepted);
+    System.out.println("reason " + cmd.reason);
+    return cmd;
   }
   return super.genSnacCommand(packet);
 }
