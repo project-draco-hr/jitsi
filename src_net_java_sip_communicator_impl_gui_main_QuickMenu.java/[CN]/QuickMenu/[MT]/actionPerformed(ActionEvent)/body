@@ -8,14 +8,25 @@
     mainFrame.getConfigFrame().setVisible(true);
   }
  else   if (buttonName.equals("search")) {
-    ContactListModel listModel=(ContactListModel)mainFrame.getTabbedPane().getContactListPanel().getContactList().getModel();
+    ContactList contactList=mainFrame.getTabbedPane().getContactListPanel().getContactList();
+    ContactListModel listModel=(ContactListModel)contactList.getModel();
     if (listModel.showOffline()) {
       listModel.setShowOffline(false);
       listModel.removeOfflineContacts();
     }
  else {
+      int currentlySelectedIndex=contactList.getSelectedIndex();
+      Object selectedObject=listModel.getElementAt(currentlySelectedIndex);
       listModel.setShowOffline(true);
       listModel.addOfflineContacts();
+      if (selectedObject != null) {
+        if (selectedObject instanceof MetaContact) {
+          contactList.setSelectedIndex(listModel.indexOf((MetaContact)selectedObject));
+        }
+ else {
+          contactList.setSelectedIndex(listModel.indexOf((MetaContactGroup)selectedObject));
+        }
+      }
     }
   }
  else   if (buttonName.equals("info")) {
