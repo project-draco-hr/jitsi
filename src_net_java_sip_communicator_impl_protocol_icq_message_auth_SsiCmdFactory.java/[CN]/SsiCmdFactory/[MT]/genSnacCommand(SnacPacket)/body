@@ -18,12 +18,10 @@
     authRequest.setReason(cmd.getReason());
     Contact srcContact=getContact(cmd.getSender());
     AuthorizationResponse authResponse=authorizationHandler.processAuthorisationRequest(authRequest,srcContact);
-    if (authResponse.getResponseCode() == AuthorizationResponse.ACCEPT) {
-      aimConnection.getInfoService().sendSnac(new AuthReplyCmd(String.valueOf(icqProvider.getAccountID().getAccountUserID()),authResponse.getReason(),true));
+    if (authResponse.getResponseCode() == AuthorizationResponse.IGNORE) {
+      return cmd;
     }
- else     if (authResponse.getResponseCode() == AuthorizationResponse.REJECT) {
-      aimConnection.getInfoService().sendSnac(new AuthReplyCmd(String.valueOf(icqProvider.getAccountID().getAccountUserID()),authResponse.getReason(),false));
-    }
+    aimConnection.getInfoService().sendSnac(new AuthReplyCmd(cmd.getSender(),authResponse.getReason(),authResponse.getResponseCode() == AuthorizationResponse.ACCEPT));
     return cmd;
   }
   return super.genSnacCommand(packet);
