@@ -1,0 +1,25 @@
+{
+  logger.debug("Will add buddy : " + screenname);
+  MutableBuddyList joustSimBuddyList=(MutableBuddyList)conn.getSsiService().getBuddyList();
+  LayoutEventCollector evtCollector=new LayoutEventCollector();
+  joustSimBuddyList.addLayoutListener(evtCollector);
+  List grList=joustSimBuddyList.getGroups();
+  Iterator iter=grList.iterator();
+  while (iter.hasNext()) {
+    MutableGroup item=(MutableGroup)iter.next();
+    logger.debug("group : " + item);
+    List bs=item.getBuddiesCopy();
+    Iterator iter1=bs.iterator();
+    while (iter1.hasNext()) {
+      Object b=(Object)iter1.next();
+      logger.debug("buddy : " + b);
+    }
+  }
+  if (grList.size() < 1) {
+    logger.debug("No groups! Will stop now");
+    return;
+  }
+  ((MutableGroup)grList.get(0)).addBuddy(screenname);
+  evtCollector.waitForANewBuddy(10000);
+  joustSimBuddyList.removeLayoutListener(evtCollector);
+}
