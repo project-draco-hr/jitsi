@@ -1,8 +1,6 @@
 {
   logger.debug("Will add buddy : " + screenname);
   MutableBuddyList joustSimBuddyList=(MutableBuddyList)conn.getSsiService().getBuddyList();
-  LayoutEventCollector evtCollector=new LayoutEventCollector();
-  joustSimBuddyList.addLayoutListener(evtCollector);
   List grList=joustSimBuddyList.getGroups();
   Iterator iter=grList.iterator();
   while (iter.hasNext()) {
@@ -20,6 +18,12 @@
     return;
   }
   ((MutableGroup)grList.get(0)).addBuddy(screenname);
-  evtCollector.waitForANewBuddy(10000);
-  joustSimBuddyList.removeLayoutListener(evtCollector);
+  Object lock=new Object();
+synchronized (lock) {
+    try {
+      lock.wait(5000);
+    }
+ catch (    Exception ex) {
+    }
+  }
 }
