@@ -1,33 +1,44 @@
 {
   long eventTimestamp=e.getWhen();
   String keyChar=String.valueOf(e.getKeyChar());
-  if ((lastTypedTimestamp - eventTimestamp) > 1000) {
-    keyBuffer.delete(0,keyBuffer.length() - 1);
+  if (e.getKeyChar() == ' ') {
+    closeGroup();
   }
-  this.lastTypedTimestamp=eventTimestamp;
-  this.keyBuffer.append(keyChar);
-  boolean selectedSameLetterContact=false;
-  int selectedIndex=this.contactList.getSelectedIndex();
-  if (selectedIndex != -1) {
-    Object selectedObject=this.contactList.getSelectedValue();
-    if (selectedObject instanceof MetaContact) {
-      String selectedContactName=((MetaContact)selectedObject).getDisplayName();
-      if (selectedContactName != null) {
-        selectedSameLetterContact=selectedContactName.substring(0,1).equalsIgnoreCase(keyBuffer.toString());
-      }
-    }
+ else   if (e.getKeyChar() == '+') {
+    openGroup();
   }
-  int contactIndex=-1;
-  if (lastTypedKey != keyChar || !selectedSameLetterContact) {
-    contactIndex=this.contactList.getNextMatch(keyBuffer.toString(),0,Position.Bias.Forward);
+ else   if (e.getKeyChar() == '-') {
+    closeGroup();
   }
  else {
-    contactIndex=this.contactList.getNextMatch(keyBuffer.toString(),selectedIndex + 1,Position.Bias.Forward);
+    if ((lastTypedTimestamp - eventTimestamp) > 1000) {
+      keyBuffer.delete(0,keyBuffer.length() - 1);
+    }
+    this.lastTypedTimestamp=eventTimestamp;
+    this.keyBuffer.append(keyChar);
+    boolean selectedSameLetterContact=false;
+    int selectedIndex=this.contactList.getSelectedIndex();
+    if (selectedIndex != -1) {
+      Object selectedObject=this.contactList.getSelectedValue();
+      if (selectedObject instanceof MetaContact) {
+        String selectedContactName=((MetaContact)selectedObject).getDisplayName();
+        if (selectedContactName != null) {
+          selectedSameLetterContact=selectedContactName.substring(0,1).equalsIgnoreCase(keyBuffer.toString());
+        }
+      }
+    }
+    int contactIndex=-1;
+    if (lastTypedKey != keyChar || !selectedSameLetterContact) {
+      contactIndex=this.contactList.getNextMatch(keyBuffer.toString(),0,Position.Bias.Forward);
+    }
+ else {
+      contactIndex=this.contactList.getNextMatch(keyBuffer.toString(),selectedIndex + 1,Position.Bias.Forward);
+    }
+    int currentlySelectedIndex=this.contactList.getSelectedIndex();
+    if (currentlySelectedIndex != contactIndex && contactIndex != -1) {
+      this.contactList.setSelectedIndex(contactIndex);
+    }
+    this.contactList.ensureIndexIsVisible(currentlySelectedIndex);
+    this.lastTypedKey=keyChar;
   }
-  int currentlySelectedIndex=this.contactList.getSelectedIndex();
-  if (currentlySelectedIndex != contactIndex && contactIndex != -1) {
-    this.contactList.setSelectedIndex(contactIndex);
-  }
-  this.contactList.ensureIndexIsVisible(currentlySelectedIndex);
-  this.lastTypedKey=keyChar;
 }
