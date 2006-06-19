@@ -1,18 +1,20 @@
 {
-  MetaContact metaContact=mainFrame.getContactList().findMetaContactByContact(evt.getSourceContact());
-  PresenceStatus contactStatus=((ContactListModel)this.contactList.getModel()).getMetaContactStatus(metaContact);
   Contact protocolContact=evt.getSourceContact();
+  Date date=evt.getTimestamp();
+  Message message=evt.getSourceMessage();
+  MetaContact metaContact=mainFrame.getContactList().findMetaContactByContact(protocolContact);
+  PresenceStatus contactStatus=((ContactListModel)this.contactList.getModel()).getMetaContactStatus(metaContact);
   if (!Constants.TABBED_CHAT_WINDOW) {
     if (contactMsgWindows.containsKey(metaContact)) {
       ChatWindow msgWindow=(ChatWindow)contactMsgWindows.get(metaContact);
-      msgWindow.getCurrentChatPanel().processMessage(evt.getSourceContact().getDisplayName(),evt.getTimestamp(),Constants.INCOMING_MESSAGE,evt.getSourceMessage().getContent());
+      msgWindow.getCurrentChatPanel().processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
       msgWindow.setVisible(true);
     }
  else {
       ChatWindow msgWindow=new ChatWindow(mainFrame);
       contactMsgWindows.put(metaContact,msgWindow);
       msgWindow.addChat(metaContact,contactStatus,protocolContact);
-      msgWindow.getCurrentChatPanel().processMessage(evt.getSourceContact().getDisplayName(),evt.getTimestamp(),Constants.INCOMING_MESSAGE,evt.getSourceMessage().getContent());
+      msgWindow.getCurrentChatPanel().processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
       msgWindow.pack();
       msgWindow.setVisible(true);
     }
@@ -31,13 +33,13 @@
     ChatPanel chatPanel;
     if (contactTabsTable.get(metaContact.getMetaUID()) == null) {
       chatPanel=tabbedChatWindow.addChatTab(metaContact,contactStatus,protocolContact);
-      chatPanel.processMessage(evt.getSourceContact().getDisplayName(),evt.getTimestamp(),Constants.INCOMING_MESSAGE,evt.getSourceMessage().getContent());
+      chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
       tabbedChatWindow.setVisible(true);
       tabbedChatWindow.getCurrentChatPanel().requestFocusInWriteArea();
     }
  else {
       chatPanel=tabbedChatWindow.getChatPanel(metaContact);
-      chatPanel.processMessage(evt.getSourceContact().getDisplayName(),evt.getTimestamp(),Constants.INCOMING_MESSAGE,evt.getSourceMessage().getContent());
+      chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
       tabbedChatWindow.setVisible(true);
     }
     if (tabbedChatWindow.getTabCount() > 1) {
