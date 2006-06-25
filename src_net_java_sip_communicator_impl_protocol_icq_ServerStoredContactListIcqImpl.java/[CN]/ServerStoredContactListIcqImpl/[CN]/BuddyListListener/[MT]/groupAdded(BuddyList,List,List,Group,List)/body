@@ -4,6 +4,8 @@
   ContactGroupIcqImpl newGroup=findContactGroup(group.getName());
   if (newGroup == null) {
     newGroup=new ContactGroupIcqImpl((MutableGroup)group,buddies,ServerStoredContactListIcqImpl.this,true);
+    rootGroup.addSubGroup(newGroup);
+    fireGroupEvent(newGroup,ServerStoredGroupEvent.GROUP_CREATED_EVENT);
   }
  else {
     List newContacts=new ArrayList();
@@ -23,18 +25,5 @@
     }
   }
   for (int i=0; i < buddies.size(); i++)   ((Buddy)buddies.get(i)).addBuddyListener(jsimBuddyListener);
-  int groupIndex=newItems.indexOf(group);
-  int insertPos=0;
-  if (groupIndex == 0) {
-    rootGroup.addSubGroup(insertPos,newGroup);
-  }
- else {
-    for (; groupIndex >= 0; groupIndex--) {
-      int prevContactGroupIndex=findContactGroupIndex((Group)newItems.get(groupIndex));
-      if (prevContactGroupIndex != -1)       insertPos=prevContactGroupIndex + 1;
-    }
-    rootGroup.addSubGroup(insertPos,newGroup);
-  }
   group.addGroupListener(jsimGroupChangeListener);
-  fireGroupEvent(newGroup,ServerStoredGroupEvent.GROUP_CREATED_EVENT);
 }
