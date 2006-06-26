@@ -1,15 +1,22 @@
 {
-  this.sendFileItem.setEnabled(false);
   this.moveToMenu.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.GROUPS_16x16_ICON)));
   this.addSubcontactMenu.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.ADD_CONTACT_16x16_ICON)));
-  ArrayList providers=this.mainFrame.getProtocolProviders();
-  for (int i=0; i < providers.size(); i++) {
-    ProtocolProviderService pps=(ProtocolProviderService)providers.get(i);
+  Iterator providers=this.mainFrame.getProtocolProviders();
+  while (providers.hasNext()) {
+    ProtocolProviderService pps=(ProtocolProviderService)providers.next();
     String protocolName=pps.getProtocolName();
     JMenuItem menuItem=new JMenuItem(pps.getAccountID().getAccountUserID(),new ImageIcon(Constants.getProtocolIcon(protocolName)));
     menuItem.setName(protocolName);
     menuItem.addActionListener(this);
     this.addSubcontactMenu.add(menuItem);
+  }
+  Iterator groups=this.mainFrame.getAllGroups();
+  while (groups.hasNext()) {
+    MetaContactGroup group=(MetaContactGroup)groups.next();
+    JMenuItem menuItem=new JMenuItem(group.getGroupName());
+    menuItem.setName(group.getMetaUID());
+    menuItem.addActionListener(this);
+    this.moveToMenu.add(menuItem);
   }
   this.add(sendMessageItem);
   this.add(sendFileItem);
@@ -38,9 +45,7 @@
   this.viewHistoryItem.addActionListener(this);
   this.userInfoItem.addActionListener(this);
   this.sendFileItem.setEnabled(false);
-  this.moveToMenu.setEnabled(false);
   this.removeContactItem.setEnabled(false);
-  this.renameContactItem.setEnabled(false);
   this.viewHistoryItem.setEnabled(false);
   this.userInfoItem.setEnabled(false);
 }

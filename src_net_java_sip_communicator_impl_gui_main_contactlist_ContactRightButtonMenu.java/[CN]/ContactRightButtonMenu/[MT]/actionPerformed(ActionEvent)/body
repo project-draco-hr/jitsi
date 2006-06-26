@@ -2,7 +2,17 @@
   JMenuItem menuItem=(JMenuItem)e.getSource();
   String itemName=menuItem.getName();
   String itemText=menuItem.getText();
-  if (itemName.equalsIgnoreCase("sendMessage")) {
+  if (mainFrame.getProtocolProviderForAccount(itemText) != null) {
+    ProtocolProviderService pps=mainFrame.getProtocolProviderForAccount(itemText);
+    AddContactDialog dialog=new AddContactDialog(mainFrame.getContactList(),contactItem,pps);
+    dialog.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - 250,Toolkit.getDefaultToolkit().getScreenSize().height / 2 - 100);
+    dialog.setVisible(true);
+  }
+ else   if (mainFrame.getGroupByID(itemName) != null) {
+    MetaContactGroup group=mainFrame.getGroupByID(itemName);
+    mainFrame.getContactList().moveMetaContact(contactItem,group);
+  }
+ else   if (itemName.equalsIgnoreCase("sendMessage")) {
     ContactListPanel clistPanel=mainFrame.getTabbedPane().getContactListPanel();
     SwingUtilities.invokeLater(clistPanel.new RunMessageWindow(contactItem));
   }
@@ -15,6 +25,9 @@
     warning.setVisible(true);
   }
  else   if (itemName.equalsIgnoreCase("renameContact")) {
+    RenameContactDialog dialog=new RenameContactDialog(mainFrame.getContactList(),contactItem);
+    dialog.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - 200,Toolkit.getDefaultToolkit().getScreenSize().height / 2 - 50);
+    dialog.setVisible(true);
   }
  else   if (itemName.equalsIgnoreCase("viewHistory")) {
     HistoryWindow history=new HistoryWindow();
@@ -22,11 +35,5 @@
     history.setVisible(true);
   }
  else   if (itemName.equalsIgnoreCase("userInfo")) {
-  }
- else   if (mainFrame.getProtocolProviderForAccount(itemText) != null) {
-    ProtocolProviderService pps=mainFrame.getProtocolProviderForAccount(itemText);
-    AddContactDialog dialog=new AddContactDialog(mainFrame.getContactList(),contactItem,pps);
-    dialog.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - 250,Toolkit.getDefaultToolkit().getScreenSize().height / 2 - 100);
-    dialog.setVisible(true);
   }
 }

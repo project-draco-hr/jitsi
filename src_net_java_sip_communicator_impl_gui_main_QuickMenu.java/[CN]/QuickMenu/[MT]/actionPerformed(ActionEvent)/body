@@ -7,7 +7,7 @@
     NewContact newContact=new NewContact();
     AddContactWizardPage1 page1=new AddContactWizardPage1(newContact,mainFrame.getProtocolProviders());
     wizard.registerWizardPanel(AddContactWizardPage1.IDENTIFIER,page1);
-    AddContactWizardPage2 page2=new AddContactWizardPage2(newContact,mainFrame.getContactList());
+    AddContactWizardPage2 page2=new AddContactWizardPage2(newContact,mainFrame.getAllGroups());
     wizard.registerWizardPanel(AddContactWizardPage2.IDENTIFIER,page2);
     AddContactWizardPage3 page3=new AddContactWizardPage3(newContact);
     wizard.registerWizardPanel(AddContactWizardPage3.IDENTIFIER,page3);
@@ -21,7 +21,12 @@
         ProtocolProviderService pps=(ProtocolProviderService)ppList.get(i);
         for (int j=0; j < groupList.size(); j++) {
           MetaContactGroup group=(MetaContactGroup)groupList.get(j);
-          mainFrame.getContactList().createMetaContact(pps,group,newContact.getUin());
+          try {
+            mainFrame.getContactList().createMetaContact(pps,group,newContact.getUin());
+          }
+ catch (          MetaContactListException ex) {
+            JOptionPane.showMessageDialog(mainFrame,Messages.getString("addContactError",newContact.getUin()),Messages.getString("addContactErrorTitle"),JOptionPane.WARNING_MESSAGE);
+          }
         }
       }
     }
