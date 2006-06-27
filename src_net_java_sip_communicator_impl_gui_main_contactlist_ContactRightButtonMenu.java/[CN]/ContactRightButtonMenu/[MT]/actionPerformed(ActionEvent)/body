@@ -8,21 +8,11 @@
     dialog.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - 250,Toolkit.getDefaultToolkit().getScreenSize().height / 2 - 100);
     dialog.setVisible(true);
   }
- else   if (mainFrame.getGroupByID(itemName) != null) {
-    MetaContactGroup group=mainFrame.getGroupByID(itemName);
-    mainFrame.getContactList().moveMetaContact(contactItem,group);
-  }
  else   if (itemName.equalsIgnoreCase("sendMessage")) {
     ContactListPanel clistPanel=mainFrame.getTabbedPane().getContactListPanel();
     SwingUtilities.invokeLater(clistPanel.new RunMessageWindow(contactItem));
   }
  else   if (itemName.equalsIgnoreCase("sendFile")) {
-  }
- else   if (itemName.equalsIgnoreCase("removeContact")) {
-    MessageDialog warning=new MessageDialog(this.mainFrame);
-    String message="<HTML>Are you sure you want to remove <B>" + this.contactItem.getDisplayName() + "</B><BR>from your contact list?</html>";
-    warning.setMessage(message);
-    warning.setVisible(true);
   }
  else   if (itemName.equalsIgnoreCase("renameContact")) {
     RenameContactDialog dialog=new RenameContactDialog(mainFrame.getContactList(),contactItem);
@@ -35,5 +25,44 @@
     history.setVisible(true);
   }
  else   if (itemName.equalsIgnoreCase("userInfo")) {
+  }
+ else   if (mainFrame.getGroupByID(itemName) != null) {
+    MetaContactGroup group=mainFrame.getGroupByID(itemName);
+    mainFrame.getContactList().moveMetaContact(contactItem,group);
+  }
+ else   if (getContactFromMetaContact(itemName) != null) {
+    Contact contact=getContactFromMetaContact(itemName);
+    if (Constants.REMOVE_CONTACT_ASK) {
+      String message="<HTML>Are you sure you want to remove <B>" + this.contactItem.getDisplayName() + "</B><BR>from your contact list?</html>";
+      MessageDialog dialog=new MessageDialog(this.mainFrame,message,Messages.getString("remove"));
+      int returnCode=dialog.showDialog();
+      if (returnCode == MessageDialog.OK_RETURN_CODE) {
+        this.mainFrame.getContactList().removeContact(contact);
+      }
+ else       if (returnCode == MessageDialog.OK_DONT_ASK_CODE) {
+        this.mainFrame.getContactList().removeContact(contact);
+        Constants.REMOVE_CONTACT_ASK=false;
+      }
+    }
+ else {
+      this.mainFrame.getContactList().removeContact(contact);
+    }
+  }
+ else   if (itemName.equals("allContacts")) {
+    if (Constants.REMOVE_CONTACT_ASK) {
+      String message="<HTML>Are you sure you want to remove <B>" + this.contactItem.getDisplayName() + "</B><BR>from your contact list?</html>";
+      MessageDialog dialog=new MessageDialog(this.mainFrame,message,Messages.getString("remove"));
+      int returnCode=dialog.showDialog();
+      if (returnCode == MessageDialog.OK_RETURN_CODE) {
+        this.mainFrame.getContactList().removeMetaContact(contactItem);
+      }
+ else       if (returnCode == MessageDialog.OK_DONT_ASK_CODE) {
+        this.mainFrame.getContactList().removeMetaContact(contactItem);
+        Constants.REMOVE_CONTACT_ASK=false;
+      }
+    }
+ else {
+      this.mainFrame.getContactList().removeMetaContact(contactItem);
+    }
   }
 }

@@ -1,6 +1,7 @@
 {
   this.moveToMenu.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.GROUPS_16x16_ICON)));
   this.addSubcontactMenu.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.ADD_CONTACT_16x16_ICON)));
+  this.removeContactMenu.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.DELETE_16x16_ICON)));
   Iterator providers=this.mainFrame.getProtocolProviders();
   while (providers.hasNext()) {
     ProtocolProviderService pps=(ProtocolProviderService)providers.next();
@@ -18,6 +19,21 @@
     menuItem.addActionListener(this);
     this.moveToMenu.add(menuItem);
   }
+  Iterator contacts=contactItem.getContacts();
+  if (contactItem.getContactCount() > 1) {
+    JMenuItem allItem=new JMenuItem(Messages.getString("allContacts"));
+    allItem.addActionListener(this);
+    allItem.setName("allContacts");
+    this.removeContactMenu.add(allItem);
+    this.removeContactMenu.addSeparator();
+  }
+  while (contacts.hasNext()) {
+    Contact contact=(Contact)contacts.next();
+    JMenuItem contactItem=new JMenuItem(contact.getDisplayName());
+    contactItem.setName(contact.getAddress() + contact.getProtocolProvider().getProtocolName());
+    contactItem.addActionListener(this);
+    this.removeContactMenu.add(contactItem);
+  }
   this.add(sendMessageItem);
   this.add(sendFileItem);
   this.addSeparator();
@@ -25,7 +41,7 @@
   this.addSeparator();
   this.add(addSubcontactMenu);
   this.addSeparator();
-  this.add(removeContactItem);
+  this.add(removeContactMenu);
   this.add(renameContactItem);
   this.addSeparator();
   this.add(viewHistoryItem);
@@ -34,18 +50,15 @@
   this.sendFileItem.setName("sendFile");
   this.moveToMenu.setName("moveToGroup");
   this.addSubcontactMenu.setName("addSubcontact");
-  this.removeContactItem.setName("removeContact");
   this.renameContactItem.setName("renameContact");
   this.viewHistoryItem.setName("viewHistory");
   this.userInfoItem.setName("userInfo");
   this.sendMessageItem.addActionListener(this);
   this.sendFileItem.addActionListener(this);
-  this.removeContactItem.addActionListener(this);
   this.renameContactItem.addActionListener(this);
   this.viewHistoryItem.addActionListener(this);
   this.userInfoItem.addActionListener(this);
   this.sendFileItem.setEnabled(false);
-  this.removeContactItem.setEnabled(false);
   this.viewHistoryItem.setEnabled(false);
   this.userInfoItem.setEnabled(false);
 }
