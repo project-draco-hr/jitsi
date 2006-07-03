@@ -1,0 +1,24 @@
+{
+  List result=new ArrayList();
+  Calendar c=Calendar.getInstance();
+  c.set(Calendar.YEAR,c.get(Calendar.YEAR) - 10);
+  Date startDate=c.getTime();
+  Iterator iter=contact.getContacts();
+  while (iter.hasNext()) {
+    Contact item=(Contact)iter.next();
+    try {
+      History history=this.getHistory(null,item);
+      Iterator recs=history.getReader().findByStartDate(startDate);
+      while (recs.hasNext()) {
+        result.add(recs.next());
+      }
+    }
+ catch (    IOException e) {
+      log.error("Could not read history",e);
+    }
+  }
+  if (result.size() > count) {
+    result=result.subList(result.size() - count,result.size());
+  }
+  return new DefaultQueryResultSet(new Vector(result));
+}

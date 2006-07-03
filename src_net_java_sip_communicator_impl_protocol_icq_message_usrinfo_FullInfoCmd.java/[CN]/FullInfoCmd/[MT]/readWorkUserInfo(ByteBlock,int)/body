@@ -1,0 +1,30 @@
+{
+  Vector infoData=getInfoForRequest(requestID);
+  int offset=1;
+  String[] workAddress=new String[6];
+  offset=readStrings(block,workAddress,offset);
+  infoData.add(new ServerStoredDetails.WorkCityDetail(workAddress[0]));
+  infoData.add(new ServerStoredDetails.WorkProvinceDetail(workAddress[1]));
+  infoData.add(new ServerStoredDetails.WorkPhoneDetail(workAddress[2]));
+  infoData.add(new WorkFaxDetail(workAddress[3]));
+  infoData.add(new ServerStoredDetails.WorkAddressDetail(workAddress[4]));
+  infoData.add(new ServerStoredDetails.WorkPostalCodeDetail(workAddress[5]));
+  int workCountryCode=LEBinaryTools.getUShort(block,offset);
+  offset+=2;
+  infoData.add(new ServerStoredDetails.WorkCountryDetail(getCountry(workCountryCode)));
+  String[] workInfo=new String[3];
+  offset=readStrings(block,workInfo,offset);
+  infoData.add(new ServerStoredDetails.WorkOrganizationNameDetail(workInfo[0]));
+  infoData.add(new WorkDepartmentNameDetail(workInfo[1]));
+  infoData.add(new WorkPositionNameDetail(workInfo[2]));
+  int workOccupationCode=LEBinaryTools.getUShort(block,offset);
+  offset+=2;
+  infoData.add(new WorkOcupationDetail(occupations[workOccupationCode]));
+  String[] tmp=new String[1];
+  offset=readStrings(block,tmp,offset);
+  try {
+    infoData.add(new ServerStoredDetails.WorkPageDetail(new URL(tmp[0])));
+  }
+ catch (  MalformedURLException ex) {
+  }
+}

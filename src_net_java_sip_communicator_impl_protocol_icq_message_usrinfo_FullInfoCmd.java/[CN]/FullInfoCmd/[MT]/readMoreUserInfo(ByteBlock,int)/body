@@ -1,0 +1,45 @@
+{
+  Vector infoData=getInfoForRequest(requestID);
+  int offset=1;
+  String[] tmp=new String[1];
+  int age=LEBinaryTools.getUShort(block,offset);
+  offset+=2;
+  short gender=LEBinaryTools.getUByte(block,offset);
+  infoData.add(genders[gender]);
+  offset+=1;
+  offset=readStrings(block,tmp,offset);
+  try {
+    infoData.add(new ServerStoredDetails.WebPageDetail(new URL(tmp[0])));
+  }
+ catch (  MalformedURLException ex) {
+  }
+  int birthdayYear=LEBinaryTools.getUShort(block,offset);
+  offset+=2;
+  short birthdayMonth=LEBinaryTools.getUByte(block,offset);
+  offset+=1;
+  short birthdayDay=LEBinaryTools.getUByte(block,offset);
+  offset+=1;
+  Calendar birthDate=Calendar.getInstance();
+  birthDate.set(Calendar.YEAR,birthdayYear);
+  birthDate.set(Calendar.MONTH,birthdayMonth);
+  birthDate.set(Calendar.DAY_OF_MONTH,birthdayDay);
+  infoData.add(new ServerStoredDetails.BirthDateDetail(birthDate));
+  short speakingLanguage1=LEBinaryTools.getUByte(block,offset);
+  offset+=1;
+  infoData.add(new ServerStoredDetails.SpokenLanguageDetail(spokenLanguages[speakingLanguage1]));
+  short speakingLanguage2=LEBinaryTools.getUByte(block,offset);
+  offset+=1;
+  infoData.add(new ServerStoredDetails.SpokenLanguageDetail(spokenLanguages[speakingLanguage2]));
+  short speakingLanguage3=LEBinaryTools.getUByte(block,offset);
+  offset+=1;
+  infoData.add(new ServerStoredDetails.SpokenLanguageDetail(spokenLanguages[speakingLanguage3]));
+  int moreInfoUnknown=LEBinaryTools.getUShort(block,offset);
+  offset+=2;
+  offset=readStrings(block,tmp,offset);
+  infoData.add(new OriginCityDetail(tmp[0]));
+  offset=readStrings(block,tmp,offset);
+  infoData.add(new OriginProvinceDetail(tmp[0]));
+  int originCountryCode=LEBinaryTools.getUShort(block,offset);
+  offset+=2;
+  infoData.add(new OriginCountryDetail(getCountry(originCountryCode)));
+}
