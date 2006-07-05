@@ -13,10 +13,13 @@
  else {
       ChatWindow msgWindow=new ChatWindow(mainFrame);
       contactMsgWindows.put(metaContact,msgWindow);
-      msgWindow.addChat(metaContact,contactStatus,protocolContact);
+      ChatPanel chatPanel=msgWindow.createChat(metaContact,contactStatus,protocolContact);
       msgWindow.getCurrentChatPanel().processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
-      msgWindow.pack();
-      msgWindow.setVisible(true);
+      if (Constants.AUTO_POPUP_NEW_MESSAGE) {
+        msgWindow.addChat(chatPanel);
+        msgWindow.pack();
+        msgWindow.setVisible(true);
+      }
     }
   }
  else {
@@ -29,22 +32,28 @@
       }
 );
     }
-    Hashtable contactTabsTable=tabbedChatWindow.getContactTabsTable();
+    Hashtable contactTabsTable=tabbedChatWindow.getContactChatsTable();
     ChatPanel chatPanel;
     if (contactTabsTable.get(metaContact.getMetaUID()) == null) {
-      chatPanel=tabbedChatWindow.addChatTab(metaContact,contactStatus,protocolContact);
+      chatPanel=tabbedChatWindow.createChat(metaContact,contactStatus,protocolContact);
       chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
-      tabbedChatWindow.setVisible(true);
-      tabbedChatWindow.getCurrentChatPanel().requestFocusInWriteArea();
+      if (Constants.AUTO_POPUP_NEW_MESSAGE) {
+        tabbedChatWindow.addChatTab(chatPanel);
+        tabbedChatWindow.setVisible(true);
+        tabbedChatWindow.getCurrentChatPanel().requestFocusInWriteArea();
+        if (tabbedChatWindow.getTabCount() > 1) {
+          tabbedChatWindow.highlightTab(metaContact);
+        }
+      }
     }
  else {
       chatPanel=tabbedChatWindow.getChatPanel(metaContact);
       chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
       tabbedChatWindow.setVisible(true);
-    }
-    if (tabbedChatWindow.getTabCount() > 1) {
-      tabbedChatWindow.highlightTab(metaContact);
+      if (tabbedChatWindow.getTabCount() > 1) {
+        tabbedChatWindow.highlightTab(metaContact);
+      }
     }
   }
-  Constants.getDefaultAudio().play();
+  if (Constants.AUTO_POPUP_NEW_MESSAGE)   Constants.getDefaultAudio().play();
 }

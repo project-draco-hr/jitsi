@@ -1,15 +1,16 @@
 {
+  MainFrame mainFrame=communicatorMain.getMainFrame();
   this.loginManager=new LoginManager(bundleContext);
-  this.loginManager.setMainFrame(communicatorMain.getMainFrame());
+  this.loginManager.setMainFrame(mainFrame);
   try {
     ServiceReference clistReference=bundleContext.getServiceReference(MetaContactListService.class.getName());
     MetaContactListService contactListService=(MetaContactListService)bundleContext.getService(clistReference);
+    mainFrame.setContactList(contactListService);
     logger.logEntry();
-    this.uiService=new UIServiceImpl();
+    this.uiService=new UIServiceImpl(mainFrame);
     logger.info("UI Service...[  STARTED ]");
     bundleContext.registerService(UIService.class.getName(),this.uiService,null);
     logger.info("UI Service ...[REGISTERED]");
-    this.communicatorMain.getMainFrame().setContactList(contactListService);
     WelcomeWindow welcomeWindow=new WelcomeWindow(communicatorMain,loginManager,bundleContext);
     welcomeWindow.showWindow();
   }

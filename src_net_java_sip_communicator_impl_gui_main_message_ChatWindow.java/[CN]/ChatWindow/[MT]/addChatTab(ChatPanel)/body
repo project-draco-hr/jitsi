@@ -1,0 +1,34 @@
+{
+  String contactName=chatPanel.getDefaultContact().getDisplayName();
+  PresenceStatus status=chatPanel.getPresenceStatus();
+  if (chatTabbedPane == null) {
+    chatTabbedPane=new SIPCommTabbedPane(true);
+    chatTabbedPane.addCloseListener(new CloseListener(){
+      public void closeOperation(      MouseEvent e){
+        int tabIndex=chatTabbedPane.getOverTabIndex();
+        removeContactTab(tabIndex);
+      }
+    }
+);
+    this.getContentPane().add(chatPanel,BorderLayout.CENTER);
+    this.setTitle(contactName);
+    this.setCurrentChatPanel(chatPanel);
+  }
+ else {
+    if (chatTabbedPane.getTabCount() > 0) {
+      chatTabbedPane.addTab(contactName,new ImageIcon(Constants.getStatusIcon(status)),chatPanel);
+      chatTabbedPane.getParent().validate();
+    }
+ else {
+      ChatPanel firstChatPanel=getCurrentChatPanel();
+      PresenceStatus currentContactStatus=firstChatPanel.getPresenceStatus();
+      chatTabbedPane.addTab(firstChatPanel.getDefaultContact().getDisplayName(),new ImageIcon(Constants.getStatusIcon(currentContactStatus)),firstChatPanel);
+      chatTabbedPane.addTab(contactName,new ImageIcon(Constants.getStatusIcon(status)),chatPanel);
+      firstChatPanel.setCaretToEnd();
+    }
+    this.getContentPane().add(chatTabbedPane,BorderLayout.CENTER);
+    this.getContentPane().validate();
+    int chatIndex=chatTabbedPane.getTabCount() - 1;
+    if (chatTabbedPane.getSelectedIndex() == chatIndex)     this.setCurrentChatPanel(chatPanel);
+  }
+}
