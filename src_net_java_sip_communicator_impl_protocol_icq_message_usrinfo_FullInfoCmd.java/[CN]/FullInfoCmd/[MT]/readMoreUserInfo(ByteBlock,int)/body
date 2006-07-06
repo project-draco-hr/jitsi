@@ -19,11 +19,16 @@
   offset+=1;
   short birthdayDay=LEBinaryTools.getUByte(block,offset);
   offset+=1;
-  Calendar birthDate=Calendar.getInstance();
-  birthDate.set(Calendar.YEAR,birthdayYear);
-  birthDate.set(Calendar.MONTH,birthdayMonth);
-  birthDate.set(Calendar.DAY_OF_MONTH,birthdayDay);
-  infoData.add(new ServerStoredDetails.BirthDateDetail(birthDate));
+  if (birthdayYear == 0 || birthdayMonth == 0 || birthdayDay == 0) {
+    infoData.add(new ServerStoredDetails.BirthDateDetail(null));
+  }
+ else {
+    Calendar birthDate=Calendar.getInstance();
+    birthDate.set(Calendar.YEAR,birthdayYear);
+    birthDate.set(Calendar.MONTH,birthdayMonth);
+    birthDate.set(Calendar.DAY_OF_MONTH,birthdayDay);
+    infoData.add(new ServerStoredDetails.BirthDateDetail(birthDate));
+  }
   short speakingLanguage1=LEBinaryTools.getUByte(block,offset);
   offset+=1;
   infoData.add(new ServerStoredDetails.SpokenLanguageDetail(spokenLanguages[speakingLanguage1]));
@@ -42,4 +47,10 @@
   int originCountryCode=LEBinaryTools.getUShort(block,offset);
   offset+=2;
   infoData.add(new OriginCountryDetail(getCountry(originCountryCode)));
+  short userGMTOffset=LEBinaryTools.getUByte(block,offset);
+  offset+=1;
+  TimeZone userTimeZone=null;
+  if (userGMTOffset >= 0)   userTimeZone=TimeZone.getTimeZone("GMT+" + userGMTOffset);
+ else   userTimeZone=TimeZone.getTimeZone("GMT" + userGMTOffset);
+  infoData.add(new ServerStoredDetails.TimeZoneDetail("GMT Offest",userTimeZone));
 }
