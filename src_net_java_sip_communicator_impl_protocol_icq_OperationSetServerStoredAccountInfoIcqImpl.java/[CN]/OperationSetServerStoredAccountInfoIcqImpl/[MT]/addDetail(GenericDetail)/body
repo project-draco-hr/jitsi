@@ -1,0 +1,17 @@
+{
+  if (!isDetailClassSupported(detail.getClass()))   throw new IllegalArgumentException("implementation does not support such details " + detail.getClass());
+  Iterator iter=getDetails(detail.getClass());
+  int count=0;
+  while (iter.hasNext()) {
+    count++;
+  }
+  if (count >= getMaxDetailInstances(detail.getClass()))   throw new ArrayIndexOutOfBoundsException("Max count for this detail is already reached");
+  Vector change=new Vector();
+  change.add(detail);
+  SuccessResponseListener responseListener=new SuccessResponseListener();
+  icqProvider.getAimConnection().getInfoService().sendSnacRequest(new FullInfoCmd(uin,change,false),responseListener);
+  responseListener.wait(2000);
+  if (!responseListener.success)   if (responseListener.timeout)   throw new OperationFailedException("Adding Detail Failed!",OperationFailedException.NETWORK_FAILURE);
+ else   throw new OperationFailedException("Adding Detail Failed!",OperationFailedException.GENERAL_ERROR);
+  infoRetreiver.detailsChanged(uin);
+}

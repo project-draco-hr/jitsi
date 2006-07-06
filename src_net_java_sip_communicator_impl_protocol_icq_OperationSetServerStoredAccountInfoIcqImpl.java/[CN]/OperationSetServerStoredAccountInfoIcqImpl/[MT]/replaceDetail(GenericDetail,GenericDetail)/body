@@ -1,0 +1,24 @@
+{
+  if (!newDetailValue.getClass().equals(currentDetailValue.getClass()))   throw new ClassCastException("New value to be replaced is not as the current one");
+  boolean isFound=false;
+  Iterator iter=infoRetreiver.getDetails(uin,currentDetailValue.getClass());
+  while (iter.hasNext()) {
+    GenericDetail item=(GenericDetail)iter.next();
+    if (item.getDetailDisplayName().equals(currentDetailValue.getDetailDisplayName()) && item.getDetailValue().equals(currentDetailValue.getDetailValue())) {
+      isFound=true;
+      break;
+    }
+  }
+  if (!isFound)   return false;
+  Vector change=new Vector();
+  change.add(newDetailValue);
+  SuccessResponseListener responseListener=new SuccessResponseListener();
+  icqProvider.getAimConnection().getInfoService().sendSnacRequest(new FullInfoCmd(uin,change,false),responseListener);
+  responseListener.wait(2000);
+  if (!responseListener.success && responseListener.timeout)   throw new OperationFailedException("Replacing Detail Failed!",OperationFailedException.NETWORK_FAILURE);
+  if (responseListener.success) {
+    infoRetreiver.detailsChanged(uin);
+    return true;
+  }
+ else   return false;
+}
