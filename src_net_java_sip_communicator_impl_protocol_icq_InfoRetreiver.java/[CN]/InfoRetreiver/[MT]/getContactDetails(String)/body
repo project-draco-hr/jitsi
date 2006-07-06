@@ -1,0 +1,21 @@
+{
+  Vector result=(Vector)retreivedDetails.get(uin);
+  if (result == null) {
+    long toICQUin=Long.parseLong(uin);
+    FullInfoRequest infoRequest=new FullInfoRequest(toICQUin);
+    int reqID=requestID++;
+    UserInfoResponseRetriever responseRetriever=new UserInfoResponseRetriever(reqID);
+    SnacCommand cmd=new ToIcqCmd(toICQUin,infoRequest.getType(),reqID,infoRequest);
+    icqProvider.getAimConnection().getInfoService().sendSnacRequest(cmd,responseRetriever);
+synchronized (responseRetriever) {
+      try {
+        responseRetriever.wait(10000);
+      }
+ catch (      InterruptedException ex) {
+      }
+    }
+    result=responseRetriever.result;
+    retreivedDetails.put(uin,result);
+  }
+  return result;
+}
