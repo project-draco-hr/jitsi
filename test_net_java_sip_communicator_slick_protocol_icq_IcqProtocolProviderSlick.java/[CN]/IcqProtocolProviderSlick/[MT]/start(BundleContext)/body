@@ -3,21 +3,27 @@
   Hashtable properties=new Hashtable();
   properties.put("service.pid",getName());
   IcqSlickFixture.bc=bundleContext;
-  IcqSlickFixture.testerAgent=new IcqTesterAgent(System.getProperty(TESTING_IMPL_ACCOUNT_ID_PROP_NAME,null));
-  if (!IcqSlickFixture.testerAgent.register(System.getProperty(TESTING_IMPL_PWD_PROP_NAME,null)))   throw new Exception("Registering the IcqTesterAgent on icq has failed.(Possible " + "reasons: authetification failed, or Connection rate limit " + "exceeded.)");
-  IcqSlickFixture.testerAgent.setAuthorizationRequired();
-  initializeTestedContactList();
-  String offlineMsgBody="This is a Test Message. Supposed to be delivered as offline message!";
-  IcqSlickFixture.offlineMsgCollector=new IcqSlickFixture.OfflineMsgCollector();
-  IcqSlickFixture.offlineMsgCollector.setMessageText(offlineMsgBody);
-  IcqSlickFixture.testerAgent.sendOfflineMessage(System.getProperty(TESTED_IMPL_ACCOUNT_ID_PROP_NAME,null),offlineMsgBody);
-  addTest(TestAccountInstallation.suite());
-  addTest(TestProtocolProviderServiceIcqImpl.suite());
-  addTest(TestOperationSetPresence.suite());
-  addTest(TestOperationSetPersistentPresence.suite());
-  addTest(TestOperationSetBasicInstantMessaging.suite());
-  addTest(TestOperationSetTypingNotifications.suite());
-  addTest(TestAccountUninstallation.suite());
+  String icqTestAgentName=System.getProperty(TESTING_IMPL_ACCOUNT_ID_PROP_NAME,null);
+  if (icqTestAgentName != null) {
+    IcqSlickFixture.testerAgent=new IcqTesterAgent(icqTestAgentName);
+    if (!IcqSlickFixture.testerAgent.register(System.getProperty(TESTING_IMPL_PWD_PROP_NAME,null)))     throw new Exception("Registering the IcqTesterAgent on icq has failed." + "(Possible reasons: authentification failed, or " + "Connection rate limit exceeded.)");
+    IcqSlickFixture.testerAgent.setAuthorizationRequired();
+    initializeTestedContactList();
+    String offlineMsgBody="This is a Test Message. Supposed to be delivered as offline message!";
+    IcqSlickFixture.offlineMsgCollector=new IcqSlickFixture.OfflineMsgCollector();
+    IcqSlickFixture.offlineMsgCollector.setMessageText(offlineMsgBody);
+    IcqSlickFixture.testerAgent.sendOfflineMessage(System.getProperty(TESTED_IMPL_ACCOUNT_ID_PROP_NAME,null),offlineMsgBody);
+    addTest(TestAccountInstallation.suite());
+    addTest(TestProtocolProviderServiceIcqImpl.suite());
+    addTest(TestOperationSetPresence.suite());
+    addTest(TestOperationSetPersistentPresence.suite());
+    addTest(TestOperationSetBasicInstantMessaging.suite());
+    addTest(TestOperationSetTypingNotifications.suite());
+    addTest(TestAccountUninstallation.suite());
+  }
+ else {
+    addTest(new TestAccountInvalidNotification("failIcqTesterAgentMissing"));
+  }
   bundleContext.registerService(getClass().getName(),this,properties);
   logger.debug("Successfully registered " + getClass().getName());
 }
