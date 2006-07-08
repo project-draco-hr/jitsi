@@ -1,23 +1,23 @@
 {
   ServiceReference[] serRefs=null;
-  String osgiFilter="(" + AccountManager.PROTOCOL_PROPERTY_NAME + "="+ ProtocolNames.ICQ+ ")";
+  String osgiFilter="(" + ProtocolProviderFactory.PROTOCOL_PROPERTY_NAME + "="+ ProtocolNames.ICQ+ ")";
   try {
-    serRefs=IcqSlickFixture.bc.getServiceReferences(AccountManager.class.getName(),osgiFilter);
+    serRefs=IcqSlickFixture.bc.getServiceReferences(ProtocolProviderFactory.class.getName(),osgiFilter);
   }
  catch (  InvalidSyntaxException ex) {
     fail(osgiFilter + " is not a valid osgi filter");
   }
-  assertTrue("Failed to find an account manager service for protocol ICQ",serRefs != null || serRefs.length > 0);
-  AccountManager icqAccountManager=(AccountManager)IcqSlickFixture.bc.getService(serRefs[0]);
+  assertTrue("Failed to find an provider factory service for protocol ICQ",serRefs != null || serRefs.length > 0);
+  ProtocolProviderFactory icqProviderFactory=(ProtocolProviderFactory)IcqSlickFixture.bc.getService(serRefs[0]);
   String passwd=System.getProperty(IcqProtocolProviderSlick.TESTED_IMPL_PWD_PROP_NAME,null);
   String uin=System.getProperty(IcqProtocolProviderSlick.TESTED_IMPL_ACCOUNT_ID_PROP_NAME,null);
   uin=uin + "1234";
   Hashtable icqAccountProperties=new Hashtable();
   icqAccountProperties.put(AccountProperties.PASSWORD,passwd);
-  AccountID icqAccountID=icqAccountManager.installAccount(IcqSlickFixture.bc,uin,icqAccountProperties);
+  AccountID icqAccountID=icqProviderFactory.installAccount(IcqSlickFixture.bc,uin,icqAccountProperties);
   ServiceReference[] icqProviderRefs=null;
   try {
-    icqProviderRefs=IcqSlickFixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + AccountManager.PROTOCOL_PROPERTY_NAME + "="+ ProtocolNames.ICQ+ ")"+ "("+ AccountManager.ACCOUNT_ID_PROPERTY_NAME+ "="+ uin+ ")"+ ")");
+    icqProviderRefs=IcqSlickFixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL_PROPERTY_NAME + "="+ ProtocolNames.ICQ+ ")"+ "("+ ProtocolProviderFactory.ACCOUNT_ID_PROPERTY_NAME+ "="+ uin+ ")"+ ")");
   }
  catch (  InvalidSyntaxException ex1) {
   }
@@ -46,5 +46,5 @@ catch (  Throwable t) {
   assertEquals("Registration status must be auth failed as we are logging in with wrong uin",regFailedEvtCollector.failedCode,RegistrationStateChangeEvent.REASON_NON_EXISTING_USER_ID);
   assertNotNull("We must have reason for auth failed",regFailedEvtCollector.failedReason);
   provider.removeRegistrationStateChangeListener(regFailedEvtCollector);
-  icqAccountManager.uninstallAccount(icqAccountID);
+  icqProviderFactory.uninstallAccount(icqAccountID);
 }
