@@ -1,0 +1,15 @@
+{
+  ShortInfoResponseRetriever responseRetriever=new ShortInfoResponseRetriever();
+  long longUin=Long.parseLong(uin);
+  MetaShortInfoRequest req=new MetaShortInfoRequest(longUin);
+  SnacCommand cmd=new ToIcqCmd(Long.parseLong(ownerUin),req.getType(),2,req);
+  icqProvider.getAimConnection().getInfoService().sendSnacRequest(cmd,responseRetriever);
+synchronized (responseRetriever) {
+    try {
+      responseRetriever.wait(30000);
+    }
+ catch (    InterruptedException ex) {
+    }
+  }
+  return responseRetriever.nickname;
+}
