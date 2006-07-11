@@ -3,8 +3,14 @@
   Iterator iter=metaContact.getContacts();
   while (iter.hasNext()) {
     Contact item=(Contact)iter.next();
-    Element currentNode=XMLUtils.locateElement(metaContactNode,PROTO_CONTACT_NODE_NAME,PROTO_CONTACT_ADDRESS_ATTR_NAME,item.getAddress());
-    Element persistentDataNode=XMLUtils.findChild(currentNode,PERSISTENT_DATA_NODE_NAME);
-    XMLUtils.setText(persistentDataNode,item.getPersistentData());
+    if (item.getPersistentData() != null) {
+      Element currentNode=XMLUtils.locateElement(metaContactNode,PROTO_CONTACT_NODE_NAME,PROTO_CONTACT_ADDRESS_ATTR_NAME,item.getAddress());
+      Element persistentDataNode=XMLUtils.findChild(currentNode,PERSISTENT_DATA_NODE_NAME);
+      if (persistentDataNode == null) {
+        persistentDataNode=contactListDocument.createElement(PERSISTENT_DATA_NODE_NAME);
+        currentNode.appendChild(persistentDataNode);
+      }
+      XMLUtils.setText(persistentDataNode,item.getPersistentData());
+    }
   }
 }
