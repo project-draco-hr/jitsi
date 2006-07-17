@@ -1,0 +1,23 @@
+{
+  super(21,3);
+  Tlv icqDataTlv=TlvTools.readChain(packet.getData()).getLastTlv(TYPE_ICQ_DATA);
+  if (icqDataTlv != null) {
+    ByteBlock icqBlock=icqDataTlv.getData();
+    ByteBlock icqData;
+    int hdrlen=8;
+    senderUIN=String.valueOf(getUInt(icqBlock,2));
+    requestID=getUShort(icqBlock,8);
+    this.primaryType=getUShort(icqBlock,6);
+    if (primaryType >= 1000) {
+      this.secondaryType=getUShort(icqBlock,10);
+      hdrlen=10;
+    }
+    if (icqBlock.getLength() >= hdrlen + 2) {
+      icqData=icqBlock.subBlock(hdrlen + 2);
+    }
+ else {
+      icqData=null;
+    }
+    processICQData(icqData);
+  }
+}

@@ -1,0 +1,74 @@
+{
+  Object lock=new Object();
+  int suffix=(int)(Math.random() * 100);
+  String lastName="TesterAgent" + String.valueOf(suffix);
+  fixture.testerAgent.setUserInfoLastName(lastName);
+synchronized (lock) {
+    try {
+      lock.wait(1500);
+    }
+ catch (    InterruptedException ex) {
+    }
+  }
+  String phoneNumber="+3591234" + suffix;
+  fixture.testerAgent.setUserInfoPhoneNumber(phoneNumber);
+synchronized (lock) {
+    try {
+      lock.wait(1500);
+    }
+ catch (    InterruptedException ex) {
+    }
+  }
+  int lang1=1 + (int)(Math.random() * 72);
+  int lang2=1 + (int)(Math.random() * 72);
+  int lang3=1 + (int)(Math.random() * 72);
+  fixture.testerAgent.setUserInfoLanguage(lang1,lang2,lang3);
+synchronized (lock) {
+    try {
+      lock.wait(1500);
+    }
+ catch (    InterruptedException ex) {
+    }
+  }
+  int countryRandom=0 + (int)(Math.random() * 232);
+  int countryCode=((Integer)countryIndexToLocaleString[countryRandom][0]).intValue();
+  String countryAbr=(String)countryIndexToLocaleString[countryRandom][1];
+  fixture.testerAgent.setUserInfoHomeCountry(countryCode);
+synchronized (lock) {
+    try {
+      lock.wait(4000);
+    }
+ catch (    InterruptedException ex) {
+    }
+  }
+  Contact testerAgentContact=opSetPresence.findContactByID(fixture.testerAgent.getIcqUIN());
+  Iterator iter=opSetServerStoredContactInfo.getDetails(testerAgentContact,ServerStoredDetails.LastNameDetail.class);
+  while (iter.hasNext()) {
+    ServerStoredDetails.LastNameDetail item=(ServerStoredDetails.LastNameDetail)iter.next();
+    assertEquals("The LastName we set is not set or not read properly",item.getName(),lastName);
+    break;
+  }
+  iter=opSetServerStoredContactInfo.getDetails(testerAgentContact,ServerStoredDetails.PhoneNumberDetail.class);
+  while (iter.hasNext()) {
+    ServerStoredDetails.PhoneNumberDetail item=(ServerStoredDetails.PhoneNumberDetail)iter.next();
+    assertEquals("The PhoneNumber we set is not set or not read properly",item.getNumber(),phoneNumber);
+    break;
+  }
+  iter=opSetServerStoredContactInfo.getDetails(testerAgentContact,ServerStoredDetails.SpokenLanguageDetail.class);
+  ArrayList spokenLanguagesServer=new ArrayList();
+  while (iter.hasNext()) {
+    ServerStoredDetails.SpokenLanguageDetail item=(ServerStoredDetails.SpokenLanguageDetail)iter.next();
+    spokenLanguagesServer.add(item.getLocale());
+  }
+  assertEquals("spoken languages must be 3 ",spokenLanguagesServer.size(),3);
+  assertTrue("Must contain langiage " + spokenLanguages[lang1],spokenLanguagesServer.contains(spokenLanguages[lang1]));
+  assertTrue("Must contain langiage " + spokenLanguages[lang2],spokenLanguagesServer.contains(spokenLanguages[lang2]));
+  assertTrue("Must contain langiage " + spokenLanguages[lang3],spokenLanguagesServer.contains(spokenLanguages[lang3]));
+  iter=opSetServerStoredContactInfo.getDetails(testerAgentContact,ServerStoredDetails.CountryDetail.class);
+  while (iter.hasNext()) {
+    ServerStoredDetails.CountryDetail item=(ServerStoredDetails.CountryDetail)iter.next();
+    logger.info("read item value: " + item.getLocale().getDisplayCountry());
+    assertEquals("The Country we set is not set or not read properly",item.getLocale(),new Locale("",countryAbr));
+    break;
+  }
+}

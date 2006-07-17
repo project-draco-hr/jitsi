@@ -1,0 +1,38 @@
+{
+  Object lock=new Object();
+  try {
+    Iterator iter=opSetServerStoredAccountInfo.getDetails(ServerStoredDetails.SpokenLanguageDetail.class);
+    ArrayList initialLanguages=new ArrayList();
+    while (iter.hasNext()) {
+      initialLanguages.add(iter.next());
+    }
+    iter=initialLanguages.iterator();
+    while (iter.hasNext()) {
+      assertTrue("Error removing language!",opSetServerStoredAccountInfo.removeDetail((ServerStoredDetails.SpokenLanguageDetail)iter.next()));
+synchronized (lock) {
+        try {
+          lock.wait(1500);
+        }
+ catch (        InterruptedException ex) {
+        }
+      }
+    }
+synchronized (lock) {
+      try {
+        lock.wait(4000);
+      }
+ catch (      InterruptedException ex) {
+      }
+    }
+    iter=opSetServerStoredAccountInfo.getDetails(ServerStoredDetails.SpokenLanguageDetail.class);
+    ArrayList languages=new ArrayList();
+    while (iter.hasNext()) {
+      languages.add(iter.next());
+    }
+    logger.trace("languages " + languages.size());
+    assertEquals("There must be no language details!",0,languages.size());
+  }
+ catch (  OperationFailedException ex) {
+    throw new RuntimeException("Error setting or retreiving detail! Network Failure!",ex);
+  }
+}

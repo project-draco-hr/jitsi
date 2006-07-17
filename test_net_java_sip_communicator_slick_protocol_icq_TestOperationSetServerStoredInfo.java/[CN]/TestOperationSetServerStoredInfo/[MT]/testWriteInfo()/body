@@ -1,0 +1,122 @@
+{
+  Object lock=new Object();
+  ServerStoredDetails.LastNameDetail lastNameDetail=null;
+  ServerStoredDetails.PhoneNumberDetail phoneNumberDetail=null;
+  Iterator iterSpokenLangDetails=null;
+  ServerStoredDetails.CountryDetail homeCountryDetail=null;
+  Iterator iter=opSetServerStoredAccountInfo.getDetails(ServerStoredDetails.LastNameDetail.class);
+  if (iter.hasNext())   lastNameDetail=(ServerStoredDetails.LastNameDetail)iter.next();
+  iter=opSetServerStoredAccountInfo.getDetails(ServerStoredDetails.PhoneNumberDetail.class);
+  if (iter.hasNext())   phoneNumberDetail=(ServerStoredDetails.PhoneNumberDetail)iter.next();
+  iterSpokenLangDetails=opSetServerStoredAccountInfo.getDetails(ServerStoredDetails.SpokenLanguageDetail.class);
+  iter=opSetServerStoredAccountInfo.getDetails(ServerStoredDetails.CountryDetail.class);
+  if (iter.hasNext())   homeCountryDetail=(ServerStoredDetails.CountryDetail)iter.next();
+  int suffix=(int)(Math.random() * 100);
+  String newLastName="TesterAgent" + String.valueOf(suffix);
+  String newPhoneNumber="+3591234" + suffix;
+  int[] newLanguages={(1 + (int)(Math.random() * 72)),(1 + (int)(Math.random() * 72)),(1 + (int)(Math.random() * 72))};
+  int countryRandom=0 + (int)(Math.random() * 232);
+  int newCountryCode=((Integer)countryIndexToLocaleString[countryRandom][0]).intValue();
+  String newCountryAbr=(String)countryIndexToLocaleString[countryRandom][1];
+  try {
+    if (lastNameDetail != null) {
+      assertTrue("Cannot set Detail LastName : " + newLastName,opSetServerStoredAccountInfo.replaceDetail(lastNameDetail,new ServerStoredDetails.LastNameDetail(newLastName)));
+    }
+ else {
+      opSetServerStoredAccountInfo.addDetail(new ServerStoredDetails.LastNameDetail(newLastName));
+    }
+synchronized (lock) {
+      try {
+        lock.wait(1500);
+      }
+ catch (      InterruptedException ex) {
+      }
+    }
+    if (phoneNumberDetail != null) {
+      assertTrue("Cannot set Detail PhoneNumver : " + newPhoneNumber,opSetServerStoredAccountInfo.replaceDetail(phoneNumberDetail,new ServerStoredDetails.PhoneNumberDetail(newPhoneNumber)));
+    }
+ else {
+      opSetServerStoredAccountInfo.addDetail(new ServerStoredDetails.PhoneNumberDetail(newPhoneNumber));
+    }
+synchronized (lock) {
+      try {
+        lock.wait(1500);
+      }
+ catch (      InterruptedException ex) {
+      }
+    }
+    if (homeCountryDetail != null) {
+      assertTrue("Cannot set Detail Country : " + newCountryAbr,opSetServerStoredAccountInfo.replaceDetail(homeCountryDetail,new ServerStoredDetails.CountryDetail(new Locale("",newCountryAbr))));
+      ;
+    }
+ else {
+      opSetServerStoredAccountInfo.addDetail(new ServerStoredDetails.CountryDetail(new Locale("",newCountryAbr)));
+    }
+synchronized (lock) {
+      try {
+        lock.wait(1500);
+      }
+ catch (      InterruptedException ex) {
+      }
+    }
+    int numberOfChangedLanguages=0;
+    while (iterSpokenLangDetails.hasNext()) {
+      ServerStoredDetails.SpokenLanguageDetail item=(ServerStoredDetails.SpokenLanguageDetail)iterSpokenLangDetails.next();
+      int newLang=newLanguages[numberOfChangedLanguages++];
+      opSetServerStoredAccountInfo.replaceDetail(item,new ServerStoredDetails.SpokenLanguageDetail(spokenLanguages[newLang]));
+synchronized (lock) {
+        try {
+          lock.wait(3000);
+        }
+ catch (        InterruptedException ex) {
+        }
+      }
+    }
+    for (int i=numberOfChangedLanguages; i < 3; i++) {
+      int newLang=newLanguages[numberOfChangedLanguages++];
+      opSetServerStoredAccountInfo.addDetail(new ServerStoredDetails.SpokenLanguageDetail(spokenLanguages[newLang]));
+synchronized (lock) {
+        try {
+          lock.wait(3000);
+        }
+ catch (        InterruptedException ex) {
+        }
+      }
+    }
+synchronized (lock) {
+      try {
+        lock.wait(4000);
+      }
+ catch (      InterruptedException ex) {
+      }
+    }
+    logger.trace("Finished Setting values!");
+  }
+ catch (  ArrayIndexOutOfBoundsException ex) {
+    throw new RuntimeException("Error setting detail! Max detail instances is reached!",ex);
+  }
+catch (  IllegalArgumentException ex) {
+    throw new RuntimeException("Error setting detail! Detail max instances reached - cannot be set!",ex);
+  }
+catch (  OperationFailedException ex) {
+    throw new RuntimeException("Error setting detail! Network Failure!",ex);
+  }
+catch (  ClassCastException ex) {
+    throw new RuntimeException("Error setting detail! ",ex);
+  }
+  logger.trace("Proceeding to Testing values!");
+  Hashtable userInfo=fixture.testerAgent.getUserInfo(fixture.ourAccountID);
+  assertEquals("The LastName we set is not set or not read properly",newLastName,userInfo.get(FullUserInfoCmd.LAST_NAME));
+  assertEquals("The PhoneNumber we set is not set or not read properly",newPhoneNumber,userInfo.get(FullUserInfoCmd.PHONE_NUMBER));
+  ArrayList languageCodes=(ArrayList)userInfo.get(FullUserInfoCmd.SPEAK_LANG);
+  ArrayList languages=new ArrayList();
+  iter=languageCodes.iterator();
+  while (iter.hasNext()) {
+    languages.add(spokenLanguages[((Integer)iter.next()).intValue()]);
+  }
+  assertEquals("The number of spoken languages dowsn't match",newLanguages.length,languages.size());
+  for (int i=0; i < newLanguages.length; i++) {
+    assertTrue("The Spoken Language we set is not set or " + "not read properly : " + newLanguages[i],languages.contains(spokenLanguages[newLanguages[i]]));
+  }
+  assertEquals("The Country we set is not set or not read properly",new Integer(newCountryCode),userInfo.get(FullUserInfoCmd.HOME_COUNTRY));
+}
