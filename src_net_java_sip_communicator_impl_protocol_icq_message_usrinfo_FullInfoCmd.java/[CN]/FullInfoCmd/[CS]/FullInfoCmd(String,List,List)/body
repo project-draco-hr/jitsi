@@ -1,0 +1,28 @@
+{
+  super(21,2);
+  this.senderUin=senderUin;
+  if (toBeCleared == null)   toBeCleared=new ArrayList();
+  int lastSpokenIndex=-1;
+  int countOfLanguages=0;
+  boolean isLanguageFound=false;
+  for (int i=0; i < changedData.size(); i++) {
+    Object item=changedData.get(i);
+    if (item instanceof ServerStoredDetails.SpokenLanguageDetail) {
+      isLanguageFound=true;
+      lastSpokenIndex=i;
+      countOfLanguages++;
+    }
+  }
+  if (isLanguageFound) {
+    for (int i=countOfLanguages; i < 3; i++) {
+      lastSpokenIndex++;
+      changedData.add(lastSpokenIndex,new ServerStoredDetails.SpokenLanguageDetail(null));
+    }
+  }
+  Iterator iter=changedData.iterator();
+  while (iter.hasNext()) {
+    ServerStoredDetails.GenericDetail item=(ServerStoredDetails.GenericDetail)iter.next();
+    if (toBeCleared.contains(item))     changeDataTlvs.add(getClearTlv(item));
+ else     changeDataTlvs.add(getTlvForChange(item));
+  }
+}

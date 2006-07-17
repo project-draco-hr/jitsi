@@ -1,22 +1,23 @@
 {
-  Vector infoData=getInfoForRequest(requestID);
+  List infoData=getInfoForRequest(requestID);
   int offset=1;
   String[] workAddress=new String[6];
   offset=readStrings(block,workAddress,offset);
-  infoData.add(new ServerStoredDetails.WorkCityDetail(workAddress[0]));
-  infoData.add(new ServerStoredDetails.WorkProvinceDetail(workAddress[1]));
-  infoData.add(new ServerStoredDetails.WorkPhoneDetail(workAddress[2]));
-  infoData.add(new WorkFaxDetail(workAddress[3]));
-  infoData.add(new ServerStoredDetails.WorkAddressDetail(workAddress[4]));
-  infoData.add(new ServerStoredDetails.WorkPostalCodeDetail(workAddress[5]));
+  if (workAddress[0] != null)   infoData.add(new ServerStoredDetails.WorkCityDetail(workAddress[0]));
+  if (workAddress[1] != null)   infoData.add(new ServerStoredDetails.WorkProvinceDetail(workAddress[1]));
+  if (workAddress[2] != null)   infoData.add(new ServerStoredDetails.WorkPhoneDetail(workAddress[2]));
+  if (workAddress[3] != null)   infoData.add(new WorkFaxDetail(workAddress[3]));
+  if (workAddress[4] != null)   infoData.add(new ServerStoredDetails.WorkAddressDetail(workAddress[4]));
+  if (workAddress[5] != null)   infoData.add(new ServerStoredDetails.WorkPostalCodeDetail(workAddress[5]));
   int workCountryCode=LEBinaryTools.getUShort(block,offset);
   offset+=2;
-  infoData.add(new ServerStoredDetails.WorkCountryDetail(getCountry(workCountryCode)));
+  Locale workCountry=getCountry(workCountryCode);
+  if (workCountry != null)   infoData.add(new ServerStoredDetails.WorkCountryDetail(workCountry));
   String[] workInfo=new String[3];
   offset=readStrings(block,workInfo,offset);
-  infoData.add(new ServerStoredDetails.WorkOrganizationNameDetail(workInfo[0]));
-  infoData.add(new WorkDepartmentNameDetail(workInfo[1]));
-  infoData.add(new WorkPositionNameDetail(workInfo[2]));
+  if (workInfo[0] != null)   infoData.add(new ServerStoredDetails.WorkOrganizationNameDetail(workInfo[0]));
+  if (workInfo[1] != null)   infoData.add(new WorkDepartmentNameDetail(workInfo[1]));
+  if (workInfo[2] != null)   infoData.add(new WorkPositionNameDetail(workInfo[2]));
   int workOccupationCode=LEBinaryTools.getUShort(block,offset);
   offset+=2;
   if (workOccupationCode == 99)   infoData.add(new WorkOcupationDetail(occupations[occupations.length - 1]));
@@ -24,7 +25,7 @@
   String[] tmp=new String[1];
   offset=readStrings(block,tmp,offset);
   try {
-    infoData.add(new ServerStoredDetails.WorkPageDetail(new URL(tmp[0])));
+    if (tmp[0] != null)     infoData.add(new ServerStoredDetails.WorkPageDetail(new URL(tmp[0])));
   }
  catch (  MalformedURLException ex) {
   }
