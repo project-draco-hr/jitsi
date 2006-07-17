@@ -1,20 +1,26 @@
 {
   if (!newDetailValue.getClass().equals(currentDetailValue.getClass()))   throw new ClassCastException("New value to be replaced is not as the current one");
   boolean isFound=false;
+  Vector alreadySetDetails=new Vector();
   Iterator iter=infoRetreiver.getDetails(uin,currentDetailValue.getClass());
   while (iter.hasNext()) {
     GenericDetail item=(GenericDetail)iter.next();
-    if (item.getDetailDisplayName().equals(currentDetailValue.getDetailDisplayName()) && item.getDetailValue().equals(currentDetailValue.getDetailValue())) {
+    if (item.equals(currentDetailValue)) {
       isFound=true;
-      break;
+      alreadySetDetails.add(newDetailValue);
     }
+ else     alreadySetDetails.add(item);
   }
   if (!isFound)   return false;
-  Vector change=new Vector();
-  change.add(newDetailValue);
   SuccessResponseListener responseListener=new SuccessResponseListener();
-  icqProvider.getAimConnection().getInfoService().sendSnacRequest(new FullInfoCmd(uin,change,false),responseListener);
-  responseListener.wait(2000);
+  icqProvider.getAimConnection().getInfoService().sendSnacRequest(new FullInfoCmd(uin,alreadySetDetails,null),responseListener);
+synchronized (responseListener.waitingForResponseLock) {
+    try {
+      responseListener.waitingForResponseLock.wait(2000);
+    }
+ catch (    InterruptedException ex) {
+    }
+  }
   if (!responseListener.success && responseListener.timeout)   throw new OperationFailedException("Replacing Detail Failed!",OperationFailedException.NETWORK_FAILURE);
   if (responseListener.success) {
     infoRetreiver.detailsChanged(uin);

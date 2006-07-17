@@ -1,19 +1,27 @@
 {
   boolean isFound=false;
+  ArrayList foundValues=new ArrayList();
   Iterator iter=infoRetreiver.getDetails(uin,detail.getClass());
   while (iter.hasNext()) {
     GenericDetail item=(GenericDetail)iter.next();
-    if (item.getDetailDisplayName().equals(detail.getDetailDisplayName()) && item.getDetailValue().equals(detail.getDetailValue())) {
+    if (item.equals(detail)) {
       isFound=true;
-      break;
+      foundValues.add(detail);
     }
+ else     foundValues.add(item);
   }
   if (!isFound)   return false;
-  Vector change=new Vector();
-  change.add(detail);
+  List removeValues=new ArrayList();
+  removeValues.add(detail);
   SuccessResponseListener responseListener=new SuccessResponseListener();
-  icqProvider.getAimConnection().getInfoService().sendSnacRequest(new FullInfoCmd(uin,change,true),responseListener);
-  responseListener.wait(2000);
+  icqProvider.getAimConnection().getInfoService().sendSnacRequest(new FullInfoCmd(uin,foundValues,removeValues),responseListener);
+synchronized (responseListener.waitingForResponseLock) {
+    try {
+      responseListener.waitingForResponseLock.wait(2000);
+    }
+ catch (    InterruptedException ex) {
+    }
+  }
   if (!responseListener.success && responseListener.timeout)   throw new OperationFailedException("Replacing Detail Failed!",OperationFailedException.NETWORK_FAILURE);
   if (responseListener.success) {
     infoRetreiver.detailsChanged(uin);

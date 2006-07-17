@@ -2,11 +2,15 @@
 synchronized (this) {
     if (ran)     return;
     ran=true;
-    FromIcqCmd cmd=new FromIcqCmd(e.getSnacPacket());
-    byte[] data=cmd.getIcqData().toByteArray();
-    if (cmd.getType().equals(RESPONSE_TYPE) && data.length == 1 && data[0] == SUCCESS_BYTE) {
+  }
+  if (e.getSnacCommand() instanceof FullInfoAck) {
+    FullInfoAck cmd=(FullInfoAck)e.getSnacCommand();
+    ;
+    if (cmd.isCommandSuccesful()) {
       success=true;
-      notifyAll();
     }
+  }
+synchronized (waitingForResponseLock) {
+    waitingForResponseLock.notifyAll();
   }
 }
