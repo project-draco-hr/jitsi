@@ -1,6 +1,23 @@
 {
-  String oldNickname=c.getDisplayName();
-  String nickName=getParentProvider().getInfoRetreiver().getNickName(c.getUIN());
-  c.setNickname(nickName);
-  parentOperationSet.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_DISPLAY_NAME,c,oldNickname,nickName);
+  try {
+    while (true) {
+synchronized (contactsForUpdate) {
+        if (contactsForUpdate.isEmpty())         contactsForUpdate.wait();
+        Iterator iter=contactsForUpdate.iterator();
+        while (iter.hasNext()) {
+          ContactIcqImpl contact=(ContactIcqImpl)iter.next();
+          String oldNickname=contact.getDisplayName();
+          String nickName=getParentProvider().getInfoRetreiver().getNickName(contact.getUIN());
+          if (nickName != null) {
+            contact.setNickname(nickName);
+            parentOperationSet.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_DISPLAY_NAME,contact,oldNickname,nickName);
+          }
+        }
+        contactsForUpdate.clear();
+      }
+    }
+  }
+ catch (  InterruptedException ex) {
+    logger.error("NickRetriever error waiting will stop now!",ex);
+  }
 }
