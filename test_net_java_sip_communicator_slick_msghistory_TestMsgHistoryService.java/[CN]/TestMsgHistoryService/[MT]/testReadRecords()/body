@@ -1,2 +1,62 @@
 {
+  MsgHistoryServiceLick.mockBImOpSet.deliverMessage(MsgHistoryServiceLick.TEST_CONTACT_NAME,messagesToSend[0]);
+  Date controlDate1=new Date();
+  Object lock=new Object();
+synchronized (lock) {
+    try {
+      lock.wait(200);
+    }
+ catch (    InterruptedException ex) {
+    }
+  }
+  MsgHistoryServiceLick.mockBImOpSet.deliverMessage(MsgHistoryServiceLick.TEST_CONTACT_NAME,messagesToSend[1]);
+  MsgHistoryServiceLick.mockBImOpSet.deliverMessage(MsgHistoryServiceLick.TEST_CONTACT_NAME,messagesToSend[2]);
+  Date controlDate2=new Date();
+synchronized (lock) {
+    try {
+      lock.wait(200);
+    }
+ catch (    InterruptedException ex) {
+    }
+  }
+  MsgHistoryServiceLick.mockBImOpSet.deliverMessage(MsgHistoryServiceLick.TEST_CONTACT_NAME,messagesToSend[3]);
+  MsgHistoryServiceLick.mockBImOpSet.deliverMessage(MsgHistoryServiceLick.TEST_CONTACT_NAME,messagesToSend[4]);
+  QueryResultSet rs=MsgHistoryServiceLick.msgHistoryService.findByKeyword(testMetaContact,"test");
+  assertTrue("Nothing found findByKeyword ",rs.hasNext());
+  Vector msgs=getMessages(rs);
+  assertTrue("Messages too few - findByKeyword",msgs.size() >= 5);
+  rs=MsgHistoryServiceLick.msgHistoryService.findByEndDate(testMetaContact,controlDate2);
+  assertTrue("Nothing found findByEndDate",rs.hasNext());
+  msgs=getMessages(rs);
+  assertTrue("Messages too few - findByEndDate",msgs.size() >= 3);
+  rs=MsgHistoryServiceLick.msgHistoryService.findByKeywords(testMetaContact,new String[]{"test","word2"});
+  assertTrue("Nothing found findByKeywords",rs.hasNext());
+  msgs=getMessages(rs);
+  assertTrue("Messages too few - findByKeywords",msgs.size() >= 1);
+  rs=MsgHistoryServiceLick.msgHistoryService.findByKeywords(testMetaContact,new String[]{"test1","word2"});
+  assertFalse("Something found findByKeywords",rs.hasNext());
+  rs=MsgHistoryServiceLick.msgHistoryService.findByPeriod(testMetaContact,controlDate1,controlDate2);
+  assertTrue("Nothing found findByPeriod",rs.hasNext());
+  msgs=getMessages(rs);
+  assertEquals("Messages must be 2",msgs.size(),2);
+  assertTrue("Message no found",msgs.contains(messagesToSend[1].getContent()));
+  assertTrue("Message no found",msgs.contains(messagesToSend[2].getContent()));
+  rs=MsgHistoryServiceLick.msgHistoryService.findByPeriod(testMetaContact,controlDate1,controlDate2,new String[]{"word2"});
+  assertTrue("Nothing found findByPeriod",rs.hasNext());
+  msgs=getMessages(rs);
+  assertEquals("Messages must be 1",msgs.size(),1);
+  assertTrue("Message no found",msgs.contains(messagesToSend[1].getContent()));
+  rs=MsgHistoryServiceLick.msgHistoryService.findByStartDate(testMetaContact,controlDate2);
+  assertTrue("Nothing found findByStartDate",rs.hasNext());
+  msgs=getMessages(rs);
+  assertEquals("Messages must be 2",msgs.size(),2);
+  assertTrue("Message no found",msgs.contains(messagesToSend[3].getContent()));
+  assertTrue("Message no found",msgs.contains(messagesToSend[4].getContent()));
+  rs=MsgHistoryServiceLick.msgHistoryService.findLast(testMetaContact,3);
+  assertTrue("Nothing found 8",rs.hasNext());
+  msgs=getMessages(rs);
+  assertEquals("Messages must be 3",msgs.size(),3);
+  assertTrue("Message no found",msgs.contains(messagesToSend[2].getContent()));
+  assertTrue("Message no found",msgs.contains(messagesToSend[3].getContent()));
+  assertTrue("Message no found",msgs.contains(messagesToSend[4].getContent()));
 }
