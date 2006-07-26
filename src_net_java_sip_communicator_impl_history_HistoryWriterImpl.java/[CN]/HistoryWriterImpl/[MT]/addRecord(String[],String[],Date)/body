@@ -10,11 +10,23 @@ synchronized (root) {
       Element elem=this.currentDoc.createElement("record");
       elem.setAttribute("timestamp",Long.toString(date.getTime()));
       for (int i=0; i < propertyNames.length; i++) {
-        if (propertyValues[i] != null) {
-          Element propertyElement=this.currentDoc.createElement(propertyNames[i]);
-          Text value=this.currentDoc.createTextNode(propertyValues[i]);
-          propertyElement.appendChild(value);
-          elem.appendChild(propertyElement);
+        String propertyName=propertyNames[i];
+        if (propertyName.endsWith(CDATA_SUFFIX)) {
+          if (propertyValues[i] != null) {
+            propertyName=propertyName.replaceFirst(CDATA_SUFFIX,"");
+            Element propertyElement=this.currentDoc.createElement(propertyName);
+            Text value=this.currentDoc.createCDATASection(propertyValues[i]);
+            propertyElement.appendChild(value);
+            elem.appendChild(propertyElement);
+          }
+        }
+ else {
+          if (propertyValues[i] != null) {
+            Element propertyElement=this.currentDoc.createElement(propertyName);
+            Text value=this.currentDoc.createTextNode(propertyValues[i]);
+            propertyElement.appendChild(value);
+            elem.appendChild(propertyElement);
+          }
         }
       }
       root.appendChild(elem);
