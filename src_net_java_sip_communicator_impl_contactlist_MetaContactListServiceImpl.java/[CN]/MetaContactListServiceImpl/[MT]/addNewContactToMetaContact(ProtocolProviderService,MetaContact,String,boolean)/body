@@ -17,6 +17,7 @@
   BlockingSubscriptionEventRetriever evtRetriever=new BlockingSubscriptionEventRetriever(contactID);
   addContactToEventIgnoreList(contactID,provider);
   opSetPersPresence.addSubsciptionListener(evtRetriever);
+  opSetPersPresence.addServerStoredGroupChangeListener(evtRetriever);
   try {
     opSetPersPresence.subscribe(parentProtoGroup,contactID);
     evtRetriever.waitForEvent(CONTACT_LIST_MODIFICATION_TIMEOUT);
@@ -31,8 +32,8 @@
   if (evtRetriever.evt == null) {
     throw new MetaContactListException("Failed to create a contact with address: " + contactID,null,MetaContactListException.CODE_NETWORK_ERROR);
   }
-  ((MetaContactImpl)metaContact).addProtoContact(evtRetriever.evt.getSourceContact());
+  ((MetaContactImpl)metaContact).addProtoContact(evtRetriever.sourceContact);
   if (fireEvent) {
-    this.fireProtoContactEvent(evtRetriever.evt.getSourceContact(),ProtoContactEvent.PROTO_CONTACT_ADDED,null,metaContact);
+    this.fireProtoContactEvent(evtRetriever.sourceContact,ProtoContactEvent.PROTO_CONTACT_ADDED,null,metaContact);
   }
 }
