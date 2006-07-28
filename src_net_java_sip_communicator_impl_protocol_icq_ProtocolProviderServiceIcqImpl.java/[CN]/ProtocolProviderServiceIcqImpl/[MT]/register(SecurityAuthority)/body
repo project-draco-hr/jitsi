@@ -1,3 +1,17 @@
 {
-  aimConnection.connect();
+synchronized (initializationLock) {
+    String accountPrefix=IcqActivator.getProtocolProviderFactory().findAccountPrefix(getAccountID());
+    String password=IcqActivator.getConfigurationService().getString(accountPrefix + "." + ProtocolProviderFactory.PASSWORD);
+    if (password != null) {
+      password=new String(Base64.decode(password));
+    }
+ else {
+    }
+    session=new DefaultAppSession();
+    aimSession=session.openAimSession(new Screenname(getAccountID().getUserID()));
+    aimConnection=aimSession.openConnection(new AimConnectionProperties(new Screenname(getAccountID().getUserID()),password));
+    aimConnStateListener=new AimConnStateListener();
+    aimConnection.addStateListener(aimConnStateListener);
+    aimConnection.connect();
+  }
 }
