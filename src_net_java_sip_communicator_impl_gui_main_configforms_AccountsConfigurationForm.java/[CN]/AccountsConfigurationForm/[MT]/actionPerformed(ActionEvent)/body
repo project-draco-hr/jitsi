@@ -8,13 +8,25 @@
     wizard.showModalDialog();
   }
  else   if (sourceButton.equals(modifyButton)) {
-    AccountRegWizardContainerImpl wizard=(AccountRegWizardContainerImpl)GuiActivator.getUIService().getAccountRegWizardContainer();
-    wizard.setTitle(Messages.getString("accountRegistrationWizard"));
-    wizard.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - 250,Toolkit.getDefaultToolkit().getScreenSize().height / 2 - 100);
-    ProtocolProviderService protocolProvider=(ProtocolProviderService)tableModel.getValueAt(accountsTable.getSelectedRow(),0);
-    wizard.modifyAccount(protocolProvider);
-    wizard.showModalDialog();
+    if (accountsTable.getSelectedRow() != -1) {
+      AccountRegWizardContainerImpl wizard=(AccountRegWizardContainerImpl)GuiActivator.getUIService().getAccountRegWizardContainer();
+      wizard.setTitle(Messages.getString("accountRegistrationWizard"));
+      wizard.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - 250,Toolkit.getDefaultToolkit().getScreenSize().height / 2 - 100);
+      ProtocolProviderService protocolProvider=(ProtocolProviderService)tableModel.getValueAt(accountsTable.getSelectedRow(),0);
+      wizard.modifyAccount(protocolProvider);
+      wizard.showModalDialog();
+    }
   }
- else   if (sourceButton.equals(modifyButton)) {
+ else   if (sourceButton.equals(removeButton)) {
+    if (accountsTable.getSelectedRow() != -1) {
+      ProtocolProviderService protocolProvider=(ProtocolProviderService)tableModel.getValueAt(accountsTable.getSelectedRow(),0);
+      ProtocolProviderFactory providerFactory=GuiActivator.getProtocolProviderFactory(protocolProvider);
+      if (providerFactory != null) {
+        int result=JOptionPane.showConfirmDialog(this,Messages.getString("removeAccountMessage"),Messages.getString("removeAccount"),JOptionPane.YES_NO_CANCEL_OPTION);
+        if (result == JOptionPane.YES_OPTION) {
+          providerFactory.uninstallAccount(protocolProvider.getAccountID());
+        }
+      }
+    }
   }
 }
