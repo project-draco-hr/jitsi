@@ -1,8 +1,18 @@
 {
+  String wizardClassName=null;
+  String prefix="net.java.sip.communicator.impl.ui";
+  List accounts=this.configService.getPropertyNamesByPrefix(prefix,true);
+  Iterator accountsIter=accounts.iterator();
+  while (accountsIter.hasNext()) {
+    String accountRootPropName=(String)accountsIter.next();
+    String accountUID=configService.getString(accountRootPropName);
+    if (accountUID.equals(protocolProvider.getAccountID().getAccountUniqueID())) {
+      wizardClassName=configService.getString(accountRootPropName + ".WIZARD");
+    }
+  }
+  AccountRegistrationWizard wizard=getWizardFromClassName(wizardClassName);
   this.registerWizardPage(summaryPage.getIdentifier(),summaryPage);
-  AccountRegistrationWizard wizard=(AccountRegistrationWizard)this.accountWizards.get(protocolProvider);
   this.setCurrentWizard(wizard);
-  wizard.loadAccount(protocolProvider);
   Iterator i=wizard.getPages();
   Object identifier=null;
   boolean firstPage=true;
@@ -15,6 +25,7 @@
       firstPage=false;
     }
   }
+  wizard.loadAccount(protocolProvider);
   this.getSummaryPage().setPreviousPageIdentifier(identifier);
   try {
     this.setWizzardIcon(ImageIO.read(new ByteArrayInputStream(wizard.getIcon())));
