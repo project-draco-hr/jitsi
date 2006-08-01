@@ -59,7 +59,7 @@ synchronized (obj) {
     subEvtCollector.waitForEvent(10000);
     operationSetPresence.removeSubscriptionListener(subEvtCollector);
   }
-  assertEquals("Subscription event dispatching failed.",1,subEvtCollector.collectedEvents.size());
+  assertEquals("Subscription event dispatching failed.",2,subEvtCollector.collectedEvents.size());
   EventObject evt=(EventObject)subEvtCollector.collectedEvents.get(0);
   Object source=null;
   Contact srcContact=null;
@@ -70,12 +70,20 @@ synchronized (obj) {
     srcContact=subEvt.getSourceContact();
     srcProvider=subEvt.getSourceProvider();
   }
- else   if (evt instanceof SubscriptionMovedEvent) {
+  assertEquals("SubscriptionEvent Source:",fixture.testerAgent.getIcqUIN(),((Contact)source).getAddress());
+  assertEquals("SubscriptionEvent Source Contact:",fixture.testerAgent.getIcqUIN(),srcContact.getAddress());
+  assertSame("SubscriptionEvent Source Provider:",fixture.provider,srcProvider);
+  evt=(EventObject)subEvtCollector.collectedEvents.get(1);
+  source=null;
+  srcContact=null;
+  srcProvider=null;
+  if (evt instanceof SubscriptionMovedEvent) {
     SubscriptionMovedEvent mvEvt=(SubscriptionMovedEvent)evt;
     source=mvEvt.getSource();
     srcContact=mvEvt.getSourceContact();
     srcProvider=mvEvt.getSourceProvider();
   }
+ else   fail("Second event must be SubscriptionMovedEvent");
   assertEquals("SubscriptionEvent Source:",fixture.testerAgent.getIcqUIN(),((Contact)source).getAddress());
   assertEquals("SubscriptionEvent Source Contact:",fixture.testerAgent.getIcqUIN(),srcContact.getAddress());
   assertSame("SubscriptionEvent Source Provider:",fixture.provider,srcProvider);
