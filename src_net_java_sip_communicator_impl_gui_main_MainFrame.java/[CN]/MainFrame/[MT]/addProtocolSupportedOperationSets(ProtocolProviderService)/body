@@ -1,40 +1,42 @@
 {
   Map supportedOperationSets=protocolProvider.getSupportedOperationSets();
   this.protocolSupportedOperationSets.put(protocolProvider,supportedOperationSets);
-  Iterator entrySetIter=supportedOperationSets.entrySet().iterator();
-  for (int i=0; i < supportedOperationSets.size(); i++) {
-    Map.Entry entry=(Map.Entry)entrySetIter.next();
-    Object key=entry.getKey();
-    Object value=entry.getValue();
-    if (key.equals(OperationSetPersistentPresence.class.getName()) || key.equals(OperationSetPresence.class.getName())) {
-      OperationSetPresence presence=(OperationSetPresence)value;
-      this.protocolPresenceSets.put(protocolProvider,presence);
-      presence.addProviderPresenceStatusListener(new ProviderPresenceStatusAdapter());
-      presence.addContactPresenceStatusListener(new ContactPresenceStatusAdapter());
-      presence.setAuthorizationHandler(new AuthorizationHandlerImpl());
-      try {
-        presence.publishPresenceStatus(IcqStatusEnum.ONLINE,"");
-      }
- catch (      OperationFailedException e) {
-        logger.error("Publish presence status failed.",e);
-      }
-      this.getStatusPanel().stopConnecting(protocolProvider);
-      this.statusPanel.setSelectedStatus(protocolProvider,Constants.ONLINE_STATUS);
-      this.tabbedPane.getContactListPanel().getContactList().requestFocus();
+  String ppOpSetClassName=OperationSetPersistentPresence.class.getName();
+  String pOpSetClassName=OperationSetPresence.class.getName();
+  if (supportedOperationSets.containsKey(ppOpSetClassName) || supportedOperationSets.containsKey(pOpSetClassName)) {
+    OperationSetPresence presence=(OperationSetPresence)supportedOperationSets.get(ppOpSetClassName);
+    if (presence == null) {
+      presence=(OperationSetPresence)supportedOperationSets.get(pOpSetClassName);
     }
- else     if (key.equals(OperationSetBasicInstantMessaging.class.getName()) || key.equals(OperationSetPresence.class.getName())) {
-      OperationSetBasicInstantMessaging im=(OperationSetBasicInstantMessaging)value;
-      this.imOperationSets.put(protocolProvider,im);
-      im.addMessageListener(this.getTabbedPane().getContactListPanel());
+    this.protocolPresenceSets.put(protocolProvider,presence);
+    presence.addProviderPresenceStatusListener(new ProviderPresenceStatusAdapter());
+    presence.addContactPresenceStatusListener(new ContactPresenceStatusAdapter());
+    presence.setAuthorizationHandler(new AuthorizationHandlerImpl());
+    try {
+      presence.publishPresenceStatus(IcqStatusEnum.ONLINE,"");
     }
- else     if (key.equals(OperationSetTypingNotifications.class.getName())) {
-      OperationSetTypingNotifications tn=(OperationSetTypingNotifications)value;
-      this.tnOperationSets.put(protocolProvider,tn);
-      tn.addTypingNotificationsListener(this.getTabbedPane().getContactListPanel());
+ catch (    OperationFailedException e) {
+      logger.error("Publish presence status failed.",e);
     }
- else     if (key.equals(OperationSetWebContactInfo.class.getName())) {
-      OperationSetWebContactInfo wContactInfo=(OperationSetWebContactInfo)value;
-      this.webContactInfoOperationSets.put(protocolProvider,wContactInfo);
-    }
+    this.getStatusPanel().stopConnecting(protocolProvider);
+    this.statusPanel.setSelectedStatus(protocolProvider,Constants.ONLINE_STATUS);
+    this.tabbedPane.getContactListPanel().getContactList().requestFocus();
+  }
+  String imOpSetClassName=OperationSetBasicInstantMessaging.class.getName();
+  if (supportedOperationSets.containsKey(imOpSetClassName)) {
+    OperationSetBasicInstantMessaging im=(OperationSetBasicInstantMessaging)supportedOperationSets.get(imOpSetClassName);
+    this.imOperationSets.put(protocolProvider,im);
+    im.addMessageListener(this.getTabbedPane().getContactListPanel());
+  }
+  String tnOpSetClassName=OperationSetTypingNotifications.class.getName();
+  if (supportedOperationSets.containsKey(tnOpSetClassName)) {
+    OperationSetTypingNotifications tn=(OperationSetTypingNotifications)supportedOperationSets.get(tnOpSetClassName);
+    this.tnOperationSets.put(protocolProvider,tn);
+    tn.addTypingNotificationsListener(this.getTabbedPane().getContactListPanel());
+  }
+  String wciOpSetClassName=OperationSetWebContactInfo.class.getName();
+  if (supportedOperationSets.containsKey(wciOpSetClassName)) {
+    OperationSetWebContactInfo wContactInfo=(OperationSetWebContactInfo)supportedOperationSets.get(wciOpSetClassName);
+    this.webContactInfoOperationSets.put(protocolProvider,wContactInfo);
   }
 }
