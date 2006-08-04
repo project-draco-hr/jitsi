@@ -1,4 +1,5 @@
 {
+  if (authority == null)   throw new IllegalArgumentException("The register method needs a valid non-null authority impl " + " in order to be able and retrieve passwords.");
 synchronized (initializationLock) {
     String accountPrefix=IcqActivator.getProtocolProviderFactory().findAccountPrefix(getAccountID());
     String password=IcqActivator.getConfigurationService().getString(accountPrefix + "." + ProtocolProviderFactory.PASSWORD);
@@ -6,6 +7,13 @@ synchronized (initializationLock) {
       password=new String(Base64.decode(password));
     }
  else {
+      UserCredentials credentials=new UserCredentials();
+      credentials.setUserName(this.getAccountID().getUserID());
+      credentials=authority.obtainCredentials(ProtocolNames.ICQ,credentials);
+      password=new String(credentials.getPassword());
+      if (credentials.isPasswordPersistent()) {
+        IcqActivator.getConfigurationService().setProperty(accountPrefix + "." + ProtocolProviderFactory.PASSWORD,new String(Base64.encode(password.getBytes())));
+      }
     }
     session=new DefaultAppSession();
     aimSession=session.openAimSession(new Screenname(getAccountID().getUserID()));
