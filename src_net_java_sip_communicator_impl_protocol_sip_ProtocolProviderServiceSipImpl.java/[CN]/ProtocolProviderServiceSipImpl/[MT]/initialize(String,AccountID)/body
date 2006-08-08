@@ -1,6 +1,29 @@
 {
 synchronized (initializationLock) {
     this.accountID=accountID;
+    sipFactory=SipFactory.getInstance();
+    sipFactory.setPathName("gov.nist");
+    Properties properties=new Properties();
+    String proxyAddress=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PROXY_ADDRESS);
+    properties.setProperty("javax.sip.STACK_NAME","SIP Communicator:" + getAccountID().getAccountUniqueID());
+    properties.setProperty("gov.nist.javax.sip.DEBUG_LOG","shootistdebug.txt");
+    properties.setProperty("gov.nist.javax.sip.SERVER_LOG","shootistlog.txt");
+    properties.setProperty("gov.nist.javax.sip.CACHE_CLIENT_CONNECTIONS","false");
+    properties.setProperty("gov.nist.javax.sip.TRACE_LEVEL","TRACE");
+    try {
+      sipStack=sipFactory.createSipStack(properties);
+      logger.debug("Created stack: " + sipStack);
+    }
+ catch (    PeerUnavailableException e) {
+      logger.fatal("Failed to initialize SIP Stack.",e);
+    }
+    try {
+      headerFactory=sipFactory.createHeaderFactory();
+      addressFactory=sipFactory.createAddressFactory();
+      messageFactory=sipFactory.createMessageFactory();
+    }
+ catch (    Throwable t) {
+    }
     isInitialized=true;
   }
 }
