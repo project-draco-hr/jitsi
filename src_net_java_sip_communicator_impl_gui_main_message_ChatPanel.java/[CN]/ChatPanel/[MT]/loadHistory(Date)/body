@@ -1,8 +1,7 @@
 {
-  MessageHistoryService msgHistory=GuiActivator.getMsgHistoryService();
-  Collection c=msgHistory.findLast(this.metaContact,Constants.CHAT_HISTORY_SIZE);
-  if (c.size() > 0) {
-    Iterator i=c.iterator();
+  Collection historyList=msgHistory.findLast(this.metaContact,Constants.CHAT_HISTORY_SIZE);
+  if (historyList.size() > 0) {
+    Iterator i=historyList.iterator();
     while (i.hasNext()) {
       Object o=i.next();
       if (o instanceof MessageDeliveredEvent) {
@@ -12,7 +11,9 @@
       }
  else       if (o instanceof MessageReceivedEvent) {
         MessageReceivedEvent evt=(MessageReceivedEvent)o;
-        conversationPanel.processMessage(evt.getSourceContact().getDisplayName(),evt.getTimestamp(),Constants.INCOMING_MESSAGE,evt.getSourceMessage().getContent());
+        if (!evt.getTimestamp().equals(lastMsgTimestamp)) {
+          conversationPanel.processMessage(evt.getSourceContact().getDisplayName(),evt.getTimestamp(),Constants.INCOMING_MESSAGE,evt.getSourceMessage().getContent());
+        }
       }
     }
   }
