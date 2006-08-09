@@ -3,24 +3,30 @@
   Hashtable properties=new Hashtable();
   properties.put("service.pid",getName());
   IcqSlickFixture.bc=bundleContext;
+  String offlineMode=System.getProperty(DISABLE_ONLINE_TESTS_PROPERTY_NAME,null);
+  if (offlineMode != null && offlineMode.equalsIgnoreCase("true"))   IcqSlickFixture.onlineTestingDisabled=true;
   String icqTestAgentName=System.getProperty(TESTING_IMPL_USER_ID_PROP_NAME,null);
   if (icqTestAgentName != null) {
     IcqSlickFixture.testerAgent=new IcqTesterAgent(icqTestAgentName);
     String icqTestAgentPwd=System.getProperty(TESTING_IMPL_PWD_PROP_NAME,null);
     if (IcqSlickFixture.testerAgent.register(icqTestAgentPwd)) {
-      IcqSlickFixture.testerAgent.setAuthorizationRequired();
-      initializeTestedContactList();
-      String offlineMsgBody="This is a Test Message. " + "Supposed to be delivered as offline message!";
-      IcqSlickFixture.offlineMsgCollector=new IcqSlickFixture.OfflineMsgCollector();
-      IcqSlickFixture.offlineMsgCollector.setMessageText(offlineMsgBody);
-      IcqSlickFixture.testerAgent.sendOfflineMessage(System.getProperty(TESTED_IMPL_USER_ID_PROP_NAME,null),offlineMsgBody);
+      if (!IcqSlickFixture.onlineTestingDisabled) {
+        IcqSlickFixture.testerAgent.setAuthorizationRequired();
+        initializeTestedContactList();
+        String offlineMsgBody="This is a Test Message. " + "Supposed to be delivered as offline message!";
+        IcqSlickFixture.offlineMsgCollector=new IcqSlickFixture.OfflineMsgCollector();
+        IcqSlickFixture.offlineMsgCollector.setMessageText(offlineMsgBody);
+        IcqSlickFixture.testerAgent.sendOfflineMessage(System.getProperty(TESTED_IMPL_USER_ID_PROP_NAME,null),offlineMsgBody);
+      }
       addTest(TestAccountInstallation.suite());
       addTest(TestProtocolProviderServiceIcqImpl.suite());
       addTest(TestOperationSetPresence.suite());
-      addTest(TestOperationSetPersistentPresence.suite());
-      addTest(TestOperationSetBasicInstantMessaging.suite());
-      addTest(TestOperationSetTypingNotifications.suite());
-      addTest(TestOperationSetServerStoredInfo.suite());
+      if (!IcqSlickFixture.onlineTestingDisabled) {
+        addTest(TestOperationSetPersistentPresence.suite());
+        addTest(TestOperationSetBasicInstantMessaging.suite());
+        addTest(TestOperationSetTypingNotifications.suite());
+        addTest(TestOperationSetServerStoredInfo.suite());
+      }
       addTest(TestAccountUninstallation.suite());
       addTestSuite(TestAccountUninstallationPersistence.class);
     }
