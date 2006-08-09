@@ -1,6 +1,21 @@
 {
-  Collection msgList=this.msgHistory.findByPeriod(this.metaContact,startDate,endDate);
-  showHistory(msgList);
-  this.lastExecutedSearch=PERIOD_SEARCH;
-  this.searchStartDate=startDate;
+  if (searchStartDate == null || !searchStartDate.equals(startDate)) {
+    ChatConversationPanel convPanel=null;
+    this.historyPanel.removeAll();
+    if (dateHistoryTable.containsKey(startDate)) {
+      convPanel=(ChatConversationPanel)dateHistoryTable.get(startDate);
+      this.historyPanel.add(convPanel);
+    }
+ else {
+      Collection msgList=this.msgHistory.findByPeriod(this.metaContact,startDate,endDate);
+      convPanel=new ChatConversationPanel(this);
+      this.historyPanel.add(convPanel);
+      this.createHistory(convPanel,msgList);
+      this.dateHistoryTable.put(startDate,convPanel);
+    }
+    this.historyPanel.revalidate();
+    this.historyPanel.repaint();
+    this.lastExecutedSearch=PERIOD_SEARCH;
+    this.searchStartDate=startDate;
+  }
 }
