@@ -1,15 +1,17 @@
 {
-  edu.stanford.ejalbert.BrowserLauncher launcher;
   try {
     launcher=new edu.stanford.ejalbert.BrowserLauncher(null);
-    BrowserLauncherRunner runner=new BrowserLauncherRunner(launcher,url,null);
+    if (urlString == null || urlString.trim().length() == 0) {
+      throw new MalformedURLException("You must specify a url.");
+    }
+    new URL(urlString);
+    BrowserLauncherErrorHandler errorHandler=new TestAppErrorHandler();
+    String targetBrowser=launcher.getBrowserList().get(0).toString();
+    BrowserLauncherRunner runner=new BrowserLauncherRunner(launcher,targetBrowser,urlString,errorHandler);
     Thread launcherThread=new Thread(runner);
     launcherThread.start();
   }
- catch (  BrowserLaunchingInitializingException e) {
-    e.printStackTrace();
-  }
-catch (  UnsupportedOperatingSystemException e) {
-    e.printStackTrace();
+ catch (  Exception ex) {
+    JOptionPane.showMessageDialog(null,ex.getMessage(),"Error Message",JOptionPane.ERROR_MESSAGE);
   }
 }
