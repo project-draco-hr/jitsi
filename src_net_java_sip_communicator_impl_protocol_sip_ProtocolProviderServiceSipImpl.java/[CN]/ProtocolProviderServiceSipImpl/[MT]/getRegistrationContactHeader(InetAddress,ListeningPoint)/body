@@ -1,0 +1,20 @@
+{
+  ContactHeader registrationContactHeader=null;
+  try {
+    InetAddress localAddress=SipActivator.getNetworkAddressManagerService().getLocalHost(registrarAddress);
+    SipURI contactURI=(SipURI)addressFactory.createSipURI(((SipURI)ourSipAddress.getURI()).getUser(),localAddress.getHostAddress());
+    contactURI.setTransportParam(srcListeningPoint.getTransport());
+    contactURI.setPort(srcListeningPoint.getPort());
+    Address contactAddress=addressFactory.createAddress(contactURI);
+    if (ourDisplayName != null) {
+      contactAddress.setDisplayName(ourDisplayName);
+    }
+    registrationContactHeader=headerFactory.createContactHeader(contactAddress);
+    logger.debug("generated contactHeader:" + registrationContactHeader);
+  }
+ catch (  ParseException ex) {
+    logger.error("A ParseException occurred while creating From Header!",ex);
+    throw new OperationFailedException("A ParseException occurred while creating From Header!",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  return registrationContactHeader;
+}

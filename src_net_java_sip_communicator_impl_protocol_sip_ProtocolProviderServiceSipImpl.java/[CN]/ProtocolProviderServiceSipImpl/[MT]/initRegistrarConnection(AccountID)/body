@@ -1,0 +1,44 @@
+{
+  String registrarAddressStr=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_ADDRESS);
+  InetAddress registrarAddress=null;
+  try {
+    registrarAddress=InetAddress.getByName(registrarAddressStr);
+  }
+ catch (  UnknownHostException ex) {
+    throw new IllegalArgumentException(registrarAddressStr + " appears to be an either invalid or inaccessible address",ex);
+  }
+  int registrarPort=ListeningPoint.PORT_5060;
+  String registrarPortStr=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_PORT);
+  if (registrarPortStr != null && registrarPortStr.length() > 0) {
+    try {
+      registrarPort=Integer.parseInt(registrarPortStr);
+    }
+ catch (    NumberFormatException ex) {
+      logger.error(registrarPortStr + " is not a valid port value. Expected an integer",ex);
+    }
+    if (registrarPort > NetworkUtils.MAX_PORT_NUMBER)     throw new IllegalArgumentException(registrarPort + " is larger than " + NetworkUtils.MAX_PORT_NUMBER+ " and does not therefore represent a valid port nubmer.");
+  }
+  String registrarTransport=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_TRANSPORT);
+  if (registrarPortStr != null && registrarPortStr.length() > 0) {
+    if (!registrarTransport.equals(ListeningPoint.UDP) || !registrarTransport.equals(ListeningPoint.TCP) || !registrarTransport.equals(ListeningPoint.TLS))     throw new IllegalArgumentException(registrarTransport + " is not a valid transport protocol. Transport must be left " + "blanc or set to TCP, UDP or TLS.");
+  }
+ else {
+    registrarTransport=ListeningPoint.UDP;
+  }
+  int expires=SipRegistrarConnection.DEFAULT_REGISTRATION_EXPIRATION;
+  String expiresStr=SipActivator.getConfigurationService().getString(REGISTRATION_EXPIRATION);
+  if (expiresStr != null && expiresStr.length() > 0) {
+    try {
+      expires=Integer.parseInt(expiresStr);
+    }
+ catch (    NumberFormatException ex) {
+      logger.error(expiresStr + " is not a valid expires  value. Expexted an integer",ex);
+    }
+  }
+  try {
+    this.sipRegistrarConnection=new SipRegistrarConnection(registrarAddress,registrarPort,registrarTransport,expires,this);
+  }
+ catch (  ParseException ex) {
+    throw new IllegalArgumentException("Failed to create a registrar connection with " + registrarAddress.getHostAddress(),ex);
+  }
+}

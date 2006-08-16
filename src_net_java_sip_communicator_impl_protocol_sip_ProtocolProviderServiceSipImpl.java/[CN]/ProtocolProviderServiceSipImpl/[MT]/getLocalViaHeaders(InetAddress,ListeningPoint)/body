@@ -1,0 +1,18 @@
+{
+  ArrayList viaHeaders=new ArrayList();
+  try {
+    InetAddress localAddress=SipActivator.getNetworkAddressManagerService().getLocalHost(destination);
+    ViaHeader viaHeader=headerFactory.createViaHeader(localAddress.getHostAddress(),srcListeningPoint.getPort(),srcListeningPoint.getTransport(),null);
+    viaHeaders.add(viaHeader);
+    logger.debug("generated via headers:" + viaHeader);
+    return viaHeaders;
+  }
+ catch (  ParseException ex) {
+    logger.error("A ParseException occurred while creating Via Headers!",ex);
+    throw new OperationFailedException("A ParseException occurred while creating Via Headers!",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+catch (  InvalidArgumentException ex) {
+    logger.error("Unable to create a via header for port " + udpListeningPoint.getPort(),ex);
+    throw new OperationFailedException("Unable to create a via header for port " + udpListeningPoint.getPort(),OperationFailedException.INTERNAL_ERROR,ex);
+  }
+}
