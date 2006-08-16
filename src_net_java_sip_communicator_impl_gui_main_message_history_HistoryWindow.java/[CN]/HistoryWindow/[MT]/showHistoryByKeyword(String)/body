@@ -1,10 +1,34 @@
 {
   Collection msgList=this.msgHistory.findByKeyword(this.metaContact,keyword);
-  this.historyPanel.removeAll();
-  ChatConversationPanel convPanel=new ChatConversationPanel(this);
-  createHistory(convPanel,msgList);
-  this.historyPanel.add(convPanel,BorderLayout.CENTER);
-  this.historyPanel.revalidate();
+  Object[] msgArray=msgList.toArray();
+  Date date=null;
+  ChatConversationPanel convPanel=null;
+  this.datesPanel.removeAllDates();
+  for (int i=0; i < msgArray.length; i++) {
+    Object o=msgArray[i];
+    if (o instanceof MessageDeliveredEvent) {
+      MessageDeliveredEvent evt=(MessageDeliveredEvent)o;
+      date=evt.getTimestamp();
+    }
+ else     if (o instanceof MessageReceivedEvent) {
+      MessageReceivedEvent evt=(MessageReceivedEvent)o;
+      date=evt.getTimestamp();
+    }
+    if (!datesPanel.containsDate(date)) {
+      datesPanel.addDate(date);
+    }
+  }
+  for (int i=0; i < datesPanel.getDatesNumber(); i++) {
+    Date initDate=datesPanel.getDate(i);
+    msgList=this.msgHistory.findByPeriod(this.metaContact,initDate,datesPanel.getNextDate(initDate));
+    if (dateHistoryTable.contains(initDate)) {
+      dateHistoryTable.remove(initDate);
+    }
+    convPanel=new ChatConversationPanel(this);
+    this.createHistory(convPanel,msgList,keyword);
+    this.dateHistoryTable.put(initDate,convPanel);
+  }
+  this.datesPanel.setSelected(datesPanel.getDatesNumber() - 1);
   this.lastExecutedSearch=KEYWORD_SEARCH;
   this.searchKeyword=keyword;
 }
