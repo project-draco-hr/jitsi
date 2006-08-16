@@ -1,0 +1,22 @@
+{
+  FromHeader fromHeader=((FromHeader)response.getHeader(FromHeader.NAME));
+  Address address=fromHeader.getAddress();
+  int expires=registrationsExpiration;
+  ExpiresHeader expiresHeader=response.getExpires();
+  if (expiresHeader != null) {
+    expires=expiresHeader.getExpires();
+  }
+ else {
+    ContactHeader contactHeader=(ContactHeader)response.getHeader(ContactHeader.NAME);
+    if (contactHeader != null) {
+      expires=contactHeader.getExpires();
+    }
+  }
+  if (expires <= 0) {
+    setRegistrationState(RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,"Registration terminated.");
+  }
+ else {
+    scheduleReRegistration(expires);
+    setRegistrationState(RegistrationState.REGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
+  }
+}

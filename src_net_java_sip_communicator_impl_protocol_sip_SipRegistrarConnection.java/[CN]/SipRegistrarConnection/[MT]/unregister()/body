@@ -1,0 +1,41 @@
+{
+  if (getRegistrationState() == RegistrationState.REGISTERED) {
+    return;
+  }
+  cancelPendingRegistrations();
+  if (this.registerRequest == null) {
+    logger.error("Couldn't find the initial register request");
+    setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,"Could not find the initial regiest request.");
+    throw new OperationFailedException("Could not find the initial register request.",OperationFailedException.INTERNAL_ERROR);
+  }
+  Request unregisterRequest=(Request)registerRequest.clone();
+  try {
+    unregisterRequest.getExpires().setExpires(0);
+    CSeqHeader cSeqHeader=(CSeqHeader)unregisterRequest.getHeader(CSeqHeader.NAME);
+    cSeqHeader.setSequenceNumber(getNextCSeqValue());
+  }
+ catch (  InvalidArgumentException ex) {
+    logger.error("Unable to set Expires Header",ex);
+    setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,"Unable to set Expires Header");
+    throw new OperationFailedException("Unable to set Expires Header",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ClientTransaction unregisterTransaction=null;
+  try {
+    unregisterTransaction=sipProvider.getJainSipProvider().getNewClientTransaction(unregisterRequest);
+  }
+ catch (  TransactionUnavailableException ex) {
+    logger.error("Unable to create a unregister transaction",ex);
+    setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,"Unable to create a unregister transaction");
+    throw new OperationFailedException("Unable to create a unregister transaction",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  try {
+    unregisterTransaction.sendRequest();
+    logger.debug("sent request: " + unregisterRequest);
+    setRegistrationState(RegistrationState.UNREGISTERING,RegistrationStateChangeEvent.REASON_USER_REQUEST,null);
+  }
+ catch (  SipException ex) {
+    logger.error("Failed to send unregister request",ex);
+    setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,"Unable to create a unregister transaction");
+    throw new OperationFailedException("Failed to send unregister request",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+}

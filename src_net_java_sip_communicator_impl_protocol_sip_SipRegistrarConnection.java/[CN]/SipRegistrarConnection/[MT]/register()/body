@@ -1,0 +1,84 @@
+{
+  setRegistrationState(RegistrationState.REGISTERING,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
+  FromHeader fromHeader=null;
+  try {
+    fromHeader=sipProvider.getHeaderFactory().createFromHeader(sipProvider.ourSipAddress,ProtocolProviderServiceSipImpl.generateLocalTag());
+  }
+ catch (  ParseException ex) {
+    logger.error("Failed to generate a from header for our register request.",ex);
+    setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,ex.getMessage());
+    throw new OperationFailedException("Failed to generate a from header for our register request.",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  CallIdHeader callIdHeader=sipProvider.getJainSipProvider().getNewCallId();
+  CSeqHeader cSeqHeader=null;
+  try {
+    cSeqHeader=sipProvider.getHeaderFactory().createCSeqHeader(getNextCSeqValue(),Request.REGISTER);
+  }
+ catch (  ParseException ex) {
+    logger.error("Corrupt Sip Stack",ex);
+    setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,ex.getMessage());
+    throw new OperationFailedException("Failed to generate a from header for our register request.",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+catch (  InvalidArgumentException ex) {
+    logger.error("The application is corrupt",ex);
+    setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,ex.getMessage());
+    throw new OperationFailedException("Failed to generate a from header for our register request.",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ToHeader toHeader=null;
+  try {
+    toHeader=sipProvider.getHeaderFactory().createToHeader(sipProvider.ourSipAddress,null);
+  }
+ catch (  ParseException ex) {
+    logger.error("Could not create a To header for address:" + fromHeader.getAddress(),ex);
+    setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,ex.getMessage());
+    throw new OperationFailedException("Could not create a To header for address:" + fromHeader.getAddress(),OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ArrayList viaHeaders=sipProvider.getLocalViaHeaders(registrarAddress,sipProvider.getUdpListeningPoint());
+  MaxForwardsHeader maxForwardsHeader=sipProvider.getMaxForwardsHeader();
+  Request request=null;
+  try {
+    request=sipProvider.getMessageFactory().createRequest(registrarURI,Request.REGISTER,callIdHeader,cSeqHeader,fromHeader,toHeader,viaHeaders,maxForwardsHeader);
+  }
+ catch (  ParseException ex) {
+    logger.error("Could not create the register request!",ex);
+    setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,ex.getMessage());
+    throw new OperationFailedException("Could not create the register request!",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ExpiresHeader expHeader=null;
+  for (int retry=0; retry < 2; retry++) {
+    try {
+      expHeader=sipProvider.getHeaderFactory().createExpiresHeader(registrationsExpiration);
+    }
+ catch (    InvalidArgumentException ex) {
+      if (retry == 0) {
+        registrationsExpiration=3600;
+        continue;
+      }
+      logger.error("Invalid registrations expiration parameter - " + registrationsExpiration,ex);
+      setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,ex.getMessage());
+      throw new OperationFailedException("Invalid registrations expiration parameter - " + registrationsExpiration,OperationFailedException.INTERNAL_ERROR,ex);
+    }
+  }
+  request.addHeader(expHeader);
+  ContactHeader contactHeader=sipProvider.getRegistrationContactHeader(registrarAddress,sipProvider.getUdpListeningPoint());
+  request.addHeader(contactHeader);
+  ClientTransaction regTrans=null;
+  try {
+    regTrans=sipProvider.getJainSipProvider().getNewClientTransaction(request);
+  }
+ catch (  TransactionUnavailableException ex) {
+    logger.error("Could not create a register transaction!\n" + "Check that the Registrar address is correct!",ex);
+    setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,ex.getMessage());
+    throw new OperationFailedException("Could not create a register transaction!\n" + "Check that the Registrar address is correct!",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  try {
+    regTrans.sendRequest();
+    logger.debug("sent request= " + request);
+  }
+ catch (  Exception ex) {
+    logger.error("Could not send out the register request!",ex);
+    setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,ex.getMessage());
+    throw new OperationFailedException("Could not send out the register request!",OperationFailedException.NETWORK_FAILURE,ex);
+  }
+  this.registerRequest=request;
+}
