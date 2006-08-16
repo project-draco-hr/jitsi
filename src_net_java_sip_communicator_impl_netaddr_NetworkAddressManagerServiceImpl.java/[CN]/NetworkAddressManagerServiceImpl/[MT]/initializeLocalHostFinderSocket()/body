@@ -1,0 +1,28 @@
+{
+  String bindRetriesStr=NetaddrActivator.getConfigurationService().getString(BIND_RETRIES_PROPERTY_NAME);
+  int bindRetries=5;
+  if (bindRetriesStr != null) {
+    try {
+      bindRetries=Integer.parseInt(bindRetriesStr);
+    }
+ catch (    NumberFormatException ex) {
+      logger.error(bindRetriesStr + " does not appear to be an integer. " + "Defaulting port bind retries to "+ bindRetries,ex);
+    }
+  }
+  int currentlyTriedPort=NetworkUtils.getRandomPortNumber();
+  for (int i=0; i < bindRetries; i++) {
+    try {
+      localHostFinderSocket=new DatagramSocket(currentlyTriedPort);
+    }
+ catch (    SocketException exc) {
+      if (!exc.getMessage().contains("Address already in use")) {
+        logger.fatal("An exception occurred while trying to create" + "a local host discovery socket.",exc);
+        localHostFinderSocket=null;
+        return;
+      }
+      logger.debug("Port " + currentlyTriedPort + " seems in use.");
+      currentlyTriedPort=NetworkUtils.getRandomPortNumber();
+      logger.debug("Retrying bind on port " + currentlyTriedPort);
+    }
+  }
+}

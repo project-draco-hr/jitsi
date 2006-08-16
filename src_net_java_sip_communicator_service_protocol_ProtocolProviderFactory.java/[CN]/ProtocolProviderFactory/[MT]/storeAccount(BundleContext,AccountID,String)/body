@@ -5,7 +5,11 @@
   ConfigurationService configurationService=(ConfigurationService)bundleContext.getService(confReference);
   configurationService.setProperty(sourcePackageName + "." + accNodeName,accNodeName);
   configurationService.setProperty(sourcePackageName + "." + accNodeName+ "."+ ACCOUNT_UID,accountID.getAccountUniqueID());
-  configurationService.setProperty(sourcePackageName + "." + accNodeName+ "."+ USER_ID,accountID.getUserID());
-  String password=(String)accountProperties.get(PASSWORD);
-  if (password != null)   configurationService.setProperty(sourcePackageName + "." + accNodeName+ "."+ PASSWORD,new String(Base64.encode(password.getBytes())));
+  Iterator accountPropKeys=accountID.getAccountProperties().keySet().iterator();
+  while (accountPropKeys.hasNext()) {
+    String propKey=(String)accountPropKeys.next();
+    String propValue=(String)accountID.getAccountProperties().get(propKey);
+    if (propKey.equals(PASSWORD))     propValue=new String(Base64.encode(propValue.getBytes()));
+    configurationService.setProperty(sourcePackageName + "." + accNodeName+ "."+ propKey,propValue);
+  }
 }

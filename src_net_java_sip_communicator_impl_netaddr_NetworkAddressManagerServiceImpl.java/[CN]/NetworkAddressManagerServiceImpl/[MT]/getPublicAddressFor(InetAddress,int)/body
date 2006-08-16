@@ -1,0 +1,21 @@
+{
+  try {
+    logger.logEntry();
+    if (!useStun) {
+      logger.debug("Stun is disabled, skipping mapped address recovery.");
+      return new InetSocketAddress(getLocalHost(dst),port);
+    }
+    StunAddress mappedAddress=queryStunServer(port);
+    InetSocketAddress result=null;
+    if (mappedAddress != null)     result=mappedAddress.getSocketAddress();
+ else {
+      InetAddress localHost=getLocalHost(dst);
+      result=new InetSocketAddress(localHost,port);
+    }
+    if (logger.isDebugEnabled())     logger.debug("Returning mapping for port:" + port + " as follows: "+ result);
+    return result;
+  }
+  finally {
+    logger.logExit();
+  }
+}

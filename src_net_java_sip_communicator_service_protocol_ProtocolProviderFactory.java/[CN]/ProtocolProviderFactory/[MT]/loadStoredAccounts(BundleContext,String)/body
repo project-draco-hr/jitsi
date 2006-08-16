@@ -7,15 +7,16 @@
   while (storedAccountsIter.hasNext()) {
     String accountRootPropName=(String)storedAccountsIter.next();
     logger.debug("Loading account " + accountRootPropName);
+    List storedAccPropNames=configurationService.getPropertyNamesByPrefix(accountRootPropName,true);
+    Iterator propNamesIter=storedAccPropNames.iterator();
     Map accountProperties=new Hashtable();
-    String accountUID=configurationService.getString(accountRootPropName + "." + ACCOUNT_UID);
-    accountProperties.put(ACCOUNT_UID,accountUID);
-    String userID=configurationService.getString(accountRootPropName + "." + USER_ID);
-    String password=configurationService.getString(accountRootPropName + "." + PASSWORD);
-    if (password != null) {
-      password=new String(Base64.decode(password));
-      accountProperties.put(PASSWORD,password);
+    while (propNamesIter.hasNext()) {
+      String fullPropertyName=(String)propNamesIter.next();
+      String storedPropertyValue=configurationService.getString(fullPropertyName);
+      String propertyName=fullPropertyName.substring(fullPropertyName.lastIndexOf('.') + 1);
+      if (propertyName.equals(PASSWORD))       storedPropertyValue=new String(Base64.decode(storedPropertyValue));
+      accountProperties.put(propertyName,storedPropertyValue);
     }
-    loadAccount(userID,accountProperties);
+    loadAccount(accountProperties);
   }
 }

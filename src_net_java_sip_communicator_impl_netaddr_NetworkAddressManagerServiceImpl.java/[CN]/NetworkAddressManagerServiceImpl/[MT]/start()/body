@@ -1,15 +1,12 @@
 {
-  try {
-    logger.logEntry();
-    String stunAddressStr=null;
-    int port=-1;
-    stunAddressStr=configurationService.getString(PROP_STUN_SERVER_ADDRESS);
-    String portStr=configurationService.getString(PROP_STUN_SERVER_PORT);
-    boolean preferIPv6Addresses=Boolean.getBoolean(PROP_PREF_IPV6_ADDRS);
-    if (stunAddressStr == null || portStr == null || preferIPv6Addresses) {
-      useStun=false;
-      return;
-    }
+  String stunAddressStr=null;
+  int port=-1;
+  stunAddressStr=NetaddrActivator.getConfigurationService().getString(PROP_STUN_SERVER_ADDRESS);
+  String portStr=NetaddrActivator.getConfigurationService().getString(PROP_STUN_SERVER_PORT);
+  if (stunAddressStr == null || portStr == null) {
+    useStun=false;
+  }
+ else {
     port=Integer.valueOf(portStr).intValue();
     detector=new SimpleAddressDetector(new StunAddress(stunAddressStr,port));
     if (logger.isDebugEnabled())     logger.debug("Created a STUN Address detector for the following " + "STUN server: " + stunAddressStr + ":"+ port);
@@ -18,15 +15,13 @@
       logger.debug("STUN server started;");
     }
  catch (    StunException ex) {
-      logger.error("Failed to start the STUN Address Detector. " + detector.toString());
+      logger.error("Failed to start the STUN Address Detector. " + detector.toString(),ex);
       logger.debug("Disabling stun and continuing bravely!");
       detector=null;
       useStun=false;
     }
-    configurationService.addVetoableChangeListener(PROP_STUN_SERVER_ADDRESS,this);
-    configurationService.addVetoableChangeListener(PROP_STUN_SERVER_PORT,this);
+    NetaddrActivator.getConfigurationService().addVetoableChangeListener(PROP_STUN_SERVER_ADDRESS,this);
+    NetaddrActivator.getConfigurationService().addVetoableChangeListener(PROP_STUN_SERVER_PORT,this);
   }
-  finally {
-    logger.logExit();
-  }
+  initializeLocalHostFinderSocket();
 }
