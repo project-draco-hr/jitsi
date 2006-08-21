@@ -1,0 +1,21 @@
+{
+  String propertyFilesListStr=System.getProperty(SYS_PROPS_FILE_NAME_PROPERTY);
+  if (propertyFilesListStr == null || propertyFilesListStr.trim().length() == 0)   return;
+  StringTokenizer tokenizer=new StringTokenizer(propertyFilesListStr,";,",false);
+  while (tokenizer.hasMoreTokens()) {
+    String fileName=tokenizer.nextToken();
+    try {
+      fileName=fileName.trim();
+      Properties fileProps=new Properties();
+      fileProps.load(getClass().getClassLoader().getSystemResourceAsStream(fileName));
+      Enumeration pNames=fileProps.propertyNames();
+      while (pNames.hasMoreElements()) {
+        String pName=(String)pNames.nextElement();
+        System.setProperty(pName,fileProps.getProperty(pName));
+      }
+    }
+ catch (    Exception ex) {
+      logger.error("Failed to load property file: " + fileName,ex);
+    }
+  }
+}
