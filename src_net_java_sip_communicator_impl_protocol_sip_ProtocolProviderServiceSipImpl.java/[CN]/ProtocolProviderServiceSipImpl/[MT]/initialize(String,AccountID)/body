@@ -11,7 +11,7 @@ synchronized (initializationLock) {
     properties.setProperty(NSPNAME_CACHE_CLIENT_CONNECTIONS,NSPVALUE_CACHE_CLIENT_CONNECTIONS);
     properties.setProperty(NSPNAME_TRACE_LEVEL,NSPVALUE_TRACE_LEVEL);
     try {
-      jainSipStack=sipFactory.createSipStack(properties);
+      jainSipStack=new SipStackImpl(properties);
       logger.debug("Created stack: " + jainSipStack);
     }
  catch (    PeerUnavailableException e) {
@@ -30,19 +30,13 @@ synchronized (initializationLock) {
       if (preferredSipPort > NetworkUtils.MAX_PORT_NUMBER)       logger.error(preferredSipPort + " is larger than " + NetworkUtils.MAX_PORT_NUMBER+ " and does not "+ "therefore represent a valid port nubmer.");
     }
     initListeningPoints(preferredSipPort);
-    try {
-      headerFactory=sipFactory.createHeaderFactory();
-      addressFactory=sipFactory.createAddressFactory();
-      messageFactory=sipFactory.createMessageFactory();
-    }
- catch (    PeerUnavailableException ex) {
-      logger.fatal("Failed to ininit SIP factories",ex);
-      throw new OperationFailedException("Failed to init SIP factories",OperationFailedException.INTERNAL_ERROR,ex);
-    }
+    headerFactory=new HeaderFactoryImpl();
+    addressFactory=new AddressFactoryImpl();
+    messageFactory=new MessageFactoryImpl();
     initRegistrarConnection(accountID);
     String ourUserID=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.USER_ID);
     ourDisplayName=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.DISPLAY_NAME);
-    String registrarAddressStr=sipRegistrarConnection.getRegistrarAddress().getHostAddress();
+    String registrarAddressStr=sipRegistrarConnection.getRegistrarAddress().getHostName();
     SipURI ourSipURI=null;
     try {
       ourSipURI=addressFactory.createSipURI(ourUserID,registrarAddressStr);
@@ -54,6 +48,9 @@ synchronized (initializationLock) {
  catch (    ParseException ex) {
       throw new IllegalArgumentException("Could not create a SIP URI for user " + ourUserID + " and registrar "+ registrarAddressStr);
     }
+    this.methodProcessors.put(Request.REGISTER,sipRegistrarConnection);
+    this.sipSecurityManager=new SipSecurityManager();
+    sipSecurityManager.setHeaderFactory(headerFactory);
     isInitialized=true;
   }
 }

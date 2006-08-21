@@ -1,3 +1,12 @@
 {
-  logger.debug("@todo implement processResponse()");
+  logger.debug("received response=" + responseEvent);
+  ClientTransaction clientTransaction=responseEvent.getClientTransaction();
+  if (clientTransaction == null) {
+    logger.debug("ignoring a transactionless response");
+    return;
+  }
+  Response response=responseEvent.getResponse();
+  String method=((CSeqHeader)response.getHeader(CSeqHeader.NAME)).getMethod();
+  SipListener processor=(SipListener)methodProcessors.get(method);
+  processor.processResponse(responseEvent);
 }

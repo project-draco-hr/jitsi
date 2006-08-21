@@ -1,0 +1,31 @@
+{
+  int currentlyTriedPort=preferredPortNumber;
+  ListeningPoint listeningPoint=null;
+  for (int i=0; i < bindRetries; i++) {
+    try {
+      if (listeningPointAlreadyBound(currentlyTriedPort,transport)) {
+        logger.debug("The following listeing point alredy existed " + "port: " + currentlyTriedPort + " trans: "+ transport);
+        throw new InvalidArgumentException("Address already in use");
+      }
+      listeningPoint=jainSipStack.createListeningPoint(NetworkUtils.IN_ADDR_ANY,currentlyTriedPort,transport);
+      logger.debug("Created LP " + listeningPoint.getIPAddress() + ":"+ listeningPoint.getPort()+ "/"+ listeningPoint.getTransport());
+      try {
+        listeningPoint.setSentBy("0.0.0.0");
+      }
+ catch (      ParseException ex) {
+      }
+      return listeningPoint;
+    }
+ catch (    InvalidArgumentException exc) {
+      if (exc.getMessage().indexOf("Address already in use") == -1) {
+        logger.fatal("An exception occurred while " + "trying to create a listening point.",exc);
+        throw new OperationFailedException("An error occurred while creating listening points. ",OperationFailedException.NETWORK_FAILURE,exc);
+      }
+    }
+    logger.debug("Port " + currentlyTriedPort + " seems in use "+ "for transport ."+ transport);
+    currentlyTriedPort=NetworkUtils.getRandomPortNumber();
+    logger.debug("Retrying bind on port " + currentlyTriedPort);
+  }
+  logger.error("Failed to create a listening point for tranport " + transport);
+  return null;
+}

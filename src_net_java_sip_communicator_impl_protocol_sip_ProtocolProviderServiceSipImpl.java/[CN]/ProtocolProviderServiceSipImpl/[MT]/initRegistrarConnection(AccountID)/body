@@ -5,7 +5,8 @@
     registrarAddress=InetAddress.getByName(registrarAddressStr);
   }
  catch (  UnknownHostException ex) {
-    throw new IllegalArgumentException(registrarAddressStr + " appears to be an either invalid or inaccessible address",ex);
+    logger.error(registrarAddressStr + " appears to be an either invalid or inaccessible address: ",ex);
+    throw new IllegalArgumentException(registrarAddressStr + " appears to be an either invalid or inaccessible address: " + ex.getMessage());
   }
   int registrarPort=ListeningPoint.PORT_5060;
   String registrarPortStr=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_PORT);
@@ -19,7 +20,7 @@
     if (registrarPort > NetworkUtils.MAX_PORT_NUMBER)     throw new IllegalArgumentException(registrarPort + " is larger than " + NetworkUtils.MAX_PORT_NUMBER+ " and does not therefore represent a valid port nubmer.");
   }
   String registrarTransport=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_TRANSPORT);
-  if (registrarPortStr != null && registrarPortStr.length() > 0) {
+  if (registrarTransport != null && registrarTransport.length() > 0) {
     if (!registrarTransport.equals(ListeningPoint.UDP) || !registrarTransport.equals(ListeningPoint.TCP) || !registrarTransport.equals(ListeningPoint.TLS))     throw new IllegalArgumentException(registrarTransport + " is not a valid transport protocol. Transport must be left " + "blanc or set to TCP, UDP or TLS.");
   }
  else {
@@ -39,6 +40,7 @@
     this.sipRegistrarConnection=new SipRegistrarConnection(registrarAddress,registrarPort,registrarTransport,expires,this);
   }
  catch (  ParseException ex) {
-    throw new IllegalArgumentException("Failed to create a registrar connection with " + registrarAddress.getHostAddress(),ex);
+    logger.error("Failed to create a registrar connection with " + registrarAddress.getHostAddress(),ex);
+    throw new IllegalArgumentException("Failed to create a registrar connection with " + registrarAddress.getHostAddress() + ": "+ ex.getMessage());
   }
 }
