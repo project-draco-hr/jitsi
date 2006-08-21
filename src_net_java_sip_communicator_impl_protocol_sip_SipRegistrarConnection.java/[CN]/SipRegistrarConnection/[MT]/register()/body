@@ -2,14 +2,14 @@
   setRegistrationState(RegistrationState.REGISTERING,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
   FromHeader fromHeader=null;
   try {
-    fromHeader=sipProvider.getHeaderFactory().createFromHeader(sipProvider.ourSipAddress,ProtocolProviderServiceSipImpl.generateLocalTag());
+    fromHeader=sipProvider.getHeaderFactory().createFromHeader(sipProvider.getOurSipAddress(),ProtocolProviderServiceSipImpl.generateLocalTag());
   }
  catch (  ParseException ex) {
     logger.error("Failed to generate a from header for our register request.",ex);
     setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,ex.getMessage());
     throw new OperationFailedException("Failed to generate a from header for our register request.",OperationFailedException.INTERNAL_ERROR,ex);
   }
-  CallIdHeader callIdHeader=sipProvider.getJainSipProvider().getNewCallId();
+  CallIdHeader callIdHeader=this.getRegistrarJainSipProvider().getNewCallId();
   CSeqHeader cSeqHeader=null;
   try {
     cSeqHeader=sipProvider.getHeaderFactory().createCSeqHeader(getNextCSeqValue(),Request.REGISTER);
@@ -26,14 +26,14 @@ catch (  InvalidArgumentException ex) {
   }
   ToHeader toHeader=null;
   try {
-    toHeader=sipProvider.getHeaderFactory().createToHeader(sipProvider.ourSipAddress,null);
+    toHeader=sipProvider.getHeaderFactory().createToHeader(sipProvider.getOurSipAddress(),null);
   }
  catch (  ParseException ex) {
     logger.error("Could not create a To header for address:" + fromHeader.getAddress(),ex);
     setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,ex.getMessage());
     throw new OperationFailedException("Could not create a To header for address:" + fromHeader.getAddress(),OperationFailedException.INTERNAL_ERROR,ex);
   }
-  ArrayList viaHeaders=sipProvider.getLocalViaHeaders(registrarAddress,sipProvider.getUdpListeningPoint());
+  ArrayList viaHeaders=sipProvider.getLocalViaHeaders(registrarAddress,getRegistrarListeningPoint());
   MaxForwardsHeader maxForwardsHeader=sipProvider.getMaxForwardsHeader();
   Request request=null;
   try {
@@ -60,11 +60,12 @@ catch (  InvalidArgumentException ex) {
     }
   }
   request.addHeader(expHeader);
-  ContactHeader contactHeader=sipProvider.getRegistrationContactHeader(registrarAddress,sipProvider.getUdpListeningPoint());
+  ContactHeader contactHeader=sipProvider.getRegistrationContactHeader(registrarAddress,getRegistrarListeningPoint());
   request.addHeader(contactHeader);
   ClientTransaction regTrans=null;
   try {
-    regTrans=sipProvider.getJainSipProvider().getNewClientTransaction(request);
+    sipProvider.getJainSipStack().getSipProviders();
+    regTrans=getRegistrarJainSipProvider().getNewClientTransaction(request);
   }
  catch (  TransactionUnavailableException ex) {
     logger.error("Could not create a register transaction!\n" + "Check that the Registrar address is correct!",ex);
