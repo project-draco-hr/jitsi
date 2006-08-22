@@ -1,4 +1,5 @@
 {
+  String sourcePackageName=getFactoryImplPackageName();
   ServiceReference confReference=bundleContext.getServiceReference(ConfigurationService.class.getName());
   ConfigurationService configurationService=(ConfigurationService)bundleContext.getService(confReference);
   List storedAccounts=configurationService.getPropertyNamesByPrefix(sourcePackageName,true);
@@ -7,15 +8,8 @@
     String accountRootPropertyName=(String)storedAccountsIter.next();
     String accountUID=configurationService.getString(accountRootPropertyName + "." + ACCOUNT_UID);
     if (accountUID.equals(accountID.getAccountUniqueID())) {
-      List accountPropertyNames=configurationService.getPropertyNamesByPrefix(accountRootPropertyName,false);
-      Iterator propsIter=accountPropertyNames.iterator();
-      while (propsIter.hasNext()) {
-        String propName=(String)propsIter.next();
-        configurationService.setProperty(propName,null);
-      }
-      configurationService.setProperty(accountRootPropertyName,null);
-      return true;
+      return accountRootPropertyName;
     }
   }
-  return false;
+  return null;
 }
