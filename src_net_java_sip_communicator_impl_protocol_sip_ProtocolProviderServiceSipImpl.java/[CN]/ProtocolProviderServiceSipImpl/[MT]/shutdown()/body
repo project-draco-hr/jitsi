@@ -1,5 +1,15 @@
 {
-  if (!isInitialized)   return;
+  if (!isInitialized) {
+    return;
+  }
+  if (isRegistered()) {
+    try {
+      unregister();
+    }
+ catch (    OperationFailedException ex) {
+      logger.error("Failed to properly unregister before shutting down. " + getAccountID(),ex);
+    }
+  }
   try {
     udpJainSipProvider.removeListeningPoint(udpListeningPoint);
     tcpJainSipProvider.removeListeningPoint(tcpListeningPoint);
@@ -7,6 +17,12 @@
   }
  catch (  ObjectInUseException ex) {
     logger.info("An exception occurred while ",ex);
+  }
+  try {
+    this.jainSipStack.stop();
+  }
+ catch (  Exception ex) {
+    logger.error("Failed to properly stop the stack!",ex);
   }
   udpListeningPoint=null;
   tcpListeningPoint=null;
@@ -19,6 +35,6 @@
   addressFactory=null;
   sipFactory=null;
   sipSecurityManager=null;
-  this.jainSipStack.stop();
+  methodProcessors.clear();
   isInitialized=false;
 }
