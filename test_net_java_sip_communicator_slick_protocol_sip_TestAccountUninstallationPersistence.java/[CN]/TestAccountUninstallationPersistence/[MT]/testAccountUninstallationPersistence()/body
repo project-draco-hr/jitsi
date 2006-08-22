@@ -1,0 +1,22 @@
+{
+  Bundle providerBundle=SipSlickFixture.providerBundle;
+  providerBundle.stop();
+  assertTrue("Couldn't stop the protocol provider bundle. State was " + providerBundle.getState(),Bundle.ACTIVE != providerBundle.getState() && Bundle.STOPPING != providerBundle.getState());
+  providerBundle.uninstall();
+  assertEquals("Couldn't stop the protocol provider bundle.",Bundle.UNINSTALLED,providerBundle.getState());
+  providerBundle=SipSlickFixture.bc.installBundle(providerBundle.getLocation());
+  assertEquals("Couldn't re-install protocol provider bundle.",Bundle.INSTALLED,providerBundle.getState());
+  providerBundle.start();
+  assertEquals("Couldn't re-start protocol provider bundle.",Bundle.ACTIVE,providerBundle.getState());
+  ServiceReference[] sipProviderRefs=null;
+  try {
+    sipProviderRefs=SipSlickFixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.SIP+ ")");
+  }
+ catch (  InvalidSyntaxException ex) {
+    fail("We apparently got our filter wrong " + ex.getMessage());
+  }
+  assertTrue("A SIP Protocol Provider Service was still regged as an " + "osgi service after it was explicitly uninstalled",sipProviderRefs == null || sipProviderRefs.length == 0);
+  ServiceReference confReference=SipSlickFixture.bc.getServiceReference(ConfigurationService.class.getName());
+  ConfigurationService configurationService=(ConfigurationService)SipSlickFixture.bc.getService(confReference);
+  configurationService.purgeStoredConfiguration();
+}
