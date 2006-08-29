@@ -1,0 +1,47 @@
+{
+  if (startDate == null && endDate == null) {
+    Vector result=new Vector();
+    while (filelist.hasNext()) {
+      result.add(filelist.next());
+    }
+    return result;
+  }
+  TreeSet files=new TreeSet();
+  while (filelist.hasNext()) {
+    String filename=(String)filelist.next();
+    files.add(new Long(filename.substring(0,filename.length() - 4)));
+  }
+  Vector resultAsLong=new Vector();
+  if (startDate == null) {
+    Long endLong=new Long(endDate.getTime());
+    files.add(endLong);
+    resultAsLong.addAll(files.subSet(files.first(),endLong));
+    resultAsLong.remove(endLong);
+  }
+ else   if (endDate == null) {
+    Long startLong=new Long(startDate.getTime());
+    files.add(startLong);
+    resultAsLong.addAll(files.subSet(startLong,files.last()));
+    resultAsLong.add(files.last());
+    resultAsLong.add(files.subSet(files.first(),startLong).last());
+    resultAsLong.remove(startLong);
+  }
+ else {
+    Long startLong=new Long(startDate.getTime());
+    Long endLong=new Long(endDate.getTime());
+    files.add(startLong);
+    files.add(endLong);
+    resultAsLong.addAll(files.subSet(startLong,endLong));
+    SortedSet theFirstToStart=files.subSet(files.first(),startLong);
+    if (!theFirstToStart.isEmpty())     resultAsLong.add(theFirstToStart.last());
+    resultAsLong.remove(startLong);
+    resultAsLong.remove(endLong);
+  }
+  Vector result=new Vector();
+  Iterator iter=resultAsLong.iterator();
+  while (iter.hasNext()) {
+    Long item=(Long)iter.next();
+    result.add(item.toString() + ".xml");
+  }
+  return result;
+}

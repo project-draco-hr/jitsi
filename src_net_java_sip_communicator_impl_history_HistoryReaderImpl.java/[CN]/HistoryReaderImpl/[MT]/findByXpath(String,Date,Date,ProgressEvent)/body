@@ -1,6 +1,10 @@
 {
   TreeSet result=new TreeSet(new HistoryRecordComparator());
-  Iterator filelist=this.historyImpl.getFileList();
+  Vector filelist=filterFilesByDate(this.historyImpl.getFileList(),startDate,endDate);
+  int currentProgress=HistorySearchProgressListener.PROGRESS_MINIMUM_VALUE;
+  int fileProgressStep=HistorySearchProgressListener.PROGRESS_MAXIMUM_VALUE;
+  if (filelist.size() != 0)   fileProgressStep=HistorySearchProgressListener.PROGRESS_MAXIMUM_VALUE / filelist.size();
+  fireProgressStateChanged(progressEvent,HistorySearchProgressListener.PROGRESS_MINIMUM_VALUE);
   Navigator navigator=DocumentNavigator.getInstance();
   XPath xpath;
   try {
@@ -9,8 +13,9 @@
  catch (  SAXPathException e) {
     throw new RuntimeException(e);
   }
-  while (filelist.hasNext()) {
-    String filename=(String)filelist.next();
+  Iterator fileIterator=filelist.iterator();
+  while (fileIterator.hasNext()) {
+    String filename=(String)fileIterator.next();
     Document doc=this.historyImpl.getDocumentForFile(filename);
     List nodes;
     try {
@@ -19,6 +24,8 @@
  catch (    JaxenException e) {
       throw new RuntimeException(e);
     }
+    int nodesProgressStep=fileProgressStep;
+    if (nodes.size() != 0)     nodesProgressStep=fileProgressStep / nodes.size();
     Iterator i=nodes.iterator();
     while (i.hasNext()) {
       Node node=(Node)i.next();
@@ -42,7 +49,10 @@
       }
       HistoryRecord record=new HistoryRecord(propertyNames,propertyValues,timestamp);
       result.add(record);
+      currentProgress+=nodesProgressStep;
+      fireProgressStateChanged(progressEvent,currentProgress);
     }
   }
+  fireProgressStateChanged(progressEvent,HistorySearchProgressListener.PROGRESS_MAXIMUM_VALUE);
   return new OrderedQueryResultSet(result);
 }
