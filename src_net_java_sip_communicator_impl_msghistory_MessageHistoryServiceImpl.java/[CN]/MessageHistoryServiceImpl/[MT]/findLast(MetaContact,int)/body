@@ -1,14 +1,12 @@
 {
   List result=new LinkedList();
-  Calendar c=Calendar.getInstance();
-  c.set(Calendar.YEAR,c.get(Calendar.YEAR) - 10);
-  Date startDate=c.getTime();
   Iterator iter=contact.getContacts();
   while (iter.hasNext()) {
     Contact item=(Contact)iter.next();
     try {
       History history=this.getHistory(null,item);
-      Iterator recs=history.getReader().findByPeriod(startDate,new Date());
+      HistoryReader reader=history.getReader();
+      Iterator recs=reader.findLast(count);
       while (recs.hasNext()) {
         result.add(convertHistoryRecordToMessageEvent((HistoryRecord)recs.next(),item));
       }
@@ -16,9 +14,6 @@
  catch (    IOException e) {
       logger.error("Could not read history",e);
     }
-  }
-  if (result.size() > count) {
-    result=result.subList(result.size() - count,result.size());
   }
   return result;
 }
