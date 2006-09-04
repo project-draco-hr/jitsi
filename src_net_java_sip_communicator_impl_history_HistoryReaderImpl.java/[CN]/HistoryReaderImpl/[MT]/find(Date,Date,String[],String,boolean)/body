@@ -1,0 +1,34 @@
+{
+  TreeSet result=new TreeSet(new HistoryRecordComparator());
+  Vector filelist=filterFilesByDate(this.historyImpl.getFileList(),startDate,endDate);
+  ProgressEvent progressEvent=new ProgressEvent(this,startDate,endDate,keywords);
+  int currentProgress=HistorySearchProgressListener.PROGRESS_MINIMUM_VALUE;
+  int fileProgressStep=HistorySearchProgressListener.PROGRESS_MAXIMUM_VALUE;
+  if (filelist.size() != 0)   fileProgressStep=HistorySearchProgressListener.PROGRESS_MAXIMUM_VALUE / filelist.size();
+  fireProgressStateChanged(progressEvent,HistorySearchProgressListener.PROGRESS_MINIMUM_VALUE);
+  Iterator fileIterator=filelist.iterator();
+  while (fileIterator.hasNext()) {
+    String filename=(String)fileIterator.next();
+    Document doc=this.historyImpl.getDocumentForFile(filename);
+    NodeList nodes=doc.getElementsByTagName("record");
+    int nodesProgressStep=fileProgressStep;
+    if (nodes.getLength() != 0)     nodesProgressStep=fileProgressStep / nodes.getLength();
+    Node node;
+    for (int i=0; i < nodes.getLength(); i++) {
+      node=nodes.item(i);
+      String ts=node.getAttributes().getNamedItem("timestamp").getNodeValue();
+      Date timestamp=new Date(Long.parseLong(ts));
+      if (isInPeriod(timestamp,startDate,endDate)) {
+        NodeList propertyNodes=node.getChildNodes();
+        HistoryRecord record=filterByKeyword(propertyNodes,timestamp,keywords,field,caseSensitive);
+        if (record != null) {
+          result.add(record);
+        }
+      }
+      currentProgress+=nodesProgressStep;
+      fireProgressStateChanged(progressEvent,currentProgress);
+    }
+  }
+  fireProgressStateChanged(progressEvent,HistorySearchProgressListener.PROGRESS_MAXIMUM_VALUE);
+  return new OrderedQueryResultSet(result);
+}

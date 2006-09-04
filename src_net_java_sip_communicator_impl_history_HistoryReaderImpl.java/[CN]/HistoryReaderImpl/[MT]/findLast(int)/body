@@ -1,0 +1,49 @@
+{
+  Vector filelist=filterFilesByDate(this.historyImpl.getFileList(),null,null);
+  TreeSet result=new TreeSet(new HistoryRecordComparator());
+  int leftCount=count;
+  int currentFile=filelist.size() - 1;
+  while (leftCount > 0 && currentFile >= 0) {
+    Document doc=this.historyImpl.getDocumentForFile((String)filelist.get(currentFile));
+    List nodes=new ArrayList();
+    NodeList nodesList=doc.getElementsByTagName("record");
+    for (int i=0; i < nodesList.getLength(); i++) {
+      nodes.add(nodesList.item(i));
+    }
+    List lNodes=null;
+    if (nodes.size() > leftCount) {
+      lNodes=nodes.subList(nodes.size() - leftCount,nodes.size());
+      leftCount=0;
+    }
+ else {
+      lNodes=nodes;
+      leftCount-=nodes.size();
+    }
+    Iterator i=lNodes.iterator();
+    while (i.hasNext()) {
+      Node node=(Node)i.next();
+      NodeList propertyNodes=node.getChildNodes();
+      String ts=node.getAttributes().getNamedItem("timestamp").getNodeValue();
+      Date timestamp=new Date(Long.parseLong(ts));
+      ArrayList nameVals=new ArrayList();
+      int len=propertyNodes.getLength();
+      for (int j=0; j < len; j++) {
+        Node propertyNode=propertyNodes.item(j);
+        if (propertyNode.getNodeType() == Node.ELEMENT_NODE) {
+          nameVals.add(propertyNode.getNodeName());
+          nameVals.add(propertyNode.getFirstChild().getNodeValue());
+        }
+      }
+      String[] propertyNames=new String[nameVals.size() / 2];
+      String[] propertyValues=new String[propertyNames.length];
+      for (int j=0; j < propertyNames.length; j++) {
+        propertyNames[j]=(String)nameVals.get(j * 2);
+        propertyValues[j]=(String)nameVals.get(j * 2 + 1);
+      }
+      HistoryRecord record=new HistoryRecord(propertyNames,propertyValues,timestamp);
+      result.add(record);
+    }
+    currentFile--;
+  }
+  return new OrderedQueryResultSet(result);
+}
