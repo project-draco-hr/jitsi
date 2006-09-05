@@ -1,11 +1,10 @@
 {
   TreeSet result=new TreeSet(new HistoryRecordComparator());
   Vector filelist=filterFilesByDate(this.historyImpl.getFileList(),startDate,endDate);
-  ProgressEvent progressEvent=new ProgressEvent(this,startDate,endDate,keywords);
   int currentProgress=HistorySearchProgressListener.PROGRESS_MINIMUM_VALUE;
   int fileProgressStep=HistorySearchProgressListener.PROGRESS_MAXIMUM_VALUE;
   if (filelist.size() != 0)   fileProgressStep=HistorySearchProgressListener.PROGRESS_MAXIMUM_VALUE / filelist.size();
-  fireProgressStateChanged(progressEvent,HistorySearchProgressListener.PROGRESS_MINIMUM_VALUE);
+  fireProgressStateChanged(startDate,endDate,keywords,HistorySearchProgressListener.PROGRESS_MINIMUM_VALUE);
   Iterator fileIterator=filelist.iterator();
   while (fileIterator.hasNext()) {
     String filename=(String)fileIterator.next();
@@ -26,9 +25,9 @@
         }
       }
       currentProgress+=nodesProgressStep;
-      fireProgressStateChanged(progressEvent,currentProgress);
+      fireProgressStateChanged(startDate,endDate,keywords,currentProgress);
     }
   }
-  fireProgressStateChanged(progressEvent,HistorySearchProgressListener.PROGRESS_MAXIMUM_VALUE);
+  fireProgressStateChanged(startDate,endDate,keywords,HistorySearchProgressListener.PROGRESS_MAXIMUM_VALUE);
   return new OrderedQueryResultSet(result);
 }
