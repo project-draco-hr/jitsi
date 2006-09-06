@@ -1,19 +1,28 @@
 {
-  ChatConversationPanel convPanel=null;
-  this.historyPanel.removeAll();
+  this.currentStartDate=startDate;
+  this.currentEndDate=endDate;
   if (dateHistoryTable.containsKey(startDate)) {
-    convPanel=(ChatConversationPanel)dateHistoryTable.get(startDate);
+    ChatConversationPanel convPanel=(ChatConversationPanel)dateHistoryTable.get(startDate);
+    this.historyPanel.removeAll();
     this.historyPanel.add(convPanel);
+    historyPanel.revalidate();
+    historyPanel.repaint();
   }
  else {
-    Collection msgList=this.msgHistory.findByPeriod(this.metaContact,startDate,endDate);
-    convPanel=new ChatConversationPanel(this);
-    this.historyPanel.add(convPanel);
-    this.createHistory(convPanel,msgList,null);
-    this.dateHistoryTable.put(startDate,convPanel);
+    SwingUtilities.invokeLater(new Thread(){
+      public void run(){
+        Collection msgList=msgHistory.findByPeriod(metaContact,currentStartDate,currentEndDate);
+        historyPanel.removeAll();
+        ChatConversationPanel convPanel=new ChatConversationPanel(HistoryWindow.this);
+        historyPanel.add(convPanel);
+        createHistory(convPanel,msgList,null);
+        dateHistoryTable.put(currentStartDate,convPanel);
+        historyPanel.revalidate();
+        historyPanel.repaint();
+      }
+    }
+);
   }
-  this.historyPanel.revalidate();
-  this.historyPanel.repaint();
   this.lastExecutedSearch=PERIOD_SEARCH;
   this.searchStartDate=startDate;
 }

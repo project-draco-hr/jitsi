@@ -1,20 +1,25 @@
 {
-  Collection c=this.msgHistory.findByEndDate(this.metaContact,new Date(System.currentTimeMillis()));
-  Object[] msgArray=c.toArray();
-  Date date=null;
-  for (int i=0; i < msgArray.length; i++) {
-    Object o=msgArray[i];
-    if (o instanceof MessageDeliveredEvent) {
-      MessageDeliveredEvent evt=(MessageDeliveredEvent)o;
-      date=evt.getTimestamp();
-    }
- else     if (o instanceof MessageReceivedEvent) {
-      MessageReceivedEvent evt=(MessageReceivedEvent)o;
-      date=evt.getTimestamp();
-    }
-    if (!datesPanel.containsDate(date)) {
-      datesPanel.addDate(date);
+  SwingUtilities.invokeLater(new Thread(){
+    public void run(){
+      Collection msgList=msgHistory.findByEndDate(metaContact,new Date(System.currentTimeMillis()));
+      Object[] msgArray=msgList.toArray();
+      Date date=null;
+      for (int i=0; i < msgArray.length; i++) {
+        Object o=msgArray[i];
+        if (o instanceof MessageDeliveredEvent) {
+          MessageDeliveredEvent evt=(MessageDeliveredEvent)o;
+          date=evt.getTimestamp();
+        }
+ else         if (o instanceof MessageReceivedEvent) {
+          MessageReceivedEvent evt=(MessageReceivedEvent)o;
+          date=evt.getTimestamp();
+        }
+        if (!datesPanel.containsDate(date)) {
+          datesPanel.addDate(date);
+        }
+      }
+      datesPanel.setSelected(datesPanel.getModel().getSize() - 1);
     }
   }
-  this.datesPanel.setSelected(datesPanel.getModel().getSize() - 1);
+);
 }
