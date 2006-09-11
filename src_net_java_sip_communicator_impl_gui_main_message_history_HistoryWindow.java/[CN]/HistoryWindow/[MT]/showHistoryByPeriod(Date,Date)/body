@@ -1,6 +1,4 @@
 {
-  this.currentStartDate=startDate;
-  this.currentEndDate=endDate;
   if (dateHistoryTable.containsKey(startDate)) {
     ChatConversationPanel convPanel=(ChatConversationPanel)dateHistoryTable.get(startDate);
     this.historyPanel.removeAll();
@@ -9,19 +7,8 @@
     historyPanel.repaint();
   }
  else {
-    SwingUtilities.invokeLater(new Thread(){
-      public void run(){
-        Collection msgList=msgHistory.findByPeriod(metaContact,currentStartDate,currentEndDate);
-        historyPanel.removeAll();
-        ChatConversationPanel convPanel=new ChatConversationPanel(HistoryWindow.this);
-        historyPanel.add(convPanel);
-        createHistory(convPanel,msgList,null);
-        dateHistoryTable.put(currentStartDate,convPanel);
-        historyPanel.revalidate();
-        historyPanel.repaint();
-      }
-    }
-);
+    historyPanel.removeAll();
+    new MessagesLoader(startDate,endDate).start();
   }
   this.lastExecutedSearch=PERIOD_SEARCH;
   this.searchStartDate=startDate;

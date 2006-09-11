@@ -1,42 +1,5 @@
 {
-  this.currentKeyword=keyword;
-  SwingUtilities.invokeLater(new Thread(){
-    public void run(){
-      Collection msgList=msgHistory.findByKeyword(metaContact,currentKeyword);
-      Object[] msgArray=msgList.toArray();
-      Date date=null;
-      ChatConversationPanel convPanel=null;
-      datesPanel.removeAllDates();
-      for (int i=0; i < msgArray.length; i++) {
-        Object o=msgArray[i];
-        if (o instanceof MessageDeliveredEvent) {
-          MessageDeliveredEvent evt=(MessageDeliveredEvent)o;
-          date=evt.getTimestamp();
-        }
- else         if (o instanceof MessageReceivedEvent) {
-          MessageReceivedEvent evt=(MessageReceivedEvent)o;
-          date=evt.getTimestamp();
-        }
-        if (!datesPanel.containsDate(date)) {
-          datesPanel.addDate(date);
-        }
-      }
-      datesPanel.revalidate();
-      datesPanel.repaint();
-      for (int i=0; i < datesPanel.getDatesNumber(); i++) {
-        Date initDate=datesPanel.getDate(i);
-        msgList=msgHistory.findByPeriod(metaContact,initDate,datesPanel.getNextDate(initDate));
-        if (dateHistoryTable.contains(initDate)) {
-          dateHistoryTable.remove(initDate);
-        }
-        convPanel=new ChatConversationPanel(HistoryWindow.this);
-        createHistory(convPanel,msgList,currentKeyword);
-        dateHistoryTable.put(initDate,convPanel);
-      }
-      datesPanel.setSelected(datesPanel.getDatesNumber() - 1);
-      lastExecutedSearch=KEYWORD_SEARCH;
-      searchKeyword=currentKeyword;
-    }
-  }
-);
+  historyPanel.removeAll();
+  datesPanel.removeAllDates();
+  new KeywordDatesLoader(keyword).start();
 }
