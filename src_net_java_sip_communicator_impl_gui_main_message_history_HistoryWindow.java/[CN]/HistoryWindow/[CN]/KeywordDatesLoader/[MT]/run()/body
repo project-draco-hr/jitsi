@@ -12,39 +12,33 @@
       MessageReceivedEvent evt=(MessageReceivedEvent)o;
       date=evt.getTimestamp();
     }
-    boolean containsDate=false;
     long milisecondsPerDay=24 * 60 * 60* 1000;
-    for (int j=0; !containsDate && j < dateVector.size(); j++) {
-      Date date1=(Date)dateVector.get(j);
-      containsDate=Math.floor(date1.getTime() / milisecondsPerDay) == Math.floor(date.getTime() / milisecondsPerDay);
-    }
-    if (!containsDate) {
-      dateVector.add(new Date(date.getTime() - date.getTime() % milisecondsPerDay));
+    for (int j=0; j < datesVector.size(); j++) {
+      Date date1=(Date)datesVector.get(j);
+      if (Math.floor(date1.getTime() / milisecondsPerDay) == Math.floor(date.getTime() / milisecondsPerDay) && !keywordDatesVector.contains(date1)) {
+        keywordDatesVector.add(date1);
+      }
     }
   }
   Runnable updateDatesPanel=new Runnable(){
     public void run(){
-      for (int i=0; i < dateVector.size(); i++) {
-        Date date=(Date)dateVector.get(i);
-        datesPanel.addDate(date);
-        datesPanel.revalidate();
-        datesPanel.repaint();
+      datesPanel.removeAllDates();
+      if (keywordDatesVector.size() > 0) {
+        Date date=null;
+        for (int i=0; i < keywordDatesVector.size(); i++) {
+          date=(Date)keywordDatesVector.get(i);
+          datesPanel.addDate(date);
+        }
+        if (date != null) {
+          ignoreProgressDate=date;
+        }
+        datesPanel.setSelected(datesPanel.getModel().getSize() - 1);
+      }
+ else {
+        chatConvPanel.setDefaultContent();
       }
     }
   }
 ;
   SwingUtilities.invokeLater(updateDatesPanel);
-  for (int i=0; i < dateVector.size(); i++) {
-    Date initDate=(Date)dateVector.get(i);
-    msgList=msgHistory.findByPeriod(metaContact,initDate,i < (dateVector.size() - 1) ? (Date)dateVector.get(i + 1) : new Date(System.currentTimeMillis()));
-    SwingUtilities.invokeLater(new KeywordMessageLoader(i,msgList,keyword));
-  }
-  SwingUtilities.invokeLater(new Runnable(){
-    public void run(){
-      datesPanel.setSelected(datesPanel.getDatesNumber() - 1);
-    }
-  }
-);
-  lastExecutedSearch=KEYWORD_SEARCH;
-  searchKeyword=keyword;
 }
