@@ -1,5 +1,5 @@
 {
-  if ((e.getModifiers() & InputEvent.BUTTON2_MASK) != 0 || (e.getModifiers() & InputEvent.BUTTON3_MASK) != 0) {
+  if ((e.getModifiers() & InputEvent.BUTTON2_MASK) != 0 || (e.getModifiers() & InputEvent.BUTTON3_MASK) != 0 || (e.isControlDown() && !e.isMetaDown())) {
     this.contactList.setSelectedIndex(contactList.locationToIndex(e.getPoint()));
   }
   int selectedIndex=this.contactList.getSelectedIndex();
@@ -10,7 +10,7 @@
   int translatedY=e.getY() - selectedCellPoint.y;
   if (selectedValue instanceof MetaContactGroup) {
     MetaContactGroup group=(MetaContactGroup)selectedValue;
-    if ((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0) {
+    if ((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0 || (e.isControlDown() && !e.isMetaDown())) {
       GroupRightButtonMenu popupMenu=new GroupRightButtonMenu(mainFrame,group);
       SwingUtilities.convertPointToScreen(selectedCellPoint,renderer);
       popupMenu.setInvoker(this.contactList);
@@ -22,15 +22,15 @@
     MetaContact contact=(MetaContact)selectedValue;
     Component component=renderer.getComponentAt(translatedX,translatedY);
     if (component instanceof JLabel) {
-      if ((e.getModifiers() & InputEvent.BUTTON1_MASK) != 0) {
-        SwingUtilities.invokeLater(new RunMessageWindow(contact));
-      }
- else       if ((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0) {
+      if ((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0 || (e.isControlDown() && !e.isMetaDown())) {
         ContactRightButtonMenu popupMenu=new ContactRightButtonMenu(mainFrame,contact);
         SwingUtilities.convertPointToScreen(selectedCellPoint,renderer);
         popupMenu.setInvoker(this.contactList);
         popupMenu.setLocation(selectedCellPoint.x,selectedCellPoint.y + renderer.getHeight());
         popupMenu.setVisible(true);
+      }
+ else       if ((e.getModifiers() & InputEvent.BUTTON1_MASK) != 0) {
+        SwingUtilities.invokeLater(new RunMessageWindow(contact));
       }
     }
  else     if (component instanceof JButton) {
