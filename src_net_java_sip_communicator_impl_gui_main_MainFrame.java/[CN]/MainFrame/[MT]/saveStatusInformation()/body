@@ -1,0 +1,25 @@
+{
+  ConfigurationService configService=GuiActivator.getConfigurationService();
+  Iterator pproviders=getProtocolProviders();
+  while (pproviders.hasNext()) {
+    ProtocolProviderService pps=(ProtocolProviderService)pproviders.next();
+    String prefix="net.java.sip.communicator.impl.ui";
+    List accounts=configService.getPropertyNamesByPrefix(prefix,true);
+    boolean savedAccount=false;
+    Iterator accountsIter=accounts.iterator();
+    while (accountsIter.hasNext()) {
+      String accountRootPropName=(String)accountsIter.next();
+      String accountUID=configService.getString(accountRootPropName);
+      if (accountUID.equals(pps.getAccountID().getAccountUniqueID())) {
+        configService.setProperty(accountRootPropName + ".lastAccountStatus",getProtocolPresence(pps).getPresenceStatus().getStatusName());
+        savedAccount=true;
+      }
+    }
+    if (!savedAccount) {
+      String accNodeName="acc" + Long.toString(System.currentTimeMillis());
+      String accountPackage="net.java.sip.communicator.impl.ui." + accNodeName;
+      configService.setProperty(accountPackage,pps.getAccountID().getAccountUniqueID());
+      configService.setProperty(accountPackage + ".lastAccountStatus",getProtocolPresence(pps).getPresenceStatus().getStatusName());
+    }
+  }
+}

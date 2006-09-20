@@ -1,0 +1,43 @@
+{
+  StatusSelectorBox selectorBox=(StatusSelectorBox)protocolStatusCombos.get(protocolProvider.getAccountID());
+  if (!protocolProvider.isRegistered())   selectorBox.updateStatus(selectorBox.getOfflineStatus());
+ else {
+    if (selectorBox.getLastSelectedStatus() != null) {
+      selectorBox.updateStatus(selectorBox.getLastSelectedStatus());
+    }
+ else {
+      ConfigurationService configService=GuiActivator.getConfigurationService();
+      Iterator pproviders=mainFrame.getProtocolProviders();
+      while (pproviders.hasNext()) {
+        ProtocolProviderService pps=(ProtocolProviderService)pproviders.next();
+        String lastStatus=null;
+        Iterator i=mainFrame.getProtocolPresence(pps).getSupportedStatusSet();
+        String prefix="net.java.sip.communicator.impl.ui";
+        List accounts=configService.getPropertyNamesByPrefix(prefix,true);
+        Iterator accountsIter=accounts.iterator();
+        while (accountsIter.hasNext()) {
+          String accountRootPropName=(String)accountsIter.next();
+          String accountUID=configService.getString(accountRootPropName);
+          if (accountUID.equals(protocolProvider.getAccountID().getAccountUniqueID())) {
+            lastStatus=configService.getString(accountRootPropName + ".lastAccountStatus");
+            if (lastStatus != null)             break;
+          }
+        }
+        if (lastStatus == null) {
+          selectorBox.updateStatus(selectorBox.getOnlineStatus());
+        }
+ else {
+          PresenceStatus status;
+          while (i.hasNext()) {
+            status=(PresenceStatus)i.next();
+            if (status.getStatusName().equals(lastStatus)) {
+              selectorBox.updateStatus(status);
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  selectorBox.repaint();
+}
