@@ -1,0 +1,36 @@
+{
+  OperationSetPersistentPresence opSetPersPresence=(OperationSetPersistentPresence)provider.getSupportedOperationSets().get(OperationSetPersistentPresence.class.getName());
+  if (opSetPersPresence == null) {
+    return;
+  }
+  if (!(metaContact instanceof MetaContactImpl)) {
+    throw new IllegalArgumentException(metaContact + " is not an instance of MetaContactImpl");
+  }
+  ContactGroup parentProtoGroup=resolveProtoPath(provider,(MetaContactGroupImpl)parentMetaGroup);
+  if (parentProtoGroup == null) {
+    throw new MetaContactListException("Could not obtain proto group parent for " + metaContact,null,MetaContactListException.CODE_NETWORK_ERROR);
+  }
+  BlockingSubscriptionEventRetriever evtRetriever=new BlockingSubscriptionEventRetriever(contactID);
+  addContactToEventIgnoreList(contactID,provider);
+  opSetPersPresence.addSubsciptionListener(evtRetriever);
+  opSetPersPresence.addServerStoredGroupChangeListener(evtRetriever);
+  try {
+    opSetPersPresence.subscribe(parentProtoGroup,contactID);
+    evtRetriever.waitForEvent(CONTACT_LIST_MODIFICATION_TIMEOUT);
+  }
+ catch (  Exception ex) {
+    throw new MetaContactListException("failed to create contact" + contactID,ex,MetaContactListException.CODE_NETWORK_ERROR);
+  }
+ finally {
+    removeContactFromEventIgnoreList(contactID,provider);
+    opSetPersPresence.removeSubscriptionListener(evtRetriever);
+  }
+  if (evtRetriever.evt == null) {
+    throw new MetaContactListException("Failed to create a contact with address: " + contactID,null,MetaContactListException.CODE_NETWORK_ERROR);
+  }
+  ((MetaContactImpl)metaContact).addProtoContact(evtRetriever.sourceContact);
+  if (fireEvent) {
+    this.fireProtoContactEvent(evtRetriever.sourceContact,ProtoContactEvent.PROTO_CONTACT_ADDED,null,metaContact);
+  }
+  ((MetaContactGroupImpl)parentMetaGroup).addMetaContact((MetaContactImpl)metaContact);
+}
