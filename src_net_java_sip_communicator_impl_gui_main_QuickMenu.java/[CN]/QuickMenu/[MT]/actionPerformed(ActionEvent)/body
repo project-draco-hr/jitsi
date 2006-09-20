@@ -21,12 +21,26 @@
         ProtocolProviderService pps=(ProtocolProviderService)ppList.get(i);
         for (int j=0; j < groupList.size(); j++) {
           MetaContactGroup group=(MetaContactGroup)groupList.get(j);
-          try {
-            mainFrame.getContactList().createMetaContact(pps,group,newContact.getUin());
+class CreateContact extends Thread {
+            ProtocolProviderService pps;
+            MetaContactGroup group;
+            NewContact newContact;
+            CreateContact(            ProtocolProviderService pps,            MetaContactGroup group,            NewContact newContact){
+              this.pps=pps;
+              this.group=group;
+              this.newContact=newContact;
+            }
+            public void run(){
+              try {
+                mainFrame.getContactList().createMetaContact(pps,group,newContact.getUin());
+              }
+ catch (              MetaContactListException ex) {
+                logger.error(ex);
+                JOptionPane.showMessageDialog(mainFrame,Messages.getString("addContactError",newContact.getUin()),Messages.getString("addContactErrorTitle"),JOptionPane.WARNING_MESSAGE);
+              }
+            }
           }
- catch (          MetaContactListException ex) {
-            JOptionPane.showMessageDialog(mainFrame,Messages.getString("addContactError",newContact.getUin()),Messages.getString("addContactErrorTitle"),JOptionPane.WARNING_MESSAGE);
-          }
+          new CreateContact(pps,group,newContact).start();
         }
       }
     }
