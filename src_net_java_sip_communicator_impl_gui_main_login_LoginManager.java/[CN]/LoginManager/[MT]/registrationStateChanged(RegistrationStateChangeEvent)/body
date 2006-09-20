@@ -1,12 +1,11 @@
 {
   ProtocolProviderService protocolProvider=evt.getProvider();
   if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
-    this.mainFrame.addProtocolProvider(protocolProvider);
+    this.mainFrame.getStatusPanel().updateStatus(evt.getProvider());
+    mainFrame.getProtocolPresence(protocolProvider).setAuthorizationHandler(new AuthorizationHandlerImpl());
   }
  else   if (evt.getNewState().equals(RegistrationState.AUTHENTICATION_FAILED)) {
-    StatusPanel statusPanel=this.mainFrame.getStatusPanel();
-    statusPanel.stopConnecting(protocolProvider);
-    statusPanel.setSelectedStatus(protocolProvider,Constants.OFFLINE_STATUS);
+    this.mainFrame.getStatusPanel().updateStatus(evt.getProvider());
     if (evt.getReasonCode() == RegistrationStateChangeEvent.REASON_RECONNECTION_RATE_LIMIT_EXCEEDED) {
       SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("reconnectionLimitExceeded",protocolProvider.getAccountID().getUserID()));
       JOptionPane.showMessageDialog(null,msgText,Messages.getString("error"),JOptionPane.ERROR_MESSAGE);
@@ -23,32 +22,33 @@
     ((AuthenticationWindow)this.loginWindows.get(protocolProvider.getProtocolName())).showWindow();
   }
  else   if (evt.getNewState().equals(RegistrationState.CONNECTION_FAILED)) {
-    this.mainFrame.getStatusPanel().stopConnecting(evt.getProvider());
-    this.mainFrame.getStatusPanel().setSelectedStatus(evt.getProvider(),Constants.OFFLINE_STATUS);
+    this.mainFrame.getStatusPanel().updateStatus(evt.getProvider());
     SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("connectionFailedMessage"));
     JOptionPane.showMessageDialog(null,msgText,Messages.getString("error"),JOptionPane.ERROR_MESSAGE);
     logger.error(evt.getReason());
   }
  else   if (evt.getNewState().equals(RegistrationState.EXPIRED)) {
+    this.mainFrame.getStatusPanel().updateStatus(evt.getProvider());
     SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("connectionExpiredMessage",protocolProvider.getProtocolName()));
     JOptionPane.showMessageDialog(null,msgText,Messages.getString("error"),JOptionPane.ERROR_MESSAGE);
     logger.error(evt.getReason());
   }
  else   if (evt.getNewState().equals(RegistrationState.UNREGISTERED)) {
-    if (evt.getReasonCode() == RegistrationStateChangeEvent.REASON_MULTIPLE_LOGINS) {
-      SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("multipleLogins",protocolProvider.getAccountID().getUserID()));
-      JOptionPane.showMessageDialog(null,msgText,Messages.getString("error"),JOptionPane.ERROR_MESSAGE);
-    }
- else     if (evt.getReasonCode() == RegistrationStateChangeEvent.REASON_CLIENT_LIMIT_REACHED_FOR_IP) {
-      SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("limitReachedForIp",protocolProvider.getProtocolName()));
-      JOptionPane.showMessageDialog(null,msgText,Messages.getString("error"),JOptionPane.ERROR_MESSAGE);
-    }
+    this.mainFrame.getStatusPanel().updateStatus(evt.getProvider());
+    if (!manuallyDisconnected) {
+      if (evt.getReasonCode() == RegistrationStateChangeEvent.REASON_MULTIPLE_LOGINS) {
+        SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("multipleLogins",protocolProvider.getAccountID().getUserID()));
+        JOptionPane.showMessageDialog(null,msgText,Messages.getString("error"),JOptionPane.ERROR_MESSAGE);
+      }
+ else       if (evt.getReasonCode() == RegistrationStateChangeEvent.REASON_CLIENT_LIMIT_REACHED_FOR_IP) {
+        SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("limitReachedForIp",protocolProvider.getProtocolName()));
+        JOptionPane.showMessageDialog(null,msgText,Messages.getString("error"),JOptionPane.ERROR_MESSAGE);
+      }
  else {
-      SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("unregisteredMessage",protocolProvider.getProtocolName()));
-      JOptionPane.showMessageDialog(null,msgText,Messages.getString("error"),JOptionPane.ERROR_MESSAGE);
+        SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("unregisteredMessage",protocolProvider.getProtocolName()));
+        JOptionPane.showMessageDialog(null,msgText,Messages.getString("error"),JOptionPane.ERROR_MESSAGE);
+      }
+      logger.error(evt.getReason());
     }
-    logger.error(evt.getReason());
-    this.mainFrame.getStatusPanel().stopConnecting(evt.getProvider());
-    this.mainFrame.getStatusPanel().setSelectedStatus(evt.getProvider(),Constants.OFFLINE_STATUS);
   }
 }
