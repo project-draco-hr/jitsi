@@ -1,0 +1,38 @@
+{
+  if (authority == null)   throw new IllegalArgumentException("The register method needs a valid non-null authority impl " + " in order to be able and retrieve passwords.");
+synchronized (initializationLock) {
+    new Thread(){
+      public void run(){
+        String password=JabberActivator.getProtocolProviderFactory().loadPassword(getAccountID());
+        if (password == null) {
+          UserCredentials credentials=new UserCredentials();
+          credentials.setUserName(getAccountID().getUserID());
+          credentials=authority.obtainCredentials(ProtocolNames.JABBER,credentials);
+          password=new String(credentials.getPassword());
+          if (credentials.isPasswordPersistent()) {
+            JabberActivator.getProtocolProviderFactory().storePassword(getAccountID(),password);
+          }
+        }
+        try {
+          String userID=StringUtils.parseName(getAccountID().getUserID());
+          String server=StringUtils.parseServer(getAccountID().getUserID());
+          if (server.equals("gmail.com")) {
+            connection=new GoogleTalkConnection();
+          }
+ else           connection=new XMPPConnection(server,DEFAULT_SERVER_PORT,server);
+          connection.addConnectionListener(new JabberConnectionListener());
+          connection.login(userID,password,"sip-comm");
+          if (connection.isAuthenticated()) {
+            currentConnectionState=RegistrationState.REGISTERED;
+            connection.getRoster().setSubscriptionMode(Roster.SUBSCRIPTION_ACCEPT_ALL);
+            fireRegistrationStateChanged(RegistrationState.UNREGISTERED,RegistrationState.REGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
+          }
+        }
+ catch (        XMPPException ex) {
+          logger.error("Error registering",ex);
+        }
+      }
+    }
+.start();
+  }
+}

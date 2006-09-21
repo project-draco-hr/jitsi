@@ -1,0 +1,27 @@
+{
+  try {
+    String userID=StringUtils.parseBareAddress(XMPPAddress);
+    logger.debug("Received a status update for buddy=" + userID);
+    ContactJabberImpl sourceContact=ssContactList.findContactById(userID);
+    if (sourceContact == null) {
+      logger.warn("No source contact found for id=" + userID);
+      return;
+    }
+    PresenceStatus oldStatus=sourceContact.getPresenceStatus();
+    PresenceStatus newStatus=queryContactStatus(userID);
+    if (oldStatus.equals(newStatus))     return;
+    sourceContact.updatePresenceStatus(newStatus);
+    ContactGroup parent=ssContactList.findContactGroup(sourceContact);
+    logger.debug("Will Dispatch the contact status event.");
+    fireContactPresenceStatusChangeEvent(sourceContact,parent,oldStatus,newStatus);
+  }
+ catch (  OperationFailedException ex) {
+    logger.error("Failed changing status",ex);
+  }
+catch (  IllegalStateException ex) {
+    logger.error("Failed changing status",ex);
+  }
+catch (  IllegalArgumentException ex) {
+    logger.error("Failed changing status",ex);
+  }
+}

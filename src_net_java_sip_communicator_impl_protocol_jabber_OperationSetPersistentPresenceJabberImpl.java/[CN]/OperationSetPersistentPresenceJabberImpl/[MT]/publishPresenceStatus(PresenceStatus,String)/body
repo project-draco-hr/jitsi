@@ -1,0 +1,20 @@
+{
+  assertConnected();
+  if (!(status instanceof JabberStatusEnum))   throw new IllegalArgumentException(status + " is not a valid Jabber status");
+  Presence presence=null;
+  if (((JabberStatusEnum)status).equals(JabberStatusEnum.OFFLINE)) {
+    presence=new Presence(Presence.Type.UNAVAILABLE);
+  }
+ else {
+    presence=new Presence(Presence.Type.AVAILABLE);
+    presence.setMode(presenceStatusToJabberMode((JabberStatusEnum)status));
+  }
+  presence.setStatus(statusMessage);
+  jabberProvider.getConnection().sendPacket(presence);
+  fireProviderPresenceStatusChangeEvent(currentStatus,status);
+  if (!getCurrentStatusMessage().equals(statusMessage)) {
+    String oldStatusMessage=getCurrentStatusMessage();
+    currentStatusMessage=statusMessage;
+    fireProviderStatusMessageChangeEvent(oldStatusMessage,getCurrentStatusMessage());
+  }
+}

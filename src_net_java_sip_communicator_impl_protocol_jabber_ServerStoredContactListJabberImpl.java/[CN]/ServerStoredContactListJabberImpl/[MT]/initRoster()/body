@@ -1,0 +1,29 @@
+{
+  if (roster.getUnfiledEntryCount() > 0) {
+    Iterator iter=roster.getUnfiledEntries();
+    while (iter.hasNext()) {
+      RosterEntry item=(RosterEntry)iter.next();
+      ContactJabberImpl contact=findContactById(item.getUser());
+      if (contact == null) {
+        contact=new ContactJabberImpl(item,this,true,true);
+        rootGroup.addContact(contact);
+        fireContactAdded(rootGroup,contact);
+      }
+ else       contact.setResolved(item);
+    }
+  }
+  Iterator iter=roster.getGroups();
+  while (iter.hasNext()) {
+    RosterGroup item=(RosterGroup)iter.next();
+    ContactGroupJabberImpl group=findContactGroup(item.getName());
+    if (group == null) {
+      ContactGroupJabberImpl newGroup=new ContactGroupJabberImpl(item,item.getEntries(),this,true);
+      rootGroup.addSubGroup(newGroup);
+      fireGroupEvent(newGroup,ServerStoredGroupEvent.GROUP_CREATED_EVENT);
+    }
+ else {
+      group.setResolved(item);
+      fireGroupEvent(group,ServerStoredGroupEvent.GROUP_RESOLVED_EVENT);
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  Iterator iter=addresses.iterator();
+  while (iter.hasNext()) {
+    String address=(String)iter.next();
+    logger.trace("entry deleted " + address);
+    ContactJabberImpl contact=findContactById(address);
+    if (contact == null)     continue;
+    ContactGroup group=findContactGroup(contact);
+    if (group == null)     continue;
+    if (group instanceof ContactGroupJabberImpl) {
+      ContactGroupJabberImpl groupImpl=(ContactGroupJabberImpl)group;
+      groupImpl.removeContact(contact);
+      if (groupImpl.countContacts() == 0) {
+        rootGroup.removeSubGroup(groupImpl);
+        fireGroupEvent(groupImpl,ServerStoredGroupEvent.GROUP_REMOVED_EVENT);
+      }
+      fireContactRemoved(groupImpl,contact);
+    }
+ else     if (group instanceof RootContactGroupJabberImpl) {
+      rootGroup.removeContact(contact);
+      fireContactRemoved(rootGroup,contact);
+    }
+  }
+}

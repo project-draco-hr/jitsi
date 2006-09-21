@@ -1,0 +1,17 @@
+{
+  if (!(packet instanceof org.jivesoftware.smack.packet.Message))   return;
+  org.jivesoftware.smack.packet.Message msg=(org.jivesoftware.smack.packet.Message)packet;
+  if (msg.getBody() == null)   return;
+  String fromUserID=StringUtils.parseBareAddress(msg.getFrom());
+  if (logger.isDebugEnabled()) {
+    logger.debug("Received from " + fromUserID + " the message "+ msg.getBody());
+  }
+  Message newMessage=createMessage(msg.getBody());
+  Contact sourceContact=opSetPersPresence.findContactByID(fromUserID);
+  if (sourceContact == null) {
+    logger.debug("received a message from an unknown contact: " + fromUserID);
+    sourceContact=opSetPersPresence.createVolatileContact(fromUserID);
+  }
+  MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(newMessage,sourceContact,new Date());
+  fireMessageEvent(msgReceivedEvt);
+}

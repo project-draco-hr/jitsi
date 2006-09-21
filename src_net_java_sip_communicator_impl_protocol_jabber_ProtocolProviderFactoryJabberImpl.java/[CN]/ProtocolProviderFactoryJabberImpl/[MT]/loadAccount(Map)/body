@@ -1,0 +1,14 @@
+{
+  BundleContext context=JabberActivator.getBundleContext();
+  if (context == null)   throw new NullPointerException("The specified BundleContext was null");
+  String userIDStr=(String)accountProperties.get(USER_ID);
+  AccountID accountID=new JabberAccountID(userIDStr,accountProperties);
+  Hashtable properties=new Hashtable();
+  properties.put(PROTOCOL,ProtocolNames.JABBER);
+  properties.put(USER_ID,userIDStr);
+  ProtocolProviderServiceJabberImpl jabberProtocolProvider=new ProtocolProviderServiceJabberImpl();
+  jabberProtocolProvider.initialize(userIDStr,accountID);
+  ServiceRegistration registration=context.registerService(ProtocolProviderService.class.getName(),jabberProtocolProvider,properties);
+  registeredAccounts.put(accountID,registration);
+  return accountID;
+}

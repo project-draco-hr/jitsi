@@ -1,0 +1,16 @@
+{
+  if (oldStatus.equals(newStatus)) {
+    logger.debug("Ignored prov stat. change evt. old==new = " + oldStatus);
+    return;
+  }
+  ProviderPresenceStatusChangeEvent evt=new ProviderPresenceStatusChangeEvent(jabberProvider,oldStatus,newStatus);
+  currentStatus=newStatus;
+synchronized (providerPresenceStatusListeners) {
+    Iterator listeners=this.providerPresenceStatusListeners.iterator();
+    logger.debug("Dispatching Provider Status Change. Listeners=" + providerPresenceStatusListeners.size() + " evt="+ evt);
+    while (listeners.hasNext()) {
+      ProviderPresenceStatusListener listener=(ProviderPresenceStatusListener)listeners.next();
+      listener.providerStatusChanged(evt);
+    }
+  }
+}

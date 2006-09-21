@@ -1,0 +1,22 @@
+{
+  logger.trace("Adding contact " + id + " to parent="+ parent);
+  final ContactJabberImpl existingContact=findContactById(id);
+  if (existingContact != null && existingContact.isPersistent()) {
+    logger.debug("Contact " + id + " already exists. Gen. evt.");
+    new Thread(){
+      public void run(){
+        fireContactAdded(existingContact.getParentContactGroup(),existingContact);
+      }
+    }
+.start();
+    return;
+  }
+  try {
+    String[] parentNames=null;
+    if (parent != null)     parentNames=new String[]{parent.getGroupName()};
+    this.roster.createEntry(id,id,parentNames);
+  }
+ catch (  XMPPException ex) {
+    logger.error("Error adding new jabber entry",ex);
+  }
+}
