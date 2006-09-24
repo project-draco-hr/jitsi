@@ -4,6 +4,7 @@
   Dialog dialog=clientTransaction.getDialog();
   String method=((CSeqHeader)response.getHeader(CSeqHeader.NAME)).getMethod();
   Response responseClone=(Response)response.clone();
+  SipProvider sourceProvider=(SipProvider)responseEvent.getSource();
   if (response.getStatusCode() == Response.OK) {
     processOK(clientTransaction,response);
   }
@@ -13,6 +14,10 @@
  else   if (response.getStatusCode() == Response.TRYING) {
   }
  else   if (response.getStatusCode() == Response.UNAUTHORIZED || response.getStatusCode() == Response.PROXY_AUTHENTICATION_REQUIRED) {
-    processAuthenticationChallenge(clientTransaction,response);
+    processAuthenticationChallenge(clientTransaction,response,sourceProvider);
+  }
+ else   if (response.getStatusCode() / 100 == 4) {
+    logger.error("Received an error response.");
+    this.setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,"Received an error while trying to register. " + "Server returned error:" + response.getReasonPhrase());
   }
 }
