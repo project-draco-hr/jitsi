@@ -1,0 +1,17 @@
+{
+  Dialog dialog=clientTransaction.getDialog();
+  CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(dialog);
+  if (callParticipant == null) {
+    logger.debug("Received a stray trying response.");
+    return;
+  }
+  ContactHeader remotePartyContactHeader=(ContactHeader)response.getHeader(ContactHeader.NAME);
+  if (remotePartyContactHeader != null) {
+    Address remotePartyAddress=remotePartyContactHeader.getAddress();
+    String displayName=remotePartyAddress.getDisplayName();
+    if (displayName != null && displayName.trim().length() > 0) {
+      callParticipant.setDisplayName(displayName);
+    }
+  }
+  callParticipant.setState(CallParticipantState.ALERTING_REMOTE_SIDE);
+}

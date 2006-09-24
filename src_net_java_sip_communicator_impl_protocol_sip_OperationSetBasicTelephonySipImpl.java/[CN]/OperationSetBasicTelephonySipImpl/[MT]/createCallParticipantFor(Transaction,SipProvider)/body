@@ -1,0 +1,13 @@
+{
+  CallSipImpl call=new CallSipImpl(protocolProvider);
+  CallParticipantSipImpl callParticipant=new CallParticipantSipImpl(containingTransaction.getDialog().getRemoteParty(),call);
+  if (containingTransaction instanceof ServerTransaction)   callParticipant.setState(CallParticipantState.INCOMING_CALL);
+ else   callParticipant.setState(CallParticipantState.INITIATING_CALL);
+  callParticipant.setDialog(containingTransaction.getDialog());
+  callParticipant.setFirstTransaction(containingTransaction);
+  callParticipant.setJainSipProvider(sourceProvider);
+  activeCallsRepository.addCall(call);
+  if (containingTransaction instanceof ServerTransaction)   fireCallEvent(CallEvent.CALL_RECEIVED,call);
+ else   fireCallEvent(CallEvent.CALL_INITIATED,call);
+  return callParticipant;
+}

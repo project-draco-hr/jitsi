@@ -1,0 +1,12 @@
+{
+  CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(serverTransaction.getDialog());
+  if (callParticipant == null) {
+    logger.debug("didn't find an ack's call, returning");
+    return;
+  }
+  ContentLengthHeader cl=ackRequest.getContentLength();
+  if (cl != null && cl.getContentLength() > 0) {
+    callParticipant.setSdpDescription(new String(ackRequest.getRawContent()));
+  }
+  callParticipant.setState(CallParticipantState.CONNECTED);
+}

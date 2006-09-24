@@ -1,0 +1,61 @@
+{
+  Transaction transaction=callParticipant.getFirstTransaction();
+  Dialog dialog=callParticipant.getDialog();
+  if (transaction == null || !dialog.isServer()) {
+    callParticipant.setState(CallParticipantState.DISCONNECTED);
+    throw new OperationFailedException("Failed to extract a ServerTransaction " + "from the call's associated dialog!",OperationFailedException.INTERNAL_ERROR);
+  }
+  ServerTransaction serverTransaction=(ServerTransaction)transaction;
+  Response ok=null;
+  try {
+    ok=protocolProvider.getMessageFactory().createResponse(Response.OK,callParticipant.getFirstTransaction().getRequest());
+    protocolProvider.attachToTag(ok,dialog);
+  }
+ catch (  ParseException ex) {
+    callParticipant.setState(CallParticipantState.DISCONNECTED);
+    logger.error("Failed to construct an OK response to an INVITE request",ex);
+    throw new OperationFailedException("Failed to construct an OK response to an INVITE request",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ContentTypeHeader contentTypeHeader=null;
+  try {
+    contentTypeHeader=protocolProvider.getHeaderFactory().createContentTypeHeader("application","sdp");
+  }
+ catch (  ParseException ex) {
+    callParticipant.setState(CallParticipantState.DISCONNECTED);
+    logger.error("Failed to create a content type header for the OK request",ex);
+    throw new OperationFailedException("Failed to create a content type header for the OK request",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  try {
+    ok.setContent(callParticipant.getSdpDescription(),contentTypeHeader);
+  }
+ catch (  NullPointerException ex) {
+    callParticipant.setState(CallParticipantState.DISCONNECTED);
+    logger.error("No sdp data was provided for the ok response to " + "an INVITE request!",ex);
+    throw new OperationFailedException("No sdp data was provided for the ok response " + "to an INVITE request!",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+catch (  ParseException ex) {
+    callParticipant.setState(CallParticipantState.DISCONNECTED);
+    logger.error("Failed to parse sdp data while creating invite request!",ex);
+    throw new OperationFailedException("Failed to parse sdp data while creating invite request!",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  if (((ToHeader)ok.getHeader(ToHeader.NAME)).getTag() == null) {
+    try {
+      ((ToHeader)ok.getHeader(ToHeader.NAME)).setTag(Integer.toString(dialog.hashCode()));
+    }
+ catch (    ParseException ex) {
+      callParticipant.setState(CallParticipantState.DISCONNECTED);
+      throw new OperationFailedException("Unable to set to tag",OperationFailedException.INTERNAL_ERROR,ex);
+    }
+  }
+  ContactHeader contactHeader=protocolProvider.getContactHeader();
+  ok.addHeader(contactHeader);
+  try {
+    serverTransaction.sendResponse(ok);
+    if (logger.isDebugEnabled())     logger.debug("sent response " + ok);
+  }
+ catch (  Exception ex) {
+    callParticipant.setState(CallParticipantState.DISCONNECTED);
+    logger.error("Failed to send an OK response to an INVITE request",ex);
+    throw new OperationFailedException("Failed to send an OK response to an INVITE request",OperationFailedException.NETWORK_FAILURE,ex);
+  }
+}

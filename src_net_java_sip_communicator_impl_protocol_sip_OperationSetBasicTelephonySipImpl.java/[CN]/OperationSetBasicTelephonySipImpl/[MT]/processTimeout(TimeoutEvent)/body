@@ -1,0 +1,15 @@
+{
+  Transaction transaction;
+  if (timeoutEvent.isServerTransaction()) {
+    transaction=timeoutEvent.getServerTransaction();
+  }
+ else {
+    transaction=timeoutEvent.getClientTransaction();
+  }
+  CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(transaction.getDialog());
+  if (callParticipant == null) {
+    logger.debug("Got a headless timeout event." + timeoutEvent);
+    return;
+  }
+  callParticipant.setState(CallParticipantState.FAILED,"The remote party has not replied!" + "The call will be disconnected");
+}

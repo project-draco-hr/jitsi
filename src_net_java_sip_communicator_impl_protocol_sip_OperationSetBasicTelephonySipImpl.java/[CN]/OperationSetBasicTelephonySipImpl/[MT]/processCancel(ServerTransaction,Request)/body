@@ -1,0 +1,41 @@
+{
+  CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(serverTransaction.getDialog());
+  if (callParticipant == null) {
+    logger.debug("received a stray CANCEL req. ignoring");
+    return;
+  }
+  callParticipant.setState(CallParticipantState.DISCONNECTED);
+  try {
+    Response ok=protocolProvider.getMessageFactory().createResponse(Response.OK,cancelRequest);
+    protocolProvider.attachToTag(ok,serverTransaction.getDialog());
+    serverTransaction.sendResponse(ok);
+    logger.debug("sent ok response: " + ok);
+  }
+ catch (  ParseException ex) {
+    logger.error("Failed to create an OK Response to an CANCEL request.",ex);
+    callParticipant.setState(CallParticipantState.FAILED,"Failed to create an OK Response to an CANCEL request.");
+  }
+catch (  Exception ex) {
+    logger.error("Failed to send an OK Response to an CANCEL request.",ex);
+    callParticipant.setState(CallParticipantState.FAILED,"Failed to send an OK Response to an CANCEL request.");
+  }
+  try {
+    Transaction tran=callParticipant.getFirstTransaction();
+    if (!(tran instanceof ServerTransaction)) {
+      logger.error("Received a misplaced CANCEL request!");
+      return;
+    }
+    ServerTransaction inviteTran=(ServerTransaction)tran;
+    Request invite=callParticipant.getFirstTransaction().getRequest();
+    Response requestTerminated=protocolProvider.getMessageFactory().createResponse(Response.REQUEST_TERMINATED,invite);
+    protocolProvider.attachToTag(requestTerminated,callParticipant.getDialog());
+    inviteTran.sendResponse(requestTerminated);
+    if (logger.isDebugEnabled())     logger.debug("sent request terminated response: " + requestTerminated);
+  }
+ catch (  ParseException ex) {
+    logger.error("Failed to create a REQUEST_TERMINATED Response to " + "an INVITE request.",ex);
+  }
+catch (  Exception ex) {
+    logger.error("Failed to send an REQUEST_TERMINATED Response to " + "an INVITE request.",ex);
+  }
+}

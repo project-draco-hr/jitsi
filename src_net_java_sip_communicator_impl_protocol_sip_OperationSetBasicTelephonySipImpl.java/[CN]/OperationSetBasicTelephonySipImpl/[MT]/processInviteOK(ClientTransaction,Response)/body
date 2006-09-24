@@ -1,0 +1,19 @@
+{
+  Dialog dialog=clientTransaction.getDialog();
+  CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(dialog);
+  if (callParticipant == null) {
+    logger.debug("Received a stray ok response.");
+    return;
+  }
+  try {
+    Request ack=clientTransaction.getDialog().createRequest(Request.ACK);
+    clientTransaction.getDialog().sendAck(ack);
+  }
+ catch (  SipException ex) {
+    logger.error("Failed to acknowledge call!",ex);
+    callParticipant.setState(CallParticipantState.FAILED);
+    return;
+  }
+  callParticipant.setSdpDescription(new String(ok.getRawContent()));
+  callParticipant.setState(CallParticipantState.CONNECTED);
+}

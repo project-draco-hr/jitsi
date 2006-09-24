@@ -1,0 +1,24 @@
+{
+  CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(serverTransaction.getDialog());
+  if (callParticipant == null) {
+    logger.debug("Received a stray bye request.");
+    return;
+  }
+  callParticipant.setState(CallParticipantState.DISCONNECTED);
+  Response ok=null;
+  try {
+    ok=protocolProvider.getMessageFactory().createResponse(Response.OK,byeRequest);
+    protocolProvider.attachToTag(ok,serverTransaction.getDialog());
+  }
+ catch (  ParseException ex) {
+    logger.error("Error while trying to send a response to a bye",ex);
+    return;
+  }
+  try {
+    serverTransaction.sendResponse(ok);
+    logger.debug("sent response " + ok);
+  }
+ catch (  Exception ex) {
+    logger.error("Failed to send an OK response to BYE request," + "exception was:\n",ex);
+  }
+}

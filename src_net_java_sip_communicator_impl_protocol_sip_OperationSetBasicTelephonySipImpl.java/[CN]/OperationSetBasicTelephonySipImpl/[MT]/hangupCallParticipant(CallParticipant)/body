@@ -1,2 +1,28 @@
 {
+  CallParticipantSipImpl callParticipant=(CallParticipantSipImpl)participant;
+  Dialog dialog=callParticipant.getDialog();
+  if (callParticipant.getState().equals(CallParticipantState.CONNECTED)) {
+    callParticipant.setState(CallParticipantState.DISCONNECTED);
+    sayBye(callParticipant);
+  }
+ else   if (callParticipant.getState().equals(CallParticipantState.CONNECTING) || callParticipant.getState().equals(CallParticipantState.ALERTING_REMOTE_SIDE)) {
+    if (callParticipant.getFirstTransaction() != null) {
+      sayCancel(callParticipant);
+    }
+    callParticipant.setState(CallParticipantState.DISCONNECTED);
+  }
+ else   if (callParticipant.getState().equals(CallParticipantState.INCOMING_CALL)) {
+    callParticipant.setState(CallParticipantState.DISCONNECTED);
+    sayBusyHere(callParticipant);
+  }
+ else   if (callParticipant.getState().equals(CallParticipantState.BUSY)) {
+    callParticipant.setState(CallParticipantState.DISCONNECTED);
+  }
+ else   if (callParticipant.getState().equals(CallParticipantState.FAILED)) {
+    callParticipant.setState(CallParticipantState.DISCONNECTED);
+  }
+ else {
+    callParticipant.setState(CallParticipantState.DISCONNECTED);
+    logger.error("Could not determine call participant state!");
+  }
 }

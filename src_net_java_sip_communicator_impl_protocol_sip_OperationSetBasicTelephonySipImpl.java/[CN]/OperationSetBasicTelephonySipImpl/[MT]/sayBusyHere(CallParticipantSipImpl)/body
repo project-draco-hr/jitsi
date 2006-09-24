@@ -1,0 +1,25 @@
+{
+  Request request=callParticipant.getFirstTransaction().getRequest();
+  Response busyHere=null;
+  try {
+    busyHere=protocolProvider.getMessageFactory().createResponse(Response.BUSY_HERE,request);
+    protocolProvider.attachToTag(busyHere,callParticipant.getDialog());
+  }
+ catch (  ParseException ex) {
+    logger.error("Failed to create the BUSY_HERE response!",ex);
+    throw new OperationFailedException("Failed to create the BUSY_HERE response!",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  if (!callParticipant.getDialog().isServer()) {
+    logger.error("Cannot send BUSY_HERE in a client transaction");
+    throw new OperationFailedException("Cannot send BUSY_HERE in a client transaction",OperationFailedException.INTERNAL_ERROR);
+  }
+  ServerTransaction serverTransaction=(ServerTransaction)callParticipant.getFirstTransaction();
+  try {
+    serverTransaction.sendResponse(busyHere);
+    logger.debug("sent response: " + busyHere);
+  }
+ catch (  Exception ex) {
+    logger.error("Failed to send the BUSY_HERE response",ex);
+    throw new OperationFailedException("Failed to send the BUSY_HERE response",OperationFailedException.NETWORK_FAILURE,ex);
+  }
+}

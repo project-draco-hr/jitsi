@@ -1,0 +1,48 @@
+{
+  InetAddress destinationInetAddress=null;
+  try {
+    destinationInetAddress=InetAddress.getByName(((SipURI)toAddress.getURI()).getHost());
+  }
+ catch (  UnknownHostException ex) {
+    throw new IllegalArgumentException(((SipURI)toAddress.getURI()).getHost() + " is not a valid internet address " + ex.getMessage());
+  }
+  CallIdHeader callIdHeader=protocolProvider.getDefaultJainSipProvider().getNewCallId();
+  CSeqHeader cSeqHeader=null;
+  try {
+    cSeqHeader=protocolProvider.getHeaderFactory().createCSeqHeader(1l,Request.INVITE);
+  }
+ catch (  InvalidArgumentException ex) {
+    logger.error("An unexpected erro occurred while" + "constructing the CSeqHeadder",ex);
+    throw new OperationFailedException("An unexpected erro occurred while" + "constructing the CSeqHeadder",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+catch (  ParseException exc) {
+    logger.error("An unexpected erro occurred while" + "constructing the CSeqHeadder",exc);
+    throw new OperationFailedException("An unexpected erro occurred while" + "constructing the CSeqHeadder",OperationFailedException.INTERNAL_ERROR,exc);
+  }
+  String localTag=protocolProvider.generateLocalTag();
+  FromHeader fromHeader=null;
+  ToHeader toHeader=null;
+  try {
+    fromHeader=protocolProvider.getHeaderFactory().createFromHeader(protocolProvider.getOurSipAddress(),localTag);
+    toHeader=protocolProvider.getHeaderFactory().createToHeader(toAddress,null);
+  }
+ catch (  ParseException ex) {
+    logger.error("An unexpected erro occurred while" + "constructing the ToHeader",ex);
+    throw new OperationFailedException("An unexpected erro occurred while" + "constructing the ToHeader",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ArrayList viaHeaders=protocolProvider.getLocalViaHeaders(destinationInetAddress,protocolProvider.getDefaultListeningPoint());
+  MaxForwardsHeader maxForwards=protocolProvider.getMaxForwardsHeader();
+  ContactHeader contactHeader=protocolProvider.getContactHeader();
+  Request invite=null;
+  try {
+    invite=protocolProvider.getMessageFactory().createRequest(toHeader.getAddress().getURI(),Request.INVITE,callIdHeader,cSeqHeader,fromHeader,toHeader,viaHeaders,maxForwards);
+  }
+ catch (  ParseException ex) {
+    logger.error("Failed to create invite Request!",ex);
+    throw new OperationFailedException("Failed to create invite Request!",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  UserAgentHeader userAgentHeader=protocolProvider.getSipCommUserAgentHeader();
+  if (userAgentHeader != null)   invite.addHeader(userAgentHeader);
+  invite.addHeader(contactHeader);
+  return invite;
+}

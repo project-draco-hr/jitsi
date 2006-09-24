@@ -1,0 +1,18 @@
+{
+  Request request=callParticipant.getFirstTransaction().getRequest();
+  if (callParticipant.getDialog().isServer()) {
+    logger.error("Cannot cancel a server transaction");
+    throw new OperationFailedException("Cannot cancel a server transaction",OperationFailedException.INTERNAL_ERROR);
+  }
+  ClientTransaction clientTransaction=(ClientTransaction)callParticipant.getFirstTransaction();
+  try {
+    Request cancel=clientTransaction.createCancel();
+    ClientTransaction cancelTransaction=callParticipant.getJainSipProvider().getNewClientTransaction(cancel);
+    cancelTransaction.sendRequest();
+    logger.debug("sent request: " + cancel);
+  }
+ catch (  SipException ex) {
+    logger.error("Failed to send the CANCEL request",ex);
+    throw new OperationFailedException("Failed to send the CANCEL request",OperationFailedException.NETWORK_FAILURE,ex);
+  }
+}

@@ -1,0 +1,60 @@
+{
+  Dialog dialog=serverTransaction.getDialog();
+  CallParticipantSipImpl callParticipant=createCallParticipantFor(serverTransaction,sourceProvider);
+  ContentLengthHeader cl=invite.getContentLength();
+  if (cl != null && cl.getContentLength() > 0) {
+    callParticipant.setSdpDescription(new String(invite.getRawContent()));
+  }
+  javax.sip.address.URI calleeURI=dialog.getLocalParty().getURI();
+  if (calleeURI.isSipURI()) {
+    boolean assertUserMatch=Boolean.valueOf(SipActivator.getConfigurationService().getString(FAIL_CALLS_ON_DEST_USER_MISMATCH)).booleanValue();
+    if (assertUserMatch) {
+      String calleeUser=((SipURI)calleeURI).getUser();
+      String localUser=((SipURI)protocolProvider.getOurSipAddress().getURI()).getUser();
+      if (calleeUser != null && !calleeUser.equals(localUser)) {
+        callParticipant.setState(CallParticipantState.FAILED,"A call was received here while it appeared " + "destined to someone else. The call was rejected.");
+        Response notFound=null;
+        try {
+          notFound=protocolProvider.getMessageFactory().createResponse(Response.NOT_FOUND,invite);
+          protocolProvider.attachToTag(notFound,dialog);
+        }
+ catch (        ParseException ex) {
+          logger.error("Error while trying to create a response",ex);
+          callParticipant.setState(CallParticipantState.FAILED,"InernalError: " + ex.getMessage());
+          return;
+        }
+        try {
+          serverTransaction.sendResponse(notFound);
+          logger.debug("sent a not found response: " + notFound);
+        }
+ catch (        Exception ex) {
+          logger.error("Error while trying to send a response",ex);
+          callParticipant.setState(CallParticipantState.FAILED,"Internal Error: " + ex.getMessage());
+          return;
+        }
+        return;
+      }
+    }
+  }
+  Response ringing=null;
+  try {
+    ringing=protocolProvider.getMessageFactory().createResponse(Response.RINGING,invite);
+    protocolProvider.attachToTag(ringing,dialog);
+    ((ToHeader)ringing.getHeader(ToHeader.NAME)).getAddress().setDisplayName(protocolProvider.getOurDisplayName());
+    ringing.addHeader(protocolProvider.getContactHeader());
+  }
+ catch (  ParseException ex) {
+    logger.error("Error while trying to send a request",ex);
+    callParticipant.setState(CallParticipantState.FAILED,"Internal Error: " + ex.getMessage());
+    return;
+  }
+  try {
+    serverTransaction.sendResponse(ringing);
+    logger.debug("sent a ringing response: " + ringing);
+  }
+ catch (  Exception ex) {
+    logger.error("Error while trying to send a request",ex);
+    callParticipant.setState(CallParticipantState.FAILED,"Internal Error: " + ex.getMessage());
+    return;
+  }
+}
