@@ -1,5 +1,5 @@
 {
-  SnacCommand snac=e.getSnacCommand();
+  SnacCommand snac=evt.getSnacCommand();
   logger.debug("Received a response to our offline message request: " + snac);
   if (snac instanceof OfflineMsgCmd) {
     OfflineMsgCmd offlineMsgCmd=(OfflineMsgCmd)snac;
@@ -10,7 +10,10 @@
         logger.debug("received a message from a unknown contact: " + contactUIN);
         sourceContact=opSetPersPresence.createVolatileContact(contactUIN);
       }
-      MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(createMessage(offlineMsgCmd.getContents()),sourceContact,offlineMsgCmd.getDate());
+      long current=System.currentTimeMillis();
+      long msgDate=offlineMsgCmd.getDate().getTime();
+      if ((current + ONE_DAY) > msgDate)       msgDate=current;
+      MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(createMessage(offlineMsgCmd.getContents()),sourceContact,new Date(msgDate));
       logger.debug("fire msg received for : " + offlineMsgCmd.getContents());
       fireMessageEvent(msgReceivedEvt);
     }
