@@ -1,3 +1,13 @@
 {
-  logger.debug("@todo implement processTransactionTerminated()");
+  Transaction transaction;
+  if (transactionTerminatedEvent.isServerTransaction())   transaction=transactionTerminatedEvent.getServerTransaction();
+ else   transaction=transactionTerminatedEvent.getClientTransaction();
+  if (transaction == null) {
+    logger.debug("ignoring a transactionless transaction terminated event");
+    return;
+  }
+  Request request=transaction.getRequest();
+  logger.debug("Transaction terminated for req=" + request);
+  SipListener processor=(SipListener)methodProcessors.get(request.getMethod());
+  processor.processTransactionTerminated(transactionTerminatedEvent);
 }

@@ -36,6 +36,8 @@ synchronized (initializationLock) {
     addressFactory=new AddressFactoryImpl();
     messageFactory=new MessageFactoryImpl();
     initRegistrarConnection(accountID);
+    OperationSetBasicTelephony opSetBasicTelephony=new OperationSetBasicTelephonySipImpl(this);
+    this.supportedOperationSets.put(OperationSetBasicTelephony.class.getName(),opSetBasicTelephony);
     String ourUserID=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.USER_ID);
     ourDisplayName=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.DISPLAY_NAME);
     String registrarAddressStr=sipRegistrarConnection.getRegistrarAddress().getHostName();
@@ -50,7 +52,6 @@ synchronized (initializationLock) {
  catch (    ParseException ex) {
       throw new IllegalArgumentException("Could not create a SIP URI for user " + ourUserID + " and registrar "+ registrarAddressStr);
     }
-    this.methodProcessors.put(Request.REGISTER,sipRegistrarConnection);
     this.sipSecurityManager=new SipSecurityManager(accountID);
     sipSecurityManager.setHeaderFactory(headerFactory);
     isInitialized=true;

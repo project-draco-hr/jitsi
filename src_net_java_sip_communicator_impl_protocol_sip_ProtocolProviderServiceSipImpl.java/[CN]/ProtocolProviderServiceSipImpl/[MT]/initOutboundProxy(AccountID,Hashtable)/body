@@ -1,15 +1,15 @@
 {
   String proxyAddressStr=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PROXY_ADDRESS);
   InetAddress proxyAddress=null;
-  if (proxyAddressStr == null || proxyAddressStr.length() == 0) {
-    return;
-  }
   try {
     proxyAddress=InetAddress.getByName(proxyAddressStr);
   }
  catch (  UnknownHostException ex) {
     logger.error(proxyAddressStr + " appears to be an either invalid or inaccessible address",ex);
     throw new IllegalArgumentException(proxyAddressStr + " appears to be an either invalid or inaccessible address " + ex.getMessage());
+  }
+  if (proxyAddressStr == null || proxyAddressStr.length() == 0) {
+    return;
   }
   int proxyPort=ListeningPoint.PORT_5060;
   String proxyPortStr=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PROXY_PORT);
@@ -43,4 +43,6 @@
   proxyStringBuffer.append('/');
   proxyStringBuffer.append(proxyTransport);
   jainSipProperties.put(JSPNAME_OUTBOUND_PROXY,proxyStringBuffer.toString());
+  this.outboundProxySocketAddress=new InetSocketAddress(proxyAddress,proxyPort);
+  this.outboundProxyTransport=proxyTransport;
 }

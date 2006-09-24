@@ -1,3 +1,13 @@
 {
-  logger.debug("@todo implement processTimeout()");
+  Transaction transaction;
+  if (timeoutEvent.isServerTransaction())   transaction=timeoutEvent.getServerTransaction();
+ else   transaction=timeoutEvent.getClientTransaction();
+  if (transaction == null) {
+    logger.debug("ignoring a transactionless timeout event");
+    return;
+  }
+  Request request=transaction.getRequest();
+  logger.debug("received timeout for req=" + request);
+  SipListener processor=(SipListener)methodProcessors.get(request.getMethod());
+  processor.processTimeout(timeoutEvent);
 }
