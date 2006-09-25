@@ -15,11 +15,10 @@ synchronized (initializationLock) {
         }
         try {
           String userID=StringUtils.parseName(getAccountID().getUserID());
-          String server=StringUtils.parseServer(getAccountID().getUserID());
-          if (server.equals("gmail.com")) {
-            connection=new GoogleTalkConnection();
-          }
- else           connection=new XMPPConnection(server,DEFAULT_SERVER_PORT,server);
+          String serviceName=StringUtils.parseServer(getAccountID().getUserID());
+          String serverAddress=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.SERVER_ADDRESS);
+          String serverPort=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.SERVER_PORT);
+          connection=new XMPPConnection(serverAddress,Integer.parseInt(serverPort),serviceName);
           connection.addConnectionListener(new JabberConnectionListener());
           connection.login(userID,password,"sip-comm");
           if (connection.isAuthenticated()) {
@@ -30,6 +29,7 @@ synchronized (initializationLock) {
         }
  catch (        XMPPException ex) {
           logger.error("Error registering",ex);
+          fireRegistrationStateChanged(RegistrationState.UNREGISTERED,RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
         }
       }
     }
