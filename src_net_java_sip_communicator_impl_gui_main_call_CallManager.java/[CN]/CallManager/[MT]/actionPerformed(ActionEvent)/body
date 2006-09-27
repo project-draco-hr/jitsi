@@ -9,15 +9,16 @@
       Contact contact=getTelephonyContact(metaContact);
       if (contact != null) {
         telephony=mainFrame.getTelephony(contact.getProtocolProvider());
-        Call createdCall=null;
+        Call createdCall;
         try {
           createdCall=telephony.createCall(contact);
+          CallPanel callPanel=new CallPanel(createdCall,CallPanel.OUTGOING_CALL);
+          mainFrame.addCallPanel(callPanel);
+          activeCalls.put(createdCall,callPanel);
         }
- catch (        OperationFailedException ex1) {
+ catch (        OperationFailedException e1) {
+          e1.printStackTrace();
         }
-        CallPanel callPanel=new CallPanel(createdCall);
-        mainFrame.addCallPanel(callPanel);
-        activeCalls.put(createdCall,callPanel);
       }
  else {
       }
@@ -26,12 +27,18 @@
       ProtocolProviderService pps=getDefaultTelephonyProvider();
       if (pps != null) {
         telephony=mainFrame.getTelephony(pps);
+        Call createdCall;
         try {
-          telephony.createCall(phoneNumberCombo.getSelectedItem().toString());
+          createdCall=telephony.createCall(phoneNumberCombo.getSelectedItem().toString());
+          CallPanel callPanel=new CallPanel(createdCall,CallPanel.OUTGOING_CALL);
+          mainFrame.addCallPanel(callPanel);
+          activeCalls.put(createdCall,callPanel);
         }
- catch (        ParseException ex) {
+ catch (        OperationFailedException e1) {
+          e1.printStackTrace();
         }
-catch (        OperationFailedException ex) {
+catch (        ParseException e1) {
+          e1.printStackTrace();
         }
       }
     }
