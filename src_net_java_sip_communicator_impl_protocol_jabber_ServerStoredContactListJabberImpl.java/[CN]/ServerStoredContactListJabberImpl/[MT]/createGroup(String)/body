@@ -1,5 +1,10 @@
 {
   logger.trace("Creating group: " + groupName);
+  ContactGroupJabberImpl existingGroup=findContactGroup(groupName);
+  if (existingGroup != null && existingGroup.isPersistent()) {
+    logger.debug("ContactGroup " + groupName + " already exists.");
+    throw new OperationFailedException("ContactGroup " + groupName + " already exists.",OperationFailedException.SUBSCRIPTION_ALREADY_EXISTS);
+  }
   RosterGroup newRosterGroup=roster.createGroup(groupName);
   ContactGroupJabberImpl newGroup=new ContactGroupJabberImpl(newRosterGroup,new Vector().iterator(),this,true);
   rootGroup.addSubGroup(newGroup);
