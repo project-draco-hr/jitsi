@@ -38,11 +38,11 @@
       mainFrame.getContactList().moveMetaContact(contactItem,group);
     }
   }
- else   if (itemName.startsWith("removeContact")) {
+ else   if (itemName.startsWith(removeContactPrefix)) {
     Contact contact=getContactFromMetaContact(itemName.substring(removeContactPrefix.length()));
     if (contact != null) {
       if (Constants.REMOVE_CONTACT_ASK) {
-        String message="<HTML>Are you sure you want to remove <B>" + this.contactItem.getDisplayName() + "</B><BR>from your contact list?</html>";
+        String message="<HTML>Are you sure you want to remove <B>" + contact.getDisplayName() + "</B><BR>from your contact list?</html>";
         MessageDialog dialog=new MessageDialog(this.mainFrame,message,Messages.getString("remove"));
         int returnCode=dialog.showDialog();
         if (returnCode == MessageDialog.OK_RETURN_CODE) {
@@ -57,37 +57,32 @@
         new RemoveContactThread(contact).start();
       }
     }
-  }
- else   if (itemName.equals("allContacts")) {
-    if (Constants.REMOVE_CONTACT_ASK) {
-      String message="<HTML>Are you sure you want to remove <B>" + this.contactItem.getDisplayName() + "</B><BR>from your contact list?</html>";
-      MessageDialog dialog=new MessageDialog(this.mainFrame,message,Messages.getString("remove"));
-      int returnCode=dialog.showDialog();
-      if (returnCode == MessageDialog.OK_RETURN_CODE) {
-        new Thread(){
-          public void run(){
-            mainFrame.getContactList().removeMetaContact(contactItem);
-          }
+ else {
+      if (Constants.REMOVE_CONTACT_ASK) {
+        String message="<HTML>Are you sure you want to remove <B>" + Messages.getString("allContacts") + "</B><BR>from your contact list?</html>";
+        MessageDialog dialog=new MessageDialog(this.mainFrame,message,Messages.getString("remove"));
+        int returnCode=dialog.showDialog();
+        if (returnCode == MessageDialog.OK_RETURN_CODE) {
+          new RemoveAllContactsThread().start();
         }
-.start();
+ else         if (returnCode == MessageDialog.OK_DONT_ASK_CODE) {
+          new RemoveAllContactsThread().start();
+          Constants.REMOVE_CONTACT_ASK=false;
+        }
       }
- else       if (returnCode == MessageDialog.OK_DONT_ASK_CODE) {
-        new Thread(){
-          public void run(){
-            mainFrame.getContactList().removeMetaContact(contactItem);
-          }
-        }
-.start();
-        Constants.REMOVE_CONTACT_ASK=false;
+ else {
+        new RemoveAllContactsThread().start();
       }
     }
+  }
+ else   if (itemName.startsWith(moveSubcontactPrefix)) {
+    Contact contact=getContactFromMetaContact(itemName.substring(moveSubcontactPrefix.length()));
+    mainFrame.getContactListPanel().getContactList().addExcContactListListener(this);
+    if (contact != null) {
+      this.contactToMove=contact;
+    }
  else {
-      new Thread(){
-        public void run(){
-          mainFrame.getContactList().removeMetaContact(contactItem);
-        }
-      }
-.start();
+      this.moveAllContacts=true;
     }
   }
 }
