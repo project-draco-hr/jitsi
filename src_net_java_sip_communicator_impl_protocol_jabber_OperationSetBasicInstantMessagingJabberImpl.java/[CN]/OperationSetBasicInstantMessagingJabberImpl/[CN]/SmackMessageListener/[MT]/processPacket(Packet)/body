@@ -6,6 +6,12 @@
   if (logger.isDebugEnabled()) {
     logger.debug("Received from " + fromUserID + " the message "+ msg.getBody());
   }
+  KeepAliveEvent keepAliveEvent=(KeepAliveEvent)packet.getExtension(KeepAliveEventProvider.ELEMENT_NAME,KeepAliveEventProvider.NAMESPACE);
+  if (keepAliveEvent != null) {
+    keepAliveEvent.setFromUserID(fromUserID);
+    receivedKeepAlivePackets.addLast(keepAliveEvent);
+    return;
+  }
   Message newMessage=createMessage(msg.getBody());
   Contact sourceContact=opSetPersPresence.findContactByID(fromUserID);
   if (msg.getType() == org.jivesoftware.smack.packet.Message.Type.ERROR) {

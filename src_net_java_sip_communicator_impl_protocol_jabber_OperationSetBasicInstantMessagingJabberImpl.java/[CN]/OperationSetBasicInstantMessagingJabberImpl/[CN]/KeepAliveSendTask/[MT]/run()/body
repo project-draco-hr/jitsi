@@ -1,0 +1,18 @@
+{
+  try {
+    if (!jabberProvider.isRegistered())     return;
+    Chat chat=jabberProvider.getConnection().createChat(jabberProvider.getAccountID().getUserID());
+    org.jivesoftware.smack.packet.Message msg=chat.createMessage();
+    msg.setBody("SYSTEM MESSAGE!");
+    KeepAliveEvent keepAliveEvent=new KeepAliveEvent();
+    keepAliveEvent.setSrcOpSetHash(OperationSetBasicInstantMessagingJabberImpl.this.hashCode());
+    keepAliveEvent.setSrcProviderHash(jabberProvider.hashCode());
+    msg.addExtension(keepAliveEvent);
+    keepAliveTimer.schedule(new KeepAliveCheckTask(),KEEPALIVE_WAIT);
+    logger.trace("send keepalive");
+    chat.sendMessage(msg);
+  }
+ catch (  XMPPException ex) {
+    logger.error("",ex);
+  }
+}
