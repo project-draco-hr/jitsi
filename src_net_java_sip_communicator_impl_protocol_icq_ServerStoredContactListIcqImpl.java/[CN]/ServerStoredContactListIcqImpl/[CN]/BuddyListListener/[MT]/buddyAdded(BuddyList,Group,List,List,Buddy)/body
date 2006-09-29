@@ -1,41 +1,35 @@
 {
   ContactGroupIcqImpl oldParentGroup=null;
   ContactIcqImpl newContact=findContactByScreenName(buddy.getScreenname().getFormatted());
+  ContactGroupIcqImpl parentGroup=findContactGroup(joustSimGroup);
+  boolean fireResolvedEvent=false;
+  if (parentGroup == null) {
+    logger.debug("no parent group " + joustSimGroup + " found for buddy: "+ buddy);
+    return;
+  }
   if (newContact == null) {
     newContact=new ContactIcqImpl(buddy,ServerStoredContactListIcqImpl.this,true,true);
   }
  else {
     oldParentGroup=findContactGroup(newContact);
-    oldParentGroup.removeContact(newContact);
+    if (oldParentGroup != parentGroup)     oldParentGroup.removeContact(newContact);
     newContact.setJoustSimBuddy(buddy);
     newContact.setPersistent(true);
-    newContact.setResolved(true);
-  }
-  ContactGroupIcqImpl parentGroup=findContactGroup(joustSimGroup);
-  if (parentGroup == null) {
-    logger.debug("no parent group " + joustSimGroup + " found for buddy: "+ buddy);
-    return;
-  }
-  int buddyIndex=newItems.indexOf(buddy);
-  if (buddyIndex == -1) {
-    logger.debug(buddy + " was not present in newItems" + newItems);
-  }
-  int insertPos=0;
-  if (buddyIndex == 0) {
-    parentGroup.addContact(insertPos,newContact);
-  }
- else {
-    for (; buddyIndex >= 0; buddyIndex--) {
-      int prevContactIndex=parentGroup.findContactIndex((Buddy)newItems.get(buddyIndex));
-      if (prevContactIndex != -1)       insertPos=prevContactIndex + 1;
+    if (!newContact.isResolved()) {
+      newContact.setResolved(true);
+      fireResolvedEvent=true;
     }
-    parentGroup.addContact(insertPos,newContact);
   }
+  parentGroup.addContact(newContact);
+  int index=parentGroup.findContactIndex(newContact);
   buddy.addBuddyListener(jsimBuddyListener);
   if (oldParentGroup == null) {
-    fireContactAdded(parentGroup,newContact,insertPos);
+    fireContactAdded(parentGroup,newContact,index);
   }
- else {
-    fireContactMoved(oldParentGroup,parentGroup,newContact,insertPos);
+ else   if (oldParentGroup != parentGroup) {
+    fireContactMoved(oldParentGroup,parentGroup,newContact,index);
+  }
+  if (fireResolvedEvent) {
+    fireContactResolved(parentGroup,newContact);
   }
 }
