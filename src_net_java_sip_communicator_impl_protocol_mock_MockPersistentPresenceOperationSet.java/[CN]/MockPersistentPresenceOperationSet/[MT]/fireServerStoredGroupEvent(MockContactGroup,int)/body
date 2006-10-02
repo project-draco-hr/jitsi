@@ -1,7 +1,11 @@
 {
   ServerStoredGroupEvent evt=new ServerStoredGroupEvent(source,eventID,(MockContactGroup)source.getParentContactGroup(),this.parentProvider,this);
-  for (int i=0; i < serverStoredGroupListeners.size(); i++) {
-    ServerStoredGroupListener listener=(ServerStoredGroupListener)serverStoredGroupListeners.get(i);
+  Iterator listeners=null;
+synchronized (serverStoredGroupListeners) {
+    listeners=new ArrayList(serverStoredGroupListeners).iterator();
+  }
+  while (listeners.hasNext()) {
+    ServerStoredGroupListener listener=(ServerStoredGroupListener)listeners.next();
     if (eventID == ServerStoredGroupEvent.GROUP_CREATED_EVENT) {
       listener.groupCreated(evt);
     }
