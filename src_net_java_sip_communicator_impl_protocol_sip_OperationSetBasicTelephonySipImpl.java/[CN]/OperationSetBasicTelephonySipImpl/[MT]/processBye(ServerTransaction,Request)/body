@@ -4,11 +4,11 @@
     logger.debug("Received a stray bye request.");
     return;
   }
-  callParticipant.setState(CallParticipantState.DISCONNECTED);
   Response ok=null;
   try {
     ok=protocolProvider.getMessageFactory().createResponse(Response.OK,byeRequest);
     protocolProvider.attachToTag(ok,serverTransaction.getDialog());
+    ok.setHeader(protocolProvider.getSipCommUserAgentHeader());
   }
  catch (  ParseException ex) {
     logger.error("Error while trying to send a response to a bye",ex);
@@ -21,4 +21,5 @@
  catch (  Exception ex) {
     logger.error("Failed to send an OK response to BYE request," + "exception was:\n",ex);
   }
+  callParticipant.setState(CallParticipantState.DISCONNECTED);
 }

@@ -1,13 +1,17 @@
 {
   CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(clientTransaction.getDialog());
+  if (callParticipant == null) {
+    logger.debug("Received an authorization challenge for no " + "participant. authorizing anyway.");
+  }
   try {
     logger.debug("Authenticating an INVITE request.");
     ClientTransaction retryTran=protocolProvider.getSipSecurityManager().handleChallenge(response,clientTransaction,jainSipProvider);
-    callParticipant.setDialog(retryTran.getDialog());
-    callParticipant.setFirstTransaction(retryTran);
-    callParticipant.setJainSipProvider(jainSipProvider);
+    if (callParticipant != null) {
+      callParticipant.setDialog(retryTran.getDialog());
+      callParticipant.setFirstTransaction(retryTran);
+      callParticipant.setJainSipProvider(jainSipProvider);
+    }
     retryTran.sendRequest();
-    return;
   }
  catch (  Exception exc) {
     logger.error("We failed to authenticate an INVITE request.",exc);
