@@ -1,5 +1,5 @@
 {
-  if (getRegistrationState() == RegistrationState.REGISTERED) {
+  if (getRegistrationState() != RegistrationState.REGISTERED) {
     return;
   }
   cancelPendingRegistrations();
@@ -13,6 +13,8 @@
     unregisterRequest.getExpires().setExpires(0);
     CSeqHeader cSeqHeader=(CSeqHeader)unregisterRequest.getHeader(CSeqHeader.NAME);
     cSeqHeader.setSeqNumber(getNextCSeqValue());
+    ViaHeader via=(ViaHeader)unregisterRequest.getHeader(ViaHeader.NAME);
+    if (via != null)     via.removeParameter("branch");
   }
  catch (  InvalidArgumentException ex) {
     logger.error("Unable to set Expires Header",ex);
@@ -31,7 +33,6 @@
   try {
     unregisterTransaction.sendRequest();
     logger.debug("sent request: " + unregisterRequest);
-    setRegistrationState(RegistrationState.UNREGISTERING,RegistrationStateChangeEvent.REASON_USER_REQUEST,null);
   }
  catch (  SipException ex) {
     logger.error("Failed to send unregister request",ex);
