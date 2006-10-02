@@ -1,8 +1,12 @@
 {
   RegistrationStateChangeEvent event=new RegistrationStateChangeEvent(this,oldState,newState,reasonCode,reason);
   logger.debug("Dispatching " + event + " to "+ registrationListeners.size()+ " listeners.");
-  for (int i=0; i < registrationListeners.size(); i++) {
-    RegistrationStateChangeListener listener=(RegistrationStateChangeListener)registrationListeners.get(i);
+  Iterator listeners=null;
+synchronized (registrationListeners) {
+    listeners=new ArrayList(registrationListeners).iterator();
+  }
+  while (listeners.hasNext()) {
+    RegistrationStateChangeListener listener=(RegistrationStateChangeListener)listeners.next();
     listener.registrationStateChanged(event);
   }
   logger.trace("Done.");

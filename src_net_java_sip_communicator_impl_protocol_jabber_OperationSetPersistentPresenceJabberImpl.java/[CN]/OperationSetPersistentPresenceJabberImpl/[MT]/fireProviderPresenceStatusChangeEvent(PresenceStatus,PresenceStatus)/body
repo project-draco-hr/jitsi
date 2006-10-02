@@ -5,12 +5,13 @@
   }
   ProviderPresenceStatusChangeEvent evt=new ProviderPresenceStatusChangeEvent(jabberProvider,oldStatus,newStatus);
   currentStatus=newStatus;
+  logger.debug("Dispatching Provider Status Change. Listeners=" + providerPresenceStatusListeners.size() + " evt="+ evt);
+  Iterator listeners=null;
 synchronized (providerPresenceStatusListeners) {
-    Iterator listeners=this.providerPresenceStatusListeners.iterator();
-    logger.debug("Dispatching Provider Status Change. Listeners=" + providerPresenceStatusListeners.size() + " evt="+ evt);
-    while (listeners.hasNext()) {
-      ProviderPresenceStatusListener listener=(ProviderPresenceStatusListener)listeners.next();
-      listener.providerStatusChanged(evt);
-    }
+    listeners=new ArrayList(providerPresenceStatusListeners).iterator();
+  }
+  while (listeners.hasNext()) {
+    ProviderPresenceStatusListener listener=(ProviderPresenceStatusListener)listeners.next();
+    listener.providerStatusChanged(evt);
   }
 }
