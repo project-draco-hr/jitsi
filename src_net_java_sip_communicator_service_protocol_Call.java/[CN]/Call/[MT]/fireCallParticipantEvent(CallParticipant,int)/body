@@ -1,7 +1,10 @@
 {
   CallParticipantEvent cpEvent=new CallParticipantEvent(sourceCallParticipant,this,eventID);
   logger.debug("Dispatching a CallParticipant event to " + callListeners.size() + " listeners. event is: "+ cpEvent.toString());
-  Iterator listeners=callListeners.iterator();
+  Iterator listeners=null;
+synchronized (callListeners) {
+    listeners=new ArrayList(callListeners).iterator();
+  }
   while (listeners.hasNext()) {
     CallChangeListener listener=(CallChangeListener)listeners.next();
     if (eventID == CallParticipantEvent.CALL_PARTICIPANT_ADDED)     listener.callParticipantAdded(cpEvent);

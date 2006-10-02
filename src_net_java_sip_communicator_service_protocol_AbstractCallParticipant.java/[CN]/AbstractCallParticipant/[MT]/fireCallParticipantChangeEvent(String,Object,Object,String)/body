@@ -1,7 +1,12 @@
 {
   CallParticipantChangeEvent evt=new CallParticipantChangeEvent(this,eventType,oldValue,newValue,reason);
-  for (int i=0; i < callParticipantListeners.size(); i++) {
-    CallParticipantListener listener=(CallParticipantListener)callParticipantListeners.get(i);
+  logger.debug("Dispatching a CallParticipantChangeEvent event to " + callParticipantListeners.size() + " listeners. event is: "+ evt.toString());
+  Iterator listeners=null;
+synchronized (callParticipantListeners) {
+    listeners=new ArrayList(callParticipantListeners).iterator();
+  }
+  while (listeners.hasNext()) {
+    CallParticipantListener listener=(CallParticipantListener)listeners.next();
     if (eventType.equals(CallParticipantChangeEvent.CALL_PARTICIPANT_ADDRESS_CHANGE)) {
       listener.participantAddressChanged(evt);
     }
