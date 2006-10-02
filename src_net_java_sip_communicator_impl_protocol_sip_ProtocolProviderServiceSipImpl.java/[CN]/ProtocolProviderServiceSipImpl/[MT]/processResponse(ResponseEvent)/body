@@ -1,5 +1,5 @@
 {
-  logger.debug("received response=" + responseEvent.getResponse());
+  logger.debug("received response=\n" + responseEvent.getResponse());
   ClientTransaction clientTransaction=responseEvent.getClientTransaction();
   if (clientTransaction == null) {
     logger.debug("ignoring a transactionless response");
@@ -8,5 +8,9 @@
   Response response=responseEvent.getResponse();
   String method=((CSeqHeader)response.getHeader(CSeqHeader.NAME)).getMethod();
   SipListener processor=(SipListener)methodProcessors.get(method);
+  if (processor == null) {
+    return;
+  }
+  logger.debug("Found one processor for method " + method + ", processor is="+ processor.toString());
   processor.processResponse(responseEvent);
 }
