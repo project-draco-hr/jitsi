@@ -1,0 +1,35 @@
+{
+  ConfigurationService configService=GuiActivator.getConfigurationService();
+  String prefix="net.java.sip.communicator.impl.ui.accounts";
+  int accountIndex=0;
+  Enumeration pproviders=protocolProviders.keys();
+  ProtocolProviderService pps;
+  while (pproviders.hasMoreElements()) {
+    pps=(ProtocolProviderService)pproviders.nextElement();
+    if (pps.getProtocolName().equals(protocolProvider.getProtocolName()) && !pps.equals(protocolProvider)) {
+      int index=((Integer)protocolProviders.get(pps)).intValue();
+      if (index == 0) {
+        index++;
+        protocolProviders.put(pps,new Integer(index));
+        List accounts=configService.getPropertyNamesByPrefix(prefix,true);
+        Iterator accountsIter=accounts.iterator();
+        while (accountsIter.hasNext()) {
+          String rootPropName=(String)accountsIter.next();
+          String accountUID=configService.getString(rootPropName);
+          if (accountUID.equals(pps.getAccountID().getAccountUniqueID())) {
+            configService.setProperty(rootPropName + ".accountIndex",new Integer(index));
+          }
+        }
+        this.getStatusPanel().updateAccount(pps);
+      }
+      if (accountIndex < index) {
+        accountIndex=index;
+      }
+    }
+  }
+  if (accountIndex != 0) {
+    accountIndex++;
+    configService.setProperty(accountRootPropName + ".accountIndex",new Integer(accountIndex));
+  }
+  return accountIndex;
+}
