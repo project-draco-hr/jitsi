@@ -1,32 +1,33 @@
 {
   FromHeader fromHeader=((FromHeader)response.getHeader(FromHeader.NAME));
-  Address address=fromHeader.getAddress();
-  int expires=registrationsExpiration;
-  ExpiresHeader expiresHeader=response.getExpires();
+  int requestedExpiration=0;
+  Request register=clientTransatcion.getRequest();
+  ExpiresHeader expiresHeader=register.getExpires();
+  if (expiresHeader != null)   requestedExpiration=expiresHeader.getExpires();
+ else {
+    ContactHeader contactHeader=(ContactHeader)register.getHeader(ContactHeader.NAME);
+    if (contactHeader != null)     requestedExpiration=contactHeader.getExpires();
+ else     requestedExpiration=0;
+  }
+  int grantedExpiration=registrationsExpiration;
+  expiresHeader=response.getExpires();
   if (expiresHeader != null) {
-    expires=expiresHeader.getExpires();
+    grantedExpiration=expiresHeader.getExpires();
   }
  else {
     ContactHeader contactHeader=(ContactHeader)response.getHeader(ContactHeader.NAME);
     if (contactHeader != null) {
-      expires=contactHeader.getExpires();
+      grantedExpiration=contactHeader.getExpires();
     }
  else {
-      Request register=clientTransatcion.getRequest();
-      expiresHeader=register.getExpires();
-      if (expiresHeader != null)       expires=expiresHeader.getExpires();
- else {
-        contactHeader=(ContactHeader)register.getHeader(ContactHeader.NAME);
-        if (contactHeader != null)         expires=contactHeader.getExpires();
- else         expires=0;
-      }
+      grantedExpiration=requestedExpiration;
     }
   }
-  if (expires <= 0) {
+  if (grantedExpiration <= 0 || requestedExpiration <= 0) {
     setRegistrationState(RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,"Registration terminated.");
   }
  else {
-    scheduleReRegistration(expires);
+    scheduleReRegistration(grantedExpiration);
     setRegistrationState(RegistrationState.REGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
   }
 }
