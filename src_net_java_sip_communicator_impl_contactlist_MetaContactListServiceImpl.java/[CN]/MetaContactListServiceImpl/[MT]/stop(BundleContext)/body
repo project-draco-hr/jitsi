@@ -1,0 +1,16 @@
+{
+  storageManager.storeContactListAndStopStorageManager();
+  bc.removeServiceListener(this);
+  Iterator providers=this.currentlyInstalledProviders.keySet().iterator();
+  while (providers.hasNext()) {
+    ProtocolProviderService pp=(ProtocolProviderService)providers.next();
+    OperationSetPersistentPresence opSetPersPresence=(OperationSetPersistentPresence)pp.getOperationSet(OperationSetPersistentPresence.class);
+    opSetPersPresence.removeSubscriptionListener(clSubscriptionEventHandler);
+    opSetPersPresence.removeServerStoredGroupChangeListener(clGroupEventHandler);
+    if (opSetPersPresence == null) {
+      OperationSetPresence opSetPresence=(OperationSetPresence)pp.getOperationSet(OperationSetPresence.class);
+      opSetPersPresence.removeSubscriptionListener(clSubscriptionEventHandler);
+    }
+  }
+  currentlyInstalledProviders.clear();
+}

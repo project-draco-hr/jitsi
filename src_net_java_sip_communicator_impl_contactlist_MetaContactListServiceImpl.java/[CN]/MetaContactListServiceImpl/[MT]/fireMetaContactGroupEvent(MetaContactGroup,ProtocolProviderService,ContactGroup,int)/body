@@ -1,29 +1,30 @@
 {
   MetaContactGroupEvent evt=new MetaContactGroupEvent(source,provider,sourceProtoGroup,eventID);
   logger.trace("Will dispatch the following mcl event: " + evt);
+  Iterator listeners=null;
 synchronized (metaContactListListeners) {
-    Iterator listeners=this.metaContactListListeners.iterator();
-    while (listeners.hasNext()) {
-      MetaContactListListener listenet=(MetaContactListListener)listeners.next();
+    listeners=new ArrayList(metaContactListListeners).iterator();
+  }
+  while (listeners.hasNext()) {
+    MetaContactListListener listener=(MetaContactListListener)listeners.next();
 switch (eventID) {
 case MetaContactGroupEvent.META_CONTACT_GROUP_ADDED:
-        listenet.metaContactGroupAdded(evt);
-      break;
+      listener.metaContactGroupAdded(evt);
+    break;
 case MetaContactGroupEvent.META_CONTACT_GROUP_REMOVED:
-    listenet.metaContactGroupRemoved(evt);
-  break;
+  listener.metaContactGroupRemoved(evt);
+break;
 case MetaContactGroupEvent.CHILD_CONTACTS_REORDERED:
-listenet.childContactsReordered(evt);
+listener.childContactsReordered(evt);
 break;
 case MetaContactGroupEvent.META_CONTACT_GROUP_RENAMED:
 case MetaContactGroupEvent.CONTACT_GROUP_RENAMED_IN_META_GROUP:
 case MetaContactGroupEvent.CONTACT_GROUP_REMOVED_FROM_META_GROUP:
 case MetaContactGroupEvent.CONTACT_GROUP_ADDED_TO_META_GROUP:
-listenet.metaContactGroupModified(evt);
+listener.metaContactGroupModified(evt);
 break;
 default :
 logger.error("Unknown event type (" + eventID + ") for event: "+ evt);
-}
 }
 }
 }
