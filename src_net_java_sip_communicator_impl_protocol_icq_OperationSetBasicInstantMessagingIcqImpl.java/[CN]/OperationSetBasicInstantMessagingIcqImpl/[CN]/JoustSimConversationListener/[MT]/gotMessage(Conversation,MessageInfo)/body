@@ -1,6 +1,12 @@
 {
-  if (logger.isDebugEnabled())   logger.debug("Received from " + conversation.getBuddy() + " the message "+ minfo.getMessage().getMessageBody());
-  Message newMessage=createMessage(minfo.getMessage().getMessageBody());
+  String msgBody=minfo.getMessage().getMessageBody();
+  if (logger.isDebugEnabled())   logger.debug("Received from " + conversation.getBuddy() + " the message "+ msgBody);
+  if (msgBody.startsWith(SYS_MSG_PREFIX_TEST) && conversation.getBuddy().getFormatted().equals(icqProvider.getAccountID().getUserID())) {
+    logger.info("adddddddddd sys msg");
+    receivedKeepAlivePackets.addLast(msgBody);
+    return;
+  }
+  Message newMessage=createMessage(msgBody);
   Contact sourceContact=opSetPersPresence.findContactByID(conversation.getBuddy().getFormatted());
   if (sourceContact == null) {
     logger.debug("received a message from a unknown contact: " + conversation.getBuddy());
