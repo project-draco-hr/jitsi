@@ -1,5 +1,20 @@
 {
-  SIPCommMsgTextArea msg=new SIPCommMsgTextArea(Messages.getString("msgNotDelivered",evt.getDestinationContact().getDisplayName()));
+  SIPCommMsgTextArea msg=null;
+  if (evt.getErrorCode() == MessageDeliveryFailedEvent.OFFLINE_MESSAGES_NOT_SUPPORTED) {
+    msg=new SIPCommMsgTextArea(Messages.getString("msgDeliveryOfflineNotSupported",evt.getDestinationContact().getDisplayName()));
+  }
+ else   if (evt.getErrorCode() == MessageDeliveryFailedEvent.NETWORK_FAILURE) {
+    msg=new SIPCommMsgTextArea(Messages.getString("msgNotDelivered",evt.getDestinationContact().getDisplayName()));
+  }
+ else   if (evt.getErrorCode() == MessageDeliveryFailedEvent.PROVIDER_NOT_REGISTERED) {
+    msg=new SIPCommMsgTextArea(Messages.getString("msgSendConnectionProblem",evt.getDestinationContact().getDisplayName()));
+  }
+ else   if (evt.getErrorCode() == MessageDeliveryFailedEvent.INTERNAL_ERROR) {
+    msg=new SIPCommMsgTextArea(Messages.getString("msgDeliveryInternalError",evt.getDestinationContact().getDisplayName()));
+  }
+ else {
+    msg=new SIPCommMsgTextArea(Messages.getString("unknownError",evt.getDestinationContact().getDisplayName()));
+  }
   String title=Messages.getString("msgDeliveryFailure");
   JOptionPane.showMessageDialog(this,msg,title,JOptionPane.WARNING_MESSAGE);
 }
