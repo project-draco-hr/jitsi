@@ -1,21 +1,20 @@
 {
-  LinkedList result=new LinkedList();
-  Iterator iter=contact.getContacts();
+  TreeSet result=new TreeSet(new MessageEventComparator());
+  Hashtable readers=getHistoryReaders(contact);
+  Iterator iter=readers.keySet().iterator();
   while (iter.hasNext()) {
     Contact item=(Contact)iter.next();
-    try {
-      History history=this.getHistory(null,item);
-      HistoryReader reader=history.getReader();
-      addHistorySearchProgressListeners(reader);
-      Iterator recs=reader.findByPeriod(startDate,endDate);
-      removeHistorySearchProgressListeners(reader);
-      while (recs.hasNext()) {
-        result.add(convertHistoryRecordToMessageEvent((HistoryRecord)recs.next(),item));
-      }
+    HistoryReader reader=(HistoryReader)readers.get(item);
+    addHistorySearchProgressListeners(reader,readers.size());
+    Iterator recs=reader.findByPeriod(startDate,endDate);
+    while (recs.hasNext()) {
+      result.add(convertHistoryRecordToMessageEvent((HistoryRecord)recs.next(),item));
     }
- catch (    IOException e) {
-      logger.error("Could not read history",e);
-    }
+  }
+  iter=readers.values().iterator();
+  while (iter.hasNext()) {
+    HistoryReader item=(HistoryReader)iter.next();
+    removeHistorySearchProgressListeners(item);
   }
   return result;
 }
