@@ -7,7 +7,6 @@
   ContactListCellRenderer renderer=(ContactListCellRenderer)this.getCellRenderer().getListCellRendererComponent(this,selectedValue,selectedIndex,true,true);
   Point selectedCellPoint=this.indexToLocation(selectedIndex);
   int translatedX=e.getX() - selectedCellPoint.x;
-  int translatedY=e.getY() - selectedCellPoint.y;
   if (selectedValue instanceof MetaContactGroup) {
     MetaContactGroup group=(MetaContactGroup)selectedValue;
     if ((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0 || (e.isControlDown() && !e.isMetaDown())) {
@@ -20,7 +19,7 @@
   }
   if (selectedValue instanceof MetaContact) {
     MetaContact contact=(MetaContact)selectedValue;
-    Component component=renderer.getComponentAt(translatedX,translatedY);
+    Component component=this.getHorizontalComponent(renderer,translatedX);
     if (component instanceof JLabel) {
       if ((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0 || (e.isControlDown() && !e.isMetaDown())) {
         ContactRightButtonMenu popupMenu=new ContactRightButtonMenu(mainFrame,contact);
@@ -40,8 +39,7 @@
       if (component.getName() != null && component.getName().equals("buttonsPanel")) {
         JPanel panel=(JPanel)component;
         int internalX=translatedX - (renderer.getWidth() - panel.getWidth() - 2);
-        int internalY=translatedY - (renderer.getHeight() - panel.getHeight());
-        Component c=panel.getComponentAt(4,4);
+        Component c=getHorizontalComponent(panel,internalX);
         if (c instanceof ContactProtocolButton) {
           fireContactListEvent(contact,((ContactProtocolButton)c).getProtocolContact(),ContactListEvent.PROTOCOL_CONTACT_SELECTED);
         }
