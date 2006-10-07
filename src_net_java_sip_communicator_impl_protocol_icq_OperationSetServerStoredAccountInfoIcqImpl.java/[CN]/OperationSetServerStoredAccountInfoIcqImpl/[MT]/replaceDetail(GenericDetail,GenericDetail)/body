@@ -14,13 +14,7 @@
   if (!isFound)   return false;
   SuccessResponseListener responseListener=new SuccessResponseListener();
   icqProvider.getAimConnection().getInfoService().sendSnacRequest(new FullInfoCmd(uin,alreadySetDetails,null),responseListener);
-synchronized (responseListener.waitingForResponseLock) {
-    try {
-      responseListener.waitingForResponseLock.wait(2000);
-    }
- catch (    InterruptedException ex) {
-    }
-  }
+  responseListener.waitForEvent(5000);
   if (!responseListener.success && responseListener.timeout)   throw new OperationFailedException("Replacing Detail Failed!",OperationFailedException.NETWORK_FAILURE);
   if (responseListener.success) {
     infoRetreiver.detailsChanged(uin);
