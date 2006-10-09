@@ -4,8 +4,17 @@ synchronized (parentGroupModLock) {
       parentGroup.lightRemoveMetaContact(this);
     }
     this.totalStatus=0;
+    int maxContactStatus=0;
     Iterator protoContacts=this.protoContacts.iterator();
-    while (protoContacts.hasNext())     totalStatus+=((Contact)protoContacts.next()).getPresenceStatus().getStatus();
+    while (protoContacts.hasNext()) {
+      Contact contact=((Contact)protoContacts.next());
+      int contactStatus=contact.getPresenceStatus().getStatus();
+      if (maxContactStatus < contactStatus) {
+        maxContactStatus=contactStatus;
+        this.defaultContact=contact;
+      }
+      totalStatus+=contactStatus;
+    }
     if (parentGroup != null) {
       parentGroup.lightAddMetaContact(this);
     }
