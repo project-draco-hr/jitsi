@@ -1,0 +1,29 @@
+{
+  Object element=null;
+  if (currentIndex == searchedIndex) {
+    element=group;
+  }
+ else {
+    if (!isGroupClosed(group)) {
+      int childCount=countChildContacts(group);
+      if (searchedIndex <= (currentIndex + childCount)) {
+        MetaContact contact=group.getMetaContact(searchedIndex - currentIndex - 1);
+        if (showOffline || isContactOnline(contact))         element=contact;
+      }
+ else {
+        currentIndex+=childCount;
+        Iterator subgroups=group.getSubgroups();
+        while (subgroups.hasNext()) {
+          MetaContactGroup subgroup=(MetaContactGroup)subgroups.next();
+          element=getElementAt(subgroup,currentIndex + 1,searchedIndex);
+          if (element != null)           break;
+ else {
+            if (!isGroupClosed(subgroup))             currentIndex+=countChildContacts(subgroup) + 1;
+ else             currentIndex++;
+          }
+        }
+      }
+    }
+  }
+  return element;
+}
