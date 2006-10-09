@@ -6,16 +6,16 @@
     }
     Chat chat=jabberProvider.getConnection().createChat(jabberProvider.getAccountID().getUserID());
     org.jivesoftware.smack.packet.Message msg=chat.createMessage();
-    msg.setBody("SYSTEM MESSAGE!");
+    msg.setBody("SYSTEM MESSAGE! (" + System.currentTimeMillis() + ")");
     KeepAliveEvent keepAliveEvent=new KeepAliveEvent();
     keepAliveEvent.setSrcOpSetHash(OperationSetBasicInstantMessagingJabberImpl.this.hashCode());
     keepAliveEvent.setSrcProviderHash(jabberProvider.hashCode());
     msg.addExtension(keepAliveEvent);
     keepAliveTimer.schedule(new KeepAliveCheckTask(),KEEPALIVE_WAIT);
-    logger.trace("send keepalive");
+    logger.trace("send keepalive for acc: " + jabberProvider.getAccountID().getAccountUniqueID());
     chat.sendMessage(msg);
   }
  catch (  XMPPException ex) {
-    logger.error("",ex);
+    logger.error("Error sending keep alive packet for account" + jabberProvider.getAccountID().getAccountUniqueID(),ex);
   }
 }
