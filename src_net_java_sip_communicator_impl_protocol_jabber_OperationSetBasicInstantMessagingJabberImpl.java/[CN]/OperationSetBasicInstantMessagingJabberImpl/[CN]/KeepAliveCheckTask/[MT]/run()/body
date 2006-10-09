@@ -1,10 +1,15 @@
 {
   try {
     while (!checkFirstPacket())     ;
+    failedKeepalivePackets=0;
   }
  catch (  NoSuchElementException ex) {
     logger.error("Did not receive last keep alive packet for account " + jabberProvider.getAccountID().getAccountUniqueID());
-    logger.error("unregistering.");
-    fireUnregisterd();
+    failedKeepalivePackets++;
+    if (failedKeepalivePackets == 3) {
+      logger.error("unregistering.");
+      fireUnregisterd();
+      failedKeepalivePackets=0;
+    }
   }
 }
