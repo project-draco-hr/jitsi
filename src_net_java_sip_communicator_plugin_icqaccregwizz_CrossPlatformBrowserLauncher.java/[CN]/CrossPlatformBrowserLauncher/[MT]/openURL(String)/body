@@ -1,0 +1,23 @@
+{
+  try {
+    launcher=new BrowserLauncher(null);
+    if (urlString == null || urlString.trim().length() == 0) {
+      throw new MalformedURLException("You must specify a url.");
+    }
+    new URL(urlString);
+    BrowserLauncherErrorHandler errorHandler=new BrowserErrorHandler();
+    String targetBrowser=launcher.getBrowserList().get(0).toString();
+    BrowserLauncherRunner runner=new BrowserLauncherRunner(launcher,targetBrowser,urlString,errorHandler);
+    Thread launcherThread=new Thread(runner);
+    launcherThread.start();
+  }
+ catch (  BrowserLaunchingInitializingException e) {
+    logger.error("Failed to initialize browser launcher : " + e);
+  }
+catch (  UnsupportedOperatingSystemException e) {
+    logger.error("The operating system is not supported " + "by browser launcher implementation : " + e);
+  }
+catch (  MalformedURLException e) {
+    logger.error("The URL string could not be parsed : " + e);
+  }
+}
