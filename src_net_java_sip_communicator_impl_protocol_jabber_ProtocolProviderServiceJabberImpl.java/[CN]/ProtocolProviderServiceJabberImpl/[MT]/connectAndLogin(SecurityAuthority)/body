@@ -1,0 +1,35 @@
+{
+synchronized (initializationLock) {
+    String password=JabberActivator.getProtocolProviderFactory().loadPassword(getAccountID());
+    if (password == null) {
+      UserCredentials credentials=new UserCredentials();
+      credentials.setUserName(getAccountID().getUserID());
+      credentials=authority.obtainCredentials(ProtocolNames.JABBER,credentials);
+      char[] pass=credentials.getPassword();
+      if (pass == null) {
+        fireRegistrationStateChanged(RegistrationState.UNREGISTERED,RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"");
+        return;
+      }
+      password=new String(pass);
+      if (credentials.isPasswordPersistent()) {
+        JabberActivator.getProtocolProviderFactory().storePassword(getAccountID(),password);
+      }
+    }
+    try {
+      String userID=StringUtils.parseName(getAccountID().getUserID());
+      String serviceName=StringUtils.parseServer(getAccountID().getUserID());
+      String serverAddress=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.SERVER_ADDRESS);
+      String serverPort=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.SERVER_PORT);
+      connection=new XMPPConnection(serverAddress,Integer.parseInt(serverPort),serviceName);
+      connection.addConnectionListener(new JabberConnectionListener());
+      connection.login(userID,password,"sip-comm");
+      if (connection.isAuthenticated()) {
+        connection.getRoster().setSubscriptionMode(Roster.SUBSCRIPTION_ACCEPT_ALL);
+        fireRegistrationStateChanged(RegistrationState.UNREGISTERED,RegistrationState.REGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
+      }
+    }
+ catch (    NumberFormatException ex) {
+      throw new OperationFailedException("Wrong port",OperationFailedException.INVALID_ACCOUNT_PROPERTIES,ex);
+    }
+  }
+}
