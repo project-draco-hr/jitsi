@@ -1,0 +1,27 @@
+{
+  while (refreshEnabled) {
+synchronized (refreshLock) {
+      if (isModified) {
+        try {
+          refreshLock.wait(5000);
+        }
+ catch (        InterruptedException e) {
+          logger.error("Storing contact list failed",e);
+        }
+      }
+    }
+    if (isModified) {
+      if (groupsToModify.size() > 0) {
+        for (int i=0; i < groupsToModify.size(); i++) {
+          MetaContactGroup group=(MetaContactGroup)groupsToModify.get(i);
+          this.refreshGroup(group);
+        }
+        groupsToModify.removeAllElements();
+      }
+ else {
+        this.refreshAll();
+      }
+      isModified=false;
+    }
+  }
+}
