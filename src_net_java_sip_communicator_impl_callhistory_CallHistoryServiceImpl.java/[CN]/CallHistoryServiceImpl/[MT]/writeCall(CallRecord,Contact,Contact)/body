@@ -1,0 +1,25 @@
+{
+  try {
+    History history=this.getHistory(source,destination);
+    HistoryWriter historyWriter=history.getWriter();
+    StringBuffer callParticipantIDs=new StringBuffer();
+    StringBuffer callParticipantStartTime=new StringBuffer();
+    StringBuffer callParticipantEndTime=new StringBuffer();
+    Iterator iter=callRecord.getParticipantRecords().iterator();
+    while (iter.hasNext()) {
+      if (callParticipantIDs.length() > 0) {
+        callParticipantIDs.append(DELIM);
+        callParticipantStartTime.append(DELIM);
+        callParticipantEndTime.append(DELIM);
+      }
+      CallParticipantRecord item=(CallParticipantRecord)iter.next();
+      callParticipantIDs.append(item.getParticipantAddress());
+      callParticipantStartTime.append(String.valueOf(item.getStartTime().getTime()));
+      callParticipantEndTime.append(String.valueOf(item.getEndTime().getTime()));
+    }
+    historyWriter.addRecord(new String[]{String.valueOf(callRecord.getStartTime().getTime()),String.valueOf(callRecord.getEndTime().getTime()),callRecord.getDirection(),callParticipantIDs.toString(),callParticipantStartTime.toString(),callParticipantEndTime.toString()},new Date());
+  }
+ catch (  IOException e) {
+    logger.error("Could not add call to history",e);
+  }
+}

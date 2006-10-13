@@ -1,0 +1,35 @@
+{
+  Vector participantAddresses=new Vector();
+  participantAddresses.add("some_address");
+  participantAddresses.add("some_new_address");
+  try {
+    Call newCall=mockBTelphonyOpSet.placeCall((String)participantAddresses.get(0));
+    Vector v=new Vector();
+    Iterator iter=newCall.getCallParticipants();
+    while (iter.hasNext()) {
+      CallParticipant item=(CallParticipant)iter.next();
+      v.add(item);
+    }
+    waitSeconds(2000);
+    CallParticipant newParticipant=mockBTelphonyOpSet.addNewCallParticipant(newCall,(String)participantAddresses.get(1));
+    mockBTelphonyOpSet.hangupCallParticipant(newParticipant);
+    waitSeconds(2000);
+    iter=v.iterator();
+    while (iter.hasNext()) {
+      CallParticipant item=(CallParticipant)iter.next();
+      mockBTelphonyOpSet.hangupCallParticipant(item);
+    }
+  }
+ catch (  Exception ex1) {
+    logger.error("Cannot place mock call",ex1);
+    fail("Cannot place mock call");
+  }
+  Collection lastCall=callHistoryService.findLast(1);
+  assertEquals("There must be 1 Call",lastCall.size(),1);
+  CallRecord callRecord=(CallRecord)lastCall.iterator().next();
+  assertEquals("There must be 2 participants in the call",callRecord.getParticipantRecords().size(),2);
+  CallParticipantRecord callP1=callRecord.findParticipantRecord((String)participantAddresses.get(0));
+  CallParticipantRecord callP2=callRecord.findParticipantRecord((String)participantAddresses.get(1));
+  assertTrue("Second participant added after first one",callP2.getStartTime().after(callP1.getStartTime()));
+  assertTrue("Second participant hanguped before first one",callP2.getEndTime().before(callP1.getEndTime()));
+}
