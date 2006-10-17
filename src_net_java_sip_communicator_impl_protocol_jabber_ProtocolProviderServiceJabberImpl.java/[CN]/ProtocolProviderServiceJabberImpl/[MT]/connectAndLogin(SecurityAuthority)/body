@@ -20,6 +20,16 @@ synchronized (initializationLock) {
       String serviceName=StringUtils.parseServer(getAccountID().getUserID());
       String serverAddress=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.SERVER_ADDRESS);
       String serverPort=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.SERVER_PORT);
+      try {
+        String hosts[]=NetworkUtils.getSRVRecords("_xmpp-client._tcp." + serviceName);
+        if (hosts != null && hosts.length > 0) {
+          logger.trace("Will set server address from SRV records " + hosts[0]);
+          serverAddress=hosts[0];
+        }
+      }
+ catch (      NamingException ex1) {
+        logger.error("Domain not resolved " + ex1.getMessage());
+      }
       connection=new XMPPConnection(serverAddress,Integer.parseInt(serverPort),serviceName);
       connection.addConnectionListener(new JabberConnectionListener());
       connection.login(userID,password,"sip-comm");

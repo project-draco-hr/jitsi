@@ -1,0 +1,20 @@
+{
+  InitialDirContext iDirC=new InitialDirContext();
+  Attributes attributes=iDirC.getAttributes("dns:/" + domain,new String[]{"SRV"});
+  Attribute attributeMX=attributes.get("SRV");
+  String[][] pvhn=new String[attributeMX.size()][2];
+  for (int i=0; i < attributeMX.size(); i++) {
+    pvhn[i]=("" + attributeMX.get(i)).split("\\s+");
+  }
+  Arrays.sort(pvhn,new Comparator(){
+    public int compare(    Object o1,    Object o2){
+      return (Integer.parseInt(((String[])o1)[0]) - Integer.parseInt(((String[])o2)[0]));
+    }
+  }
+);
+  String[] sortedHostNames=new String[pvhn.length];
+  for (int i=0; i < pvhn.length; i++) {
+    sortedHostNames[i]=pvhn[i][3].endsWith(".") ? pvhn[i][3].substring(0,pvhn[i][3].length() - 1) : pvhn[i][3];
+  }
+  return sortedHostNames;
+}
