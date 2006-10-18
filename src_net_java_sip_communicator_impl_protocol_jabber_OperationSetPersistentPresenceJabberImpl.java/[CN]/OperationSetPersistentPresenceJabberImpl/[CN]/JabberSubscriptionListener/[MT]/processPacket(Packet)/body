@@ -1,0 +1,37 @@
+{
+  Presence presence=(Presence)packet;
+  if (presence != null && presence.getType() == Presence.Type.SUBSCRIBE) {
+    logger.trace(presence.getFrom() + " wants to add you to its contact list");
+    String fromID=presence.getFrom();
+    ContactJabberImpl srcContact=ssContactList.findContactById(fromID);
+    if (srcContact == null)     srcContact=createVolatileContact(fromID);
+    AuthorizationRequest req=new AuthorizationRequest();
+    AuthorizationResponse response=handler.processAuthorisationRequest(req,srcContact);
+    if (response != null && response.getResponseCode().equals(AuthorizationResponse.ACCEPT)) {
+      Presence responsePacket=new Presence(Presence.Type.SUBSCRIBED);
+      responsePacket.setTo(fromID);
+      logger.info("Sending Accepted Subscription");
+      jabberProvider.getConnection().sendPacket(responsePacket);
+    }
+ else {
+      Presence responsePacket=new Presence(Presence.Type.UNSUBSCRIBED);
+      responsePacket.setTo(fromID);
+      logger.info("Sending Rejected Subscription");
+      jabberProvider.getConnection().sendPacket(responsePacket);
+    }
+  }
+ else   if (presence != null && presence.getType() == Presence.Type.UNSUBSCRIBED) {
+    logger.trace(presence.getFrom() + " does not allow your subscription");
+    ContactJabberImpl contact=ssContactList.findContactById(presence.getFrom());
+    if (contact != null) {
+      AuthorizationResponse response=new AuthorizationResponse(AuthorizationResponse.REJECT,"");
+      handler.processAuthorizationResponse(response,contact);
+      ssContactList.removeContact(contact);
+    }
+  }
+ else   if (presence != null && presence.getType() == Presence.Type.SUBSCRIBED) {
+    ContactJabberImpl contact=ssContactList.findContactById(presence.getFrom());
+    AuthorizationResponse response=new AuthorizationResponse(AuthorizationResponse.ACCEPT,"");
+    handler.processAuthorizationResponse(response,contact);
+  }
+}
