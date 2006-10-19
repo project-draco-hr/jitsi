@@ -1,0 +1,32 @@
+{
+  PresenceStatus status=(PresenceStatus)presenceStatus;
+  OperationSetPresence presence=mainFrame.getProtocolPresence(protocolProvider);
+  this.connecting.stop();
+  this.setSelectedStatus(status);
+  if (protocolProvider.isRegistered()) {
+    try {
+      presence.publishPresenceStatus(status,"");
+    }
+ catch (    IllegalArgumentException e1) {
+      logger.error("Error - changing status",e1);
+    }
+catch (    IllegalStateException e1) {
+      logger.error("Error - changing status",e1);
+    }
+catch (    OperationFailedException e1) {
+      if (e1.getErrorCode() == OperationFailedException.GENERAL_ERROR) {
+        SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("statusChangeGeneralError"));
+        JOptionPane.showMessageDialog(null,msgText,Messages.getString("generalError"),JOptionPane.ERROR_MESSAGE);
+      }
+ else       if (e1.getErrorCode() == OperationFailedException.NETWORK_FAILURE) {
+        SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("statusChangeNetworkFailure"));
+        JOptionPane.showMessageDialog(null,msgText,Messages.getString("networkFailure"),JOptionPane.ERROR_MESSAGE);
+      }
+ else       if (e1.getErrorCode() == OperationFailedException.PROVIDER_NOT_REGISTERED) {
+        SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("statusChangeNetworkFailure"));
+        JOptionPane.showMessageDialog(null,msgText,Messages.getString("networkFailure"),JOptionPane.ERROR_MESSAGE);
+      }
+      logger.error("Error - changing status",e1);
+    }
+  }
+}
