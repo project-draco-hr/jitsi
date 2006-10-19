@@ -1,0 +1,17 @@
+{
+  Hashtable accountProperties=new Hashtable();
+  if (registration.isRememberPassword()) {
+    accountProperties.put(ProtocolProviderFactory.PASSWORD,passwd);
+  }
+  accountProperties.put(ProtocolProviderFactory.SERVER_ADDRESS,registration.getServerAddress());
+  accountProperties.put(ProtocolProviderFactory.PROXY_ADDRESS,registration.getProxy());
+  accountProperties.put(ProtocolProviderFactory.SERVER_PORT,registration.getPort());
+  if (protocolProvider != null) {
+    providerFactory.uninstallAccount(protocolProvider.getAccountID());
+    this.protocolProvider=null;
+  }
+  AccountID accountID=providerFactory.installAccount(user,accountProperties);
+  ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
+  ProtocolProviderService protocolProvider=(ProtocolProviderService)SIPAccRegWizzActivator.bundleContext.getService(serRef);
+  return protocolProvider;
+}
