@@ -1,0 +1,30 @@
+{
+  Iterator lastCalls=historyCalls.iterator();
+  while (lastCalls.hasNext()) {
+    CallRecord callRecord=(CallRecord)lastCalls.next();
+    Date callStartDate=callRecord.getStartTime();
+    if (lastDateFromHistory == null) {
+      callList.addItem(processDate(callStartDate));
+      lastDateFromHistory=callStartDate;
+    }
+ else {
+      int compareResult=GuiUtils.compareDates(callStartDate,lastDateFromHistory);
+      if (compareResult != 0) {
+        callList.addItem(processDate(callStartDate));
+        lastDateFromHistory=callStartDate;
+      }
+    }
+    Iterator participants=callRecord.getParticipantRecords().iterator();
+    while (participants.hasNext()) {
+      CallParticipantRecord participantRecord=(CallParticipantRecord)participants.next();
+      String participantName=participantRecord.getParticipantAddress();
+      addToCallComboBox(participantName);
+      addToSearchComboBox(participantName);
+      String direction;
+      if (callRecord.getDirection().equals(CallRecord.IN))       direction=GuiCallParticipantRecord.INCOMING_CALL;
+ else       direction=GuiCallParticipantRecord.OUTGOING_CALL;
+      callList.addItem(new GuiCallParticipantRecord(participantRecord,direction));
+    }
+  }
+  this.callList.addItem(Messages.getString("olderCalls") + "...");
+}
