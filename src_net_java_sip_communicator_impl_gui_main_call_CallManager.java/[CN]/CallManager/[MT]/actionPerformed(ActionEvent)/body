@@ -4,7 +4,7 @@
   if (buttonName.equals("call")) {
     OperationSetBasicTelephony telephony;
     Object o=mainFrame.getContactListPanel().getContactList().getSelectedValue();
-    if (mainFrame.getSelectedCallPanel() != null && mainFrame.getSelectedCallPanel().getCallType() == CallPanel.INCOMING_CALL && mainFrame.getSelectedCallPanel().getCall().getCallState() == CallState.CALL_INITIALIZATION) {
+    if (mainFrame.getSelectedCallPanel() != null && mainFrame.getSelectedCallPanel().getCall().getCallState() == CallState.CALL_INITIALIZATION) {
       CallPanel callPanel=mainFrame.getSelectedCallPanel();
       Call call=callPanel.getCall();
       ProtocolProviderService pps=call.getProtocolProvider();
@@ -18,46 +18,23 @@
       MetaContact metaContact=(MetaContact)o;
       Contact contact=getTelephonyContact(metaContact);
       if (contact != null) {
-        telephony=mainFrame.getTelephony(contact.getProtocolProvider());
-        Call createdCall;
-        try {
-          createdCall=telephony.createCall(contact);
-          CallPanel callPanel=new CallPanel(this,createdCall,CallPanel.OUTGOING_CALL);
-          mainFrame.addCallPanel(callPanel);
-          activeCalls.put(createdCall,callPanel);
-        }
- catch (        OperationFailedException e) {
-          logger.error("The call could not be created: " + e);
-        }
+        new CreateCallThread(contact).start();
       }
  else {
         JOptionPane.showMessageDialog(this.mainFrame,Messages.getString("contactNotSupportingTelephony"),Messages.getString("warning"),JOptionPane.WARNING_MESSAGE);
       }
     }
  else     if (!phoneNumberCombo.isComboFieldEmpty()) {
-      ProtocolProviderService pps=getDefaultTelephonyProvider();
-      if (pps != null) {
-        telephony=mainFrame.getTelephony(pps);
-        Call createdCall;
-        try {
-          createdCall=telephony.createCall(phoneNumberCombo.getEditor().getItem().toString());
-          CallPanel callPanel=new CallPanel(this,createdCall,CallPanel.OUTGOING_CALL);
-          mainFrame.addCallPanel(callPanel);
-          activeCalls.put(createdCall,callPanel);
-        }
- catch (        OperationFailedException e) {
-          logger.error("The call could not be created: " + e);
-        }
-catch (        ParseException e) {
-          logger.error("The call could not be created: " + e);
-        }
-      }
+      new CreateCallThread().start();
     }
   }
  else   if (buttonName.equalsIgnoreCase("hangup")) {
     CallPanel selectedCallPanel=this.mainFrame.getSelectedCallPanel();
     if (selectedCallPanel != null) {
       Call call=selectedCallPanel.getCall();
+      activeCalls.remove(call);
+      mainFrame.removeCallPanel(selectedCallPanel);
+      updateButtonsStateAccordingToSelectedPanel();
       ProtocolProviderService pps=call.getProtocolProvider();
       OperationSetBasicTelephony telephony=mainFrame.getTelephony(pps);
       Iterator participants=call.getCallParticipants();
@@ -69,9 +46,6 @@ catch (        ParseException e) {
           logger.error("Hang up was not successful: " + e);
         }
       }
-      activeCalls.remove(call);
-      mainFrame.removeCallPanel(selectedCallPanel);
-      updateButtonsStateAccordingToSelectedPanel();
     }
   }
  else   if (buttonName.equalsIgnoreCase("minimize")) {
