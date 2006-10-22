@@ -2,10 +2,10 @@
   JButton button=(JButton)evt.getSource();
   String buttonName=button.getName();
   if (buttonName.equals("call")) {
-    OperationSetBasicTelephony telephony;
     Object o=mainFrame.getContactListPanel().getContactList().getSelectedValue();
-    if (mainFrame.getSelectedCallPanel() != null && mainFrame.getSelectedCallPanel().getCall().getCallState() == CallState.CALL_INITIALIZATION) {
-      CallPanel callPanel=mainFrame.getSelectedCallPanel();
+    Component selectedPanel=mainFrame.getSelectedPanel();
+    if (selectedPanel != null && selectedPanel instanceof CallPanel && ((CallPanel)selectedPanel).getCall().getCallState() == CallState.CALL_INITIALIZATION) {
+      CallPanel callPanel=(CallPanel)selectedPanel;
       Call call=callPanel.getCall();
       ProtocolProviderService pps=call.getProtocolProvider();
       Iterator participants=call.getCallParticipants();
@@ -13,6 +13,12 @@
         CallParticipant participant=(CallParticipant)participants.next();
         answerCall(pps,participant);
       }
+    }
+ else     if (selectedPanel != null && selectedPanel instanceof CallListPanel && ((CallListPanel)selectedPanel).getCallList().getSelectedIndex() != -1) {
+      CallListPanel callListPanel=(CallListPanel)selectedPanel;
+      GuiCallParticipantRecord callRecord=(GuiCallParticipantRecord)callListPanel.getCallList().getSelectedValue();
+      String stringContact=callRecord.getParticipantName();
+      new CreateCallThread(stringContact).start();
     }
  else     if (isCallMetaContact && o != null && o instanceof MetaContact) {
       MetaContact metaContact=(MetaContact)o;
@@ -25,16 +31,18 @@
       }
     }
  else     if (!phoneNumberCombo.isComboFieldEmpty()) {
-      new CreateCallThread().start();
+      String stringContact=phoneNumberCombo.getEditor().getItem().toString();
+      new CreateCallThread(stringContact).start();
     }
   }
  else   if (buttonName.equalsIgnoreCase("hangup")) {
-    CallPanel selectedCallPanel=this.mainFrame.getSelectedCallPanel();
-    if (selectedCallPanel != null) {
-      Call call=selectedCallPanel.getCall();
+    Component selectedPanel=this.mainFrame.getSelectedPanel();
+    if (selectedPanel != null && selectedPanel instanceof CallPanel) {
+      CallPanel callPanel=(CallPanel)selectedPanel;
+      Call call=callPanel.getCall();
       if (activeCalls.get(call) != null) {
         if (removeCallTimer.isRunning())         removeCallTimer.stop();
-        mainFrame.removeCallPanel(selectedCallPanel);
+        mainFrame.removeCallPanel(callPanel);
         ProtocolProviderService pps=call.getProtocolProvider();
         OperationSetBasicTelephony telephony=mainFrame.getTelephony(pps);
         Iterator participants=call.getCallParticipants();
