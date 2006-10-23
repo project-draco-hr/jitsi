@@ -1,0 +1,80 @@
+{
+  if (sourceProcessor == null) {
+    logger.error("Processor is null.");
+    throw new MediaException("The source Processor has not been " + "initialized.",MediaException.INTERNAL_ERROR);
+  }
+  boolean processorIsReady=true;
+  if (sourceProcessor.getState() < Processor.Configured) {
+    processorIsReady=processorUtility.waitForState(sourceProcessor,Processor.Configured);
+  }
+  if (!processorIsReady) {
+    logger.error("Couldn't configure sourceProcessor");
+    throw new MediaException("Couldn't configure sourceProcessor",MediaException.INTERNAL_ERROR);
+  }
+  TrackControl[] tracks=sourceProcessor.getTrackControls();
+  if (tracks == null || tracks.length < 1) {
+    logger.error("Couldn't find any tracks in sourceProcessor");
+    throw new MediaException("Couldn't find any tracks in sourceProcessor",MediaException.INTERNAL_ERROR);
+  }
+  ContentDescriptor cd=new ContentDescriptor(ContentDescriptor.RAW_RTP);
+  sourceProcessor.setContentDescriptor(cd);
+  Format supported[];
+  Format chosenFormat;
+  boolean atLeastOneTrack=false;
+  for (int i=0; i < tracks.length; i++) {
+    Format format=tracks[i].getFormat();
+    if (tracks[i].isEnabled()) {
+      supported=tracks[i].getSupportedFormats();
+      if (logger.isDebugEnabled()) {
+        logger.debug("Available encodings are:");
+        for (int j=0; j < supported.length; j++) {
+          logger.debug("track[" + (i + 1) + "] format["+ (j + 1)+ "]="+ supported[j].getEncoding());
+        }
+      }
+      if (supported.length > 0) {
+        if (supported[0] instanceof VideoFormat) {
+          int index=findFirstMatchingFormat(supported,encodingSets);
+          if (index != -1) {
+            chosenFormat=assertSize((VideoFormat)supported[index]);
+            tracks[i].setFormat(chosenFormat);
+            logger.debug("Track " + i + " is set to transmit "+ "as: "+ chosenFormat);
+            atLeastOneTrack=true;
+          }
+ else {
+            tracks[i].setEnabled(false);
+          }
+        }
+ else {
+          int index=findFirstMatchingFormat(supported,encodingSets);
+          if (index != -1) {
+            tracks[i].setFormat(supported[index]);
+            if (logger.isDebugEnabled()) {
+              logger.debug("Track " + i + " is set to transmit as: "+ supported[index]);
+            }
+            atLeastOneTrack=true;
+          }
+ else {
+            tracks[i].setEnabled(false);
+          }
+        }
+      }
+ else {
+        tracks[i].setEnabled(false);
+      }
+    }
+ else {
+      tracks[i].setEnabled(false);
+    }
+  }
+  if (!atLeastOneTrack) {
+    logger.error("Couldn't set any of the tracks to a valid RTP format");
+    throw new MediaException("Couldn't set any of the tracks to a valid RTP format",MediaException.INTERNAL_ERROR);
+  }
+  processorIsReady=processorUtility.waitForState(sourceProcessor,Controller.Realized);
+  if (!processorIsReady) {
+    logger.error("Couldn't realize sourceProcessor");
+    throw new MediaException("Couldn't realize sourceProcessor",MediaException.INTERNAL_ERROR);
+  }
+  setJpegQuality(sourceProcessor,1f);
+  return sourceProcessor.getDataOutput();
+}

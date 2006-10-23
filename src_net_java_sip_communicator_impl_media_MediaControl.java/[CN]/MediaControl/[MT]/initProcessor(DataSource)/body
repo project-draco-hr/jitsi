@@ -1,0 +1,69 @@
+{
+  try {
+    try {
+      dataSource.connect();
+    }
+ catch (    NullPointerException ex) {
+      logger.error("An internal error occurred while" + " trying to connec to to datasource!",ex);
+      throw new MediaException("An internal error occurred while" + " trying to connec to to datasource!",MediaException.INTERNAL_ERROR,ex);
+    }
+    sourceProcessor=Manager.createProcessor(dataSource);
+    processorUtility.waitForState(sourceProcessor,Processor.Configured);
+  }
+ catch (  NoProcessorException ex) {
+    logger.error("Media manager could not create a processor\n" + "for the specified data source",ex);
+    throw new MediaException("Media manager could not create a processor\n" + "for the specified data source",MediaException.INTERNAL_ERROR,ex);
+  }
+catch (  IOException ex) {
+    logger.error("Media manager could not connect " + "to the specified data source",ex);
+    throw new MediaException("Media manager could not connect " + "to the specified data source",MediaException.INTERNAL_ERROR,ex);
+  }
+  sourceProcessor.setContentDescriptor(new ContentDescriptor(ContentDescriptor.RAW_RTP));
+  TrackControl[] trackControls=sourceProcessor.getTrackControls();
+  logger.debug("We will be able to transmit in:");
+  List transmittableAudioEncodings=new ArrayList();
+  List transmittableVideoEncodings=new ArrayList();
+  for (int i=0; i < trackControls.length; i++) {
+    Format[] formats=trackControls[i].getSupportedFormats();
+    for (int j=0; j < formats.length; j++) {
+      Format format=formats[j];
+      String encoding=format.getEncoding();
+      if (format instanceof AudioFormat) {
+        String sdp=MediaUtils.jmfToSdpEncoding(encoding);
+        if (sdp != null && !transmittableAudioEncodings.contains(sdp)) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Audio=[" + (j + 1) + "]="+ encoding+ "; sdp="+ sdp);
+          }
+          transmittableAudioEncodings.add(sdp);
+        }
+      }
+      if (format instanceof VideoFormat) {
+        String sdp=MediaUtils.jmfToSdpEncoding(encoding);
+        if (sdp != null && !transmittableVideoEncodings.contains(sdp)) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Video=[" + (j + 1) + "]="+ encoding+ "; sdp="+ sdp);
+          }
+          transmittableVideoEncodings.add(sdp);
+        }
+      }
+    }
+  }
+  if (transmittableAudioEncodings.size() > 0) {
+    supportedAudioEncodings=new String[transmittableAudioEncodings.size()];
+    for (int i=0; i < supportedAudioEncodings.length; i++) {
+      supportedAudioEncodings[i]=(String)transmittableAudioEncodings.get(i);
+    }
+    this.sortEncodingsArray(supportedAudioEncodings);
+  }
+{
+  }
+  if (transmittableVideoEncodings.size() > 0) {
+    supportedVideoEncodings=new String[transmittableVideoEncodings.size()];
+    for (int i=0; i < supportedVideoEncodings.length; i++) {
+      supportedVideoEncodings[i]=(String)transmittableVideoEncodings.get(i);
+    }
+    this.sortEncodingsArray(supportedVideoEncodings);
+  }
+{
+  }
+}

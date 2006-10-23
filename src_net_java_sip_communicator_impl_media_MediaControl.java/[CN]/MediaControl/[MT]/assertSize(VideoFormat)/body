@@ -1,0 +1,29 @@
+{
+  int width, height;
+  Dimension size=((VideoFormat)sourceFormat).getSize();
+  Format jpegFmt=new Format(VideoFormat.JPEG_RTP);
+  Format h263Fmt=new Format(VideoFormat.H263_RTP);
+  if (sourceFormat.matches(jpegFmt)) {
+    width=(size.width % 8 == 0) ? size.width : (((size.width / 8)) * 8);
+    height=(size.height % 8 == 0) ? size.height : (size.height / 8) * 8;
+  }
+ else   if (sourceFormat.matches(h263Fmt)) {
+    if (size.width < 128) {
+      width=128;
+      height=96;
+    }
+ else     if (size.width < 176) {
+      width=176;
+      height=144;
+    }
+ else {
+      width=352;
+      height=288;
+    }
+  }
+ else {
+    return sourceFormat;
+  }
+  VideoFormat result=new VideoFormat(null,new Dimension(width,height),Format.NOT_SPECIFIED,null,Format.NOT_SPECIFIED);
+  return (VideoFormat)result.intersects(sourceFormat);
+}

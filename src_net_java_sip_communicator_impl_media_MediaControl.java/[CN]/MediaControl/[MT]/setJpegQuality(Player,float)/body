@@ -1,0 +1,24 @@
+{
+  Control cs[]=player.getControls();
+  QualityControl qc=null;
+  VideoFormat jpegFmt=new VideoFormat(VideoFormat.JPEG);
+  for (int i=0; i < cs.length; i++) {
+    if (cs[i] instanceof QualityControl && cs[i] instanceof Owned) {
+      Object owner=((Owned)cs[i]).getOwner();
+      if (owner instanceof Codec) {
+        Format fmts[]=((Codec)owner).getSupportedOutputFormats(null);
+        for (int j=0; j < fmts.length; j++) {
+          if (fmts[j].matches(jpegFmt)) {
+            qc=(QualityControl)cs[i];
+            qc.setQuality(val);
+            logger.debug("Setting quality to " + val + " on "+ qc);
+            break;
+          }
+        }
+      }
+      if (qc != null) {
+        break;
+      }
+    }
+  }
+}

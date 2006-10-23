@@ -1,0 +1,33 @@
+{
+  setEncodingPreference(SdpConstants.H263,1000);
+  setEncodingPreference(SdpConstants.JPEG,950);
+  setEncodingPreference(SdpConstants.H261,800);
+  setEncodingPreference(SdpConstants.GSM,500);
+  setEncodingPreference(SdpConstants.PCMU,450);
+  setEncodingPreference(SdpConstants.DVI4_8000,400);
+  setEncodingPreference(SdpConstants.DVI4_16000,350);
+  setEncodingPreference(SdpConstants.PCMA,300);
+  setEncodingPreference(SdpConstants.G723,250);
+  setEncodingPreference(SdpConstants.G728,200);
+  ConfigurationService confService=MediaActivator.getConfigurationService();
+  List sdpPreferences=confService.getPropertyNamesByPrefix(PROP_SDP_PREFERENCE,false);
+  Iterator sdpPreferencesIter=sdpPreferences.iterator();
+  while (sdpPreferencesIter.hasNext()) {
+    String pName=(String)sdpPreferencesIter.next();
+    String prefStr=confService.getString(pName);
+    String fmtName=pName.substring(pName.lastIndexOf('.'));
+    int preference=-1;
+    int fmt=-1;
+    try {
+      preference=Integer.parseInt(prefStr);
+      fmt=Integer.parseInt(fmtName);
+    }
+ catch (    NumberFormatException exc) {
+      logger.warn("Failed to parse format (" + fmtName + ") or preference("+ prefStr+ ").",exc);
+      continue;
+    }
+    setEncodingPreference(fmt,preference);
+    sortEncodingsArray(this.supportedAudioEncodings);
+    sortEncodingsArray(this.supportedVideoEncodings);
+  }
+}
