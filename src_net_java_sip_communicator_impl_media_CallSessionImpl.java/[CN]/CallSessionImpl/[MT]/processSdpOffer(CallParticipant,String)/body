@@ -1,0 +1,21 @@
+{
+  SessionDescription sdpOffer=null;
+  try {
+    sdpOffer=mediaServCallback.getSdpFactory().createSessionDescription(sdpOfferStr);
+  }
+ catch (  SdpParseException ex) {
+    throw new ParseException("Failed to parse SDPOffer: " + ex.getMessage(),ex.getCharOffset());
+  }
+  SessionDescription sdpAnswer=createSessionDescription(sdpOffer);
+  Vector mediaDescriptions=null;
+  try {
+    mediaDescriptions=sdpAnswer.getMediaDescriptions(true);
+  }
+ catch (  SdpException exc) {
+    logger.error("failed to extract media descriptions",exc);
+    throw new MediaException("failed to extract media descriptions",MediaException.INTERNAL_ERROR,exc);
+  }
+  this.initStreamTargets(sdpAnswer.getConnection(),mediaDescriptions);
+  createSendStreams(mediaDescriptions);
+  return sdpAnswer.toString();
+}

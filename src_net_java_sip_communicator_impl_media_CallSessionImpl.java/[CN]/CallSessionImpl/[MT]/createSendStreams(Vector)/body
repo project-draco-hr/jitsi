@@ -1,0 +1,25 @@
+{
+  Hashtable mediaEncodings=extractMediaEncodings(mediaDescriptions);
+  DataSource dataSource=mediaServCallback.getMediaControl().createDataSourceForEncodings(mediaEncodings);
+  PushBufferStream[] streams=((PushBufferDataSource)dataSource).getStreams();
+  for (int i=0; i < streams.length; i++) {
+    RTPManager rtpManager=null;
+    if (streams[i].getFormat() instanceof VideoFormat) {
+      rtpManager=getVideoRtpManager();
+    }
+ else     if (streams[i].getFormat() instanceof AudioFormat) {
+      rtpManager=getAudioRtpManager();
+    }
+ else {
+      logger.warn("We are apparently capable of sending a format " + " that is neither videro nor audio. Is " + "this really possible?:"+ streams[i].getFormat());
+      continue;
+    }
+    try {
+      SendStream stream=rtpManager.createSendStream(dataSource,i);
+      logger.trace("Created a send stream for format " + streams[i].getFormat());
+    }
+ catch (    Exception exc) {
+      throw new MediaException("Failed to create an RTP send stream for format " + streams[i].getFormat(),MediaException.IO_ERROR,exc);
+    }
+  }
+}

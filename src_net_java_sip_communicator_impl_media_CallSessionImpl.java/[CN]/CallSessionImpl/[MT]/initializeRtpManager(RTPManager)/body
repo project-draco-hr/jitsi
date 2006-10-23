@@ -1,0 +1,48 @@
+{
+  int port=minPortNumber;
+  minPortNumber+=2;
+  InetAddress inAddrAny=null;
+  try {
+    inAddrAny=InetAddress.getByName(NetworkUtils.IN_ADDR_ANY);
+  }
+ catch (  UnknownHostException ex) {
+    throw new MediaException("Failed to create the ANY inet address.",MediaException.INTERNAL_ERROR,ex);
+  }
+  String bindRetriesStr=MediaActivator.getConfigurationService().getString(MediaService.BIND_RETRIES_PROPERTY_NAME);
+  int bindRetries=MediaService.BIND_RETRIES_DEFAULT_VALUE;
+  try {
+    if (bindRetriesStr != null && bindRetriesStr.length() > 0)     bindRetries=Integer.parseInt(bindRetriesStr);
+  }
+ catch (  NumberFormatException ex) {
+    logger.warn(bindRetriesStr + " is not a valid value for number of bind retries.",ex);
+  }
+  boolean initialized=false;
+  SessionAddress address=null;
+  for (int i=bindRetries; i > 0; i--) {
+    address=new SessionAddress(inAddrAny,port);
+    try {
+      rtpManager.initialize(address);
+      initialized=true;
+      break;
+    }
+ catch (    InvalidSessionAddressException exc) {
+      logger.info("port " + port + " seemed busy. "+ "Will retry with another port",exc);
+      port=NetworkUtils.getRandomPortNumber(minPortNumber,maxPortNumber,true);
+    }
+catch (    IOException exc) {
+      logger.error("Failed to init an RTP manager.",exc);
+      throw new MediaException("Failed to init an RTP manager.",MediaException.IO_ERROR,exc);
+    }
+  }
+  if (!initialized)   throw new MediaException("Failed to bind to a local port in " + bindRetriesStr + " tries.",MediaException.INTERNAL_ERROR);
+  BufferControl bc=(BufferControl)rtpManager.getControl(BufferControl.class.getName());
+  if (bc != null) {
+    long buff=bc.setBufferLength(500);
+    logger.trace("set receiver buffer len to=" + buff);
+    bc.setEnabledThreshold(false);
+  }
+  rtpManager.addReceiveStreamListener(this);
+  rtpManager.addSendStreamListener(this);
+  rtpManager.addSessionListener(this);
+  return address;
+}

@@ -1,0 +1,56 @@
+{
+  String[] supportedAudioEncodings=mediaServCallback.getMediaControl().getSupportedAudioEncodings();
+  String[] supportedVideoEncodings=mediaServCallback.getMediaControl().getSupportedVideoEncodings();
+  if (offerMediaDescs != null && offerMediaDescs.size() > 0) {
+    Vector offeredVideoEncodings=null;
+    Vector offeredAudioEncodings=null;
+    Iterator offerDescsIter=offerMediaDescs.iterator();
+    while (offerDescsIter.hasNext()) {
+      MediaDescription desc=(MediaDescription)offerDescsIter.next();
+      Media media=desc.getMedia();
+      String mediaType=media.getMediaType();
+      if (mediaType.equalsIgnoreCase("video")) {
+        offeredVideoEncodings=media.getMediaFormats(false);
+        continue;
+      }
+      if (mediaType.equalsIgnoreCase("audio")) {
+        offeredAudioEncodings=media.getMediaFormats(false);
+        continue;
+      }
+    }
+    List supportedAudioEncsList=Arrays.asList(supportedAudioEncodings);
+    List intersectedAudioEncsList=new LinkedList();
+    List supportedVideoEncsList=Arrays.asList(supportedVideoEncodings);
+    List intersectedVideoEncsList=new LinkedList();
+    if (offeredAudioEncodings != null && offeredAudioEncodings.size() > 0) {
+      Iterator offeredAudioEncsIter=offeredAudioEncodings.iterator();
+      while (offeredAudioEncsIter.hasNext()) {
+        String format=(String)offeredAudioEncsIter.next();
+        if (supportedAudioEncsList.contains(format))         intersectedAudioEncsList.add(format);
+      }
+    }
+    if (offeredVideoEncodings != null && offeredVideoEncodings.size() > 0) {
+      Iterator offeredVideoEncsIter=offeredVideoEncodings.iterator();
+      while (offeredVideoEncsIter.hasNext()) {
+        String format=(String)offeredVideoEncsIter.next();
+        if (supportedVideoEncsList.contains(format))         intersectedVideoEncsList.add(format);
+      }
+    }
+    supportedAudioEncodings=new String[intersectedAudioEncsList.size()];
+    supportedVideoEncodings=new String[intersectedVideoEncsList.size()];
+    for (int i=0; i < supportedAudioEncodings.length; i++)     supportedAudioEncodings[i]=(String)intersectedAudioEncsList.get(i);
+    for (int i=0; i < supportedVideoEncodings.length; i++)     supportedVideoEncodings[i]=(String)intersectedVideoEncsList.get(i);
+  }
+  MediaDescription am=mediaServCallback.getSdpFactory().createMediaDescription("audio",publicAudioAddress.getPort(),1,"RTP/AVP",supportedAudioEncodings);
+  if (!mediaServCallback.getDeviceConfiguration().isAudioCaptureSupported()) {
+    am.setAttribute("recvonly",null);
+  }
+  MediaDescription vm=mediaServCallback.getSdpFactory().createMediaDescription("video",publicVideoAddress.getPort(),1,"RTP/AVP",supportedVideoEncodings);
+  if (!mediaServCallback.getDeviceConfiguration().isVideoCaptureSupported()) {
+    vm.setAttribute("recvonly",null);
+  }
+  Vector mediaDescs=new Vector();
+  mediaDescs.add(am);
+  mediaDescs.add(vm);
+  return mediaDescs;
+}

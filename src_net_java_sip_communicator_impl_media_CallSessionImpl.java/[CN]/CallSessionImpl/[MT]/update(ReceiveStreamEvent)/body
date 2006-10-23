@@ -1,0 +1,45 @@
+{
+  logger.debug("received a new incoming stream. " + evt);
+  RTPManager mgr=(RTPManager)evt.getSource();
+  Participant participant=evt.getParticipant();
+  ReceiveStream stream=evt.getReceiveStream();
+  if (evt instanceof NewReceiveStreamEvent) {
+    try {
+      stream=((NewReceiveStreamEvent)evt).getReceiveStream();
+      DataSource ds=stream.getDataSource();
+      RTPControl ctl=(RTPControl)ds.getControl("javax.media.rtp.RTPControl");
+      if (logger.isDebugEnabled()) {
+        if (ctl != null) {
+          logger.debug("Received new RTP stream: " + ctl.getFormat());
+        }
+ else {
+          logger.debug("Received new RTP stream");
+        }
+      }
+      Player player=Manager.createPlayer(ds);
+      player.addControllerListener(this);
+      player.realize();
+    }
+ catch (    Exception e) {
+      logger.error("NewReceiveStreamEvent exception ",e);
+      return;
+    }
+  }
+ else   if (evt instanceof StreamMappedEvent) {
+    if (stream != null && stream.getDataSource() != null) {
+      DataSource ds=stream.getDataSource();
+      RTPControl ctl=(RTPControl)ds.getControl("javax.media.rtp.RTPControl");
+      if (logger.isDebugEnabled()) {
+        String msg="The previously unidentified stream ";
+        if (ctl != null) {
+          msg+=ctl.getFormat();
+        }
+        msg+=" had now been identified as sent by: " + participant.getCNAME();
+        logger.debug(msg);
+      }
+    }
+  }
+ else   if (evt instanceof ByeEvent) {
+    logger.debug("Got \"bye\" from: " + participant.getCNAME());
+  }
+}

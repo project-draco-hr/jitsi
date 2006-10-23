@@ -1,0 +1,33 @@
+{
+  try {
+    SessionDescription sessDescr=mediaServCallback.getSdpFactory().createSessionDescription();
+    Version v=mediaServCallback.getSdpFactory().createVersion(0);
+    sessDescr.setVersion(v);
+    NetworkAddressManagerService netAddressManager=MediaActivator.getNetworkAddressManagerService();
+    InetSocketAddress publicVideoAddress=netAddressManager.getPublicAddressFor(getVideoPort());
+    InetSocketAddress publicAudioAddress=netAddressManager.getPublicAddressFor(getAudioPort());
+    InetAddress publicIpAddress=publicAudioAddress.getAddress();
+    String addrType=publicIpAddress instanceof Inet6Address ? Connection.IP6 : Connection.IP4;
+    Origin o=mediaServCallback.getSdpFactory().createOrigin(call.getProtocolProvider().getAccountID().getUserID(),0,0,"IN",addrType,publicIpAddress.getHostAddress());
+    sessDescr.setOrigin(o);
+    Connection c=mediaServCallback.getSdpFactory().createConnection("IN",addrType,publicIpAddress.getHostAddress());
+    sessDescr.setConnection(c);
+    SessionName s=mediaServCallback.getSdpFactory().createSessionName("-");
+    sessDescr.setSessionName(s);
+    TimeDescription t=mediaServCallback.getSdpFactory().createTimeDescription();
+    Vector timeDescs=new Vector();
+    timeDescs.add(t);
+    sessDescr.setTimeDescriptions(timeDescs);
+    Vector offeredMediaDescriptions=null;
+    if (offer != null)     offeredMediaDescriptions=offer.getMediaDescriptions(false);
+    Vector mediaDescs=createMediaDescriptions(offeredMediaDescriptions,publicAudioAddress,publicVideoAddress);
+    sessDescr.setMediaDescriptions(mediaDescs);
+    if (logger.isTraceEnabled()) {
+      logger.trace("Generated SDP - " + sessDescr.toString());
+    }
+    return sessDescr;
+  }
+ catch (  SdpException exc) {
+    throw new MediaException("An SDP exception occurred while generating local " + "sdp description",MediaException.INTERNAL_ERROR,exc);
+  }
+}
