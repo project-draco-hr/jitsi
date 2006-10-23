@@ -19,9 +19,15 @@
   }
   CallParticipantSipImpl callParticipant=createCallParticipantFor(inviteTransaction,jainSipProvider);
   try {
-    invite.setContent(SipActivator.getMediaService().generateSdpOffer(callParticipant),contentTypeHeader);
+    CallSession callSession=SipActivator.getMediaService().createCallSession(callParticipant.getCall());
+    ((CallSipImpl)callParticipant.getCall()).setMediaCallSession(callSession);
+    invite.setContent(callSession.createSdpOffer(),contentTypeHeader);
   }
  catch (  ParseException ex) {
+    logger.error("Failed to parse sdp data while creating invite request!",ex);
+    throw new OperationFailedException("Failed to parse sdp data while creating invite request!",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+catch (  MediaException ex) {
     logger.error("Failed to parse sdp data while creating invite request!",ex);
     throw new OperationFailedException("Failed to parse sdp data while creating invite request!",OperationFailedException.INTERNAL_ERROR,ex);
   }

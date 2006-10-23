@@ -5,8 +5,40 @@
     logger.debug("Received a stray ok response.");
     return;
   }
+  Request ack=null;
+  ContentTypeHeader contentTypeHeader=null;
   try {
-    Request ack=clientTransaction.getDialog().createRequest(Request.ACK);
+    ack=clientTransaction.getDialog().createRequest(Request.ACK);
+    contentTypeHeader=protocolProvider.getHeaderFactory().createContentTypeHeader("application","sdp");
+  }
+ catch (  ParseException ex) {
+    callParticipant.setState(CallParticipantState.FAILED,"Failed to create a content type header for the ACK request");
+    logger.error("Failed to create a content type header for the ACK request",ex);
+  }
+catch (  SipException ex) {
+    logger.error("Failed to create ACK request!",ex);
+    callParticipant.setState(CallParticipantState.FAILED);
+    return;
+  }
+  callParticipant.setSdpDescription(new String(ok.getRawContent()));
+  CallSession callSession=((CallSipImpl)callParticipant.getCall()).getMediaCallSession();
+  try {
+    if (callSession == null) {
+      callSession=SipActivator.getMediaService().createCallSession(callParticipant.getCall());
+      String sdp=callSession.processSdpOffer(callParticipant,callParticipant.getSdpDescription());
+      ack.setContent(sdp,contentTypeHeader);
+    }
+    callSession.processSdpAnswer(callParticipant,callParticipant.getSdpDescription());
+  }
+ catch (  ParseException exc) {
+    logger.error("There was an error parsing the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")",exc);
+    callParticipant.setState(CallParticipantState.FAILED,"There was an error parsing the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")");
+  }
+catch (  MediaException exc) {
+    logger.error("We failed to process the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")"+ ". Error was: "+ exc.getMessage(),exc);
+    callParticipant.setState(CallParticipantState.FAILED,"We failed to process the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")"+ ". Error was: "+ exc.getMessage());
+  }
+  try {
     clientTransaction.getDialog().sendAck(ack);
   }
  catch (  SipException ex) {
@@ -14,6 +46,5 @@
     callParticipant.setState(CallParticipantState.FAILED);
     return;
   }
-  callParticipant.setSdpDescription(new String(ok.getRawContent()));
   callParticipant.setState(CallParticipantState.CONNECTED);
 }

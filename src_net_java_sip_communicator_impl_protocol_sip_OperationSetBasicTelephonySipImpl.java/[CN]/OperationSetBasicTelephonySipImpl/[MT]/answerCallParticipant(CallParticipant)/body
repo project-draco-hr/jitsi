@@ -28,13 +28,22 @@
   }
  catch (  ParseException ex) {
     callParticipant.setState(CallParticipantState.DISCONNECTED);
-    logger.error("Failed to create a content type header for the OK request",ex);
-    throw new OperationFailedException("Failed to create a content type header for the OK request",OperationFailedException.INTERNAL_ERROR,ex);
+    logger.error("Failed to create a content type header for the OK response",ex);
+    throw new OperationFailedException("Failed to create a content type header for the OK response",OperationFailedException.INTERNAL_ERROR,ex);
   }
   try {
-    ok.setContent(SipActivator.getMediaService().generateSdpAnswer(callParticipant),contentTypeHeader);
+    CallSession callSession=SipActivator.getMediaService().createCallSession(callParticipant.getCall());
+    ((CallSipImpl)callParticipant.getCall()).setMediaCallSession(callSession);
+    String sdp=null;
+    if (callParticipant.getSdpDescription() != null && callParticipant.getSdpDescription().length() > 0) {
+      sdp=callSession.processSdpOffer(callParticipant,callParticipant.getSdpDescription());
+    }
+ else {
+      sdp=callSession.createSdpOffer();
+    }
+    ok.setContent(sdp,contentTypeHeader);
   }
- catch (  NullPointerException ex) {
+ catch (  MediaException ex) {
     callParticipant.setState(CallParticipantState.DISCONNECTED);
     logger.error("No sdp data was provided for the ok response to " + "an INVITE request!",ex);
     throw new OperationFailedException("No sdp data was provided for the ok response " + "to an INVITE request!",OperationFailedException.INTERNAL_ERROR,ex);
