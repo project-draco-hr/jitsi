@@ -1,34 +1,28 @@
 {
-  try {
-    logger.logEntry();
-    Object oldValue=getProperty(propertyName);
-    if (changeEventDispatcher.hasVetoableChangeListeners(propertyName))     changeEventDispatcher.fireVetoableChange(propertyName,oldValue,property);
-    logger.trace(propertyName + "( oldValue=" + oldValue+ ", newValue="+ property+ ".");
-    if (isSystem(propertyName))     isSystem=true;
-    if (property == null) {
-      properties.remove(propertyName);
-      if (isSystem) {
-        System.setProperty(propertyName,"");
-      }
-    }
- else {
-      if (isSystem) {
-        System.setProperty(propertyName,property.toString());
-        properties.put(propertyName,new PropertyReference(propertyName));
-      }
- else {
-        properties.put(propertyName,property);
-      }
-    }
-    if (changeEventDispatcher.hasPropertyChangeListeners(propertyName))     changeEventDispatcher.firePropertyChange(propertyName,oldValue,property);
-    try {
-      storeConfiguration();
-    }
- catch (    IOException ex) {
-      logger.error("Failed to store configuration after " + "a property change");
+  Object oldValue=getProperty(propertyName);
+  if (changeEventDispatcher.hasVetoableChangeListeners(propertyName))   changeEventDispatcher.fireVetoableChange(propertyName,oldValue,property);
+  logger.trace(propertyName + "( oldValue=" + oldValue+ ", newValue="+ property+ ".");
+  if (isSystem(propertyName))   isSystem=true;
+  if (property == null) {
+    properties.remove(propertyName);
+    if (isSystem) {
+      System.setProperty(propertyName,"");
     }
   }
-  finally {
-    logger.logExit();
+ else {
+    if (isSystem) {
+      System.setProperty(propertyName,property.toString());
+      properties.put(propertyName,new PropertyReference(propertyName));
+    }
+ else {
+      properties.put(propertyName,property);
+    }
+  }
+  if (changeEventDispatcher.hasPropertyChangeListeners(propertyName))   changeEventDispatcher.firePropertyChange(propertyName,oldValue,property);
+  try {
+    storeConfiguration();
+  }
+ catch (  IOException ex) {
+    logger.error("Failed to store configuration after " + "a property change");
   }
 }
