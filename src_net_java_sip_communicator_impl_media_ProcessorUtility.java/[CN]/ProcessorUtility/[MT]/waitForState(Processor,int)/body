@@ -1,0 +1,21 @@
+{
+  processor.addControllerListener(this);
+  setFailed(false);
+  if (state == Processor.Configured) {
+    processor.configure();
+  }
+ else   if (state == Processor.Realized) {
+    processor.realize();
+  }
+  while (processor.getState() < state && !failed) {
+synchronized (getStateLock()) {
+      try {
+        getStateLock().wait();
+      }
+ catch (      InterruptedException ie) {
+        return false;
+      }
+    }
+  }
+  return !failed;
+}
