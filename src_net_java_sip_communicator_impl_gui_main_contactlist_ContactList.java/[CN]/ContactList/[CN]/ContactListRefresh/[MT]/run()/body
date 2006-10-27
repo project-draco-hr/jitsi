@@ -1,28 +1,29 @@
 {
-  while (refreshEnabled) {
-synchronized (refreshLock) {
-      if (!isModified) {
-        try {
-          refreshLock.wait(9000);
-          isModified=true;
+  try {
+    Map copyContentToRefresh=null;
+    while (refreshEnabled) {
+synchronized (contentToRefresh) {
+        if (contentToRefresh.isEmpty())         contentToRefresh.wait();
+        copyContentToRefresh=new Hashtable(contentToRefresh);
+        contentToRefresh.clear();
+      }
+      Iterator i=copyContentToRefresh.entrySet().iterator();
+      while (i.hasNext()) {
+        Map.Entry groupEntry=(Map.Entry)i.next();
+        String operation=(String)groupEntry.getValue();
+        Object o=groupEntry.getKey();
+        if (o instanceof MetaContactGroup) {
+          MetaContactGroup group=(MetaContactGroup)o;
+          SwingUtilities.invokeLater(new RefreshGroup(group,operation));
         }
- catch (        InterruptedException exc) {
-          logger.error("Storing contact list failed",exc);
+ else         if (o instanceof MetaContact) {
+          MetaContact contact=(MetaContact)o;
+          SwingUtilities.invokeLater(new RefreshContact(contact,operation));
         }
       }
     }
-    if (isModified) {
-      if (groupsToModify.size() > 0) {
-        for (int i=0; i < groupsToModify.size(); i++) {
-          MetaContactGroup group=(MetaContactGroup)groupsToModify.get(i);
-          this.refreshGroup(group);
-        }
-        groupsToModify.removeAllElements();
-      }
- else {
-        this.refreshAll();
-      }
-      isModified=false;
-    }
+  }
+ catch (  InterruptedException e) {
+    e.printStackTrace();
   }
 }
