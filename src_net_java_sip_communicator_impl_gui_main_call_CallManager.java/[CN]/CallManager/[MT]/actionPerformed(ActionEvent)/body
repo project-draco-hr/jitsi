@@ -2,7 +2,6 @@
   JButton button=(JButton)evt.getSource();
   String buttonName=button.getName();
   if (buttonName.equals("call")) {
-    Object o=mainFrame.getContactListPanel().getContactList().getSelectedValue();
     Component selectedPanel=mainFrame.getSelectedPanel();
     if (selectedPanel != null && selectedPanel instanceof CallPanel && ((CallPanel)selectedPanel).getCall().getCallState() == CallState.CALL_INITIALIZATION) {
       CallPanel callPanel=(CallPanel)selectedPanel;
@@ -15,19 +14,26 @@
       String stringContact=callRecord.getParticipantName();
       createCall(stringContact);
     }
- else     if (isCallMetaContact && o != null && o instanceof MetaContact) {
-      MetaContact metaContact=(MetaContact)o;
-      Contact contact=getTelephonyContact(metaContact);
-      if (contact != null) {
-        createCall(contact);
-      }
+ else     if (selectedPanel != null && selectedPanel instanceof ContactListPanel) {
+      if (isCallMetaContact) {
+        Object[] selectedContacts=mainFrame.getContactListPanel().getContactList().getSelectedValues();
+        Vector telephonyContacts=new Vector();
+        for (int i=0; i < selectedContacts.length; i++) {
+          Object o=selectedContacts[i];
+          if (o instanceof MetaContact) {
+            Contact contact=getTelephonyContact((MetaContact)o);
+            if (contact != null)             telephonyContacts.add(contact);
  else {
-        JOptionPane.showMessageDialog(this.mainFrame,Messages.getString("contactNotSupportingTelephony"),Messages.getString("warning"),JOptionPane.WARNING_MESSAGE);
+              JOptionPane.showMessageDialog(this.mainFrame,Messages.getString("contactNotSupportingTelephony",contact.getDisplayName()),Messages.getString("warning"),JOptionPane.WARNING_MESSAGE);
+            }
+          }
+        }
+        if (telephonyContacts.size() > 0)         createCall(telephonyContacts);
       }
-    }
- else     if (!phoneNumberCombo.isComboFieldEmpty()) {
-      String stringContact=phoneNumberCombo.getEditor().getItem().toString();
-      createCall(stringContact);
+ else       if (!phoneNumberCombo.isComboFieldEmpty()) {
+        String stringContact=phoneNumberCombo.getEditor().getItem().toString();
+        createCall(stringContact);
+      }
     }
   }
  else   if (buttonName.equalsIgnoreCase("hangup")) {
