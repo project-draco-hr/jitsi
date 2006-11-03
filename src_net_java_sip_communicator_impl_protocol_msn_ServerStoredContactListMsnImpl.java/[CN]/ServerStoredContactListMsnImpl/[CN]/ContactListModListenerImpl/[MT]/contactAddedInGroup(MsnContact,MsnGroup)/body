@@ -1,0 +1,30 @@
+{
+  ContactMsnImpl contactToAdd=findContactById(contact.getEmail().getEmailAddress());
+  ContactGroupMsnImpl dstGroup=findContactGroupByMsnId(group.getGroupId());
+  Integer isWaitingForAddInGroup=(Integer)waitAddInGroup.get(contact.getEmail().getEmailAddress());
+  Integer isWaitingForMove=(Integer)waitMove.get(contact.getEmail().getEmailAddress());
+  if (dstGroup == null) {
+    logger.trace("Group not found!" + group);
+    return;
+  }
+  if (isWaitingForMove != null && isWaitingForMove.intValue() == 0) {
+    waitMove.put(contact.getEmail().getEmailAddress(),dstGroup);
+    return;
+  }
+  if (contactToAdd == null || isWaitingForAddInGroup != null) {
+    if (isWaitingForAddInGroup.intValue() == 1) {
+      waitAddInGroup.remove(contact.getEmail().getEmailAddress());
+      dstGroup.addContact(contactToAdd);
+      fireContactAdded(dstGroup,contactToAdd);
+    }
+ else {
+      waitAddInGroup.remove(contact.getEmail().getEmailAddress());
+      logger.trace("Contact not found!" + contact);
+      return;
+    }
+  }
+ else {
+    dstGroup.addContact(contactToAdd);
+    fireContactAdded(dstGroup,contactToAdd);
+  }
+}

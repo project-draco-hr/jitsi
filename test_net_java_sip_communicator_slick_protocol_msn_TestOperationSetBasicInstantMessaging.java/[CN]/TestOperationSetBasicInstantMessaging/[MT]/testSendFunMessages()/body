@@ -1,0 +1,31 @@
+{
+  String hostname="";
+  try {
+    hostname=java.net.InetAddress.getLocalHost().getHostName() + ": ";
+  }
+ catch (  UnknownHostException ex) {
+  }
+  String message=hostname + "Hello this is the SIP Communicator build on: " + new Date().toString()+ ". Have a very nice day!";
+  String list=System.getProperty("accounts.reporting.MSN_REPORT_LIST");
+  logger.debug("Will send message " + message + " to: "+ list);
+  if (list == null || list.trim().length() == 0)   return;
+  StringTokenizer tokenizer=new StringTokenizer(list," ");
+  while (tokenizer.hasMoreTokens()) {
+    String contactID=tokenizer.nextToken();
+    Contact contact=opSetPresence2.findContactByID(contactID);
+    if (contact == null) {
+      try {
+        opSetPresence2.subscribe(contactID);
+        Object o=new Object();
+synchronized (o) {
+          o.wait(2000);
+        }
+      }
+ catch (      Exception ex1) {
+        continue;
+      }
+    }
+    contact=opSetPresence2.findContactByID(contactID);
+    opSetBasicIM2.sendInstantMessage(contact,opSetBasicIM2.createMessage(message));
+  }
+}

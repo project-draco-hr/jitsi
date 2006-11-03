@@ -1,0 +1,14 @@
+{
+  BundleContext context=MsnActivator.getBundleContext();
+  if (context == null)   throw new NullPointerException("The specified BundleContext was null");
+  String userIDStr=(String)accountProperties.get(USER_ID);
+  AccountID accountID=new MsnAccountID(userIDStr,accountProperties);
+  Hashtable properties=new Hashtable();
+  properties.put(PROTOCOL,ProtocolNames.MSN);
+  properties.put(USER_ID,userIDStr);
+  ProtocolProviderServiceMsnImpl msnProtocolProvider=new ProtocolProviderServiceMsnImpl();
+  msnProtocolProvider.initialize(userIDStr,accountID);
+  ServiceRegistration registration=context.registerService(ProtocolProviderService.class.getName(),msnProtocolProvider,properties);
+  registeredAccounts.put(accountID,registration);
+  return accountID;
+}

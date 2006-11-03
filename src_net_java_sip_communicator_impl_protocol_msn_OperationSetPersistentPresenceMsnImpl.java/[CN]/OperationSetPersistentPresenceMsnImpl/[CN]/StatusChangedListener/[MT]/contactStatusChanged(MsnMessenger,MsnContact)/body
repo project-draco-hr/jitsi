@@ -1,0 +1,15 @@
+{
+  logger.debug("Received a status update for contact=" + contact);
+  ContactMsnImpl sourceContact=ssContactList.findContactById(contact.getEmail().getEmailAddress());
+  if (sourceContact == null) {
+    logger.warn("No source contact found for msncontact=" + contact);
+    return;
+  }
+  PresenceStatus oldStatus=sourceContact.getPresenceStatus();
+  PresenceStatus newStatus=msnStatusToPresenceStatus(contact.getStatus());
+  if (oldStatus.equals(newStatus))   return;
+  sourceContact.updatePresenceStatus(newStatus);
+  ContactGroup parent=ssContactList.findContactGroup(sourceContact);
+  logger.debug("Will Dispatch the contact status event.");
+  fireContactPresenceStatusChangeEvent(sourceContact,parent,oldStatus,newStatus);
+}
