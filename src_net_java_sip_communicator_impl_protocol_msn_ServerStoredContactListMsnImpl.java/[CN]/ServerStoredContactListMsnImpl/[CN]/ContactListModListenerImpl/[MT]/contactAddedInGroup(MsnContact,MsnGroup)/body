@@ -1,24 +1,34 @@
 {
-  ContactMsnImpl contactToAdd=findContactById(contact.getEmail().getEmailAddress());
+  String contactID=contact.getEmail().getEmailAddress();
+  ContactMsnImpl contactToAdd=findContactById(contactID);
   ContactGroupMsnImpl dstGroup=findContactGroupByMsnId(group.getGroupId());
-  Integer isWaitingForAddInGroup=(Integer)waitAddInGroup.get(contact.getEmail().getEmailAddress());
-  Integer isWaitingForMove=(Integer)waitMove.get(contact.getEmail().getEmailAddress());
+  Integer isWaitingForAddInGroup=(Integer)waitAddInGroup.get(contactID);
+  Integer isWaitingForMove=(Integer)waitMove.get(contactID);
+  Integer isWaitingForMoveFromRoot=(Integer)waitMoveFromRoot.get(contactID);
   if (dstGroup == null) {
     logger.trace("Group not found!" + group);
     return;
   }
+  if (isWaitingForMoveFromRoot != null && isWaitingForMoveFromRoot.intValue() == 0) {
+    logger.trace("Moving from root to a group: firing event");
+    waitMoveFromRoot.remove(contactID);
+    fireContactMoved(rootGroup,dstGroup,contactToAdd);
+    return;
+  }
   if (isWaitingForMove != null && isWaitingForMove.intValue() == 0) {
-    waitMove.put(contact.getEmail().getEmailAddress(),dstGroup);
+    waitMove.put(contactID,dstGroup);
     return;
   }
   if (contactToAdd == null || isWaitingForAddInGroup != null) {
     if (isWaitingForAddInGroup.intValue() == 1) {
-      waitAddInGroup.remove(contact.getEmail().getEmailAddress());
+      if (contactToAdd == null) {
+        contactToAdd=new ContactMsnImpl(contact,ServerStoredContactListMsnImpl.this,true,true);
+      }
+      waitAddInGroup.remove(contactID);
       dstGroup.addContact(contactToAdd);
       fireContactAdded(dstGroup,contactToAdd);
     }
  else {
-      waitAddInGroup.remove(contact.getEmail().getEmailAddress());
       logger.trace("Contact not found!" + contact);
       return;
     }
