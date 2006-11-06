@@ -41,45 +41,17 @@
  else   if (itemName.startsWith(removeContactPrefix)) {
     Contact contact=getContactFromMetaContact(itemName.substring(removeContactPrefix.length()));
     if (contact != null) {
-      if (Constants.REMOVE_CONTACT_ASK) {
-        String message="<HTML>Are you sure you want to remove <B>" + contact.getDisplayName() + "</B><BR>from your contact list?</html>";
-        MessageDialog dialog=new MessageDialog(this.mainFrame,message,Messages.getString("remove"));
-        int returnCode=dialog.showDialog();
-        if (returnCode == MessageDialog.OK_RETURN_CODE) {
-          new RemoveContactThread(contact).start();
-        }
- else         if (returnCode == MessageDialog.OK_DONT_ASK_CODE) {
-          new RemoveContactThread(contact).start();
-          Constants.REMOVE_CONTACT_ASK=false;
-        }
-      }
- else {
-        new RemoveContactThread(contact).start();
-      }
+      new RemoveContactThread(contact).start();
     }
  else {
-      if (Constants.REMOVE_CONTACT_ASK) {
-        String message="<HTML>Are you sure you want to remove <B>" + Messages.getString("allContacts") + "</B><BR>from your contact list?</html>";
-        MessageDialog dialog=new MessageDialog(this.mainFrame,message,Messages.getString("remove"));
-        int returnCode=dialog.showDialog();
-        if (returnCode == MessageDialog.OK_RETURN_CODE) {
-          new RemoveAllContactsThread().start();
-        }
- else         if (returnCode == MessageDialog.OK_DONT_ASK_CODE) {
-          new RemoveAllContactsThread().start();
-          Constants.REMOVE_CONTACT_ASK=false;
-        }
-      }
- else {
-        new RemoveAllContactsThread().start();
-      }
+      new RemoveAllContactsThread().start();
     }
   }
  else   if (itemName.startsWith(moveSubcontactPrefix)) {
     Contact contact=getContactFromMetaContact(itemName.substring(moveSubcontactPrefix.length()));
     guiContactList.addExcContactListListener(this);
     guiContactList.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
-    this.moveDialog=new MoveSubcontactMessageDialog(mainFrame);
+    this.moveDialog=new MoveSubcontactMessageDialog(mainFrame,this);
     this.moveDialog.setVisible(true);
     if (contact != null) {
       this.contactToMove=contact;
