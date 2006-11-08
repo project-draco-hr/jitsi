@@ -1,49 +1,26 @@
 {
   if (e.getSource() instanceof JMenuItem) {
     JMenuItem menuItem=(JMenuItem)e.getSource();
-    OperationSetPresence presence=mainFrame.getProtocolPresence(protocolProvider);
+    LoginManager loginManager=mainFrame.getLoginManager();
     Iterator statusSet=presence.getSupportedStatusSet();
     while (statusSet.hasNext()) {
       PresenceStatus status=((PresenceStatus)statusSet.next());
       if (status.getStatusName().equals(menuItem.getText()) && !presence.getPresenceStatus().equals(status)) {
-        try {
-          if (protocolProvider.isRegistered()) {
-            if (status.isOnline()) {
-              presence.publishPresenceStatus(status,"");
-            }
- else {
-              mainFrame.getLoginManager().setManuallyDisconnected(true);
-              protocolProvider.unregister();
-            }
-            setSelectedStatus(status);
+        if (protocolProvider.isRegistered()) {
+          if (status.isOnline()) {
+            new PublishPresenceStatusThread(status).start();
           }
  else {
-            lastSelectedStatus=status;
-            mainFrame.getLoginManager().login(protocolProvider);
+            loginManager.setManuallyDisconnected(true);
+            loginManager.logoff(protocolProvider);
           }
-          mainFrame.saveStatusInformation(protocolProvider,status);
+          setSelectedStatus(status);
         }
- catch (        IllegalArgumentException e1) {
-          logger.error("Error - changing status",e1);
+ else {
+          lastSelectedStatus=status;
+          loginManager.login(protocolProvider);
         }
-catch (        IllegalStateException e1) {
-          logger.error("Error - changing status",e1);
-        }
-catch (        OperationFailedException e1) {
-          if (e1.getErrorCode() == OperationFailedException.GENERAL_ERROR) {
-            SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("statusChangeGeneralError"));
-            JOptionPane.showMessageDialog(null,msgText,Messages.getString("generalError"),JOptionPane.ERROR_MESSAGE);
-          }
- else           if (e1.getErrorCode() == OperationFailedException.NETWORK_FAILURE) {
-            SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("statusChangeNetworkFailure"));
-            JOptionPane.showMessageDialog(null,msgText,Messages.getString("networkFailure"),JOptionPane.ERROR_MESSAGE);
-          }
- else           if (e1.getErrorCode() == OperationFailedException.PROVIDER_NOT_REGISTERED) {
-            SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("statusChangeNetworkFailure"));
-            JOptionPane.showMessageDialog(null,msgText,Messages.getString("networkFailure"),JOptionPane.ERROR_MESSAGE);
-          }
-          logger.error("Error - changing status",e1);
-        }
+        mainFrame.saveStatusInformation(protocolProvider,status);
         break;
       }
     }
