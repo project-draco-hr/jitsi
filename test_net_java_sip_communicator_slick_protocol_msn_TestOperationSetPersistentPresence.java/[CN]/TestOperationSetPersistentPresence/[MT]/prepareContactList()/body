@@ -1,9 +1,6 @@
 {
   fixture.clearProvidersLists();
-  Object o=new Object();
-synchronized (o) {
-    o.wait(3000);
-  }
+  waitFor(3000);
   String contactList=System.getProperty(MsnProtocolProviderServiceLick.CONTACT_LIST_PROPERTY_NAME,null);
   logger.debug("The " + MsnProtocolProviderServiceLick.CONTACT_LIST_PROPERTY_NAME + " property is set to="+ contactList);
   if (contactList == null || contactList.trim().length() < 6)   throw new IllegalArgumentException("The " + MsnProtocolProviderServiceLick.CONTACT_LIST_PROPERTY_NAME + " property did not contain a contact list.");
@@ -29,10 +26,13 @@ synchronized (o) {
     uinInThisGroup.add(uin);
   }
   Enumeration newGroupsEnum=contactListToCreate.keys();
+  GroupChangeCollector groupChangeCollector=new GroupChangeCollector();
+  opSetPersPresence1.addServerStoredGroupChangeListener(groupChangeCollector);
   while (newGroupsEnum.hasMoreElements()) {
     String groupName=(String)newGroupsEnum.nextElement();
     logger.debug("Will add group " + groupName);
     opSetPersPresence1.createServerStoredContactGroup(opSetPersPresence1.getServerStoredContactListRoot(),groupName);
+    groupChangeCollector.waitForEvent(3000);
     ContactGroup newlyCreatedGroup=opSetPersPresence1.getServerStoredContactListRoot().getGroup(groupName);
     Iterator contactsToAddToThisGroup=((List)contactListToCreate.get(groupName)).iterator();
     while (contactsToAddToThisGroup.hasNext()) {
@@ -41,5 +41,6 @@ synchronized (o) {
       opSetPersPresence1.subscribe(newlyCreatedGroup,id);
     }
   }
+  waitFor(2000);
   MsnSlickFixture.preInstalledBuddyList=contactListToCreate;
 }
