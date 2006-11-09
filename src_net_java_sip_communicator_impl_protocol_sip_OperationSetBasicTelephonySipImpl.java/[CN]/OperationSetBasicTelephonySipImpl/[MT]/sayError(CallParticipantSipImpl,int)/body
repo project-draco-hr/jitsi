@@ -1,0 +1,33 @@
+{
+  Dialog dialog=callParticipant.getDialog();
+  callParticipant.setState(CallParticipantState.FAILED);
+  if (dialog == null) {
+    logger.error("Failed to extract participant's associated dialog! " + "Ending Call!");
+    throw new OperationFailedException("Failed to extract participant's associated dialog! " + "Ending Call!",OperationFailedException.INTERNAL_ERROR);
+  }
+  Transaction transaction=callParticipant.getFirstTransaction();
+  if (transaction == null || !dialog.isServer()) {
+    logger.error("Failed to extract a transaction" + " from the call's associated dialog!");
+    throw new OperationFailedException("Failed to extract a transaction from the participant's " + "associated dialog!",OperationFailedException.INTERNAL_ERROR);
+  }
+  ServerTransaction serverTransaction=(ServerTransaction)transaction;
+  Response internalError=null;
+  try {
+    internalError=protocolProvider.getMessageFactory().createResponse(errorCode,callParticipant.getFirstTransaction().getRequest());
+    protocolProvider.attachToTag(internalError,dialog);
+  }
+ catch (  ParseException ex) {
+    logger.error("Failed to construct an OK response to an INVITE request",ex);
+    throw new OperationFailedException("Failed to construct an OK response to an INVITE request",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ContactHeader contactHeader=protocolProvider.getContactHeader();
+  internalError.addHeader(contactHeader);
+  try {
+    serverTransaction.sendResponse(internalError);
+    if (logger.isDebugEnabled())     logger.debug("sent response: " + internalError);
+  }
+ catch (  Exception ex) {
+    logger.error("Failed to send an OK response to an INVITE request",ex);
+    throw new OperationFailedException("Failed to send an OK response to an INVITE request",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+}
