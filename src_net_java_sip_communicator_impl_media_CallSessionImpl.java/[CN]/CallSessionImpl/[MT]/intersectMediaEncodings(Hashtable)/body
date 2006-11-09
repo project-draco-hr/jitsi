@@ -1,0 +1,31 @@
+{
+  String[] supportedAudioEncodings=mediaServCallback.getMediaControl().getSupportedAudioEncodings();
+  String[] supportedVideoEncodings=mediaServCallback.getMediaControl().getSupportedVideoEncodings();
+  List offeredAudioEncodings=(List)offeredEncodings.get("audio");
+  List offeredVideoEncodings=(List)offeredEncodings.get("video");
+  List supportedAudioEncsList=Arrays.asList(supportedAudioEncodings);
+  List intersectedAudioEncsList=new LinkedList();
+  List supportedVideoEncsList=Arrays.asList(supportedVideoEncodings);
+  List intersectedVideoEncsList=new LinkedList();
+  if (offeredAudioEncodings != null && offeredAudioEncodings.size() > 0) {
+    Iterator offeredAudioEncsIter=offeredAudioEncodings.iterator();
+    while (offeredAudioEncsIter.hasNext()) {
+      String format=(String)offeredAudioEncsIter.next();
+      if (supportedAudioEncsList.contains(format))       intersectedAudioEncsList.add(format);
+    }
+  }
+  if (offeredVideoEncodings != null && offeredVideoEncodings.size() > 0) {
+    Iterator offeredVideoEncsIter=offeredVideoEncodings.iterator();
+    while (offeredVideoEncsIter.hasNext()) {
+      String format=(String)offeredVideoEncsIter.next();
+      if (supportedVideoEncsList.contains(format))       intersectedVideoEncsList.add(format);
+    }
+  }
+  if (intersectedAudioEncsList.size() == 0 && intersectedVideoEncsList.size() == 0) {
+    throw new MediaException("None of the offered formats was supported by this " + "media implementation",MediaException.UNSUPPORTED_FORMAT_SET_ERROR);
+  }
+  Hashtable intersection=new Hashtable(2);
+  intersection.put("audio",intersectedAudioEncsList);
+  intersection.put("video",intersectedAudioEncsList);
+  return intersection;
+}
