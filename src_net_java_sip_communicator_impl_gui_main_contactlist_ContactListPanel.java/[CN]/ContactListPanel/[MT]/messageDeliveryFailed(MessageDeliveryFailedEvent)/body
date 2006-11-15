@@ -1,20 +1,108 @@
 {
-  SIPCommMsgTextArea msg=null;
+  String errorMsg=null;
+  Message sourceMessage=(Message)evt.getSource();
+  Contact sourceContact=evt.getDestinationContact();
+  MetaContact metaContact=mainFrame.getContactList().findMetaContactByContact(sourceContact);
+  PresenceStatus contactStatus=((ContactListModel)this.contactList.getModel()).getMetaContactStatus(metaContact);
   if (evt.getErrorCode() == MessageDeliveryFailedEvent.OFFLINE_MESSAGES_NOT_SUPPORTED) {
-    msg=new SIPCommMsgTextArea(Messages.getString("msgDeliveryOfflineNotSupported",evt.getDestinationContact().getDisplayName()));
+    errorMsg=Messages.getString("msgDeliveryOfflineNotSupported",evt.getDestinationContact().getDisplayName());
   }
  else   if (evt.getErrorCode() == MessageDeliveryFailedEvent.NETWORK_FAILURE) {
-    msg=new SIPCommMsgTextArea(Messages.getString("msgNotDelivered",evt.getDestinationContact().getDisplayName()));
+    errorMsg=Messages.getString("msgNotDelivered",evt.getDestinationContact().getDisplayName());
   }
  else   if (evt.getErrorCode() == MessageDeliveryFailedEvent.PROVIDER_NOT_REGISTERED) {
-    msg=new SIPCommMsgTextArea(Messages.getString("msgSendConnectionProblem",evt.getDestinationContact().getDisplayName()));
+    errorMsg=Messages.getString("msgSendConnectionProblem",evt.getDestinationContact().getDisplayName());
   }
  else   if (evt.getErrorCode() == MessageDeliveryFailedEvent.INTERNAL_ERROR) {
-    msg=new SIPCommMsgTextArea(Messages.getString("msgDeliveryInternalError",evt.getDestinationContact().getDisplayName()));
+    errorMsg=Messages.getString("msgDeliveryInternalError",evt.getDestinationContact().getDisplayName());
   }
  else {
-    msg=new SIPCommMsgTextArea(Messages.getString("msgDeliveryFailedUnknownError",evt.getDestinationContact().getDisplayName()));
+    errorMsg=Messages.getString("msgDeliveryFailedUnknownError",evt.getDestinationContact().getDisplayName());
   }
-  String title=Messages.getString("msgDeliveryFailure");
-  JOptionPane.showMessageDialog(this,msg,title,JOptionPane.WARNING_MESSAGE);
+  if (!Constants.TABBED_CHAT_WINDOW) {
+    if (contactMsgWindows.containsKey(metaContact)) {
+      ChatWindow msgWindow=(ChatWindow)contactMsgWindows.get(metaContact);
+      ChatPanel chatPanel=msgWindow.getCurrentChatPanel();
+      chatPanel.refreshWriteArea();
+      chatPanel.processMessage(metaContact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,sourceMessage.getContent());
+      chatPanel.processMessage(metaContact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,errorMsg);
+      if (msgWindow.getState() == JFrame.ICONIFIED) {
+        msgWindow.setTitle("*" + msgWindow.getTitle());
+      }
+      if (Constants.AUTO_POPUP_NEW_MESSAGE) {
+        if (msgWindow.isVisible()) {
+          if (msgWindow.getState() == JFrame.ICONIFIED)           msgWindow.setState(JFrame.NORMAL);
+          msgWindow.toFront();
+        }
+ else         msgWindow.setVisible(true);
+      }
+    }
+ else {
+      ChatWindow msgWindow=new ChatWindow(mainFrame);
+      contactMsgWindows.put(metaContact,msgWindow);
+      ChatPanel chatPanel=msgWindow.createChat(metaContact,contactStatus,sourceContact);
+      chatPanel.loadHistory();
+      chatPanel.processMessage(metaContact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,sourceMessage.getContent());
+      chatPanel.processMessage(metaContact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,errorMsg);
+      if (Constants.AUTO_POPUP_NEW_MESSAGE) {
+        msgWindow.addChat(chatPanel);
+        msgWindow.pack();
+        msgWindow.setVisible(true);
+        chatPanel.setCaretToEnd();
+      }
+    }
+  }
+ else {
+    if (tabbedChatWindow == null) {
+      tabbedChatWindow=new ChatWindow(mainFrame);
+      tabbedChatWindow.addWindowListener(new WindowAdapter(){
+        public void windowClosing(        WindowEvent e){
+          tabbedChatWindow=null;
+        }
+      }
+);
+    }
+    Hashtable contactTabsTable=tabbedChatWindow.getContactChatsTable();
+    ChatPanel chatPanel;
+    if (contactTabsTable.get(metaContact.getMetaUID()) != null) {
+      chatPanel=tabbedChatWindow.getChatPanel(metaContact);
+      chatPanel.refreshWriteArea();
+      chatPanel.processMessage(metaContact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,sourceMessage.getContent());
+      chatPanel.processMessage(metaContact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,errorMsg);
+      if (tabbedChatWindow.getState() == JFrame.ICONIFIED) {
+        if (tabbedChatWindow.getTabCount() > 1) {
+          tabbedChatWindow.setSelectedContactTab(metaContact);
+        }
+        if (!tabbedChatWindow.getTitle().startsWith("*")) {
+          tabbedChatWindow.setTitle("*" + tabbedChatWindow.getTitle());
+        }
+      }
+ else {
+        if (tabbedChatWindow.getTabCount() > 1) {
+          tabbedChatWindow.highlightTab(metaContact);
+        }
+        if (tabbedChatWindow.isVisible())         tabbedChatWindow.toFront();
+ else         tabbedChatWindow.setVisible(true);
+      }
+    }
+ else {
+      chatPanel=tabbedChatWindow.createChat(metaContact,contactStatus,sourceContact);
+      chatPanel.loadHistory();
+      chatPanel.processMessage(metaContact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,sourceMessage.getContent());
+      chatPanel.processMessage(metaContact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,errorMsg);
+      if (Constants.AUTO_POPUP_NEW_MESSAGE) {
+        tabbedChatWindow.addChatTab(chatPanel);
+        if (tabbedChatWindow.isVisible()) {
+          if (tabbedChatWindow.getState() == JFrame.ICONIFIED)           tabbedChatWindow.setState(JFrame.NORMAL);
+          tabbedChatWindow.toFront();
+        }
+ else         tabbedChatWindow.setVisible(true);
+        chatPanel.setCaretToEnd();
+        tabbedChatWindow.getCurrentChatPanel().requestFocusInWriteArea();
+        if (tabbedChatWindow.getTabCount() > 1) {
+          tabbedChatWindow.highlightTab(metaContact);
+        }
+      }
+    }
+  }
 }
