@@ -1,0 +1,22 @@
+{
+  TreeSet result=new TreeSet(new MessageEventComparator());
+  Iterator iter=contact.getContacts();
+  while (iter.hasNext()) {
+    Contact item=(Contact)iter.next();
+    try {
+      History history=this.getHistory(null,item);
+      HistoryReader reader=history.getReader();
+      Iterator recs=reader.getLastRecordsBefore(date,count);
+      while (recs.hasNext()) {
+        result.add(convertHistoryRecordToMessageEvent((HistoryRecord)recs.next(),item));
+      }
+    }
+ catch (    IOException e) {
+      logger.error("Could not read history",e);
+    }
+  }
+  LinkedList resultAsList=new LinkedList(result);
+  int startIndex=resultAsList.size() - count;
+  if (startIndex < 0)   startIndex=0;
+  return resultAsList.subList(startIndex,resultAsList.size());
+}
