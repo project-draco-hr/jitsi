@@ -1,19 +1,24 @@
 {
-  if (!getCurrentChatPanel().isWriteAreaEmpty()) {
-    SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("nonEmptyChatWindowClose"));
-    int answer=JOptionPane.showConfirmDialog(ChatWindow.this,msgText,Messages.getString("warning"),JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
-    if (answer == JOptionPane.OK_OPTION) {
-      closeChat(immediately);
+  if (isEscaped) {
+    ChatRightButtonMenu chatRightMenu=currentChatPanel.getChatConversationPanel().getRightButtonMenu();
+    WritePanelRightButtonMenu writePanelRightMenu=currentChatPanel.getChatWritePanel().getRightButtonMenu();
+    JMenu selectedMenu=menusPanel.getMainMenuBar().getSelectedMenu();
+    JMenu contactMenu=currentChatPanel.getChatSendPanel().getContactSelectorBox();
+    MenuSelectionManager menuSelectionManager=MenuSelectionManager.defaultManager();
+    if (chatRightMenu.isVisible()) {
+      chatRightMenu.setVisible(false);
     }
-  }
- else   if (System.currentTimeMillis() - getCurrentChatPanel().getLastIncomingMsgTimestamp().getTime() < 2 * 1000) {
-    SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getString("closeChatAfterNewMsg"));
-    int answer=JOptionPane.showConfirmDialog(ChatWindow.this,msgText,Messages.getString("warning"),JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
-    if (answer == JOptionPane.OK_OPTION) {
-      closeChat(immediately);
+ else     if (writePanelRightMenu.isVisible()) {
+      writePanelRightMenu.setVisible(false);
+    }
+ else     if (selectedMenu != null || contactMenu.isPopupMenuVisible() || menusPanel.getMainToolBar().hasSelectedMenus()) {
+      menuSelectionManager.clearSelectedPath();
+    }
+ else {
+      closeWindow(false);
     }
   }
  else {
-    closeChat(immediately);
+    closeWindow(true);
   }
 }
