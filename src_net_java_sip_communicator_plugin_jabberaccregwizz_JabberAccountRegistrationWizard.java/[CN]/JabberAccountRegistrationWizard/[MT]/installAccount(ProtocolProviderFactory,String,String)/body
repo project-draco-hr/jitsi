@@ -6,12 +6,20 @@
   accountProperties.put(ProtocolProviderFactory.SERVER_ADDRESS,registration.getServerAddress());
   accountProperties.put(ProtocolProviderFactory.SERVER_PORT,String.valueOf(registration.getPort()));
   accountProperties.put("SEND_KEEP_ALIVE",String.valueOf(registration.isSendKeepAlive()));
-  if (protocolProvider != null) {
+  if (isModification) {
     providerFactory.uninstallAccount(protocolProvider.getAccountID());
     this.protocolProvider=null;
   }
-  AccountID accountID=providerFactory.installAccount(user,accountProperties);
-  ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
-  ProtocolProviderService protocolProvider=(ProtocolProviderService)JabberAccRegWizzActivator.bundleContext.getService(serRef);
+  try {
+    AccountID accountID=providerFactory.installAccount(user,accountProperties);
+    ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
+    protocolProvider=(ProtocolProviderService)JabberAccRegWizzActivator.bundleContext.getService(serRef);
+  }
+ catch (  IllegalArgumentException e) {
+    JOptionPane.showMessageDialog(null,e.getMessage());
+  }
+catch (  IllegalStateException e) {
+    JOptionPane.showMessageDialog(null,e.getMessage());
+  }
   return protocolProvider;
 }
