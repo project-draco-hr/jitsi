@@ -15,8 +15,60 @@
     this.messageWindow.getCurrentChatPanel().paste();
   }
  else   if (buttonText.equalsIgnoreCase("previous")) {
+    if (chatPanel == null) {
+      this.chatPanel=this.messageWindow.getCurrentChatPanel();
+      this.conversationPanel=this.chatPanel.getChatConversationPanel();
+    }
+    new Thread(){
+      public void run(){
+        MessageHistoryService msgHistory=GuiActivator.getMsgHistoryService();
+        MetaContact metaContact=chatPanel.getMetaContact();
+        Collection c=msgHistory.findLastMessagesBefore(metaContact,conversationPanel.getPageFirstMsgTimestamp(),MESSAGES_PER_PAGE);
+        if (c.size() > 0) {
+          SwingUtilities.invokeLater(new HistoryMessagesLoader(c,metaContact));
+          Iterator i=c.iterator();
+          Object lastMessageObject=null;
+          Date lastMessageTimeStamp=null;
+          while (i.hasNext()) {
+            Object o=i.next();
+            if (!i.hasNext()) {
+              lastMessageObject=o;
+            }
+          }
+          if (lastMessageObject instanceof MessageDeliveredEvent) {
+            MessageDeliveredEvent evt=(MessageDeliveredEvent)lastMessageObject;
+            lastMessageTimeStamp=evt.getTimestamp();
+          }
+ else           if (lastMessageObject instanceof MessageReceivedEvent) {
+            MessageReceivedEvent evt=(MessageReceivedEvent)lastMessageObject;
+            lastMessageTimeStamp=evt.getTimestamp();
+          }
+          if (lastPageTimestamp == null)           lastPageTimestamp=lastMessageTimeStamp;
+        }
+      }
+    }
+.start();
   }
  else   if (buttonText.equalsIgnoreCase("next")) {
+    if (chatPanel == null) {
+      this.chatPanel=this.messageWindow.getCurrentChatPanel();
+      this.conversationPanel=this.chatPanel.getChatConversationPanel();
+    }
+    new Thread(){
+      public void run(){
+        MessageHistoryService msgHistory=GuiActivator.getMsgHistoryService();
+        MetaContact metaContact=chatPanel.getMetaContact();
+        Collection c;
+        if (lastPageTimestamp.compareTo(conversationPanel.getPageLastMsgTimestamp()) == 0) {
+          c=msgHistory.findByPeriod(metaContact,lastPageTimestamp,new Date(System.currentTimeMillis()));
+        }
+ else {
+          c=msgHistory.findFirstMessagesAfter(metaContact,conversationPanel.getPageLastMsgTimestamp(),MESSAGES_PER_PAGE);
+        }
+        if (c.size() > 0)         SwingUtilities.invokeLater(new HistoryMessagesLoader(c,metaContact));
+      }
+    }
+.start();
   }
  else   if (buttonText.equalsIgnoreCase("sendFile")) {
   }
