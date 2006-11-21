@@ -1,0 +1,33 @@
+{
+  Response optionsOK=null;
+  try {
+    optionsOK=provider.getMessageFactory().createResponse(Response.OK,requestEvent.getRequest());
+    Iterator supportedMethods=provider.getSupportedMethods().iterator();
+    while (supportedMethods.hasNext()) {
+      String method=(String)supportedMethods.next();
+      if (method.equals(Request.REGISTER))       continue;
+      optionsOK.addHeader(provider.getHeaderFactory().createAllowHeader(method));
+      optionsOK.setHeader(provider.getSipCommUserAgentHeader());
+    }
+  }
+ catch (  ParseException ex) {
+    logger.warn("Failed to create an incoming OPTIONS request",ex);
+    return;
+  }
+  try {
+    ServerTransaction sTran=requestEvent.getServerTransaction();
+    if (sTran == null) {
+      SipProvider sipProvider=(SipProvider)requestEvent.getSource();
+      sTran=sipProvider.getNewServerTransaction(requestEvent.getRequest());
+    }
+    sTran.sendResponse(optionsOK);
+  }
+ catch (  InvalidArgumentException ex) {
+    logger.warn("Failed to send an incoming OPTIONS request",ex);
+    return;
+  }
+catch (  SipException ex) {
+    logger.warn("Failed to send an incoming OPTIONS request",ex);
+    return;
+  }
+}
