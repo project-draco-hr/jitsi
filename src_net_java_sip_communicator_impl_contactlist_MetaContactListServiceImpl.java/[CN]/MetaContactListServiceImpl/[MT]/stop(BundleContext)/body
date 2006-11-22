@@ -5,12 +5,19 @@
   while (providers.hasNext()) {
     ProtocolProviderService pp=(ProtocolProviderService)providers.next();
     OperationSetPersistentPresence opSetPersPresence=(OperationSetPersistentPresence)pp.getOperationSet(OperationSetPersistentPresence.class);
-    opSetPersPresence.removeSubscriptionListener(clSubscriptionEventHandler);
-    opSetPersPresence.removeServerStoredGroupChangeListener(clGroupEventHandler);
-    if (opSetPersPresence == null) {
-      OperationSetPresence opSetPresence=(OperationSetPresence)pp.getOperationSet(OperationSetPresence.class);
+    if (opSetPersPresence != null) {
       opSetPersPresence.removeSubscriptionListener(clSubscriptionEventHandler);
+      opSetPersPresence.removeServerStoredGroupChangeListener(clGroupEventHandler);
+    }
+ else {
+      OperationSetPresence opSetPresence=(OperationSetPresence)pp.getOperationSet(OperationSetPresence.class);
+      if (opSetPresence != null) {
+        opSetPersPresence.removeSubscriptionListener(clSubscriptionEventHandler);
+      }
     }
   }
   currentlyInstalledProviders.clear();
+  if (storageManager != null) {
+    storageManager.stop();
+  }
 }
