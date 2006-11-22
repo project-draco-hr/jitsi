@@ -37,7 +37,15 @@ catch (    IOException exc) {
   if (!initialized)   throw new MediaException("Failed to bind to a local port in " + bindRetriesStr + " tries.",MediaException.INTERNAL_ERROR);
   BufferControl bc=(BufferControl)rtpManager.getControl(BufferControl.class.getName());
   if (bc != null) {
-    long buff=bc.setBufferLength(500);
+    long buff=500;
+    String buffStr=MediaActivator.getConfigurationService().getString(PROPERTY_NAME_RECEIVE_BUFFER_LENGTH);
+    try {
+      if (buffStr != null && buffStr.length() > 0)       buff=Long.parseLong(buffStr);
+    }
+ catch (    NumberFormatException exc) {
+      logger.warn(buffStr + " is not a valid receive buffer value (integer).",exc);
+    }
+    buff=bc.setBufferLength(buff);
     logger.trace("set receiver buffer len to=" + buff);
     bc.setEnabledThreshold(true);
     bc.setMinimumThreshold(100);
