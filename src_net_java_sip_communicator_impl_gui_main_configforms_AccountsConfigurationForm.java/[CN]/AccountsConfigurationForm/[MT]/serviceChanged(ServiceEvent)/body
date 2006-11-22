@@ -1,9 +1,9 @@
 {
-  Object service=GuiActivator.bundleContext.getService(event.getServiceReference());
-  if (!(service instanceof ProtocolProviderService)) {
+  Object sourceService=GuiActivator.bundleContext.getService(event.getServiceReference());
+  if (!(sourceService instanceof ProtocolProviderService)) {
     return;
   }
-  ProtocolProviderService pps=(ProtocolProviderService)service;
+  ProtocolProviderService pps=(ProtocolProviderService)sourceService;
   if (event.getType() == ServiceEvent.REGISTERED) {
     String pName=pps.getProtocolName();
     JLabel protocolLabel=new JLabel();
@@ -12,6 +12,18 @@
     tableModel.addRow(new Object[]{pps,protocolLabel,pps.getAccountID().getUserID()});
   }
  else   if (event.getType() == ServiceEvent.UNREGISTERING) {
+    ProtocolProviderFactory sourceFactory=null;
+    ServiceReference[] allBundleServices=event.getServiceReference().getBundle().getRegisteredServices();
+    for (int i=0; i < allBundleServices.length; i++) {
+      Object service=GuiActivator.bundleContext.getService(allBundleServices[i]);
+      if (service instanceof ProtocolProviderFactory) {
+        sourceFactory=(ProtocolProviderFactory)service;
+        break;
+      }
+    }
+    if (sourceFactory.getRegisteredAccounts().contains(pps.getAccountID())) {
+      return;
+    }
     tableModel.removeRow(tableModel.rowIndexOf(pps));
   }
 }
