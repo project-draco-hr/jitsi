@@ -4,9 +4,24 @@
   localHostFinderSocket.disconnect();
   if (localHost.isAnyLocalAddress()) {
     try {
-      localHost=InetAddress.getLocalHost();
+      if (intendedDestination instanceof Inet6Address) {
+        Enumeration interfaces=NetworkInterface.getNetworkInterfaces();
+        while (interfaces.hasMoreElements()) {
+          NetworkInterface iface=(NetworkInterface)interfaces.nextElement();
+          Enumeration addresses=iface.getInetAddresses();
+          while (addresses.hasMoreElements()) {
+            InetAddress address=(InetAddress)addresses.nextElement();
+            if (address instanceof Inet6Address) {
+              if (!address.isAnyLocalAddress() && !address.isLinkLocalAddress() && !address.isSiteLocalAddress()&& !address.isLoopbackAddress()) {
+                return address;
+              }
+            }
+          }
+        }
+      }
+ else       localHost=InetAddress.getLocalHost();
     }
- catch (    UnknownHostException ex) {
+ catch (    Exception ex) {
       logger.warn("Failed to get localhost ",ex);
     }
   }
