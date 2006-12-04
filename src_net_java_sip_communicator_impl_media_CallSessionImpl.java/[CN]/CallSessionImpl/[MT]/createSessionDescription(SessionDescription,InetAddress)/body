@@ -4,8 +4,30 @@
     Version v=mediaServCallback.getSdpFactory().createVersion(0);
     sessDescr.setVersion(v);
     NetworkAddressManagerService netAddressManager=MediaActivator.getNetworkAddressManagerService();
-    InetSocketAddress publicVideoAddress=netAddressManager.getPublicAddressFor(getVideoPort());
-    InetSocketAddress publicAudioAddress=netAddressManager.getPublicAddressFor(getAudioPort());
+    InetSocketAddress publicVideoAddress=null;
+    InetSocketAddress publicAudioAddress=null;
+    if (offer != null) {
+      Connection c=offer.getConnection();
+      if (c != null) {
+        try {
+          intendedDestination=InetAddress.getByName(c.getAddress());
+        }
+ catch (        SdpParseException ex) {
+          logger.warn("error reading remote sdp. " + c.toString() + " is not a valid connection parameter.");
+        }
+catch (        UnknownHostException ex) {
+          logger.warn("error reading remote sdp. " + c.toString() + " does not contain a valid address.");
+        }
+      }
+    }
+    if (intendedDestination != null) {
+      publicVideoAddress=netAddressManager.getPublicAddressFor(intendedDestination,getVideoPort());
+      publicAudioAddress=netAddressManager.getPublicAddressFor(intendedDestination,getAudioPort());
+    }
+ else {
+      publicVideoAddress=netAddressManager.getPublicAddressFor(getVideoPort());
+      publicAudioAddress=netAddressManager.getPublicAddressFor(getAudioPort());
+    }
     InetAddress publicIpAddress=publicAudioAddress.getAddress();
     String addrType=publicIpAddress instanceof Inet6Address ? Connection.IP6 : Connection.IP4;
     Origin o=mediaServCallback.getSdpFactory().createOrigin(call.getProtocolProvider().getAccountID().getUserID(),0,0,"IN",addrType,publicIpAddress.getHostAddress());
