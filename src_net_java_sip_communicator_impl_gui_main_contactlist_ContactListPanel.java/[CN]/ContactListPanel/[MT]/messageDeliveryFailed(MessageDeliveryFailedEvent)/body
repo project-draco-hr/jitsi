@@ -19,27 +19,28 @@
  else {
     errorMsg=Messages.getString("msgDeliveryFailedUnknownError",evt.getDestinationContact().getDisplayName());
   }
+  ChatWindow chatWindow;
   if (!Constants.TABBED_CHAT_WINDOW) {
-    if (contactMsgWindows.containsKey(metaContact)) {
-      ChatWindow msgWindow=(ChatWindow)contactMsgWindows.get(metaContact);
-      ChatPanel chatPanel=msgWindow.getCurrentChatPanel();
+    if (chatWindows.containsKey(metaContact)) {
+      chatWindow=(ChatWindow)chatWindows.get(metaContact);
+      ChatPanel chatPanel=chatWindow.getCurrentChatPanel();
       chatPanel.refreshWriteArea();
       chatPanel.processMessage(metaContact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,sourceMessage.getContent());
       chatPanel.processMessage(metaContact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,errorMsg);
-      if (msgWindow.getState() == JFrame.ICONIFIED) {
-        msgWindow.setTitle("*" + msgWindow.getTitle());
+      if (chatWindow.getState() == JFrame.ICONIFIED) {
+        chatWindow.setTitle("*" + chatWindow.getTitle());
       }
       if (Constants.AUTO_POPUP_NEW_MESSAGE) {
-        if (msgWindow.isVisible()) {
-          if (msgWindow.getState() == JFrame.ICONIFIED)           msgWindow.setState(JFrame.NORMAL);
-          msgWindow.toFront();
+        if (chatWindow.isVisible()) {
+          if (chatWindow.getState() == JFrame.ICONIFIED)           chatWindow.setState(JFrame.NORMAL);
+          chatWindow.toFront();
         }
- else         msgWindow.setVisible(true);
+ else         chatWindow.setVisible(true);
       }
     }
  else {
       ChatWindow msgWindow=new ChatWindow(mainFrame);
-      contactMsgWindows.put(metaContact,msgWindow);
+      chatWindows.put(metaContact,msgWindow);
       ChatPanel chatPanel=msgWindow.createChat(metaContact,contactStatus,sourceContact);
       chatPanel.loadHistory();
       chatPanel.processMessage(metaContact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,sourceMessage.getContent());
@@ -53,54 +54,50 @@
     }
   }
  else {
-    if (tabbedChatWindow == null) {
-      tabbedChatWindow=new ChatWindow(mainFrame);
-      tabbedChatWindow.addWindowListener(new WindowAdapter(){
-        public void windowClosing(        WindowEvent e){
-          tabbedChatWindow=null;
-        }
-      }
-);
+    if (chatWindows.isEmpty()) {
+      chatWindow=new ChatWindow(mainFrame);
     }
-    Hashtable contactTabsTable=tabbedChatWindow.getContactChatsTable();
+ else {
+      chatWindow=(ChatWindow)chatWindows.elements().nextElement();
+    }
     ChatPanel chatPanel;
-    if (contactTabsTable.get(metaContact.getMetaUID()) != null) {
-      chatPanel=tabbedChatWindow.getChatPanel(metaContact);
+    if (chatWindow.containsContactChat(metaContact)) {
+      chatPanel=chatWindow.getChatPanel(metaContact);
       chatPanel.refreshWriteArea();
       chatPanel.processMessage(metaContact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,sourceMessage.getContent());
       chatPanel.processMessage(metaContact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,errorMsg);
-      if (tabbedChatWindow.getState() == JFrame.ICONIFIED) {
-        if (tabbedChatWindow.getTabCount() > 1) {
-          tabbedChatWindow.setSelectedContactTab(metaContact);
+      if (chatWindow.getState() == JFrame.ICONIFIED) {
+        if (chatWindow.getTabCount() > 1) {
+          chatWindow.setSelectedContactTab(metaContact);
         }
-        if (!tabbedChatWindow.getTitle().startsWith("*")) {
-          tabbedChatWindow.setTitle("*" + tabbedChatWindow.getTitle());
+        if (!chatWindow.getTitle().startsWith("*")) {
+          chatWindow.setTitle("*" + chatWindow.getTitle());
         }
       }
  else {
-        if (tabbedChatWindow.getTabCount() > 1) {
-          tabbedChatWindow.highlightTab(metaContact);
+        if (chatWindow.getTabCount() > 1) {
+          chatWindow.highlightTab(metaContact);
         }
-        if (tabbedChatWindow.isVisible())         tabbedChatWindow.toFront();
- else         tabbedChatWindow.setVisible(true);
+        if (chatWindow.isVisible())         chatWindow.toFront();
+ else         chatWindow.setVisible(true);
       }
     }
  else {
-      chatPanel=tabbedChatWindow.createChat(metaContact,contactStatus,sourceContact);
+      chatPanel=chatWindow.createChat(metaContact,contactStatus,sourceContact);
       chatPanel.loadHistory();
       chatPanel.processMessage(metaContact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,sourceMessage.getContent());
       chatPanel.processMessage(metaContact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,errorMsg);
       if (Constants.AUTO_POPUP_NEW_MESSAGE) {
-        tabbedChatWindow.addChatTab(chatPanel);
-        if (tabbedChatWindow.isVisible()) {
-          if (tabbedChatWindow.getState() == JFrame.ICONIFIED)           tabbedChatWindow.setState(JFrame.NORMAL);
-          tabbedChatWindow.toFront();
+        chatWindow.addChatTab(chatPanel);
+        if (chatWindow.isVisible()) {
+          if (chatWindow.getState() == JFrame.ICONIFIED)           chatWindow.setState(JFrame.NORMAL);
+          chatWindow.toFront();
         }
- else         tabbedChatWindow.setVisible(true);
+ else         chatWindow.setVisible(true);
         chatPanel.setCaretToEnd();
-        tabbedChatWindow.getCurrentChatPanel().requestFocusInWriteArea();
-        if (tabbedChatWindow.getTabCount() > 1) {
-          tabbedChatWindow.highlightTab(metaContact);
+        chatWindow.getCurrentChatPanel().requestFocusInWriteArea();
+        if (chatWindow.getTabCount() > 1) {
+          chatWindow.highlightTab(metaContact);
         }
       }
     }
