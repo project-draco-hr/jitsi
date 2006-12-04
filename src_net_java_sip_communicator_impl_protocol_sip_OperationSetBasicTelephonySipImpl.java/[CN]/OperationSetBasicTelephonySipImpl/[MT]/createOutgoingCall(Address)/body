@@ -21,7 +21,19 @@
   try {
     CallSession callSession=SipActivator.getMediaService().createCallSession(callParticipant.getCall());
     ((CallSipImpl)callParticipant.getCall()).setMediaCallSession(callSession);
-    invite.setContent(callSession.createSdpOffer(),contentTypeHeader);
+    javax.sip.address.URI calleeURI=calleeAddress.getURI();
+    InetAddress intendedDestination=null;
+    if (calleeURI.isSipURI()) {
+      String host=((SipURI)calleeURI).getHost();
+      try {
+        intendedDestination=InetAddress.getByName(host);
+        invite.setContent(callSession.createSdpOffer(intendedDestination),contentTypeHeader);
+      }
+ catch (      UnknownHostException ex) {
+        logger.warn("Failed to obtain an InetAddress for " + host,ex);
+      }
+    }
+    invite.setContent(callSession.createSdpOffer(intendedDestination),contentTypeHeader);
   }
  catch (  ParseException ex) {
     logger.error("Failed to parse sdp data while creating invite request!",ex);
