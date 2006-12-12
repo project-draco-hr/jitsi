@@ -7,28 +7,23 @@
   }
  else   if (buttonName.equals("config")) {
     configDialog=GuiActivator.getUIService().getConfigurationManager();
-    configDialog.showDialog();
+    configDialog.show();
   }
  else   if (buttonName.equals("search")) {
     ContactList contactList=mainFrame.getContactListPanel().getContactList();
     ContactListModel listModel=(ContactListModel)contactList.getModel();
-    if (listModel.showOffline()) {
-      listModel.setShowOffline(false);
+    Object selectedObject=null;
+    int currentlySelectedIndex=contactList.getSelectedIndex();
+    if (currentlySelectedIndex != -1) {
+      selectedObject=listModel.getElementAt(currentlySelectedIndex);
     }
- else {
-      Object selectedObject=null;
-      int currentlySelectedIndex=contactList.getSelectedIndex();
-      if (currentlySelectedIndex != -1) {
-        selectedObject=listModel.getElementAt(currentlySelectedIndex);
+    listModel.setShowOffline(!listModel.showOffline());
+    if (selectedObject != null) {
+      if (selectedObject instanceof MetaContact) {
+        contactList.setSelectedIndex(listModel.indexOf((MetaContact)selectedObject));
       }
-      listModel.setShowOffline(true);
-      if (selectedObject != null) {
-        if (selectedObject instanceof MetaContact) {
-          contactList.setSelectedIndex(listModel.indexOf((MetaContact)selectedObject));
-        }
  else {
-          contactList.setSelectedIndex(listModel.indexOf((MetaContactGroup)selectedObject));
-        }
+        contactList.setSelectedIndex(listModel.indexOf((MetaContactGroup)selectedObject));
       }
     }
   }
