@@ -1,0 +1,31 @@
+{
+  logger.debug("Starting the Growl Notification implementation.");
+  this.bundleContext=bc;
+  try {
+    Constructor constructor=Growl.class.getConstructor(new Class[]{String.class,String.class,String.class});
+    notifier=(Growl)constructor.newInstance(new Object[]{"SIP Communicator",allNotif,defaultNotif});
+    notifier.register();
+    notifyMethod=Growl.class.getMethod("notifyGrowlOf",new Class[]{String.class,String.class,String.class});
+    notifyGrowlOf("SIP Communicator Started","Welcome to SIP Communicator","http://www.sip-communicator.org");
+  }
+ catch (  Exception ex) {
+    logger.error("Could not send the message to Growl",ex);
+    throw ex;
+  }
+  bc.addServiceListener(this);
+  ServiceReference[] protocolProviderRefs=null;
+  try {
+    protocolProviderRefs=bc.getServiceReferences(ProtocolProviderService.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException ex) {
+    logger.error("Error while retrieving service refs",ex);
+    return;
+  }
+  if (protocolProviderRefs != null) {
+    logger.debug("Found " + protocolProviderRefs.length + " already installed providers.");
+    for (int i=0; i < protocolProviderRefs.length; i++) {
+      ProtocolProviderService provider=(ProtocolProviderService)bc.getService(protocolProviderRefs[i]);
+      this.handleProviderAdded(provider);
+    }
+  }
+}
