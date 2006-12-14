@@ -1,0 +1,39 @@
+{
+  int bit=0;
+  int cnt=0;
+  int off=0;
+  int c;
+  while ((len * 8 - bit) >= 5) {
+    off=speex_get_wb_sz_at(data,len,bit);
+    if (off < 0) {
+      break;
+    }
+    bit+=off;
+    if ((len * 8 - bit) < 5) {
+      break;
+    }
+    c=get_n_bits_at(data,5,bit);
+    bit+=5;
+    if (c == 15) {
+      break;
+    }
+ else     if (c == 14) {
+      c=get_n_bits_at(data,4,bit);
+      bit+=4;
+      bit+=SpeexInBandSz[c];
+    }
+ else     if (c == 13) {
+      c=get_n_bits_at(data,5,bit);
+      bit+=5;
+      bit+=c * 8;
+    }
+ else     if (c > 8) {
+      break;
+    }
+ else {
+      bit+=SpeexSubModeSz[c] - 5;
+      cnt+=160;
+    }
+  }
+  return cnt;
+}
