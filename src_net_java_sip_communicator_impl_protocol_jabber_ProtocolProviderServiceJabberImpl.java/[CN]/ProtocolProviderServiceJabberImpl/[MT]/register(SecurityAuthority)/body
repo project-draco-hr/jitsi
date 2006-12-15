@@ -7,7 +7,15 @@
  catch (  XMPPException ex) {
     logger.error("Error registering",ex);
     int reason=RegistrationStateChangeEvent.REASON_NOT_SPECIFIED;
-    if (ex.getWrappedThrowable() instanceof UnknownHostException)     reason=RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND;
-    fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,reason,null);
+    RegistrationState regState=RegistrationState.UNREGISTERED;
+    if (ex.getWrappedThrowable() instanceof UnknownHostException) {
+      reason=RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND;
+      regState=RegistrationState.CONNECTION_FAILED;
+    }
+ else     if ((connection.getSASLAuthentication() != null && connection.getSASLAuthentication().isAuthenticated()) || !connection.isAuthenticated()) {
+      reason=RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED;
+      regState=RegistrationState.AUTHENTICATION_FAILED;
+    }
+    fireRegistrationStateChanged(getRegistrationState(),regState,reason,null);
   }
 }
