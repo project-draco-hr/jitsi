@@ -1,5 +1,6 @@
 {
-  if (getRegistrationState() != RegistrationState.REGISTERED) {
+  if (getRegistrationState() == RegistrationState.UNREGISTERED) {
+    logger.trace("Trying to unregister when already unresgistered");
     return;
   }
   cancelPendingRegistrations();
@@ -40,6 +41,10 @@
   try {
     unregisterTransaction.sendRequest();
     logger.debug("sent request: " + unregisterRequest);
+    if (!getRegistrationState().equals(RegistrationState.REGISTERED)) {
+      logger.trace("Setting state to UNREGISTERED.");
+      setRegistrationState(RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,null);
+    }
   }
  catch (  SipException ex) {
     logger.error("Failed to send unregister request",ex);
