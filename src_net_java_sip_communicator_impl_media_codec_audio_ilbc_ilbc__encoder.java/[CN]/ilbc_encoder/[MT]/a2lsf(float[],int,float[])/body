@@ -1,0 +1,89 @@
+{
+  float[] steps={(float)0.00635f,(float)0.003175f,(float)0.0015875f,(float)0.00079375f};
+  float step;
+  int step_idx;
+  int lsp_index;
+  float[] p=new float[ilbc_constants.LPC_HALFORDER];
+  float[] q=new float[ilbc_constants.LPC_HALFORDER];
+  float[] p_pre=new float[ilbc_constants.LPC_HALFORDER];
+  float[] q_pre=new float[ilbc_constants.LPC_HALFORDER];
+  int old_p=0, old_q=1;
+  float[] olds=new float[2];
+  int old;
+  float[] pq_coef;
+  float omega, old_omega;
+  int i;
+  float hlp, hlp1, hlp2, hlp3, hlp4, hlp5;
+  for (i=0; i < ilbc_constants.LPC_HALFORDER; i++) {
+    p[i]=(float)-1.0f * (a[i + 1] + a[ilbc_constants.LPC_FILTERORDER - i]);
+    q[i]=a[ilbc_constants.LPC_FILTERORDER - i] - a[i + 1];
+  }
+  p_pre[0]=(float)-1.0f - p[0];
+  p_pre[1]=-p_pre[0] - p[1];
+  p_pre[2]=-p_pre[1] - p[2];
+  p_pre[3]=-p_pre[2] - p[3];
+  p_pre[4]=-p_pre[3] - p[4];
+  p_pre[4]=p_pre[4] / 2;
+  q_pre[0]=(float)1.0f - q[0];
+  q_pre[1]=q_pre[0] - q[1];
+  q_pre[2]=q_pre[1] - q[2];
+  q_pre[3]=q_pre[2] - q[3];
+  q_pre[4]=q_pre[3] - q[4];
+  q_pre[4]=q_pre[4] / 2;
+  omega=0.0f;
+  old_omega=0.0f;
+  olds[old_p]=ilbc_constants.DOUBLE_MAX;
+  olds[old_q]=ilbc_constants.DOUBLE_MAX;
+  for (lsp_index=0; lsp_index < ilbc_constants.LPC_FILTERORDER; lsp_index++) {
+    if ((lsp_index & 0x1) == 0) {
+      pq_coef=p_pre;
+      old=old_p;
+    }
+ else {
+      pq_coef=q_pre;
+      old=old_q;
+    }
+    for (step_idx=0, step=steps[step_idx]; step_idx < ilbc_constants.LSF_NUMBER_OF_STEPS; ) {
+      hlp=(float)Math.cos(omega * ilbc_constants.TWO_PI);
+      hlp1=2.0f * hlp + pq_coef[0];
+      hlp2=2.0f * hlp * hlp1 - (float)1.0 + pq_coef[1];
+      hlp3=2.0f * hlp * hlp2 - hlp1 + pq_coef[2];
+      hlp4=2.0f * hlp * hlp3 - hlp2 + pq_coef[3];
+      hlp5=hlp * hlp4 - hlp3 + pq_coef[4];
+      if (((hlp5 * (olds[old])) <= 0.0f) || (omega >= 0.5)) {
+        if (step_idx == (ilbc_constants.LSF_NUMBER_OF_STEPS - 1)) {
+          if ((float)Math.abs(hlp5) >= Math.abs(olds[old])) {
+            freq[freq_idx + lsp_index]=omega - step;
+          }
+ else {
+            freq[freq_idx + lsp_index]=omega;
+          }
+          if ((olds[old]) >= 0.0f) {
+            olds[old]=-1.0f * ilbc_constants.DOUBLE_MAX;
+          }
+ else {
+            olds[old]=ilbc_constants.DOUBLE_MAX;
+          }
+          omega=old_omega;
+          step_idx=0;
+          step_idx=ilbc_constants.LSF_NUMBER_OF_STEPS;
+        }
+ else {
+          if (step_idx == 0) {
+            old_omega=omega;
+          }
+          step_idx++;
+          omega-=steps[step_idx];
+          step=steps[step_idx];
+        }
+      }
+ else {
+        olds[old]=hlp5;
+        omega+=step;
+      }
+    }
+  }
+  for (i=0; i < ilbc_constants.LPC_FILTERORDER; i++) {
+    freq[freq_idx + i]=freq[freq_idx + i] * ilbc_constants.TWO_PI;
+  }
+}

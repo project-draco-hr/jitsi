@@ -1,0 +1,60 @@
+{
+  int pu, ps;
+  int i, j, k, q, filterlength, hfl2;
+  int[] polyp=new int[ilbc_constants.ENH_UPS0];
+  int pp;
+  filterlength=2 * hfl + 1;
+  if (filterlength > dim1) {
+    hfl2=(int)(dim1 / 2);
+    for (j=0; j < ilbc_constants.ENH_UPS0; j++) {
+      polyp[j]=j * filterlength + hfl - hfl2;
+    }
+    hfl=hfl2;
+    filterlength=2 * hfl + 1;
+  }
+ else {
+    for (j=0; j < ilbc_constants.ENH_UPS0; j++) {
+      polyp[j]=j * filterlength;
+    }
+  }
+  pu=0;
+  for (i=hfl; i < filterlength; i++) {
+    for (j=0; j < ilbc_constants.ENH_UPS0; j++) {
+      useq1[pu]=0.0f;
+      pp=polyp[j];
+      ps=i;
+      for (k=0; k <= i; k++) {
+        useq1[pu]+=seq1[ps] * ilbc_constants.polyphaserTbl[pp];
+        ps--;
+        pp++;
+      }
+      pu++;
+    }
+  }
+  for (i=filterlength; i < dim1; i++) {
+    for (j=0; j < ilbc_constants.ENH_UPS0; j++) {
+      useq1[pu]=0.0f;
+      pp=polyp[j];
+      ps=i;
+      for (k=0; k < filterlength; k++) {
+        useq1[pu]+=seq1[ps] * ilbc_constants.polyphaserTbl[pp];
+        ps--;
+        pp++;
+      }
+      pu++;
+    }
+  }
+  for (q=1; q <= hfl; q++) {
+    for (j=0; j < ilbc_constants.ENH_UPS0; j++) {
+      useq1[pu]=0.0f;
+      pp=polyp[j] + q;
+      ps=dim1 - 1;
+      for (k=0; k < filterlength - q; k++) {
+        useq1[pu]+=seq1[ps] * ilbc_constants.polyphaserTbl[pp];
+        ps--;
+        pp++;
+      }
+      pu++;
+    }
+  }
+}

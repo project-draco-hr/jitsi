@@ -1,0 +1,64 @@
+{
+  float[] reverseDecresidual=new float[ilbc_constants.BLOCKL_MAX];
+  float[] mem=new float[ilbc_constants.CB_MEML];
+  int k, meml_gotten, Nfor, Nback, i;
+  int diff, start_pos;
+  int subcount, subframe;
+  diff=ilbc_constants.STATE_LEN - this.ULP_inst.state_short_len;
+  if (state_first == 1) {
+    start_pos=(start - 1) * ilbc_constants.SUBL;
+  }
+ else {
+    start_pos=(start - 1) * ilbc_constants.SUBL + diff;
+  }
+  ilbc_common.StateConstructW(idxForMax,idxVec,syntdenum,(start - 1) * (ilbc_constants.LPC_FILTERORDER + 1),decresidual,start_pos,this.ULP_inst.state_short_len);
+  if (state_first != 0) {
+    for (int li=0; li < (ilbc_constants.CB_MEML - this.ULP_inst.state_short_len); li++)     mem[li]=0.0f;
+    System.arraycopy(decresidual,start_pos,mem,ilbc_constants.CB_MEML - this.ULP_inst.state_short_len,this.ULP_inst.state_short_len);
+    ilbc_common.iCBConstruct(decresidual,start_pos + this.ULP_inst.state_short_len,extra_cb_index,0,extra_gain_index,0,mem,ilbc_constants.CB_MEML - ilbc_constants.stMemLTbl,ilbc_constants.stMemLTbl,diff,ilbc_constants.CB_NSTAGES);
+  }
+ else {
+    for (k=0; k < diff; k++) {
+      reverseDecresidual[k]=decresidual[(start + 1) * ilbc_constants.SUBL - 1 - (k + this.ULP_inst.state_short_len)];
+    }
+    meml_gotten=this.ULP_inst.state_short_len;
+    for (k=0; k < meml_gotten; k++) {
+      mem[ilbc_constants.CB_MEML - 1 - k]=decresidual[start_pos + k];
+    }
+    for (int li=0; li < ilbc_constants.CB_MEML - k; li++)     mem[li]=0.0f;
+    ilbc_common.iCBConstruct(reverseDecresidual,0,extra_cb_index,0,extra_gain_index,0,mem,ilbc_constants.CB_MEML - ilbc_constants.stMemLTbl,ilbc_constants.stMemLTbl,diff,ilbc_constants.CB_NSTAGES);
+    for (k=0; k < diff; k++) {
+      decresidual[start_pos - 1 - k]=reverseDecresidual[k];
+    }
+  }
+  subcount=0;
+  Nfor=this.ULP_inst.nsub - start - 1;
+  if (Nfor > 0) {
+    for (int li=0; li < ilbc_constants.CB_MEML - ilbc_constants.STATE_LEN; li++)     mem[li]=0.0f;
+    System.arraycopy(decresidual,(start - 1) * ilbc_constants.SUBL,mem,ilbc_constants.CB_MEML - ilbc_constants.STATE_LEN,ilbc_constants.STATE_LEN);
+    for (subframe=0; subframe < Nfor; subframe++) {
+      ilbc_common.iCBConstruct(decresidual,(start + 1 + subframe) * ilbc_constants.SUBL,cb_index,subcount * ilbc_constants.CB_NSTAGES,gain_index,subcount * ilbc_constants.CB_NSTAGES,mem,ilbc_constants.CB_MEML - ilbc_constants.memLfTbl[subcount],ilbc_constants.memLfTbl[subcount],ilbc_constants.SUBL,ilbc_constants.CB_NSTAGES);
+      System.arraycopy(mem,ilbc_constants.SUBL,mem,0,ilbc_constants.CB_MEML - ilbc_constants.SUBL);
+      System.arraycopy(decresidual,(start + 1 + subframe) * ilbc_constants.SUBL,mem,ilbc_constants.CB_MEML - ilbc_constants.SUBL,ilbc_constants.SUBL);
+      subcount++;
+    }
+  }
+  Nback=start - 1;
+  if (Nback > 0) {
+    meml_gotten=ilbc_constants.SUBL * (this.ULP_inst.nsub + 1 - start);
+    if (meml_gotten > ilbc_constants.CB_MEML) {
+      meml_gotten=ilbc_constants.CB_MEML;
+    }
+    for (k=0; k < meml_gotten; k++) {
+      mem[ilbc_constants.CB_MEML - 1 - k]=decresidual[(start - 1) * ilbc_constants.SUBL + k];
+    }
+    for (int li=0; li < (ilbc_constants.CB_MEML - k); li++)     mem[li]=0.0f;
+    for (subframe=0; subframe < Nback; subframe++) {
+      ilbc_common.iCBConstruct(reverseDecresidual,subframe * ilbc_constants.SUBL,cb_index,subcount * ilbc_constants.CB_NSTAGES,gain_index,subcount * ilbc_constants.CB_NSTAGES,mem,ilbc_constants.CB_MEML - ilbc_constants.memLfTbl[subcount],ilbc_constants.memLfTbl[subcount],ilbc_constants.SUBL,ilbc_constants.CB_NSTAGES);
+      System.arraycopy(mem,ilbc_constants.SUBL,mem,0,ilbc_constants.CB_MEML - ilbc_constants.SUBL);
+      System.arraycopy(reverseDecresidual,subframe * ilbc_constants.SUBL,mem,ilbc_constants.CB_MEML - ilbc_constants.SUBL,ilbc_constants.SUBL);
+      subcount++;
+    }
+    for (i=0; i < ilbc_constants.SUBL * Nback; i++)     decresidual[ilbc_constants.SUBL * Nback - i - 1]=reverseDecresidual[i];
+  }
+}

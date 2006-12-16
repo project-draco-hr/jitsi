@@ -1,0 +1,65 @@
+{
+  int icount, ilow, j, tmpIndex;
+  int pp, ppo, ppi, ppe;
+  float crossDot, alfa;
+  float weighted, measure, nrjRecursive;
+  float ftmp;
+  nrjRecursive=(float)0.0f;
+  pp=1 - low + buffer_idx;
+  for (j=0; j < (low - 5); j++) {
+    nrjRecursive+=(buffer[pp] * buffer[pp]);
+    pp++;
+  }
+  ppe=buffer_idx - low;
+  for (icount=low; icount <= high; icount++) {
+    tmpIndex=startIndex + icount - 20;
+    ilow=icount - 4;
+    nrjRecursive=nrjRecursive + buffer[ppe] * buffer[ppe];
+    ppe--;
+    energy[tmpIndex]=nrjRecursive;
+    crossDot=(float)0.0f;
+    pp=buffer_idx - icount;
+    for (j=0; j < ilow; j++) {
+      crossDot+=target[j] * buffer[pp];
+      pp++;
+    }
+    alfa=(float)0.2;
+    ppo=buffer_idx - 4;
+    ppi=buffer_idx - icount - 4;
+    for (j=ilow; j < icount; j++) {
+      weighted=((float)1.0f - alfa) * (buffer[ppo]) + alfa * (buffer[ppi]);
+      ppo++;
+      ppi++;
+      energy[tmpIndex]+=weighted * weighted;
+      crossDot+=target[j] * weighted;
+      alfa+=(float)0.2;
+    }
+    pp=buffer_idx - icount;
+    for (j=icount; j < ilbc_constants.SUBL; j++) {
+      energy[tmpIndex]+=buffer[pp] * buffer[pp];
+      crossDot+=target[j] * buffer[pp];
+      pp++;
+    }
+    if (energy[tmpIndex] > 0.0f) {
+      invenergy[tmpIndex]=(float)1.0f / (energy[tmpIndex] + ilbc_constants.EPS);
+    }
+ else {
+      invenergy[tmpIndex]=(float)0.0f;
+    }
+    if (stage == 0) {
+      measure=(float)-10000000.0f;
+      if (crossDot > 0.0f) {
+        measure=crossDot * crossDot * invenergy[tmpIndex];
+      }
+    }
+ else {
+      measure=crossDot * crossDot * invenergy[tmpIndex];
+    }
+    ftmp=crossDot * invenergy[tmpIndex];
+    if ((measure > max_measure[0]) && ((float)Math.abs(ftmp) < ilbc_constants.CB_MAXGAIN)) {
+      best_index[0]=tmpIndex;
+      max_measure[0]=measure;
+      gain[0]=ftmp;
+    }
+  }
+}

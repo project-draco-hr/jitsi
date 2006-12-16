@@ -1,0 +1,30 @@
+{
+  float sum, alpha;
+  int m, m_h, i;
+  a[0]=1.0f;
+  if (r[0] < ilbc_constants.EPS) {
+    for (i=0; i < order; i++) {
+      k[i]=0;
+      a[i + 1]=0;
+    }
+  }
+ else {
+    a[1]=k[0]=-r[1] / r[0];
+    alpha=r[0] + r[1] * k[0];
+    for (m=1; m < order; m++) {
+      sum=r[m + 1];
+      for (i=0; i < m; i++) {
+        sum+=a[i + 1] * r[m - i];
+      }
+      k[m]=-sum / alpha;
+      alpha+=k[m] * sum;
+      m_h=(m + 1) >> 1;
+      for (i=0; i < m_h; i++) {
+        sum=a[i + 1] + k[m] * a[m - i];
+        a[m - i]+=k[m] * a[i + 1];
+        a[i + 1]=sum;
+      }
+      a[m + 1]=k[m];
+    }
+  }
+}

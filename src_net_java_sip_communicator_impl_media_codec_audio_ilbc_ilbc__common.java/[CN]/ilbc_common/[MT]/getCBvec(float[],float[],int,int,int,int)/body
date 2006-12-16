@@ -1,0 +1,85 @@
+{
+  int j, k, n, memInd, sFilt;
+  float[] tmpbuf=new float[ilbc_constants.CB_MEML];
+  int base_size;
+  int ilow, ihigh;
+  float alfa, alfa1;
+  base_size=lMem - cbveclen + 1;
+  if (cbveclen == ilbc_constants.SUBL) {
+    base_size+=cbveclen / 2;
+  }
+  if (index < lMem - cbveclen + 1) {
+    k=index + cbveclen;
+    System.arraycopy(mem,mem_idx + lMem - k,cbvec,0,cbveclen);
+  }
+ else   if (index < base_size) {
+    k=2 * (index - (lMem - cbveclen + 1)) + cbveclen;
+    ihigh=k / 2;
+    ilow=ihigh - 5;
+    System.arraycopy(mem,mem_idx + lMem - k / 2,cbvec,0,ilow);
+    alfa1=(float)0.2;
+    alfa=0.0f;
+    for (j=ilow; j < ihigh; j++) {
+      cbvec[j]=((float)1.0f - alfa) * mem[mem_idx + lMem - k / 2 + j] + alfa * mem[mem_idx + lMem - k + j];
+      alfa+=alfa1;
+    }
+    System.arraycopy(mem,mem_idx + lMem - k + ihigh,cbvec,ihigh,(cbveclen - ihigh));
+  }
+ else {
+    if (index - base_size < lMem - cbveclen + 1) {
+      float[] tempbuff2=new float[ilbc_constants.CB_MEML + ilbc_constants.CB_FILTERLEN + 1];
+      int pos, pp, pp1;
+      for (int li=0; li < ilbc_constants.CB_HALFFILTERLEN; li++)       tempbuff2[li]=0.0f;
+      System.arraycopy(mem,mem_idx,tempbuff2,ilbc_constants.CB_HALFFILTERLEN,lMem);
+      for (int li=0; li < ilbc_constants.CB_HALFFILTERLEN + 1; li++)       tempbuff2[lMem + ilbc_constants.CB_HALFFILTERLEN + li]=0.0f;
+      k=index - base_size + cbveclen;
+      sFilt=lMem - k;
+      memInd=sFilt + 1 - ilbc_constants.CB_HALFFILTERLEN;
+      pos=0;
+      for (int li=0; li < cbveclen; li++)       cbvec[li]=0;
+      for (n=0; n < cbveclen; n++) {
+        pp=memInd + n + ilbc_constants.CB_HALFFILTERLEN;
+        pp1=ilbc_constants.CB_FILTERLEN - 1;
+        for (j=0; j < ilbc_constants.CB_FILTERLEN; j++) {
+          cbvec[pos]+=tempbuff2[pp] * ilbc_constants.cbfiltersTbl[pp1];
+          pp++;
+          pp1--;
+        }
+        pos++;
+      }
+    }
+ else {
+      float[] tempbuff2=new float[ilbc_constants.CB_MEML + ilbc_constants.CB_FILTERLEN + 1];
+      int pos, pp, pp1;
+      int i;
+      for (int li=0; li < ilbc_constants.CB_HALFFILTERLEN; li++)       tempbuff2[li]=0.0f;
+      System.arraycopy(mem,mem_idx,tempbuff2,ilbc_constants.CB_HALFFILTERLEN,lMem);
+      for (int li=0; li < ilbc_constants.CB_HALFFILTERLEN; li++)       tempbuff2[lMem + ilbc_constants.CB_HALFFILTERLEN + li]=0.0f;
+      k=2 * (index - base_size - (lMem - cbveclen + 1)) + cbveclen;
+      sFilt=lMem - k;
+      memInd=sFilt + 1 - ilbc_constants.CB_HALFFILTERLEN;
+      pos=sFilt;
+      for (int li=0; li < k; li++)       tmpbuf[pos + li]=0.0f;
+      for (i=0; i < k; i++) {
+        pp=memInd + i + ilbc_constants.CB_HALFFILTERLEN;
+        pp1=ilbc_constants.CB_FILTERLEN - 1;
+        for (j=0; j < ilbc_constants.CB_FILTERLEN; j++) {
+          tmpbuf[pos]+=tempbuff2[pp] * ilbc_constants.cbfiltersTbl[pp1];
+          pp++;
+          pp1--;
+        }
+        pos++;
+      }
+      ihigh=k / 2;
+      ilow=ihigh - 5;
+      System.arraycopy(tmpbuf,lMem - k / 2,cbvec,0,ilow);
+      alfa1=(float)0.2;
+      alfa=0.0f;
+      for (j=ilow; j < ihigh; j++) {
+        cbvec[j]=((float)1.0f - alfa) * tmpbuf[lMem - k / 2 + j] + alfa * tmpbuf[lMem - k + j];
+        alfa+=alfa1;
+      }
+      System.arraycopy(tmpbuf,lMem - k + ihigh,cbvec,ihigh,cbveclen - ihigh);
+    }
+  }
+}

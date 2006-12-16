@@ -1,0 +1,24 @@
+{
+  int j, k;
+  float[] gain=new float[ilbc_constants.CB_NSTAGES];
+  float[] cbvec=new float[ilbc_constants.SUBL];
+  gain[0]=gaindequant(gain_index[gain_index_idx + 0],1.0f,32);
+  if (nStages > 1) {
+    gain[1]=gaindequant(gain_index[gain_index_idx + 1],(float)(float)Math.abs(gain[0]),16);
+  }
+  if (nStages > 2) {
+    gain[2]=gaindequant(gain_index[gain_index_idx + 2],(float)(float)Math.abs(gain[1]),8);
+  }
+  getCBvec(cbvec,mem,mem_idx,index[index_idx + 0],lMem,veclen);
+  for (j=0; j < veclen; j++) {
+    decvector[decvector_idx + j]=gain[0] * cbvec[j];
+  }
+  if (nStages > 1) {
+    for (k=1; k < nStages; k++) {
+      getCBvec(cbvec,mem,mem_idx,index[index_idx + k],lMem,veclen);
+      for (j=0; j < veclen; j++) {
+        decvector[decvector_idx + j]+=gain[k] * cbvec[j];
+      }
+    }
+  }
+}

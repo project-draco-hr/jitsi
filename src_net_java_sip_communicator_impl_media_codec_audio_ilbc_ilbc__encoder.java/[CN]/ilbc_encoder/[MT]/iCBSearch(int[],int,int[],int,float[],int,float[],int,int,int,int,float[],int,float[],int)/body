@@ -1,0 +1,305 @@
+{
+  int i, j, icount, stage, best_index, range, counter;
+  float max_measure, gain, measure, crossDot, ftmp;
+  float[] gains=new float[ilbc_constants.CB_NSTAGES];
+  float[] target=new float[ilbc_constants.SUBL];
+  int base_index, sInd, eInd, base_size;
+  int sIndAug=0, eIndAug=0;
+  float[] buf=new float[ilbc_constants.CB_MEML + ilbc_constants.SUBL + 2 * ilbc_constants.LPC_FILTERORDER];
+  float[] invenergy=new float[ilbc_constants.CB_EXPAND * 128];
+  float[] energy=new float[ilbc_constants.CB_EXPAND * 128];
+  int pp, ppi=0, ppo=0, ppe=0;
+  float[] ppt;
+  float[] cbvectors=new float[ilbc_constants.CB_MEML];
+  float tene, cene;
+  float[] cvec=new float[ilbc_constants.SUBL];
+  float[] aug_vec=new float[ilbc_constants.SUBL];
+  float[] a=new float[1];
+  int[] b=new int[1];
+  float[] c=new float[1];
+  for (int li=0; li < ilbc_constants.SUBL; li++)   cvec[li]=0.0f;
+  base_size=lMem - lTarget + 1;
+  if (lTarget == ilbc_constants.SUBL) {
+    base_size=lMem - lTarget + 1 + lTarget / 2;
+  }
+  System.arraycopy(weightState,0,buf,0,ilbc_constants.LPC_FILTERORDER);
+  System.arraycopy(mem,mem_idx,buf,ilbc_constants.LPC_FILTERORDER,lMem);
+  System.arraycopy(intarget,intarget_idx,buf,ilbc_constants.LPC_FILTERORDER + lMem,lTarget);
+  ilbc_common.AllPoleFilter(buf,ilbc_constants.LPC_FILTERORDER,weightDenum,weightDenum_idx,lMem + lTarget,ilbc_constants.LPC_FILTERORDER);
+  System.arraycopy(buf,ilbc_constants.LPC_FILTERORDER + lMem,target,0,lTarget);
+  tene=0.0f;
+  for (i=0; i < lTarget; i++) {
+    tene+=target[i] * target[i];
+  }
+  filteredCBvecs(cbvectors,buf,ilbc_constants.LPC_FILTERORDER,lMem);
+  for (stage=0; stage < nStages; stage++) {
+    range=ilbc_constants.search_rangeTbl[block][stage];
+    max_measure=(float)-10000000.0f;
+    gain=(float)0.0f;
+    best_index=0;
+    crossDot=0.0f;
+    pp=ilbc_constants.LPC_FILTERORDER + lMem - lTarget;
+    for (j=0; j < lTarget; j++) {
+      crossDot+=target[j] * (buf[pp]);
+      pp++;
+    }
+    if (stage == 0) {
+      ppe=0;
+      ppi=ilbc_constants.LPC_FILTERORDER + lMem - lTarget - 1;
+      ppo=ilbc_constants.LPC_FILTERORDER + lMem - 1;
+      energy[ppe]=0.0f;
+      pp=ilbc_constants.LPC_FILTERORDER + lMem - lTarget;
+      for (j=0; j < lTarget; j++) {
+        energy[ppe]+=(buf[pp]) * (buf[pp]);
+        pp++;
+      }
+      if (energy[ppe] > 0.0f) {
+        invenergy[0]=(float)1.0f / (energy[ppe] + ilbc_constants.EPS);
+      }
+ else {
+        invenergy[0]=(float)0.0f;
+      }
+      ppe++;
+      measure=(float)-10000000.0f;
+      if (crossDot > 0.0f) {
+        measure=crossDot * crossDot * invenergy[0];
+      }
+    }
+ else {
+      measure=crossDot * crossDot * invenergy[0];
+    }
+    ftmp=crossDot * invenergy[0];
+    if ((measure > max_measure) && ((float)Math.abs(ftmp) < ilbc_constants.CB_MAXGAIN)) {
+      best_index=0;
+      max_measure=measure;
+      gain=ftmp;
+    }
+    for (icount=1; icount < range; icount++) {
+      crossDot=0.0f;
+      pp=ilbc_constants.LPC_FILTERORDER + lMem - lTarget - icount;
+      for (j=0; j < lTarget; j++) {
+        crossDot+=target[j] * (buf[pp]);
+        pp++;
+      }
+      if (stage == 0) {
+        energy[ppe]=energy[icount - 1] + (buf[ppi]) * (buf[ppi]) - (buf[ppo]) * (buf[ppo]);
+        ppe++;
+        ppo--;
+        ppi--;
+        if (energy[icount] > 0.0f) {
+          invenergy[icount]=(float)1.0f / (energy[icount] + ilbc_constants.EPS);
+        }
+ else {
+          invenergy[icount]=(float)0.0f;
+        }
+        measure=(float)-10000000.0f;
+        if (crossDot > 0.0f) {
+          measure=crossDot * crossDot * invenergy[icount];
+        }
+      }
+ else {
+        measure=crossDot * crossDot * invenergy[icount];
+      }
+      ftmp=crossDot * invenergy[icount];
+      if ((measure > max_measure) && ((float)Math.abs(ftmp) < ilbc_constants.CB_MAXGAIN)) {
+        best_index=icount;
+        max_measure=measure;
+        gain=ftmp;
+      }
+    }
+    if (lTarget == ilbc_constants.SUBL) {
+      a[0]=max_measure;
+      b[0]=best_index;
+      c[0]=gain;
+      searchAugmentedCB(20,39,stage,base_size - lTarget / 2,target,buf,ilbc_constants.LPC_FILTERORDER + lMem,a,b,c,energy,invenergy);
+      max_measure=a[0];
+      best_index=b[0];
+      gain=c[0];
+    }
+    base_index=best_index;
+    if (ilbc_constants.CB_RESRANGE == -1) {
+      sInd=0;
+      eInd=range - 1;
+      sIndAug=20;
+      eIndAug=39;
+    }
+ else {
+      sIndAug=0;
+      eIndAug=0;
+      sInd=base_index - ilbc_constants.CB_RESRANGE / 2;
+      eInd=sInd + ilbc_constants.CB_RESRANGE;
+      if (lTarget == ilbc_constants.SUBL) {
+        if (sInd < 0) {
+          sIndAug=40 + sInd;
+          eIndAug=39;
+          sInd=0;
+        }
+ else         if (base_index < (base_size - 20)) {
+          if (eInd > range) {
+            sInd-=(eInd - range);
+            eInd=range;
+          }
+        }
+ else {
+          if (sInd < (base_size - 20)) {
+            sIndAug=20;
+            sInd=0;
+            eInd=0;
+            eIndAug=19 + ilbc_constants.CB_RESRANGE;
+            if (eIndAug > 39) {
+              eInd=eIndAug - 39;
+              eIndAug=39;
+            }
+          }
+ else {
+            sIndAug=20 + sInd - (base_size - 20);
+            eIndAug=39;
+            sInd=0;
+            eInd=ilbc_constants.CB_RESRANGE - (eIndAug - sIndAug + 1);
+          }
+        }
+      }
+ else {
+        if (sInd < 0) {
+          eInd-=sInd;
+          sInd=0;
+        }
+        if (eInd > range) {
+          sInd-=(eInd - range);
+          eInd=range;
+        }
+      }
+    }
+    counter=sInd;
+    sInd+=base_size;
+    eInd+=base_size;
+    if (stage == 0) {
+      ppe=base_size;
+      energy[ppe]=0.0f;
+      pp=lMem - lTarget;
+      for (j=0; j < lTarget; j++) {
+        energy[ppe]+=(cbvectors[pp]) * (cbvectors[pp]);
+        pp++;
+      }
+      ppi=lMem - 1 - lTarget;
+      ppo=lMem - 1;
+      for (j=0; j < (range - 1); j++) {
+        energy[(ppe + 1)]=energy[ppe] + (cbvectors[ppi]) * (cbvectors[ppi]) - (cbvectors[ppo]) * (cbvectors[ppo]);
+        ppo--;
+        ppi--;
+        ppe++;
+      }
+    }
+    for (icount=sInd; icount < eInd; icount++) {
+      crossDot=0.0f;
+      pp=lMem - (counter++) - lTarget;
+      for (j=0; j < lTarget; j++) {
+        crossDot+=target[j] * (cbvectors[pp]);
+        pp++;
+      }
+      if (energy[icount] > 0.0f) {
+        invenergy[icount]=(float)1.0f / (energy[icount] + ilbc_constants.EPS);
+      }
+ else {
+        invenergy[icount]=(float)0.0f;
+      }
+      if (stage == 0) {
+        measure=(float)-10000000.0f;
+        if (crossDot > 0.0f) {
+          measure=crossDot * crossDot * invenergy[icount];
+        }
+      }
+ else {
+        measure=crossDot * crossDot * invenergy[icount];
+      }
+      ftmp=crossDot * invenergy[icount];
+      if ((measure > max_measure) && ((float)Math.abs(ftmp) < ilbc_constants.CB_MAXGAIN)) {
+        best_index=icount;
+        max_measure=measure;
+        gain=ftmp;
+      }
+    }
+    if ((lTarget == ilbc_constants.SUBL) && (sIndAug != 0)) {
+      a[0]=max_measure;
+      b[0]=best_index;
+      c[0]=gain;
+      searchAugmentedCB(sIndAug,eIndAug,stage,2 * base_size - 20,target,cbvectors,lMem,a,b,c,energy,invenergy);
+      max_measure=a[0];
+      best_index=b[0];
+      gain=c[0];
+    }
+    index[index_idx + stage]=best_index;
+    if (stage == 0) {
+      if (gain < 0.0f) {
+        gain=0.0f;
+      }
+      if (gain > ilbc_constants.CB_MAXGAIN) {
+        gain=(float)ilbc_constants.CB_MAXGAIN;
+      }
+      gain=ilbc_common.gainquant(gain,1.0f,32,gain_index,gain_index_idx + stage);
+    }
+ else {
+      if (stage == 1) {
+        gain=ilbc_common.gainquant(gain,(float)(float)Math.abs(gains[stage - 1]),16,gain_index,gain_index_idx + stage);
+      }
+ else {
+        gain=ilbc_common.gainquant(gain,(float)(float)Math.abs(gains[stage - 1]),8,gain_index,gain_index_idx + stage);
+      }
+    }
+    if (lTarget == (ilbc_constants.STATE_LEN - this.ULP_inst.state_short_len)) {
+      if (index[index_idx + stage] < base_size) {
+        pp=ilbc_constants.LPC_FILTERORDER + lMem - lTarget - index[index_idx + stage];
+        ppt=buf;
+      }
+ else {
+        pp=lMem - lTarget - index[index_idx + stage] + base_size;
+        ppt=cbvectors;
+      }
+    }
+ else {
+      if (index[index_idx + stage] < base_size) {
+        if (index[index_idx + stage] < (base_size - 20)) {
+          pp=ilbc_constants.LPC_FILTERORDER + lMem - lTarget - index[index_idx + stage];
+          ppt=buf;
+        }
+ else {
+          createAugmentedVec(index[index_idx + stage] - base_size + 40,buf,ilbc_constants.LPC_FILTERORDER + lMem,aug_vec);
+          pp=0;
+          ppt=aug_vec;
+        }
+      }
+ else {
+        int filterno, position;
+        filterno=index[index_idx + stage] / base_size;
+        position=index[index_idx + stage] - filterno * base_size;
+        if (position < (base_size - 20)) {
+          pp=filterno * lMem - lTarget - index[index_idx + stage] + filterno * base_size;
+          ppt=cbvectors;
+        }
+ else {
+          createAugmentedVec(index[index_idx + stage] - (filterno + 1) * base_size + 40,cbvectors,filterno * lMem,aug_vec);
+          pp=0;
+          ppt=aug_vec;
+        }
+      }
+    }
+    for (j=0; j < lTarget; j++) {
+      cvec[j]+=gain * (ppt[pp]);
+      target[j]-=gain * (ppt[pp]);
+      pp++;
+    }
+    gains[stage]=gain;
+  }
+  cene=0.0f;
+  for (i=0; i < lTarget; i++) {
+    cene+=cvec[i] * cvec[i];
+  }
+  j=gain_index[gain_index_idx + 0];
+  for (i=gain_index[gain_index_idx + 0]; i < 32; i++) {
+    ftmp=cene * ilbc_constants.gain_sq5Tbl[i] * ilbc_constants.gain_sq5Tbl[i];
+    if ((ftmp < (tene * gains[0] * gains[0])) && (ilbc_constants.gain_sq5Tbl[j] < (2.0f * gains[0]))) {
+      j=i;
+    }
+  }
+  gain_index[gain_index_idx + 0]=j;
+}

@@ -1,0 +1,100 @@
+{
+  int iblock, isample;
+  int lag=0, ilag, i, ioffset;
+  float cc, maxcc;
+  float ftmp1, ftmp2;
+  int inPtr, enh_bufPtr1, enh_bufPtr2;
+  float[] plc_pred=new float[ilbc_constants.ENH_BLOCKL];
+  float[] lpState=new float[6];
+  float[] downsampled=new float[(ilbc_constants.ENH_NBLOCKS * ilbc_constants.ENH_BLOCKL + 120) / 2];
+  int inLen=ilbc_constants.ENH_NBLOCKS * ilbc_constants.ENH_BLOCKL + 120;
+  int start, plc_blockl, inlag;
+  System.arraycopy(enh_buf,this.ULP_inst.blockl,enh_buf,0,ilbc_constants.ENH_BUFL - this.ULP_inst.blockl);
+  System.arraycopy(in,0,enh_buf,ilbc_constants.ENH_BUFL - this.ULP_inst.blockl,this.ULP_inst.blockl);
+  if (this.ULP_inst.mode == 30)   plc_blockl=ilbc_constants.ENH_BLOCKL;
+ else   plc_blockl=40;
+  ioffset=0;
+  if (this.ULP_inst.mode == 20)   ioffset=1;
+  i=3 - ioffset;
+  System.arraycopy(enh_period,i,enh_period,0,ilbc_constants.ENH_NBLOCKS_TOT - i);
+  System.arraycopy(enh_buf,(ilbc_constants.ENH_NBLOCKS_EXTRA + ioffset) * ilbc_constants.ENH_BLOCKL - 126,lpState,0,6);
+  DownSample(enh_buf,(ilbc_constants.ENH_NBLOCKS_EXTRA + ioffset) * ilbc_constants.ENH_BLOCKL - 120,ilbc_constants.lpFilt_coefsTbl,inLen - ioffset * ilbc_constants.ENH_BLOCKL,lpState,downsampled);
+  for (iblock=0; iblock < ilbc_constants.ENH_NBLOCKS - ioffset; iblock++) {
+    lag=10;
+    maxcc=xCorrCoef(downsampled,60 + iblock * ilbc_constants.ENH_BLOCKL_HALF,downsampled,60 + iblock * ilbc_constants.ENH_BLOCKL_HALF - lag,ilbc_constants.ENH_BLOCKL_HALF);
+    for (ilag=11; ilag < 60; ilag++) {
+      cc=xCorrCoef(downsampled,60 + iblock * ilbc_constants.ENH_BLOCKL_HALF,downsampled,60 + iblock * ilbc_constants.ENH_BLOCKL_HALF - ilag,ilbc_constants.ENH_BLOCKL_HALF);
+      if (cc > maxcc) {
+        maxcc=cc;
+        lag=ilag;
+      }
+    }
+    enh_period[iblock + ilbc_constants.ENH_NBLOCKS_EXTRA + ioffset]=(float)lag * 2;
+  }
+  if (this.prev_enh_pl == 1) {
+    inlag=(int)enh_period[ilbc_constants.ENH_NBLOCKS_EXTRA + ioffset];
+    lag=inlag - 1;
+    maxcc=xCorrCoef(in,0,in,lag,plc_blockl);
+    for (ilag=inlag; ilag <= inlag + 1; ilag++) {
+      cc=xCorrCoef(in,0,in,ilag,plc_blockl);
+      if (cc > maxcc) {
+        maxcc=cc;
+        lag=ilag;
+      }
+    }
+    enh_period[ilbc_constants.ENH_NBLOCKS_EXTRA + ioffset - 1]=(float)lag;
+    inPtr=lag - 1;
+    enh_bufPtr1=plc_blockl - 1;
+    if (lag > plc_blockl) {
+      start=plc_blockl;
+    }
+ else {
+      start=lag;
+    }
+    for (isample=start; isample > 0; isample--) {
+      plc_pred[enh_bufPtr1]=in[inPtr];
+      enh_bufPtr1--;
+      inPtr--;
+    }
+    enh_bufPtr2=ilbc_constants.ENH_BUFL - 1 - this.ULP_inst.blockl;
+    for (isample=(plc_blockl - 1 - lag); isample >= 0; isample--) {
+      plc_pred[enh_bufPtr1]=enh_buf[enh_bufPtr2];
+      enh_bufPtr1--;
+      enh_bufPtr2--;
+    }
+    ftmp2=0.0f;
+    ftmp1=0.0f;
+    for (i=0; i < plc_blockl; i++) {
+      ftmp2+=enh_buf[ilbc_constants.ENH_BUFL - 1 - this.ULP_inst.blockl- i] * enh_buf[ilbc_constants.ENH_BUFL - 1 - this.ULP_inst.blockl- i];
+      ftmp1+=plc_pred[i] * plc_pred[i];
+    }
+    ftmp1=(float)(float)Math.sqrt(ftmp1 / (float)plc_blockl);
+    ftmp2=(float)(float)Math.sqrt(ftmp2 / (float)plc_blockl);
+    if (ftmp1 > (float)2.0f * ftmp2 && ftmp1 > 0.0) {
+      for (i=0; i < plc_blockl - 10; i++) {
+        plc_pred[i]*=(float)2.0f * ftmp2 / ftmp1;
+      }
+      for (i=plc_blockl - 10; i < plc_blockl; i++) {
+        plc_pred[i]*=(float)(i - plc_blockl + 10) * ((float)1.0f - (float)2.0 * ftmp2 / ftmp1) / (float)(10) + (float)2.0f * ftmp2 / ftmp1;
+      }
+    }
+    enh_bufPtr1=ilbc_constants.ENH_BUFL - 1 - this.ULP_inst.blockl;
+    for (i=0; i < plc_blockl; i++) {
+      ftmp1=(float)(i + 1) / (float)(plc_blockl + 1);
+      enh_buf[enh_bufPtr1]*=ftmp1;
+      enh_buf[enh_bufPtr1]+=((float)1.0f - ftmp1) * plc_pred[plc_blockl - 1 - i];
+      enh_bufPtr1--;
+    }
+  }
+  if (this.ULP_inst.mode == 20) {
+    for (iblock=0; iblock < 2; iblock++) {
+      enhancer(out,iblock * ilbc_constants.ENH_BLOCKL,enh_buf,ilbc_constants.ENH_BUFL,(5 + iblock) * ilbc_constants.ENH_BLOCKL + 40,ilbc_constants.ENH_ALPHA0,enh_period,ilbc_constants.enh_plocsTbl,ilbc_constants.ENH_NBLOCKS_TOT);
+    }
+  }
+ else   if (this.ULP_inst.mode == 30) {
+    for (iblock=0; iblock < 3; iblock++) {
+      enhancer(out,iblock * ilbc_constants.ENH_BLOCKL,enh_buf,ilbc_constants.ENH_BUFL,(4 + iblock) * ilbc_constants.ENH_BLOCKL,ilbc_constants.ENH_ALPHA0,enh_period,ilbc_constants.enh_plocsTbl,ilbc_constants.ENH_NBLOCKS_TOT);
+    }
+  }
+  return (lag * 2);
+}

@@ -1,0 +1,45 @@
+{
+  float dtmp, maxVal;
+  float[] tmpbuf=new float[ilbc_constants.LPC_FILTERORDER + 2 * ilbc_constants.STATE_SHORT_LEN_30MS];
+  int tmp;
+  float[] numerator=new float[1 + ilbc_constants.LPC_FILTERORDER];
+  float[] foutbuf=new float[ilbc_constants.LPC_FILTERORDER + 2 * ilbc_constants.STATE_SHORT_LEN_30MS];
+  int fout;
+  int k;
+  float qmax, scal;
+  for (int li=0; li < ilbc_constants.LPC_FILTERORDER; li++) {
+    tmpbuf[li]=0.0f;
+    foutbuf[li]=0.0f;
+  }
+  for (k=0; k < ilbc_constants.LPC_FILTERORDER; k++) {
+    numerator[k]=syntDenum[syntDenum_idx + ilbc_constants.LPC_FILTERORDER - k];
+  }
+  numerator[ilbc_constants.LPC_FILTERORDER]=syntDenum[syntDenum_idx];
+  tmp=ilbc_constants.LPC_FILTERORDER;
+  fout=ilbc_constants.LPC_FILTERORDER;
+  System.arraycopy(residual,residual_idx,tmpbuf,tmp,len);
+  for (int li=0; li < len; li++)   tmpbuf[tmp + len + li]=0.0f;
+  ilbc_common.ZeroPoleFilter(tmpbuf,tmp,numerator,syntDenum,syntDenum_idx,2 * len,ilbc_constants.LPC_FILTERORDER,foutbuf,fout);
+  for (k=0; k < len; k++) {
+    foutbuf[fout + k]+=foutbuf[fout + k + len];
+  }
+  maxVal=foutbuf[fout + 0];
+  for (k=1; k < len; k++) {
+    if (foutbuf[fout + k] * foutbuf[fout + k] > maxVal * maxVal) {
+      maxVal=foutbuf[fout + k];
+    }
+  }
+  maxVal=(float)Math.abs(maxVal);
+  if (maxVal < 10.0f) {
+    maxVal=10.0f;
+  }
+  maxVal=(float)(Math.log(maxVal) / Math.log(10));
+  dtmp=sort_sq(idxForMax,0,maxVal,ilbc_constants.state_frgqTbl,64);
+  maxVal=ilbc_constants.state_frgqTbl[idxForMax[0]];
+  qmax=(float)Math.pow(10,maxVal);
+  scal=4.5f / qmax;
+  for (k=0; k < len; k++) {
+    foutbuf[fout + k]*=scal;
+  }
+  AbsQuantW(foutbuf,fout,syntDenum,syntDenum_idx,weightDenum,weightDenum_idx,idxVec,len,state_first);
+}

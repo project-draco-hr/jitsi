@@ -1,0 +1,30 @@
+{
+  float maxVal;
+  float[] tmpbuf=new float[ilbc_constants.LPC_FILTERORDER + 2 * ilbc_constants.STATE_LEN];
+  int tmp;
+  float[] numerator=new float[ilbc_constants.LPC_FILTERORDER + 1];
+  float[] foutbuf=new float[ilbc_constants.LPC_FILTERORDER + 2 * ilbc_constants.STATE_LEN];
+  int fout;
+  int k, tmpi;
+  maxVal=ilbc_constants.state_frgqTbl[idxForMax];
+  maxVal=(float)Math.pow(10,maxVal) / 4.5f;
+  for (int li=0; li < ilbc_constants.LPC_FILTERORDER; li++) {
+    tmpbuf[li]=0.0f;
+    foutbuf[li]=0.0f;
+  }
+  for (k=0; k < ilbc_constants.LPC_FILTERORDER; k++) {
+    numerator[k]=syntDenum[syntDenum_idx + ilbc_constants.LPC_FILTERORDER - k];
+  }
+  numerator[ilbc_constants.LPC_FILTERORDER]=syntDenum[syntDenum_idx];
+  tmp=ilbc_constants.LPC_FILTERORDER;
+  fout=ilbc_constants.LPC_FILTERORDER;
+  for (k=0; k < len; k++) {
+    tmpi=len - 1 - k;
+    tmpbuf[tmp + k]=maxVal * ilbc_constants.state_sq3Tbl[idxVec[tmpi]];
+  }
+  for (int li=0; li < len; li++)   tmpbuf[tmp + len + li]=0.0f;
+  ilbc_common.ZeroPoleFilter(tmpbuf,tmp,numerator,syntDenum,syntDenum_idx,2 * len,ilbc_constants.LPC_FILTERORDER,foutbuf,fout);
+  for (k=0; k < len; k++) {
+    out[out_idx + k]=foutbuf[fout + len - 1 - k] + foutbuf[fout + 2 * len - 1 - k];
+  }
+}

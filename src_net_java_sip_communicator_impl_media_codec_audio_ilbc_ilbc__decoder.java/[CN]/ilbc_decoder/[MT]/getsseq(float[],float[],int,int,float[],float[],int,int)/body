@@ -1,0 +1,37 @@
+{
+  int i, centerEndPos, q;
+  float[] blockStartPos=new float[2 * ilbc_constants.ENH_HL + 1];
+  int[] lagBlock=new int[2 * ilbc_constants.ENH_HL + 1];
+  float[] plocs2=new float[ilbc_constants.ENH_PLOCSL];
+  int psseq;
+  centerEndPos=centerStartPos + ilbc_constants.ENH_BLOCKL - 1;
+  lagBlock[hl]=NearestNeighbor(plocs,(float)0.5 * (centerStartPos + centerEndPos),periodl);
+  blockStartPos[hl]=(float)centerStartPos;
+  psseq=ilbc_constants.ENH_BLOCKL * hl;
+  System.arraycopy(idata,centerStartPos,sseq,psseq,ilbc_constants.ENH_BLOCKL);
+  for (q=hl - 1; q >= 0; q--) {
+    blockStartPos[q]=blockStartPos[q + 1] - period[lagBlock[q + 1]];
+    lagBlock[q]=NearestNeighbor(plocs,blockStartPos[q] + ilbc_constants.ENH_BLOCKL_HALF - period[lagBlock[q + 1]],periodl);
+    if (blockStartPos[q] - ilbc_constants.ENH_OVERHANG >= 0) {
+      blockStartPos[q]=refiner(sseq,q * ilbc_constants.ENH_BLOCKL,idata,idatal,centerStartPos,blockStartPos[q],period[lagBlock[q + 1]]);
+    }
+ else {
+      psseq=q * ilbc_constants.ENH_BLOCKL;
+      for (int li=0; li < ilbc_constants.ENH_BLOCKL; li++)       sseq[psseq + li]=0.0f;
+    }
+  }
+  for (i=0; i < periodl; i++) {
+    plocs2[i]=plocs[i] - period[i];
+  }
+  for (q=hl + 1; q <= 2 * hl; q++) {
+    lagBlock[q]=NearestNeighbor(plocs2,blockStartPos[q - 1] + ilbc_constants.ENH_BLOCKL_HALF,periodl);
+    blockStartPos[q]=blockStartPos[q - 1] + period[lagBlock[q]];
+    if (blockStartPos[q] + ilbc_constants.ENH_BLOCKL + ilbc_constants.ENH_OVERHANG < idatal) {
+      blockStartPos[q]=refiner(sseq,q * ilbc_constants.ENH_BLOCKL,idata,idatal,centerStartPos,blockStartPos[q],period[lagBlock[q]]);
+    }
+ else {
+      psseq=q * ilbc_constants.ENH_BLOCKL;
+      for (int li=0; li < ilbc_constants.ENH_BLOCKL; li++)       sseq[psseq + li]=0.0f;
+    }
+  }
+}

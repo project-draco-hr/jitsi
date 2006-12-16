@@ -1,0 +1,55 @@
+{
+  float o;
+  int out_ptr=0;
+  int coef_ptr=0;
+  int in_ptr=in_idx;
+  int state_ptr=0;
+  int i, j, stop;
+  for (i=ilbc_constants.DELAY_DS; i < lengthIn; i+=ilbc_constants.FACTOR_DS) {
+    coef_ptr=0;
+    in_ptr=in_idx + i;
+    state_ptr=ilbc_constants.FILTERORDER_DS - 2;
+    o=(float)0.0f;
+    if (i < ilbc_constants.FILTERORDER_DS) {
+      stop=i + 1;
+    }
+ else {
+      stop=ilbc_constants.FILTERORDER_DS;
+    }
+    for (j=0; j < stop; j++) {
+      o+=Coef[coef_ptr] * In[in_ptr];
+      coef_ptr++;
+      in_ptr--;
+    }
+    for (j=i + 1; j < ilbc_constants.FILTERORDER_DS; j++) {
+      o+=Coef[coef_ptr] * state[state_ptr];
+      coef_ptr++;
+      state_ptr--;
+    }
+    Out[out_ptr]=o;
+    out_ptr++;
+  }
+  for (i=(lengthIn + ilbc_constants.FACTOR_DS); i < (lengthIn + ilbc_constants.DELAY_DS); i+=ilbc_constants.FACTOR_DS) {
+    o=(float)0.0f;
+    if (i < lengthIn) {
+      coef_ptr=0;
+      in_ptr=in_idx + i;
+      for (j=0; j < ilbc_constants.FILTERORDER_DS; j++) {
+        o+=Coef[coef_ptr] * Out[out_ptr];
+        coef_ptr++;
+        out_ptr--;
+      }
+    }
+ else {
+      coef_ptr=i - lengthIn;
+      in_ptr=in_idx + lengthIn - 1;
+      for (j=0; j < ilbc_constants.FILTERORDER_DS - (i - lengthIn); j++) {
+        o+=Coef[coef_ptr] * In[in_ptr];
+        coef_ptr++;
+        in_ptr--;
+      }
+    }
+    Out[out_ptr]=o;
+    out_ptr++;
+  }
+}

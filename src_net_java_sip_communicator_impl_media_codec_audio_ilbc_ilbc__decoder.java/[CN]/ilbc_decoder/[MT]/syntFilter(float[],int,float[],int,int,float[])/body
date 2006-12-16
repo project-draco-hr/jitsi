@@ -1,0 +1,32 @@
+{
+  int i, j;
+  int po, pi, pa, pm;
+  po=Out_idx;
+  for (i=0; i < ilbc_constants.LPC_FILTERORDER; i++) {
+    pi=Out_idx + i - 1;
+    pa=a_idx + 1;
+    pm=ilbc_constants.LPC_FILTERORDER - 1;
+    for (j=1; j <= i; j++) {
+      Out[po]-=a[pa] * Out[pi];
+      pa++;
+      pi--;
+    }
+    for (j=i + 1; j < ilbc_constants.LPC_FILTERORDER + 1; j++) {
+      Out[po]-=a[pa] * mem[pm];
+      pa++;
+      pm--;
+    }
+    po++;
+  }
+  for (i=ilbc_constants.LPC_FILTERORDER; i < len; i++) {
+    pi=Out_idx + i - 1;
+    pa=a_idx + 1;
+    for (j=1; j < ilbc_constants.LPC_FILTERORDER + 1; j++) {
+      Out[po]-=a[pa] * Out[pi];
+      pa++;
+      pi--;
+    }
+    po++;
+  }
+  System.arraycopy(Out,Out_idx + len - ilbc_constants.LPC_FILTERORDER,mem,0,ilbc_constants.LPC_FILTERORDER);
+}

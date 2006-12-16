@@ -1,0 +1,52 @@
+{
+  int estSegPosRounded, searchSegStartPos, searchSegEndPos, corrdim;
+  int tloc, tloc2, i, st, en, fraction;
+  float[] vect=new float[ilbc_constants.ENH_VECTL];
+  float[] corrVec=new float[ilbc_constants.ENH_CORRDIM];
+  float maxv;
+  float[] corrVecUps=new float[ilbc_constants.ENH_CORRDIM * ilbc_constants.ENH_UPS0];
+  float updStartPos=0.0f;
+  estSegPosRounded=(int)(estSegPos - 0.5);
+  searchSegStartPos=estSegPosRounded - ilbc_constants.ENH_SLOP;
+  if (searchSegStartPos < 0) {
+    searchSegStartPos=0;
+  }
+  searchSegEndPos=estSegPosRounded + ilbc_constants.ENH_SLOP;
+  if (searchSegEndPos + ilbc_constants.ENH_BLOCKL >= idatal) {
+    searchSegEndPos=idatal - ilbc_constants.ENH_BLOCKL - 1;
+  }
+  corrdim=searchSegEndPos - searchSegStartPos + 1;
+  mycorr1(corrVec,0,idata,searchSegStartPos,corrdim + ilbc_constants.ENH_BLOCKL - 1,idata,centerStartPos,ilbc_constants.ENH_BLOCKL);
+  enh_upsample(corrVecUps,corrVec,corrdim,ilbc_constants.ENH_FL0);
+  tloc=0;
+  maxv=corrVecUps[0];
+  for (i=1; i < ilbc_constants.ENH_UPS0 * corrdim; i++) {
+    if (corrVecUps[i] > maxv) {
+      tloc=i;
+      maxv=corrVecUps[i];
+    }
+  }
+  updStartPos=(float)searchSegStartPos + (float)tloc / (float)ilbc_constants.ENH_UPS0 + (float)1.0f;
+  tloc2=(int)(tloc / ilbc_constants.ENH_UPS0);
+  if (tloc > tloc2 * ilbc_constants.ENH_UPS0) {
+    tloc2++;
+  }
+  st=searchSegStartPos + tloc2 - ilbc_constants.ENH_FL0;
+  if (st < 0) {
+    for (int li=0; li < -st; li++)     vect[li]=0.0f;
+    System.arraycopy(idata,0,vect,-st,(ilbc_constants.ENH_VECTL + st));
+  }
+ else {
+    en=st + ilbc_constants.ENH_VECTL;
+    if (en > idatal) {
+      System.arraycopy(idata,st,vect,0,(ilbc_constants.ENH_VECTL - (en - idatal)));
+      for (int li=0; li < en - idatal; li++)       vect[ilbc_constants.ENH_VECTL - (en - idatal) + li]=0.0f;
+    }
+ else {
+      System.arraycopy(idata,st,vect,0,ilbc_constants.ENH_VECTL);
+    }
+  }
+  fraction=tloc2 * ilbc_constants.ENH_UPS0 - tloc;
+  mycorr1(seg,seg_idx,vect,0,ilbc_constants.ENH_VECTL,ilbc_constants.polyphaserTbl,(2 * ilbc_constants.ENH_FL0 + 1) * fraction,2 * ilbc_constants.ENH_FL0 + 1);
+  return updStartPos;
+}

@@ -1,0 +1,100 @@
+{
+  int lag=20, randlag=0;
+  float gain=0.0f, maxcc=0.0f;
+  float use_gain=0.0f;
+  float gain_comp=0.0f, maxcc_comp=0.0f, per=0.0f, max_per=0.0f;
+  int i, pick, use_lag;
+  float ftmp, randvec[], pitchfact, energy;
+  float[] a_gain, a_comp, a_per;
+  randvec=new float[ilbc_constants.BLOCKL_MAX];
+  a_gain=new float[1];
+  a_comp=new float[1];
+  a_per=new float[1];
+  if (PLI == 1) {
+    this.consPLICount+=1;
+    if (this.prevPLI != 1) {
+      lag=inlag - 3;
+      a_comp[0]=maxcc;
+      a_gain[0]=gain;
+      a_per[0]=max_per;
+      compCorr(a_comp,a_gain,a_per,this.prevResidual,lag,this.ULP_inst.blockl,60);
+      maxcc=a_comp[0];
+      gain=a_gain[0];
+      max_per=a_per[0];
+      for (i=inlag - 2; i <= inlag + 3; i++) {
+        a_comp[0]=maxcc_comp;
+        a_gain[0]=gain_comp;
+        a_per[0]=per;
+        compCorr(a_comp,a_gain,a_per,this.prevResidual,i,this.ULP_inst.blockl,60);
+        maxcc_comp=a_comp[0];
+        gain_comp=a_gain[0];
+        per=a_per[0];
+        if (maxcc_comp > maxcc) {
+          maxcc=maxcc_comp;
+          gain=gain_comp;
+          lag=i;
+          max_per=per;
+        }
+      }
+    }
+ else {
+      lag=this.prevLag;
+      max_per=this.per;
+    }
+    use_gain=1.0f;
+    if (this.consPLICount * this.ULP_inst.blockl > 320)     use_gain=(float)0.9;
+ else     if (this.consPLICount * this.ULP_inst.blockl > 2 * 320)     use_gain=(float)0.7;
+ else     if (this.consPLICount * this.ULP_inst.blockl > 3 * 320)     use_gain=(float)0.5;
+ else     if (this.consPLICount * this.ULP_inst.blockl > 4 * 320)     use_gain=(float)0.0f;
+    ftmp=(float)(float)Math.sqrt(max_per);
+    if (ftmp > (float)0.7)     pitchfact=(float)1.0f;
+ else     if (ftmp > (float)0.4)     pitchfact=(ftmp - (float)0.4) / ((float)0.7 - (float)0.4);
+ else     pitchfact=0.0f;
+    use_lag=lag;
+    if (lag < 80) {
+      use_lag=2 * lag;
+    }
+    energy=0.0f;
+    for (i=0; i < this.ULP_inst.blockl; i++) {
+      this.seed=(this.seed * 69069 + 1) & (0x80000000 - 1);
+      randlag=50 + (int)(this.seed % 70);
+      pick=i - randlag;
+      if (pick < 0) {
+        randvec[i]=this.prevResidual[this.ULP_inst.blockl + pick];
+      }
+ else {
+        randvec[i]=randvec[pick];
+      }
+      pick=i - use_lag;
+      if (pick < 0) {
+        PLCresidual[i]=this.prevResidual[this.ULP_inst.blockl + pick];
+      }
+ else {
+        PLCresidual[i]=PLCresidual[pick];
+      }
+      if (i < 80)       PLCresidual[i]=use_gain * (pitchfact * PLCresidual[i] + ((float)1.0f - pitchfact) * randvec[i]);
+ else       if (i < 160)       PLCresidual[i]=(float)0.95 * use_gain * (pitchfact * PLCresidual[i] + ((float)1.0f - pitchfact) * randvec[i]);
+ else       PLCresidual[i]=(float)0.9 * use_gain * (pitchfact * PLCresidual[i] + ((float)1.0f - pitchfact) * randvec[i]);
+      energy+=PLCresidual[i] * PLCresidual[i];
+    }
+    if ((float)Math.sqrt(energy / (float)this.ULP_inst.blockl) < 30.0f) {
+      gain=0.0f;
+      for (i=0; i < this.ULP_inst.blockl; i++) {
+        PLCresidual[i]=randvec[i];
+      }
+    }
+    System.arraycopy(this.prevLpc,0,PLClpc,0,ilbc_constants.LPC_FILTERORDER + 1);
+  }
+ else {
+    System.arraycopy(decresidual,0,PLCresidual,0,this.ULP_inst.blockl);
+    System.arraycopy(lpc,lpc_idx,PLClpc,0,ilbc_constants.LPC_FILTERORDER + 1);
+    this.consPLICount=0;
+  }
+  if (PLI != 0) {
+    this.prevLag=lag;
+    this.per=max_per;
+  }
+  this.prevPLI=PLI;
+  System.arraycopy(PLClpc,0,this.prevLpc,0,ilbc_constants.LPC_FILTERORDER + 1);
+  System.arraycopy(PLCresidual,0,this.prevResidual,0,this.ULP_inst.blockl);
+}

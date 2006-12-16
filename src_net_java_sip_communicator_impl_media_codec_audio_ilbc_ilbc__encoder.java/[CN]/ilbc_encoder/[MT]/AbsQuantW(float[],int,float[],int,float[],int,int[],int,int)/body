@@ -1,0 +1,36 @@
+{
+  int syntOut;
+  float[] syntOutBuf=new float[ilbc_constants.LPC_FILTERORDER + ilbc_constants.STATE_SHORT_LEN_30MS];
+  float toQ, xq;
+  int n;
+  int[] index=new int[1];
+  for (int li=0; li < ilbc_constants.LPC_FILTERORDER; li++) {
+    syntOutBuf[li]=0.0f;
+  }
+  syntOut=ilbc_constants.LPC_FILTERORDER;
+  if (state_first != 0) {
+    ilbc_common.AllPoleFilter(in,in_idx,weightDenum,weightDenum_idx,ilbc_constants.SUBL,ilbc_constants.LPC_FILTERORDER);
+  }
+ else {
+    ilbc_common.AllPoleFilter(in,in_idx,weightDenum,weightDenum_idx,this.ULP_inst.state_short_len - ilbc_constants.SUBL,ilbc_constants.LPC_FILTERORDER);
+  }
+  for (n=0; n < len; n++) {
+    if ((state_first != 0) && (n == ilbc_constants.SUBL)) {
+      syntDenum_idx+=(ilbc_constants.LPC_FILTERORDER + 1);
+      weightDenum_idx+=(ilbc_constants.LPC_FILTERORDER + 1);
+      ilbc_common.AllPoleFilter(in,in_idx + n,weightDenum,weightDenum_idx,len - n,ilbc_constants.LPC_FILTERORDER);
+    }
+ else     if ((state_first == 0) && (n == (this.ULP_inst.state_short_len - ilbc_constants.SUBL))) {
+      syntDenum_idx+=(ilbc_constants.LPC_FILTERORDER + 1);
+      weightDenum_idx+=(ilbc_constants.LPC_FILTERORDER + 1);
+      ilbc_common.AllPoleFilter(in,in_idx + n,weightDenum,weightDenum_idx,len - n,ilbc_constants.LPC_FILTERORDER);
+    }
+    syntOutBuf[syntOut + n]=0.0f;
+    ilbc_common.AllPoleFilter(syntOutBuf,syntOut + n,weightDenum,weightDenum_idx,1,ilbc_constants.LPC_FILTERORDER);
+    toQ=in[in_idx + n] - syntOutBuf[syntOut + n];
+    xq=sort_sq(index,0,toQ,ilbc_constants.state_sq3Tbl,8);
+    out[n]=index[0];
+    syntOutBuf[syntOut + n]=ilbc_constants.state_sq3Tbl[out[n]];
+    ilbc_common.AllPoleFilter(syntOutBuf,syntOut + n,weightDenum,weightDenum_idx,1,ilbc_constants.LPC_FILTERORDER);
+  }
+}

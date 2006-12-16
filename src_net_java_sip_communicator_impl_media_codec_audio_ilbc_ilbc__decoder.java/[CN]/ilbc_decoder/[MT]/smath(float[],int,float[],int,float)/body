@@ -1,0 +1,64 @@
+{
+  int i, k;
+  float w00, w10, w11, A, B, C, err, errs;
+  float[] surround=new float[ilbc_constants.BLOCKL_MAX];
+  float[] wt=new float[2 * ilbc_constants.ENH_HL + 1];
+  float denom;
+  int psseq;
+  for (i=1; i <= 2 * hl + 1; i++) {
+    wt[i - 1]=(float)0.5 * (1 - (float)(float)Math.cos(2 * ilbc_constants.PI * i / (2 * hl + 2)));
+  }
+  wt[hl]=0.0f;
+  for (i=0; i < ilbc_constants.ENH_BLOCKL; i++) {
+    surround[i]=sseq[i] * wt[0];
+  }
+  for (k=1; k < hl; k++) {
+    psseq=k * ilbc_constants.ENH_BLOCKL;
+    for (i=0; i < ilbc_constants.ENH_BLOCKL; i++) {
+      surround[i]+=sseq[psseq + i] * wt[k];
+    }
+  }
+  for (k=hl + 1; k <= 2 * hl; k++) {
+    psseq=k * ilbc_constants.ENH_BLOCKL;
+    for (i=0; i < ilbc_constants.ENH_BLOCKL; i++) {
+      surround[i]+=sseq[psseq + i] * wt[k];
+    }
+  }
+  w00=w10=w11=0.0f;
+  psseq=hl * ilbc_constants.ENH_BLOCKL;
+  for (i=0; i < ilbc_constants.ENH_BLOCKL; i++) {
+    w00+=sseq[psseq + i] * sseq[psseq + i];
+    w11+=surround[i] * surround[i];
+    w10+=surround[i] * sseq[psseq + i];
+  }
+  if ((float)Math.abs(w11) < 1.0f) {
+    w11=1.0f;
+  }
+  C=(float)(float)Math.sqrt(w00 / w11);
+  errs=0.0f;
+  psseq=hl * ilbc_constants.ENH_BLOCKL;
+  for (i=0; i < ilbc_constants.ENH_BLOCKL; i++) {
+    odata[odata_idx + i]=C * surround[i];
+    err=sseq[psseq + i] - odata[odata_idx + i];
+    errs+=err * err;
+  }
+  if (errs > alpha0 * w00) {
+    if (w00 < 1) {
+      w00=1;
+    }
+    denom=(w11 * w00 - w10 * w10) / (w00 * w00);
+    if (denom > 0.0001f) {
+      A=(float)(float)Math.sqrt((alpha0 - alpha0 * alpha0 / 4) / denom);
+      B=-alpha0 / 2 - A * w10 / w00;
+      B=B + 1;
+    }
+ else {
+      A=0.0f;
+      B=1.0f;
+    }
+    psseq=hl * ilbc_constants.ENH_BLOCKL;
+    for (i=0; i < ilbc_constants.ENH_BLOCKL; i++) {
+      odata[odata_idx + i]=A * surround[i] + B * sseq[psseq + i];
+    }
+  }
+}

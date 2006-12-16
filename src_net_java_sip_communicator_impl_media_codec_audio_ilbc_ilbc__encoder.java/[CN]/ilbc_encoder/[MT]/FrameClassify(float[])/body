@@ -1,0 +1,61 @@
+{
+  float max_ssqEn;
+  float[] fssqEn=new float[ilbc_constants.NSUB_MAX];
+  float[] bssqEn=new float[ilbc_constants.NSUB_MAX];
+  int pp;
+  int n, l, max_ssqEn_n;
+  float[] ssqEn_win={(float)0.8,(float)0.9,(float)1.0f,(float)0.9,(float)0.8};
+  float[] sampEn_win={(float)1.0f / (float)6.0,(float)2.0f / (float)6.0,(float)3.0f / (float)6.0,(float)4.0f / (float)6.0,(float)5.0f / (float)6.0};
+  for (int li=0; li < ilbc_constants.NSUB_MAX; li++)   fssqEn[li]=0.0f;
+  for (int li=0; li < ilbc_constants.NSUB_MAX; li++)   bssqEn[li]=0.0f;
+  n=0;
+  pp=0;
+  for (l=0; l < 5; l++) {
+    fssqEn[n]+=sampEn_win[l] * (residual[pp]) * (residual[pp]);
+    pp++;
+  }
+  for (l=5; l < ilbc_constants.SUBL; l++) {
+    fssqEn[n]+=(residual[pp]) * (residual[pp]);
+    pp++;
+  }
+  for (n=1; n < this.ULP_inst.nsub - 1; n++) {
+    pp=n * ilbc_constants.SUBL;
+    for (l=0; l < 5; l++) {
+      fssqEn[n]+=sampEn_win[l] * (residual[pp]) * (residual[pp]);
+      bssqEn[n]+=(residual[pp]) * (residual[pp]);
+      pp++;
+    }
+    for (l=5; l < ilbc_constants.SUBL - 5; l++) {
+      fssqEn[n]+=(residual[pp]) * (residual[pp]);
+      bssqEn[n]+=(residual[pp]) * (residual[pp]);
+      pp++;
+    }
+    for (l=ilbc_constants.SUBL - 5; l < ilbc_constants.SUBL; l++) {
+      fssqEn[n]+=(residual[pp]) * (residual[pp]);
+      bssqEn[n]+=sampEn_win[ilbc_constants.SUBL - l - 1] * (residual[pp]) * (residual[pp]);
+      pp++;
+    }
+  }
+  n=this.ULP_inst.nsub - 1;
+  pp=n * ilbc_constants.SUBL;
+  for (l=0; l < ilbc_constants.SUBL - 5; l++) {
+    bssqEn[n]+=(residual[pp]) * (residual[pp]);
+    pp++;
+  }
+  for (l=ilbc_constants.SUBL - 5; l < ilbc_constants.SUBL; l++) {
+    bssqEn[n]+=sampEn_win[ilbc_constants.SUBL - l - 1] * (residual[pp]) * (residual[pp]);
+    pp++;
+  }
+  if (this.ULP_inst.mode == 20)   l=1;
+ else   l=0;
+  max_ssqEn=(fssqEn[0] + bssqEn[1]) * ssqEn_win[l];
+  max_ssqEn_n=1;
+  for (n=2; n < this.ULP_inst.nsub; n++) {
+    l++;
+    if ((fssqEn[n - 1] + bssqEn[n]) * ssqEn_win[l] > max_ssqEn) {
+      max_ssqEn=(fssqEn[n - 1] + bssqEn[n]) * ssqEn_win[l];
+      max_ssqEn_n=n;
+    }
+  }
+  return max_ssqEn_n;
+}
