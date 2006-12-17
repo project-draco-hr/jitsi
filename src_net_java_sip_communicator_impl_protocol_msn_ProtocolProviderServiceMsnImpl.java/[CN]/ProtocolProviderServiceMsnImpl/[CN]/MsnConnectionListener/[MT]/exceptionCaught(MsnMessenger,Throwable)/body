@@ -1,5 +1,9 @@
 {
-  if (throwable instanceof IncorrectPasswordException)   fireRegistrationStateChanged(getRegistrationState(),RegistrationState.AUTHENTICATION_FAILED,RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED,"Incorrect Password");
+  if (throwable instanceof IncorrectPasswordException) {
+    unregister(false);
+    MsnActivator.getProtocolProviderFactory().storePassword(getAccountID(),null);
+    fireRegistrationStateChanged(getRegistrationState(),RegistrationState.AUTHENTICATION_FAILED,RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED,"Incorrect Password");
+  }
  else {
     if (throwable instanceof MsnProtocolException) {
       MsnProtocolException exception=(MsnProtocolException)throwable;
@@ -16,6 +20,7 @@ case 601:
 case 911:
     if (isRegistered()) {
       unregister(false);
+      MsnActivator.getProtocolProviderFactory().storePassword(getAccountID(),null);
       fireRegistrationStateChanged(getRegistrationState(),RegistrationState.AUTHENTICATION_FAILED,RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED,null);
     }
   break;
