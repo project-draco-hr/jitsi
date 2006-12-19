@@ -1,0 +1,18 @@
+{
+  Iterator iter=earlyStatusChange.keySet().iterator();
+  while (iter.hasNext()) {
+    String contactEmail=(String)iter.next();
+    ContactMsnImpl sourceContact=ssContactList.findContactById(contactEmail);
+    if (sourceContact == null) {
+      return;
+    }
+    PresenceStatus oldStatus=sourceContact.getPresenceStatus();
+    PresenceStatus newStatus=msnStatusToPresenceStatus((MsnUserStatus)earlyStatusChange.get(contactEmail));
+    if (oldStatus.equals(newStatus))     return;
+    sourceContact.updatePresenceStatus(newStatus);
+    ContactGroup parent=ssContactList.findContactGroup(sourceContact);
+    logger.debug("Will Dispatch the contact status event.");
+    fireContactPresenceStatusChangeEvent(sourceContact,parent,oldStatus,newStatus);
+  }
+  earlyStatusChange.clear();
+}
