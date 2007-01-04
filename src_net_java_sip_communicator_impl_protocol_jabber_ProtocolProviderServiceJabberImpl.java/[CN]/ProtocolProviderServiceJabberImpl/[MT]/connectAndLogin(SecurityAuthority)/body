@@ -40,11 +40,15 @@ synchronized (initializationLock) {
         throw new OperationFailedException("Failed to establish a Jabber connection for " + getAccountID().getAccountUniqueID(),OperationFailedException.NETWORK_FAILURE,exc);
       }
       connection.addConnectionListener(new JabberConnectionListener());
+      fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERING,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
       connection.login(userID,password,"sip-comm");
       if (connection.isAuthenticated()) {
         this.reconnecting=false;
         connection.getRoster().setSubscriptionMode(Roster.SUBSCRIPTION_MANUAL);
         fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
+      }
+ else {
+        fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
       }
     }
  catch (    NumberFormatException ex) {
