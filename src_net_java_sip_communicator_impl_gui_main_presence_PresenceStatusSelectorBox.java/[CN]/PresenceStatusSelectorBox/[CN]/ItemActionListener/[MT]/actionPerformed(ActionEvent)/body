@@ -6,7 +6,7 @@
     while (statusSet.hasNext()) {
       PresenceStatus status=((PresenceStatus)statusSet.next());
       if (status.getStatusName().equals(menuItem.getText()) && !presence.getPresenceStatus().equals(status)) {
-        if (protocolProvider.isRegistered()) {
+        if (protocolProvider.getRegistrationState() == RegistrationState.REGISTERED) {
           if (status.isOnline()) {
             new PublishPresenceStatusThread(status).start();
           }
@@ -16,11 +16,18 @@
           }
           setSelectedStatus(status);
         }
- else         if (status.isOnline()) {
+ else         if (protocolProvider.getRegistrationState() != RegistrationState.REGISTERED && protocolProvider.getRegistrationState() != RegistrationState.REGISTERING && protocolProvider.getRegistrationState() != RegistrationState.AUTHENTICATING && status.isOnline()) {
           lastSelectedStatus=status;
           loginManager.login(protocolProvider);
         }
-        mainFrame.saveStatusInformation(protocolProvider,status);
+ else {
+          if (!status.isOnline() && !(protocolProvider.getRegistrationState() == RegistrationState.UNREGISTERING)) {
+            loginManager.setManuallyDisconnected(true);
+            loginManager.logoff(protocolProvider);
+            setSelectedStatus(status);
+          }
+        }
+        mainFrame.saveStatusInformation(protocolProvider,status.getStatusName());
         break;
       }
     }
