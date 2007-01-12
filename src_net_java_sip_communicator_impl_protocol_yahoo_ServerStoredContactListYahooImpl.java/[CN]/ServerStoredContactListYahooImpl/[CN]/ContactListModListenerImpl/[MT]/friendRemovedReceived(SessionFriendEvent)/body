@@ -1,0 +1,21 @@
+{
+  String contactID=ev.getFriend().getId();
+  Object waitForMoveObj=waitMove.get(contactID);
+  if (waitForMoveObj != null && waitForMoveObj instanceof YahooGroup) {
+    ContactGroupYahooImpl oldParent=findContactGroup(ev.getGroup());
+    ContactYahooImpl contactToRemove=oldParent.findContact(contactID);
+    oldParent.removeContact(contactToRemove);
+    waitMove.remove(contactID);
+    ContactGroupYahooImpl newParent=findContactGroup(((YahooGroup)waitForMoveObj).getName());
+    fireContactMoved(oldParent,newParent,contactToRemove);
+    return;
+  }
+  ContactYahooImpl contactToRemove=findContactById(contactID);
+  ContactGroupYahooImpl parentGroup=(ContactGroupYahooImpl)contactToRemove.getParentContactGroup();
+  parentGroup.removeContact(contactToRemove);
+  fireContactRemoved(parentGroup,contactToRemove);
+  if (findGroup(ev.getGroup()) == null) {
+    rootGroup.removeSubGroup(parentGroup);
+    fireGroupEvent(parentGroup,ServerStoredGroupEvent.GROUP_REMOVED_EVENT);
+  }
+}

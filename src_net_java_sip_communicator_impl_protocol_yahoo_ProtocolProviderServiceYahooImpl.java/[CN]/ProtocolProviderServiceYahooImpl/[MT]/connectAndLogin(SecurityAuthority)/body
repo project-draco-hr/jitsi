@@ -1,0 +1,37 @@
+{
+synchronized (initializationLock) {
+    String password=YahooActivator.getProtocolProviderFactory().loadPassword(getAccountID());
+    if (password == null) {
+      UserCredentials credentials=new UserCredentials();
+      credentials.setUserName(getAccountID().getUserID());
+      credentials=authority.obtainCredentials(ProtocolNames.YAHOO,credentials);
+      char[] pass=credentials.getPassword();
+      if (pass == null) {
+        fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"");
+        return;
+      }
+      password=new String(pass);
+      if (credentials.isPasswordPersistent()) {
+        YahooActivator.getProtocolProviderFactory().storePassword(getAccountID(),password);
+      }
+    }
+    yahooSession=new YahooSession();
+    yahooSession.addSessionListener(new YahooConnectionListener());
+    try {
+      yahooSession.login(getAccountID().getUserID(),password);
+      if (yahooSession.getSessionStatus() == StatusConstants.MESSAGING) {
+        persistentPresence.fireProviderPresenceStatusChangeEvent(persistentPresence.getPresenceStatus(),persistentPresence.yahooStatusToPresenceStatus(yahooSession.getStatus()));
+        fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
+      }
+ else {
+        fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
+      }
+    }
+ catch (    LoginRefusedException ex) {
+      fireRegistrationStateChanged(getRegistrationState(),RegistrationState.AUTHENTICATION_FAILED,RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED,null);
+    }
+catch (    IOException ex) {
+      fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
+    }
+  }
+}

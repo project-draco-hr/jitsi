@@ -1,0 +1,18 @@
+{
+  logger.trace("Start init list of " + yahooProvider.getAccountID().getUserID());
+  YahooGroup[] groups=yahooSession.getGroups();
+  for (int i=0; i < groups.length; i++) {
+    YahooGroup item=groups[i];
+    ContactGroupYahooImpl group=findContactGroup(item.getName());
+    if (group == null) {
+      group=new ContactGroupYahooImpl(item,item.getMembers(),this,true);
+      rootGroup.addSubGroup(group);
+      fireGroupEvent(group,ServerStoredGroupEvent.GROUP_CREATED_EVENT);
+    }
+ else {
+      group.setResolved(item);
+      fireGroupEvent(group,ServerStoredGroupEvent.GROUP_RESOLVED_EVENT);
+    }
+    logger.trace("Init of group done! : " + group);
+  }
+}

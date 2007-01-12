@@ -1,0 +1,15 @@
+{
+  assertConnected();
+  if (!(status instanceof YahooStatusEnum))   throw new IllegalArgumentException(status + " is not a valid Yahoo status");
+  if (status.equals(YahooStatusEnum.OFFLINE)) {
+    yahooProvider.unregister();
+    return;
+  }
+  try {
+    yahooProvider.getYahooSession().setStatus(((Long)scToYahooModesMappings.get(status)).longValue());
+    fireProviderPresenceStatusChangeEvent(currentStatus,status);
+  }
+ catch (  IOException ex) {
+    throw new OperationFailedException("Failed to set Status",OperationFailedException.NETWORK_FAILURE);
+  }
+}

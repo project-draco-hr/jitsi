@@ -1,0 +1,39 @@
+{
+  logger.trace("Receive event for adding a friend : " + ev);
+  ContactGroupYahooImpl group=findContactGroup(ev.getGroup());
+  if (group == null) {
+    logger.trace("Group not found!" + group);
+    return;
+  }
+  if (!group.isResolved()) {
+    YahooGroup gr=findGroup(ev.getGroup());
+    if (gr != null)     group.setResolved(gr);
+    return;
+  }
+  String contactID=ev.getFriend().getId();
+  ContactYahooImpl contactToAdd=findContactById(contactID);
+  if (contactToAdd == null) {
+    contactToAdd=new ContactYahooImpl(ev.getFriend(),ServerStoredContactListYahooImpl.this,true,true);
+  }
+ else   if (!contactToAdd.isPersistent()) {
+    ContactGroupYahooImpl parent=(ContactGroupYahooImpl)contactToAdd.getParentContactGroup();
+    parent.removeContact(contactToAdd);
+    contactToAdd=new ContactYahooImpl(ev.getFriend(),ServerStoredContactListYahooImpl.this,true,true);
+  }
+  Object isWaitingForMove=waitMove.get(contactID);
+  if (isWaitingForMove != null && isWaitingForMove instanceof String) {
+    String oldParent=(String)isWaitingForMove;
+    group.addContact(contactToAdd);
+    waitMove.put(contactID,group.getSourceGroup());
+    try {
+      yahooSession.removeFriend(contactID,oldParent);
+    }
+ catch (    IOException ex) {
+      logger.info("Cannot Remove(till moving) contact :" + contactToAdd + " from group "+ oldParent);
+    }
+  }
+ else {
+    group.addContact(contactToAdd);
+    fireContactAdded(group,contactToAdd);
+  }
+}

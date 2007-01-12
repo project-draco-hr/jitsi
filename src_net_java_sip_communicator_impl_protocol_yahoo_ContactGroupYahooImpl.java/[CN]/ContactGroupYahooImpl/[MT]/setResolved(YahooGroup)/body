@@ -1,0 +1,20 @@
+{
+  if (isResolved)   return;
+  this.isResolved=true;
+  this.yahooGroup=yahooGroup;
+  Vector contacts=yahooGroup.getMembers();
+  Iterator iter=contacts.iterator();
+  while (iter.hasNext()) {
+    YahooUser item=(YahooUser)iter.next();
+    ContactYahooImpl contact=ssclCallback.findContactById(item.getId());
+    if (contact != null) {
+      contact.setResolved(item);
+      ssclCallback.fireContactResolved(this,contact);
+    }
+ else {
+      ContactYahooImpl newContact=new ContactYahooImpl(item,ssclCallback,true,true);
+      addContact(newContact);
+      ssclCallback.fireContactAdded(this,newContact);
+    }
+  }
+}

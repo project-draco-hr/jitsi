@@ -1,0 +1,14 @@
+{
+  assertConnected();
+  try {
+    yahooProvider.getYahooSession().sendMessage(((ContactYahooImpl)to).getSourceContact().getId(),message.getContent());
+    MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(message,to,new Date());
+    fireMessageEvent(msgDeliveredEvt);
+  }
+ catch (  IOException ex) {
+    logger.info("Cannot Send Message! " + ex.getMessage());
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date());
+    fireMessageEvent(evt);
+    return;
+  }
+}

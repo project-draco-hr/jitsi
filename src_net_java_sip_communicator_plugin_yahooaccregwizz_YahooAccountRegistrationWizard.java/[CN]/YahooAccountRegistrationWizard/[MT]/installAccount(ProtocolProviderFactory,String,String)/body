@@ -1,0 +1,22 @@
+{
+  Hashtable accountProperties=new Hashtable();
+  if (registration.isRememberPassword()) {
+    accountProperties.put(ProtocolProviderFactory.PASSWORD,passwd);
+  }
+  if (isModification) {
+    providerFactory.uninstallAccount(protocolProvider.getAccountID());
+    this.protocolProvider=null;
+  }
+  try {
+    AccountID accountID=providerFactory.installAccount(user,accountProperties);
+    ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
+    protocolProvider=(ProtocolProviderService)YahooAccRegWizzActivator.bundleContext.getService(serRef);
+  }
+ catch (  IllegalArgumentException e) {
+    new ErrorDialog(null,e.getMessage()).showDialog();
+  }
+catch (  IllegalStateException e) {
+    new ErrorDialog(null,e.getMessage()).showDialog();
+  }
+  return protocolProvider;
+}

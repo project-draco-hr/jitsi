@@ -1,0 +1,49 @@
+{
+  logger.debug("Testing Subscription and Subscription Event Dispatch.");
+  SubscriptionEventCollector subEvtCollector=new SubscriptionEventCollector();
+  operationSetPresence1.addSubsciptionListener(subEvtCollector);
+synchronized (subEvtCollector) {
+    operationSetPresence1.subscribe(fixture.userID2);
+    subEvtCollector.waitForEvent(10000);
+    operationSetPresence1.removeSubscriptionListener(subEvtCollector);
+  }
+  assertEquals("Subscription event dispatching failed.",1,subEvtCollector.collectedEvents.size());
+  SubscriptionEvent subEvt=(SubscriptionEvent)subEvtCollector.collectedEvents.get(0);
+  assertEquals("SubscriptionEvent Source:",fixture.userID2,((Contact)subEvt.getSource()).getAddress());
+  assertEquals("SubscriptionEvent Source Contact:",fixture.userID2,subEvt.getSourceContact().getAddress());
+  assertSame("SubscriptionEvent Source Provider:",fixture.provider1,subEvt.getSourceProvider());
+  subEvtCollector.collectedEvents.clear();
+  logger.debug("Testing presence notifications.");
+  YahooStatusEnum oldStatus=(YahooStatusEnum)operationSetPresence2.getPresenceStatus();
+  YahooStatusEnum newStatus=YahooStatusEnum.IDLE;
+  if (oldStatus.equals(newStatus)) {
+    newStatus=YahooStatusEnum.BUSY;
+  }
+  ContactPresenceEventCollector contactPresEvtCollector=new ContactPresenceEventCollector(fixture.userID2,newStatus);
+  operationSetPresence1.addContactPresenceStatusListener(contactPresEvtCollector);
+synchronized (contactPresEvtCollector) {
+    operationSetPresence2.publishPresenceStatus(newStatus,"new status");
+    contactPresEvtCollector.waitForEvent(10000);
+    operationSetPresence1.removeContactPresenceStatusListener(contactPresEvtCollector);
+  }
+  assertEquals("Presence Notif. event dispatching failed.",1,contactPresEvtCollector.collectedEvents.size());
+  ContactPresenceStatusChangeEvent presEvt=(ContactPresenceStatusChangeEvent)contactPresEvtCollector.collectedEvents.get(0);
+  assertEquals("Presence Notif. event  Source:",fixture.userID2,((Contact)presEvt.getSource()).getAddress());
+  assertEquals("Presence Notif. event  Source Contact:",fixture.userID2,presEvt.getSourceContact().getAddress());
+  assertSame("Presence Notif. event  Source Provider:",fixture.provider1,presEvt.getSourceProvider());
+  PresenceStatus reportedNewStatus=presEvt.getNewStatus();
+  PresenceStatus reportedOldStatus=presEvt.getOldStatus();
+  assertEquals("Reported new PresenceStatus: ",newStatus,reportedNewStatus);
+  assertNotNull("Reported old PresenceStatus: ",reportedOldStatus);
+  try {
+    subEvtCollector.collectedEvents.clear();
+    operationSetPresence2.addSubsciptionListener(subEvtCollector);
+synchronized (subEvtCollector) {
+      operationSetPresence2.subscribe(fixture.userID1);
+      subEvtCollector.waitForEvent(10000);
+      operationSetPresence2.removeSubscriptionListener(subEvtCollector);
+    }
+  }
+ catch (  OperationFailedException ex) {
+  }
+}
