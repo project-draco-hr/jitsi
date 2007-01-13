@@ -2,7 +2,7 @@
   logger.trace("Receive event for adding a friend : " + ev);
   ContactGroupYahooImpl group=findContactGroup(ev.getGroup());
   if (group == null) {
-    logger.trace("Group not found!" + group);
+    logger.trace("Group not found!" + ev.getGroup());
     return;
   }
   if (!group.isResolved()) {
@@ -12,22 +12,18 @@
   }
   String contactID=ev.getFriend().getId();
   ContactYahooImpl contactToAdd=findContactById(contactID);
+  boolean isVolatile=false;
   if (contactToAdd == null) {
-    contactToAdd=new ContactYahooImpl(ev.getFriend(),ServerStoredContactListYahooImpl.this,true,true);
+    if (addedCustomYahooIds.containsKey(contactID)) {
+      String expectedContactID=(String)addedCustomYahooIds.remove(contactID);
+      contactToAdd=new ContactYahooImpl(expectedContactID,ev.getFriend(),ServerStoredContactListYahooImpl.this,true,true);
+    }
+ else {
+      contactToAdd=new ContactYahooImpl(ev.getFriend(),ServerStoredContactListYahooImpl.this,true,true);
+    }
   }
- else   if (!contactToAdd.isPersistent()) {
-    ContactGroupYahooImpl parent=(ContactGroupYahooImpl)contactToAdd.getParentContactGroup();
-    parent.removeContact(contactToAdd);
-    contactToAdd.setPersistent(true);
-    contactToAdd.setResolved(ev.getFriend());
-    group.addContact(contactToAdd);
-    fireContactMoved(parent,group,contactToAdd);
-    waitMove.remove(contactID);
-    return;
-  }
- else   if (!contactToAdd.isResolved()) {
-    contactToAdd.setResolved(ev.getFriend());
-    return;
+ else {
+    isVolatile=contactToAdd.isVolatile();
   }
   Object isWaitingForMove=waitMove.get(contactID);
   if (isWaitingForMove != null && isWaitingForMove instanceof String) {
@@ -40,9 +36,19 @@
  catch (    IOException ex) {
       logger.info("Cannot Remove(till moving) contact :" + contactToAdd + " from group "+ oldParent);
     }
+    return;
   }
- else {
+  if (isVolatile) {
+    ContactGroupYahooImpl parent=(ContactGroupYahooImpl)contactToAdd.getParentContactGroup();
+    parent.removeContact(contactToAdd);
+    fireContactRemoved(parent,contactToAdd);
+    contactToAdd.setPersistent(true);
+    contactToAdd.setResolved(ev.getFriend());
     group.addContact(contactToAdd);
     fireContactAdded(group,contactToAdd);
+    waitMove.remove(contactID);
+    return;
   }
+  group.addContact(contactToAdd);
+  fireContactAdded(group,contactToAdd);
 }
