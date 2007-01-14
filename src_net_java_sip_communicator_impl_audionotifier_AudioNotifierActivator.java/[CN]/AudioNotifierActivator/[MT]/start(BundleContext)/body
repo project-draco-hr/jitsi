@@ -1,0 +1,18 @@
+{
+  try {
+    audioNotifier=new AudioNotifierImpl();
+    ServiceReference configReference=bundleContext.getServiceReference(ConfigurationService.class.getName());
+    configService=(ConfigurationService)bundleContext.getService(configReference);
+    String isSoundEnabled=configService.getString("net.java.sip.communicator.impl.sound.isSoundEnabled");
+    if (isSoundEnabled != null && isSoundEnabled != "") {
+      audioNotifier.setMute(!new Boolean(isSoundEnabled).booleanValue());
+    }
+    logger.logEntry();
+    logger.info("Audio Notifier Service...[  STARTED ]");
+    bundleContext.registerService(AudioNotifierService.class.getName(),audioNotifier,null);
+    logger.info("Audio Notifier Service ...[REGISTERED]");
+  }
+  finally {
+    logger.logExit();
+  }
+}
