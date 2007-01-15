@@ -5,13 +5,18 @@
     logger.trace("Group not found!" + ev.getGroup());
     return;
   }
+  String contactID=ev.getFriend().getId();
+  ContactYahooImpl contactToAdd=findContactById(contactID);
   if (!group.isResolved()) {
+    if (contactToAdd != null && contactToAdd.isVolatile()) {
+      ContactGroupYahooImpl parent=(ContactGroupYahooImpl)contactToAdd.getParentContactGroup();
+      parent.removeContact(contactToAdd);
+      fireContactRemoved(parent,contactToAdd);
+    }
     YahooGroup gr=findGroup(ev.getGroup());
     if (gr != null)     group.setResolved(gr);
     return;
   }
-  String contactID=ev.getFriend().getId();
-  ContactYahooImpl contactToAdd=findContactById(contactID);
   boolean isVolatile=false;
   if (contactToAdd == null) {
     if (addedCustomYahooIds.containsKey(contactID)) {
