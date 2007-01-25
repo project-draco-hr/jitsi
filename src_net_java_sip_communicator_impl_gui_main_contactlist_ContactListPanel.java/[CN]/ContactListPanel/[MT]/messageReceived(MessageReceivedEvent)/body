@@ -1,4 +1,5 @@
 {
+  logger.trace("MESSAGE RECEIVED from contact: " + evt.getSourceContact().getAddress());
   Contact protocolContact=evt.getSourceContact();
   Date date=evt.getTimestamp();
   Message message=evt.getSourceMessage();
@@ -44,8 +45,10 @@
     }
     ChatPanel chatPanel;
     if (!chatWindow.containsContactChat(metaContact)) {
+      logger.trace("MESSAGE RECEIVED: create new chat for contact: " + evt.getSourceContact().getAddress());
       chatPanel=chatWindow.createChat(metaContact,contactStatus,protocolContact);
       chatPanel.loadHistory(message.getMessageUID());
+      logger.trace("MESSAGE RECEIVED: process message in chat for contact: " + evt.getSourceContact().getAddress());
       chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
       if (Constants.AUTO_POPUP_NEW_MESSAGE) {
         chatWindow.addChatTab(chatPanel);
@@ -62,7 +65,9 @@
       }
     }
  else {
+      logger.trace("MESSAGE RECEIVED: get existing chat for contact: " + evt.getSourceContact().getAddress());
       chatPanel=chatWindow.getChatPanel(metaContact);
+      logger.trace("MESSAGE RECEIVED: process message in chat for contact: " + evt.getSourceContact().getAddress());
       chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
       if (chatWindow.getState() == JFrame.ICONIFIED) {
         if (chatWindow.getTabCount() > 1) {
