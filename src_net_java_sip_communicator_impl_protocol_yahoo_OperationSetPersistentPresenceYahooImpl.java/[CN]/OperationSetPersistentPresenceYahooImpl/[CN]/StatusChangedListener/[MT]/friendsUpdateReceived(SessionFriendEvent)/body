@@ -1,15 +1,10 @@
 {
   logger.debug("Received a status update for contact " + evt);
-  ContactYahooImpl sourceContact=ssContactList.findContactById(evt.getFriend().getId());
-  if (sourceContact == null) {
-    if (yahooProvider.getAccountID().getUserID().equals(evt.getFriend().getId())) {
-      logger.trace("Own status changed to " + evt.getFriend().getStatus());
-      PresenceStatus oldStatus=currentStatus;
-      currentStatus=yahooStatusToPresenceStatus(evt.getFriend().getStatus());
-      fireProviderPresenceStatusChangeEvent(oldStatus,currentStatus);
-      return;
-    }
- else     return;
+  if (evt.getFriend() != null) {
+    handleContactStatusChange(evt.getFriend());
   }
-  handleContactStatusChange(sourceContact,evt.getFriend().getStatus());
+ else   if (evt.getFriends() != null) {
+    YahooUser[] yfs=evt.getFriends();
+    for (int i=0; i < yfs.length; i++)     handleContactStatusChange(yfs[i]);
+  }
 }
