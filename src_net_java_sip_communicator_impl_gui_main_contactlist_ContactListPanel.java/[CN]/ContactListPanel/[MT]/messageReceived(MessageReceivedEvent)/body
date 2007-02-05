@@ -6,10 +6,12 @@
   MetaContact metaContact=mainFrame.getContactList().findMetaContactByContact(protocolContact);
   PresenceStatus contactStatus=((ContactListModel)this.contactList.getModel()).getMetaContactStatus(metaContact);
   ChatWindow chatWindow;
+  ChatPanel chatPanel;
   if (!Constants.TABBED_CHAT_WINDOW) {
     if (chatWindows.containsKey(metaContact)) {
       chatWindow=(ChatWindow)chatWindows.get(metaContact);
-      chatWindow.getCurrentChatPanel().processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
+      chatPanel=chatWindow.getCurrentChatPanel();
+      chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
       if (chatWindow.getState() == JFrame.ICONIFIED) {
         chatWindow.setTitle("*" + chatWindow.getTitle());
       }
@@ -24,7 +26,7 @@
  else {
       ChatWindow msgWindow=new ChatWindow(mainFrame);
       chatWindows.put(metaContact,msgWindow);
-      ChatPanel chatPanel=msgWindow.createChat(metaContact,contactStatus,protocolContact);
+      chatPanel=msgWindow.createChat(metaContact,contactStatus,protocolContact);
       chatPanel.loadHistory(message.getMessageUID());
       chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
       if (Constants.AUTO_POPUP_NEW_MESSAGE) {
@@ -43,7 +45,6 @@
  else {
       chatWindow=(ChatWindow)chatWindows.elements().nextElement();
     }
-    ChatPanel chatPanel;
     if (!chatWindow.containsContactChat(metaContact)) {
       logger.trace("MESSAGE RECEIVED: create new chat for contact: " + evt.getSourceContact().getAddress());
       chatPanel=chatWindow.createChat(metaContact,contactStatus,protocolContact);
@@ -87,4 +88,7 @@
     }
   }
   GuiActivator.getAudioNotifier().createAudio(Sounds.INCOMING_MESSAGE).play();
+  if (!chatPanel.getProtocolContact().getProtocolProvider().equals(protocolContact.getProtocolProvider())) {
+    chatPanel.setProtocolContact(protocolContact);
+  }
 }
