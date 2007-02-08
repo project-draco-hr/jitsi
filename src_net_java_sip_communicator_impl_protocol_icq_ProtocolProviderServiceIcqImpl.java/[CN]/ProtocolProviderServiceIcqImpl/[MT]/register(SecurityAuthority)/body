@@ -20,6 +20,24 @@ synchronized (initializationLock) {
     session=new DefaultAppSession();
     aimSession=session.openAimSession(new Screenname(getAccountID().getUserID()));
     aimConnection=aimSession.openConnection(new AimConnectionProperties(new Screenname(getAccountID().getUserID()),password));
+    String proxyAddress=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.PROXY_ADDRESS);
+    if (proxyAddress != null && proxyAddress.length() > 0) {
+      String proxyPortStr=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.PROXY_PORT);
+      int proxyPort;
+      try {
+        proxyPort=Integer.parseInt(proxyPortStr);
+      }
+ catch (      NumberFormatException ex) {
+        throw new OperationFailedException("Wrong port",OperationFailedException.INVALID_ACCOUNT_PROPERTIES,ex);
+      }
+      String proxyType=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.PROXY_TYPE);
+      if (proxyType == null)       throw new OperationFailedException("Missing proxy type",OperationFailedException.INVALID_ACCOUNT_PROPERTIES);
+      String proxyUsername=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.PROXY_USERNAME);
+      String proxyPassword=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.PROXY_PASSWORD);
+      if (proxyType.equals("http"))       aimConnection.setProxy(AimProxyInfo.forHttp(proxyAddress,proxyPort,proxyUsername,proxyPassword));
+ else       if (proxyType.equals("socks4"))       aimConnection.setProxy(AimProxyInfo.forSocks4(proxyAddress,proxyPort,proxyUsername));
+ else       if (proxyType.equals("socks5"))       aimConnection.setProxy(AimProxyInfo.forSocks5(proxyAddress,proxyPort,proxyUsername,proxyPassword));
+    }
     aimConnStateListener=new AimConnStateListener();
     aimConnection.addStateListener(aimConnStateListener);
     aimConnection.connect();
