@@ -1,0 +1,29 @@
+{
+  List infoData=getInfoForRequest(cmd.getId());
+  ServerStoredDetails.GenderDetail gender=OperationSetServerStoredAccountInfoIcqImpl.genders[cmd.getGender()];
+  if (gender != null)   infoData.add(gender);
+  String tmp=null;
+  try {
+    if ((tmp=cmd.getHomepage()) != null)     infoData.add(new ServerStoredDetails.WebPageDetail(new URL(tmp)));
+  }
+ catch (  MalformedURLException ex) {
+  }
+  Calendar birthDate=Calendar.getInstance();
+  birthDate.setTime(cmd.getBirthDate());
+  infoData.add(new ServerStoredDetails.BirthDateDetail(birthDate));
+  Locale spokenLanguage1=OperationSetServerStoredAccountInfoIcqImpl.getSpokenLanguage(cmd.getSpeakingLanguages()[0]);
+  if (spokenLanguage1 != null)   infoData.add(new ServerStoredDetails.SpokenLanguageDetail(spokenLanguage1));
+  Locale spokenLanguage2=OperationSetServerStoredAccountInfoIcqImpl.getSpokenLanguage(cmd.getSpeakingLanguages()[1]);
+  if (spokenLanguage2 != null)   infoData.add(new ServerStoredDetails.SpokenLanguageDetail(spokenLanguage2));
+  Locale spokenLanguage3=OperationSetServerStoredAccountInfoIcqImpl.getSpokenLanguage(cmd.getSpeakingLanguages()[2]);
+  if (spokenLanguage3 != null)   infoData.add(new ServerStoredDetails.SpokenLanguageDetail(spokenLanguage3));
+  if ((tmp=cmd.getOriginalCity()) != null)   infoData.add(new OperationSetServerStoredAccountInfoIcqImpl.OriginCityDetail(tmp));
+  if ((tmp=cmd.getOriginalState()) != null)   infoData.add(new OperationSetServerStoredAccountInfoIcqImpl.OriginProvinceDetail(tmp));
+  Locale originCountryLocale=OperationSetServerStoredAccountInfoIcqImpl.getCountry(cmd.getOriginalCountryCode());
+  if (originCountryLocale != null)   infoData.add(new OperationSetServerStoredAccountInfoIcqImpl.OriginCountryDetail(originCountryLocale));
+  int userGMTOffset=cmd.getTimeZone();
+  TimeZone userTimeZone=null;
+  if (userGMTOffset >= 0)   userTimeZone=TimeZone.getTimeZone("GMT+" + userGMTOffset);
+ else   userTimeZone=TimeZone.getTimeZone("GMT" + userGMTOffset);
+  infoData.add(new ServerStoredDetails.TimeZoneDetail("GMT Offest",userTimeZone));
+}

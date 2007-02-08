@@ -1,19 +1,12 @@
 {
   List result=(List)retreivedDetails.get(uin);
   if (result == null) {
-    long toICQUin=Long.parseLong(uin);
-    FullInfoRequest infoRequest=new FullInfoRequest(toICQUin);
     int reqID=requestID++;
+    long toICQUin=Long.parseLong(uin);
+    MetaFullInfoRequest infoRequest=new MetaFullInfoRequest(Long.parseLong(ownerUin),reqID,toICQUin);
     UserInfoResponseRetriever responseRetriever=new UserInfoResponseRetriever(reqID);
-    SnacCommand cmd=new ToIcqCmd(Long.parseLong(ownerUin),infoRequest.getType(),reqID,infoRequest);
-    icqProvider.getAimConnection().getInfoService().sendSnacRequest(cmd,responseRetriever);
-synchronized (responseRetriever) {
-      try {
-        responseRetriever.wait(10000);
-      }
- catch (      InterruptedException ex) {
-      }
-    }
+    icqProvider.getAimConnection().getInfoService().getOscarConnection().sendSnacRequest(infoRequest,responseRetriever);
+    responseRetriever.waitForLastInfo(10000);
     result=responseRetriever.result;
     retreivedDetails.put(uin,result);
   }

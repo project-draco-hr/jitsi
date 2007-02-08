@@ -14,12 +14,125 @@
   List removeValues=new ArrayList();
   removeValues.add(detail);
   SuccessResponseListener responseListener=new SuccessResponseListener();
-  icqProvider.getAimConnection().getInfoService().sendSnacRequest(new FullInfoCmd(uin,foundValues,removeValues),responseListener);
-  responseListener.waitForEvent(5000);
-  if (!responseListener.success && responseListener.timeout)   throw new OperationFailedException("Replacing Detail Failed!",OperationFailedException.NETWORK_FAILURE);
-  if (responseListener.success) {
-    infoRetreiver.detailsChanged(uin);
-    return true;
-  }
- else   return false;
+  MetaFullInfoSetCmd cmd=new MetaFullInfoSetCmd(Integer.parseInt(uin),reqID++);
+  int typeOfDetail=((int[])supportedTypes.get(detail.getClass()))[1];
+  try {
+switch (typeOfDetail) {
+case 0x01A4:
+      cmd.setCountry(-1);
+    break;
+case 0x0154:
+  cmd.setNickName(null);
+break;
+case 0x0140:
+cmd.setFirstName(null);
+break;
+case 0x014A:
+cmd.setLastName(null);
+break;
+case 0x015E:
+cmd.setEmail(null,false);
+break;
+case 0x0190:
+cmd.setHomeCity(null);
+break;
+case 0x019A:
+cmd.setHomeState(null);
+break;
+case 0x0276:
+cmd.setHomePhone(null);
+break;
+case 0x0280:
+cmd.setHomeFax(null);
+break;
+case 0x0262:
+cmd.setAddress(null);
+break;
+case 0x028A:
+cmd.setCellPhone(null);
+break;
+case 0x026C:
+cmd.setHomeZip(null);
+break;
+case 0x017C:
+cmd.setGender(0);
+break;
+case 0x0213:
+cmd.setHomePage(null);
+break;
+case 0x023A:
+cmd.setBirthDay(null);
+break;
+case 0x0186:
+int[] langs=new int[3];
+Arrays.fill(langs,-1);
+cmd.setLanguages(langs[0],langs[1],langs[2]);
+break;
+case 0x0320:
+cmd.setOriginCity(null);
+break;
+case 0x032A:
+cmd.setOriginState(null);
+break;
+case 0x0334:
+cmd.setOriginCountry(-1);
+break;
+case 0x029E:
+cmd.setWorkCity(null);
+break;
+case 0x02A8:
+cmd.setWorkState(null);
+break;
+case 0x02C6:
+cmd.setWorkPhone(null);
+break;
+case 0x02D0:
+cmd.setWorkFax(null);
+break;
+case 0x0294:
+cmd.setWorkAddress(null);
+break;
+case 0x02BC:
+cmd.setWorkZip(null);
+break;
+case 0x02B2:
+cmd.setWorkCountry(-1);
+break;
+case 0x01AE:
+cmd.setWorkCompany(null);
+break;
+case 0x01B8:
+cmd.setWorkDepartment(null);
+break;
+case 0x01C2:
+cmd.setWorkPosition(null);
+break;
+case 0x01CC:
+cmd.setWorkOccupationCode(0);
+break;
+case 0x02DA:
+cmd.setWorkWebPage(null);
+break;
+case 0x0258:
+cmd.setNotes(null);
+break;
+case 0x01EA:
+cmd.setInterests(new int[]{0},new String[]{""});
+break;
+case 0x0316:
+cmd.setTimeZone(0);
+break;
+}
+}
+ catch (IOException ex) {
+throw new OperationFailedException("Cannot add Detail!",OperationFailedException.NETWORK_FAILURE);
+}
+icqProvider.getAimConnection().getInfoService().getOscarConnection().sendSnacRequest(cmd,responseListener);
+responseListener.waitForEvent(5000);
+if (!responseListener.success && responseListener.timeout) throw new OperationFailedException("Replacing Detail Failed!",OperationFailedException.NETWORK_FAILURE);
+if (responseListener.success) {
+infoRetreiver.detailsChanged(uin);
+return true;
+}
+ else return false;
 }

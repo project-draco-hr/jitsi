@@ -8,17 +8,156 @@
     if (item.equals(currentDetailValue)) {
       isFound=true;
       alreadySetDetails.add(newDetailValue);
+      logger.info("ooooooooooooo found old " + item);
     }
  else     alreadySetDetails.add(item);
   }
   if (!isFound)   return false;
   SuccessResponseListener responseListener=new SuccessResponseListener();
-  icqProvider.getAimConnection().getInfoService().sendSnacRequest(new FullInfoCmd(uin,alreadySetDetails,null),responseListener);
-  responseListener.waitForEvent(5000);
-  if (!responseListener.success && responseListener.timeout)   throw new OperationFailedException("Replacing Detail Failed!",OperationFailedException.NETWORK_FAILURE);
-  if (responseListener.success) {
-    infoRetreiver.detailsChanged(uin);
-    return true;
-  }
- else   return false;
+  MetaFullInfoSetCmd cmd=new MetaFullInfoSetCmd(Integer.parseInt(uin),reqID++);
+  int typeOfDetail=((int[])supportedTypes.get(newDetailValue.getClass()))[1];
+  try {
+switch (typeOfDetail) {
+case 0x01A4:
+      cmd.setCountry(getCountryCode(((CountryDetail)newDetailValue).getLocale()));
+    break;
+case 0x0154:
+  cmd.setNickName(((StringDetail)newDetailValue).getString());
+break;
+case 0x0140:
+cmd.setFirstName(((StringDetail)newDetailValue).getString());
+break;
+case 0x014A:
+logger.info("ooooo replacing last name " + ((StringDetail)newDetailValue).getString());
+cmd.setLastName(((StringDetail)newDetailValue).getString());
+break;
+case 0x015E:
+cmd.setEmail(((StringDetail)newDetailValue).getString(),false);
+break;
+case 0x0190:
+cmd.setHomeCity(((StringDetail)newDetailValue).getString());
+break;
+case 0x019A:
+cmd.setHomeState(((StringDetail)newDetailValue).getString());
+break;
+case 0x0276:
+cmd.setHomePhone(((StringDetail)newDetailValue).getString());
+break;
+case 0x0280:
+cmd.setHomeFax(((StringDetail)newDetailValue).getString());
+break;
+case 0x0262:
+cmd.setAddress(((StringDetail)newDetailValue).getString());
+break;
+case 0x028A:
+cmd.setCellPhone(((StringDetail)newDetailValue).getString());
+break;
+case 0x026C:
+cmd.setHomeZip(((StringDetail)newDetailValue).getString());
+break;
+case 0x017C:
+if (newDetailValue.equals(ServerStoredDetails.GenderDetail.FEMALE)) cmd.setGender(1);
+ else if (newDetailValue.equals(ServerStoredDetails.GenderDetail.MALE)) cmd.setGender(2);
+ else cmd.setGender(0);
+break;
+case 0x0213:
+cmd.setHomePage(((StringDetail)newDetailValue).getString());
+break;
+case 0x023A:
+cmd.setBirthDay(((BirthDateDetail)newDetailValue).getCalendar().getTime());
+break;
+case 0x0186:
+int[] langs=new int[3];
+Arrays.fill(langs,-1);
+int count=0;
+Iterator i=getDetails(SpokenLanguageDetail.class);
+while (i.hasNext()) {
+Object item=(Object)i.next();
+if (item.equals(currentDetailValue)) langs[count++]=getLanguageCode(((SpokenLanguageDetail)newDetailValue).getLocale());
+ else langs[count++]=getLanguageCode(((SpokenLanguageDetail)item).getLocale());
+}
+cmd.setLanguages(langs[0],langs[1],langs[2]);
+break;
+case 0x0320:
+cmd.setOriginCity(((StringDetail)newDetailValue).getString());
+break;
+case 0x032A:
+cmd.setOriginState(((StringDetail)newDetailValue).getString());
+break;
+case 0x0334:
+cmd.setOriginCountry(getCountryCode(((CountryDetail)newDetailValue).getLocale()));
+break;
+case 0x029E:
+cmd.setWorkCity(((StringDetail)newDetailValue).getString());
+break;
+case 0x02A8:
+cmd.setWorkState(((StringDetail)newDetailValue).getString());
+break;
+case 0x02C6:
+cmd.setWorkPhone(((StringDetail)newDetailValue).getString());
+break;
+case 0x02D0:
+cmd.setWorkFax(((StringDetail)newDetailValue).getString());
+break;
+case 0x0294:
+cmd.setWorkAddress(((StringDetail)newDetailValue).getString());
+break;
+case 0x02BC:
+cmd.setWorkZip(((StringDetail)newDetailValue).getString());
+break;
+case 0x02B2:
+cmd.setWorkCountry(getCountryCode(((CountryDetail)newDetailValue).getLocale()));
+break;
+case 0x01AE:
+cmd.setWorkCompany(((StringDetail)newDetailValue).getString());
+break;
+case 0x01B8:
+cmd.setWorkDepartment(((StringDetail)newDetailValue).getString());
+break;
+case 0x01C2:
+cmd.setWorkPosition(((StringDetail)newDetailValue).getString());
+break;
+case 0x01CC:
+cmd.setWorkOccupationCode(getOccupationCode(((StringDetail)newDetailValue).getString()));
+break;
+case 0x02DA:
+cmd.setWorkWebPage(((StringDetail)newDetailValue).getString());
+break;
+case 0x0258:
+cmd.setNotes(((StringDetail)newDetailValue).getString());
+break;
+case 0x01EA:
+ArrayList interests=new ArrayList();
+Iterator intIter=getDetails(InterestDetail.class);
+while (intIter.hasNext()) {
+InterestDetail item=(InterestDetail)intIter.next();
+if (item.equals(currentDetailValue)) interests.add(newDetailValue);
+ else interests.add(item);
+}
+InterestDetail[] interestsArr=(InterestDetail[])interests.toArray();
+int[] interestsCategories=new int[interestsArr.length];
+String[] interestsStr=new String[interestsArr.length];
+for (int k=0; k < interestsArr.length; k++) {
+interestsStr[k]=interestsArr[k].getInterest();
+interestsCategories[k]=getInterestCode(interestsStr[k]);
+}
+cmd.setInterests(interestsCategories,interestsStr);
+break;
+case 0x0316:
+int offset=((ServerStoredDetails.TimeZoneDetail)newDetailValue).getTimeZone().getRawOffset() / (60 * 60 * 1000);
+cmd.setTimeZone(offset);
+break;
+}
+}
+ catch (IOException ex) {
+throw new OperationFailedException("Cannot add Detail!",OperationFailedException.NETWORK_FAILURE);
+}
+icqProvider.getAimConnection().getInfoService().getOscarConnection().sendSnacRequest(cmd,responseListener);
+responseListener.waitForEvent(5000);
+if (!responseListener.success && responseListener.timeout) throw new OperationFailedException("Replacing Detail Failed!",OperationFailedException.NETWORK_FAILURE);
+if (responseListener.success) {
+infoRetreiver.detailsChanged(uin);
+return true;
+}
+ else return false;
 }
