@@ -15,13 +15,13 @@
       if (chatWindow.getState() == JFrame.ICONIFIED) {
         chatWindow.setTitle("*" + chatWindow.getTitle());
       }
-      if (Constants.AUTO_POPUP_NEW_MESSAGE) {
-        if (chatWindow.isVisible()) {
+      if (chatWindow.isVisible()) {
+        if (ConfigurationManager.isAutoPopupNewMessage()) {
           if (chatWindow.getState() == JFrame.ICONIFIED)           chatWindow.setState(JFrame.NORMAL);
           chatWindow.toFront();
         }
- else         chatWindow.setVisible(true);
       }
+ else       chatWindow.setVisible(true);
     }
  else {
       ChatWindow msgWindow=new ChatWindow(mainFrame);
@@ -29,7 +29,7 @@
       chatPanel=msgWindow.createChat(metaContact,contactStatus,protocolContact);
       chatPanel.loadHistory(message.getMessageUID());
       chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
-      if (Constants.AUTO_POPUP_NEW_MESSAGE) {
+      if (ConfigurationManager.isAutoPopupNewMessage()) {
         msgWindow.addChat(chatPanel);
         msgWindow.pack();
         msgWindow.setVisible(true);
@@ -51,18 +51,18 @@
       chatPanel.loadHistory(message.getMessageUID());
       logger.trace("MESSAGE RECEIVED: process message in chat for contact: " + evt.getSourceContact().getAddress());
       chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
-      if (Constants.AUTO_POPUP_NEW_MESSAGE) {
-        chatWindow.addChatTab(chatPanel);
-        if (chatWindow.isVisible()) {
+      chatWindow.addChatTab(chatPanel);
+      if (chatWindow.isVisible()) {
+        if (ConfigurationManager.isAutoPopupNewMessage()) {
           if (chatWindow.getState() == JFrame.ICONIFIED)           chatWindow.setState(JFrame.NORMAL);
           chatWindow.toFront();
         }
- else         chatWindow.setVisible(true);
-        chatPanel.setCaretToEnd();
-        chatWindow.getCurrentChatPanel().requestFocusInWriteArea();
-        if (chatWindow.getTabCount() > 1) {
-          chatWindow.highlightTab(metaContact);
-        }
+      }
+ else       chatWindow.setVisible(true);
+      chatPanel.setCaretToEnd();
+      chatWindow.getCurrentChatPanel().requestFocusInWriteArea();
+      if (chatWindow.getTabCount() > 1) {
+        chatWindow.highlightTab(metaContact);
       }
     }
  else {
@@ -82,7 +82,9 @@
         if (chatWindow.getTabCount() > 1) {
           chatWindow.highlightTab(metaContact);
         }
-        if (chatWindow.isVisible())         chatWindow.toFront();
+        if (chatWindow.isVisible()) {
+          if (ConfigurationManager.isAutoPopupNewMessage())           chatWindow.toFront();
+        }
  else         chatWindow.setVisible(true);
       }
     }
