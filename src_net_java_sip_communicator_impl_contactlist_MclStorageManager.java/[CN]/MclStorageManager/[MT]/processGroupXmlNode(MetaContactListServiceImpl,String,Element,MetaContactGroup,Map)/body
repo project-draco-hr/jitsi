@@ -34,12 +34,25 @@
   for (int i=0; childContacts != null && i < childContacts.getLength(); i++) {
     Node currentMetaContactNode=childContacts.item(i);
     if (currentMetaContactNode.getNodeType() != Node.ELEMENT_NODE)     continue;
-    String uid=XMLUtils.getAttribute(currentMetaContactNode,UID_ATTR_NAME);
-    Element displayNameNode=XMLUtils.findChild((Element)currentMetaContactNode,META_CONTACT_DISPLAY_NAME_NODE_NAME);
-    String displayName=XMLUtils.getText(displayNameNode);
-    List protoContacts=extractProtoContacts((Element)currentMetaContactNode,accountID,protoGroupsMap);
-    if (protoContacts.size() < 1)     continue;
-    mclServiceImpl.loadStoredMetaContact(currentMetaGroup,uid,displayName,protoContacts,accountID);
+    try {
+      String uid=XMLUtils.getAttribute(currentMetaContactNode,UID_ATTR_NAME);
+      Element displayNameNode=XMLUtils.findChild((Element)currentMetaContactNode,META_CONTACT_DISPLAY_NAME_NODE_NAME);
+      String displayName=XMLUtils.getText(displayNameNode);
+      List protoContacts=extractProtoContacts((Element)currentMetaContactNode,accountID,protoGroupsMap);
+      if (protoContacts.size() < 1)       continue;
+      mclServiceImpl.loadStoredMetaContact(currentMetaGroup,uid,displayName,protoContacts,accountID);
+    }
+ catch (    Throwable thr) {
+      logger.warn("Failed to parse meta contact " + currentMetaContactNode + ". Will remove and continue with other contacts",thr);
+      if (currentMetaContactNode != null && currentMetaContactNode.getParentNode() != null) {
+        try {
+          currentMetaContactNode.getParentNode().removeChild(currentMetaContactNode);
+        }
+ catch (        Throwable throwable) {
+          logger.error("Failed to remove meta contact node " + currentMetaContactNode,throwable);
+        }
+      }
+    }
   }
   Node subgroupsNode=XMLUtils.findChild(groupNode,SUBGROUPS_NODE_NAME);
   if (subgroupsNode == null)   return;
@@ -51,7 +64,15 @@
       processGroupXmlNode(mclServiceImpl,accountID,(Element)currentGroupNode,currentMetaGroup,protoGroupsMap);
     }
  catch (    Throwable throwable) {
-      logger.error("Failed to process group node " + currentGroupNode,throwable);
+      logger.error("Failed to process group node " + currentGroupNode + ". Removing.",throwable);
+      if (currentGroupNode != null && currentGroupNode.getParentNode() != null) {
+        try {
+          currentGroupNode.getParentNode().removeChild(currentGroupNode);
+        }
+ catch (        Throwable thr) {
+          logger.error("Failed to remove group node " + currentGroupNode,thr);
+        }
+      }
     }
   }
 }

@@ -1,16 +1,26 @@
 {
   List protoContacts=new LinkedList();
   NodeList children=metaContactNode.getChildNodes();
+  List duplicates=new LinkedList();
   for (int i=0; i < children.getLength(); i++) {
     Node currentNode=children.item(i);
     if (currentNode.getNodeType() != Node.ELEMENT_NODE || !currentNode.getNodeName().equals(PROTO_CONTACT_NODE_NAME))     continue;
     String contactAccountID=XMLUtils.getAttribute(currentNode,ACCOUNT_ID_ATTR_NAME);
     if (!accountID.equals(contactAccountID))     continue;
     String contactAddress=XMLUtils.getAttribute(currentNode,PROTO_CONTACT_ADDRESS_ATTR_NAME);
+    if (StoredProtoContactDescriptor.findContactInList(contactAddress,protoContacts) != null) {
+      duplicates.add(currentNode);
+      continue;
+    }
     String protoGroupUID=XMLUtils.getAttribute(currentNode,PARENT_PROTO_GROUP_UID_ATTR_NAME);
     Element persistentDataNode=XMLUtils.findChild((Element)currentNode,PERSISTENT_DATA_NODE_NAME);
     String persistentData=XMLUtils.getText(persistentDataNode);
     protoContacts.add(new StoredProtoContactDescriptor(contactAddress,persistentData,(ContactGroup)protoGroups.get(protoGroupUID)));
+  }
+  Iterator duplicatesIter=duplicates.iterator();
+  while (duplicatesIter.hasNext()) {
+    Node node=(Node)duplicatesIter.next();
+    metaContactNode.removeChild(node);
   }
   return protoContacts;
 }
