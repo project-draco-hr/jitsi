@@ -9,8 +9,18 @@
   Iterator contactsIter=protoContacts.iterator();
   while (contactsIter.hasNext()) {
     MclStorageManager.StoredProtoContactDescriptor contactDescriptor=(MclStorageManager.StoredProtoContactDescriptor)contactsIter.next();
+    if (contactDescriptor.contactAddress.indexOf("238431632") > -1)     logger.debug("asdfasdfasdfasdfasdfasdfasdf");
+    MetaContact mc=findMetaContactByContact(contactDescriptor.contactAddress,accountID);
+    if (mc != null) {
+      logger.warn("Ignoring duplicate proto contact " + contactDescriptor + " accountID="+ accountID+ ". The contact was also present in the "+ "folloing meta contact:"+ mc);
+      continue;
+    }
     Contact protoContact=presenceOpSet.createUnresolvedContact(contactDescriptor.contactAddress,contactDescriptor.persistentData,(contactDescriptor.parentProtoGroup == null) ? presenceOpSet.getServerStoredContactListRoot() : contactDescriptor.parentProtoGroup);
     newMetaContact.addProtoContact(protoContact);
+  }
+  if (newMetaContact.getContactCount() == 0) {
+    logger.error("Found an empty meta contact. Throwing an exception " + "so that the storage manager would remove it.");
+    throw new IllegalArgumentException("MetaContact[" + newMetaContact + "] contains no non-duplicating child contacts.");
   }
   parentGroup.addMetaContact(newMetaContact);
   logger.trace("Created meta contact: " + newMetaContact);
