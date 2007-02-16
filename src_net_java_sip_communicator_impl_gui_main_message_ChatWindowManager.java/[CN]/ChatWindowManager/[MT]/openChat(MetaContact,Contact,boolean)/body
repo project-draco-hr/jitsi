@@ -1,0 +1,32 @@
+{
+synchronized (syncChat) {
+    ChatPanel chatPanel;
+    ChatWindow chatWindow;
+    if (containsContactChat(metaContact)) {
+      chatPanel=getContactChat(metaContact);
+      chatWindow=chatPanel.getChatWindow();
+      if (!chatPanel.isWindowVisible())       chatWindow.addChat(chatPanel);
+    }
+ else {
+      chatPanel=createChat(metaContact,protoContact);
+      chatWindow=chatPanel.getChatWindow();
+      chatWindow.addChat(chatPanel);
+    }
+    if (chatWindow.getState() == JFrame.ICONIFIED && !chatWindow.getTitle().startsWith("*")) {
+      chatWindow.setTitle("*" + chatWindow.getTitle());
+    }
+    if (chatWindow.isVisible()) {
+      if (ConfigurationManager.isAutoPopupNewMessage() || setSelected) {
+        if (chatWindow.getState() == JFrame.ICONIFIED)         chatWindow.setState(JFrame.NORMAL);
+        chatWindow.toFront();
+      }
+    }
+ else     chatWindow.setVisible(true);
+    if (Constants.TABBED_CHAT_WINDOW && chatWindow.getTabCount() > 1) {
+      if (setSelected)       chatWindow.setSelectedChatTab(chatPanel);
+ else       chatPanel.getChatWindow().highlightTab(chatPanel);
+    }
+    chatPanel.setCaretToEnd();
+    chatWindow.getCurrentChatPanel().requestFocusInWriteArea();
+  }
+}

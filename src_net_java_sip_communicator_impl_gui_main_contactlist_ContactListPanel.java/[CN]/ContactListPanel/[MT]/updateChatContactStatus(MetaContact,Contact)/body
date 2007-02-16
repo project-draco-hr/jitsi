@@ -1,20 +1,13 @@
 {
   ContactListModel listModel=(ContactListModel)this.getContactList().getModel();
-  ChatWindow chatWindow;
-  if (!Constants.TABBED_CHAT_WINDOW) {
-    if (chatWindows.containsKey(metaContact)) {
-      chatWindow=(ChatWindow)chatWindows.get(metaContact);
-      chatWindow.getCurrentChatPanel().updateContactStatus(metaContact,protoContact);
-    }
-  }
- else   if (!chatWindows.isEmpty()) {
-    chatWindow=(ChatWindow)chatWindows.elements().nextElement();
-    ChatPanel chatPanel=chatWindow.getChatPanel(metaContact);
-    if (chatPanel != null) {
+  if (chatWindowManager.containsContactChat(metaContact)) {
+    ChatPanel chatPanel=chatWindowManager.getContactChat(metaContact);
+    chatPanel.updateContactStatus(metaContact,protoContact);
+    if (Constants.TABBED_CHAT_WINDOW) {
+      ChatWindow chatWindow=chatPanel.getChatWindow();
       if (chatWindow.getTabCount() > 0) {
-        chatWindow.setTabIcon(metaContact,listModel.getMetaContactStatusIcon(metaContact));
+        chatWindow.setTabIcon(chatPanel,listModel.getMetaContactStatusIcon(metaContact));
       }
-      chatPanel.updateContactStatus(metaContact,protoContact);
     }
   }
 }

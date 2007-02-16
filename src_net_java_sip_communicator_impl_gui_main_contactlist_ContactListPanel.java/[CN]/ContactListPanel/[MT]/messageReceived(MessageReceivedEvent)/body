@@ -4,91 +4,32 @@
   Date date=evt.getTimestamp();
   Message message=evt.getSourceMessage();
   MetaContact metaContact=mainFrame.getContactList().findMetaContactByContact(protocolContact);
-  PresenceStatus contactStatus=((ContactListModel)this.contactList.getModel()).getMetaContactStatus(metaContact);
-  ChatWindow chatWindow;
   ChatPanel chatPanel;
   if (!Constants.TABBED_CHAT_WINDOW) {
-    if (chatWindows.containsKey(metaContact)) {
-      chatWindow=(ChatWindow)chatWindows.get(metaContact);
-      chatPanel=chatWindow.getCurrentChatPanel();
+    if (chatWindowManager.containsContactChat(metaContact)) {
+      chatPanel=chatWindowManager.getContactChat(metaContact);
       chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
-      if (chatWindow.getState() == JFrame.ICONIFIED) {
-        chatWindow.setTitle("*" + chatWindow.getTitle());
-      }
-      if (chatWindow.isVisible()) {
-        if (ConfigurationManager.isAutoPopupNewMessage()) {
-          if (chatWindow.getState() == JFrame.ICONIFIED)           chatWindow.setState(JFrame.NORMAL);
-          chatWindow.toFront();
-        }
-      }
- else       chatWindow.setVisible(true);
     }
  else {
-      ChatWindow msgWindow=new ChatWindow(mainFrame);
-      chatWindows.put(metaContact,msgWindow);
-      chatPanel=msgWindow.createChat(metaContact,contactStatus,protocolContact);
-      chatPanel.loadHistory(message.getMessageUID());
+      chatPanel=chatWindowManager.createChat(metaContact,protocolContact);
       chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
-      if (ConfigurationManager.isAutoPopupNewMessage()) {
-        msgWindow.addChat(chatPanel);
-        msgWindow.pack();
-        msgWindow.setVisible(true);
-        chatPanel.setCaretToEnd();
-      }
     }
   }
  else {
-    if (chatWindows.isEmpty()) {
-      chatWindow=new ChatWindow(mainFrame);
-      chatWindows.put(metaContact,chatWindow);
-    }
- else {
-      chatWindow=(ChatWindow)chatWindows.elements().nextElement();
-    }
-    if (!chatWindow.containsContactChat(metaContact)) {
+    if (!chatWindowManager.containsContactChat(metaContact)) {
       logger.trace("MESSAGE RECEIVED: create new chat for contact: " + evt.getSourceContact().getAddress());
-      chatPanel=chatWindow.createChat(metaContact,contactStatus,protocolContact);
-      chatPanel.loadHistory(message.getMessageUID());
+      chatPanel=chatWindowManager.createChat(metaContact,protocolContact);
       logger.trace("MESSAGE RECEIVED: process message in chat for contact: " + evt.getSourceContact().getAddress());
       chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
-      chatWindow.addChatTab(chatPanel);
-      if (chatWindow.isVisible()) {
-        if (ConfigurationManager.isAutoPopupNewMessage()) {
-          if (chatWindow.getState() == JFrame.ICONIFIED)           chatWindow.setState(JFrame.NORMAL);
-          chatWindow.toFront();
-        }
-      }
- else       chatWindow.setVisible(true);
-      chatPanel.setCaretToEnd();
-      chatWindow.getCurrentChatPanel().requestFocusInWriteArea();
-      if (chatWindow.getTabCount() > 1) {
-        chatWindow.highlightTab(metaContact);
-      }
     }
  else {
       logger.trace("MESSAGE RECEIVED: get existing chat for contact: " + evt.getSourceContact().getAddress());
-      chatPanel=chatWindow.getChatPanel(metaContact);
+      chatPanel=chatWindowManager.getContactChat(metaContact);
       logger.trace("MESSAGE RECEIVED: process message in chat for contact: " + evt.getSourceContact().getAddress());
       chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
-      if (chatWindow.getState() == JFrame.ICONIFIED) {
-        if (chatWindow.getTabCount() > 1) {
-          chatWindow.setSelectedContactTab(metaContact);
-        }
-        if (!chatWindow.getTitle().startsWith("*")) {
-          chatWindow.setTitle("*" + chatWindow.getTitle());
-        }
-      }
- else {
-        if (chatWindow.getTabCount() > 1) {
-          chatWindow.highlightTab(metaContact);
-        }
-        if (chatWindow.isVisible()) {
-          if (ConfigurationManager.isAutoPopupNewMessage())           chatWindow.toFront();
-        }
- else         chatWindow.setVisible(true);
-      }
     }
   }
+  chatWindowManager.openChat(metaContact,false);
   GuiActivator.getAudioNotifier().createAudio(Sounds.INCOMING_MESSAGE).play();
   if (!chatPanel.getProtocolContact().getProtocolProvider().equals(protocolContact.getProtocolProvider())) {
     chatPanel.setProtocolContact(protocolContact);
