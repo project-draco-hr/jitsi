@@ -1,35 +1,22 @@
 {
   String contactName=chatPanel.getMetaContact().getDisplayName();
   PresenceStatus status=chatPanel.getDefaultContactStatus();
-  if (chatTabbedPane == null) {
-    chatTabbedPane=new SIPCommTabbedPane(true,false);
-    chatTabbedPane.addCloseListener(new CloseListener(){
-      public void closeOperation(      MouseEvent e){
-        int tabIndex=chatTabbedPane.getOverTabIndex();
-        ChatPanel chatPanel=(ChatPanel)chatTabbedPane.getComponentAt(tabIndex);
-        mainFrame.getChatWindowManager().closeChat(chatPanel);
-      }
-    }
-);
+  if (getCurrentChatPanel() == null) {
     this.getContentPane().add(chatPanel,BorderLayout.CENTER);
-    this.setTitle(contactName);
-    this.setCurrentChatPanel(chatPanel);
   }
  else {
-    if (chatTabbedPane.getTabCount() > 0) {
-      chatTabbedPane.addTab(contactName,new ImageIcon(Constants.getStatusIcon(status)),chatPanel);
-      chatTabbedPane.getParent().validate();
-    }
- else {
+    if (getChatTabCount() == 0) {
       ChatPanel firstChatPanel=getCurrentChatPanel();
       PresenceStatus currentContactStatus=firstChatPanel.getDefaultContactStatus();
       chatTabbedPane.addTab(firstChatPanel.getMetaContact().getDisplayName(),new ImageIcon(Constants.getStatusIcon(currentContactStatus)),firstChatPanel);
       chatTabbedPane.addTab(contactName,new ImageIcon(Constants.getStatusIcon(status)),chatPanel);
       firstChatPanel.setCaretToEnd();
+      this.getContentPane().add(chatTabbedPane,BorderLayout.CENTER);
+      this.getContentPane().validate();
     }
-    this.getContentPane().add(chatTabbedPane,BorderLayout.CENTER);
-    this.getContentPane().validate();
-    int chatIndex=chatTabbedPane.getTabCount() - 1;
-    if (chatTabbedPane.getSelectedIndex() == chatIndex)     this.setCurrentChatPanel(chatPanel);
+ else {
+      chatTabbedPane.addTab(contactName,new ImageIcon(Constants.getStatusIcon(status)),chatPanel);
+      chatTabbedPane.getParent().validate();
+    }
   }
 }

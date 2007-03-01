@@ -6,28 +6,14 @@
   MetaContact metaContact=mainFrame.getContactList().findMetaContactByContact(protocolContact);
   ChatPanel chatPanel;
   if (!Constants.TABBED_CHAT_WINDOW) {
-    if (chatWindowManager.containsContactChat(metaContact)) {
-      chatPanel=chatWindowManager.getContactChat(metaContact);
-      chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
-    }
- else {
-      chatPanel=chatWindowManager.createChat(metaContact,protocolContact,message.getMessageUID());
-      chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
-    }
+    chatPanel=chatWindowManager.getContactChat(metaContact,protocolContact,message.getMessageUID());
+    chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
   }
  else {
-    if (!chatWindowManager.containsContactChat(metaContact)) {
-      logger.trace("MESSAGE RECEIVED: create new chat for contact: " + evt.getSourceContact().getAddress());
-      chatPanel=chatWindowManager.createChat(metaContact,protocolContact,message.getMessageUID());
-      logger.trace("MESSAGE RECEIVED: process message in chat for contact: " + evt.getSourceContact().getAddress());
-      chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
-    }
- else {
-      logger.trace("MESSAGE RECEIVED: get existing chat for contact: " + evt.getSourceContact().getAddress());
-      chatPanel=chatWindowManager.getContactChat(metaContact);
-      logger.trace("MESSAGE RECEIVED: process message in chat for contact: " + evt.getSourceContact().getAddress());
-      chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
-    }
+    logger.trace("MESSAGE RECEIVED: create new chat for contact: " + evt.getSourceContact().getAddress());
+    chatPanel=chatWindowManager.getContactChat(metaContact,protocolContact,message.getMessageUID());
+    logger.trace("MESSAGE RECEIVED: process message in chat for contact: " + evt.getSourceContact().getAddress());
+    chatPanel.processMessage(protocolContact.getDisplayName(),date,Constants.INCOMING_MESSAGE,message.getContent());
   }
   chatWindowManager.openChat(chatPanel,false);
   GuiActivator.getAudioNotifier().createAudio(Sounds.INCOMING_MESSAGE).play();
