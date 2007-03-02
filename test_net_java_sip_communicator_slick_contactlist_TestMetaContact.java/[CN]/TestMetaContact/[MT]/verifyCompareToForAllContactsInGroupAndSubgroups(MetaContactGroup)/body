@@ -1,20 +1,22 @@
 {
   Iterator contacts=group.getChildContacts();
   MetaContact previousContact=null;
-  int previousContactStatusSum=0;
+  int previousContactIsOnlineStatus=0;
   while (contacts.hasNext()) {
     MetaContact currentContact=(MetaContact)contacts.next();
     Iterator protoContacts=currentContact.getContacts();
-    int currentContactStatusSum=0;
+    int currentContactIsOnlineStatus=0;
     while (protoContacts.hasNext()) {
-      currentContactStatusSum+=((Contact)protoContacts.next()).getPresenceStatus().getStatus();
+      if (((Contact)protoContacts.next()).getPresenceStatus().isOnline()) {
+        currentContactIsOnlineStatus=1;
+      }
     }
     if (previousContact != null) {
-      assertTrue(previousContact + " with status=" + previousContactStatusSum+ " was wrongfully before "+ currentContact+ " with status="+ currentContactStatusSum,previousContactStatusSum >= currentContactStatusSum);
-      if (previousContactStatusSum == currentContactStatusSum)       assertTrue("The display name: " + previousContact.getDisplayName() + " should be considered less than "+ currentContact.getDisplayName(),previousContact.getDisplayName().compareToIgnoreCase(currentContact.getDisplayName()) <= 0);
+      assertTrue(previousContact + " with status=" + previousContactIsOnlineStatus+ " was wrongfully before "+ currentContact+ " with status="+ currentContactIsOnlineStatus,previousContactIsOnlineStatus >= currentContactIsOnlineStatus);
+      if (previousContactIsOnlineStatus == currentContactIsOnlineStatus)       assertTrue("The display name: " + previousContact.getDisplayName() + " should be considered less than "+ currentContact.getDisplayName(),previousContact.getDisplayName().compareToIgnoreCase(currentContact.getDisplayName()) <= 0);
     }
     previousContact=currentContact;
-    previousContactStatusSum=currentContactStatusSum;
+    previousContactIsOnlineStatus=currentContactIsOnlineStatus;
   }
   Iterator subgroups=group.getSubgroups();
   while (subgroups.hasNext()) {
