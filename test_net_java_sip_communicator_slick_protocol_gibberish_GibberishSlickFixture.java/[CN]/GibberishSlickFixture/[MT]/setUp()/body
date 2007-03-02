@@ -1,0 +1,24 @@
+{
+  ServiceReference[] serRefs=null;
+  String osgiFilter="(" + ProtocolProviderFactory.PROTOCOL + "=Gibberish)";
+  try {
+    serRefs=bc.getServiceReferences(ProtocolProviderFactory.class.getName(),osgiFilter);
+  }
+ catch (  InvalidSyntaxException ex) {
+    fail(osgiFilter + " is not a valid osgi filter");
+  }
+  assertTrue("Failed to find a provider factory service for protocol Gibberish",serRefs != null || serRefs.length > 0);
+  providerFactory=(ProtocolProviderFactory)bc.getService(serRefs[0]);
+  userID1=System.getProperty(GibberishProtocolProviderServiceLick.ACCOUNT_1_PREFIX + ProtocolProviderFactory.USER_ID);
+  userID2=System.getProperty(GibberishProtocolProviderServiceLick.ACCOUNT_2_PREFIX + ProtocolProviderFactory.USER_ID);
+  ServiceReference[] gibberishProvider1Refs=bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "=Gibberish)"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ userID1+ ")"+ ")");
+  assertNotNull("No Protocol Provider was found for Gibberish account1:" + userID1,gibberishProvider1Refs);
+  assertTrue("No Protocol Provider was found for Gibberish account1:" + userID1,gibberishProvider1Refs.length > 0);
+  ServiceReference[] gibberishProvider2Refs=bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "=Gibberish)"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ userID2+ ")"+ ")");
+  assertNotNull("No Protocol Provider was found for Gibberish account2:" + userID2,gibberishProvider2Refs);
+  assertTrue("No Protocol Provider was found for Gibberish account2:" + userID2,gibberishProvider2Refs.length > 0);
+  provider1ServiceRef=gibberishProvider1Refs[0];
+  provider1=(ProtocolProviderService)bc.getService(provider1ServiceRef);
+  provider2ServiceRef=gibberishProvider2Refs[0];
+  provider2=(ProtocolProviderService)bc.getService(provider2ServiceRef);
+}
