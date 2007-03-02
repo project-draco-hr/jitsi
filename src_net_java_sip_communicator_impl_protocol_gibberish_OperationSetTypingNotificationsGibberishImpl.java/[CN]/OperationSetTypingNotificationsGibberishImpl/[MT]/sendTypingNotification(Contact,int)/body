@@ -1,3 +1,21 @@
 {
-  this.fireTypingNotificationsEvent(notifiedContact,typingState);
+  String userID=notifiedContact.getAddress();
+  if (userID.equals(this.parentProvider.getAccountID().getUserID())) {
+    String sourceUserID=notifiedContact.getProtocolProvider().getAccountID().getUserID();
+    Contact from=opSetPersPresence.findContactByID(sourceUserID);
+    if (from == null) {
+      from=opSetPersPresence.createVolatileContact(sourceUserID);
+    }
+    fireTypingNotificationsEvent(from,typingState);
+  }
+ else {
+    ProtocolProviderServiceGibberishImpl gibberishProvider=this.opSetPersPresence.findProviderForGibberishUserID(userID);
+    if (gibberishProvider != null) {
+      OperationSetTypingNotificationsGibberishImpl opSetTN=(OperationSetTypingNotificationsGibberishImpl)gibberishProvider.getOperationSet(OperationSetTypingNotifications.class);
+      opSetTN.sendTypingNotification(notifiedContact,typingState);
+    }
+ else {
+      fireTypingNotificationsEvent(notifiedContact,typingState);
+    }
+  }
 }
