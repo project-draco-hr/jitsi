@@ -1,0 +1,21 @@
+{
+  String userID=to.getAddress();
+  if (userID.equals(this.parentProvider.getAccountID().getUserID())) {
+    String sourceUserID=to.getProtocolProvider().getAccountID().getUserID();
+    Contact from=opSetPersPresence.findContactByID(sourceUserID);
+    if (from == null) {
+      from=opSetPersPresence.createVolatileContact(sourceUserID);
+    }
+    fireMessageReceived(message,from);
+  }
+ else {
+    ProtocolProviderServiceGibberishImpl gibberishProvider=this.opSetPersPresence.findProviderForGibberishUserID(userID);
+    if (gibberishProvider != null) {
+      OperationSetBasicInstantMessagingGibberishImpl opSetIM=(OperationSetBasicInstantMessagingGibberishImpl)gibberishProvider.getOperationSet(OperationSetBasicInstantMessaging.class);
+      opSetIM.deliverMessage(message,to);
+    }
+ else {
+      fireMessageReceived(message,to);
+    }
+  }
+}
