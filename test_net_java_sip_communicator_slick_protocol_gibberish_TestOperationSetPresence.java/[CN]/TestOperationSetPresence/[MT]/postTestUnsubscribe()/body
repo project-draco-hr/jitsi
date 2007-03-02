@@ -1,0 +1,32 @@
+{
+  logger.debug("Testing Unsubscribe and unsubscription event dispatch.");
+  SubscriptionEventCollector subEvtCollector=new SubscriptionEventCollector();
+  operationSetPresence1.addSubsciptionListener(subEvtCollector);
+  Contact gibberishTesterAgentContact=operationSetPresence1.findContactByID(fixture.userID2);
+  assertNotNull("Failed to find an existing subscription for the tester agent",gibberishTesterAgentContact);
+synchronized (subEvtCollector) {
+    operationSetPresence1.unsubscribe(gibberishTesterAgentContact);
+    subEvtCollector.waitForEvent(10000);
+    operationSetPresence1.removeSubscriptionListener(subEvtCollector);
+  }
+  assertEquals("Subscription event dispatching failed.",1,subEvtCollector.collectedEvents.size());
+  SubscriptionEvent subEvt=(SubscriptionEvent)subEvtCollector.collectedEvents.get(0);
+  assertEquals("SubscriptionEvent Source:",gibberishTesterAgentContact,subEvt.getSource());
+  assertEquals("SubscriptionEvent Source Contact:",gibberishTesterAgentContact,subEvt.getSourceContact());
+  assertSame("SubscriptionEvent Source Provider:",fixture.provider1,subEvt.getSourceProvider());
+  subEvtCollector.collectedEvents.clear();
+  logger.debug("Testing (lack of) presence notifications.");
+  PresenceStatus oldStatus=operationSetPresence2.getPresenceStatus();
+  PresenceStatus newStatus=getSampleStatus1();
+  if (oldStatus.equals(newStatus)) {
+    newStatus=getSampleStatus2();
+  }
+  ContactPresenceEventCollector contactPresEvtCollector=new ContactPresenceEventCollector(fixture.userID2,null);
+  operationSetPresence1.addContactPresenceStatusListener(contactPresEvtCollector);
+synchronized (contactPresEvtCollector) {
+    operationSetPresence2.publishPresenceStatus(newStatus,"new status");
+    contactPresEvtCollector.waitForEvent(5000);
+    operationSetPresence1.removeContactPresenceStatusListener(contactPresEvtCollector);
+  }
+  assertEquals("Presence Notifications were received after unsubscibing.",0,contactPresEvtCollector.collectedEvents.size());
+}
