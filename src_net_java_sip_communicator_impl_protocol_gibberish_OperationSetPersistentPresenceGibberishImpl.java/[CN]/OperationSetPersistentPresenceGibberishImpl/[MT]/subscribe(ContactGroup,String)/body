@@ -2,11 +2,19 @@
   ContactGibberishImpl contact=new ContactGibberishImpl(contactIdentifier,parentProvider);
   if (authorizationHandler != null) {
     AuthorizationRequest request=authorizationHandler.createAuthorizationRequest(contact);
-    authorizationHandler.processAuthorisationRequest(request,contact);
-    AuthorizationResponse response=new AuthorizationResponse(AuthorizationResponse.ACCEPT,"You are welcome!");
+    AuthorizationResponse response=deliverAuthorizationRequest(request,contact);
     authorizationHandler.processAuthorizationResponse(response,contact);
+    if (response.getResponseCode() == AuthorizationResponse.REJECT)     return;
   }
   ((ContactGroupGibberishImpl)parent).addContact(contact);
   fireSubscriptionEvent(contact,parent,SubscriptionEvent.SUBSCRIPTION_CREATED);
-  changePresenceStatusForContact(contact,getPresenceStatus());
+  ProtocolProviderServiceGibberishImpl gibProvider=findProviderForGibberishUserID(contactIdentifier);
+  if (gibProvider != null) {
+    OperationSetPersistentPresence opSetPresence=(OperationSetPersistentPresence)gibProvider.getOperationSet(OperationSetPersistentPresence.class);
+    changePresenceStatusForContact(contact,(GibberishStatusEnum)opSetPresence.getPresenceStatus());
+  }
+ else {
+    changePresenceStatusForContact(contact,getPresenceStatus());
+  }
+  fireContactPresenceStatusChangeEvent(contact,parent,GibberishStatusEnum.OFFLINE);
 }

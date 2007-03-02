@@ -2,6 +2,18 @@
   ContactGibberishImpl gibberishContact=(ContactGibberishImpl)contactToMove;
   ContactGroupGibberishImpl parentGibberishGroup=findContactParent(gibberishContact);
   parentGibberishGroup.removeContact(gibberishContact);
-  ((ContactGroupGibberishImpl)newParent).addContact(gibberishContact);
-  fireSubscriptionMovedEvent(contactToMove,parentGibberishGroup,newParent);
+  if (!gibberishContact.isPersistent()) {
+    fireSubscriptionEvent(gibberishContact,parentGibberishGroup,SubscriptionEvent.SUBSCRIPTION_REMOVED);
+    try {
+      this.subscribe(newParent,contactToMove.getAddress());
+      fireSubscriptionEvent(gibberishContact,newParent,SubscriptionEvent.SUBSCRIPTION_CREATED);
+    }
+ catch (    Exception ex) {
+      logger.error("Failed to move contact " + gibberishContact.getAddress(),ex);
+    }
+  }
+ else {
+    ((ContactGroupGibberishImpl)newParent).addContact(gibberishContact);
+    fireSubscriptionMovedEvent(contactToMove,parentGibberishGroup,newParent);
+  }
 }
