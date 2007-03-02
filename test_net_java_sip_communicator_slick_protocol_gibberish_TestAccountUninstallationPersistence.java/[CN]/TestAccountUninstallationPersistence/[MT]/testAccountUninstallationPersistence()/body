@@ -1,0 +1,22 @@
+{
+  Bundle providerBundle=GibberishSlickFixture.providerBundle;
+  providerBundle.stop();
+  assertTrue("Couldn't stop the protocol provider bundle. State was " + providerBundle.getState(),Bundle.ACTIVE != providerBundle.getState() && Bundle.STOPPING != providerBundle.getState());
+  providerBundle.uninstall();
+  assertEquals("Couldn't stop the protocol provider bundle.",Bundle.UNINSTALLED,providerBundle.getState());
+  providerBundle=GibberishSlickFixture.bc.installBundle(providerBundle.getLocation());
+  assertEquals("Couldn't re-install protocol provider bundle.",Bundle.INSTALLED,providerBundle.getState());
+  providerBundle.start();
+  assertEquals("Couldn't re-start protocol provider bundle.",Bundle.ACTIVE,providerBundle.getState());
+  ServiceReference[] gibberishProviderRefs=null;
+  try {
+    gibberishProviderRefs=GibberishSlickFixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(" + ProtocolProviderFactory.PROTOCOL + "=Gibberish)");
+  }
+ catch (  InvalidSyntaxException ex) {
+    fail("We apparently got our filter wrong " + ex.getMessage());
+  }
+  assertTrue("A Gibberish Protocol Provider Service was still regged " + "as an osgi service after it was explicitly uninstalled",gibberishProviderRefs == null || gibberishProviderRefs.length == 0);
+  ServiceReference confReference=GibberishSlickFixture.bc.getServiceReference(ConfigurationService.class.getName());
+  ConfigurationService configurationService=(ConfigurationService)GibberishSlickFixture.bc.getService(confReference);
+  configurationService.purgeStoredConfiguration();
+}
