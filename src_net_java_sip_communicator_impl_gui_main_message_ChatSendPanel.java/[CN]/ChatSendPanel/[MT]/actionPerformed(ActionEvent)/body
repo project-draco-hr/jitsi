@@ -1,20 +1,28 @@
 {
   if (!this.chatPanel.isWriteAreaEmpty()) {
-    OperationSetBasicInstantMessaging im=this.chatPanel.getImOperationSet();
+    Contact contact=(Contact)contactSelectorBox.getMenu().getSelectedObject();
+    OperationSetBasicInstantMessaging im=(OperationSetBasicInstantMessaging)contact.getProtocolProvider().getOperationSet(OperationSetBasicInstantMessaging.class);
+    OperationSetTypingNotifications tn=(OperationSetTypingNotifications)contact.getProtocolProvider().getOperationSet(OperationSetTypingNotifications.class);
     String body=chatPanel.getTextFromWriteArea();
     Message msg=im.createMessage(body);
     this.chatPanel.getChatWindow().getMainFrame().getWaitToBeDeliveredMsgs().put(msg.getMessageUID(),this.chatPanel);
-    Contact contact=(Contact)contactSelectorBox.getMenu().getSelectedObject();
-    if (chatPanel.getTnOperationSet() != null) {
+    if (tn != null) {
       chatPanel.stopTypingNotifications();
     }
     try {
       im.sendInstantMessage(contact,msg);
     }
  catch (    IllegalStateException ex) {
+      logger.error("Failed to send message.",ex);
       chatPanel.refreshWriteArea();
       chatPanel.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,msg.getContent());
       chatPanel.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,Messages.getI18NString("msgSendConnectionProblem").getText());
+    }
+catch (    Exception ex) {
+      logger.error("Failed to send message.",ex);
+      chatPanel.refreshWriteArea();
+      chatPanel.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,msg.getContent());
+      chatPanel.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,Messages.getI18NString("msgDeliveryInternalError").getText());
     }
   }
   chatPanel.requestFocusInWriteArea();

@@ -1,26 +1,25 @@
 {
+  Contact chatProtocolContact=chatPanel.getProtocolContact();
+  OperationSetTypingNotifications tnOperationSet=(OperationSetTypingNotifications)chatProtocolContact.getProtocolProvider().getOperationSet(OperationSetTypingNotifications.class);
   if ((e.getModifiers() & KeyEvent.CTRL_MASK) == KeyEvent.CTRL_MASK && (e.getKeyCode() == KeyEvent.VK_Z)) {
-    if (undo.canUndo()) {
-      undo();
-    }
+    if (undo.canUndo())     undo();
   }
  else   if ((e.getModifiers() & KeyEvent.CTRL_MASK) == KeyEvent.CTRL_MASK && (e.getKeyCode() == KeyEvent.VK_R)) {
-    if (undo.canRedo()) {
-      redo();
-    }
+    if (undo.canRedo())     redo();
   }
- else   if (chatPanel.getProtocolContact().getProtocolProvider().isRegistered() && chatPanel.getChatWindow().isTypingNotificationEnabled() && chatPanel.getTnOperationSet() != null && e.getKeyCode() != KeyEvent.VK_ESCAPE) {
+ else   if (chatProtocolContact.getProtocolProvider().isRegistered() && chatPanel.getChatWindow().isTypingNotificationEnabled() && tnOperationSet != null && e.getKeyCode() != KeyEvent.VK_ESCAPE) {
     if (typingState != OperationSetTypingNotifications.STATE_TYPING) {
       stoppedTypingTimer.setDelay(2 * 1000);
       typingState=OperationSetTypingNotifications.STATE_TYPING;
-      chatPanel.getTnOperationSet().sendTypingNotification(chatPanel.getProtocolContact(),typingState);
-      typingTimer.start();
+      try {
+        tnOperationSet.sendTypingNotification(chatProtocolContact,typingState);
+        typingTimer.start();
+      }
+ catch (      Exception ex) {
+        logger.error("Failed to send typing notifications.",ex);
+      }
     }
-    if (!stoppedTypingTimer.isRunning()) {
-      stoppedTypingTimer.start();
-    }
- else {
-      stoppedTypingTimer.restart();
-    }
+    if (!stoppedTypingTimer.isRunning())     stoppedTypingTimer.start();
+ else     stoppedTypingTimer.restart();
   }
 }
