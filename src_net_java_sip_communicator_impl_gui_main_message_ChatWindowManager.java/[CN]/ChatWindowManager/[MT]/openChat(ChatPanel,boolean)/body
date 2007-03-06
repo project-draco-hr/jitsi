@@ -4,15 +4,21 @@ synchronized (syncChat) {
     boolean isChatVisible=chatPanel.isWindowVisible();
     if (!isChatVisible)     chatWindow.addChat(chatPanel);
     if (chatWindow.isVisible()) {
-      if ((ConfigurationManager.isAutoPopupNewMessage() && chatWindow.getExtendedState() != JFrame.ICONIFIED) || setSelected) {
-        if (chatWindow.getState() == JFrame.ICONIFIED)         chatWindow.setExtendedState(JFrame.NORMAL);
-        chatWindow.toFront();
-        chatWindow.setCurrentChatPanel(chatPanel);
+      if (chatWindow.getExtendedState() != JFrame.ICONIFIED) {
+        if (ConfigurationManager.isAutoPopupNewMessage() || setSelected)         chatWindow.toFront();
       }
  else {
-        if (chatWindow.getState() == JFrame.ICONIFIED && !chatWindow.getTitle().startsWith("*")) {
-          chatWindow.setTitle("*" + chatWindow.getTitle());
+        if (setSelected) {
+          chatWindow.setExtendedState(JFrame.NORMAL);
+          chatWindow.toFront();
         }
+        if (!chatWindow.getTitle().startsWith("*"))         chatWindow.setTitle("*" + chatWindow.getTitle());
+      }
+      if (setSelected) {
+        chatWindow.setCurrentChatPanel(chatPanel);
+      }
+ else       if (!chatWindow.getCurrentChatPanel().equals(chatPanel) && chatWindow.getChatTabCount() > 0) {
+        chatPanel.getChatWindow().highlightTab(chatPanel);
       }
     }
  else {
@@ -20,8 +26,5 @@ synchronized (syncChat) {
       chatWindow.setCurrentChatPanel(chatPanel);
     }
     chatPanel.setCaretToEnd();
-    if (!chatWindow.getCurrentChatPanel().equals(chatPanel) && chatWindow.getChatTabCount() > 0) {
-      chatPanel.getChatWindow().highlightTab(chatPanel);
-    }
   }
 }
