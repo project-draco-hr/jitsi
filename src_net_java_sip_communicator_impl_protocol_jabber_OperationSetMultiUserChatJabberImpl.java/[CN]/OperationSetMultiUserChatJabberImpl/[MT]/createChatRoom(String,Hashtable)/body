@@ -1,3 +1,32 @@
 {
-  return null;
+  if (MultiUserChat.isServiceEnabled(getXmppConnection(),jabberProvider.getAccountID().getUserID())) {
+    throw new OperationNotSupportedException("Impossible to create chat rooms on server " + jabberProvider.getAccountID().getService() + " for user "+ jabberProvider.getAccountID().getUserID());
+  }
+  MultiUserChat muc=new MultiUserChat(getXmppConnection(),roomName);
+  try {
+    logger.error("MUCI=" + muc.toString());
+    logger.debug("muc.getRoom()=" + muc.getRoom());
+    logger.debug("muc.getConfigurationForm();=" + muc.getConfigurationForm());
+    logger.debug("muc.getSubject();=" + muc.getSubject());
+    logger.debug("muc.getOwners();=" + muc.getOwners());
+  }
+ catch (  XMPPException ex2) {
+    ex2.printStackTrace(System.out);
+    throw new OperationFailedException("",0,ex2);
+  }
+  try {
+    try {
+      muc.create("kiki");
+    }
+ catch (    XMPPException ex1) {
+    }
+    muc.join("kiki");
+    muc.sendMessage("created a room");
+  }
+ catch (  XMPPException ex) {
+    logger.error("Failed to create or join a chat room",ex);
+    throw new OperationFailedException("Failed to create or join a chat room",OperationFailedException.FORBIDDEN);
+  }
+  ChatRoomJabberImpl chatRoom=new ChatRoomJabberImpl(muc);
+  return chatRoom;
 }
