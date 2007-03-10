@@ -1,11 +1,26 @@
 {
-  InitialDirContext iDirC=new InitialDirContext();
-  Attributes attributes=iDirC.getAttributes("dns:/" + domain,new String[]{"SRV"});
-  Attribute attributeSRV=attributes.get("SRV");
-  if (attributeSRV == null)   return null;
-  String[][] pvhn=new String[attributeSRV.size()][2];
-  for (int i=0; i < attributeSRV.size(); i++) {
-    pvhn[i]=("" + attributeSRV.get(i)).split("\\s+");
+  Record[] records=null;
+  try {
+    Lookup lookup=new Lookup(domain,Type.SRV);
+    records=lookup.run();
+  }
+ catch (  TextParseException tpe) {
+    logger.error("Failed to parse domain=" + domain,tpe);
+    throw new ParseException(tpe.getMessage(),0);
+  }
+  if (records == null) {
+    return null;
+  }
+  String[][] pvhn=new String[records.length][4];
+  for (int i=0; i < records.length; i++) {
+    SRVRecord srvRecord=(SRVRecord)records[i];
+    pvhn[i][0]="" + srvRecord.getPriority();
+    pvhn[i][1]="" + srvRecord.getWeight();
+    pvhn[i][2]="" + srvRecord.getPort();
+    pvhn[i][3]=srvRecord.getTarget().toString();
+    if (pvhn[i][3].endsWith(".")) {
+      pvhn[i][3]=pvhn[i][3].substring(0,pvhn[i][3].length() - 1);
+    }
   }
   Arrays.sort(pvhn,new Comparator(){
     public int compare(    Object o1,    Object o2){
@@ -15,7 +30,7 @@
 );
   String[] sortedHostNames=new String[pvhn.length];
   for (int i=0; i < pvhn.length; i++) {
-    sortedHostNames[i]=pvhn[i][3].endsWith(".") ? pvhn[i][3].substring(0,pvhn[i][3].length() - 1) : pvhn[i][3];
+    sortedHostNames[i]=pvhn[i][3];
   }
   if (logger.isTraceEnabled()) {
     logger.trace("DNS SRV query for domain " + domain + " returned:");
