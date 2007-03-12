@@ -1,0 +1,17 @@
+{
+synchronized (this) {
+    Object outdata=buffer.getData();
+    if (outdata == null || !(outdata.getClass() == Format.byteArray) || ((byte[])outdata).length < maxDataLength) {
+      outdata=new byte[maxDataLength];
+      buffer.setData(outdata);
+    }
+    buffer.setFormat(audioFormat);
+    buffer.setTimeStamp(1000000000 / 8);
+    jni_alsa_read((byte[])outdata);
+    buffer.setSequenceNumber(seqNo);
+    buffer.setLength(maxDataLength);
+    buffer.setFlags(0);
+    buffer.setHeader(null);
+    seqNo++;
+  }
+}
