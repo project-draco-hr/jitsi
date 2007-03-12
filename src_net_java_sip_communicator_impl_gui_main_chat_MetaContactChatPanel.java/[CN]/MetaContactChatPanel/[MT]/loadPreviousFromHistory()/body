@@ -1,0 +1,31 @@
+{
+  new Thread(){
+    public void run(){
+      MessageHistoryService msgHistory=GuiActivator.getMsgHistoryService();
+      ChatConversationPanel conversationPanel=getChatConversationPanel();
+      Collection c=msgHistory.findLastMessagesBefore(metaContact,conversationPanel.getPageFirstMsgTimestamp(),MESSAGES_PER_PAGE);
+      if (c.size() > 0) {
+        SwingUtilities.invokeLater(new HistoryMessagesLoader(c));
+        Iterator i=c.iterator();
+        Object lastMessageObject=null;
+        Date lastMessageTimeStamp=null;
+        while (i.hasNext()) {
+          Object o=i.next();
+          if (!i.hasNext()) {
+            lastMessageObject=o;
+          }
+        }
+        if (lastMessageObject instanceof MessageDeliveredEvent) {
+          MessageDeliveredEvent evt=(MessageDeliveredEvent)lastMessageObject;
+          lastMessageTimeStamp=evt.getTimestamp();
+        }
+ else         if (lastMessageObject instanceof MessageReceivedEvent) {
+          MessageReceivedEvent evt=(MessageReceivedEvent)lastMessageObject;
+          lastMessageTimeStamp=evt.getTimestamp();
+        }
+        if (getBeginLastPageTimeStamp() == null)         setBeginLastPageTimeStamp(lastMessageTimeStamp);
+      }
+    }
+  }
+.start();
+}

@@ -1,0 +1,31 @@
+{
+synchronized (syncChat) {
+    ChatWindow chatWindow=chatPanel.getChatWindow();
+    boolean isChatVisible=chatPanel.isWindowVisible();
+    if (!isChatVisible)     chatWindow.addChat(chatPanel);
+    if (chatWindow.isVisible()) {
+      if (chatWindow.getExtendedState() != JFrame.ICONIFIED) {
+        if (ConfigurationManager.isAutoPopupNewMessage() || setSelected)         chatWindow.toFront();
+      }
+ else {
+        if (setSelected) {
+          chatWindow.setExtendedState(JFrame.NORMAL);
+          chatWindow.toFront();
+        }
+        if (!chatWindow.getTitle().startsWith("*"))         chatWindow.setTitle("*" + chatWindow.getTitle());
+      }
+      if (setSelected) {
+        chatWindow.setCurrentChatPanel(chatPanel);
+      }
+ else       if (!chatWindow.getCurrentChatPanel().equals(chatPanel) && chatWindow.getChatTabCount() > 0) {
+        chatPanel.getChatWindow().highlightTab(chatPanel);
+        chatPanel.setCaretToEnd();
+      }
+    }
+ else {
+      chatWindow.setVisible(true);
+      chatWindow.setCurrentChatPanel(chatPanel);
+      chatPanel.setCaretToEnd();
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  Contact contact=(Contact)contactSelectorBox.getMenu().getSelectedObject();
+  OperationSetBasicInstantMessaging im=(OperationSetBasicInstantMessaging)contact.getProtocolProvider().getOperationSet(OperationSetBasicInstantMessaging.class);
+  OperationSetTypingNotifications tn=(OperationSetTypingNotifications)contact.getProtocolProvider().getOperationSet(OperationSetTypingNotifications.class);
+  String body=this.getTextFromWriteArea();
+  Message msg=im.createMessage(body);
+  if (tn != null) {
+    getChatWritePanel().stopTypingTimer();
+  }
+  try {
+    im.sendInstantMessage(contact,msg);
+  }
+ catch (  IllegalStateException ex) {
+    logger.error("Failed to send message.",ex);
+    this.refreshWriteArea();
+    this.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,msg.getContent());
+    this.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,Messages.getI18NString("msgSendConnectionProblem").getText());
+  }
+catch (  Exception ex) {
+    logger.error("Failed to send message.",ex);
+    this.refreshWriteArea();
+    this.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,msg.getContent());
+    this.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,Messages.getI18NString("msgDeliveryInternalError").getText());
+  }
+}

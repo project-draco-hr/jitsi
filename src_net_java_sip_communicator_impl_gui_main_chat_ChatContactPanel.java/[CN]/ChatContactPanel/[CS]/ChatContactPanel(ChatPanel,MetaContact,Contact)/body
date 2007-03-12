@@ -1,0 +1,48 @@
+{
+  super(new BorderLayout(10,5));
+  this.protocolContact=protocolContact;
+  this.setPreferredSize(new Dimension(100,60));
+  this.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
+  this.status=protocolContact.getPresenceStatus();
+  this.chatPanel=chatPanel;
+  this.setOpaque(false);
+  this.mainPanel.setOpaque(false);
+  this.buttonsPanel.setOpaque(false);
+  String chatContactName;
+  if (metaContact != null)   chatContactName=metaContact.getDisplayName();
+ else   chatContactName=protocolContact.getDisplayName();
+  this.personNameLabel.setText(chatContactName);
+  this.personNameLabel.setFont(this.getFont().deriveFont(Font.BOLD));
+  this.personNameLabel.setIcon(new ImageIcon(Constants.getStatusIcon(status)));
+  ImageIcon contactPhoto=null;
+  Iterator i=metaContact.getContacts();
+  while (i.hasNext()) {
+    Contact subContact=(Contact)i.next();
+    if (subContact.getImage() != null && subContact.getImage().length > 0) {
+      Image contactImage=ImageLoader.getBytesInImage(subContact.getImage());
+      contactPhoto=new ImageIcon(contactImage.getScaledInstance(40,45,Image.SCALE_SMOOTH));
+      break;
+    }
+  }
+  if (contactPhoto != null) {
+    this.personPhotoLabel.setBorder(new SIPCommBorders.BoldRoundBorder());
+    this.personPhotoLabel.setIcon(contactPhoto);
+  }
+  this.callButton.setToolTipText(Messages.getI18NString("call").getText());
+  this.infoButton.setToolTipText(Messages.getI18NString("userInfo").getText());
+  this.sendFileButton.setToolTipText(Messages.getI18NString("sendFile").getText());
+  this.callButton.setName("call");
+  this.infoButton.setName("info");
+  this.callButton.addActionListener(this);
+  this.infoButton.addActionListener(this);
+  this.buttonsPanel.add(infoButton);
+  this.buttonsPanel.add(callButton);
+  this.buttonsPanel.add(sendFileButton);
+  this.mainPanel.add(buttonsPanel,BorderLayout.NORTH);
+  this.mainPanel.add(personNameLabel,BorderLayout.CENTER);
+  this.add(personPhotoLabel,BorderLayout.WEST);
+  this.add(mainPanel,BorderLayout.CENTER);
+  this.callButton.setEnabled(false);
+  this.sendFileButton.setEnabled(false);
+  this.updateProtocolContact(protocolContact);
+}

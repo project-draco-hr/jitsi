@@ -1,0 +1,30 @@
+{
+  this.mainFrame=mainFrame;
+  this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+  this.setIconImage(ImageLoader.getImage(ImageLoader.SIP_COMMUNICATOR_LOGO));
+  menusPanel=new MenusPanel(this);
+  if (Constants.TABBED_CHAT_WINDOW) {
+    chatTabbedPane=new SIPCommTabbedPane(true,false);
+    chatTabbedPane.addCloseListener(new CloseListener(){
+      public void closeOperation(      MouseEvent e){
+        int tabIndex=chatTabbedPane.getOverTabIndex();
+        ChatPanel chatPanel=(ChatPanel)chatTabbedPane.getComponentAt(tabIndex);
+        ChatWindow.this.mainFrame.getChatWindowManager().closeChat(chatPanel);
+      }
+    }
+);
+  }
+  this.setSizeAndLocation();
+  this.getContentPane().add(menusPanel,BorderLayout.NORTH);
+  this.addKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,KeyEvent.ALT_DOWN_MASK),new ForwordTabAction());
+  this.addKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT,KeyEvent.ALT_DOWN_MASK),new BackwordTabAction());
+  this.addKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_INSERT,KeyEvent.CTRL_DOWN_MASK),new CopyAction());
+  this.addKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_INSERT,KeyEvent.SHIFT_DOWN_MASK),new PasteAction());
+  this.addKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_C,KeyEvent.META_MASK),new CopyAction());
+  this.addKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_V,KeyEvent.META_MASK),new PasteAction());
+  this.addKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_M,KeyEvent.CTRL_DOWN_MASK),new OpenSmileyAction());
+  this.addKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_H,KeyEvent.CTRL_DOWN_MASK),new OpenHistoryAction());
+  this.addKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_W,KeyEvent.META_MASK),new CloseAction());
+  this.addKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_W,KeyEvent.CTRL_DOWN_MASK),new CloseAction());
+  this.addWindowListener(new ChatWindowAdapter());
+}

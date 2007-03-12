@@ -1,0 +1,34 @@
+{
+synchronized (syncChat) {
+    ChatPanel chatPanel=chatWindow.getCurrentChatPanel();
+    if (!chatPanel.isWriteAreaEmpty()) {
+      SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getI18NString("nonEmptyChatWindowClose").getText());
+      int answer=JOptionPane.showConfirmDialog(chatWindow,msgText,Messages.getI18NString("warning").getText(),JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
+      if (answer == JOptionPane.OK_OPTION) {
+        chatWindow.removeAllChats();
+        chatWindow.setVisible(false);
+synchronized (chats) {
+          chats.clear();
+        }
+      }
+    }
+ else     if (System.currentTimeMillis() - chatWindow.getLastIncomingMsgTimestamp(chatPanel).getTime() < 2 * 1000) {
+      SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(Messages.getI18NString("closeChatAfterNewMsg").getText());
+      int answer=JOptionPane.showConfirmDialog(chatWindow,msgText,Messages.getI18NString("warning").getText(),JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
+      if (answer == JOptionPane.OK_OPTION) {
+        chatWindow.removeAllChats();
+        chatWindow.setVisible(false);
+synchronized (chats) {
+          chats.clear();
+        }
+      }
+    }
+ else {
+      chatWindow.removeAllChats();
+      chatWindow.setVisible(false);
+synchronized (chats) {
+        chats.clear();
+      }
+    }
+  }
+}

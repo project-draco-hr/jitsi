@@ -1,0 +1,32 @@
+{
+  ChatRoomsList chatRoomsList=(ChatRoomsList)list;
+  String toolTipText="<html>";
+  if (value instanceof ChatRoom) {
+    ChatRoom chatRoom=(ChatRoom)value;
+    toolTipText+="<b>" + chatRoom.getName() + "</b>";
+    this.nameLabel.setText(chatRoom.getName());
+    this.nameLabel.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.CHAT_ROOM_16x16_ICON)));
+    this.nameLabel.setFont(this.getFont().deriveFont(Font.PLAIN));
+    this.setBorder(BorderFactory.createEmptyBorder(1,8,1,1));
+    this.setBounds(0,0,list.getWidth() - 2,17);
+    this.isLeaf=true;
+  }
+ else   if (value instanceof ProtocolProviderService) {
+    ProtocolProviderService pps=(ProtocolProviderService)value;
+    toolTipText+=pps.getAccountID().getService();
+    this.nameLabel.setText(pps.getAccountID().getService() + " (" + pps.getAccountID().getAccountAddress()+ ")");
+    this.nameLabel.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.CHAT_SERVER_16x16_ICON)));
+    this.nameLabel.setFont(this.getFont().deriveFont(Font.BOLD));
+    this.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+    this.setBounds(0,0,list.getWidth() - 2,20);
+    JLabel groupContentIndicator=new JLabel();
+    if (chatRoomsList.isChatServerClosed(pps))     groupContentIndicator.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.CLOSED_GROUP)));
+ else     groupContentIndicator.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.OPENED_GROUP)));
+    groupContentIndicator.setBounds(0,0,12,12);
+    this.isLeaf=false;
+  }
+  toolTipText+="</html>";
+  this.setToolTipText(toolTipText);
+  this.isSelected=isSelected;
+  return this;
+}
