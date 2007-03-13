@@ -1,0 +1,36 @@
+{
+  byte[] image=null;
+  if (metaContact != null) {
+    Iterator i=metaContact.getContacts();
+    while (i.hasNext()) {
+      Contact protoContact=(Contact)i.next();
+      try {
+        image=protoContact.getImage();
+      }
+ catch (      Exception ex) {
+        logger.error("Failed to load contact photo.",ex);
+      }
+      if (image != null && image.length > 0)       break;
+    }
+  }
+ else   if (contact != null) {
+    try {
+      image=contact.getImage();
+    }
+ catch (    Exception ex) {
+      logger.error("Failed to load contact photo.",ex);
+    }
+  }
+  if (image != null && image.length > 0) {
+    Image contactImage=ImageLoader.getBytesInImage(image);
+    contactPhoto=new ImageIcon(contactImage.getScaledInstance(40,45,Image.SCALE_SMOOTH));
+  }
+  if (contactPhoto == null)   return;
+  SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
+      personPhotoLabel.setBorder(new SIPCommBorders.BoldRoundBorder());
+      personPhotoLabel.setIcon(contactPhoto);
+    }
+  }
+);
+}
