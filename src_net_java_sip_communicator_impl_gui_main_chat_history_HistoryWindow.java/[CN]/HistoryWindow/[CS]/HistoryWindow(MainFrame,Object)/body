@@ -1,2 +1,24 @@
 {
+  if (o instanceof MetaContact) {
+    chatConvPanel=new ChatConversationPanel(this);
+    this.progressBar=new JProgressBar(MessageHistorySearchProgressListener.PROGRESS_MINIMUM_VALUE,MessageHistorySearchProgressListener.PROGRESS_MAXIMUM_VALUE);
+    this.progressBar.setValue(0);
+    this.progressBar.setStringPainted(true);
+    this.msgHistory=GuiActivator.getMsgHistoryService();
+    this.msgHistory.addSearchProgressListener(this);
+    this.mainFrame=mainFrame;
+    this.metaContact=(MetaContact)o;
+    this.setTitle(Messages.getI18NString("historyContact",new String[]{metaContact.getDisplayName()}).getText());
+    this.datesPanel=new DatesPanel(this);
+    this.historyMenu=new HistoryMenu(this);
+    this.searchPanel=new SearchPanel(this);
+    this.initPanels();
+    this.initDates();
+    this.addWindowListener(new HistoryWindowAdapter());
+    Iterator protoContacts=metaContact.getContacts();
+    while (protoContacts.hasNext()) {
+      Contact protoContact=(Contact)protoContacts.next();
+      ((OperationSetBasicInstantMessaging)protoContact.getProtocolProvider().getOperationSet(OperationSetBasicInstantMessaging.class)).addMessageListener(this);
+    }
+  }
 }
