@@ -1,0 +1,30 @@
+{
+  Object sourceService=GuiActivator.bundleContext.getService(event.getServiceReference());
+  if (!(sourceService instanceof ProtocolProviderService)) {
+    return;
+  }
+  ProtocolProviderService sourcePProvider=(ProtocolProviderService)sourceService;
+  if (event.getType() == ServiceEvent.REGISTERED) {
+    String pName=sourcePProvider.getProtocolName();
+    Image protocolImage=null;
+    try {
+      protocolImage=ImageIO.read(new ByteArrayInputStream(sourcePProvider.getProtocolIcon().getIcon(ProtocolIcon.ICON_SIZE_16x16)));
+    }
+ catch (    IOException e) {
+      logger.error("Could not read image.",e);
+    }
+    JLabel protocolLabel=new JLabel();
+    protocolLabel.setText(pName);
+    protocolLabel.setIcon(new ImageIcon(protocolImage));
+    tableModel.addRow(new Object[]{new Boolean(false),sourcePProvider,protocolLabel});
+  }
+ else   if (event.getType() == ServiceEvent.UNREGISTERING) {
+    for (int i=0; i < tableModel.getRowCount(); i++) {
+      ProtocolProviderService protocolProvider=(ProtocolProviderService)tableModel.getValueAt(i,1);
+      if (protocolProvider.equals(sourcePProvider)) {
+        tableModel.removeRow(i);
+        break;
+      }
+    }
+  }
+}
