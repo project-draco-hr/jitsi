@@ -1,9 +1,28 @@
 {
-  this.uiService=s;
+  this.uiService=service;
+  uiService.setExitOnMainWindowClose(false);
+  BundleContext bc=SystrayActivator.bundleContext;
+  bc.addServiceListener(this);
+  ServiceReference[] protocolProviderRefs=null;
+  try {
+    protocolProviderRefs=bc.getServiceReferences(ProtocolProviderService.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException ex) {
+    logger.error("Error while retrieving service refs",ex);
+    return;
+  }
+  if (protocolProviderRefs != null) {
+    for (int i=0; i < protocolProviderRefs.length; i++) {
+      ProtocolProviderService provider=(ProtocolProviderService)bc.getService(protocolProviderRefs[i]);
+      this.protocolProviderTable.put(provider.getAccountID(),provider);
+      handleProviderAdded(provider);
+    }
+  }
   SystemTray tray=SystemTray.getDefaultSystemTray();
-  ImageIcon logoIcon=new ImageIcon(Systray.class.getResource("systrayIcon.png"));
-  trayIcon=new TrayIcon(logoIcon,"SIP Communicator",null);
-  trayIcon.setIconAutoSize(false);
+  ImageIcon logoIcon=new ImageIcon(Resources.getImage("trayIcon"));
+  menu=new TrayMenu(uiService,this);
+  trayIcon=new TrayIcon(logoIcon,"SIP Communicator",menu);
+  trayIcon.setIconAutoSize(true);
   trayIcon.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
       if (uiService.isVisible()) {

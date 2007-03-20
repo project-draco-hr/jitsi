@@ -1,0 +1,26 @@
+{
+  JMenuItem menuItem=(JMenuItem)evt.getSource();
+  Iterator statusSet=presence.getSupportedStatusSet();
+  while (statusSet.hasNext()) {
+    PresenceStatus status=((PresenceStatus)statusSet.next());
+    if (status.getStatusName().equals(menuItem.getText())) {
+      if (this.provider.getRegistrationState() == RegistrationState.REGISTERED && !presence.getPresenceStatus().equals(status)) {
+        if (status.isOnline()) {
+          new PublishPresenceStatusThread(status).start();
+        }
+ else {
+          new ProviderUnRegistration(this.provider).start();
+        }
+      }
+ else       if (this.provider.getRegistrationState() != RegistrationState.REGISTERED && this.provider.getRegistrationState() != RegistrationState.REGISTERING && this.provider.getRegistrationState() != RegistrationState.AUTHENTICATING && status.isOnline()) {
+        new ProviderRegistration(this.provider,parentSystray).start();
+      }
+ else {
+        if (!status.isOnline() && !(this.provider.getRegistrationState() == RegistrationState.UNREGISTERING)) {
+          new ProviderUnRegistration(this.provider).start();
+        }
+      }
+      break;
+    }
+  }
+}
