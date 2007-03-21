@@ -25,8 +25,14 @@
   authEventCollector1.responseToRequest=new AuthorizationResponse(AuthorizationResponse.ACCEPT,null);
   authEventCollector2.responseToRequest=new AuthorizationResponse(AuthorizationResponse.ACCEPT,null);
   operationSetPresence1.removeSubscriptionListener(subEvtCollector);
-  assertEquals("Subscription event dispatching failed.",1,subEvtCollector.collectedEvents.size());
-  SubscriptionEvent subEvt=(SubscriptionEvent)subEvtCollector.collectedEvents.get(0);
+  assertTrue("Subscription event dispatching failed.",subEvtCollector.collectedEvents.size() > 0);
+  SubscriptionEvent subEvt=null;
+  Iterator events=subEvtCollector.collectedEvents.iterator();
+  while (events.hasNext()) {
+    SubscriptionEvent elem=(SubscriptionEvent)events.next();
+    if (elem.getEventID() == SubscriptionEvent.SUBSCRIPTION_CREATED)     subEvt=elem;
+  }
+  assertNotNull("Subscription event dispatching failed.",subEvt);
   assertEquals("SubscriptionEvent Source:",fixture.userID2,((Contact)subEvt.getSource()).getAddress());
   assertEquals("SubscriptionEvent Source Contact:",fixture.userID2,subEvt.getSourceContact().getAddress());
   assertSame("SubscriptionEvent Source Provider:",fixture.provider1,subEvt.getSourceProvider());
