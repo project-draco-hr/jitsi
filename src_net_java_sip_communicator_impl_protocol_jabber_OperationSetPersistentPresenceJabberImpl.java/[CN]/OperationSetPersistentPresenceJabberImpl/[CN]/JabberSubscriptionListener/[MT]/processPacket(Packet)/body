@@ -1,6 +1,6 @@
 {
   Presence presence=(Presence)packet;
-  if (presence != null && presence.getType() == Presence.Type.SUBSCRIBE) {
+  if (presence != null && presence.getType() == Presence.Type.subscribe) {
     logger.trace(presence.getFrom() + " wants to add you to its contact list");
     String fromID=presence.getFrom();
     ContactJabberImpl srcContact=ssContactList.findContactById(fromID);
@@ -8,19 +8,19 @@
     AuthorizationRequest req=new AuthorizationRequest();
     AuthorizationResponse response=handler.processAuthorisationRequest(req,srcContact);
     if (response != null && response.getResponseCode().equals(AuthorizationResponse.ACCEPT)) {
-      Presence responsePacket=new Presence(Presence.Type.SUBSCRIBED);
+      Presence responsePacket=new Presence(Presence.Type.subscribed);
       responsePacket.setTo(fromID);
       logger.info("Sending Accepted Subscription");
       jabberProvider.getConnection().sendPacket(responsePacket);
     }
  else {
-      Presence responsePacket=new Presence(Presence.Type.UNSUBSCRIBED);
+      Presence responsePacket=new Presence(Presence.Type.unsubscribed);
       responsePacket.setTo(fromID);
       logger.info("Sending Rejected Subscription");
       jabberProvider.getConnection().sendPacket(responsePacket);
     }
   }
- else   if (presence != null && presence.getType() == Presence.Type.UNSUBSCRIBED) {
+ else   if (presence != null && presence.getType() == Presence.Type.unsubscribed) {
     logger.trace(presence.getFrom() + " does not allow your subscription");
     ContactJabberImpl contact=ssContactList.findContactById(presence.getFrom());
     if (contact != null) {
@@ -29,7 +29,7 @@
       ssContactList.removeContact(contact);
     }
   }
- else   if (presence != null && presence.getType() == Presence.Type.SUBSCRIBED) {
+ else   if (presence != null && presence.getType() == Presence.Type.subscribed) {
     ContactJabberImpl contact=ssContactList.findContactById(presence.getFrom());
     AuthorizationResponse response=new AuthorizationResponse(AuthorizationResponse.ACCEPT,"");
     handler.processAuthorizationResponse(response,contact);
