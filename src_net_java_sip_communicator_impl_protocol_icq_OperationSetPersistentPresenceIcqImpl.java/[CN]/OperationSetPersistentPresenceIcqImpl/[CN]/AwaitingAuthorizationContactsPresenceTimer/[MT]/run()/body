@@ -1,0 +1,26 @@
+{
+  logger.trace("Running status retreiver for AwaitingAuthorizationContacts");
+  ContactGroupIcqImpl theAwaitingAuthorizationGroup=ssContactList.findContactGroup(ssContactList.awaitingAuthorizationGroupName);
+  if (theAwaitingAuthorizationGroup == null)   return;
+  Iterator iter=theAwaitingAuthorizationGroup.contacts();
+  while (iter.hasNext()) {
+    ContactIcqImpl sourceContact=(ContactIcqImpl)iter.next();
+    PresenceStatus newStatus=queryContactStatus(sourceContact.getAddress());
+    PresenceStatus oldStatus=sourceContact.getPresenceStatus();
+    if (newStatus.equals(oldStatus))     continue;
+    sourceContact.updatePresenceStatus(newStatus);
+    ContactGroupIcqImpl parent=ssContactList.findContactGroup(sourceContact);
+    fireContactPresenceStatusChangeEvent(sourceContact,theAwaitingAuthorizationGroup,oldStatus,newStatus);
+    if (!newStatus.equals(IcqStatusEnum.OFFLINE) && !buddiesSeenAvailable.contains(sourceContact.getAddress())) {
+      buddiesSeenAvailable.add(sourceContact.getAddress());
+      try {
+        AuthorizationRequest req=new AuthorizationRequest();
+        req.setReason("I'm resending my request. Please authorize me!");
+        opSetExtendedAuthorizations.reRequestAuthorization(req,sourceContact);
+      }
+ catch (      OperationFailedException ex) {
+        logger.error("failed to reRequestAuthorization",ex);
+      }
+    }
+  }
+}

@@ -1,10 +1,31 @@
 {
   logger.trace("authorizationRequired from " + screenname);
   logger.trace("finding buddy : " + screenname);
-  Contact srcContact=findContactByID(screenname.getFormatted());
+  ContactIcqImpl srcContact=ssContactList.findContactByScreenName(screenname.getFormatted());
   if (srcContact == null) {
-    ContactGroup parent=ssContactList.findContactGroup(parentGroup);
-    srcContact=createUnresolvedContact(screenname.getFormatted(),null,parent);
+    ContactGroupIcqImpl parent=ssContactList.findContactGroup(parentGroup);
+    srcContact=ssContactList.createUnresolvedContact((ContactGroupIcqImpl)parent,screenname);
+    Buddy buddy=((ContactIcqImpl)srcContact).getJoustSimBuddy();
+    if (buddy instanceof VolatileBuddy)     ((VolatileBuddy)buddy).setAwaitingAuthorization(true);
+    ContactGroupIcqImpl theAwaitingAuthorizationGroup=ssContactList.findContactGroup(ssContactList.awaitingAuthorizationGroupName);
+    if (theAwaitingAuthorizationGroup == null) {
+      List emptyBuddies=new LinkedList();
+      theAwaitingAuthorizationGroup=new ContactGroupIcqImpl(new VolatileGroup(ssContactList.awaitingAuthorizationGroupName),emptyBuddies,ssContactList,false);
+      ((RootContactGroupIcqImpl)ssContactList.getRootGroup()).addSubGroup(theAwaitingAuthorizationGroup);
+      ssContactList.fireGroupEvent(theAwaitingAuthorizationGroup,ServerStoredGroupEvent.GROUP_CREATED_EVENT);
+    }
+    ((ContactGroupIcqImpl)parent).removeContact(srcContact);
+    theAwaitingAuthorizationGroup.addContact(srcContact);
+    Object lock=new Object();
+synchronized (lock) {
+      try {
+        lock.wait(500);
+      }
+ catch (      Exception e) {
+      }
+    }
+    ;
+    fireSubscriptionMovedEvent(srcContact,parent,theAwaitingAuthorizationGroup);
   }
   AuthorizationRequest authRequest=authorizationHandler.createAuthorizationRequest(srcContact);
   if (authRequest == null)   return false;

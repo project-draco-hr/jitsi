@@ -10,6 +10,14 @@
     return;
   }
   logger.trace("Going to remove contact from ss-list : " + contact);
-  MutableGroup joustSimContactGroup=contactGroup.getJoustSimSourceGroup();
-  joustSimContactGroup.deleteBuddy(contactIcqImpl.getJoustSimBuddy());
+  if (!contactGroup.isPersistent() && contactIcqImpl.getJoustSimBuddy().isAwaitingAuthorization()) {
+    ContactGroupIcqImpl origParent=ssContactList.findGroup(contactIcqImpl.getJoustSimBuddy());
+    if (origParent != null) {
+      origParent.getJoustSimSourceGroup().deleteBuddy(contactIcqImpl.getJoustSimBuddy());
+    }
+  }
+ else {
+    MutableGroup joustSimContactGroup=contactGroup.getJoustSimSourceGroup();
+    joustSimContactGroup.deleteBuddy(contactIcqImpl.getJoustSimBuddy());
+  }
 }

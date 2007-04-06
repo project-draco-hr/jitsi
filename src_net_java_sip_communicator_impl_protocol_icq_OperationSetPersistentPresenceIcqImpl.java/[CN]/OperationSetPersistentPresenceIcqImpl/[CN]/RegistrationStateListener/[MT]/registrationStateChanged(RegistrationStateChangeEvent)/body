@@ -7,6 +7,13 @@
     icqProvider.getAimConnection().getBuddyService().addBuddyListener(joustSimBuddySerListener);
     icqProvider.getAimConnection().getBuddyInfoManager().addGlobalBuddyInfoListener(new GlobalBuddyInfoListener());
     icqProvider.getAimConnection().getExternalServiceManager().getIconServiceArbiter().addIconRequestListener(new IconUpdateListener());
+    if (icqProvider.USING_ICQ) {
+      opSetExtendedAuthorizations=(OperationSetExtendedAuthorizationsIcqImpl)icqProvider.getSupportedOperationSets().get(OperationSetExtendedAuthorizations.class.getName());
+      if (presenceQueryTimer == null)       presenceQueryTimer=new Timer();
+ else       presenceQueryTimer.cancel();
+      AwaitingAuthorizationContactsPresenceTimer queryTask=new AwaitingAuthorizationContactsPresenceTimer();
+      presenceQueryTimer.scheduleAtFixedRate(queryTask,PRESENCE_QUERY_INTERVAL,PRESENCE_QUERY_INTERVAL);
+    }
   }
  else   if (evt.getNewState() == RegistrationState.UNREGISTERED || evt.getNewState() == RegistrationState.AUTHENTICATION_FAILED || evt.getNewState() == RegistrationState.CONNECTION_FAILED) {
     long oldStatus=currentIcqStatus;

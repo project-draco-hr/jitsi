@@ -1,7 +1,19 @@
 {
   ContactGroupIcqImpl parentGroup=findContactGroup(group);
   ContactIcqImpl contactToRemove=parentGroup.findContact(buddy);
-  parentGroup.removeContact(contactToRemove);
-  buddy.removeBuddyListener(jsimBuddyListener);
-  fireContactRemoved(parentGroup,contactToRemove);
+  if (contactToRemove == null) {
+    ContactGroupIcqImpl theAwaitingAuthorizationGroup=findContactGroup(awaitingAuthorizationGroupName);
+    if (theAwaitingAuthorizationGroup != null) {
+      contactToRemove=theAwaitingAuthorizationGroup.findContact(buddy.getScreenname().getFormatted());
+      if (contactToRemove == null)       return;
+      theAwaitingAuthorizationGroup.removeContact(contactToRemove);
+      buddy.removeBuddyListener(jsimBuddyListener);
+      fireContactRemoved(theAwaitingAuthorizationGroup,contactToRemove);
+    }
+  }
+ else {
+    parentGroup.removeContact(contactToRemove);
+    buddy.removeBuddyListener(jsimBuddyListener);
+    fireContactRemoved(parentGroup,contactToRemove);
+  }
 }

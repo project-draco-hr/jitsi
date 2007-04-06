@@ -1,6 +1,12 @@
 {
 synchronized (initializationLock) {
     this.accountID=accountID;
+    try {
+      Long.parseLong(accountID.getUserID());
+    }
+ catch (    NumberFormatException ex) {
+      USING_ICQ=false;
+    }
     OperationSetPersistentPresence persistentPresence=new OperationSetPersistentPresenceIcqImpl(this,screenname);
     supportedOperationSets.put(OperationSetPersistentPresence.class.getName(),persistentPresence);
     supportedOperationSets.put(OperationSetPresence.class.getName(),persistentPresence);
@@ -8,17 +14,19 @@ synchronized (initializationLock) {
     supportedOperationSets.put(OperationSetBasicInstantMessaging.class.getName(),basicInstantMessaging);
     OperationSetTypingNotifications typingNotifications=new OperationSetTypingNotificationsIcqImpl(this);
     supportedOperationSets.put(OperationSetTypingNotifications.class.getName(),typingNotifications);
-    this.infoRetreiver=new InfoRetreiver(this,screenname);
-    OperationSetServerStoredContactInfo serverStoredContactInfo=new OperationSetServerStoredContactInfoIcqImpl(infoRetreiver);
-    supportedOperationSets.put(OperationSetServerStoredContactInfo.class.getName(),serverStoredContactInfo);
-    OperationSetServerStoredAccountInfo serverStoredAccountInfo=new OperationSetServerStoredAccountInfoIcqImpl(infoRetreiver,screenname,this);
-    supportedOperationSets.put(OperationSetServerStoredAccountInfo.class.getName(),serverStoredAccountInfo);
-    OperationSetWebAccountRegistration webAccountRegistration=new OperationSetWebAccountRegistrationIcqImpl();
-    supportedOperationSets.put(OperationSetWebAccountRegistration.class.getName(),webAccountRegistration);
-    OperationSetWebContactInfo webContactInfo=new OperationSetWebContactInfoIcqImpl();
-    supportedOperationSets.put(OperationSetWebContactInfo.class.getName(),webContactInfo);
-    OperationSetExtendedAuthorizationsIcqImpl extendedAuth=new OperationSetExtendedAuthorizationsIcqImpl(this);
-    supportedOperationSets.put(OperationSetExtendedAuthorizations.class.getName(),extendedAuth);
+    if (USING_ICQ) {
+      this.infoRetreiver=new InfoRetreiver(this,screenname);
+      OperationSetServerStoredContactInfo serverStoredContactInfo=new OperationSetServerStoredContactInfoIcqImpl(infoRetreiver);
+      supportedOperationSets.put(OperationSetServerStoredContactInfo.class.getName(),serverStoredContactInfo);
+      OperationSetServerStoredAccountInfo serverStoredAccountInfo=new OperationSetServerStoredAccountInfoIcqImpl(infoRetreiver,screenname,this);
+      supportedOperationSets.put(OperationSetServerStoredAccountInfo.class.getName(),serverStoredAccountInfo);
+      OperationSetWebAccountRegistration webAccountRegistration=new OperationSetWebAccountRegistrationIcqImpl();
+      supportedOperationSets.put(OperationSetWebAccountRegistration.class.getName(),webAccountRegistration);
+      OperationSetWebContactInfo webContactInfo=new OperationSetWebContactInfoIcqImpl();
+      supportedOperationSets.put(OperationSetWebContactInfo.class.getName(),webContactInfo);
+      OperationSetExtendedAuthorizationsIcqImpl extendedAuth=new OperationSetExtendedAuthorizationsIcqImpl(this);
+      supportedOperationSets.put(OperationSetExtendedAuthorizations.class.getName(),extendedAuth);
+    }
     isInitialized=true;
   }
 }

@@ -4,7 +4,25 @@
   long icqStatus=presenceStatusToIcqStatusLong((IcqStatusEnum)status);
   logger.debug("Will set status: " + status + " long="+ icqStatus);
   MainBosService bosService=icqProvider.getAimConnection().getBosService();
-  bosService.getOscarConnection().sendSnac(new SetExtraInfoCmd(icqStatus));
-  bosService.setStatusMessage(statusMessage);
+  if (!icqProvider.USING_ICQ) {
+    if (status.equals(IcqStatusEnum.AWAY)) {
+      if (getPresenceStatus().equals(IcqStatusEnum.INVISIBLE))       bosService.setVisibleStatus(true);
+      bosService.getOscarConnection().sendSnac(new SetInfoCmd(new InfoData(null,"I'm away!",null,null)));
+    }
+ else     if (status.equals(IcqStatusEnum.INVISIBLE)) {
+      if (getPresenceStatus().equals(IcqStatusEnum.AWAY))       bosService.getOscarConnection().sendSnac(new SetInfoCmd(new InfoData(null,InfoData.NOT_AWAY,null,null)));
+      bosService.setVisibleStatus(false);
+    }
+ else     if (status.equals(IcqStatusEnum.ONLINE)) {
+      if (getPresenceStatus().equals(IcqStatusEnum.INVISIBLE))       bosService.setVisibleStatus(true);
+ else       if (getPresenceStatus().equals(IcqStatusEnum.AWAY)) {
+        bosService.getOscarConnection().sendSnac(new SetInfoCmd(new InfoData(null,InfoData.NOT_AWAY,null,null)));
+      }
+    }
+  }
+ else {
+    bosService.getOscarConnection().sendSnac(new SetExtraInfoCmd(icqStatus));
+    bosService.setStatusMessage(statusMessage);
+  }
   queryContactStatus(icqProvider.getAimConnection().getScreenname().getFormatted());
 }

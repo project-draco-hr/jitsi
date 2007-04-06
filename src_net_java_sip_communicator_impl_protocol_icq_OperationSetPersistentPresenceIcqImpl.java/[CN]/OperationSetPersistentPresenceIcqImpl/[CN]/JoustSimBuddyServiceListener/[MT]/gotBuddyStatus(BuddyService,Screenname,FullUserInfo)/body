@@ -7,7 +7,13 @@
     return;
   }
   PresenceStatus oldStatus=sourceContact.getPresenceStatus();
-  PresenceStatus newStatus=icqStatusLongToPresenceStatus(info.getIcqStatus());
+  PresenceStatus newStatus=null;
+  if (!icqProvider.USING_ICQ) {
+    Boolean awayStatus=info.getAwayStatus();
+    if (awayStatus == null || awayStatus.equals(Boolean.FALSE))     newStatus=IcqStatusEnum.ONLINE;
+ else     newStatus=IcqStatusEnum.AWAY;
+  }
+ else   newStatus=icqStatusLongToPresenceStatus(info.getIcqStatus());
   sourceContact.updatePresenceStatus(newStatus);
   ContactGroupIcqImpl parent=ssContactList.findContactGroup(sourceContact);
   logger.debug("Will Dispatch the contact status event.");

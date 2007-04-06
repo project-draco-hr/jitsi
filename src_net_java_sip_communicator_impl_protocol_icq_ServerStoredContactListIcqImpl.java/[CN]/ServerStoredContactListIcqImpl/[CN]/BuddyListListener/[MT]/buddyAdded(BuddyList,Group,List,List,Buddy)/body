@@ -1,10 +1,15 @@
 {
+  logger.trace("Received buddyAdded " + buddy);
   ContactGroupIcqImpl oldParentGroup=null;
   ContactIcqImpl newContact=findContactByScreenName(buddy.getScreenname().getFormatted());
   ContactGroupIcqImpl parentGroup=findContactGroup(joustSimGroup);
   boolean fireResolvedEvent=false;
   if (parentGroup == null) {
     logger.debug("no parent group " + joustSimGroup + " found for buddy: "+ buddy);
+    return;
+  }
+  if (buddy.isAwaitingAuthorization()) {
+    addAwaitingAuthorizationContact(buddy);
     return;
   }
   if (newContact == null) {
