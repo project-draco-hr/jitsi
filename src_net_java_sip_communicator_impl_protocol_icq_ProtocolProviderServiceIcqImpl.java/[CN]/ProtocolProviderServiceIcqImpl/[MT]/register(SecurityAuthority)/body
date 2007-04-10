@@ -1,11 +1,14 @@
 {
   if (authority == null)   throw new IllegalArgumentException("The register method needs a valid non-null authority impl " + " in order to be able and retrieve passwords.");
 synchronized (initializationLock) {
-    String password=IcqActivator.getProtocolProviderFactory().loadPassword(getAccountID());
+    ProtocolProviderFactoryIcqImpl protocolProviderFactory=null;
+    if (USING_ICQ)     protocolProviderFactory=IcqActivator.getIcqProtocolProviderFactory();
+ else     protocolProviderFactory=IcqActivator.getAimProtocolProviderFactory();
+    String password=protocolProviderFactory.loadPassword(getAccountID());
     if (password == null) {
       UserCredentials credentials=new UserCredentials();
       credentials.setUserName(this.getAccountID().getUserID());
-      credentials=authority.obtainCredentials(ProtocolNames.ICQ,credentials);
+      credentials=authority.obtainCredentials(getProtocolName(),credentials);
       char[] pass=credentials.getPassword();
       if (pass == null) {
         fireRegistrationStateChanged(RegistrationState.UNREGISTERED,RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"");
@@ -13,7 +16,7 @@ synchronized (initializationLock) {
       }
       password=new String(pass);
       if (credentials.isPasswordPersistent()) {
-        IcqActivator.getProtocolProviderFactory().storePassword(getAccountID(),password);
+        protocolProviderFactory.storePassword(getAccountID(),password);
       }
     }
     if (password.length() > 8)     password=password.substring(0,8);
