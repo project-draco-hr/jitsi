@@ -1,0 +1,24 @@
+{
+  ServiceReference configReference=SystrayActivator.bundleContext.getServiceReference(ConfigurationService.class.getName());
+  ConfigurationService configService=(ConfigurationService)SystrayActivator.bundleContext.getService(configReference);
+  if (configService != null) {
+    String prefix="net.java.sip.communicator.impl.gui.accounts";
+    List accounts=configService.getPropertyNamesByPrefix(prefix,true);
+    boolean savedAccount=false;
+    Iterator accountsIter=accounts.iterator();
+    while (accountsIter.hasNext()) {
+      String accountRootPropName=(String)accountsIter.next();
+      String accountUID=configService.getString(accountRootPropName);
+      if (accountUID.equals(protocolProvider.getAccountID().getAccountUniqueID())) {
+        configService.setProperty(accountRootPropName + ".lastAccountStatus",statusName);
+        savedAccount=true;
+      }
+    }
+    if (!savedAccount) {
+      String accNodeName="acc" + Long.toString(System.currentTimeMillis());
+      String accountPackage="net.java.sip.communicator.impl.gui.accounts." + accNodeName;
+      configService.setProperty(accountPackage,protocolProvider.getAccountID().getAccountUniqueID());
+      configService.setProperty(accountPackage + ".lastAccountStatus",statusName);
+    }
+  }
+}

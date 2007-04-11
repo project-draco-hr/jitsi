@@ -1,0 +1,34 @@
+{
+  menu=new TrayMenu(uiService,this);
+  String osName=System.getProperty("os.name");
+  if (osName.startsWith("Windows")) {
+    logoIcon=new ImageIcon(Resources.getImage("trayIconWindows"));
+  }
+ else {
+    logoIcon=new ImageIcon(Resources.getImage("trayIcon"));
+  }
+  trayIcon=new TrayIcon(logoIcon,"SIP Communicator",menu);
+  trayIcon.setIconAutoSize(true);
+  trayIcon.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      if (uiService.isVisible()) {
+        uiService.setVisible(false);
+      }
+ else {
+        uiService.setVisible(true);
+      }
+    }
+  }
+);
+  trayIcon.addBalloonActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      firePopupMessageEvent(e.getSource());
+      ExportedWindow chatWindow=uiService.getExportedWindow(ExportedWindow.CHAT_WINDOW);
+      if (chatWindow != null && chatWindow.isVisible()) {
+        chatWindow.bringToFront();
+      }
+    }
+  }
+);
+  systray.addTrayIcon(trayIcon);
+}
