@@ -1,0 +1,24 @@
+{
+  try {
+    Collection copyContactsForUpdate=null;
+    while (true) {
+synchronized (contactsForUpdate) {
+        if (contactsForUpdate.isEmpty())         contactsForUpdate.wait();
+        copyContactsForUpdate=new Vector(contactsForUpdate);
+        contactsForUpdate.clear();
+      }
+      Iterator iter=copyContactsForUpdate.iterator();
+      while (iter.hasNext()) {
+        ContactJabberImpl contact=(ContactJabberImpl)iter.next();
+        byte[] imgBytes=getAvatar(contact);
+        if (imgBytes != null) {
+          contact.setImage(imgBytes);
+          parentOperationSet.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_IMAGE,contact,null,imgBytes);
+        }
+      }
+    }
+  }
+ catch (  InterruptedException ex) {
+    logger.error("NickRetriever error waiting will stop now!",ex);
+  }
+}
