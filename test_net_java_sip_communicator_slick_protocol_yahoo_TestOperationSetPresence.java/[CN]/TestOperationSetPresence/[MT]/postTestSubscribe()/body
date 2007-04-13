@@ -27,6 +27,25 @@ synchronized (contactPresEvtCollector) {
     contactPresEvtCollector.waitForEvent(10000);
     operationSetPresence1.removeContactPresenceStatusListener(contactPresEvtCollector);
   }
+  if (contactPresEvtCollector.collectedEvents.size() == 0) {
+    logger.info("ATTENTION: Yahoo friend not added correctly will remove and add him again");
+    operationSetPresence1.unsubscribe(subEvt.getSourceContact());
+    operationSetPresence1.addSubsciptionListener(subEvtCollector);
+    subEvtCollector.collectedEvents.clear();
+synchronized (subEvtCollector) {
+      operationSetPresence1.subscribe(fixture.userID2);
+      subEvtCollector.waitForEvent(10000);
+      operationSetPresence1.removeSubscriptionListener(subEvtCollector);
+    }
+    subEvtCollector.collectedEvents.clear();
+    contactPresEvtCollector.collectedEvents.clear();
+    operationSetPresence1.addContactPresenceStatusListener(contactPresEvtCollector);
+synchronized (contactPresEvtCollector) {
+      operationSetPresence2.publishPresenceStatus(newStatus,"new status");
+      contactPresEvtCollector.waitForEvent(10000);
+      operationSetPresence1.removeContactPresenceStatusListener(contactPresEvtCollector);
+    }
+  }
   assertEquals("Presence Notif. event dispatching failed.",1,contactPresEvtCollector.collectedEvents.size());
   ContactPresenceStatusChangeEvent presEvt=(ContactPresenceStatusChangeEvent)contactPresEvtCollector.collectedEvents.get(0);
   assertEquals("Presence Notif. event  Source:",fixture.userID2,((Contact)presEvt.getSource()).getAddress());
