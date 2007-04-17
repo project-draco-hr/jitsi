@@ -1,26 +1,27 @@
 {
   assertConnected();
-  if (!(status instanceof IcqStatusEnum))   throw new IllegalArgumentException(status + " is not a valid ICQ status");
-  long icqStatus=presenceStatusToIcqStatusLong((IcqStatusEnum)status);
-  logger.debug("Will set status: " + status + " long="+ icqStatus);
+  if (!(status instanceof IcqStatusEnum || status instanceof AimStatusEnum))   throw new IllegalArgumentException(status + " is not a valid ICQ/AIM status");
+  logger.debug("Will set status: " + status);
   MainBosService bosService=icqProvider.getAimConnection().getBosService();
   if (!icqProvider.USING_ICQ) {
-    if (status.equals(IcqStatusEnum.AWAY)) {
-      if (getPresenceStatus().equals(IcqStatusEnum.INVISIBLE))       bosService.setVisibleStatus(true);
+    if (status.equals(AimStatusEnum.AWAY)) {
+      if (getPresenceStatus().equals(AimStatusEnum.INVISIBLE))       bosService.setVisibleStatus(true);
       bosService.getOscarConnection().sendSnac(new SetInfoCmd(new InfoData(null,"I'm away!",null,null)));
     }
- else     if (status.equals(IcqStatusEnum.INVISIBLE)) {
-      if (getPresenceStatus().equals(IcqStatusEnum.AWAY))       bosService.getOscarConnection().sendSnac(new SetInfoCmd(new InfoData(null,InfoData.NOT_AWAY,null,null)));
+ else     if (status.equals(AimStatusEnum.INVISIBLE)) {
+      if (getPresenceStatus().equals(AimStatusEnum.AWAY))       bosService.getOscarConnection().sendSnac(new SetInfoCmd(new InfoData(null,InfoData.NOT_AWAY,null,null)));
       bosService.setVisibleStatus(false);
     }
- else     if (status.equals(IcqStatusEnum.ONLINE)) {
-      if (getPresenceStatus().equals(IcqStatusEnum.INVISIBLE))       bosService.setVisibleStatus(true);
- else       if (getPresenceStatus().equals(IcqStatusEnum.AWAY)) {
+ else     if (status.equals(AimStatusEnum.ONLINE)) {
+      if (getPresenceStatus().equals(AimStatusEnum.INVISIBLE))       bosService.setVisibleStatus(true);
+ else       if (getPresenceStatus().equals(AimStatusEnum.AWAY)) {
         bosService.getOscarConnection().sendSnac(new SetInfoCmd(new InfoData(null,InfoData.NOT_AWAY,null,null)));
       }
     }
   }
  else {
+    long icqStatus=presenceStatusToStatusLong((IcqStatusEnum)status);
+    logger.debug("Will set status: " + status + " long="+ icqStatus);
     bosService.getOscarConnection().sendSnac(new SetExtraInfoCmd(icqStatus));
     bosService.setStatusMessage(statusMessage);
   }
