@@ -1,3 +1,20 @@
 {
-  return null;
+  assertSupportedAndConnected();
+  ChatRoom room=(ChatRoom)chatRoomCache.get(roomName);
+  if (room != null) {
+    return room;
+  }
+ else {
+    try {
+      MultiUserChat.getRoomInfo(getXmppConnection(),roomName);
+      return createLocalChatRoomInstance(new MultiUserChat(getXmppConnection(),roomName));
+    }
+ catch (    XMPPException ex) {
+      if (ex.getXMPPError() != null && ex.getXMPPError().getCode() == 404) {
+        return null;
+      }
+      logger.error("Failed to retrieve room info for " + roomName + ". Error was: "+ ex.getMessage(),ex);
+      throw new OperationFailedException("Failed to retrieve room info for " + roomName + ". Error was: "+ ex.getMessage(),OperationFailedException.GENERAL_ERROR);
+    }
+  }
 }
