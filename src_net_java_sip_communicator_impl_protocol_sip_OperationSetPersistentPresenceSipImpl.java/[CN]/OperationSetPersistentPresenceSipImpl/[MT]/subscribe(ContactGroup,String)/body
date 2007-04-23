@@ -1,0 +1,13 @@
+{
+  ContactSipImpl contact=new ContactSipImpl(contactIdentifier,parentProvider);
+  if (authorizationHandler != null) {
+    AuthorizationRequest request=authorizationHandler.createAuthorizationRequest(contact);
+    AuthorizationResponse response=deliverAuthorizationRequest(request,contact);
+    authorizationHandler.processAuthorizationResponse(response,contact);
+    if (response.getResponseCode() == AuthorizationResponse.REJECT)     return;
+  }
+  ((ContactGroupSipImpl)parent).addContact(contact);
+  fireSubscriptionEvent(contact,parent,SubscriptionEvent.SUBSCRIPTION_CREATED);
+  changePresenceStatusForContact(contact,getPresenceStatus());
+  fireContactPresenceStatusChangeEvent(contact,parent,SipStatusEnum.OFFLINE);
+}

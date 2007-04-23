@@ -1,0 +1,19 @@
+{
+  ContactSipImpl sipContact=(ContactSipImpl)contactToMove;
+  ContactGroupSipImpl parentSipGroup=findContactParent(sipContact);
+  parentSipGroup.removeContact(sipContact);
+  if (!sipContact.isPersistent()) {
+    fireSubscriptionEvent(sipContact,parentSipGroup,SubscriptionEvent.SUBSCRIPTION_REMOVED);
+    try {
+      this.subscribe(newParent,contactToMove.getAddress());
+      fireSubscriptionEvent(sipContact,newParent,SubscriptionEvent.SUBSCRIPTION_CREATED);
+    }
+ catch (    Exception ex) {
+      logger.error("Failed to move contact " + sipContact.getAddress(),ex);
+    }
+  }
+ else {
+    ((ContactGroupSipImpl)newParent).addContact(sipContact);
+    fireSubscriptionMovedEvent(contactToMove,parentSipGroup,newParent);
+  }
+}
