@@ -1,0 +1,18 @@
+{
+  if (obj == null || !(obj instanceof ContactGroupSipImpl))   return false;
+  ContactGroupSipImpl sipGroup=(ContactGroupSipImpl)obj;
+  if (!sipGroup.getGroupName().equals(getGroupName()) || !sipGroup.getUID().equals(getUID()) || sipGroup.countContacts() != countContacts() || sipGroup.countSubgroups() != countSubgroups())   return false;
+  Iterator theirContacts=sipGroup.contacts();
+  while (theirContacts.hasNext()) {
+    ContactSipImpl theirContact=(ContactSipImpl)theirContacts.next();
+    ContactSipImpl ourContact=(ContactSipImpl)getContact(theirContact.getAddress());
+    if (ourContact == null || !ourContact.equals(theirContact))     return false;
+  }
+  Iterator theirSubgroups=sipGroup.subgroups();
+  while (theirSubgroups.hasNext()) {
+    ContactGroupSipImpl theirSubgroup=(ContactGroupSipImpl)theirSubgroups.next();
+    ContactGroupSipImpl ourSubgroup=(ContactGroupSipImpl)getGroup(theirSubgroup.getGroupName());
+    if (ourSubgroup == null || !ourSubgroup.equals(theirSubgroup))     return false;
+  }
+  return true;
+}
