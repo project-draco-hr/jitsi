@@ -1,21 +1,13 @@
 {
   GuiActivator.bundleContext=bundleContext;
   ConfigurationManager.loadGuiConfigurations();
-  this.communicatorMain=new CommunicatorMain();
-  MainFrame mainFrame=communicatorMain.getMainFrame();
-  this.loginManager=new LoginManager(mainFrame);
   try {
-    ServiceReference clistReference=bundleContext.getServiceReference(MetaContactListService.class.getName());
-    MetaContactListService contactListService=(MetaContactListService)bundleContext.getService(clistReference);
-    mainFrame.setContactList(contactListService);
-    logger.logEntry();
-    this.uiService=new UIServiceImpl(mainFrame);
+    this.uiService=new UIServiceImpl();
     logger.info("UI Service...[  STARTED ]");
     bundleContext.registerService(UIService.class.getName(),this.uiService,null);
     logger.info("UI Service ...[REGISTERED]");
-    if (ConfigurationManager.isApplicationVisible())     mainFrame.setVisible(true);
-    SwingUtilities.invokeLater(new RunLogin());
-    uiService.initExportedWindows();
+    this.uiService.loadApplicationGui();
+    logger.logEntry();
   }
   finally {
     logger.logExit();
