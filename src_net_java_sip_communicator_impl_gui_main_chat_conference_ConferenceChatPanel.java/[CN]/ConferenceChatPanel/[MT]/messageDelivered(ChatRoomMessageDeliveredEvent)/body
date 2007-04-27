@@ -1,13 +1,14 @@
 {
   ChatRoom sourceChatRoom=(ChatRoom)evt.getSource();
   if (!sourceChatRoom.equals(chatRoom))   return;
-  logger.trace("MESSAGE DELIVERED to contact: " + evt.getDestinationContact().getAddress());
+  ChatRoomMember destMember=evt.getDestinationChatRoomMember();
+  logger.trace("MESSAGE DELIVERED to contact: " + destMember.getContactAddress());
   Message msg=evt.getMessage();
   ChatPanel chatPanel=null;
   if (chatWindowManager.isChatOpenedForChatRoom(sourceChatRoom))   chatPanel=chatWindowManager.getChatRoom(sourceChatRoom);
   if (chatPanel != null) {
-    ProtocolProviderService protocolProvider=evt.getDestinationContact().getProtocolProvider();
-    logger.trace("MESSAGE DELIVERED: process message to chat for contact: " + evt.getDestinationContact().getAddress());
+    ProtocolProviderService protocolProvider=destMember.getProtocolProvider();
+    logger.trace("MESSAGE DELIVERED: process message to chat for contact: " + destMember.getContactAddress());
     chatPanel.processMessage(getChatWindow().getMainFrame().getAccount(protocolProvider),evt.getTimestamp(),Constants.OUTGOING_MESSAGE,msg.getContent());
     chatPanel.refreshWriteArea();
   }
