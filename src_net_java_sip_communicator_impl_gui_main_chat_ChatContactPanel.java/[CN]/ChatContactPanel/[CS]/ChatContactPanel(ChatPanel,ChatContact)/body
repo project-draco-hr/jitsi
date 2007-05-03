@@ -1,0 +1,50 @@
+{
+  super(new BorderLayout(10,5));
+  this.chatContact=contact;
+  this.setPreferredSize(new Dimension(100,60));
+  this.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
+  this.status=chatContact.getPresenceStatus();
+  this.chatPanel=chatPanel;
+  this.setOpaque(false);
+  this.mainPanel.setOpaque(false);
+  this.buttonsPanel.setOpaque(false);
+  this.personNameLabel.setText(chatContact.getName());
+  this.personNameLabel.setFont(this.getFont().deriveFont(Font.BOLD));
+  this.personNameLabel.setIcon(new ImageIcon(Constants.getStatusIcon(status)));
+  this.callButton.setToolTipText(Messages.getI18NString("call").getText());
+  this.infoButton.setToolTipText(Messages.getI18NString("userInfo").getText());
+  this.sendFileButton.setToolTipText(Messages.getI18NString("sendFile").getText());
+  this.callButton.setName("call");
+  this.infoButton.setName("info");
+  this.callButton.addActionListener(this);
+  this.infoButton.addActionListener(this);
+  this.buttonsPanel.add(infoButton);
+  this.buttonsPanel.add(callButton);
+  this.buttonsPanel.add(sendFileButton);
+  this.mainPanel.add(buttonsPanel,BorderLayout.NORTH);
+  this.mainPanel.add(personNameLabel,BorderLayout.CENTER);
+  this.add(personPhotoLabel,BorderLayout.WEST);
+  this.add(mainPanel,BorderLayout.CENTER);
+  this.callButton.setEnabled(false);
+  this.sendFileButton.setEnabled(false);
+  new Thread(){
+    public void run(){
+      contactPhotoIcon=chatContact.getImage();
+      SwingUtilities.invokeLater(new Runnable(){
+        public void run(){
+          if (contactPhotoIcon != null) {
+            personPhotoLabel.setBorder(new SIPCommBorders.BoldRoundBorder());
+            personPhotoLabel.setIcon(contactPhotoIcon);
+          }
+        }
+      }
+);
+    }
+  }
+.start();
+  ProtocolProviderService pps=chatContact.getProtocolProvider();
+  Object contactInfoOpSet=pps.getOperationSet(OperationSetWebContactInfo.class);
+  if (contactInfoOpSet == null)   infoButton.setEnabled(false);
+ else   infoButton.setEnabled(true);
+  this.setStatusIcon(chatContact.getPresenceStatus());
+}

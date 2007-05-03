@@ -1,7 +1,8 @@
 {
   super(chatWindow);
   this.metaContact=metaContact;
-  getChatContactListPanel().addContact(metaContact,protocolContact);
+  ChatContact chatContact=new ChatContact(metaContact,protocolContact);
+  getChatContactListPanel().addContact(chatContact);
   new Thread(){
     public void run(){
       loadHistoryPeriod();
@@ -11,7 +12,11 @@
   Iterator protocolContacts=metaContact.getContacts();
   while (protocolContacts.hasNext()) {
     Contact subContact=(Contact)protocolContacts.next();
-    chatWindow.getMainFrame().getProtocolPresenceOpSet(subContact.getProtocolProvider()).addContactPresenceStatusListener(this);
+    Object opSet=subContact.getProtocolProvider().getOperationSet(OperationSetPersistentPresence.class);
+    if (opSet != null) {
+      ((OperationSetPersistentPresence)opSet).addContactPresenceStatusListener(this);
+      ((OperationSetPersistentPresence)opSet).addSubsciptionListener(this);
+    }
   }
   chatWindow.getMainFrame().getContactList().addMetaContactListListener(this);
   contactSelectorBox=new ProtocolContactSelectorBox(this,metaContact,protocolContact);
