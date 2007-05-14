@@ -1,0 +1,35 @@
+{
+  GeolocationPacketExtension geolocExt=new GeolocationPacketExtension();
+  Set entries=geolocation.entrySet();
+  Iterator itLine=entries.iterator();
+  while (itLine.hasNext()) {
+    Map.Entry line=(Entry)itLine.next();
+    String curParam=(String)line.getKey();
+    String curValue=(String)line.getValue();
+    String prototype=Character.toUpperCase(curParam.charAt(0)) + curParam.substring(1);
+    String setterFunction="set" + prototype;
+    try {
+      Method toCall=GeolocationPacketExtension.class.getMethod(setterFunction,new Class[]{String.class});
+      Object[] arguments=new Object[]{curValue};
+      try {
+        toCall.invoke(geolocExt,arguments);
+      }
+ catch (      IllegalArgumentException exc) {
+        logger.error(exc);
+      }
+catch (      IllegalAccessException exc) {
+        logger.error(exc);
+      }
+catch (      InvocationTargetException exc) {
+        logger.error(exc);
+      }
+    }
+ catch (    SecurityException exc) {
+      logger.error(exc);
+    }
+catch (    NoSuchMethodException exc) {
+      logger.error(exc);
+    }
+  }
+  return geolocExt;
+}
