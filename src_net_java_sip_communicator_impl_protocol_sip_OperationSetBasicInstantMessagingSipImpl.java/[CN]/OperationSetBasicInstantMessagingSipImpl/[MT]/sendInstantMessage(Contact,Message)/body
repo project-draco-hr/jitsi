@@ -1,0 +1,39 @@
+{
+  if (!(to instanceof ContactSipImpl))   throw new IllegalArgumentException("The specified contact is not a Sip contact." + to);
+  assertConnected();
+  if (to.getPresenceStatus().equals(SipStatusEnum.OFFLINE)) {
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.OFFLINE_MESSAGES_NOT_SUPPORTED,new Date());
+    fireMessageEvent(evt);
+    return;
+  }
+  Request mes;
+  try {
+    mes=createMessage(to,message);
+  }
+ catch (  OperationFailedException ex) {
+    logger.error("Failed to create the message.",ex);
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
+    fireMessageEvent(evt);
+    return;
+  }
+  ClientTransaction messageTransaction;
+  SipProvider jainSipProvider=this.sipProvider.getDefaultJainSipProvider();
+  try {
+    messageTransaction=jainSipProvider.getNewClientTransaction(mes);
+  }
+ catch (  TransactionUnavailableException ex) {
+    logger.error("Failed to create messageTransaction.\n" + "This is most probably a network connection error.",ex);
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date());
+    fireMessageEvent(evt);
+    return;
+  }
+  try {
+    messageTransaction.sendRequest();
+  }
+ catch (  SipException ex) {
+    logger.error("Failed to send the message.",ex);
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
+    fireMessageEvent(evt);
+    return;
+  }
+}

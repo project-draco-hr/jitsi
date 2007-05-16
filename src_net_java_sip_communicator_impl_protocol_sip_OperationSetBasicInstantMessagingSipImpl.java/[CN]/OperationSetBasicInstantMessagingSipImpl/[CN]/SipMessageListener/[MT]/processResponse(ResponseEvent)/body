@@ -1,0 +1,45 @@
+{
+  Request req=responseEvent.getClientTransaction().getRequest();
+  int status=responseEvent.getResponse().getStatusCode();
+  String content=null;
+  try {
+    content=new String(req.getRawContent(),req.getContentEncoding().getEncoding());
+  }
+ catch (  UnsupportedEncodingException ex) {
+    logger.debug("failed to convert the message charset");
+    content=new String(req.getRawContent());
+  }
+  FromHeader fromHeader=(FromHeader)req.getHeader(FromHeader.NAME);
+  if (fromHeader == null) {
+    logger.error("received a response without a from header");
+    return;
+  }
+  Contact from=opSetPersPresence.findContactByID(fromHeader.getAddress().getURI().toString());
+  Message newMessage=createMessage(content);
+  if (from == null) {
+    logger.error("Error received a response from an unknown contact : " + responseEvent.getResponse().getReasonPhrase());
+    return;
+  }
+  if (status >= 400 && status != 401 && status != 407) {
+    logger.error("Error received from the network : " + responseEvent.getResponse().getReasonPhrase());
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,from,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
+    fireMessageEvent(evt);
+  }
+ else   if (status == 401 || status == 407) {
+    logger.debug("proxy asks authentication : " + responseEvent.getResponse().getReasonPhrase());
+    ClientTransaction clientTransaction=responseEvent.getClientTransaction();
+    SipProvider sourceProvider=(SipProvider)responseEvent.getSource();
+    try {
+      processAuthenticationChallenge(clientTransaction,responseEvent.getResponse(),sourceProvider);
+    }
+ catch (    OperationFailedException ex) {
+      MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,from,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
+      fireMessageEvent(evt);
+    }
+  }
+ else   if (status >= 200) {
+    logger.debug("Ack received from the network : " + responseEvent.getResponse().getReasonPhrase());
+    MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(newMessage,from,new Date());
+    fireMessageEvent(msgDeliveredEvt);
+  }
+}

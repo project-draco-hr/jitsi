@@ -1,0 +1,76 @@
+{
+  InetAddress destinationInetAddress=null;
+  Address toAddress=null;
+  try {
+    toAddress=parseAddressStr(to.getAddress());
+    destinationInetAddress=InetAddress.getByName(((SipURI)toAddress.getURI()).getHost());
+  }
+ catch (  UnknownHostException ex) {
+    throw new IllegalArgumentException(((SipURI)toAddress.getURI()).getHost() + " is not a valid internet address " + ex.getMessage());
+  }
+catch (  ParseException exc) {
+    logger.error("An unexpected error occurred while" + "constructing the address",exc);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the address",OperationFailedException.INTERNAL_ERROR,exc);
+  }
+  CallIdHeader callIdHeader=this.sipProvider.getDefaultJainSipProvider().getNewCallId();
+  CSeqHeader cSeqHeader=null;
+  long seqN=1;
+  if (this.cseqs.containsKey(to)) {
+    seqN=((Long)this.cseqs.get(to)).longValue();
+    this.cseqs.put(to,new Long(seqN + 1));
+  }
+ else {
+    this.cseqs.put(to,new Long(seqN + 1));
+  }
+  try {
+    cSeqHeader=this.sipProvider.getHeaderFactory().createCSeqHeader(seqN,Request.MESSAGE);
+  }
+ catch (  InvalidArgumentException ex) {
+    logger.error("An unexpected error occurred while" + "constructing the CSeqHeadder",ex);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the CSeqHeadder",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+catch (  ParseException exc) {
+    logger.error("An unexpected error occurred while" + "constructing the CSeqHeadder",exc);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the CSeqHeadder",OperationFailedException.INTERNAL_ERROR,exc);
+  }
+  String localTag=ProtocolProviderServiceSipImpl.generateLocalTag();
+  FromHeader fromHeader=null;
+  ToHeader toHeader=null;
+  try {
+    fromHeader=this.sipProvider.getHeaderFactory().createFromHeader(this.sipProvider.getOurSipAddress(),localTag);
+    toHeader=this.sipProvider.getHeaderFactory().createToHeader(toAddress,null);
+  }
+ catch (  ParseException ex) {
+    logger.error("An unexpected error occurred while" + "constructing the FromHeader or ToHeader",ex);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the FromHeader or ToHeader",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ArrayList viaHeaders=this.sipProvider.getLocalViaHeaders(destinationInetAddress,this.sipProvider.getDefaultListeningPoint());
+  MaxForwardsHeader maxForwards=this.sipProvider.getMaxForwardsHeader();
+  ContentTypeHeader contTypeHeader;
+  ContentEncodingHeader contEncodHeader;
+  ContentLengthHeader contLengthHeader;
+  try {
+    contTypeHeader=this.sipProvider.getHeaderFactory().createContentTypeHeader(getType(message),getSubType(message));
+    contEncodHeader=this.sipProvider.getHeaderFactory().createContentEncodingHeader(message.getEncoding());
+    contLengthHeader=this.sipProvider.getHeaderFactory().createContentLengthHeader(message.getSize());
+  }
+ catch (  ParseException ex) {
+    logger.error("An unexpected error occurred while" + "constructing the content headers",ex);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the content headers",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+catch (  InvalidArgumentException exc) {
+    logger.error("An unexpected error occurred while" + "constructing the content length header",exc);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the content length header",OperationFailedException.INTERNAL_ERROR,exc);
+  }
+  Request req;
+  try {
+    req=this.sipProvider.getMessageFactory().createRequest(toHeader.getAddress().getURI(),Request.MESSAGE,callIdHeader,cSeqHeader,fromHeader,toHeader,viaHeaders,maxForwards,contTypeHeader,message.getContent().getBytes());
+  }
+ catch (  ParseException ex) {
+    logger.error("Failed to create message Request!",ex);
+    throw new OperationFailedException("Failed to create message Request!",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  req.addHeader(contEncodHeader);
+  req.addHeader(contLengthHeader);
+  return req;
+}
