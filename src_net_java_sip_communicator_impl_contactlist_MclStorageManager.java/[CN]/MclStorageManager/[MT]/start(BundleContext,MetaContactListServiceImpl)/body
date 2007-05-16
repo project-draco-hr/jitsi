@@ -26,14 +26,21 @@
       storeContactList0();
     }
  else {
-      contactListDocument=builder.parse(contactlistFile);
+      try {
+        contactListDocument=builder.parse(contactlistFile);
+      }
+ catch (      Throwable ex) {
+        logger.error("Error parsing configuration file",ex);
+        logger.error("Creating replacement file");
+        contactlistFile.delete();
+        contactlistFile.createNewFile();
+        contactListDocument=builder.newDocument();
+        initVirginDocument(mclServiceImpl,contactListDocument);
+        storeContactList0();
+      }
     }
   }
- catch (  SAXException ex) {
-    logger.error("Error parsing configuration file",ex);
-    throw new XMLException(ex.getMessage(),ex);
-  }
-catch (  ParserConfigurationException ex) {
+ catch (  ParserConfigurationException ex) {
     logger.error("Error finding configuration for default parsers",ex);
   }
   this.launchStorageThread();

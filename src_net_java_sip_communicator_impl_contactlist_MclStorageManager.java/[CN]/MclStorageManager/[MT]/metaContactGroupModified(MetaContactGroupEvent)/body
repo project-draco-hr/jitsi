@@ -6,15 +6,17 @@
   }
 switch (evt.getEventID()) {
 case MetaContactGroupEvent.CONTACT_GROUP_REMOVED_FROM_META_GROUP:
-    Element protoGroupNode=XMLUtils.locateElement(mcGroupNode,PROTO_GROUP_NODE_NAME,UID_ATTR_NAME,evt.getSourceProtoGroup().getUID());
-  if (protoGroupNode != null)   protoGroupNode.getParentNode().removeChild(protoGroupNode);
- else   logger.error("Hm ... strange ...");
-break;
 case MetaContactGroupEvent.CONTACT_GROUP_ADDED_TO_META_GROUP:
-Element newProtoGroupNode=createProtoContactGroupNode(evt.getSourceProtoGroup());
-Element protoGroupsNode=XMLUtils.findChild(mcGroupNode,PROTO_GROUPS_NODE_NAME);
-if (protoGroupsNode != null) protoGroupsNode.appendChild(newProtoGroupNode);
- else logger.error("Hm ... strange ...");
+    Element parentNode=(Element)mcGroupNode.getParentNode();
+  parentNode.removeChild(mcGroupNode);
+Element newGroupElement=createMetaContactGroupNode(evt.getSourceMetaContactGroup());
+parentNode.appendChild(newGroupElement);
+try {
+scheduleContactListStorage();
+}
+ catch (IOException ex) {
+logger.error("Writing CL failed after adding contact " + evt.getSourceMetaContactGroup(),ex);
+}
 break;
 case MetaContactGroupEvent.META_CONTACT_GROUP_RENAMED:
 mcGroupNode.setAttribute(GROUP_NAME_ATTR_NAME,evt.getSourceMetaContactGroup().getGroupName());
