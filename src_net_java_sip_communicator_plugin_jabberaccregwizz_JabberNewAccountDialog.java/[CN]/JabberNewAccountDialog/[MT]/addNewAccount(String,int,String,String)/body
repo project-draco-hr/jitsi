@@ -1,0 +1,20 @@
+{
+  try {
+    ConnectionConfiguration config=new ConnectionConfiguration(server,port);
+    xmppConnection=new XMPPConnection(config);
+    xmppConnection.connect();
+    accountManager=new AccountManager(xmppConnection);
+    accountManager.createAccount(username,password);
+    return true;
+  }
+ catch (  XMPPException exc) {
+    if (exc.getXMPPError().getCode() == 409) {
+      JOptionPane.showMessageDialog(null,Resources.getString("userExist"),Resources.getString("xmppError"),JOptionPane.ERROR_MESSAGE);
+      logger.error("Error when created a new Jabber account : user already exist");
+    }
+ else {
+      JOptionPane.showMessageDialog(null,Resources.getString("unknownXmppError"),Resources.getString("xmppError"),JOptionPane.ERROR_MESSAGE);
+    }
+    return false;
+  }
+}

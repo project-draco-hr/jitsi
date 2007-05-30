@@ -24,6 +24,7 @@ synchronized (initializationLock) {
       String serviceName=StringUtils.parseServer(getAccountID().getUserID());
       String serverAddress=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.SERVER_ADDRESS);
       String serverPort=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.SERVER_PORT);
+      String accountResource=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.RESOURCE);
       try {
         String hosts[]=NetworkUtils.getSRVRecords("_xmpp-client._tcp." + serviceName);
         if (hosts != null && hosts.length > 0) {
@@ -46,7 +47,8 @@ synchronized (initializationLock) {
       }
       connection.addConnectionListener(new JabberConnectionListener());
       fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERING,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
-      connection.login(userID,password,"sip-comm");
+      if (accountResource == null || accountResource == "")       accountResource="sip-comm";
+      connection.login(userID,password,accountResource);
       if (connection.isAuthenticated()) {
         this.reconnecting=false;
         connection.getRoster().setSubscriptionMode(Roster.SubscriptionMode.manual);

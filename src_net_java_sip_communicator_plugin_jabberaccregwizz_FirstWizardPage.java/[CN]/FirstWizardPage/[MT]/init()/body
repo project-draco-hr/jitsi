@@ -1,5 +1,6 @@
 {
   this.userIDField.getDocument().addDocumentListener(this);
+  this.resourceField.getDocument().addDocumentListener(this);
   this.rememberPassBox.setSelected(true);
   this.existingAccountLabel.setForeground(Color.RED);
   this.userIDExampleLabel.setForeground(Color.GRAY);
@@ -19,11 +20,15 @@
   mainPanel.add(userIDPassPanel);
   serverField.setEditable(false);
   portField.setEditable(false);
+  resourceField.setEditable(false);
+  priorityField.setEditable(false);
   enableAdvOpButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent evt){
       JCheckBox cb=(JCheckBox)evt.getSource();
       serverField.setEditable(cb.isSelected());
       portField.setEditable(cb.isSelected());
+      resourceField.setEditable(cb.isSelected());
+      priorityField.setEditable(cb.isSelected());
     }
   }
 );
@@ -31,17 +36,32 @@
     public void changedUpdate(    DocumentEvent evt){
     }
     public void insertUpdate(    DocumentEvent evt){
-      setNextButtonAccordingToPort();
+      setNextButtonAccordingToPortAndPriority();
     }
     public void removeUpdate(    DocumentEvent evt){
-      setNextButtonAccordingToPort();
+      setNextButtonAccordingToPortAndPriority();
+    }
+  }
+);
+  priorityField.getDocument().addDocumentListener(new DocumentListener(){
+    public void changedUpdate(    DocumentEvent evt){
+    }
+    public void insertUpdate(    DocumentEvent evt){
+      setNextButtonAccordingToPortAndPriority();
+    }
+    public void removeUpdate(    DocumentEvent evt){
+      setNextButtonAccordingToPortAndPriority();
     }
   }
 );
   labelsAdvOpPanel.add(serverLabel);
   labelsAdvOpPanel.add(portLabel);
+  labelsAdvOpPanel.add(resourceLabel);
+  labelsAdvOpPanel.add(priorityLabel);
   valuesAdvOpPanel.add(serverField);
   valuesAdvOpPanel.add(portField);
+  valuesAdvOpPanel.add(resourceField);
+  valuesAdvOpPanel.add(priorityField);
   JPanel checkBoxesPanel=new JPanel(new GridLayout(0,1,10,10));
   checkBoxesPanel.add(sendKeepAliveBox);
   checkBoxesPanel.add(enableAdvOpButton);
@@ -50,5 +70,28 @@
   advancedOpPanel.add(valuesAdvOpPanel,BorderLayout.CENTER);
   advancedOpPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("advancedOptions")));
   mainPanel.add(advancedOpPanel);
+  registerButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent evt){
+      logger.debug("Reg OK");
+      jabberNewAccountDialog=new JabberNewAccountDialog();
+      if (jabberNewAccountDialog.isOK == true) {
+        serverField.setText(jabberNewAccountDialog.server);
+        portField.setText(jabberNewAccountDialog.port);
+        userIDField.setText(jabberNewAccountDialog.userID + "@" + jabberNewAccountDialog.server);
+        passField.setText(jabberNewAccountDialog.password);
+      }
+      logger.debug("Reg End");
+    }
+  }
+);
+  buttonPanel.add(registerButton);
+  registerArea.setEditable(false);
+  registerArea.setOpaque(false);
+  registerArea.setLineWrap(true);
+  registerArea.setWrapStyleWord(true);
+  registerPanel.add(registerArea);
+  registerPanel.add(buttonPanel);
+  registerPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("registerNewAccount")));
+  mainPanel.add(registerPanel);
   this.add(mainPanel,BorderLayout.NORTH);
 }
