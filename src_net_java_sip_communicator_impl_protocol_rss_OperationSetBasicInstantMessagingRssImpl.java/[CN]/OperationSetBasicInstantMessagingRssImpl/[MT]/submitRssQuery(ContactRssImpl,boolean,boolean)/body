@@ -1,0 +1,42 @@
+{
+  Message msg;
+  boolean newName=false;
+  boolean newDate=false;
+  boolean update=false;
+  Date lastQueryDate=null;
+  String newDisplayName=new String();
+  String oldDisplayName=new String();
+  RssFeedReader rssFeed=new RssFeedReader(rssContact.getAddress());
+  rssFeed.recupFlux();
+  if (rssFeed.getFeed() == null) {
+    msg=createMessage("No RSS feed available at URL " + rssContact.getAddress());
+  }
+ else {
+    if (newContact)     oldDisplayName=rssContact.getDisplayName();
+ else     oldDisplayName=rssFeed.getTitle();
+    newDisplayName=rssFeed.getTitle();
+    if (!(newDisplayName.equals(oldDisplayName))) {
+      newName=true;
+    }
+    rssContact.setDisplayName(newDisplayName);
+    if (rssContact.getDate() != null)     lastQueryDate=rssContact.getDate();
+    msg=createMessage(rssFeed.getPrintedFeed(lastQueryDate));
+    if (rssFeed.getUltimateItemDate() != null) {
+      if (lastQueryDate != null) {
+        if (rssFeed.getUltimateItemDate().compareTo(lastQueryDate) > 0) {
+          rssContact.setDate(rssFeed.getUltimateItemDate());
+          newDate=true;
+          update=true;
+        }
+      }
+ else {
+        rssContact.setDate(rssFeed.getUltimateItemDate());
+        newDate=true;
+        update=true;
+      }
+    }
+ else     update=true;
+    if (newName || newDate)     this.opSetPersPresence.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_DISPLAY_NAME,rssContact,oldDisplayName,newDisplayName);
+  }
+  if (update || aloneUpdate)   fireMessageReceived(msg,rssContact);
+}

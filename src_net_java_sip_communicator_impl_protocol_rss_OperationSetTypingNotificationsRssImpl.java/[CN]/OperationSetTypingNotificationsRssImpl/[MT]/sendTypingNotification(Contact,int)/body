@@ -1,0 +1,22 @@
+{
+  if (!(notifiedContact instanceof ContactRssImpl))   throw new IllegalArgumentException("The specified contact is not a Rss contact." + notifiedContact);
+  String userID=notifiedContact.getAddress();
+  if (userID.equals(this.parentProvider.getAccountID().getUserID())) {
+    String sourceUserID=notifiedContact.getProtocolProvider().getAccountID().getUserID();
+    Contact from=opSetPersPresence.findContactByID(sourceUserID);
+    if (from == null) {
+      from=opSetPersPresence.createVolatileContact(sourceUserID);
+    }
+    fireTypingNotificationsEvent(from,typingState);
+  }
+ else {
+    ProtocolProviderServiceRssImpl rssProvider=this.opSetPersPresence.findProviderForRssUserID(userID);
+    if (rssProvider != null) {
+      OperationSetTypingNotificationsRssImpl opSetTN=(OperationSetTypingNotificationsRssImpl)rssProvider.getOperationSet(OperationSetTypingNotifications.class);
+      opSetTN.sendTypingNotification(notifiedContact,typingState);
+    }
+ else {
+      fireTypingNotificationsEvent(notifiedContact,typingState);
+    }
+  }
+}

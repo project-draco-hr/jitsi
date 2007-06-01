@@ -1,0 +1,22 @@
+{
+  String userID=contact.getAddress();
+  if (userID.equals(this.parentProvider.getAccountID().getUserID())) {
+    String sourceUserID=contact.getProtocolProvider().getAccountID().getUserID();
+    Contact from=findContactByID(sourceUserID);
+    if (from == null) {
+      from=createVolatileContact(sourceUserID);
+    }
+    return authorizationHandler.processAuthorisationRequest(request,from);
+  }
+ else {
+    ProtocolProviderServiceRssImpl rssProvider=this.findProviderForRssUserID(userID);
+    if (rssProvider != null) {
+      OperationSetPersistentPresenceRssImpl opSetPersPresence=(OperationSetPersistentPresenceRssImpl)rssProvider.getOperationSet(OperationSetPersistentPresence.class);
+      return opSetPersPresence.deliverAuthorizationRequest(request,contact);
+    }
+ else {
+      authorizationHandler.processAuthorisationRequest(request,contact);
+      return new AuthorizationResponse(AuthorizationResponse.ACCEPT,"You are welcome!");
+    }
+  }
+}

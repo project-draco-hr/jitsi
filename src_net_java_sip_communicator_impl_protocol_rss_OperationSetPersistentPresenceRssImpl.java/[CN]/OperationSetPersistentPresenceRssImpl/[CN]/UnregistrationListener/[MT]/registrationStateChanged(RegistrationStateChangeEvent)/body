@@ -1,0 +1,17 @@
+{
+  if (!evt.getNewState().equals(RegistrationState.UNREGISTERED) && !evt.getNewState().equals(RegistrationState.AUTHENTICATION_FAILED) && !evt.getNewState().equals(RegistrationState.CONNECTION_FAILED)) {
+    return;
+  }
+  Iterator groupsIter=getServerStoredContactListRoot().subgroups();
+  while (groupsIter.hasNext()) {
+    ContactGroupRssImpl group=(ContactGroupRssImpl)groupsIter.next();
+    Iterator contactsIter=group.contacts();
+    while (contactsIter.hasNext()) {
+      ContactRssImpl contact=(ContactRssImpl)contactsIter.next();
+      PresenceStatus oldContactStatus=contact.getPresenceStatus();
+      if (!oldContactStatus.isOnline())       continue;
+      contact.setPresenceStatus(RssStatusEnum.ONLINE);
+      fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldContactStatus);
+    }
+  }
+}

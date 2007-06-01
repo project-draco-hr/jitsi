@@ -1,0 +1,20 @@
+{
+  String password=RssActivator.getProtocolProviderFactory().loadPassword(getAccountID());
+  if (password == null) {
+    UserCredentials credentials=new UserCredentials();
+    credentials.setUserName(getAccountID().getUserID());
+    credentials=authority.obtainCredentials("Rss",credentials);
+    char[] pass=credentials.getPassword();
+    if (pass == null) {
+      fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"");
+      return;
+    }
+    password=new String(pass);
+    if (credentials.isPasswordPersistent()) {
+      RssActivator.getProtocolProviderFactory().storePassword(getAccountID(),password);
+    }
+  }
+  RegistrationState oldState=currentRegistrationState;
+  currentRegistrationState=RegistrationState.REGISTERED;
+  fireRegistrationStateChanged(oldState,currentRegistrationState,RegistrationStateChangeEvent.REASON_USER_REQUEST,null);
+}

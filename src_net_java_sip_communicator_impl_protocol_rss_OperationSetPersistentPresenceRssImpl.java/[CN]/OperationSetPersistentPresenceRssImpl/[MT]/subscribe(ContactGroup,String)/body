@@ -1,0 +1,14 @@
+{
+  ContactRssImpl contact=new ContactRssImpl(contactIdentifier,parentProvider);
+  ((ContactGroupRssImpl)parent).addContact(contact);
+  fireSubscriptionEvent(contact,parent,SubscriptionEvent.SUBSCRIPTION_CREATED);
+  ProtocolProviderServiceRssImpl rssProvider=findProviderForRssUserID(contactIdentifier);
+  if (rssProvider != null) {
+    OperationSetPersistentPresence opSetPresence=(OperationSetPersistentPresence)rssProvider.getOperationSet(OperationSetPersistentPresence.class);
+    changePresenceStatusForContact(contact,(RssStatusEnum)opSetPresence.getPresenceStatus());
+  }
+ else {
+    changePresenceStatusForContact(contact,getPresenceStatus());
+  }
+  this.parentProvider.getBasicInstantMessaging().newContact(contact);
+}

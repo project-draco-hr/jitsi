@@ -1,0 +1,15 @@
+{
+  PresenceStatus oldPresenceStatus=this.presenceStatus;
+  this.presenceStatus=status;
+  this.statusMessage=statusMessage;
+  this.fireProviderStatusChangeEvent(oldPresenceStatus);
+  changePresenceStatusForAllContacts(getServerStoredContactListRoot(),getPresenceStatus());
+  List contacts=findContactsPointingToUs();
+  Iterator contactsIter=contacts.iterator();
+  while (contactsIter.hasNext()) {
+    ContactRssImpl contact=(ContactRssImpl)contactsIter.next();
+    PresenceStatus oldStatus=contact.getPresenceStatus();
+    contact.setPresenceStatus(status);
+    contact.getParentPresenceOperationSet().fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldStatus);
+  }
+}

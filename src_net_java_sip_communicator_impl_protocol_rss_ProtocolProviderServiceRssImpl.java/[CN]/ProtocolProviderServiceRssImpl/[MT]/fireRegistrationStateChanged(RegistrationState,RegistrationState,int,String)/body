@@ -1,0 +1,21 @@
+{
+  RegistrationStateChangeEvent event=new RegistrationStateChangeEvent(this,oldState,newState,reasonCode,reason);
+  logger.debug("Dispatching " + event + " to "+ registrationStateListeners.size()+ " listeners.");
+  Iterator listeners=null;
+synchronized (registrationStateListeners) {
+    listeners=new ArrayList(registrationStateListeners).iterator();
+  }
+  while (listeners.hasNext()) {
+    RegistrationStateChangeListener listener=(RegistrationStateChangeListener)listeners.next();
+    listener.registrationStateChanged(event);
+  }
+  if (!start) {
+    this.basicInstantMessaging.createTimer();
+    start=true;
+  }
+ else {
+    this.basicInstantMessaging.stopTimer();
+    start=false;
+  }
+  logger.trace("Done.");
+}
