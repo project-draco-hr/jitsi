@@ -9,21 +9,38 @@
     logger.debug("failed to convert the message charset");
     content=new String(req.getRawContent());
   }
-  FromHeader fromHeader=(FromHeader)req.getHeader(FromHeader.NAME);
-  if (fromHeader == null) {
-    logger.error("received a response without a from header");
+  ToHeader toHeader=(ToHeader)req.getHeader(ToHeader.NAME);
+  if (toHeader == null) {
+    logger.error("send a request without a to header");
     return;
   }
-  Contact from=opSetPersPresence.findContactByID(fromHeader.getAddress().getURI().toString());
-  Message newMessage=createMessage(content);
-  if (from == null) {
-    logger.error("Error received a response from an unknown contact : " + responseEvent.getResponse().getReasonPhrase());
+  Contact to=resolveContact(toHeader.getAddress().getURI().toString());
+  if (to == null) {
+    logger.error("Error received a response from an unknown contact : " + toHeader.getAddress().getURI().toString() + " : "+ responseEvent.getResponse().getReasonPhrase());
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(createMessage(content),to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
+    fireMessageEvent(evt);
+    return;
+  }
+  long seqNum=((CSeqHeader)req.getHeader(CSeqHeader.NAME)).getSeqNumber();
+  Integer key=new Integer(to.hashCode() + (int)seqNum);
+  if (key == null) {
+    logger.error("Couldn't create the key to find the message" + " sent");
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(createMessage(content),to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
+    fireMessageEvent(evt);
+    return;
+  }
+  Message newMessage=(Message)sentMsg.get(key);
+  if (newMessage == null) {
+    logger.error("Couldn't find the message sent");
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(createMessage(content),to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
+    fireMessageEvent(evt);
     return;
   }
   if (status >= 400 && status != 401 && status != 407) {
     logger.error("Error received from the network : " + responseEvent.getResponse().getReasonPhrase());
-    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,from,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date());
     fireMessageEvent(evt);
+    sentMsg.remove(key);
   }
  else   if (status == 401 || status == 407) {
     logger.debug("proxy asks authentication : " + responseEvent.getResponse().getReasonPhrase());
@@ -33,13 +50,23 @@
       processAuthenticationChallenge(clientTransaction,responseEvent.getResponse(),sourceProvider);
     }
  catch (    OperationFailedException ex) {
-      MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,from,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
+      MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date());
       fireMessageEvent(evt);
+      sentMsg.remove(key);
     }
+    sentMsg.remove(key);
+    sentMsg.put(new Integer(key.intValue() + 1),newMessage);
   }
  else   if (status >= 200) {
     logger.debug("Ack received from the network : " + responseEvent.getResponse().getReasonPhrase());
-    MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(newMessage,from,new Date());
+    MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(newMessage,to,new Date());
     fireMessageEvent(msgDeliveredEvt);
+    sentMsg.remove(key);
+  }
+  try {
+    responseEvent.getClientTransaction().terminate();
+  }
+ catch (  ObjectInUseException e) {
+    logger.debug("transaction in use while trying to close it");
   }
 }
