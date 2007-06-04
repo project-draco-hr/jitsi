@@ -1,8 +1,16 @@
 {
-  ContactRssImpl contact=new ContactRssImpl(address,parentProvider);
+  URL rssURL=null;
+  try {
+    rssURL=new URL(address);
+  }
+ catch (  MalformedURLException ex) {
+    throw new IllegalArgumentException("failed to create a URL for address " + address + ". Error was: "+ ex.getMessage());
+  }
+  ContactRssImpl contact=new ContactRssImpl(rssURL,new RssFeedReader(rssURL),parentProvider);
   contact.setResolved(false);
   ((ContactGroupRssImpl)parent).addContact(contact);
   fireSubscriptionEvent(contact,parent,SubscriptionEvent.SUBSCRIPTION_CREATED);
+  contact.setResolved(true);
   fireSubscriptionEvent(contact,parent,SubscriptionEvent.SUBSCRIPTION_RESOLVED);
   changePresenceStatusForContact(contact,getPresenceStatus());
   contact.setPersistentData(persistentData);

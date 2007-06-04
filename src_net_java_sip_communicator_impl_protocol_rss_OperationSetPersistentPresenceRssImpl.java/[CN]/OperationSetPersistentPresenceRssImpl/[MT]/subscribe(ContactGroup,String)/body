@@ -1,14 +1,16 @@
 {
-  ContactRssImpl contact=new ContactRssImpl(contactIdentifier,parentProvider);
+  URL rssURL=null;
+  try {
+    rssURL=new URL(contactIdentifier);
+  }
+ catch (  MalformedURLException ex) {
+    throw new IllegalArgumentException("failed to create a URL for address " + contactIdentifier + ". Error was: "+ ex.getMessage());
+  }
+  RssFeedReader rssFeedReader=new RssFeedReader(rssURL);
+  rssFeedReader.retrieveFlow();
+  ContactRssImpl contact=new ContactRssImpl(rssURL,rssFeedReader,parentProvider);
   ((ContactGroupRssImpl)parent).addContact(contact);
   fireSubscriptionEvent(contact,parent,SubscriptionEvent.SUBSCRIPTION_CREATED);
-  ProtocolProviderServiceRssImpl rssProvider=findProviderForRssUserID(contactIdentifier);
-  if (rssProvider != null) {
-    OperationSetPersistentPresence opSetPresence=(OperationSetPersistentPresence)rssProvider.getOperationSet(OperationSetPersistentPresence.class);
-    changePresenceStatusForContact(contact,(RssStatusEnum)opSetPresence.getPresenceStatus());
-  }
- else {
-    changePresenceStatusForContact(contact,getPresenceStatus());
-  }
-  this.parentProvider.getBasicInstantMessaging().newContact(contact);
+  changePresenceStatusForContact(contact,getPresenceStatus());
+  parentProvider.getBasicInstantMessaging().threadedContactFeedUpdate(contact);
 }
