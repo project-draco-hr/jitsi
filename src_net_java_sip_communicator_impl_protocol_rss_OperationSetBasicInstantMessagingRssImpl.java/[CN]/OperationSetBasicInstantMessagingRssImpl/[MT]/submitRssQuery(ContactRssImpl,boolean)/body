@@ -6,14 +6,19 @@
   Date lastQueryDate=null;
   String newDisplayName=new String();
   String oldDisplayName=new String();
-  RssFeedReader rssFeed=new RssFeedReader(rssContact.getAddress());
-  rssFeed.recupFlux();
+  RssFeedReader rssFeed=rssContact.getRssFeedReader();
+  try {
+    rssFeed.retrieveFlow();
+  }
+ catch (  OperationFailedException ex) {
+    logger.error("Failed to retrieve RSS flow. Error was: " + ex.getMessage(),ex);
+    return;
+  }
   if (rssFeed.getFeed() == null) {
     msg=createMessage("No RSS feed available at URL " + rssContact.getAddress());
   }
  else {
-    if (newContact)     oldDisplayName=rssContact.getDisplayName();
- else     oldDisplayName=rssFeed.getTitle();
+    oldDisplayName=rssContact.getDisplayName();
     newDisplayName=rssFeed.getTitle();
     if (!(newDisplayName.equals(oldDisplayName))) {
       newName=true;
@@ -38,5 +43,5 @@
  else     update=true;
     if (newName || newDate)     this.opSetPersPresence.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_DISPLAY_NAME,rssContact,oldDisplayName,newDisplayName);
   }
-  if (update || aloneUpdate)   fireMessageReceived(msg,rssContact);
+  if (update || userRequestedUpdate)   fireMessageReceived(msg,rssContact);
 }
