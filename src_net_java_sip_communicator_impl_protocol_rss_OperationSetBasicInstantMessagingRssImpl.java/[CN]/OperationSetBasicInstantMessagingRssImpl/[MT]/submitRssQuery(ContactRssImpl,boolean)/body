@@ -3,7 +3,6 @@
   boolean newName=false;
   boolean newDate=false;
   boolean update=false;
-  Date lastQueryDate=null;
   String newDisplayName=new String();
   String oldDisplayName=new String();
   RssFeedReader rssFeed=rssContact.getRssFeedReader();
@@ -14,34 +13,18 @@
     logger.error("Failed to retrieve RSS flow. Error was: " + ex.getMessage(),ex);
     return;
   }
-  if (rssFeed.getFeed() == null) {
-    msg=createMessage("No RSS feed available at URL " + rssContact.getAddress());
+  oldDisplayName=rssContact.getDisplayName();
+  newDisplayName=rssFeed.getTitle();
+  if (!(newDisplayName.equals(oldDisplayName))) {
+    newName=true;
   }
- else {
-    oldDisplayName=rssContact.getDisplayName();
-    newDisplayName=rssFeed.getTitle();
-    if (!(newDisplayName.equals(oldDisplayName))) {
-      newName=true;
-    }
-    rssContact.setDisplayName(newDisplayName);
-    if (rssContact.getDate() != null)     lastQueryDate=rssContact.getDate();
-    msg=createMessage(rssFeed.getPrintedFeed(lastQueryDate));
-    if (rssFeed.getUltimateItemDate() != null) {
-      if (lastQueryDate != null) {
-        if (rssFeed.getUltimateItemDate().compareTo(lastQueryDate) > 0) {
-          rssContact.setDate(rssFeed.getUltimateItemDate());
-          newDate=true;
-          update=true;
-        }
-      }
- else {
-        rssContact.setDate(rssFeed.getUltimateItemDate());
-        newDate=true;
-        update=true;
-      }
-    }
- else     update=true;
-    if (newName || newDate)     this.opSetPersPresence.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_DISPLAY_NAME,rssContact,oldDisplayName,newDisplayName);
+  rssContact.setDisplayName(newDisplayName);
+  msg=createMessage(rssFeed.feedToString(rssContact.getLastItemDate()));
+  if (rssFeed.getLastItemPubDate().compareTo(rssContact.getLastItemDate()) > 0) {
+    rssContact.setDate(rssFeed.getLastItemPubDate());
+    newDate=true;
+    update=true;
   }
+  if (newName || newDate)   this.opSetPersPresence.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_DISPLAY_NAME,rssContact,oldDisplayName,newDisplayName);
   if (update || userRequestedUpdate)   fireMessageReceived(msg,rssContact);
 }
