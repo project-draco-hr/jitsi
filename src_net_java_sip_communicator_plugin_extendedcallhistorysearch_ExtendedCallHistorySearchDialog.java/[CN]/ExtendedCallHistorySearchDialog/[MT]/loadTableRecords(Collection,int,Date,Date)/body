@@ -1,0 +1,40 @@
+{
+  boolean addMe=true;
+  lastDateFromHistory=null;
+  callList.removeAll();
+  Iterator lastCalls=historyCalls.iterator();
+  while (lastCalls.hasNext()) {
+    addMe=true;
+    CallRecord callRecord=(CallRecord)lastCalls.next();
+    Date callStartDate=callRecord.getStartTime();
+    if (checkDate(callStartDate,since,before)) {
+      if (lastDateFromHistory == null) {
+        callList.addItem(processDate(callStartDate));
+        lastDateFromHistory=callStartDate;
+      }
+ else {
+        int compareResult=GuiUtils.compareDates(callStartDate,lastDateFromHistory);
+        if (compareResult != 0) {
+          callList.addItem(processDate(callStartDate));
+          lastDateFromHistory=callStartDate;
+        }
+      }
+    }
+ else     addMe=false;
+    if (addMe) {
+      Iterator participants=callRecord.getParticipantRecords().iterator();
+      while (participants.hasNext() && addMe) {
+        CallParticipantRecord participantRecord=(CallParticipantRecord)participants.next();
+        String participantName=participantRecord.getParticipantAddress();
+        if (participantName.matches("(?i).*" + contactNameField.getText() + ".*")) {
+          String direction;
+          direction=checkCallType(calltype,callRecord);
+          if (direction != null)           callList.addItem(new GuiCallParticipantRecord(participantRecord,direction));
+ else           addMe=false;
+        }
+ else         addMe=false;
+      }
+    }
+  }
+  if (callList.getModel().getSize() > 0)   callList.addItem(Resources.getString("olderCalls") + "...");
+}
