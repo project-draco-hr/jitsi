@@ -1,0 +1,25 @@
+{
+  logger.finer("unregisterAllServices()");
+  if (services.size() == 0) {
+    return;
+  }
+  Collection list;
+synchronized (this) {
+    list=new LinkedList(services.values());
+    services.clear();
+  }
+  for (Iterator iterator=list.iterator(); iterator.hasNext(); ) {
+    ((ServiceInfo)iterator.next()).cancel();
+  }
+  Object lock=new Object();
+  new Canceler(list,lock).start();
+  try {
+synchronized (lock) {
+      if (!closed) {
+        lock.wait();
+      }
+    }
+  }
+ catch (  InterruptedException e) {
+  }
+}

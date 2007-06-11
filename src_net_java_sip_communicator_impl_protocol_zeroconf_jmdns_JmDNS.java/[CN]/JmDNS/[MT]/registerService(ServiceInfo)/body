@@ -1,0 +1,20 @@
+{
+  registerServiceType(info.type);
+  info.server=localHost.getName();
+  info.addr=localHost.getAddress();
+synchronized (this) {
+    makeServiceNameUnique(info);
+    services.put(info.getQualifiedName().toLowerCase(),info);
+  }
+  new Prober().start();
+  try {
+synchronized (info) {
+      while (info.getState().compareTo(DNSState.ANNOUNCED) < 0) {
+        info.wait();
+      }
+    }
+  }
+ catch (  InterruptedException e) {
+  }
+  logger.fine("registerService() JmDNS registered service as " + info);
+}

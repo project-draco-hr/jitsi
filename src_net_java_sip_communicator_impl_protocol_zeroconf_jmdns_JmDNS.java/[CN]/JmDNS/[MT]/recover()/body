@@ -1,0 +1,23 @@
+{
+  logger.finer("recover()");
+  if (DNSState.CANCELED != state) {
+synchronized (this) {
+      logger.finer("recover() Cleanning up");
+      state=DNSState.CANCELED;
+      Collection oldServiceInfos=new ArrayList(services.values());
+      unregisterAllServices();
+      disposeServiceCollectors();
+      closeMulticastSocket();
+      cache.clear();
+      logger.finer("recover() All is clean");
+      try {
+        openMulticastSocket(localHost);
+        start(oldServiceInfos);
+      }
+ catch (      Exception exception) {
+        logger.log(Level.WARNING,"recover() Start services exception ",exception);
+      }
+      logger.log(Level.WARNING,"recover() We are back!");
+    }
+  }
+}

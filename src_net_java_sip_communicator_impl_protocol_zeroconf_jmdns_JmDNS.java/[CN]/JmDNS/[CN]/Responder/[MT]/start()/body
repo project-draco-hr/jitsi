@@ -1,0 +1,20 @@
+{
+  boolean iAmTheOnlyOne=true;
+  for (Iterator i=in.questions.iterator(); i.hasNext(); ) {
+    DNSEntry entry=(DNSEntry)i.next();
+    if (entry instanceof DNSQuestion) {
+      DNSQuestion q=(DNSQuestion)entry;
+      logger.finest("start() question=" + q);
+      iAmTheOnlyOne&=(q.type == DNSConstants.TYPE_SRV || q.type == DNSConstants.TYPE_TXT || q.type == DNSConstants.TYPE_A || q.type == DNSConstants.TYPE_AAAA || localHost.getName().equalsIgnoreCase(q.name) || services.containsKey(q.name.toLowerCase()));
+      if (!iAmTheOnlyOne) {
+        break;
+      }
+    }
+  }
+  int delay=(iAmTheOnlyOne && !in.isTruncated()) ? 0 : DNSConstants.RESPONSE_MIN_WAIT_INTERVAL + random.nextInt(DNSConstants.RESPONSE_MAX_WAIT_INTERVAL - DNSConstants.RESPONSE_MIN_WAIT_INTERVAL + 1) - in.elapseSinceArrival();
+  if (delay < 0) {
+    delay=0;
+  }
+  logger.finest("start() Responder chosen delay=" + delay);
+  timer.schedule(this,delay);
+}

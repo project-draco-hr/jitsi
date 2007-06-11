@@ -1,0 +1,17 @@
+{
+  if (out == null) {
+    out=new DNSOutgoing(DNSConstants.FLAGS_QR_RESPONSE | DNSConstants.FLAGS_AA);
+  }
+  try {
+    out.addAnswer(in,rec);
+  }
+ catch (  IOException e) {
+    out.flags|=DNSConstants.FLAGS_TC;
+    out.id=in.id;
+    out.finish();
+    send(out);
+    out=new DNSOutgoing(DNSConstants.FLAGS_QR_RESPONSE | DNSConstants.FLAGS_AA);
+    out.addAnswer(in,rec);
+  }
+  return out;
+}

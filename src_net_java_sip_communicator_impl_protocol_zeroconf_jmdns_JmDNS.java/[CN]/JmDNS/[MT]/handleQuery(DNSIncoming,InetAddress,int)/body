@@ -1,0 +1,26 @@
+{
+  boolean hostConflictDetected=false;
+  boolean serviceConflictDetected=false;
+  long expirationTime=System.currentTimeMillis() + DNSConstants.KNOWN_ANSWER_TTL;
+  for (Iterator i=in.answers.iterator(); i.hasNext(); ) {
+    DNSRecord answer=(DNSRecord)i.next();
+    if ((answer.getType() == DNSConstants.TYPE_A) || (answer.getType() == DNSConstants.TYPE_AAAA)) {
+      hostConflictDetected|=answer.handleQuery(this,expirationTime);
+    }
+ else {
+      serviceConflictDetected|=answer.handleQuery(this,expirationTime);
+    }
+  }
+  if (plannedAnswer != null) {
+    plannedAnswer.append(in);
+  }
+ else {
+    if (in.isTruncated()) {
+      plannedAnswer=in;
+    }
+    new Responder(in,addr,port).start();
+  }
+  if (hostConflictDetected || serviceConflictDetected) {
+    new Prober().start();
+  }
+}

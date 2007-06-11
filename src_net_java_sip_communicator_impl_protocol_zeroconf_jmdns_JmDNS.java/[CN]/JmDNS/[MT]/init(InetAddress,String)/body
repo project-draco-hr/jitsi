@@ -1,0 +1,21 @@
+{
+  int idx=name.indexOf(".");
+  if (idx > 0) {
+    name=name.substring(0,idx);
+  }
+  name+=".local.";
+  localHost=new HostInfo(address,name);
+  cache=new DNSCache(100);
+  listeners=Collections.synchronizedList(new ArrayList());
+  serviceListeners=new HashMap();
+  typeListeners=new ArrayList();
+  services=new Hashtable(20);
+  serviceTypes=new Hashtable(20);
+  timer=new Timer();
+  new RecordReaper().start();
+  shutdown=new Thread(new Shutdown(),"JmDNS.Shutdown");
+  Runtime.getRuntime().addShutdownHook(shutdown);
+  incomingListener=new Thread(new SocketListener(),"JmDNS.SocketListener");
+  openMulticastSocket(localHost);
+  start(services.values());
+}

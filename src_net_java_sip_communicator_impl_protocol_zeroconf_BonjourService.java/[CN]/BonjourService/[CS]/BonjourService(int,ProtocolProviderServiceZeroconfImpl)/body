@@ -1,0 +1,29 @@
+{
+  this.acc=(ZeroconfAccountID)pps.getAccountID();
+  this.port=port;
+  this.id=acc.getUserID();
+  this.pps=pps;
+  opSetPersPresence=(OperationSetPersistentPresenceZeroconfImpl)pps.getSupportedOperationSets().get(OperationSetPersistentPresence.class.getName());
+  props=new Hashtable();
+  props.put("1st",acc.getFirst());
+  props.put("email",(acc.getMail() == null) ? "" : acc.getMail());
+  props.put("jid",this.id);
+  props.put("last",(acc.getLast() == null) ? "" : acc.getLast());
+  props.put("msg",opSetPersPresence.getCurrentStatusMessage());
+  props.put("status","avail");
+  props.put("phsh","000");
+  props.put("vc","C!");
+  props.put("txtvers","1");
+  props.put("ext","");
+  props.put("nick",acc.getFirst());
+  props.put("ver","1");
+  props.put("node","SIP Communicator");
+  props.put("client","SIP Communicator");
+  changeStatus(opSetPersPresence.getPresenceStatus());
+  sock=createSocket(port);
+  if (sock == null)   return;
+  port=sock.getLocalPort();
+  logger.debug("ZEROCONF: ServerSocket bound to port " + port);
+  props.put("port.p2pj",Integer.toString(port));
+  this.start();
+}

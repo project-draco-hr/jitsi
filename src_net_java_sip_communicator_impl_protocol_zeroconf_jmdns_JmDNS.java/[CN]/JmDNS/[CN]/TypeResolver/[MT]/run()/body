@@ -1,0 +1,27 @@
+{
+  try {
+    if (state == DNSState.ANNOUNCED) {
+      if (count++ < 3) {
+        logger.finer("run() JmDNS querying type");
+        DNSOutgoing out=new DNSOutgoing(DNSConstants.FLAGS_QR_QUERY);
+        out.addQuestion(new DNSQuestion("_services._mdns._udp.local.",DNSConstants.TYPE_PTR,DNSConstants.CLASS_IN));
+        for (Iterator iterator=serviceTypes.values().iterator(); iterator.hasNext(); ) {
+          out.addAnswer(new DNSRecord.Pointer("_services._mdns._udp.local.",DNSConstants.TYPE_PTR,DNSConstants.CLASS_IN,DNSConstants.DNS_TTL,(String)iterator.next()),0);
+        }
+        send(out);
+      }
+ else {
+        this.cancel();
+      }
+    }
+ else {
+      if (state == DNSState.CANCELED) {
+        this.cancel();
+      }
+    }
+  }
+ catch (  Throwable e) {
+    logger.log(Level.WARNING,"run() exception ",e);
+    recover();
+  }
+}

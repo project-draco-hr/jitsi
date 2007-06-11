@@ -1,0 +1,13 @@
+{
+  if (str.startsWith("<?xml") || str.startsWith("<stream"))   return new MessageZeroconfImpl(null,null,MessageZeroconfImpl.STREAM_OPEN);
+  if (str.endsWith("stream>"))   return new MessageZeroconfImpl(null,null,MessageZeroconfImpl.STREAM_CLOSE);
+  if ((str.indexOf("<delivered/>") > 0) && (str.indexOf("<body>") < 0))   return new MessageZeroconfImpl(null,null,MessageZeroconfImpl.DELIVERED);
+  if (!str.startsWith("<message"))   return new MessageZeroconfImpl(null,null,MessageZeroconfImpl.UNDEF);
+  if ((str.indexOf("<body>") < 0) || (str.indexOf("</body>") < 0))   return new MessageZeroconfImpl(null,null,MessageZeroconfImpl.UNDEF);
+  String temp=str.substring(str.indexOf("<body>") + 6,str.indexOf("</body>"));
+  logger.debug("ZEROCONF: received message [" + temp + "]");
+  int MessageType=MessageZeroconfImpl.MESSAGE;
+  if ((str.indexOf("<id>") >= 0) && (str.indexOf("</id>") >= 0))   MessageType=MessageZeroconfImpl.TYPING;
+  MessageZeroconfImpl msg=new MessageZeroconfImpl(temp,null,MessageType);
+  return msg;
+}

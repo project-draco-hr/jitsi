@@ -1,0 +1,26 @@
+{
+  logger.debug("ZEROCONF: Bonjour Service Thread up and running!");
+  while (dead == false) {
+    if (sock == null || sock.isClosed()) {
+      sock=createSocket(port);
+      if (sock == null)       shutdown();
+      port=sock.getLocalPort();
+      props.put("port.p2pj",Integer.toString(port));
+    }
+    try {
+      Socket connexion=sock.accept();
+      ContactZeroconfImpl contact=getContact(null,connexion.getInetAddress());
+      if (dead == true)       break;
+      if ((contact == null) || (contact.getClientThread() != null)) {
+        if (contact == null)         logger.error("ZEROCONF: Connexion from " + "unknown contact [" + connexion.getInetAddress() + "]. REJECTING!");
+ else         if (contact.getClientThread() == null)         logger.error("ZEROCONF: Redundant chat " + "channel [" + contact + "]. REJECTING!");
+        connexion.close();
+      }
+ else       new ClientThread(connexion,this);
+    }
+ catch (    Exception e) {
+      logger.error(e);
+    }
+  }
+  logger.debug("ZEROCONF: Going Offline - " + "BonjourService Thread exiting!");
+}

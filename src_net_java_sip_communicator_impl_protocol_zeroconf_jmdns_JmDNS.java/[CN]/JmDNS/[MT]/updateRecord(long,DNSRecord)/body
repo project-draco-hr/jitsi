@@ -1,0 +1,36 @@
+{
+  List listenerList=null;
+synchronized (this) {
+    listenerList=new ArrayList(listeners);
+  }
+  for (Iterator iterator=listenerList.iterator(); iterator.hasNext(); ) {
+    DNSListener listener=(DNSListener)iterator.next();
+    listener.updateRecord(this,now,rec);
+  }
+  if (rec.type == DNSConstants.TYPE_PTR || rec.type == DNSConstants.TYPE_SRV) {
+    List serviceListenerList=null;
+synchronized (this) {
+      serviceListenerList=(List)serviceListeners.get(rec.name.toLowerCase());
+      if (serviceListenerList != null) {
+        serviceListenerList=new ArrayList(serviceListenerList);
+      }
+    }
+    if (serviceListenerList != null) {
+      boolean expired=rec.isExpired(now);
+      String type=rec.getName();
+      String name=((DNSRecord.Pointer)rec).getAlias();
+      if (!expired) {
+        ServiceEvent event=new ServiceEvent(this,type,toUnqualifiedName(type,name),null);
+        for (Iterator iterator=serviceListenerList.iterator(); iterator.hasNext(); ) {
+          ((ServiceListener)iterator.next()).serviceAdded(event);
+        }
+      }
+ else {
+        ServiceEvent event=new ServiceEvent(this,type,toUnqualifiedName(type,name),null);
+        for (Iterator iterator=serviceListenerList.iterator(); iterator.hasNext(); ) {
+          ((ServiceListener)iterator.next()).serviceRemoved(event);
+        }
+      }
+    }
+  }
+}
