@@ -5,8 +5,8 @@
   try {
     content=new String(req.getRawContent(),req.getContentEncoding().getEncoding());
   }
- catch (  UnsupportedEncodingException ex) {
-    logger.debug("failed to convert the message charset");
+ catch (  UnsupportedEncodingException exc) {
+    logger.debug("failed to convert the message charset",exc);
     content=new String(req.getRawContent());
   }
   ToHeader toHeader=(ToHeader)req.getHeader(ToHeader.NAME);
@@ -21,14 +21,7 @@
     fireMessageEvent(evt);
     return;
   }
-  long seqNum=((CSeqHeader)req.getHeader(CSeqHeader.NAME)).getSeqNumber();
-  Integer key=new Integer(to.hashCode() + (int)seqNum);
-  if (key == null) {
-    logger.error("Couldn't create the key to find the message" + " sent");
-    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(createMessage(content),to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
-    fireMessageEvent(evt);
-    return;
-  }
+  String key=((CallIdHeader)req.getHeader(CallIdHeader.NAME)).getCallId();
   Message newMessage=(Message)sentMsg.get(key);
   if (newMessage == null) {
     logger.error("Couldn't find the message sent");
@@ -37,8 +30,8 @@
     return;
   }
   if (status >= 400 && status != 401 && status != 407) {
-    logger.error("Error received from the network : " + responseEvent.getResponse().getReasonPhrase());
-    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date());
+    logger.info("Error received from the network : " + responseEvent.getResponse().getReasonPhrase());
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date(),responseEvent.getResponse().getReasonPhrase());
     fireMessageEvent(evt);
     sentMsg.remove(key);
   }
@@ -50,23 +43,15 @@
       processAuthenticationChallenge(clientTransaction,responseEvent.getResponse(),sourceProvider);
     }
  catch (    OperationFailedException ex) {
-      MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date());
+      MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date(),ex.getMessage());
       fireMessageEvent(evt);
       sentMsg.remove(key);
     }
-    sentMsg.remove(key);
-    sentMsg.put(new Integer(key.intValue() + 1),newMessage);
   }
  else   if (status >= 200) {
     logger.debug("Ack received from the network : " + responseEvent.getResponse().getReasonPhrase());
     MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(newMessage,to,new Date());
     fireMessageEvent(msgDeliveredEvt);
     sentMsg.remove(key);
-  }
-  try {
-    responseEvent.getClientTransaction().terminate();
-  }
- catch (  ObjectInUseException e) {
-    logger.debug("transaction in use while trying to close it");
   }
 }
