@@ -2,6 +2,13 @@
   if (!(parent instanceof MetaContactGroupImpl)) {
     throw new IllegalArgumentException(parent + " is not an instance of MetaContactGroupImpl");
   }
+  Iterator subgroups=parent.getSubgroups();
+  while (subgroups.hasNext()) {
+    MetaContactGroup group=(MetaContactGroup)subgroups.next();
+    if (group.getGroupName().equals(groupName)) {
+      throw new MetaContactListException("Parent " + parent.getGroupName() + " already contains a "+ "group called "+ groupName,new CloneNotSupportedException("just testing nested exc-s"),MetaContactListException.CODE_GROUP_ALREADY_EXISTS_ERROR);
+    }
+  }
   MetaContactGroupImpl newMetaGroup=new MetaContactGroupImpl(groupName);
   ((MetaContactGroupImpl)parent).addSubgroup(newMetaGroup);
   fireMetaContactGroupEvent(newMetaGroup,null,null,MetaContactGroupEvent.META_CONTACT_GROUP_ADDED);
