@@ -1,0 +1,47 @@
+{
+  fixture.clearProvidersLists();
+  Object o=new Object();
+synchronized (o) {
+    o.wait(2000);
+  }
+  try {
+    opSetPresence1.subscribe(fixture.userID2);
+  }
+ catch (  OperationFailedException ex) {
+    if (ex.getErrorCode() != OperationFailedException.SUBSCRIPTION_ALREADY_EXISTS) {
+      throw ex;
+    }
+ else {
+    }
+  }
+  try {
+    opSetPresence2.subscribe(fixture.userID1);
+  }
+ catch (  OperationFailedException ex) {
+    if (ex.getErrorCode() != OperationFailedException.SUBSCRIPTION_ALREADY_EXISTS) {
+      throw ex;
+    }
+ else {
+    }
+  }
+  Iterator iter=opSetPresence1.getSupportedStatusSet();
+  while (iter.hasNext()) {
+    PresenceStatus stat=(PresenceStatus)iter.next();
+    if (stat.isOnline()) {
+      opSetPresence1.publishPresenceStatus(stat,"online for testing purpose");
+      break;
+    }
+  }
+  iter=opSetPresence2.getSupportedStatusSet();
+  while (iter.hasNext()) {
+    PresenceStatus stat=(PresenceStatus)iter.next();
+    if (stat.isOnline()) {
+      opSetPresence2.publishPresenceStatus(stat,"online for testing purpose");
+      break;
+    }
+  }
+  logger.info("will wait till the list prepare is completed");
+synchronized (o) {
+    o.wait(4000);
+  }
+}
