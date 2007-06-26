@@ -1,0 +1,15 @@
+{
+  if (nickname == null)   nickname=getParentProvider().getAccountID().getUserID();
+  this.nickname=nickname;
+  this.joined=true;
+  MockChatRoomMember newMember=new MockChatRoomMember(nickname,this,ChatRoomMemberRole.MEMBER);
+  members.add(newMember);
+  ChatRoomJoinedEvent event=new ChatRoomJoinedEvent(this);
+  Iterator iter=chatRoomJoinListeners.iterator();
+  while (iter.hasNext()) {
+    ChatRoomJoinListener elem=(ChatRoomJoinListener)iter.next();
+    elem.chatRoomJoined(event);
+  }
+  LocalUserChatRoomPresenceChangeEvent evt=new LocalUserChatRoomPresenceChangeEvent(parentOpSet,this,LocalUserChatRoomPresenceChangeEvent.CHAT_ROOM_JOINED,null);
+  parentOpSet.fireLocalUserChatRoomPresenceChangeEvent(evt);
+}

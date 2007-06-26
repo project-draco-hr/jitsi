@@ -1,0 +1,17 @@
+{
+  TreeSet result=new TreeSet(new ChatRoomMessageEventComparator());
+  try {
+    HistoryReader reader=this.getHistoryForMultiChat(null,room).getReader();
+    Iterator recs=reader.findLastRecordsBefore(date,count);
+    while (recs.hasNext()) {
+      result.add(convertHistoryRecordToMessageEvent((HistoryRecord)recs.next(),room));
+    }
+  }
+ catch (  IOException e) {
+    logger.error("Could not read history",e);
+  }
+  LinkedList resultAsList=new LinkedList(result);
+  int startIndex=resultAsList.size() - count;
+  if (startIndex < 0)   startIndex=0;
+  return resultAsList.subList(startIndex,resultAsList.size());
+}
