@@ -1,21 +1,38 @@
 {
   if (telephony == null)   return;
-  try {
-    Call createdCall;
-    if (contacts != null) {
-      Contact contact=(Contact)contacts.get(0);
+  Call createdCall=null;
+  if (contacts != null) {
+    Contact contact=(Contact)contacts.get(0);
+    try {
       createdCall=telephony.createCall(contact);
     }
- else     createdCall=telephony.createCall(stringContact);
+ catch (    OperationFailedException e) {
+      logger.error("The call could not be created: " + e);
+      callPanel.getParticipantPanel(contact.getDisplayName()).setState(e.getMessage());
+      removeCallPanelWait(callPanel);
+    }
     if (createdCall != null) {
       callPanel.setCall(createdCall,GuiCallParticipantRecord.OUTGOING_CALL);
       activeCalls.put(createdCall,callPanel);
     }
   }
- catch (  OperationFailedException e) {
-    logger.error("The call could not be created: " + e);
-  }
-catch (  ParseException e) {
-    logger.error("The call could not be created: " + e);
+ else {
+    try {
+      createdCall=telephony.createCall(stringContact);
+    }
+ catch (    ParseException e) {
+      logger.error("The call could not be created: " + e);
+      callPanel.getParticipantPanel(stringContact).setState(e.getMessage());
+      removeCallPanelWait(callPanel);
+    }
+catch (    OperationFailedException e) {
+      logger.error("The call could not be created: " + e);
+      callPanel.getParticipantPanel(stringContact).setState(e.getMessage());
+      removeCallPanelWait(callPanel);
+    }
+    if (createdCall != null) {
+      callPanel.setCall(createdCall,GuiCallParticipantRecord.OUTGOING_CALL);
+      activeCalls.put(createdCall,callPanel);
+    }
   }
 }

@@ -1,16 +1,15 @@
 {
   if (evt.getSourceCall() == call) {
     CallParticipant participant=evt.getSourceCallParticipant();
-    CallParticipantPanel participantPanel=(CallParticipantPanel)participantsPanels.get(participant);
+    CallParticipantPanel participantPanel=getParticipantPanel(participant);
     if (participantPanel != null) {
       CallParticipantState state=participant.getState();
       participantPanel.setState(state.getStateString());
       participantPanel.stopCallTimer();
-      GuiCallParticipantRecord participantRecord=new GuiCallParticipantRecord(participantPanel.getParticipantName(),participantPanel.getCallType(),participantPanel.getStartTime(),participantPanel.getTime());
+      GuiCallParticipantRecord participantRecord=new GuiCallParticipantRecord(participantPanel.getParticipantName(),participantPanel.getCallType(),participantPanel.getCallStartTime(),participantPanel.getCallDuration());
       callManager.getMainFrame().getCallListManager().addCallRecord(0,participantRecord);
-      this.participantsPanels.remove(participant);
       if (participantsPanels.size() != 0) {
-        Timer timer=new Timer(5000,new RemoveParticipantPanelListener(participantPanel));
+        Timer timer=new Timer(5000,new RemoveParticipantPanelListener(getParticipantWrapper(participant)));
         timer.setRepeats(false);
         timer.start();
       }
