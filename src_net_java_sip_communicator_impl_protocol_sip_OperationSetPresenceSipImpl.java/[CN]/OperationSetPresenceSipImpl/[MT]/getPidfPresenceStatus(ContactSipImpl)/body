@@ -1,0 +1,43 @@
+{
+  Document doc=this.createDocument();
+  if (doc == null) {
+    return null;
+  }
+  String contactUri=null;
+  try {
+    contactUri=this.parseAddressStr(contact.getAddress()).getURI().toString();
+  }
+ catch (  ParseException e) {
+    logger.debug("failed to parse the contact id",e);
+    return null;
+  }
+  Element presence=doc.createElement(PRESENCE_ELEMENT);
+  presence.setAttribute(NS_ELEMENT,NS_VALUE);
+  presence.setAttribute(ENTITY_ATTRIBUTE,contactUri);
+  doc.appendChild(presence);
+  Element tuple=doc.createElement(TUPLE_ELEMENT);
+  tuple.setAttribute(ID_ATTRIBUTE,String.valueOf(tupleid++));
+  presence.appendChild(tuple);
+  Element status=doc.createElement(STATUS_ELEMENT);
+  tuple.appendChild(status);
+  Element basic=doc.createElement(BASIC_ELEMENT);
+  if (this.getPresenceStatus().equals(SipStatusEnum.OFFLINE)) {
+    basic.appendChild(doc.createTextNode(OFFLINE_STATUS));
+  }
+ else {
+    basic.appendChild(doc.createTextNode(ONLINE_STATUS));
+  }
+  status.appendChild(basic);
+  Element contactUriEl=doc.createElement(CONTACT_ELEMENT);
+  Node cValue=doc.createTextNode(contactUri);
+  contactUriEl.appendChild(cValue);
+  tuple.appendChild(contactUriEl);
+  Element noteNodeEl=doc.createElement(NOTE_ELEMENT);
+  noteNodeEl.appendChild(doc.createTextNode(this.getPresenceStatus().getStatusName()));
+  tuple.appendChild(noteNodeEl);
+  String res=convertDocument(doc);
+  if (res == null) {
+    return null;
+  }
+  return res.getBytes();
+}

@@ -1,0 +1,91 @@
+{
+  InetAddress destinationInetAddress=null;
+  try {
+    destinationInetAddress=InetAddress.getByName(((SipURI)this.parentProvider.getOurSipAddress().getURI()).getHost());
+  }
+ catch (  UnknownHostException ex) {
+    throw new OperationFailedException(((SipURI)this.parentProvider.getOurSipAddress().getURI()).getHost() + " is not a valid internet address " + ex.getMessage(),OperationFailedException.INTERNAL_ERROR);
+  }
+  CallIdHeader callIdHeader=this.parentProvider.getDefaultJainSipProvider().getNewCallId();
+  String localTag=ProtocolProviderServiceSipImpl.generateLocalTag();
+  FromHeader fromHeader=null;
+  ToHeader toHeader=null;
+  try {
+    fromHeader=this.parentProvider.getHeaderFactory().createFromHeader(this.parentProvider.getOurSipAddress(),localTag);
+    toHeader=this.parentProvider.getHeaderFactory().createToHeader(this.parentProvider.getOurSipAddress(),null);
+  }
+ catch (  ParseException ex) {
+    logger.error("An unexpected error occurred while" + "constructing the FromHeader or ToHeader",ex);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the FromHeader or ToHeader",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ArrayList viaHeaders=this.parentProvider.getLocalViaHeaders(destinationInetAddress,this.parentProvider.getDefaultListeningPoint());
+  MaxForwardsHeader maxForwards=this.parentProvider.getMaxForwardsHeader();
+  byte[] doc=getPidfPresenceStatus((ContactSipImpl)this.getLocalContact());
+  ContentTypeHeader contTypeHeader;
+  ContentLengthHeader contLengthHeader;
+  try {
+    contTypeHeader=this.parentProvider.getHeaderFactory().createContentTypeHeader("application",PIDF_XML);
+    contLengthHeader=this.parentProvider.getHeaderFactory().createContentLengthHeader(doc.length);
+  }
+ catch (  ParseException ex) {
+    logger.error("An unexpected error occurred while" + "constructing the content headers",ex);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the content headers",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+catch (  InvalidArgumentException exc) {
+    logger.error("An unexpected error occurred while" + "constructing the content length header",exc);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the content length header",OperationFailedException.INTERNAL_ERROR,exc);
+  }
+  SIPIfMatchHeader ifmHeader=null;
+  try {
+    if (this.distantPAET != null) {
+      ifmHeader=this.parentProvider.getHeaderFactory().createSIPIfMatchHeader(this.distantPAET);
+    }
+  }
+ catch (  ParseException e) {
+    logger.error("An unexpected error occurred while" + "constructing the SIPIfMatch header",e);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the SIPIfMatch header",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  CSeqHeader cSeqHeader=null;
+  try {
+    cSeqHeader=this.parentProvider.getHeaderFactory().createCSeqHeader(1l,Request.PUBLISH);
+  }
+ catch (  InvalidArgumentException ex) {
+    logger.error("An unexpected error occurred while" + "constructing the CSeqHeader",ex);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the CSeqHeader",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+catch (  ParseException ex) {
+    logger.error("An unexpected error occurred while" + "constructing the CSeqHeader",ex);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the CSeqHeader",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ExpiresHeader expHeader=null;
+  try {
+    expHeader=this.parentProvider.getHeaderFactory().createExpiresHeader(expires);
+  }
+ catch (  InvalidArgumentException e) {
+    logger.error("An unexpected error occurred while" + "constructing the Expires header",e);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the Expires header",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  EventHeader evtHeader=null;
+  try {
+    evtHeader=this.parentProvider.getHeaderFactory().createEventHeader("presence");
+  }
+ catch (  ParseException e) {
+    logger.error("An unexpected error occurred while" + "constructing the Event header",e);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the Event header",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  Request req=null;
+  try {
+    req=this.parentProvider.getMessageFactory().createRequest(toHeader.getAddress().getURI(),Request.PUBLISH,callIdHeader,cSeqHeader,fromHeader,toHeader,viaHeaders,maxForwards,contTypeHeader,doc);
+  }
+ catch (  ParseException ex) {
+    logger.error("Failed to create message Request!",ex);
+    throw new OperationFailedException("Failed to create message Request!",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  req.setHeader(contLengthHeader);
+  req.setHeader(expHeader);
+  req.setHeader(evtHeader);
+  if (ifmHeader != null) {
+    req.setHeader(ifmHeader);
+  }
+  return req;
+}

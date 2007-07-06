@@ -1,0 +1,75 @@
+{
+  if (evt.getNewState() == RegistrationState.UNREGISTERING) {
+    try {
+      publishPresenceStatus(SipStatusEnum.OFFLINE,"");
+    }
+ catch (    OperationFailedException e) {
+      logger.error("can't set the offline mode",e);
+    }
+    for (int i=0; i < 100; i++) {
+synchronized (waitedCallIds) {
+        if (waitedCallIds.size() == 0) {
+          break;
+        }
+      }
+      Object o=new Object();
+synchronized (o) {
+        try {
+          o.wait(100);
+        }
+ catch (        InterruptedException e) {
+          logger.debug("abnormal behavior, may cause " + "unnecessary CPU use",e);
+        }
+      }
+    }
+    PresenceStatus oldStatus=presenceStatus;
+    presenceStatus=SipStatusEnum.OFFLINE;
+    fireProviderStatusChangeEvent(oldStatus);
+  }
+ else   if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
+    logger.debug("enter register state");
+    Iterator groupsIter=getServerStoredContactListRoot().subgroups();
+    while (groupsIter.hasNext()) {
+      ContactGroupSipImpl group=(ContactGroupSipImpl)groupsIter.next();
+      Iterator contactsIter=group.contacts();
+      while (contactsIter.hasNext()) {
+        ContactSipImpl contact=(ContactSipImpl)contactsIter.next();
+        if (contact.isResolved()) {
+          logger.debug("contact " + contact + " already resolved");
+          continue;
+        }
+        Request subscription;
+        try {
+          subscription=createSubscription(contact,SUBSCRIBE_DEFAULT_EXPIRE);
+        }
+ catch (        OperationFailedException ex) {
+          logger.error("Failed to create the subcription",ex);
+          return;
+        }
+        ClientTransaction subscribeTransaction;
+        SipProvider jainSipProvider=parentProvider.getDefaultJainSipProvider();
+        try {
+          subscribeTransaction=jainSipProvider.getNewClientTransaction(subscription);
+        }
+ catch (        TransactionUnavailableException ex) {
+          logger.error("Failed to create subscriptionTransaction.\n" + "This is most probably a network" + " connection error.",ex);
+          return;
+        }
+        CallIdHeader idheader=(CallIdHeader)subscription.getHeader(CallIdHeader.NAME);
+        subscribedContacts.put(idheader.getCallId(),contact);
+        logger.debug("added a contact at :" + idheader.getCallId());
+        try {
+          subscribeTransaction.sendRequest();
+        }
+ catch (        SipException ex) {
+          logger.error("Failed to send the message.",ex);
+          subscribedContacts.remove(idheader.getCallId());
+          return;
+        }
+      }
+    }
+    PresenceStatus oldStatus=getPresenceStatus();
+    presenceStatus=SipStatusEnum.ONLINE;
+    fireProviderStatusChangeEvent(oldStatus);
+  }
+}

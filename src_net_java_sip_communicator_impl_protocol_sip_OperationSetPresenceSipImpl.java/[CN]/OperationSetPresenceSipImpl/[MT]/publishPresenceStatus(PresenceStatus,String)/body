@@ -1,0 +1,75 @@
+{
+  PresenceStatus oldStatus=this.presenceStatus;
+  this.presenceStatus=status;
+  this.statusMessage=statusMsg;
+  fireProviderStatusChangeEvent(oldStatus);
+  if (!status.equals(SipStatusEnum.OFFLINE)) {
+    assertConnected();
+  }
+  if (status.equals(SipStatusEnum.OFFLINE)) {
+    unsubscribeToAllContact();
+  }
+  if (this.useDistantPA) {
+    Request req=createPublish(PUBLISH_DEFAULT_EXPIRE);
+    if (status.equals(SipStatusEnum.OFFLINE)) {
+synchronized (this.waitedCallIds) {
+        this.waitedCallIds.add(((CallIdHeader)req.getHeader(CallIdHeader.NAME)).getCallId());
+      }
+    }
+    ClientTransaction transac=null;
+    try {
+      transac=this.parentProvider.getDefaultJainSipProvider().getNewClientTransaction(req);
+    }
+ catch (    TransactionUnavailableException e) {
+      logger.debug("can't create the client transaction",e);
+      throw new OperationFailedException("can't create the client transaction",OperationFailedException.NETWORK_FAILURE);
+    }
+    try {
+      transac.sendRequest();
+    }
+ catch (    SipException e) {
+      logger.debug("can't send the PUBLISH request");
+      throw new OperationFailedException("can't send the PUBLISH request",OperationFailedException.NETWORK_FAILURE);
+    }
+  }
+ else {
+synchronized (this.ourWatchers) {
+      Iterator iter=this.ourWatchers.iterator();
+      ContactSipImpl me=(ContactSipImpl)getLocalContact();
+      while (iter.hasNext()) {
+        ContactSipImpl contact=(ContactSipImpl)iter.next();
+        if (!contact.isResolved()) {
+          continue;
+        }
+        ClientTransaction transac=null;
+        try {
+          if (status.equals(SipStatusEnum.OFFLINE)) {
+            transac=createNotify(contact,getPidfPresenceStatus(me),SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.PROBATION);
+synchronized (this.waitedCallIds) {
+              this.waitedCallIds.add(transac.getDialog().getCallId().getCallId());
+            }
+          }
+ else {
+            transac=createNotify(contact,getPidfPresenceStatus(me),SubscriptionStateHeader.ACTIVE,null);
+          }
+        }
+ catch (        OperationFailedException e) {
+          logger.debug("failed to create the new notify",e);
+          return;
+        }
+        try {
+          contact.getServerDialog().sendRequest(transac);
+        }
+ catch (        Exception e) {
+          logger.debug("Can't send the request");
+          return;
+        }
+      }
+      if (status.equals(SipStatusEnum.OFFLINE)) {
+synchronized (this.ourWatchers) {
+          this.ourWatchers.removeAllElements();
+        }
+      }
+    }
+  }
+}

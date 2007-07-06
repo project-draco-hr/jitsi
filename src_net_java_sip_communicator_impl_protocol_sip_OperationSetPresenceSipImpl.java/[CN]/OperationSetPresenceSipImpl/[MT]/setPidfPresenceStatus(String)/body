@@ -1,0 +1,106 @@
+{
+  Document doc=convertDocument(presenceDoc);
+  if (doc == null) {
+    return;
+  }
+  logger.debug("parsing:\n" + presenceDoc);
+  NodeList presList=doc.getElementsByTagName(PRESENCE_ELEMENT);
+  if (presList.getLength() == 0) {
+    logger.error("no presence element in this document");
+    return;
+  }
+  if (presList.getLength() > 1) {
+    logger.warn("more than one presence element in this document");
+  }
+  Node presNode=presList.item(0);
+  if (presNode.getNodeType() != Node.ELEMENT_NODE) {
+    logger.error("the presence node is not an element");
+    return;
+  }
+  Element presence=(Element)presNode;
+  NodeList tupleList=presence.getElementsByTagName(TUPLE_ELEMENT);
+  for (int i=0; i < tupleList.getLength(); i++) {
+    Node tupleNode=tupleList.item(i);
+    if (tupleNode.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element tuple=(Element)tupleNode;
+    NodeList contactList=tuple.getElementsByTagName(CONTACT_ELEMENT);
+    for (int j=0; j < contactList.getLength(); j++) {
+      Node contactNode=contactList.item(j);
+      if (contactNode.getNodeType() != Node.ELEMENT_NODE) {
+        continue;
+      }
+      Element contact=(Element)contactNode;
+      ContactSipImpl sipcontact=(ContactSipImpl)resolveContactID(contact.getTextContent());
+      if (sipcontact == null) {
+        logger.debug("no contact found for id: " + contact.getTextContent());
+        continue;
+      }
+      NodeList statusList=tuple.getElementsByTagName(STATUS_ELEMENT);
+      if (statusList.getLength() == 0) {
+        logger.debug("no status in this tuple");
+        continue;
+      }
+      int index=statusList.getLength() - 1;
+      Node statusNode=null;
+      do {
+        Node temp=statusList.item(index);
+        if (temp.getNodeType() == Node.ELEMENT_NODE) {
+          statusNode=temp;
+          break;
+        }
+        index--;
+      }
+ while (index >= 0);
+      if (statusNode == null) {
+        logger.debug("no valid status in this tuple");
+        break;
+      }
+      Element status=(Element)statusNode;
+      NodeList basicList=status.getElementsByTagName(BASIC_ELEMENT);
+      if (basicList.getLength() == 0) {
+        logger.debug("no <basic> in this status");
+        continue;
+      }
+      index=basicList.getLength() - 1;
+      Node basicNode=null;
+      do {
+        Node temp=statusList.item(index);
+        if (temp.getNodeType() == Node.ELEMENT_NODE) {
+          basicNode=temp;
+          break;
+        }
+        index--;
+      }
+ while (index >= 0);
+      if (basicNode == null) {
+        logger.debug("no valid <basic> in this status");
+        break;
+      }
+      Element basic=(Element)basicNode;
+      if (basic.getTextContent().equalsIgnoreCase(ONLINE_STATUS)) {
+        NodeList noteList=tuple.getElementsByTagName(NOTE_ELEMENT);
+        boolean changed=false;
+        for (int k=0; k < noteList.getLength(); k++) {
+          Node noteNode=noteList.item(k);
+          if (noteNode.getNodeType() != Node.ELEMENT_NODE) {
+            continue;
+          }
+          Element note=(Element)noteNode;
+          String state=note.getTextContent();
+          if (state.equalsIgnoreCase(SipStatusEnum.AWAY.getStatusName())) {
+            changed=true;
+            changePresenceStatusForContact(sipcontact,SipStatusEnum.AWAY);
+          }
+        }
+        if (changed == false) {
+          changePresenceStatusForContact(sipcontact,SipStatusEnum.ONLINE);
+        }
+      }
+ else       if (basic.getTextContent().equalsIgnoreCase(OFFLINE_STATUS)) {
+        changePresenceStatusForContact(sipcontact,SipStatusEnum.OFFLINE);
+      }
+    }
+  }
+}

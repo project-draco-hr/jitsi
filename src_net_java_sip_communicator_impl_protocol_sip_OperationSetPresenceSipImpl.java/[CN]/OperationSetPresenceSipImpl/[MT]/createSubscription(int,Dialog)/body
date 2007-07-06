@@ -1,0 +1,63 @@
+{
+  Request req=null;
+  try {
+    req=dialog.createRequest(Request.SUBSCRIBE);
+  }
+ catch (  SipException e) {
+    logger.debug("Can't create the SUBSCRIBE message");
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the SUBSCRIBE request",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  InetAddress destinationInetAddress=null;
+  Address toAddress=dialog.getRemoteTarget();
+  if (toAddress == null) {
+    toAddress=dialog.getRemoteParty();
+  }
+  try {
+    destinationInetAddress=InetAddress.getByName(((SipURI)toAddress.getURI()).getHost());
+  }
+ catch (  UnknownHostException ex) {
+    throw new IllegalArgumentException(((SipURI)toAddress.getURI()).getHost() + " is not a valid internet address " + ex.getMessage());
+  }
+  MaxForwardsHeader maxForwards=this.parentProvider.getMaxForwardsHeader();
+  EventHeader evHeader=null;
+  try {
+    evHeader=this.parentProvider.getHeaderFactory().createEventHeader("presence");
+  }
+ catch (  ParseException e) {
+    logger.error("An unexpected error occurred while" + "constructing the EventHeader",e);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the EventHeader",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  ContactHeader contactHeader=this.parentProvider.getContactHeader();
+  AcceptHeader accept=null;
+  try {
+    accept=this.parentProvider.getHeaderFactory().createAcceptHeader("application",PIDF_XML);
+  }
+ catch (  ParseException e) {
+    logger.error("wrong accept header");
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the AcceptHeader",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  ExpiresHeader expHeader=null;
+  try {
+    expHeader=this.parentProvider.getHeaderFactory().createExpiresHeader(expires);
+  }
+ catch (  InvalidArgumentException e) {
+    logger.debug("Invalid expires value: " + expires,e);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the ExpiresHeader",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  req.setHeader(expHeader);
+  req.setHeader(accept);
+  req.setHeader(maxForwards);
+  req.setHeader(evHeader);
+  req.setHeader(contactHeader);
+  ClientTransaction transac=null;
+  try {
+    transac=this.parentProvider.getDefaultJainSipProvider().getNewClientTransaction(req);
+  }
+ catch (  TransactionUnavailableException ex) {
+    logger.error("Failed to create subscriptionTransaction.\n" + "This is most probably a network connection error.",ex);
+    throw new OperationFailedException("Failed to create the subscription transaction",OperationFailedException.NETWORK_FAILURE);
+  }
+  ArrayList viaHeaders=this.parentProvider.getLocalViaHeaders(destinationInetAddress,this.parentProvider.getDefaultListeningPoint());
+  req.addHeader((Header)viaHeaders.get(0));
+  return transac;
+}

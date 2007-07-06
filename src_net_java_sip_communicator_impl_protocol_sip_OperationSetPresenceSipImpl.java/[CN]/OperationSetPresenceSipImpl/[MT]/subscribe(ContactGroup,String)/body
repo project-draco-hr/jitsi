@@ -1,0 +1,39 @@
+{
+  logger.debug("let's subscribe " + contactIdentifier);
+  ContactSipImpl contact=(ContactSipImpl)findContactByID(contactIdentifier);
+  if (contact != null && contact.isResolved()) {
+    logger.debug("Contact " + contactIdentifier + " already exists.");
+    throw new OperationFailedException("Contact " + contactIdentifier + " already exists.",OperationFailedException.SUBSCRIPTION_ALREADY_EXISTS);
+  }
+  assertConnected();
+  contact=new ContactSipImpl(contactIdentifier,this.parentProvider);
+  Request subscription;
+  try {
+    subscription=createSubscription(contact,SUBSCRIBE_DEFAULT_EXPIRE);
+  }
+ catch (  OperationFailedException ex) {
+    logger.error("Failed to create the subcription",ex);
+    throw new OperationFailedException("Failed to create the subscription",OperationFailedException.INTERNAL_ERROR);
+  }
+  ClientTransaction subscribeTransaction;
+  SipProvider jainSipProvider=this.parentProvider.getDefaultJainSipProvider();
+  try {
+    subscribeTransaction=jainSipProvider.getNewClientTransaction(subscription);
+  }
+ catch (  TransactionUnavailableException ex) {
+    logger.error("Failed to create subscriptionTransaction.\n" + "This is most probably a network connection error.",ex);
+    throw new OperationFailedException("Failed to create the subscription transaction",OperationFailedException.NETWORK_FAILURE);
+  }
+  CallIdHeader idheader=(CallIdHeader)subscription.getHeader(CallIdHeader.NAME);
+  this.subscribedContacts.put(idheader.getCallId(),contact);
+  try {
+    subscribeTransaction.sendRequest();
+  }
+ catch (  SipException ex) {
+    logger.error("Failed to send the message.",ex);
+    this.subscribedContacts.remove(idheader.getCallId());
+    throw new OperationFailedException("Failed to send the subscription",OperationFailedException.NETWORK_FAILURE);
+  }
+  ((ContactGroupSipImpl)parentGroup).addContact(contact);
+  fireSubscriptionEvent(contact,parentGroup,SubscriptionEvent.SUBSCRIPTION_CREATED);
+}

@@ -1,0 +1,248 @@
+{
+  ServerTransaction serverTransaction=requestEvent.getServerTransaction();
+  SipProvider jainSipProvider=(SipProvider)requestEvent.getSource();
+  Request request=requestEvent.getRequest();
+  if (serverTransaction == null) {
+    try {
+      serverTransaction=jainSipProvider.getNewServerTransaction(request);
+    }
+ catch (    TransactionAlreadyExistsException ex) {
+      logger.error("Failed to create a new server" + "transaction for an incoming request\n" + "(Next message contains the request)",ex);
+      return;
+    }
+catch (    TransactionUnavailableException ex) {
+      logger.error("Failed to create a new server" + "transaction for an incoming request\n" + "(Next message contains the request)",ex);
+      return;
+    }
+  }
+  EventHeader eventHeader=(EventHeader)request.getHeader(EventHeader.NAME);
+  if (eventHeader == null || !eventHeader.getEventType().equalsIgnoreCase("presence")) {
+    return;
+  }
+  if (request.getMethod().equals(Request.NOTIFY)) {
+    Response response=null;
+    logger.debug("notify received");
+    SubscriptionStateHeader sstateHeader=(SubscriptionStateHeader)request.getHeader(SubscriptionStateHeader.NAME);
+    if (sstateHeader == null) {
+      logger.error("no subscription state in this request");
+      return;
+    }
+    CallIdHeader idheader=(CallIdHeader)request.getHeader(CallIdHeader.NAME);
+    ContactSipImpl contact=(ContactSipImpl)this.subscribedContacts.get(idheader.getCallId());
+    if (contact != null && !sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED) && !contact.isResolved()) {
+      logger.debug("contact still pending while NOTIFY received");
+      try {
+        finalizeSubscription(contact,serverTransaction.getDialog());
+      }
+ catch (      NullPointerException e) {
+        logger.debug("failed to finalize the subscription of the" + "contact",e);
+        return;
+      }
+    }
+    if (contact == null) {
+      logger.debug("contact not found for callid : " + idheader.getCallId());
+synchronized (this.waitedCallIds) {
+        this.waitedCallIds.remove(idheader.getCallId());
+      }
+      try {
+        response=this.parentProvider.getMessageFactory().createResponse(Response.CALL_OR_TRANSACTION_DOES_NOT_EXIST,request);
+      }
+ catch (      ParseException e) {
+        logger.debug("failed to create the 481 response",e);
+        return;
+      }
+      try {
+        serverTransaction.sendResponse(response);
+      }
+ catch (      SipException e) {
+        logger.debug("failed to send the response",e);
+      }
+catch (      InvalidArgumentException e) {
+        logger.debug("invalid argument provided while trying" + " to send the response",e);
+      }
+      return;
+    }
+    ContentTypeHeader ctheader=(ContentTypeHeader)request.getHeader(ContentTypeHeader.NAME);
+    if (ctheader != null && !ctheader.getContentSubType().equalsIgnoreCase(PIDF_XML)) {
+      try {
+        response=this.parentProvider.getMessageFactory().createResponse(Response.UNSUPPORTED_MEDIA_TYPE,request);
+      }
+ catch (      ParseException e) {
+        logger.debug("failed to create the OK response",e);
+        return;
+      }
+      AcceptHeader acceptHeader=null;
+      try {
+        acceptHeader=this.parentProvider.getHeaderFactory().createAcceptHeader("application",PIDF_XML);
+      }
+ catch (      ParseException e) {
+        logger.debug("failed to create the accept header",e);
+        return;
+      }
+      response.setHeader(acceptHeader);
+      try {
+        serverTransaction.sendResponse(response);
+      }
+ catch (      SipException e) {
+        logger.debug("failed to send the response",e);
+      }
+catch (      InvalidArgumentException e) {
+        logger.debug("invalid argument provided while trying" + " to send the response",e);
+      }
+    }
+    try {
+      response=this.parentProvider.getMessageFactory().createResponse(Response.OK,request);
+    }
+ catch (    ParseException e) {
+      logger.debug("failed to create the OK response",e);
+      return;
+    }
+    try {
+      serverTransaction.sendResponse(response);
+    }
+ catch (    SipException e) {
+      logger.debug("failed to send the response",e);
+    }
+catch (    InvalidArgumentException e) {
+      logger.debug("invalid argument provided while trying" + " to send the response",e);
+    }
+    if (sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED)) {
+      terminateSubscription(contact);
+      this.subscribedContacts.remove(serverTransaction.getDialog().getCallId().getCallId());
+synchronized (this.waitedCallIds) {
+        this.waitedCallIds.remove(idheader.getCallId());
+      }
+    }
+    if (request.getRawContent() != null) {
+      setPidfPresenceStatus(new String(request.getRawContent()));
+    }
+  }
+ else   if (request.getMethod().equals(Request.SUBSCRIBE)) {
+    FromHeader from=(FromHeader)request.getHeader(FromHeader.NAME);
+    ContactSipImpl contact=(ContactSipImpl)resolveContactID(from.getAddress().getURI().toString());
+    if (contact == null) {
+      contact=new ContactSipImpl(from.getAddress().getURI().toString(),this.parentProvider);
+      contact.setResolved(true);
+      contact.setResolvable(false);
+    }
+    logger.debug(contact.toString() + " wants to watch your presence " + "status");
+    contact.setServerDialog(serverTransaction.getDialog());
+    Dialog dialog=contact.getServerDialog();
+    ExpiresHeader expHeader=(ExpiresHeader)request.getHeader(ExpiresHeader.NAME);
+    if (expHeader != null && expHeader.getExpires() == 0) {
+      logger.debug("contact " + contact + " isn't a watcher anymore");
+synchronized (this.ourWatchers) {
+        this.ourWatchers.remove(contact);
+      }
+      Response response=null;
+      try {
+        response=this.parentProvider.getMessageFactory().createResponse(Response.OK,request);
+      }
+ catch (      Exception e) {
+        logger.debug("Error while creating the response 202",e);
+        return;
+      }
+      try {
+        serverTransaction.sendResponse(response);
+      }
+ catch (      Exception e) {
+        logger.error("Error while sending the response 202",e);
+        return;
+      }
+      ClientTransaction transac=null;
+      try {
+        transac=createNotify(contact,new byte[0],SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.TIMEOUT);
+      }
+ catch (      OperationFailedException e) {
+        logger.debug("failed to create the new notify",e);
+        return;
+      }
+      try {
+        dialog.sendRequest(transac);
+      }
+ catch (      Exception e) {
+        logger.debug("Can't send the request");
+        return;
+      }
+      return;
+    }
+    Response response=null;
+    try {
+      response=this.parentProvider.getMessageFactory().createResponse(Response.ACCEPTED,request);
+    }
+ catch (    Exception e) {
+      logger.debug("Error while creating the response 202",e);
+      return;
+    }
+    try {
+      expHeader=this.parentProvider.getHeaderFactory().createExpiresHeader(SUBSCRIBE_DEFAULT_EXPIRE);
+    }
+ catch (    InvalidArgumentException e) {
+      logger.error("Can't create the expires header");
+      return;
+    }
+    response.setHeader(expHeader);
+    try {
+      serverTransaction.sendResponse(response);
+    }
+ catch (    Exception e) {
+      logger.error("Error while sending the response 202",e);
+      return;
+    }
+    ClientTransaction transac=null;
+    try {
+      transac=createNotify(contact,new byte[0],SubscriptionStateHeader.PENDING,null);
+    }
+ catch (    OperationFailedException e) {
+      logger.debug("failed to create the first notify",e);
+      return;
+    }
+    try {
+      dialog.sendRequest(transac);
+    }
+ catch (    Exception e) {
+      logger.debug("Can't send the request");
+      return;
+    }
+    AuthorizationResponse authResp=null;
+    if (this.authorizationHandler != null) {
+      AuthorizationRequest authReq=new AuthorizationRequest();
+      authResp=this.authorizationHandler.processAuthorisationRequest(authReq,contact);
+    }
+    if (authResp == null || authResp.getResponseCode().equals(AuthorizationResponse.ACCEPT)) {
+      try {
+        transac=createNotify(contact,getPidfPresenceStatus((ContactSipImpl)getLocalContact()),SubscriptionStateHeader.ACTIVE,null);
+      }
+ catch (      OperationFailedException e) {
+        logger.debug("failed to create the new notify",e);
+        return;
+      }
+      try {
+        dialog.sendRequest(transac);
+      }
+ catch (      Exception e) {
+        logger.debug("Can't send the request");
+        return;
+      }
+synchronized (this.ourWatchers) {
+        this.ourWatchers.add(contact);
+      }
+    }
+ else {
+      try {
+        transac=createNotify(contact,new byte[0],SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.REJECTED);
+      }
+ catch (      OperationFailedException e) {
+        logger.debug("failed to create the new notify",e);
+        return;
+      }
+      try {
+        dialog.sendRequest(transac);
+      }
+ catch (      Exception e) {
+        logger.debug("Can't send the request");
+        return;
+      }
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  InetAddress destinationInetAddress=null;
+  Address toAddress=null;
+  try {
+    toAddress=parseAddressStr(contact.getAddress());
+    destinationInetAddress=InetAddress.getByName(((SipURI)toAddress.getURI()).getHost());
+  }
+ catch (  UnknownHostException ex) {
+    throw new IllegalArgumentException(((SipURI)toAddress.getURI()).getHost() + " is not a valid internet address " + ex.getMessage());
+  }
+catch (  ParseException ex) {
+    logger.error("An unexpected error occurred while" + "constructing the address",ex);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the address",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  Request req;
+  CallIdHeader callIdHeader=this.parentProvider.getDefaultJainSipProvider().getNewCallId();
+  CSeqHeader cSeqHeader=null;
+  try {
+    cSeqHeader=this.parentProvider.getHeaderFactory().createCSeqHeader(1l,Request.SUBSCRIBE);
+  }
+ catch (  InvalidArgumentException ex) {
+    logger.error("An unexpected error occurred while" + "constructing the CSeqHeader",ex);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the CSeqHeader",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+catch (  ParseException ex) {
+    logger.error("An unexpected error occurred while" + "constructing the CSeqHeader",ex);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the CSeqHeader",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  String localTag=ProtocolProviderServiceSipImpl.generateLocalTag();
+  FromHeader fromHeader=null;
+  ToHeader toHeader=null;
+  try {
+    fromHeader=this.parentProvider.getHeaderFactory().createFromHeader(this.parentProvider.getOurSipAddress(),localTag);
+    toHeader=this.parentProvider.getHeaderFactory().createToHeader(toAddress,null);
+  }
+ catch (  ParseException ex) {
+    logger.error("An unexpected error occurred while" + "constructing the FromHeader or ToHeader",ex);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the FromHeader or ToHeader",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ArrayList viaHeaders=this.parentProvider.getLocalViaHeaders(destinationInetAddress,this.parentProvider.getDefaultListeningPoint());
+  MaxForwardsHeader maxForwards=this.parentProvider.getMaxForwardsHeader();
+  try {
+    req=this.parentProvider.getMessageFactory().createRequest(toHeader.getAddress().getURI(),Request.SUBSCRIBE,callIdHeader,cSeqHeader,fromHeader,toHeader,viaHeaders,maxForwards);
+  }
+ catch (  ParseException ex) {
+    logger.error("Failed to create message Request!",ex);
+    throw new OperationFailedException("Failed to create message Request!",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  EventHeader evHeader=null;
+  try {
+    evHeader=this.parentProvider.getHeaderFactory().createEventHeader("presence");
+  }
+ catch (  ParseException e) {
+    logger.error("An unexpected error occurred while" + "constructing the EventHeader",e);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the EventHeader",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  ContactHeader contactHeader=this.parentProvider.getContactHeader();
+  req.setHeader(evHeader);
+  req.setHeader(contactHeader);
+  AcceptHeader accept=null;
+  try {
+    accept=this.parentProvider.getHeaderFactory().createAcceptHeader("application",PIDF_XML);
+  }
+ catch (  ParseException e) {
+    logger.error("wrong accept header");
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the AcceptHeader",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  req.setHeader(accept);
+  ExpiresHeader expHeader=null;
+  try {
+    expHeader=this.parentProvider.getHeaderFactory().createExpiresHeader(expires);
+  }
+ catch (  InvalidArgumentException e) {
+    logger.debug("Invalid expires value: " + expires,e);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the ExpiresHeader",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  req.setHeader(expHeader);
+  return req;
+}
