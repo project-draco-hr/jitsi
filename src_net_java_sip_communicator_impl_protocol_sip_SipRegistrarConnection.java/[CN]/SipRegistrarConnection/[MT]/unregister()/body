@@ -45,6 +45,10 @@
     if (!getRegistrationState().equals(RegistrationState.REGISTERED)) {
       logger.trace("Setting state to UNREGISTERED.");
       setRegistrationState(RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,null);
+      CallIdHeader call=(CallIdHeader)unregisterRequest.getHeader(CallIdHeader.NAME);
+      String callid=call.getCallId();
+      AuthorizationHeader authorization=sipProvider.getSipSecurityManager().getCachedAuthorizationHeader(callid);
+      if (authorization != null)       unregisterRequest.addHeader(authorization);
       if (regTrans != null && regTrans.getState().getValue() <= TransactionState.PROCEEDING.getValue()) {
         logger.trace("Will try to terminate reg tran ...");
         regTrans.terminate();
