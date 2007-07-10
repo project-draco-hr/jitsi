@@ -3,27 +3,29 @@
   int port=-1;
   stunAddressStr=NetaddrActivator.getConfigurationService().getString(PROP_STUN_SERVER_ADDRESS);
   String portStr=NetaddrActivator.getConfigurationService().getString(PROP_STUN_SERVER_PORT);
-  stunServerAddress=new StunAddress(DEFAULT_STUN_SERVER_ADDRESS,DEFAULT_STUN_SERVER_PORT);
+  this.localHostFinderSocket=initRandomPortSocket();
   if (stunAddressStr == null || portStr == null) {
     useStun=false;
+    stunServerAddress=new StunAddress(DEFAULT_STUN_SERVER_ADDRESS,DEFAULT_STUN_SERVER_PORT);
+    logger.info("Stun server address(" + stunAddressStr + ")/port("+ portStr+ ") not set (or invalid). Disabling STUN.");
   }
  else {
-    port=Integer.valueOf(portStr).intValue();
+    try {
+      port=Integer.valueOf(portStr).intValue();
+    }
+ catch (    NumberFormatException ex) {
+      logger.error(portStr + " is not a valid port number. " + "Defaulting to 3478",ex);
+      port=3478;
+    }
     stunServerAddress=new StunAddress(stunAddressStr,port);
     detector=new SimpleAddressDetector(stunServerAddress);
-    if (logger.isDebugEnabled())     logger.debug("Created a STUN Address detector for the following " + "STUN server: " + stunAddressStr + ":"+ port);
-    try {
-      detector.start();
-      logger.debug("STUN server started;");
+    if (logger.isDebugEnabled()) {
+      logger.debug("Created a STUN Address detector for the following " + "STUN server: " + stunAddressStr + ":"+ port);
     }
- catch (    StunException ex) {
-      logger.error("Failed to start the STUN Address Detector. " + detector.toString(),ex);
-      logger.debug("Disabling stun and continuing bravely!");
-      detector=null;
-      useStun=false;
-    }
+    detector.start();
+    logger.debug("STUN server detector started;");
     NetaddrActivator.getConfigurationService().addVetoableChangeListener(PROP_STUN_SERVER_ADDRESS,this);
     NetaddrActivator.getConfigurationService().addVetoableChangeListener(PROP_STUN_SERVER_PORT,this);
+    launchStunServerTest();
   }
-  initializeLocalHostFinderSocket();
 }

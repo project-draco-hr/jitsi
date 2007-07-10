@@ -1,0 +1,29 @@
+{
+  Thread stunServerTestThread=new Thread("StunServerTestThread"){
+    public void run(){
+      DatagramSocket randomSocket=initRandomPortSocket();
+      try {
+        StunAddress stunAddress=detector.getMappingFor(randomSocket);
+        randomSocket.disconnect();
+        System.out.println("heeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeh1");
+        if (stunAddress != null) {
+          useStun=true;
+          logger.trace("StunServer check succeeded for server: " + detector.getServerAddress() + " and local port: "+ randomSocket.getLocalPort());
+        }
+ else {
+          useStun=false;
+          logger.trace("StunServer check failed for server: " + detector.getServerAddress() + " and local port: "+ randomSocket.getLocalPort()+ ". No address returned by server.");
+        }
+      }
+ catch (      Throwable ex) {
+        logger.error("Failed to run a stun query against " + "server :" + detector.getServerAddress(),ex);
+        System.out.println("heeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeh2");
+        if (randomSocket.isConnected())         randomSocket.disconnect();
+        useStun=false;
+      }
+    }
+  }
+;
+  stunServerTestThread.setDaemon(true);
+  stunServerTestThread.start();
+}

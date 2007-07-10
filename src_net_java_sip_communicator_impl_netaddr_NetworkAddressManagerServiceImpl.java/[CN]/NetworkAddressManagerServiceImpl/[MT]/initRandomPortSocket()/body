@@ -1,4 +1,5 @@
 {
+  DatagramSocket resultSocket=null;
   String bindRetriesStr=NetaddrActivator.getConfigurationService().getString(BIND_RETRIES_PROPERTY_NAME);
   int bindRetries=5;
   if (bindRetriesStr != null) {
@@ -12,18 +13,19 @@
   int currentlyTriedPort=NetworkUtils.getRandomPortNumber();
   for (int i=0; i < bindRetries; i++) {
     try {
-      localHostFinderSocket=new DatagramSocket(currentlyTriedPort);
+      resultSocket=new DatagramSocket(currentlyTriedPort);
       break;
     }
  catch (    SocketException exc) {
       if (exc.getMessage().indexOf("Address already in use") == -1) {
         logger.fatal("An exception occurred while trying to create" + "a local host discovery socket.",exc);
-        localHostFinderSocket=null;
-        return;
+        resultSocket=null;
+        return null;
       }
       logger.debug("Port " + currentlyTriedPort + " seems in use.");
       currentlyTriedPort=NetworkUtils.getRandomPortNumber();
       logger.debug("Retrying bind on port " + currentlyTriedPort);
     }
   }
+  return resultSocket;
 }

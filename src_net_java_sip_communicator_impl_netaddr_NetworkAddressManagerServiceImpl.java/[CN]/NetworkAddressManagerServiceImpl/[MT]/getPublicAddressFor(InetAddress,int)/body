@@ -1,21 +1,17 @@
 {
-  try {
-    logger.logEntry();
-    if (!useStun) {
-      logger.debug("Stun is disabled, skipping mapped address recovery.");
-      return new InetSocketAddress(getLocalHost(dst),port);
-    }
-    StunAddress mappedAddress=queryStunServer(port);
-    InetSocketAddress result=null;
-    if (mappedAddress != null)     result=mappedAddress.getSocketAddress();
+  if (!useStun || (dst instanceof Inet6Address)) {
+    logger.debug("Stun is disabled for destination " + dst + ", skipping mapped address recovery (useStun="+ useStun+ ", IPv6@="+ (dst instanceof Inet6Address)+ ").");
+    DatagramSocket bindTestSocket=new DatagramSocket(port);
+    bindTestSocket.close();
+    return new InetSocketAddress(getLocalHost(dst),port);
+  }
+  StunAddress mappedAddress=queryStunServer(port);
+  InetSocketAddress result=null;
+  if (mappedAddress != null)   result=mappedAddress.getSocketAddress();
  else {
-      InetAddress localHost=getLocalHost(dst);
-      result=new InetSocketAddress(localHost,port);
-    }
-    if (logger.isDebugEnabled())     logger.debug("Returning mapping for port:" + port + " as follows: "+ result);
-    return result;
+    InetAddress localHost=getLocalHost(dst);
+    result=new InetSocketAddress(localHost,port);
   }
-  finally {
-    logger.logExit();
-  }
+  if (logger.isDebugEnabled())   logger.debug("Returning mapping for port:" + port + " as follows: "+ result);
+  return result;
 }
