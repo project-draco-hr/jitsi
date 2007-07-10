@@ -1,0 +1,40 @@
+{
+  Request info=null;
+  try {
+    info=callParticipant.getDialog().createRequest(Request.INFO);
+  }
+ catch (  SipException ex) {
+    logger.error("Failed to create info request!",ex);
+    throw new OperationFailedException("Failed to create info request!",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ContentType ct=new ContentType("application","dtmf-relay");
+  String content="Signal=" + dtmftone + "\r\nDuration=250\r\n\r\n";
+  ContentLength cl=new ContentLength(content.length());
+  info.setContentLength(cl);
+  try {
+    info.setContent(content.getBytes(),ct);
+  }
+ catch (  ParseException ex) {
+    logger.error("Failed to construct the INFO request",ex);
+    throw new OperationFailedException("Failed to construct a client the INFO request",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ClientTransaction clientTransaction=null;
+  try {
+    clientTransaction=callParticipant.getJainSipProvider().getNewClientTransaction(info);
+  }
+ catch (  TransactionUnavailableException ex) {
+    logger.error("Failed to construct a client transaction from the INFO request",ex);
+    throw new OperationFailedException("Failed to construct a client transaction from the INFO request",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  try {
+    if (callParticipant.getDialog().getState() == DialogState.TERMINATED) {
+      logger.warn("Trying to send a dtmf tone inside a " + "TERMINATED dialog.");
+      return;
+    }
+    callParticipant.getDialog().sendRequest(clientTransaction);
+    logger.debug("sent request:\n" + info);
+  }
+ catch (  SipException ex) {
+    throw new OperationFailedException("Failed to send the INFO request",OperationFailedException.NETWORK_FAILURE,ex);
+  }
+}
