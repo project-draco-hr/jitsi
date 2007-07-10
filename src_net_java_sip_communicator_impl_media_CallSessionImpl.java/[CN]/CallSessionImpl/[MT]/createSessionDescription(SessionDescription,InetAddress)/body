@@ -4,8 +4,6 @@
     Version v=mediaServCallback.getSdpFactory().createVersion(0);
     sessDescr.setVersion(v);
     NetworkAddressManagerService netAddressManager=MediaActivator.getNetworkAddressManagerService();
-    InetSocketAddress publicVideoAddress=null;
-    InetSocketAddress publicAudioAddress=null;
     if (offer != null) {
       Connection c=offer.getConnection();
       if (c != null) {
@@ -13,22 +11,15 @@
           intendedDestination=InetAddress.getByName(c.getAddress());
         }
  catch (        SdpParseException ex) {
-          logger.warn("error reading remote sdp. " + c.toString() + " is not a valid connection parameter.");
+          logger.warn("error reading remote sdp. " + c.toString() + " is not a valid connection parameter.",ex);
         }
 catch (        UnknownHostException ex) {
-          logger.warn("error reading remote sdp. " + c.toString() + " does not contain a valid address.");
+          logger.warn("error reading remote sdp. " + c.toString() + " does not contain a valid address.",ex);
         }
       }
     }
-    if (intendedDestination != null) {
-      publicVideoAddress=netAddressManager.getPublicAddressFor(intendedDestination,getVideoPort());
-      publicAudioAddress=netAddressManager.getPublicAddressFor(intendedDestination,getAudioPort());
-    }
- else {
-      publicVideoAddress=netAddressManager.getPublicAddressFor(getVideoPort());
-      publicAudioAddress=netAddressManager.getPublicAddressFor(getAudioPort());
-    }
-    InetAddress publicIpAddress=publicAudioAddress.getAddress();
+    allocateMediaPorts(intendedDestination);
+    InetAddress publicIpAddress=audioPublicAddress.getAddress();
     String addrType=publicIpAddress instanceof Inet6Address ? Connection.IP6 : Connection.IP4;
     Origin o=mediaServCallback.getSdpFactory().createOrigin(call.getProtocolProvider().getAccountID().getUserID(),0,0,"IN",addrType,publicIpAddress.getHostAddress());
     sessDescr.setOrigin(o);
@@ -42,7 +33,7 @@ catch (        UnknownHostException ex) {
     sessDescr.setTimeDescriptions(timeDescs);
     Vector offeredMediaDescriptions=null;
     if (offer != null)     offeredMediaDescriptions=offer.getMediaDescriptions(false);
-    Vector mediaDescs=createMediaDescriptions(offeredMediaDescriptions,publicAudioAddress,publicVideoAddress);
+    Vector mediaDescs=createMediaDescriptions(offeredMediaDescriptions,audioPublicAddress,videoPublicAddress);
     sessDescr.setMediaDescriptions(mediaDescs);
     if (logger.isTraceEnabled()) {
       logger.trace("Generated SDP - " + sessDescr.toString());
