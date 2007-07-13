@@ -2,42 +2,71 @@
   JButton button=(JButton)e.getSource();
   String buttonName=button.getName();
   String phoneNumber="";
+  OperationSetDTMF dtmfOpSet=null;
+  DTMFTone dtmfTone=null;
+  if (callParticipant != null && callParticipant.getProtocolProvider().getOperationSet(OperationSetDTMF.class) != null) {
+    dtmfOpSet=(OperationSetDTMF)callParticipant.getProtocolProvider().getOperationSet(OperationSetDTMF.class);
+  }
   if (this.phoneNumberCombo.getEditor().getItem() != null)   phoneNumber=(String)this.phoneNumberCombo.getEditor().getItem();
   if (buttonName.equals("one")) {
-    this.phoneNumberCombo.getEditor().setItem(phoneNumber + "1");
+    if (dtmfOpSet != null)     dtmfTone=DTMFTone.DTMF_1;
+ else     this.phoneNumberCombo.getEditor().setItem(phoneNumber + "1");
   }
  else   if (buttonName.equals("two")) {
-    this.phoneNumberCombo.getEditor().setItem(phoneNumber + "2");
+    if (dtmfOpSet != null)     dtmfTone=DTMFTone.DTMF_2;
+ else     this.phoneNumberCombo.getEditor().setItem(phoneNumber + "2");
   }
  else   if (buttonName.equals("three")) {
-    this.phoneNumberCombo.getEditor().setItem(phoneNumber + "3");
+    if (dtmfOpSet != null)     dtmfTone=DTMFTone.DTMF_3;
+ else     this.phoneNumberCombo.getEditor().setItem(phoneNumber + "3");
   }
  else   if (buttonName.equals("four")) {
-    this.phoneNumberCombo.getEditor().setItem(phoneNumber + "4");
+    if (dtmfOpSet != null)     dtmfTone=DTMFTone.DTMF_4;
+ else     this.phoneNumberCombo.getEditor().setItem(phoneNumber + "4");
   }
  else   if (buttonName.equals("five")) {
-    this.phoneNumberCombo.getEditor().setItem(phoneNumber + "5");
+    if (dtmfOpSet != null)     dtmfTone=DTMFTone.DTMF_5;
+ else     this.phoneNumberCombo.getEditor().setItem(phoneNumber + "5");
   }
  else   if (buttonName.equals("six")) {
-    this.phoneNumberCombo.getEditor().setItem(phoneNumber + "6");
+    if (dtmfOpSet != null)     dtmfTone=DTMFTone.DTMF_6;
+ else     this.phoneNumberCombo.getEditor().setItem(phoneNumber + "6");
   }
  else   if (buttonName.equals("seven")) {
-    this.phoneNumberCombo.getEditor().setItem(phoneNumber + "7");
+    if (dtmfOpSet != null)     dtmfTone=DTMFTone.DTMF_7;
+ else     this.phoneNumberCombo.getEditor().setItem(phoneNumber + "7");
   }
  else   if (buttonName.equals("eight")) {
-    this.phoneNumberCombo.getEditor().setItem(phoneNumber + "8");
+    if (dtmfOpSet != null)     dtmfTone=DTMFTone.DTMF_8;
+ else     this.phoneNumberCombo.getEditor().setItem(phoneNumber + "8");
   }
  else   if (buttonName.equals("nine")) {
-    this.phoneNumberCombo.getEditor().setItem(phoneNumber + "9");
+    if (dtmfOpSet != null)     dtmfTone=DTMFTone.DTMF_9;
+ else     this.phoneNumberCombo.getEditor().setItem(phoneNumber + "9");
   }
  else   if (buttonName.equals("zero")) {
-    this.phoneNumberCombo.getEditor().setItem(phoneNumber + "0");
+    if (dtmfOpSet != null)     dtmfTone=DTMFTone.DTMF_0;
+ else     this.phoneNumberCombo.getEditor().setItem(phoneNumber + "0");
   }
  else   if (buttonName.equals("diez")) {
-    this.phoneNumberCombo.getEditor().setItem(phoneNumber + "#");
+    if (dtmfOpSet != null)     dtmfTone=DTMFTone.DTMF_SHARP;
+ else     this.phoneNumberCombo.getEditor().setItem(phoneNumber + "#");
   }
  else   if (buttonName.equals("star")) {
-    this.phoneNumberCombo.getEditor().setItem(phoneNumber + "*");
+    if (dtmfOpSet != null)     dtmfTone=DTMFTone.DTMF_STAR;
+ else     this.phoneNumberCombo.getEditor().setItem(phoneNumber + "*");
   }
-  this.phoneNumberCombo.requestFocus();
+  if (dtmfTone != null)   try {
+    dtmfOpSet.sendDTMF(callParticipant,dtmfTone);
+  }
+ catch (  NullPointerException e1) {
+    logger.error("Failed to send a DTMF tone.",e1);
+  }
+catch (  ClassCastException e1) {
+    logger.error("Failed to send a DTMF tone.",e1);
+  }
+catch (  OperationFailedException e1) {
+    logger.error("Failed to send a DTMF tone.",e1);
+  }
+ else   this.phoneNumberCombo.requestFocus();
 }
