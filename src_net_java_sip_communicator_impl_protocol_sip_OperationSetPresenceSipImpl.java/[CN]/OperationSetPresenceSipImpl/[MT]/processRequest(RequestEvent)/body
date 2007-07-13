@@ -39,7 +39,7 @@ catch (    TransactionUnavailableException ex) {
         return;
       }
     }
-    if (contact == null) {
+    if (contact == null && !sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED)) {
       logger.debug("contact not found for callid : " + idheader.getCallId());
 synchronized (this.waitedCallIds) {
         this.waitedCallIds.remove(idheader.getCallId());
@@ -90,6 +90,15 @@ catch (      InvalidArgumentException e) {
         logger.debug("invalid argument provided while trying" + " to send the response",e);
       }
     }
+    if (sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED)) {
+      if (contact != null) {
+        terminateSubscription(contact);
+        this.subscribedContacts.remove(serverTransaction.getDialog().getCallId().getCallId());
+      }
+synchronized (this.waitedCallIds) {
+        this.waitedCallIds.remove(idheader.getCallId());
+      }
+    }
     try {
       response=this.parentProvider.getMessageFactory().createResponse(Response.OK,request);
     }
@@ -106,14 +115,7 @@ catch (      InvalidArgumentException e) {
 catch (    InvalidArgumentException e) {
       logger.debug("invalid argument provided while trying" + " to send the response",e);
     }
-    if (sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED)) {
-      terminateSubscription(contact);
-      this.subscribedContacts.remove(serverTransaction.getDialog().getCallId().getCallId());
-synchronized (this.waitedCallIds) {
-        this.waitedCallIds.remove(idheader.getCallId());
-      }
-    }
-    if (request.getRawContent() != null) {
+    if (request.getRawContent() != null && !sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED)) {
       setPidfPresenceStatus(new String(request.getRawContent()));
     }
   }
@@ -126,32 +128,105 @@ synchronized (this.waitedCallIds) {
       contact.setResolvable(false);
     }
     logger.debug(contact.toString() + " wants to watch your presence " + "status");
-    contact.setServerDialog(serverTransaction.getDialog());
-    Dialog dialog=contact.getServerDialog();
-    ExpiresHeader expHeader=(ExpiresHeader)request.getHeader(ExpiresHeader.NAME);
-    if (expHeader != null && expHeader.getExpires() == 0) {
-      logger.debug("contact " + contact + " isn't a watcher anymore");
-synchronized (this.ourWatchers) {
-        this.ourWatchers.remove(contact);
+    ExpiresHeader expHeader=request.getExpires();
+    int expires;
+    if (expHeader == null) {
+      expires=SUBSCRIBE_DEFAULT_EXPIRE;
+    }
+ else {
+      expires=expHeader.getExpires();
+    }
+    if (expires < SUBSCRIBE_MIN_EXPIRE && expires != 0) {
+      Response response=null;
+      try {
+        response=this.parentProvider.getMessageFactory().createResponse(Response.INTERVAL_TOO_BRIEF,request);
       }
+ catch (      Exception e) {
+        logger.debug("Error while creating the response 423",e);
+        return;
+      }
+      MinExpiresHeader min=null;
+      try {
+        min=this.parentProvider.getHeaderFactory().createMinExpiresHeader(SUBSCRIBE_MIN_EXPIRE);
+      }
+ catch (      InvalidArgumentException e) {
+        logger.error("can't create the min expires header",e);
+        return;
+      }
+      response.setHeader(min);
+      try {
+        serverTransaction.sendResponse(response);
+      }
+ catch (      Exception e) {
+        logger.error("Error while sending the response 423",e);
+        return;
+      }
+      return;
+    }
+    if (this.ourWatchers.contains(contact)) {
+      contact.getTimeoutTask().cancel();
+      watcherTimeoutTask timeout=new watcherTimeoutTask(contact);
+      contact.setTimeoutTask(timeout);
+      this.timer.schedule(timeout,expires * 1000);
       Response response=null;
       try {
         response=this.parentProvider.getMessageFactory().createResponse(Response.OK,request);
       }
  catch (      Exception e) {
-        logger.debug("Error while creating the response 202",e);
+        logger.debug("Error while creating the response 200",e);
         return;
       }
+      try {
+        expHeader=this.parentProvider.getHeaderFactory().createExpiresHeader(expires);
+      }
+ catch (      InvalidArgumentException e) {
+        logger.error("Can't create the expires header");
+        return;
+      }
+      response.setHeader(expHeader);
       try {
         serverTransaction.sendResponse(response);
       }
  catch (      Exception e) {
-        logger.error("Error while sending the response 202",e);
+        logger.error("Error while sending the response 200",e);
+        return;
+      }
+      return;
+    }
+    contact.setServerDialog(serverTransaction.getDialog());
+    Dialog dialog=contact.getServerDialog();
+    if (expires == 0) {
+      logger.debug("contact " + contact + " isn't a watcher anymore");
+synchronized (this.ourWatchers) {
+        this.ourWatchers.remove(contact);
+      }
+      contact.getTimeoutTask().cancel();
+      Response response=null;
+      try {
+        response=this.parentProvider.getMessageFactory().createResponse(Response.OK,request);
+      }
+ catch (      Exception e) {
+        logger.debug("Error while creating the response 200",e);
+        return;
+      }
+      try {
+        expHeader=this.parentProvider.getHeaderFactory().createExpiresHeader(expires);
+      }
+ catch (      InvalidArgumentException e) {
+        logger.error("Can't create the expires header");
+        return;
+      }
+      response.setHeader(expHeader);
+      try {
+        serverTransaction.sendResponse(response);
+      }
+ catch (      Exception e) {
+        logger.error("Error while sending the response 200",e);
         return;
       }
       ClientTransaction transac=null;
       try {
-        transac=createNotify(contact,new byte[0],SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.TIMEOUT);
+        transac=createNotify(contact,getPidfPresenceStatus((ContactSipImpl)getLocalContact()),SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.TIMEOUT);
       }
  catch (      OperationFailedException e) {
         logger.debug("failed to create the new notify",e);
@@ -175,7 +250,7 @@ synchronized (this.ourWatchers) {
       return;
     }
     try {
-      expHeader=this.parentProvider.getHeaderFactory().createExpiresHeader(SUBSCRIBE_DEFAULT_EXPIRE);
+      expHeader=this.parentProvider.getHeaderFactory().createExpiresHeader(expires);
     }
  catch (    InvalidArgumentException e) {
       logger.error("Can't create the expires header");
@@ -227,6 +302,9 @@ synchronized (this.ourWatchers) {
 synchronized (this.ourWatchers) {
         this.ourWatchers.add(contact);
       }
+      watcherTimeoutTask timeout=new watcherTimeoutTask(contact);
+      contact.setTimeoutTask(timeout);
+      this.timer.schedule(timeout,expires * 1000);
     }
  else {
       try {

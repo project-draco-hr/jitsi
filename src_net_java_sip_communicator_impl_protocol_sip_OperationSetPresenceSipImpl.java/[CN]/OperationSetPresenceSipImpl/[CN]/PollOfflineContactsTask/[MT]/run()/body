@@ -1,0 +1,41 @@
+{
+  Iterator groupsIter=getServerStoredContactListRoot().subgroups();
+  while (groupsIter.hasNext()) {
+    ContactGroupSipImpl group=(ContactGroupSipImpl)groupsIter.next();
+    Iterator contactsIter=group.contacts();
+    while (contactsIter.hasNext()) {
+      ContactSipImpl contact=(ContactSipImpl)contactsIter.next();
+      if (!contact.isResolvable() || (!contact.getPresenceStatus().equals(SipStatusEnum.UNKNOWN) && !contact.getPresenceStatus().equals(SipStatusEnum.OFFLINE))) {
+        continue;
+      }
+      Request subscription=null;
+      try {
+        subscription=createSubscription(contact,SUBSCRIBE_DEFAULT_EXPIRE);
+      }
+ catch (      OperationFailedException e) {
+        logger.debug("can't create a new subscription",e);
+        return;
+      }
+      ClientTransaction subscribeTransaction;
+      SipProvider jainSipProvider=parentProvider.getDefaultJainSipProvider();
+      try {
+        subscribeTransaction=jainSipProvider.getNewClientTransaction(subscription);
+      }
+ catch (      TransactionUnavailableException ex) {
+        logger.error("Failed to create subscriptionTransaction.\n" + "This is most probably a network connection" + " error.",ex);
+        return;
+      }
+      CallIdHeader idheader=(CallIdHeader)subscription.getHeader(CallIdHeader.NAME);
+      subscribedContacts.put(idheader.getCallId(),contact);
+      logger.debug("polling " + contact);
+      try {
+        subscribeTransaction.sendRequest();
+      }
+ catch (      SipException ex) {
+        logger.error("Failed to send the message.",ex);
+        subscribedContacts.remove(idheader.getCallId());
+        return;
+      }
+    }
+  }
+}

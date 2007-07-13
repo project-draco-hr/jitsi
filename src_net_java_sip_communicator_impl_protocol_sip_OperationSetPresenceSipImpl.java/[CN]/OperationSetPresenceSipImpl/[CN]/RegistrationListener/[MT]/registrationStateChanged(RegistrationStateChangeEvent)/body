@@ -1,12 +1,13 @@
 {
   if (evt.getNewState() == RegistrationState.UNREGISTERING) {
+    timer.cancel();
     try {
       publishPresenceStatus(SipStatusEnum.OFFLINE,"");
     }
  catch (    OperationFailedException e) {
       logger.error("can't set the offline mode",e);
     }
-    for (int i=0; i < 100; i++) {
+    for (byte i=0; i < 20; i++) {
 synchronized (waitedCallIds) {
         if (waitedCallIds.size() == 0) {
           break;
@@ -15,7 +16,7 @@ synchronized (waitedCallIds) {
       Object o=new Object();
 synchronized (o) {
         try {
-          o.wait(100);
+          o.wait(500);
         }
  catch (        InterruptedException e) {
           logger.debug("abnormal behavior, may cause " + "unnecessary CPU use",e);
@@ -71,5 +72,8 @@ synchronized (o) {
     PresenceStatus oldStatus=getPresenceStatus();
     presenceStatus=SipStatusEnum.ONLINE;
     fireProviderStatusChangeEvent(oldStatus);
+    timer=new Timer();
+    pollingTask=new PollOfflineContactsTask();
+    timer.schedule(pollingTask,POLLING_TASK_PERIOD,POLLING_TASK_PERIOD);
   }
 }
