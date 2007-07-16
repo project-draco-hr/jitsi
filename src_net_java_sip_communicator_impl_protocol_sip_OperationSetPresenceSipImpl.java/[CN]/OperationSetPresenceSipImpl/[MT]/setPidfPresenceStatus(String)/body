@@ -18,6 +18,42 @@
     return;
   }
   Element presence=(Element)presNode;
+  SipStatusEnum personStatus=null;
+  NodeList personList=presence.getElementsByTagName(PERSON_ELEMENT);
+  if (personList.getLength() > 1) {
+    logger.error("more than one person in this document");
+    return;
+  }
+  if (personList.getLength() > 0) {
+    Node personNode=personList.item(0);
+    if (personNode.getNodeType() != Node.ELEMENT_NODE) {
+      logger.error("the person node is not and element");
+      return;
+    }
+    Element person=(Element)personNode;
+    NodeList activityList=person.getElementsByTagName(ACTIVITY_ELEMENT);
+    if (activityList.getLength() > 0) {
+      Element activity=null;
+      for (int i=0; i < activityList.getLength(); i++) {
+        Node activityNode=activityList.item(i);
+        if (activityNode.getNodeType() != Node.ELEMENT_NODE) {
+          continue;
+        }
+        if (activityNode.getNodeName().equals(AWAY_ELEMENT) || activityNode.getNodeName().equals(BUSY_ELEMENT)) {
+          activity=(Element)activityNode;
+          break;
+        }
+      }
+      if (activity != null) {
+        if (activity.getNodeName().equals(AWAY_ELEMENT)) {
+          personStatus=SipStatusEnum.AWAY;
+        }
+ else         if (activity.getNodeName().equals(BUSY_ELEMENT)) {
+          personStatus=SipStatusEnum.DO_NOT_DISTURB;
+        }
+      }
+    }
+  }
   NodeList tupleList=presence.getElementsByTagName(TUPLE_ELEMENT);
   for (int i=0; i < tupleList.getLength(); i++) {
     Node tupleNode=tupleList.item(i);
@@ -35,6 +71,10 @@
       ContactSipImpl sipcontact=(ContactSipImpl)resolveContactID(getTextContent(contact));
       if (sipcontact == null) {
         logger.debug("no contact found for id: " + getTextContent(contact));
+        continue;
+      }
+      if (personStatus != null) {
+        changePresenceStatusForContact(sipcontact,personStatus);
         continue;
       }
       NodeList statusList=tuple.getElementsByTagName(STATUS_ELEMENT);
@@ -79,27 +119,31 @@
         break;
       }
       Element basic=(Element)basicNode;
-      if (getTextContent(basic).equalsIgnoreCase(ONLINE_STATUS)) {
-        NodeList noteList=tuple.getElementsByTagName(NOTE_ELEMENT);
-        boolean changed=false;
-        for (int k=0; k < noteList.getLength(); k++) {
-          Node noteNode=noteList.item(k);
-          if (noteNode.getNodeType() != Node.ELEMENT_NODE) {
-            continue;
-          }
-          Element note=(Element)noteNode;
-          String state=getTextContent(note);
-          if (state.equalsIgnoreCase(SipStatusEnum.AWAY.getStatusName())) {
-            changed=true;
-            changePresenceStatusForContact(sipcontact,SipStatusEnum.AWAY);
-          }
+      NodeList noteList=tuple.getElementsByTagName(NOTE_ELEMENT);
+      boolean changed=false;
+      for (int k=0; k < noteList.getLength() && !changed; k++) {
+        Node noteNode=noteList.item(k);
+        if (noteNode.getNodeType() != Node.ELEMENT_NODE) {
+          continue;
         }
-        if (changed == false) {
-          changePresenceStatusForContact(sipcontact,SipStatusEnum.ONLINE);
+        Element note=(Element)noteNode;
+        String state=getTextContent(note);
+        if (state.equalsIgnoreCase(SipStatusEnum.AWAY.getStatusName())) {
+          changed=true;
+          changePresenceStatusForContact(sipcontact,SipStatusEnum.AWAY);
+        }
+ else         if (state.equalsIgnoreCase(SipStatusEnum.DO_NOT_DISTURB.getStatusName())) {
+          changed=true;
+          changePresenceStatusForContact(sipcontact,SipStatusEnum.DO_NOT_DISTURB);
         }
       }
- else       if (getTextContent(basic).equalsIgnoreCase(OFFLINE_STATUS)) {
-        changePresenceStatusForContact(sipcontact,SipStatusEnum.OFFLINE);
+      if (changed == false) {
+        if (getTextContent(basic).equalsIgnoreCase(ONLINE_STATUS)) {
+          changePresenceStatusForContact(sipcontact,SipStatusEnum.ONLINE);
+        }
+ else         if (getTextContent(basic).equalsIgnoreCase(OFFLINE_STATUS)) {
+          changePresenceStatusForContact(sipcontact,SipStatusEnum.OFFLINE);
+        }
       }
     }
   }
