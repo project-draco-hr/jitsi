@@ -1,17 +1,25 @@
 {
-  String startPlainTextTag="<PLAINTEXT>";
-  String endPlainTextTag="</PLAINTEXT>";
+  String startPlainTextTag;
+  String endPlainTextTag;
+  if (contentType == null || contentType.equals(TEXT_CONTENT_TYPE) || "".equals(contentType)) {
+    startPlainTextTag="<PLAINTEXT>";
+    endPlainTextTag="</PLAINTEXT>";
+  }
+ else {
+    startPlainTextTag="";
+    endPlainTextTag="";
+  }
   ArrayList smiliesList=ImageLoader.getDefaultSmiliesPack();
-  String regexp="";
+  StringBuffer regexp=new StringBuffer();
   for (int i=0; i < smiliesList.size(); i++) {
     Smiley smiley=(Smiley)smiliesList.get(i);
     String[] smileyStrings=smiley.getSmileyStrings();
     for (int j=0; j < smileyStrings.length; j++) {
-      regexp+=GuiUtils.replaceSpecialRegExpChars(smileyStrings[j]) + "|";
+      regexp.append(GuiUtils.replaceSpecialRegExpChars(smileyStrings[j])).append("|");
     }
   }
-  regexp=regexp.substring(0,regexp.length() - 1);
-  Pattern p=Pattern.compile(regexp);
+  regexp=regexp.deleteCharAt(regexp.length() - 1);
+  Pattern p=Pattern.compile(regexp.toString());
   Matcher m=p.matcher(message);
   StringBuffer msgBuffer=new StringBuffer();
   boolean matchSuccessfull=false;
