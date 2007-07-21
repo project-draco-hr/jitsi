@@ -61,7 +61,7 @@ synchronized (this.waitedCallIds) {
       return;
     }
     try {
-      if (!contact.isResolved()) {
+      if (!contact.isResolved() && response.getStatusCode() != Response.UNAUTHORIZED && response.getStatusCode() != Response.PROXY_AUTHENTICATION_REQUIRED) {
         finalizeSubscription(contact,clientTransaction.getDialog());
       }
     }
@@ -74,10 +74,13 @@ synchronized (this.waitedCallIds) {
         logger.error("no Expires header in this response");
         return;
       }
+      if (contact.getResfreshTask() != null) {
+        contact.getResfreshTask().cancel();
+      }
       RefreshSubscriptionTask refresh=new RefreshSubscriptionTask(contact);
       contact.setResfreshTask(refresh);
       try {
-        this.timer.schedule(refresh,expHeader.getExpires() * 1000 - REFRESH_MARGIN);
+        this.timer.schedule(refresh,(expHeader.getExpires() - REFRESH_MARGIN) * 1000);
       }
  catch (      IllegalArgumentException e) {
         logger.debug("the expires value seems to be less than a " + "minute, let's assume it");
@@ -93,6 +96,7 @@ synchronized (this.waitedCallIds) {
         logger.error("can't handle the challenge");
         changePresenceStatusForContact(contact,SipStatusEnum.UNKNOWN);
         this.subscribedContacts.remove(idheader.getCallId());
+        contact.setClientDialog(null);
       }
     }
  else     if (response.getStatusCode() == Response.REQUEST_TIMEOUT || response.getStatusCode() == Response.TEMPORARILY_UNAVAILABLE || response.getStatusCode() == Response.BUSY_HERE || response.getStatusCode() == Response.BUSY_EVERYWHERE || response.getStatusCode() == Response.DECLINE) {
@@ -166,12 +170,16 @@ synchronized (this.waitedCallIds) {
         logger.error("no Expires header in the response");
         return;
       }
+      if (this.republishTask != null) {
+        this.republishTask.cancel();
+      }
+      this.republishTask=new RePublishTask();
       try {
-        this.timer.schedule(new RePublishTask(),expires.getExpires() * 1000 - REFRESH_MARGIN);
+        this.timer.schedule(this.republishTask,(expires.getExpires() - REFRESH_MARGIN) * 1000);
       }
  catch (      IllegalArgumentException e) {
         logger.debug("the expires value seems to be less than a " + "minute, let's assume it");
-        this.timer.schedule(new RePublishTask(),expires.getExpires() * 1000);
+        this.timer.schedule(this.republishTask,expires.getExpires() * 1000);
       }
     }
  else     if (response.getStatusCode() == Response.UNAUTHORIZED || response.getStatusCode() == Response.PROXY_AUTHENTICATION_REQUIRED) {

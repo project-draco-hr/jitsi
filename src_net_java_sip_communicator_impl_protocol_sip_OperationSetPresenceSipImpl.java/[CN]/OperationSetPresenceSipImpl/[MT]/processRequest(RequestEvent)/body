@@ -31,13 +31,7 @@ catch (    TransactionUnavailableException ex) {
     ContactSipImpl contact=(ContactSipImpl)this.subscribedContacts.get(idheader.getCallId());
     if (contact != null && !sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED) && !contact.isResolved()) {
       logger.debug("contact still pending while NOTIFY received");
-      try {
-        finalizeSubscription(contact,serverTransaction.getDialog());
-      }
- catch (      NullPointerException e) {
-        logger.debug("failed to finalize the subscription of the" + "contact",e);
-        return;
-      }
+      return;
     }
     if (contact == null && !sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED)) {
       logger.debug("contact not found for callid : " + idheader.getCallId());
@@ -193,7 +187,6 @@ catch (    InvalidArgumentException e) {
       }
       return;
     }
-    contact.setServerDialog(serverTransaction.getDialog());
     Dialog dialog=contact.getServerDialog();
     if (expires == 0) {
       logger.debug("contact " + contact + " isn't a watcher anymore");
@@ -201,6 +194,7 @@ synchronized (this.ourWatchers) {
         this.ourWatchers.remove(contact);
       }
       contact.getTimeoutTask().cancel();
+      contact.setServerDialog(null);
       Response response=null;
       try {
         response=this.parentProvider.getMessageFactory().createResponse(Response.OK,request);
@@ -210,7 +204,7 @@ synchronized (this.ourWatchers) {
         return;
       }
       try {
-        expHeader=this.parentProvider.getHeaderFactory().createExpiresHeader(expires);
+        expHeader=this.parentProvider.getHeaderFactory().createExpiresHeader(0);
       }
  catch (      InvalidArgumentException e) {
         logger.error("Can't create the expires header");
@@ -241,12 +235,14 @@ synchronized (this.ourWatchers) {
       }
       return;
     }
+    contact.setServerDialog(serverTransaction.getDialog());
+    dialog=contact.getServerDialog();
     Response response=null;
     try {
-      response=this.parentProvider.getMessageFactory().createResponse(Response.ACCEPTED,request);
+      response=this.parentProvider.getMessageFactory().createResponse(Response.OK,request);
     }
  catch (    Exception e) {
-      logger.debug("Error while creating the response 202",e);
+      logger.debug("Error while creating the response 200",e);
       return;
     }
     try {
@@ -261,66 +257,29 @@ synchronized (this.ourWatchers) {
       serverTransaction.sendResponse(response);
     }
  catch (    Exception e) {
-      logger.error("Error while sending the response 202",e);
+      logger.error("Error while sending the response 200",e);
       return;
     }
     ClientTransaction transac=null;
     try {
-      transac=createNotify(contact,new byte[0],SubscriptionStateHeader.PENDING,null);
+      transac=createNotify(contact,getPidfPresenceStatus((ContactSipImpl)getLocalContact()),SubscriptionStateHeader.ACTIVE,null);
     }
  catch (    OperationFailedException e) {
-      logger.debug("failed to create the first notify",e);
+      logger.debug("failed to create the new notify",e);
       return;
     }
     try {
       dialog.sendRequest(transac);
     }
  catch (    Exception e) {
-      logger.debug("Can't send the request");
+      logger.error("Can't send the request",e);
       return;
     }
-    AuthorizationResponse authResp=null;
-    if (this.authorizationHandler != null) {
-      AuthorizationRequest authReq=new AuthorizationRequest();
-      authResp=this.authorizationHandler.processAuthorisationRequest(authReq,contact);
-    }
-    if (authResp == null || authResp.getResponseCode().equals(AuthorizationResponse.ACCEPT)) {
-      try {
-        transac=createNotify(contact,getPidfPresenceStatus((ContactSipImpl)getLocalContact()),SubscriptionStateHeader.ACTIVE,null);
-      }
- catch (      OperationFailedException e) {
-        logger.debug("failed to create the new notify",e);
-        return;
-      }
-      try {
-        dialog.sendRequest(transac);
-      }
- catch (      Exception e) {
-        logger.debug("Can't send the request");
-        return;
-      }
 synchronized (this.ourWatchers) {
-        this.ourWatchers.add(contact);
-      }
-      watcherTimeoutTask timeout=new watcherTimeoutTask(contact);
-      contact.setTimeoutTask(timeout);
-      this.timer.schedule(timeout,expires * 1000);
+      this.ourWatchers.add(contact);
     }
- else {
-      try {
-        transac=createNotify(contact,new byte[0],SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.REJECTED);
-      }
- catch (      OperationFailedException e) {
-        logger.debug("failed to create the new notify",e);
-        return;
-      }
-      try {
-        dialog.sendRequest(transac);
-      }
- catch (      Exception e) {
-        logger.debug("Can't send the request");
-        return;
-      }
-    }
+    watcherTimeoutTask timeout=new watcherTimeoutTask(contact);
+    contact.setTimeoutTask(timeout);
+    this.timer.schedule(timeout,expires * 1000);
   }
 }

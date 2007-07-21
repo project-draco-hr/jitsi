@@ -28,18 +28,12 @@
     doc=new byte[0];
   }
   ContentTypeHeader contTypeHeader;
-  ContentLengthHeader contLengthHeader;
   try {
     contTypeHeader=this.parentProvider.getHeaderFactory().createContentTypeHeader("application",PIDF_XML);
-    contLengthHeader=this.parentProvider.getHeaderFactory().createContentLengthHeader(doc.length);
   }
  catch (  ParseException ex) {
     logger.error("An unexpected error occurred while" + "constructing the content headers",ex);
     throw new OperationFailedException("An unexpected error occurred while" + "constructing the content headers",OperationFailedException.INTERNAL_ERROR,ex);
-  }
-catch (  InvalidArgumentException exc) {
-    logger.error("An unexpected error occurred while" + "constructing the content length header",exc);
-    throw new OperationFailedException("An unexpected error occurred while" + "constructing the content length header",OperationFailedException.INTERNAL_ERROR,exc);
   }
   SIPIfMatchHeader ifmHeader=null;
   try {
@@ -53,7 +47,7 @@ catch (  InvalidArgumentException exc) {
   }
   CSeqHeader cSeqHeader=null;
   try {
-    cSeqHeader=this.parentProvider.getHeaderFactory().createCSeqHeader(1l,Request.PUBLISH);
+    cSeqHeader=this.parentProvider.getHeaderFactory().createCSeqHeader(publish_cseq++,Request.PUBLISH);
   }
  catch (  InvalidArgumentException ex) {
     logger.error("An unexpected error occurred while" + "constructing the CSeqHeader",ex);
@@ -87,7 +81,6 @@ catch (  ParseException ex) {
     logger.error("Failed to create message Request!",ex);
     throw new OperationFailedException("Failed to create message Request!",OperationFailedException.INTERNAL_ERROR,ex);
   }
-  req.setHeader(contLengthHeader);
   req.setHeader(expHeader);
   req.setHeader(evtHeader);
   if (ifmHeader != null) {
