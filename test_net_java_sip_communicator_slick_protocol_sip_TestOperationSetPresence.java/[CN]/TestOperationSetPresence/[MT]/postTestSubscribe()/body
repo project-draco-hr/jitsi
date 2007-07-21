@@ -1,0 +1,61 @@
+{
+  logger.debug("Testing Subscription and Subscription Event Dispatch.");
+  SubscriptionEventCollector subEvtCollector=new SubscriptionEventCollector();
+  this.operationSetPresence1.addSubsciptionListener(subEvtCollector);
+synchronized (subEvtCollector) {
+    this.operationSetPresence1.subscribe(this.fixture.userID2);
+    subEvtCollector.waitForEvent(10000);
+  }
+  assertEquals("Subscription event dispatching failed.",1,subEvtCollector.collectedEvents.size());
+  SubscriptionEvent subEvt=(SubscriptionEvent)subEvtCollector.collectedEvents.get(0);
+  assertEquals("SubscriptionEvent Source:",this.fixture.userID2,((Contact)subEvt.getSource()).getAddress());
+  assertEquals("SubscriptionEvent Source Contact:",this.fixture.userID2,subEvt.getSourceContact().getAddress());
+  assertSame("SubscriptionEvent Source Provider:",this.fixture.provider1,subEvt.getSourceProvider());
+  subEvtCollector.collectedEvents.clear();
+synchronized (subEvtCollector) {
+    subEvtCollector.waitForEvent(10000);
+    this.operationSetPresence1.removeSubscriptionListener(subEvtCollector);
+  }
+  subEvtCollector.collectedEvents.clear();
+  logger.debug("Testing presence notifications.");
+  PresenceStatus oldStatus=this.operationSetPresence2.getPresenceStatus();
+  PresenceStatus newStatus=getSampleStatus1();
+  if (oldStatus.equals(newStatus)) {
+    newStatus=getSampleStatus2();
+  }
+  ContactPresenceEventCollector contactPresEvtCollector=new ContactPresenceEventCollector(this.fixture.userID2,newStatus);
+  this.operationSetPresence1.addContactPresenceStatusListener(contactPresEvtCollector);
+synchronized (contactPresEvtCollector) {
+    this.operationSetPresence2.publishPresenceStatus(newStatus,"new status");
+    contactPresEvtCollector.waitForEvent(10000);
+    this.operationSetPresence1.removeContactPresenceStatusListener(contactPresEvtCollector);
+  }
+  assertEquals("Presence Notif. event dispatching failed.",1,contactPresEvtCollector.collectedEvents.size());
+  ContactPresenceStatusChangeEvent presEvt=(ContactPresenceStatusChangeEvent)contactPresEvtCollector.collectedEvents.get(0);
+  assertEquals("Presence Notif. event  Source:",this.fixture.userID2,((Contact)presEvt.getSource()).getAddress());
+  assertEquals("Presence Notif. event  Source Contact:",this.fixture.userID2,presEvt.getSourceContact().getAddress());
+  assertSame("Presence Notif. event  Source Provider:",this.fixture.provider1,presEvt.getSourceProvider());
+  PresenceStatus reportedNewStatus=presEvt.getNewStatus();
+  PresenceStatus reportedOldStatus=presEvt.getOldStatus();
+  assertEquals("Reported new PresenceStatus: ",newStatus,reportedNewStatus);
+  assertNotNull("Reported old PresenceStatus: ",reportedOldStatus);
+  try {
+    subEvtCollector.collectedEvents.clear();
+    this.operationSetPresence2.addSubsciptionListener(subEvtCollector);
+synchronized (subEvtCollector) {
+      this.operationSetPresence2.subscribe(this.fixture.userID1);
+      subEvtCollector.waitForEvent(10000);
+      subEvtCollector.collectedEvents.clear();
+      subEvtCollector.waitForEvent(10000);
+      this.operationSetPresence2.removeSubscriptionListener(subEvtCollector);
+    }
+  }
+ catch (  OperationFailedException ex) {
+  }
+  Object lock=new Object();
+synchronized (lock) {
+    logger.info("Will wait all subscriptioin events to be received by" + " lib");
+    lock.wait(3000);
+    logger.info("Stopped waiting");
+  }
+}

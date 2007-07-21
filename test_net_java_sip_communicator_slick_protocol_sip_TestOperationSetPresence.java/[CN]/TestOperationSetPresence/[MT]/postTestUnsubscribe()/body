@@ -1,0 +1,32 @@
+{
+  logger.debug("Testing Unsubscribe and unsubscription event dispatch.");
+  SubscriptionEventCollector subEvtCollector=new SubscriptionEventCollector();
+  this.operationSetPresence1.addSubsciptionListener(subEvtCollector);
+  Contact sipTesterAgentContact=this.operationSetPresence1.findContactByID(this.fixture.userID2);
+  assertNotNull("Failed to find an existing subscription for the tester agent",sipTesterAgentContact);
+synchronized (subEvtCollector) {
+    this.operationSetPresence1.unsubscribe(sipTesterAgentContact);
+    subEvtCollector.waitForEvent(10000);
+    this.operationSetPresence1.removeSubscriptionListener(subEvtCollector);
+  }
+  assertEquals("Subscription event dispatching failed.",1,subEvtCollector.collectedEvents.size());
+  SubscriptionEvent subEvt=(SubscriptionEvent)subEvtCollector.collectedEvents.get(0);
+  assertEquals("SubscriptionEvent Source:",sipTesterAgentContact,subEvt.getSource());
+  assertEquals("SubscriptionEvent Source Contact:",sipTesterAgentContact,subEvt.getSourceContact());
+  assertSame("SubscriptionEvent Source Provider:",this.fixture.provider1,subEvt.getSourceProvider());
+  subEvtCollector.collectedEvents.clear();
+  logger.debug("Testing (lack of) presence notifications.");
+  PresenceStatus oldStatus=this.operationSetPresence2.getPresenceStatus();
+  PresenceStatus newStatus=getSampleStatus1();
+  if (oldStatus.equals(newStatus)) {
+    newStatus=getSampleStatus2();
+  }
+  ContactPresenceEventCollector contactPresEvtCollector=new ContactPresenceEventCollector(this.fixture.userID2,null);
+  this.operationSetPresence1.addContactPresenceStatusListener(contactPresEvtCollector);
+synchronized (contactPresEvtCollector) {
+    this.operationSetPresence2.publishPresenceStatus(newStatus,"new status");
+    contactPresEvtCollector.waitForEvent(10000);
+    this.operationSetPresence1.removeContactPresenceStatusListener(contactPresEvtCollector);
+  }
+  assertEquals("Presence Notifications were received after unsubscibing.",0,contactPresEvtCollector.collectedEvents.size());
+}
