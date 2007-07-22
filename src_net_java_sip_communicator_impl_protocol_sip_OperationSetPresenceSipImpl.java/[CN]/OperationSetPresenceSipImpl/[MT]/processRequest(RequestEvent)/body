@@ -42,17 +42,17 @@ synchronized (this.waitedCallIds) {
         response=this.parentProvider.getMessageFactory().createResponse(Response.CALL_OR_TRANSACTION_DOES_NOT_EXIST,request);
       }
  catch (      ParseException e) {
-        logger.debug("failed to create the 481 response",e);
+        logger.error("failed to create the 481 response",e);
         return;
       }
       try {
         serverTransaction.sendResponse(response);
       }
  catch (      SipException e) {
-        logger.debug("failed to send the response",e);
+        logger.error("failed to send the response",e);
       }
 catch (      InvalidArgumentException e) {
-        logger.debug("invalid argument provided while trying" + " to send the response",e);
+        logger.error("invalid argument provided while trying" + " to send the response",e);
       }
       return;
     }
@@ -62,7 +62,7 @@ catch (      InvalidArgumentException e) {
         response=this.parentProvider.getMessageFactory().createResponse(Response.UNSUPPORTED_MEDIA_TYPE,request);
       }
  catch (      ParseException e) {
-        logger.debug("failed to create the OK response",e);
+        logger.error("failed to create the OK response",e);
         return;
       }
       AcceptHeader acceptHeader=null;
@@ -70,7 +70,7 @@ catch (      InvalidArgumentException e) {
         acceptHeader=this.parentProvider.getHeaderFactory().createAcceptHeader("application",PIDF_XML);
       }
  catch (      ParseException e) {
-        logger.debug("failed to create the accept header",e);
+        logger.error("failed to create the accept header",e);
         return;
       }
       response.setHeader(acceptHeader);
@@ -78,10 +78,10 @@ catch (      InvalidArgumentException e) {
         serverTransaction.sendResponse(response);
       }
  catch (      SipException e) {
-        logger.debug("failed to send the response",e);
+        logger.error("failed to send the response",e);
       }
 catch (      InvalidArgumentException e) {
-        logger.debug("invalid argument provided while trying" + " to send the response",e);
+        logger.error("invalid argument provided while trying" + " to send the response",e);
       }
     }
     if (sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED)) {
@@ -97,17 +97,17 @@ synchronized (this.waitedCallIds) {
       response=this.parentProvider.getMessageFactory().createResponse(Response.OK,request);
     }
  catch (    ParseException e) {
-      logger.debug("failed to create the OK response",e);
+      logger.error("failed to create the OK response",e);
       return;
     }
     try {
       serverTransaction.sendResponse(response);
     }
  catch (    SipException e) {
-      logger.debug("failed to send the response",e);
+      logger.error("failed to send the response",e);
     }
 catch (    InvalidArgumentException e) {
-      logger.debug("invalid argument provided while trying" + " to send the response",e);
+      logger.error("invalid argument provided while trying" + " to send the response",e);
     }
     if (request.getRawContent() != null && !sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED)) {
       setPidfPresenceStatus(new String(request.getRawContent()));
@@ -115,6 +115,12 @@ catch (    InvalidArgumentException e) {
   }
  else   if (request.getMethod().equals(Request.SUBSCRIBE)) {
     FromHeader from=(FromHeader)request.getHeader(FromHeader.NAME);
+    if (this.useDistantPA) {
+      this.useDistantPA=false;
+      if (this.republishTask != null) {
+        this.republishTask.cancel();
+      }
+    }
     ContactSipImpl contact=(ContactSipImpl)resolveContactID(from.getAddress().getURI().toString());
     if (contact == null) {
       contact=new ContactSipImpl(from.getAddress().getURI().toString(),this.parentProvider);
@@ -136,7 +142,7 @@ catch (    InvalidArgumentException e) {
         response=this.parentProvider.getMessageFactory().createResponse(Response.INTERVAL_TOO_BRIEF,request);
       }
  catch (      Exception e) {
-        logger.debug("Error while creating the response 423",e);
+        logger.error("Error while creating the response 423",e);
         return;
       }
       MinExpiresHeader min=null;
@@ -167,7 +173,7 @@ catch (    InvalidArgumentException e) {
         response=this.parentProvider.getMessageFactory().createResponse(Response.OK,request);
       }
  catch (      Exception e) {
-        logger.debug("Error while creating the response 200",e);
+        logger.error("Error while creating the response 200",e);
         return;
       }
       try {
@@ -200,14 +206,14 @@ synchronized (this.ourWatchers) {
         response=this.parentProvider.getMessageFactory().createResponse(Response.OK,request);
       }
  catch (      Exception e) {
-        logger.debug("Error while creating the response 200",e);
+        logger.error("Error while creating the response 200",e);
         return;
       }
       try {
         expHeader=this.parentProvider.getHeaderFactory().createExpiresHeader(0);
       }
  catch (      InvalidArgumentException e) {
-        logger.error("Can't create the expires header");
+        logger.error("Can't create the expires header",e);
         return;
       }
       response.setHeader(expHeader);
@@ -223,14 +229,14 @@ synchronized (this.ourWatchers) {
         transac=createNotify(contact,getPidfPresenceStatus((ContactSipImpl)getLocalContact()),SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.TIMEOUT);
       }
  catch (      OperationFailedException e) {
-        logger.debug("failed to create the new notify",e);
+        logger.error("failed to create the new notify",e);
         return;
       }
       try {
         dialog.sendRequest(transac);
       }
  catch (      Exception e) {
-        logger.debug("Can't send the request");
+        logger.error("Can't send the request",e);
         return;
       }
       return;
@@ -242,14 +248,14 @@ synchronized (this.ourWatchers) {
       response=this.parentProvider.getMessageFactory().createResponse(Response.OK,request);
     }
  catch (    Exception e) {
-      logger.debug("Error while creating the response 200",e);
+      logger.error("Error while creating the response 200",e);
       return;
     }
     try {
       expHeader=this.parentProvider.getHeaderFactory().createExpiresHeader(expires);
     }
  catch (    InvalidArgumentException e) {
-      logger.error("Can't create the expires header");
+      logger.error("Can't create the expires header",e);
       return;
     }
     response.setHeader(expHeader);
@@ -265,7 +271,7 @@ synchronized (this.ourWatchers) {
       transac=createNotify(contact,getPidfPresenceStatus((ContactSipImpl)getLocalContact()),SubscriptionStateHeader.ACTIVE,null);
     }
  catch (    OperationFailedException e) {
-      logger.debug("failed to create the new notify",e);
+      logger.error("failed to create the new notify",e);
       return;
     }
     try {
@@ -281,5 +287,22 @@ synchronized (this.ourWatchers) {
     watcherTimeoutTask timeout=new watcherTimeoutTask(contact);
     contact.setTimeoutTask(timeout);
     this.timer.schedule(timeout,expires * 1000);
+  }
+ else   if (request.getMethod().equals(Request.PUBLISH)) {
+    Response response=null;
+    try {
+      response=this.parentProvider.getMessageFactory().createResponse(Response.NOT_IMPLEMENTED,request);
+    }
+ catch (    Exception e) {
+      logger.error("Error while creating the response 501",e);
+      return;
+    }
+    try {
+      serverTransaction.sendResponse(response);
+    }
+ catch (    Exception e) {
+      logger.error("Error while sending the response 501",e);
+      return;
+    }
   }
 }

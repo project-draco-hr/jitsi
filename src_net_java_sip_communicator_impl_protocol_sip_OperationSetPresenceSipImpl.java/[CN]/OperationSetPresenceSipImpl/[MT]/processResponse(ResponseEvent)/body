@@ -50,7 +50,7 @@
           processAuthenticationChallenge(clientTransaction,response,sourceProvider);
         }
  catch (        OperationFailedException e) {
-          logger.error("can't handle the challenge");
+          logger.error("can't handle the challenge",e);
         }
       }
  else       if (response.getStatusCode() != Response.OK && response.getStatusCode() != Response.ACCEPTED) {
@@ -93,7 +93,7 @@ synchronized (this.waitedCallIds) {
         processAuthenticationChallenge(clientTransaction,response,sourceProvider);
       }
  catch (      OperationFailedException e) {
-        logger.error("can't handle the challenge");
+        logger.error("can't handle the challenge",e);
         changePresenceStatusForContact(contact,SipStatusEnum.UNKNOWN);
         this.subscribedContacts.remove(idheader.getCallId());
         contact.setClientDialog(null);
@@ -131,7 +131,7 @@ synchronized (this.waitedCallIds) {
         processAuthenticationChallenge(clientTransaction,response,sourceProvider);
       }
  catch (      OperationFailedException e) {
-        logger.error("can't handle the challenge");
+        logger.error("can't handle the challenge",e);
         String contactAddress=((FromHeader)response.getHeader(FromHeader.NAME)).getAddress().getURI().toString();
         Contact watcher=getWatcher(contactAddress);
         if (watcher != null) {
@@ -178,7 +178,7 @@ synchronized (this.waitedCallIds) {
         this.timer.schedule(this.republishTask,(expires.getExpires() - REFRESH_MARGIN) * 1000);
       }
  catch (      IllegalArgumentException e) {
-        logger.debug("the expires value seems to be less than a " + "minute, let's assume it");
+        logger.error("the expires value seems to be less than a " + "minute, let's assume it",e);
         this.timer.schedule(this.republishTask,expires.getExpires() * 1000);
       }
     }
@@ -187,7 +187,7 @@ synchronized (this.waitedCallIds) {
         processAuthenticationChallenge(clientTransaction,response,sourceProvider);
       }
  catch (      OperationFailedException e) {
-        logger.error("can't handle the challenge");
+        logger.error("can't handle the challenge",e);
         return;
       }
     }
@@ -224,6 +224,14 @@ synchronized (this.waitedCallIds) {
  else {
       logger.debug("error received from the network" + response);
       this.distantPAET=null;
+      if (this.useDistantPA == false) {
+        return;
+      }
+      logger.debug("we enter into the peer to peer mode as the " + "distant PA mode fails");
+      this.useDistantPA=false;
+      if (this.republishTask != null) {
+        this.republishTask.cancel();
+      }
     }
   }
 }
