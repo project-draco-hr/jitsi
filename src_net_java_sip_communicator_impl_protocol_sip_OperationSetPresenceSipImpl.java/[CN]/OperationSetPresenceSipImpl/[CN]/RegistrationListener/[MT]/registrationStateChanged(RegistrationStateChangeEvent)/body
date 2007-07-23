@@ -7,9 +7,21 @@
  catch (    OperationFailedException e) {
       logger.error("can't set the offline mode",e);
     }
-    Thread t=new Thread(new unregisteringThread());
-    t.setDaemon(false);
-    t.start();
+    for (byte i=0; i < 10; i++) {
+synchronized (waitedCallIds) {
+        if (waitedCallIds.size() == 0) {
+          break;
+        }
+      }
+synchronized (this) {
+        try {
+          wait(500);
+        }
+ catch (        InterruptedException e) {
+          logger.debug("abnormal behavior, may cause " + "unnecessary CPU use",e);
+        }
+      }
+    }
     PresenceStatus oldStatus=presenceStatus;
     presenceStatus=SipStatusEnum.OFFLINE;
     fireProviderStatusChangeEvent(oldStatus);
@@ -26,34 +38,7 @@
           logger.debug("contact " + contact + " already resolved");
           continue;
         }
-        Request subscription;
-        try {
-          subscription=createSubscription(contact,SUBSCRIBE_DEFAULT_EXPIRE);
-        }
- catch (        OperationFailedException ex) {
-          logger.error("Failed to create the subcription",ex);
-          return;
-        }
-        ClientTransaction subscribeTransaction;
-        SipProvider jainSipProvider=parentProvider.getDefaultJainSipProvider();
-        try {
-          subscribeTransaction=jainSipProvider.getNewClientTransaction(subscription);
-        }
- catch (        TransactionUnavailableException ex) {
-          logger.error("Failed to create subscriptionTransaction.\n" + "This is most probably a network" + " connection error.",ex);
-          return;
-        }
-        CallIdHeader idheader=(CallIdHeader)subscription.getHeader(CallIdHeader.NAME);
-        subscribedContacts.put(idheader.getCallId(),contact);
-        logger.debug("added a contact at :" + idheader.getCallId());
-        try {
-          subscribeTransaction.sendRequest();
-        }
- catch (        SipException ex) {
-          logger.error("Failed to send the message.",ex);
-          subscribedContacts.remove(idheader.getCallId());
-          return;
-        }
+        forcePollContact(contact);
       }
     }
     timer=new Timer(true);

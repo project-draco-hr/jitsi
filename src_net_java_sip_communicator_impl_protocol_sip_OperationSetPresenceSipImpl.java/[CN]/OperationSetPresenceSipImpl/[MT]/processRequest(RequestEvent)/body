@@ -31,7 +31,6 @@ catch (    TransactionUnavailableException ex) {
     ContactSipImpl contact=(ContactSipImpl)this.subscribedContacts.get(idheader.getCallId());
     if (contact != null && !sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED) && !contact.isResolved()) {
       logger.debug("contact still pending while NOTIFY received");
-      return;
     }
     if (contact == null && !sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED)) {
       logger.debug("contact not found for callid : " + idheader.getCallId());
@@ -88,6 +87,9 @@ catch (      InvalidArgumentException e) {
       if (contact != null) {
         terminateSubscription(contact);
         this.subscribedContacts.remove(serverTransaction.getDialog().getCallId().getCallId());
+        if (sstateHeader.getReasonCode().equals(SubscriptionStateHeader.DEACTIVATED)) {
+          forcePollContact(contact);
+        }
       }
 synchronized (this.waitedCallIds) {
         this.waitedCallIds.remove(idheader.getCallId());

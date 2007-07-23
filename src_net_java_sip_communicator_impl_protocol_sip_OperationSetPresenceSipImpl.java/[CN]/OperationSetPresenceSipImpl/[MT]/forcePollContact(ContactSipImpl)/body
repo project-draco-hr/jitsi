@@ -1,0 +1,33 @@
+{
+  if (contact.getClientDialog() != null || !contact.isResolvable()) {
+    return;
+  }
+  Request subscription;
+  try {
+    subscription=createSubscription(contact,SUBSCRIBE_DEFAULT_EXPIRE);
+  }
+ catch (  OperationFailedException ex) {
+    logger.error("Failed to create the subcription",ex);
+    return;
+  }
+  ClientTransaction subscribeTransaction;
+  SipProvider jainSipProvider=this.parentProvider.getDefaultJainSipProvider();
+  try {
+    subscribeTransaction=jainSipProvider.getNewClientTransaction(subscription);
+  }
+ catch (  TransactionUnavailableException ex) {
+    logger.error("Failed to create subscriptionTransaction.\n" + "This is most probably a network" + " connection error.",ex);
+    return;
+  }
+  CallIdHeader idheader=(CallIdHeader)subscription.getHeader(CallIdHeader.NAME);
+  this.subscribedContacts.put(idheader.getCallId(),contact);
+  logger.debug("added a contact at :" + idheader.getCallId());
+  try {
+    subscribeTransaction.sendRequest();
+  }
+ catch (  SipException ex) {
+    logger.error("Failed to send the message.",ex);
+    this.subscribedContacts.remove(idheader.getCallId());
+    return;
+  }
+}

@@ -1,0 +1,42 @@
+{
+  logger.trace("Killing the SIP Protocol Provider.");
+  OperationSetBasicTelephonySipImpl telephony=(OperationSetBasicTelephonySipImpl)getOperationSet(OperationSetBasicTelephony.class);
+  telephony.shutdown();
+  if (isRegistered()) {
+    try {
+      ShutdownUnregistrationBlockListener listener=new ShutdownUnregistrationBlockListener();
+      addRegistrationStateChangeListener(listener);
+      unregister();
+      listener.waitForEvent(5000);
+    }
+ catch (    OperationFailedException ex) {
+      logger.error("Failed to properly unregister before shutting down. " + getAccountID(),ex);
+    }
+  }
+  try {
+    udpJainSipProvider.removeListeningPoint(udpListeningPoint);
+    tcpJainSipProvider.removeListeningPoint(tcpListeningPoint);
+    tlsJainSipProvider.removeListeningPoint(tlsListeningPoint);
+  }
+ catch (  ObjectInUseException ex) {
+    logger.info("An exception occurred while ",ex);
+  }
+  try {
+  }
+ catch (  Exception ex) {
+    logger.error("Failed to properly stop the stack!",ex);
+  }
+  udpListeningPoint=null;
+  tcpListeningPoint=null;
+  tlsListeningPoint=null;
+  udpJainSipProvider=null;
+  tcpJainSipProvider=null;
+  tlsJainSipProvider=null;
+  headerFactory=null;
+  messageFactory=null;
+  addressFactory=null;
+  sipFactory=null;
+  sipSecurityManager=null;
+  methodProcessors.clear();
+  isInitialized=false;
+}
