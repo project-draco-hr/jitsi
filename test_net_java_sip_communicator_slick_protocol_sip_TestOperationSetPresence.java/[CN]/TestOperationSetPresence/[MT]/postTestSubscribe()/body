@@ -17,6 +17,11 @@ synchronized (subEvtCollector) {
     this.operationSetPresence1.removeSubscriptionListener(subEvtCollector);
   }
   subEvtCollector.collectedEvents.clear();
+  Object lock=new Object();
+synchronized (lock) {
+    logger.info("Will wait all subscription events to be received");
+    lock.wait(3000);
+  }
   logger.debug("Testing presence notifications.");
   PresenceStatus oldStatus=this.operationSetPresence2.getPresenceStatus();
   PresenceStatus newStatus=getSampleStatus1();
@@ -53,9 +58,8 @@ synchronized (subEvtCollector) {
   }
  catch (  OperationFailedException ex) {
   }
-  Object lock=new Object();
 synchronized (lock) {
-    logger.info("Will wait all subscriptioin events to be received by" + " lib");
+    logger.info("Will wait all subscription events to be received by" + " lib");
     lock.wait(3000);
     logger.info("Stopped waiting");
   }
