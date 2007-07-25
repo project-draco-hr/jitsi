@@ -1,6 +1,47 @@
 {
   logger.debug("received request=\n" + requestEvent.getRequest());
   Request request=requestEvent.getRequest();
+  EventHeader eventHeader=(EventHeader)request.getHeader(EventHeader.NAME);
+  if (eventHeader != null) {
+    boolean eventKnown;
+synchronized (this.registeredEvents) {
+      eventKnown=this.registeredEvents.contains(eventHeader.getEventType());
+    }
+    if (!eventKnown) {
+      ServerTransaction serverTransaction=requestEvent.getServerTransaction();
+      SipProvider jainSipProvider=(SipProvider)requestEvent.getSource();
+      if (serverTransaction == null) {
+        try {
+          serverTransaction=jainSipProvider.getNewServerTransaction(request);
+        }
+ catch (        TransactionAlreadyExistsException ex) {
+          logger.error("Failed to create a new server" + "transaction for an incoming request\n" + "(Next message contains the request)",ex);
+          return;
+        }
+catch (        TransactionUnavailableException ex) {
+          logger.error("Failed to create a new server" + "transaction for an incoming request\n" + "(Next message contains the request)",ex);
+          return;
+        }
+      }
+      Response response=null;
+      try {
+        response=this.getMessageFactory().createResponse(Response.BAD_EVENT,request);
+      }
+ catch (      ParseException e) {
+        logger.error("failed to create the 489 response",e);
+        return;
+      }
+      try {
+        serverTransaction.sendResponse(response);
+      }
+ catch (      SipException e) {
+        logger.error("failed to send the response",e);
+      }
+catch (      InvalidArgumentException e) {
+        logger.error("invalid argument provided while trying" + " to send the response",e);
+      }
+    }
+  }
   String method=request.getMethod();
   SipListener processor=(SipListener)methodProcessors.get(method);
   if (processor == null) {

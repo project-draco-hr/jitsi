@@ -7,8 +7,15 @@
       String method=(String)supportedMethods.next();
       if (method.equals(Request.REGISTER))       continue;
       optionsOK.addHeader(provider.getHeaderFactory().createAllowHeader(method));
-      optionsOK.setHeader(provider.getSipCommUserAgentHeader());
     }
+    Iterator events=provider.getKnownEventsList().iterator();
+synchronized (provider.getKnownEventsList()) {
+      while (events.hasNext()) {
+        String event=(String)events.next();
+        optionsOK.addHeader(provider.getHeaderFactory().createAllowEventsHeader(event));
+      }
+    }
+    optionsOK.setHeader(provider.getSipCommUserAgentHeader());
   }
  catch (  ParseException ex) {
     logger.warn("Failed to create an incoming OPTIONS request",ex);
