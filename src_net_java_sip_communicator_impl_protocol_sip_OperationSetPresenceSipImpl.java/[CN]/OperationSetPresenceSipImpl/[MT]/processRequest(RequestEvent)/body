@@ -1,4 +1,7 @@
 {
+  if (this.presenceEnabled == false) {
+    return;
+  }
   ServerTransaction serverTransaction=requestEvent.getServerTransaction();
   SipProvider jainSipProvider=(SipProvider)requestEvent.getSource();
   Request request=requestEvent.getRequest();
@@ -133,7 +136,7 @@ catch (    InvalidArgumentException e) {
     ExpiresHeader expHeader=request.getExpires();
     int expires;
     if (expHeader == null) {
-      expires=SUBSCRIBE_DEFAULT_EXPIRE;
+      expires=PRESENCE_DEFAULT_EXPIRE;
     }
  else {
       expires=expHeader.getExpires();
@@ -165,7 +168,7 @@ catch (    InvalidArgumentException e) {
       }
       return;
     }
-    if (this.ourWatchers.contains(contact)) {
+    if (this.ourWatchers.contains(contact) && expires != 0 && contact.getServerDialog().equals(serverTransaction.getDialog())) {
       contact.getTimeoutTask().cancel();
       watcherTimeoutTask timeout=new watcherTimeoutTask(contact);
       contact.setTimeoutTask(timeout);
@@ -243,7 +246,34 @@ synchronized (this.ourWatchers) {
       }
       return;
     }
-    contact.setServerDialog(serverTransaction.getDialog());
+    if (this.ourWatchers.contains(contact) && !contact.getServerDialog().equals(serverTransaction.getDialog())) {
+      logger.debug("contact " + contact + " try to resubscribe, "+ "we will remove the first subscription");
+      ClientTransaction transac=null;
+      try {
+        transac=createNotify(contact,getPidfPresenceStatus((ContactSipImpl)getLocalContact()),SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.DEACTIVATED);
+      }
+ catch (      OperationFailedException e) {
+        logger.error("failed to create the new notify",e);
+        return;
+      }
+      contact.setServerDialog(null);
+synchronized (this.ourWatchers) {
+        this.ourWatchers.remove(contact);
+      }
+      if (contact.getTimeoutTask() != null) {
+        contact.getTimeoutTask().cancel();
+      }
+      try {
+        dialog.sendRequest(transac);
+      }
+ catch (      Exception e) {
+        logger.error("Can't send the request",e);
+        return;
+      }
+    }
+synchronized (contact) {
+      contact.setServerDialog(serverTransaction.getDialog());
+    }
     dialog=contact.getServerDialog();
     Response response=null;
     try {

@@ -5,11 +5,18 @@
     logger.debug("Contact " + contactIdentifier + " already exists.");
     throw new OperationFailedException("Contact " + contactIdentifier + " already exists.",OperationFailedException.SUBSCRIPTION_ALREADY_EXISTS);
   }
+  if (this.presenceEnabled == false) {
+    contact=new ContactSipImpl(contactIdentifier,this.parentProvider);
+    ((ContactGroupSipImpl)parentGroup).addContact(contact);
+    fireSubscriptionEvent(contact,parentGroup,SubscriptionEvent.SUBSCRIPTION_CREATED);
+    fireSubscriptionEvent(contact,parentGroup,SubscriptionEvent.SUBSCRIPTION_RESOLVED);
+    return;
+  }
   assertConnected();
   contact=new ContactSipImpl(contactIdentifier,this.parentProvider);
   Request subscription;
   try {
-    subscription=createSubscription(contact,SUBSCRIBE_DEFAULT_EXPIRE);
+    subscription=createSubscription(contact,this.subscriptionDuration);
   }
  catch (  OperationFailedException ex) {
     logger.error("Failed to create the subcription",ex);

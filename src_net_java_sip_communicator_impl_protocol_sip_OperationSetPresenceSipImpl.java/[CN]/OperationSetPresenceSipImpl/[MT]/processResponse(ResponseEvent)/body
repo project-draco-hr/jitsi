@@ -1,4 +1,7 @@
 {
+  if (this.presenceEnabled == false) {
+    return;
+  }
   ClientTransaction clientTransaction=responseEvent.getClientTransaction();
   Response response=responseEvent.getResponse();
   CSeqHeader cseq=((CSeqHeader)response.getHeader(CSeqHeader.NAME));
@@ -135,8 +138,12 @@ synchronized (this.waitedCallIds) {
         String contactAddress=((FromHeader)response.getHeader(FromHeader.NAME)).getAddress().getURI().toString();
         Contact watcher=getWatcher(contactAddress);
         if (watcher != null) {
+synchronized (watcher) {
+            if (((ContactSipImpl)watcher).getServerDialog().equals(clientTransaction.getDialog())) {
 synchronized (this.ourWatchers) {
-            this.ourWatchers.remove(watcher);
+                this.ourWatchers.remove(watcher);
+              }
+            }
           }
         }
       }
@@ -146,8 +153,12 @@ synchronized (this.ourWatchers) {
       String contactAddress=((FromHeader)response.getHeader(FromHeader.NAME)).getAddress().getURI().toString();
       Contact watcher=getWatcher(contactAddress);
       if (watcher != null) {
+synchronized (watcher) {
+          if (((ContactSipImpl)watcher).getServerDialog().equals(clientTransaction.getDialog())) {
 synchronized (this.ourWatchers) {
-          this.ourWatchers.remove(watcher);
+              this.ourWatchers.remove(watcher);
+            }
+          }
         }
       }
     }

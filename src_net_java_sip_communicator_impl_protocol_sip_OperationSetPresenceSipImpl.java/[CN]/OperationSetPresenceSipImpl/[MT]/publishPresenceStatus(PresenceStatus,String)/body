@@ -5,14 +5,14 @@
   this.statusMessage=statusMsg;
   this.fireProviderStatusChangeEvent(oldStatus);
   this.fireProviderMsgStatusChangeEvent(oldMessage);
+  if (this.presenceEnabled == false) {
+    return;
+  }
   if (!status.equals(SipStatusEnum.OFFLINE)) {
     assertConnected();
   }
-  if (status.equals(SipStatusEnum.OFFLINE)) {
-    unsubscribeToAllContact();
-  }
   if (this.useDistantPA) {
-    Request req=createPublish(PUBLISH_DEFAULT_EXPIRE,true);
+    Request req=createPublish(this.subscriptionDuration,true);
     if (status.equals(SipStatusEnum.OFFLINE)) {
 synchronized (this.waitedCallIds) {
         this.waitedCallIds.add(((CallIdHeader)req.getHeader(CallIdHeader.NAME)).getCallId());
@@ -68,10 +68,11 @@ synchronized (this.waitedCallIds) {
         }
       }
       if (status.equals(SipStatusEnum.OFFLINE)) {
-synchronized (this.ourWatchers) {
-          this.ourWatchers.removeAllElements();
-        }
+        this.ourWatchers.removeAllElements();
       }
     }
+  }
+  if (status.equals(SipStatusEnum.OFFLINE)) {
+    unsubscribeToAllContact();
   }
 }

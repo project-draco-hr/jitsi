@@ -1,6 +1,8 @@
 {
   if (evt.getNewState() == RegistrationState.UNREGISTERING) {
-    timer.cancel();
+    if (timer != null) {
+      timer.cancel();
+    }
     try {
       publishPresenceStatus(SipStatusEnum.OFFLINE,"");
     }
@@ -22,12 +24,12 @@ synchronized (this) {
         }
       }
     }
-    PresenceStatus oldStatus=presenceStatus;
-    presenceStatus=SipStatusEnum.OFFLINE;
-    fireProviderStatusChangeEvent(oldStatus);
   }
  else   if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
     logger.debug("enter registered state");
+    if (presenceEnabled == false) {
+      return;
+    }
     Iterator groupsIter=getServerStoredContactListRoot().subgroups();
     while (groupsIter.hasNext()) {
       ContactGroupSipImpl group=(ContactGroupSipImpl)groupsIter.next();
@@ -43,6 +45,6 @@ synchronized (this) {
     }
     timer=new Timer(true);
     pollingTask=new PollOfflineContactsTask();
-    timer.schedule(pollingTask,POLLING_TASK_PERIOD,POLLING_TASK_PERIOD);
+    timer.schedule(pollingTask,pollingTaskPeriod,pollingTaskPeriod);
   }
 }
