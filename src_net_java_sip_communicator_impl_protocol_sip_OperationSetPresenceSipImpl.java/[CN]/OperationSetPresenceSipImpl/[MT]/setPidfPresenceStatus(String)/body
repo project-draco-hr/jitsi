@@ -39,17 +39,18 @@
         if (activityNode.getNodeType() != Node.ELEMENT_NODE) {
           continue;
         }
-        if (activityNode.getNodeName().equals(AWAY_ELEMENT) || activityNode.getNodeName().equals(BUSY_ELEMENT)) {
-          activity=(Element)activityNode;
-          break;
-        }
-      }
-      if (activity != null) {
+        activity=(Element)activityNode;
         if (activity.getNodeName().equals(AWAY_ELEMENT)) {
           personStatus=SipStatusEnum.AWAY;
+          break;
         }
  else         if (activity.getNodeName().equals(BUSY_ELEMENT)) {
-          personStatus=SipStatusEnum.DO_NOT_DISTURB;
+          personStatus=SipStatusEnum.BUSY;
+          break;
+        }
+ else         if (activity.getNodeName().equals(OTP_ELEMENT)) {
+          personStatus=SipStatusEnum.ON_THE_PHONE;
+          break;
         }
       }
     }
@@ -128,13 +129,14 @@
         }
         Element note=(Element)noteNode;
         String state=getTextContent(note);
-        if (state.equalsIgnoreCase(SipStatusEnum.AWAY.getStatusName())) {
-          changed=true;
-          changePresenceStatusForContact(sipcontact,SipStatusEnum.AWAY);
-        }
- else         if (state.equalsIgnoreCase(SipStatusEnum.DO_NOT_DISTURB.getStatusName())) {
-          changed=true;
-          changePresenceStatusForContact(sipcontact,SipStatusEnum.DO_NOT_DISTURB);
+        Iterator states=SipStatusEnum.supportedStatusSet();
+        while (states.hasNext()) {
+          SipStatusEnum current=(SipStatusEnum)states.next();
+          if (current.getStatusName().equalsIgnoreCase(state)) {
+            changed=true;
+            changePresenceStatusForContact(sipcontact,current);
+            break;
+          }
         }
       }
       if (changed == false) {
