@@ -1,0 +1,28 @@
+{
+  ChatRoomWrapper chatRoomWrapper=null;
+  ChatRoom chatRoom=null;
+  int serverIndex=listModel.indexOf(protocolProvider);
+  for (int i=serverIndex + 1; i < listModel.size(); i++) {
+    Object o=listModel.get(i);
+    if (!(o instanceof ChatRoomWrapper))     break;
+    chatRoomWrapper=(ChatRoomWrapper)o;
+    try {
+      chatRoom=opSet.findRoom(chatRoomWrapper.getChatRoomName());
+    }
+ catch (    OperationFailedException e1) {
+      logger.error("Failed to find chat room with name:" + chatRoomWrapper.getChatRoomName(),e1);
+    }
+catch (    OperationNotSupportedException e1) {
+      logger.error("Failed to find chat room with name:" + chatRoomWrapper.getChatRoomName(),e1);
+    }
+    if (chatRoom != null) {
+      chatRoomWrapper.setChatRoom(chatRoom);
+      try {
+        chatRoom.join();
+      }
+ catch (      OperationFailedException e) {
+        logger.error("Failed to join chat room: " + chatRoomWrapper.getChatRoomName(),e);
+      }
+    }
+  }
+}
