@@ -1,6 +1,5 @@
 {
   Map supportedOperationSets=protocolProvider.getSupportedOperationSets();
-  this.protocolSupportedOperationSets.put(protocolProvider,supportedOperationSets);
   String ppOpSetClassName=OperationSetPersistentPresence.class.getName();
   String pOpSetClassName=OperationSetPresence.class.getName();
   if (supportedOperationSets.containsKey(ppOpSetClassName) || supportedOperationSets.containsKey(pOpSetClassName)) {
@@ -8,7 +7,6 @@
     if (presence == null) {
       presence=(OperationSetPresence)supportedOperationSets.get(pOpSetClassName);
     }
-    this.protocolPresenceSets.put(protocolProvider,presence);
     presence.addProviderPresenceStatusListener(new GUIProviderPresenceStatusListener());
     presence.addContactPresenceStatusListener(new GUIContactPresenceStatusListener());
   }
@@ -25,7 +23,6 @@
   String wciOpSetClassName=OperationSetWebContactInfo.class.getName();
   if (supportedOperationSets.containsKey(wciOpSetClassName)) {
     OperationSetWebContactInfo wContactInfo=(OperationSetWebContactInfo)supportedOperationSets.get(wciOpSetClassName);
-    this.webContactInfoOperationSets.put(protocolProvider,wContactInfo);
   }
   String telOpSetClassName=OperationSetBasicTelephony.class.getName();
   if (supportedOperationSets.containsKey(telOpSetClassName)) {
@@ -33,14 +30,13 @@
     telephony.addCallListener(callManager);
     this.getContactListPanel().getContactList().addListSelectionListener(callManager);
     this.tabbedPane.addChangeListener(callManager);
-    this.protocolTelephonySets.put(protocolProvider,telephony);
   }
   String multiChatClassName=OperationSetMultiUserChat.class.getName();
   if (supportedOperationSets.containsKey(multiChatClassName)) {
     OperationSetMultiUserChat multiUserChat=(OperationSetMultiUserChat)supportedOperationSets.get(multiChatClassName);
-    multiUserChat.addInvitationListener(multiChatManager);
-    multiUserChat.addInvitationRejectionListener(multiChatManager);
+    multiUserChat.addInvitationListener(multiUserChatManager);
+    multiUserChat.addInvitationRejectionListener(multiUserChatManager);
+    multiUserChat.addPresenceListener(multiUserChatManager);
     this.getChatRoomsListPanel().getChatRoomsList().addChatServer(protocolProvider,multiUserChat);
-    this.multiUserChatOperationSets.put(protocolProvider,multiUserChat);
   }
 }
