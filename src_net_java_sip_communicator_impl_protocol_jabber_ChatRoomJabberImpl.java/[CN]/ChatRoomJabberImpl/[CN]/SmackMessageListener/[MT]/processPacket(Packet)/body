@@ -1,0 +1,28 @@
+{
+  if (!(packet instanceof org.jivesoftware.smack.packet.Message))   return;
+  org.jivesoftware.smack.packet.Message msg=(org.jivesoftware.smack.packet.Message)packet;
+  if (msg.getBody() == null)   return;
+  String fromUserName=StringUtils.parseResource(msg.getFrom());
+  if (fromUserName.equals(nickname))   return;
+  ChatRoomMember member=smackParticipantToScMember(msg.getFrom());
+  if (logger.isDebugEnabled()) {
+    logger.debug("Received from " + fromUserName + " the message "+ msg.toXML());
+  }
+  Message newMessage=createMessage(msg.getBody());
+  if (msg.getType() == org.jivesoftware.smack.packet.Message.Type.error) {
+    logger.info("Message error received from " + fromUserName);
+    int errorCode=packet.getError().getCode();
+    int errorResultCode=ChatRoomMessageDeliveryFailedEvent.UNKNOWN_ERROR;
+    if (errorCode == 503) {
+      org.jivesoftware.smackx.packet.MessageEvent msgEvent=(org.jivesoftware.smackx.packet.MessageEvent)packet.getExtension("x","jabber:x:event");
+      if (msgEvent != null && msgEvent.isOffline()) {
+        errorResultCode=ChatRoomMessageDeliveryFailedEvent.OFFLINE_MESSAGES_NOT_SUPPORTED;
+      }
+    }
+    ChatRoomMessageDeliveryFailedEvent evt=new ChatRoomMessageDeliveryFailedEvent(ChatRoomJabberImpl.this,member,errorResultCode,new Date(),newMessage);
+    fireMessageEvent(evt);
+    return;
+  }
+  ChatRoomMessageReceivedEvent msgReceivedEvt=new ChatRoomMessageReceivedEvent(ChatRoomJabberImpl.this,member,new Date(),newMessage);
+  fireMessageEvent(msgReceivedEvt);
+}
