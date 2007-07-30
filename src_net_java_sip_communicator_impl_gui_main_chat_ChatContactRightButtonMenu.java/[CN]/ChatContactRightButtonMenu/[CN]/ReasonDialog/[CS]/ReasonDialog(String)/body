@@ -1,0 +1,41 @@
+{
+  super(chatPanel.getChatWindow());
+  this.setTitle(Messages.getI18NString("reason").getText());
+  this.operationType=operation;
+  this.buttonsPanel.add(okButton);
+  this.buttonsPanel.add(cancelButton);
+  okButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      ChatRoomWrapper chatRoomWrapper=(ChatRoomWrapper)chatPanel.getChatIdentifier();
+      ChatRoom chatRoom=chatRoomWrapper.getChatRoom();
+      if (chatRoom == null) {
+        new ErrorDialog(chatPanel.getChatWindow(),Messages.getI18NString("chatRoomNotJoined").getText(),Messages.getI18NString("error").getText()).setVisible(true);
+        return;
+      }
+      if (operationType.equals(KICK_OPERATION)) {
+        new KickParticipantThread(chatRoom,reasonField.getText()).start();
+      }
+ else       if (operationType.equals(BAN_OPERATION)) {
+        new BanParticipantThread(chatRoom,reasonField.getText()).start();
+      }
+      ReasonDialog.this.dispose();
+    }
+  }
+);
+  cancelButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      ReasonDialog.this.dispose();
+    }
+  }
+);
+  this.infoLabel.setFont(infoLabel.getFont().deriveFont(Font.BOLD));
+  this.titlePanel.add(iconLabel,BorderLayout.WEST);
+  this.titlePanel.add(infoLabel,BorderLayout.CENTER);
+  this.mainPanel.add(titlePanel,BorderLayout.NORTH);
+  this.mainPanel.add(reasonLabel,BorderLayout.WEST);
+  this.mainPanel.add(reasonField,BorderLayout.CENTER);
+  this.mainPanel.add(buttonsPanel,BorderLayout.SOUTH);
+  this.mainPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+  this.getContentPane().add(mainPanel);
+  this.pack();
+}

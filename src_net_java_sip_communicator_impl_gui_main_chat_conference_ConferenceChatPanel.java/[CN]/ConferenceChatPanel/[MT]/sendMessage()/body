@@ -1,10 +1,17 @@
 {
   String body=this.getTextFromWriteArea();
+  ChatRoom chatRoom=chatRoomWrapper.getChatRoom();
   Message msg=chatRoom.createMessage(body);
   try {
     chatRoom.sendMessage(msg);
   }
- catch (  Exception ex) {
+ catch (  IllegalStateException ex) {
+    logger.error("Failed to send message.",ex);
+    this.refreshWriteArea();
+    this.processMessage(chatRoom.getName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,msg.getContent(),msg.getContentType());
+    this.processMessage(chatRoom.getName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,Messages.getI18NString("msgSendConnectionProblem").getText(),"text");
+  }
+catch (  Exception ex) {
     logger.error("Failed to send message.",ex);
     this.refreshWriteArea();
     this.processMessage(chatRoom.getName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,msg.getContent(),msg.getContentType());
