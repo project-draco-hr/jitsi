@@ -1,0 +1,28 @@
+{
+  String prefix="net.java.sip.communicator.impl.gui.accounts";
+  List accounts=configService.getPropertyNamesByPrefix(prefix,true);
+  Iterator accountsIter=accounts.iterator();
+  while (accountsIter.hasNext()) {
+    String accountRootPropName=(String)accountsIter.next();
+    String accountUID=configService.getString(accountRootPropName);
+    if (accountUID.equals(protocolProvider.getAccountID().getAccountUniqueID())) {
+      List chatRooms=configService.getPropertyNamesByPrefix(accountRootPropName + ".chatRooms",true);
+      Iterator chatRoomsIter=chatRooms.iterator();
+      boolean isExistingChatRoom=false;
+      while (chatRoomsIter.hasNext()) {
+        String chatRoomPropName=(String)chatRoomsIter.next();
+        String chatRoomID=configService.getString(chatRoomPropName);
+        if (!oldChatRoomId.equals(chatRoomID))         continue;
+        isExistingChatRoom=true;
+        configService.setProperty(chatRoomPropName,newChatRoomId);
+        configService.setProperty(chatRoomPropName + ".chatRoomName",newChatRoomName);
+      }
+      if (!isExistingChatRoom) {
+        String chatRoomNodeName="chatRoom" + Long.toString(System.currentTimeMillis());
+        String chatRoomPackage=accountRootPropName + ".chatRooms." + chatRoomNodeName;
+        configService.setProperty(chatRoomPackage,newChatRoomId);
+        configService.setProperty(chatRoomPackage + ".chatRoomName",newChatRoomName);
+      }
+    }
+  }
+}
