@@ -3,6 +3,7 @@
   AccountID accountID=protocolProvider.getAccountID();
   logger.trace("Protocol provider: " + protocolProvider + " changed its state to: "+ evt.getNewState().getStateName());
   OperationSetPresence presence=mainFrame.getProtocolPresenceOpSet(protocolProvider);
+  OperationSetMultiUserChat multiUserChat=mainFrame.getMultiUserChatOpSet(protocolProvider);
   if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
     this.mainFrame.getStatusPanel().updateStatus(protocolProvider);
     if (mainFrame.getCallManager().containsCallAccount(protocolProvider)) {
@@ -10,6 +11,9 @@
     }
     if (presence != null) {
       presence.setAuthorizationHandler(new AuthorizationHandlerImpl(mainFrame));
+    }
+    if (multiUserChat != null) {
+      mainFrame.getChatRoomsListPanel().getChatRoomsList().synchronizeOpSetWithLocalContactList(protocolProvider,multiUserChat);
     }
   }
  else   if (evt.getNewState().equals(RegistrationState.AUTHENTICATION_FAILED)) {
