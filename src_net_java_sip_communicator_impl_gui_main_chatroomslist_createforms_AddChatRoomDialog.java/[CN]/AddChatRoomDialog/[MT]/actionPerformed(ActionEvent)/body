@@ -1,0 +1,30 @@
+{
+  JButton button=(JButton)e.getSource();
+  String name=button.getName();
+  if (name.equals("add")) {
+    new Thread(){
+      public void run(){
+        ChatRoom newChatRoom=null;
+        String chatRoomName=namePanel.getChatRoomName();
+        try {
+          newChatRoom=multiUserChatOpSet.createChatRoom(chatRoomName,new Hashtable());
+          mainFrame.getChatRoomsListPanel().getChatRoomsList().addChatRoom(new ChatRoomWrapper(newChatRoom));
+        }
+ catch (        OperationFailedException e) {
+          new ErrorDialog(mainFrame,Messages.getI18NString("failedToCreateChatRoom",new String[]{chatRoomName}).getText(),Messages.getI18NString("error").getText()).showDialog();
+          logger.error("Failed to create chat room with name: " + namePanel.getChatRoomName(),e);
+        }
+catch (        OperationNotSupportedException e) {
+          new ErrorDialog(mainFrame,Messages.getI18NString("createChatRoomNotSupported",new String[]{chatRoomName,protocolProvider.getAccountID().getService()}).getText(),Messages.getI18NString("error").getText()).showDialog();
+          logger.error("Failed to create chat room with name: " + namePanel.getChatRoomName(),e);
+        }
+catch (        Exception e) {
+          new ErrorDialog(mainFrame,Messages.getI18NString("failedToCreateChatRoom",new String[]{chatRoomName}).getText(),Messages.getI18NString("error").getText()).showDialog();
+          logger.error("Failed to create chat room with name: " + namePanel.getChatRoomName(),e);
+        }
+      }
+    }
+.start();
+  }
+  this.dispose();
+}
