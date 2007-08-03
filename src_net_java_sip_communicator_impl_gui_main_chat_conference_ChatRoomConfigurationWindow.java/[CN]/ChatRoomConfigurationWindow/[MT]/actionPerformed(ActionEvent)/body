@@ -1,0 +1,43 @@
+{
+  JButton button=(JButton)e.getSource();
+  if (button.equals(saveButton)) {
+    Iterator configurationSet=configForm.getConfigurationSet();
+    while (configurationSet.hasNext()) {
+      ChatRoomConfigurationFormField formField=(ChatRoomConfigurationFormField)configurationSet.next();
+      if (formField.getType().equals(ChatRoomConfigurationFormField.TYPE_TEXT_FIXED))       continue;
+      JComponent c=(JComponent)uiFieldsTable.get(formField.getName());
+      if (c instanceof JTextComponent) {
+        String newValue=((JTextComponent)c).getText();
+        formField.addValue(newValue);
+      }
+ else       if (c instanceof AbstractButton) {
+        boolean isSelected=((AbstractButton)c).isSelected();
+        formField.addValue(new Boolean(isSelected));
+      }
+ else       if (c instanceof JComboBox) {
+        Object selectedObject=((JComboBox)c).getSelectedItem();
+        formField.addValue(selectedObject);
+      }
+ else       if (c instanceof JPanel) {
+        Component[] components=c.getComponents();
+        for (int i=0; i < components.length; i++) {
+          if (!(components[i] instanceof JCheckBox))           continue;
+          JCheckBox checkBox=(JCheckBox)components[i];
+          formField.addValue(checkBox.getText());
+        }
+      }
+    }
+    new Thread(){
+      public void run(){
+        try {
+          configForm.submit();
+        }
+ catch (        Exception e) {
+          new ErrorDialog(ChatRoomConfigurationWindow.this,Messages.getI18NString("chatRoomConfigFormSubmitFailed").getText(),e,Messages.getI18NString("error").getText()).showDialog();
+        }
+      }
+    }
+.start();
+  }
+  this.dispose();
+}

@@ -1,0 +1,96 @@
+{
+  Iterator configurationSet=configForm.getConfigurationSet();
+  int labelWidth=computeLabelWidth(configForm);
+  while (configurationSet.hasNext()) {
+    ChatRoomConfigurationFormField formField=(ChatRoomConfigurationFormField)configurationSet.next();
+    Iterator values=formField.getValues();
+    Iterator options=formField.getOptions();
+    JComponent field=null;
+    JLabel label=new JLabel();
+    if (formField.getLabel() != null) {
+      label.setText(formField.getLabel() + ": ");
+    }
+    String fieldType=formField.getType();
+    if (fieldType.equals(ChatRoomConfigurationFormField.TYPE_BOOLEAN)) {
+      field=new JCheckBox(formField.getLabel());
+      if (values.hasNext()) {
+        ((JCheckBox)field).setSelected(((Boolean)values.next()).booleanValue());
+      }
+    }
+ else     if (fieldType.equals(ChatRoomConfigurationFormField.TYPE_TEXT_FIXED)) {
+      field=new JTextArea();
+      ((JTextArea)field).setEditable(false);
+      if (values.hasNext()) {
+        String value=values.next().toString();
+        ((JTextArea)field).setText(value);
+      }
+    }
+ else     if (fieldType.equals(ChatRoomConfigurationFormField.TYPE_LIST_MULTI)) {
+      field=new JPanel(new GridLayout(0,1));
+      field.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+      Hashtable optionCheckBoxes=new Hashtable();
+      while (options.hasNext()) {
+        Object option=options.next();
+        JCheckBox checkBox=new JCheckBox(option.toString());
+        field.add(checkBox);
+        optionCheckBoxes.put(option,checkBox);
+      }
+      while (values.hasNext()) {
+        Object value=values.next();
+        ((JCheckBox)optionCheckBoxes.get(value)).setSelected(true);
+      }
+    }
+ else     if (fieldType.equals(ChatRoomConfigurationFormField.TYPE_LIST_SINGLE)) {
+      field=new JComboBox();
+      while (options.hasNext()) {
+        ((JComboBox)field).addItem(options.next());
+      }
+      if (values.hasNext()) {
+        ((JComboBox)field).setSelectedItem(values.next());
+      }
+    }
+ else     if (fieldType.equals(ChatRoomConfigurationFormField.TYPE_TEXT_MULTI)) {
+      field=new JEditorPane();
+      if (values.hasNext()) {
+        String value=values.next().toString();
+        ((JEditorPane)field).setText(value);
+      }
+    }
+ else     if (fieldType.equals(ChatRoomConfigurationFormField.TYPE_TEXT_SINGLE)) {
+      field=new JTextField();
+      if (values.hasNext()) {
+        String value=values.next().toString();
+        ((JTextField)field).setText(value);
+      }
+    }
+ else     if (fieldType.equals(ChatRoomConfigurationFormField.TYPE_TEXT_PRIVATE)) {
+      field=new JPasswordField();
+      if (values.hasNext()) {
+        String value=values.next().toString();
+        ((JPasswordField)field).setText(value);
+      }
+    }
+ else {
+      if (label.getText() == null)       continue;
+      field=new JTextField();
+      if (values.hasNext()) {
+        String value=values.next().toString();
+        ((JTextField)field).setText(value);
+      }
+    }
+    if (!fieldType.equals(ChatRoomConfigurationFormField.TYPE_TEXT_FIXED)) {
+      uiFieldsTable.put(formField.getName(),field);
+    }
+    if (fieldType.equals(ChatRoomConfigurationFormField.TYPE_BOOLEAN)) {
+      roomOptionsPanel.add(field);
+    }
+ else {
+      JPanel fieldPanel=new JPanel(new BorderLayout());
+      fieldPanel.setBorder(BorderFactory.createEmptyBorder(0,0,10,0));
+      label.setPreferredSize(new Dimension(labelWidth,30));
+      fieldPanel.add(label,BorderLayout.WEST);
+      fieldPanel.add(field,BorderLayout.CENTER);
+      this.mainPanel.add(fieldPanel);
+    }
+  }
+}

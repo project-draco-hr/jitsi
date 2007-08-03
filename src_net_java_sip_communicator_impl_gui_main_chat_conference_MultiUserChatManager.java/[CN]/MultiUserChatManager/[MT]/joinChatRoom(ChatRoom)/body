@@ -1,0 +1,24 @@
+{
+  try {
+    chatRoom.join();
+  }
+ catch (  OperationFailedException e) {
+    if (e.getErrorCode() == OperationFailedException.AUTHENTICATION_FAILED) {
+      ChatRoomAuthenticationWindow authWindow=new ChatRoomAuthenticationWindow(mainFrame,chatRoom);
+      authWindow.setVisible(true);
+    }
+ else     if (e.getErrorCode() == OperationFailedException.REGISTRATION_REQUIRED) {
+      new ErrorDialog(mainFrame,Messages.getI18NString("chatRoomRegistrationRequired",new String[]{chatRoom.getName()}).getText(),e,Messages.getI18NString("error").getText()).showDialog();
+    }
+ else     if (e.getErrorCode() == OperationFailedException.PROVIDER_NOT_REGISTERED) {
+      new ErrorDialog(mainFrame,Messages.getI18NString("chatRoomNotConnected",new String[]{chatRoom.getName()}).getText(),e,Messages.getI18NString("error").getText()).showDialog();
+    }
+ else     if (e.getErrorCode() == OperationFailedException.SUBSCRIPTION_ALREADY_EXISTS) {
+      new ErrorDialog(mainFrame,Messages.getI18NString("chatRoomAlreadyJoined",new String[]{chatRoom.getName()}).getText(),e,Messages.getI18NString("error").getText()).showDialog();
+    }
+ else {
+      new ErrorDialog(mainFrame,Messages.getI18NString("failedToJoinChatRoom",new String[]{chatRoom.getName()}).getText(),e,Messages.getI18NString("error").getText()).showDialog();
+    }
+    logger.error("Failed to join chat room: " + chatRoom.getName(),e);
+  }
+}
