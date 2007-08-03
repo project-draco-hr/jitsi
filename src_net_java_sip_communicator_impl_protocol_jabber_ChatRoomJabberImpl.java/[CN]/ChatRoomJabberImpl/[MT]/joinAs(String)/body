@@ -1,19 +1,28 @@
 {
+  this.assertConnected();
   this.nickname=nickname;
   try {
     multiUserChat.join(nickname);
-    try {
-      this.multiUserChatConfigForm=multiUserChat.getConfigurationForm();
-    }
- catch (    XMPPException e) {
-      logger.error("",e);
-    }
     ChatRoomMemberJabberImpl member=new ChatRoomMemberJabberImpl(this,nickname,provider.getAccountID().getAccountAddress(),ChatRoomMemberRole.GUEST);
     members.put(nickname,member);
     opSetMuc.fireLocalUserPresenceEvent(this,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
   }
  catch (  XMPPException ex) {
-    logger.error("Failed to join room " + getName() + " with nickname: "+ nickname,ex);
-    throw new OperationFailedException("Failed to join room " + getName() + " with nickname: "+ nickname,OperationFailedException.GENERAL_ERROR,ex);
+    String errorMessage;
+    if (ex.getXMPPError().getCode() == 401) {
+      errorMessage="Failed to join chat room " + getName() + " with nickname: "+ nickname+ ". The chat room requests a password.";
+      logger.error(errorMessage,ex);
+      throw new OperationFailedException(errorMessage,OperationFailedException.AUTHENTICATION_FAILED,ex);
+    }
+ else     if (ex.getXMPPError().getCode() == 407) {
+      errorMessage="Failed to join chat room " + getName() + " with nickname: "+ nickname+ ". The chat room requires registration.";
+      logger.error(errorMessage,ex);
+      throw new OperationFailedException(errorMessage,OperationFailedException.REGISTRATION_REQUIRED,ex);
+    }
+ else {
+      errorMessage="Failed to join room " + getName() + " with nickname: "+ nickname;
+      logger.error(errorMessage,ex);
+      throw new OperationFailedException(errorMessage,OperationFailedException.GENERAL_ERROR,ex);
+    }
   }
 }
