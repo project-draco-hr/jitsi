@@ -1,15 +1,72 @@
 {
-  if (e.getClickCount() > 1) {
-    int selectedIndex=this.locationToIndex(e.getPoint());
-    ContactListModel listModel=(ContactListModel)this.getModel();
-    Object element=listModel.getElementAt(selectedIndex);
-    if (element instanceof MetaContactGroup) {
-      MetaContactGroup group=(MetaContactGroup)element;
+  int selectedIndex=this.getSelectedIndex();
+  Object selectedValue=this.getSelectedValue();
+  ContactListCellRenderer renderer=(ContactListCellRenderer)this.getCellRenderer().getListCellRendererComponent(this,selectedValue,selectedIndex,true,true);
+  Point selectedCellPoint=this.indexToLocation(selectedIndex);
+  int translatedX=e.getX() - selectedCellPoint.x;
+  if (selectedValue instanceof MetaContactGroup) {
+    MetaContactGroup group=(MetaContactGroup)selectedValue;
+    if (e.getClickCount() > 1) {
       if (listModel.isGroupClosed(group)) {
         listModel.openGroup(group);
       }
  else {
         listModel.closeGroup(group);
+      }
+    }
+    if ((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0 || (e.isControlDown() && !e.isMetaDown())) {
+      groupRightButtonMenu=new GroupRightButtonMenu(mainFrame,group);
+      SwingUtilities.convertPointToScreen(selectedCellPoint,this);
+      groupRightButtonMenu.setInvoker(this);
+      groupRightButtonMenu.setLocation(selectedCellPoint.x,selectedCellPoint.y + renderer.getHeight());
+      groupRightButtonMenu.setVisible(true);
+    }
+ else     if ((e.getModifiers() & InputEvent.BUTTON1_MASK) != 0) {
+      fireContactListEvent(group,ContactListEvent.GROUP_SELECTED,e.getClickCount());
+      Component component=this.getHorizontalComponent(renderer,translatedX);
+      if (component instanceof JPanel) {
+        if (component.getName() != null && component.getName().equals("buttonsPanel")) {
+          JPanel panel=(JPanel)component;
+          int internalX=translatedX - (renderer.getWidth() - panel.getWidth() - 2);
+          Component c=getHorizontalComponent(panel,internalX);
+          if (c instanceof JLabel) {
+            if (listModel.isGroupClosed(group)) {
+              listModel.openGroup(group);
+            }
+ else {
+              listModel.closeGroup(group);
+            }
+          }
+        }
+      }
+    }
+  }
+  if (selectedValue instanceof MetaContact) {
+    MetaContact contact=(MetaContact)selectedValue;
+    Component component=this.getHorizontalComponent(renderer,translatedX);
+    if (component instanceof JLabel) {
+      if ((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0 || (e.isControlDown() && !e.isMetaDown())) {
+        contactRightButtonMenu=new ContactRightButtonMenu(this,contact);
+        SwingUtilities.convertPointToScreen(selectedCellPoint,this);
+        contactRightButtonMenu.setInvoker(this);
+        contactRightButtonMenu.setLocation(selectedCellPoint.x,selectedCellPoint.y + renderer.getHeight());
+        contactRightButtonMenu.setVisible(true);
+      }
+ else       if ((e.getModifiers() & InputEvent.BUTTON1_MASK) != 0) {
+        fireContactListEvent(contact,ContactListEvent.CONTACT_SELECTED,e.getClickCount());
+      }
+    }
+ else     if (component instanceof JButton) {
+      SwingUtilities.invokeLater(new RunInfoWindow(selectedCellPoint,contact));
+    }
+ else     if (component instanceof JPanel) {
+      if (component.getName() != null && component.getName().equals("buttonsPanel")) {
+        JPanel panel=(JPanel)component;
+        int internalX=translatedX - (renderer.getWidth() - panel.getWidth() - 2);
+        Component c=getHorizontalComponent(panel,internalX);
+        if (c instanceof ContactProtocolButton) {
+          fireContactListEvent(contact,((ContactProtocolButton)c).getProtocolContact(),ContactListEvent.PROTOCOL_CONTACT_SELECTED);
+        }
       }
     }
   }
