@@ -2,7 +2,24 @@
   Object o=mainFrame.getContactListPanel().getContactList().getSelectedValue();
   if ((e.getFirstIndex() != -1 || e.getLastIndex() != -1) && (o instanceof MetaContact)) {
     setCallMetaContact(true);
-    callButton.setEnabled(true);
+    MetaContact mContact=(MetaContact)o;
+    Iterator contacts=mContact.getContacts();
+    boolean telephonySupported=false;
+    while (contacts.hasNext()) {
+      Contact contact=(Contact)contacts.next();
+      ProtocolProviderService pps=contact.getProtocolProvider();
+      if (pps.getOperationSet(OperationSetBasicTelephony.class) != null) {
+        mainFrame.getCallManager().getAccountSelectorBox().setSelected(pps);
+        telephonySupported=true;
+        break;
+      }
+    }
+    if (telephonySupported) {
+      callButton.setEnabled(true);
+    }
+ else {
+      callButton.setEnabled(false);
+    }
   }
  else   if (phoneNumberCombo.isComboFieldEmpty()) {
     callButton.setEnabled(false);
