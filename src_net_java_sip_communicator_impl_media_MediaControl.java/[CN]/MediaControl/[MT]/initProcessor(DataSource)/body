@@ -33,23 +33,28 @@ catch (  IOException ex) {
     for (int j=0; j < formats.length; j++) {
       Format format=formats[j];
       String encoding=format.getEncoding();
-      if (format instanceof AudioFormat) {
-        String sdp=MediaUtils.jmfToSdpEncoding(encoding);
-        if (sdp != null && !transmittableAudioEncodings.contains(sdp)) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("Audio=[" + (j + 1) + "]="+ encoding+ "; sdp="+ sdp);
+      int sdpInt=MediaUtils.jmfToSdpEncoding(encoding);
+      if (sdpInt != MediaUtils.UNKNOWN_ENCODING) {
+        String sdp=String.valueOf(sdpInt);
+        if (format instanceof AudioFormat) {
+          if (transmittableAudioEncodings.contains(sdp)) {
+            if (logger.isDebugEnabled()) {
+              logger.debug("Audio=[" + (j + 1) + "]="+ encoding+ "; sdp="+ sdp);
+            }
+            transmittableAudioEncodings.add(sdp);
           }
-          transmittableAudioEncodings.add(sdp);
+        }
+        if (format instanceof VideoFormat) {
+          if (!transmittableVideoEncodings.contains(sdp)) {
+            if (logger.isDebugEnabled()) {
+              logger.debug("Video=[" + (j + 1) + "]="+ encoding+ "; sdp="+ sdp);
+            }
+            transmittableVideoEncodings.add(sdp);
+          }
         }
       }
-      if (format instanceof VideoFormat) {
-        String sdp=MediaUtils.jmfToSdpEncoding(encoding);
-        if (sdp != null && !transmittableVideoEncodings.contains(sdp)) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("Video=[" + (j + 1) + "]="+ encoding+ "; sdp="+ sdp);
-          }
-          transmittableVideoEncodings.add(sdp);
-        }
+ else {
+        logger.debug("unknown encoding format " + encoding);
       }
     }
   }

@@ -1,14 +1,21 @@
 {
+  Set registeredPlugins=new HashSet();
+  for (Iterator plugins=PlugInManager.getPlugInList(null,null,PlugInManager.CODEC).iterator(); plugins.hasNext(); ) {
+    registeredPlugins.add(plugins.next());
+  }
   for (int i=0; i < customCodecs.length; i++) {
     String className=customCodecs[i];
-    try {
-      Class pic=Class.forName(className);
-      Object instance=pic.newInstance();
-      boolean result=PlugInManager.addPlugIn(className,((Codec)instance).getSupportedInputFormats(),((Codec)instance).getSupportedOutputFormats(null),PlugInManager.CODEC);
-      logger.debug("Codec : " + className + " is succsefully registered : "+ result);
-    }
- catch (    Exception ex) {
-      logger.debug("Codec : " + className + " is NOT succsefully registered");
+    if (registeredPlugins.contains(className))     logger.debug("Codec : " + className + " is already registered");
+ else {
+      try {
+        Class pic=Class.forName(className);
+        Object instance=pic.newInstance();
+        boolean result=PlugInManager.addPlugIn(className,((Codec)instance).getSupportedInputFormats(),((Codec)instance).getSupportedOutputFormats(null),PlugInManager.CODEC);
+        logger.debug("Codec : " + className + " is succsefully registered : "+ result);
+      }
+ catch (      Exception ex) {
+        logger.debug("Codec : " + className + " is NOT succsefully registered");
+      }
     }
   }
   try {
@@ -17,4 +24,7 @@
  catch (  IOException ex) {
     logger.error("Cannot commit to PlugInManager",ex);
   }
+  RTPManager rtpManager=RTPManager.newInstance();
+  CallSessionImpl.registerCustomCodecFormats(rtpManager);
+  rtpManager.dispose();
 }
