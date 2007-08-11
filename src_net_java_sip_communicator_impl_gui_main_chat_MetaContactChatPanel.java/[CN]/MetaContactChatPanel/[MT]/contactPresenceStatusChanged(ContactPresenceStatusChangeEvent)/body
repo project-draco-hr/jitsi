@@ -1,19 +1,19 @@
 {
   Contact sourceContact=evt.getSourceContact();
+  PresenceStatus newStatus=evt.getNewStatus();
   MetaContact sourceMetaContact=GuiActivator.getMetaContactListService().findMetaContactByContact(sourceContact);
   if (sourceMetaContact != null && metaContact.equals(sourceMetaContact)) {
     contactSelectorBox.updateContactStatus(sourceContact);
-    if (sourceMetaContact != null && sourceMetaContact.getDefaultContact().equals(sourceContact)) {
+    if (sourceMetaContact.getDefaultContact().equals(sourceContact)) {
       ChatContact chatContact=findChatContactByMetaContact(sourceMetaContact);
       ChatContactPanel chatContactPanel=getChatContactListPanel().getChatContactPanel(chatContact);
       chatContactPanel.setStatusIcon(chatContact.getPresenceStatus());
     }
-    PresenceStatus status=contactSelectorBox.getSelectedProtocolContact().getPresenceStatus();
-    String message=getChatConversationPanel().processMessage(sourceContact.getAddress(),new Date(System.currentTimeMillis()),Constants.STATUS_MESSAGE,Messages.getI18NString("statusChangedChatMessage",new String[]{status.getStatusName()}).getText(),"text");
+    String message=getChatConversationPanel().processMessage(sourceContact.getAddress(),new Date(System.currentTimeMillis()),Constants.STATUS_MESSAGE,Messages.getI18NString("statusChangedChatMessage",new String[]{newStatus.getStatusName()}).getText(),"text");
     getChatConversationPanel().appendMessageToEnd(message);
     if (Constants.TABBED_CHAT_WINDOW) {
       if (getChatWindow().getChatTabCount() > 0) {
-        getChatWindow().setTabIcon(this,new ImageIcon(Constants.getStatusIcon(status)));
+        getChatWindow().setTabIcon(this,new ImageIcon(Constants.getStatusIcon(newStatus)));
       }
     }
   }
