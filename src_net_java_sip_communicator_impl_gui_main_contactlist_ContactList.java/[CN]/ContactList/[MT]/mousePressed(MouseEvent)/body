@@ -13,7 +13,12 @@
     MetaContact mContact=(MetaContact)selectedValue;
     Component component=this.getHorizontalComponent(renderer,translatedX);
     if (component instanceof JLabel) {
-      draggedElement=new ContactListDraggable(mContact,null,component);
+      Image image=new BufferedImage(component.getWidth(),component.getHeight(),BufferedImage.TYPE_INT_ARGB);
+      Graphics g=image.getGraphics();
+      g.setColor(getBackground());
+      g.fillRect(0,0,image.getWidth(null),image.getHeight(null));
+      component.paint(image.getGraphics());
+      draggedElement=new ContactListDraggable(this,mContact,null,image);
     }
  else     if (component instanceof JPanel) {
       if (component.getName() != null && component.getName().equals("buttonsPanel")) {
@@ -21,27 +26,16 @@
         int internalX=translatedX - (renderer.getWidth() - panel.getWidth() - 2);
         Component c=getHorizontalComponent(panel,internalX);
         if (c instanceof ContactProtocolButton) {
-          draggedElement=new ContactListDraggable(mContact,((ContactProtocolButton)c).getProtocolContact(),component);
+          ContactProtocolButton cb=(ContactProtocolButton)c;
+          draggedElement=new ContactListDraggable(this,mContact,cb.getProtocolContact(),cb.getBgImage());
         }
       }
     }
-    if (draggedElement != null) {
-      Component src=draggedElement.getComponent();
-      Component c=src;
-      Image image;
-      if (c instanceof ContactProtocolButton) {
-        image=new BufferedImage(((ContactProtocolButton)c).getWidth(),((ContactProtocolButton)c).getHeight(),BufferedImage.TYPE_INT_ARGB);
-      }
- else {
-        image=new BufferedImage(c.getWidth(),c.getHeight(),BufferedImage.TYPE_INT_ARGB);
-      }
-      Graphics g=image.getGraphics();
-      c.paint(g);
-      draggedElement.setImage(image);
-      Point p=(Point)e.getPoint().clone();
-      SwingUtilities.convertPointToScreen(p,c);
-      SwingUtilities.convertPointFromScreen(p,this);
-      draggedElement.setLocation(p);
-    }
+  }
+  if (draggedElement != null) {
+    mainFrame.setGlassPane(draggedElement);
+    Point p=(Point)e.getPoint().clone();
+    p=SwingUtilities.convertPoint(e.getComponent(),p,draggedElement);
+    draggedElement.setLocation(p);
   }
 }
