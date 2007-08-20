@@ -1,13 +1,30 @@
 {
-  if (document.getLength() > Constants.CHAT_BUFFER_SIZE && document.getDefaultRootElement().getElementCount() > 2) {
-    Element firstElement=this.document.getDefaultRootElement().getElement(0);
-    try {
-      if (firstElement != null)       this.document.remove(firstElement.getStartOffset(),firstElement.getEndOffset() - firstElement.getStartOffset());
-      String idAttr=(String)firstElement.getAttributes().getAttribute("identifier");
-      if (idAttr != null && idAttr.equals("messageHeader")) {
-        Element secondElement=this.document.getDefaultRootElement().getElement(0);
-        this.document.remove(secondElement.getStartOffset(),secondElement.getEndOffset() - secondElement.getStartOffset());
+  if (document.getLength() > Constants.CHAT_BUFFER_SIZE) {
+    int msgElementCount=0;
+    Element firstMsgElement=null;
+    int firstMsgIndex=0;
+    Element rootElement=this.document.getDefaultRootElement();
+    for (int i=0; i < rootElement.getElementCount(); i++) {
+      String idAttr=(String)rootElement.getElement(i).getAttributes().getAttribute("identifier");
+      if (idAttr != null && (idAttr.equals("message") || idAttr.equals("statusMessage") || idAttr.equals("systemMessage"))) {
+        if (firstMsgElement == null) {
+          firstMsgElement=rootElement.getElement(i);
+          firstMsgIndex=i;
+        }
+        msgElementCount++;
       }
+    }
+    if (firstMsgElement == null || msgElementCount < 2)     return;
+    try {
+      Element headerElement=null;
+      if (firstMsgIndex > 1) {
+        headerElement=rootElement.getElement(firstMsgIndex - 1);
+        String idAttr=(String)headerElement.getAttributes().getAttribute("identifier");
+        if (idAttr != null && idAttr.equals("messageHeader")) {
+          this.document.remove(headerElement.getStartOffset(),headerElement.getEndOffset() - headerElement.getStartOffset());
+        }
+      }
+      this.document.remove(firstMsgElement.getStartOffset(),firstMsgElement.getEndOffset() - firstMsgElement.getStartOffset());
     }
  catch (    BadLocationException e) {
       LOGGER.error("Error removing messages from chat: ",e);
