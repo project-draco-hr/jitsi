@@ -8,10 +8,16 @@
   }
   feed.getEntries();
   this.title=this.feed.getTitle();
-  items=(SyndEntry[])(this.feed.getEntries().toArray(new SyndEntry[0]));
-  Arrays.sort(items,syndEntryComparator);
-  if (items[items.length - 1].getPublishedDate() == null) {
-    throw new OperationFailedException("We can't retrieve dates for RSS flow \"" + title + "\" ("+ rssURL+ ")",OperationFailedException.GENERAL_ERROR);
+  items=(SyndEntry[])this.feed.getEntries().toArray(new SyndEntry[0]);
+  if (items.length == 0) {
+    lastItemKey=new RssItemKey(new Date(0));
+    return;
   }
-  setLastItemPubDate(items[items.length - 1].getPublishedDate());
+  if (items[items.length - 1].getPublishedDate() != null) {
+    Arrays.sort(items,syndEntryComparator);
+    lastItemKey=new RssItemKey(items[items.length - 1].getPublishedDate());
+  }
+ else {
+    lastItemKey=new RssItemKey(items[0].getLink());
+  }
 }

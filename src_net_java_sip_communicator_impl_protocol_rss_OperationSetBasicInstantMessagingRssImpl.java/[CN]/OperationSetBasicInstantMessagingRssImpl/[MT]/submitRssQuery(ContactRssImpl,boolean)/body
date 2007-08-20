@@ -1,7 +1,7 @@
 {
   Message msg;
   boolean newName=false;
-  boolean newDate=false;
+  boolean newItem=false;
   boolean update=false;
   String newDisplayName=new String();
   String oldDisplayName=new String();
@@ -19,12 +19,21 @@
     newName=true;
   }
   rssContact.setDisplayName(newDisplayName);
-  msg=createMessage(rssFeed.feedToString(rssContact.getLastItemDate()));
-  if (rssFeed.getLastItemPubDate().compareTo(rssContact.getLastItemDate()) > 0) {
-    rssContact.setDate(rssFeed.getLastItemPubDate());
-    newDate=true;
-    update=true;
+  msg=createMessage(rssFeed.feedToString(rssContact.getLastItemKey()));
+  if (rssFeed.getLastItemKey().usesDate()) {
+    if (rssFeed.getLastItemKey().getItemDate().compareTo(rssContact.getLastItemKey().getItemDate()) > 0) {
+      rssContact.setLastItemKey(new RssItemKey(rssFeed.getLastItemKey().getItemDate()));
+      newItem=true;
+      update=true;
+    }
   }
-  if (newName || newDate)   this.opSetPersPresence.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_DISPLAY_NAME,rssContact,oldDisplayName,newDisplayName);
+ else {
+    if (!rssFeed.getLastItemKey().getItemUri().equalsIgnoreCase(rssContact.getLastItemKey().getItemUri())) {
+      rssContact.setLastItemKey(new RssItemKey(rssFeed.getLastItemKey().getItemUri()));
+      newItem=true;
+      update=true;
+    }
+  }
+  if (newName || newItem)   this.opSetPersPresence.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_DISPLAY_NAME,rssContact,oldDisplayName,newDisplayName);
   if (update || userRequestedUpdate)   fireMessageReceived(msg,rssContact);
 }
