@@ -1,0 +1,25 @@
+{
+  StringBuffer result=new StringBuffer();
+  StringBuffer smileyRegexp=new StringBuffer();
+  ArrayList smiliesList=ImageLoader.getDefaultSmiliesPack();
+  for (int i=0; i < smiliesList.size(); i++) {
+    Smiley smiley=(Smiley)smiliesList.get(i);
+    String[] smileyStrings=smiley.getSmileyStrings();
+    for (int j=0; j < smileyStrings.length; j++) {
+      smileyRegexp.append(GuiUtils.replaceSpecialRegExpChars(smileyStrings[j])).append("|");
+    }
+  }
+  smileyRegexp.deleteCharAt(smileyRegexp.length() - 1);
+  String imgPattern="<img (.*alt=\"|')(.*?)" + smileyRegexp.toString() + "(.*?)(\"|')(.*?)>";
+  Pattern p=Pattern.compile(imgPattern,Pattern.CASE_INSENSITIVE);
+  Matcher imgFinder=p.matcher(content);
+  boolean foundMatch=false;
+  while (imgFinder.find()) {
+    if (!foundMatch)     foundMatch=true;
+    String matchGroup=imgFinder.group();
+    String replacement=matchGroup.replaceAll(smileyRegexp.toString(),"");
+    imgFinder.appendReplacement(result,GuiUtils.replaceSpecialRegExpChars(replacement));
+  }
+  imgFinder.appendTail(result);
+  return result.toString();
+}
