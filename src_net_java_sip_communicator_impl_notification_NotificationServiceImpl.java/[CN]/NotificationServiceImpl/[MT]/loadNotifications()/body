@@ -1,0 +1,37 @@
+{
+  ConfigurationService configService=NotificationActivator.getConfigurationService();
+  String prefix="net.java.sip.communicator.impl.notifications";
+  List eventTypes=configService.getPropertyNamesByPrefix(prefix,true);
+  Iterator eventTypesIter=eventTypes.iterator();
+  while (eventTypesIter.hasNext()) {
+    String eventTypeRootPropName=(String)eventTypesIter.next();
+    String eventType=configService.getString(eventTypeRootPropName);
+    List actions=configService.getPropertyNamesByPrefix(eventTypeRootPropName + ".actions",true);
+    Iterator actionsIter=actions.iterator();
+    while (actionsIter.hasNext()) {
+      String actionPropName=(String)actionsIter.next();
+      String actionType=configService.getString(actionPropName);
+      NotificationActionHandler handler=null;
+      if (actionType.equals(ACTION_SOUND)) {
+        String soundFileDescriptor=configService.getString(actionPropName + ".soundFileDescriptor");
+        String loopInterval=configService.getString(actionPropName + ".loopInterval");
+        handler=new SoundNotificationHandlerImpl(soundFileDescriptor,new Integer(loopInterval).intValue());
+      }
+ else       if (handler instanceof PopupMessageNotificationHandler) {
+        String defaultMessage=configService.getString(actionPropName + ".defaultMessage");
+        handler=new PopupMessageNotificationHandlerImpl(defaultMessage);
+      }
+ else       if (handler instanceof LogMessageNotificationHandler) {
+        String logType=configService.getString(actionPropName + ".logType");
+        handler=new LogMessageNotificationHandlerImpl(logType);
+      }
+ else       if (handler instanceof CommandNotificationHandler) {
+        String commandDescriptor=configService.getString(actionPropName + ".commandDescriptor");
+        handler=new LogMessageNotificationHandlerImpl(commandDescriptor);
+      }
+      EventNotification notification=new EventNotification(eventType);
+      notificationsTable.put(eventType,notification);
+      notification.addAction(actionType,handler);
+    }
+  }
+}
