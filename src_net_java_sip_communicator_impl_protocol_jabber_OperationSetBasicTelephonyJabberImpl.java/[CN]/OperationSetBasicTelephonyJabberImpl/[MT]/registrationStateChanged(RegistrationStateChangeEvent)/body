@@ -1,0 +1,18 @@
+{
+  if ((evt.getNewState() == RegistrationState.REGISTERED)) {
+    logger.warn("warning: we will use a null stun server ***");
+    transportManager=new ICETransportManager(protocolProvider.getConnection(),null,3478);
+    jingleManager=new JingleManager(protocolProvider.getConnection(),transportManager,mediaManager);
+    jingleManager.addCreationListener(this);
+    jingleManager.addJingleSessionRequestListener(this);
+    logger.info("Jingle : ON ");
+  }
+ else   if ((evt.getNewState() == RegistrationState.UNREGISTERED)) {
+    if (jingleManager != null) {
+      jingleManager.removeCreationListener(this);
+      jingleManager.removeJingleSessionRequestListener(this);
+      jingleManager=null;
+      logger.info("Jingle : OFF ");
+    }
+  }
+}

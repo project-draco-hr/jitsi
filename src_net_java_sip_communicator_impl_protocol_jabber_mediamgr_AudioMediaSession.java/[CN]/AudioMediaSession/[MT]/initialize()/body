@@ -1,0 +1,23 @@
+{
+  String remoteIp;
+  String localIp;
+  int localPort;
+  int remotePort;
+  if (getLocal().getSymmetric() != null) {
+    logger.warn("oops : unexpected situation ... ");
+  }
+  remoteIp=getRemote().getIp();
+  localIp=getLocal().getLocalIp();
+  localPort=getLocal().getPort();
+  remotePort=getRemote().getPort();
+  logger.info("AudioMediaSession : " + localIp + ":"+ localPort+ " <-> "+ remoteIp+ ":"+ remotePort);
+  Hashtable mediaEncoding=MediaUtils.getAudioEncoding(getPayloadType().getId());
+  try {
+    rtpFlow=JabberActivator.getMediaService().createRtpFlow(localIp,localPort,remoteIp,remotePort,mediaEncoding);
+  }
+ catch (  MediaException ex) {
+    logger.error("failed to create a RtpFlow between " + localIp + ":"+ localPort+ " and "+ remoteIp+ ":"+ remotePort,ex);
+    rtpFlow=null;
+    throw new RuntimeException("failed to create a RtpFlow between " + localIp + ":"+ localPort+ " and "+ remoteIp+ ":"+ remotePort,ex);
+  }
+}

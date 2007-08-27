@@ -62,4 +62,35 @@ synchronized (initializationLock) {
       throw new OperationFailedException("Wrong port",OperationFailedException.INVALID_ACCOUNT_PROPERTIES,ex);
     }
   }
+  if (getRegistrationState() == RegistrationState.REGISTERED) {
+    connection.addPacketListener(new PacketListener(){
+      public void processPacket(      Packet packet){
+        DiscoverInfo infos=new DiscoverInfo();
+        infos.setType(IQ.Type.RESULT);
+        infos.setFrom(packet.getTo());
+        infos.setTo(packet.getFrom());
+        infos.setPacketID(packet.getPacketID());
+        DiscoverInfo.Identity id=new DiscoverInfo.Identity("account","sc");
+        id.setType("registered");
+        infos.addIdentity(id);
+        Iterator it=supportedFeatures.iterator();
+        while (it.hasNext()) {
+          infos.addFeature((String)it.next());
+        }
+        connection.sendPacket(infos);
+      }
+    }
+,new PacketFilter(){
+      public boolean accept(      Packet packet){
+        String s=packet.toXML();
+        if (s.indexOf("type=\"get\"") != -1 && s.indexOf("http://jabber.org/protocol/disco#info") != -1) {
+          return true;
+        }
+ else {
+          return false;
+        }
+      }
+    }
+);
+  }
 }

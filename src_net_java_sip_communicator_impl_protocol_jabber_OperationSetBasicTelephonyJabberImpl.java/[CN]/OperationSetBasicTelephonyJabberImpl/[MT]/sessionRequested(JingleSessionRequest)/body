@@ -1,0 +1,21 @@
+{
+  IncomingJingleSession inJS;
+  logger.info("session requested ");
+  try {
+    inJS=jingleSessionRequest.accept();
+  }
+ catch (  XMPPException ex) {
+    logger.error("Failed to accept inoming jingle request : " + ex);
+    return;
+  }
+  CallJabberImpl call=new CallJabberImpl(protocolProvider);
+  String from=jingleSessionRequest.getFrom();
+  if (from.indexOf("/") > 0) {
+    from=from.substring(0,from.indexOf("/"));
+  }
+  CallParticipantJabberImpl callParticipant=new CallParticipantJabberImpl(from,call);
+  callParticipant.setJingleSession(inJS);
+  callParticipant.setState(CallParticipantState.INCOMING_CALL);
+  activeCallsRepository.addCall(call);
+  fireCallEvent(CallEvent.CALL_RECEIVED,call);
+}

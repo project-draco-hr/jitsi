@@ -1,11 +1,13 @@
 {
 synchronized (initializationLock) {
     this.accountID=accountID;
+    supportedFeatures.add("http://jabber.org/protocol/disco#info");
     String keepAliveStrValue=(String)accountID.getAccountProperties().get("SEND_KEEP_ALIVE");
     String resourcePriority=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.RESOURCE_PRIORITY);
     OperationSetPersistentPresenceJabberImpl persistentPresence=new OperationSetPersistentPresenceJabberImpl(this);
     if (resourcePriority != null) {
       persistentPresence.setResourcePriority(new Integer(resourcePriority).intValue());
+      supportedFeatures.add("http://www.xmpp.org/extensions/xep-0168.html#ns");
     }
     supportedOperationSets.put(OperationSetPersistentPresence.class.getName(),persistentPresence);
     supportedOperationSets.put(OperationSetPresence.class.getName(),persistentPresence);
@@ -14,8 +16,13 @@ synchronized (initializationLock) {
     supportedOperationSets.put(OperationSetBasicInstantMessaging.class.getName(),basicInstantMessaging);
     OperationSetTypingNotifications typingNotifications=new OperationSetTypingNotificationsJabberImpl(this);
     supportedOperationSets.put(OperationSetTypingNotifications.class.getName(),typingNotifications);
+    supportedFeatures.add("http://jabber.org/protocol/chatstates");
     OperationSetMultiUserChat multiUserChat=new OperationSetMultiUserChatJabberImpl(this);
     supportedOperationSets.put(OperationSetMultiUserChat.class.getName(),multiUserChat);
+    supportedFeatures.add("http://jabber.org/protocol/muc");
+    OperationSetBasicTelephony opSetBasicTelephony=new OperationSetBasicTelephonyJabberImpl(this);
+    supportedOperationSets.put(OperationSetBasicTelephony.class.getName(),opSetBasicTelephony);
+    supportedFeatures.add("http://www.xmpp.org/extensions/xep-0166.html#ns");
     isInitialized=true;
   }
 }

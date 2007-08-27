@@ -1,0 +1,27 @@
+{
+  OutgoingJingleSession outJS;
+  logger.info("creating outgoing call...");
+  if (protocolProvider.getConnection() == null) {
+    throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + "we don't have a valid XMPPConnection.",OperationFailedException.INTERNAL_ERROR);
+  }
+  String resource=protocolProvider.getConnection().getRoster().getPresence(calleeAddress).getFrom();
+  String[] parts=resource.split("/");
+  if (parts.length != 2) {
+    throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + "user " + calleeAddress + " is unknwon to us.",OperationFailedException.INTERNAL_ERROR);
+  }
+  resource="/" + parts[1];
+  try {
+    outJS=jingleManager.createOutgoingJingleSession(calleeAddress.concat(resource));
+  }
+ catch (  XMPPException ex) {
+    throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + "This is most probably a network connection error.",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  CallJabberImpl call=new CallJabberImpl(protocolProvider);
+  CallParticipantJabberImpl callParticipant=new CallParticipantJabberImpl(calleeAddress,call);
+  callParticipant.setJingleSession(outJS);
+  callParticipant.setState(CallParticipantState.INITIATING_CALL);
+  fireCallEvent(CallEvent.CALL_INITIATED,call);
+  activeCallsRepository.addCall(call);
+  outJS.start();
+  return (CallJabberImpl)callParticipant.getCall();
+}
