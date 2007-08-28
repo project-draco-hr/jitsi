@@ -22,6 +22,23 @@
  else     logger.debug("Player does not have gain control.");
     logger.debug("A player was realized and will be started.");
     player.start();
+    if (dataSink != null) {
+      try {
+        logger.info("starting recording to file: " + dataSink);
+        MediaLocator dest=new MediaLocator(dataSink);
+        DataSource ds=((Processor)player).getDataOutput();
+        DataSink sink=Manager.createDataSink(((Processor)player).getDataOutput(),dest);
+        player.start();
+        RecordInitiator record=new RecordInitiator(sink);
+        record.start();
+      }
+ catch (      Exception e) {
+        logger.error("failed while trying to record to file",e);
+      }
+    }
+ else {
+      player.start();
+    }
     java.awt.Component vc=player.getVisualComponent();
     if (vc != null) {
       javax.swing.JFrame frame=new javax.swing.JFrame();
