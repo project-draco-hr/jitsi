@@ -37,7 +37,13 @@ catch (  InvalidArgumentException ex) {
   MaxForwardsHeader maxForwardsHeader=sipProvider.getMaxForwardsHeader();
   Request request=null;
   try {
-    request=sipProvider.getMessageFactory().createRequest(registrarURI,Request.REGISTER,callIdHeader,cSeqHeader,fromHeader,toHeader,viaHeaders,maxForwardsHeader);
+    String domain=((SipURI)toHeader.getAddress().getURI()).getHost();
+    SipURI requestURI=sipProvider.getAddressFactory().createSipURI(null,domain);
+    request=sipProvider.getMessageFactory().createRequest(requestURI,Request.REGISTER,callIdHeader,cSeqHeader,fromHeader,toHeader,viaHeaders,maxForwardsHeader);
+    SipURI regURI=(SipURI)registrarURI.clone();
+    regURI.setLrParam();
+    RouteHeader route=sipProvider.getHeaderFactory().createRouteHeader(sipProvider.getAddressFactory().createAddress(null,regURI));
+    request.addHeader(route);
   }
  catch (  ParseException ex) {
     logger.error("Could not create the register request!",ex);

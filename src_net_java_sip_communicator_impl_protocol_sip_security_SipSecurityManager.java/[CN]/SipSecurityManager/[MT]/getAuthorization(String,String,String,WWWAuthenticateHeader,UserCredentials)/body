@@ -1,7 +1,11 @@
 {
   String response=null;
+  String qopList=authHeader.getQop();
+  String qop=(qopList != null) ? "auth" : null;
+  String nc_value="00000001";
+  String cnonce="xyz";
   try {
-    response=MessageDigestAlgorithm.calculateResponse(authHeader.getAlgorithm(),userCredentials.getUserName(),authHeader.getRealm(),new String(userCredentials.getPassword()),authHeader.getNonce(),null,null,method,uri,requestBody,authHeader.getQop());
+    response=MessageDigestAlgorithm.calculateResponse(authHeader.getAlgorithm(),userCredentials.getUserName(),authHeader.getRealm(),new String(userCredentials.getPassword()),authHeader.getNonce(),nc_value,cnonce,method,uri,requestBody,qop);
   }
  catch (  NullPointerException exc) {
     throw new OperationFailedException("The authenticate header was malformatted",OperationFailedException.GENERAL_ERROR,exc);
@@ -24,6 +28,11 @@
     }
     if (authHeader.getOpaque() != null) {
       authorization.setOpaque(authHeader.getOpaque());
+    }
+    if (qop != null) {
+      authorization.setQop(qop);
+      authorization.setCNonce(cnonce);
+      authorization.setNonceCount(Integer.parseInt(nc_value));
     }
     authorization.setResponse(response);
   }
