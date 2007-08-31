@@ -4,14 +4,24 @@
   if (protocolProvider.getConnection() == null) {
     throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + "we don't have a valid XMPPConnection.",OperationFailedException.INTERNAL_ERROR);
   }
-  String resource=protocolProvider.getConnection().getRoster().getPresence(calleeAddress).getFrom();
-  String[] parts=resource.split("/");
-  if (parts.length != 2) {
+  String fullCalleeURI=protocolProvider.getConnection().getRoster().getPresence(calleeAddress).getFrom();
+  if (fullCalleeURI.indexOf('/') < 0) {
     throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + "user " + calleeAddress + " is unknwon to us.",OperationFailedException.INTERNAL_ERROR);
   }
-  resource="/" + parts[1];
   try {
-    outJS=jingleManager.createOutgoingJingleSession(calleeAddress.concat(resource));
+    DiscoverInfo di=ServiceDiscoveryManager.getInstanceFor(protocolProvider.getConnection()).discoverInfo(fullCalleeURI);
+    if (di.containsFeature("http://www.xmpp.org/extensions/xep-0166.html#ns")) {
+      logger.info(fullCalleeURI + ": telephony supported ");
+    }
+ else {
+      logger.info(calleeAddress + ": telephony not supported ??? ");
+    }
+  }
+ catch (  XMPPException ex) {
+    logger.warn("could not retrieves info for " + fullCalleeURI,ex);
+  }
+  try {
+    outJS=jingleManager.createOutgoingJingleSession(fullCalleeURI);
   }
  catch (  XMPPException ex) {
     throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + "This is most probably a network connection error.",OperationFailedException.INTERNAL_ERROR,ex);
