@@ -1,0 +1,9 @@
+{
+  logger.trace("NOTICE on " + target + ": Received from "+ sourceNick+ " "+ sourceLogin+ "@"+ sourceHostname+ " the message: "+ notice);
+  MessageIrcImpl message=new MessageIrcImpl(notice,MessageIrcImpl.DEFAULT_MIME_TYPE,MessageIrcImpl.DEFAULT_MIME_ENCODING,null);
+  ChatRoomIrcImpl chatRoom=ircMUCOpSet.getChatRoom(target);
+  if (chatRoom == null || !chatRoom.isJoined())   chatRoom=(ChatRoomIrcImpl)ircMUCOpSet.getSystemRoom();
+  ChatRoomMember sourceMember=chatRoom.getChatRoomMember(sourceNick);
+  if (sourceMember == null)   sourceMember=new ChatRoomMemberIrcImpl(parentProvider,chatRoom,sourceNick,sourceLogin,sourceHostname,ChatRoomMemberRole.GUEST);
+  chatRoom.fireMessageReceivedEvent(message,sourceMember,new Date(System.currentTimeMillis()),ChatRoomMessageReceivedEvent.ACTION_MESSAGE_RECEIVED);
+}

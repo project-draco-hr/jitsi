@@ -1,0 +1,11 @@
+{
+  if (logger.isDebugEnabled())   logger.debug("LEAVE on " + channel + ": Received from "+ sender+ " "+ login+ "@"+ hostname);
+  ChatRoomIrcImpl chatRoom=(ChatRoomIrcImpl)ircMUCOpSet.findRoom(channel);
+  if (chatRoom.getUserNickname().equals(sender))   ircMUCOpSet.fireLocalUserPresenceEvent(chatRoom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT,"");
+ else {
+    ChatRoomMember member=chatRoom.getChatRoomMember(sender);
+    if (member == null)     return;
+    chatRoom.removeChatRoomMember(sender);
+    chatRoom.fireMemberPresenceEvent(member,null,ChatRoomMemberPresenceChangeEvent.MEMBER_LEFT,null);
+  }
+}

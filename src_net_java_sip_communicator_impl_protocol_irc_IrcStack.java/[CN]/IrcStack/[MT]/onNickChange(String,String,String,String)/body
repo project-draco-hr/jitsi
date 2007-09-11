@@ -1,0 +1,12 @@
+{
+  logger.trace("NICK changed: from " + oldNick + " changed to "+ newNick);
+  this.notifyChatRoomOperation(0);
+  Iterator joinedChatRoomsIter=ircMUCOpSet.getCurrentlyJoinedChatRooms().iterator();
+  while (joinedChatRoomsIter.hasNext()) {
+    ChatRoomIrcImpl chatRoom=(ChatRoomIrcImpl)joinedChatRoomsIter.next();
+    ChatRoomMember member=chatRoom.getChatRoomMember(oldNick);
+    if (member == null)     continue;
+    ChatRoomMemberPropertyChangeEvent evt=new ChatRoomMemberPropertyChangeEvent(member,chatRoom,ChatRoomMemberPropertyChangeEvent.MEMBER_NICKNAME,oldNick,newNick);
+    chatRoom.fireMemberPropertyChangeEvent(evt);
+  }
+}

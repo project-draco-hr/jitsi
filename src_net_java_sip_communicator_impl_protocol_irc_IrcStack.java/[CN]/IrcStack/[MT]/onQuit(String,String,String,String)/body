@@ -1,0 +1,14 @@
+{
+  if (logger.isDebugEnabled())   logger.debug("QUIT : Received from " + sourceNick + " "+ sourceLogin+ "@"+ sourceHostname);
+  Iterator joinedChatRooms=ircMUCOpSet.getCurrentlyJoinedChatRooms().iterator();
+  while (joinedChatRooms.hasNext()) {
+    ChatRoomIrcImpl chatRoom=(ChatRoomIrcImpl)joinedChatRooms.next();
+    if (chatRoom.getUserNickname().equals(sourceNick))     ircMUCOpSet.fireLocalUserPresenceEvent(chatRoom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_DROPPED,reason);
+ else {
+      ChatRoomMember member=chatRoom.getChatRoomMember(sourceNick);
+      if (member == null)       return;
+      chatRoom.removeChatRoomMember(sourceNick);
+      chatRoom.fireMemberPresenceEvent(member,null,ChatRoomMemberPresenceChangeEvent.MEMBER_QUIT,reason);
+    }
+  }
+}

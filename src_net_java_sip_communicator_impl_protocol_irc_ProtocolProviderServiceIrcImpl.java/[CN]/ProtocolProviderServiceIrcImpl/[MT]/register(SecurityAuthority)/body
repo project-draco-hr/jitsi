@@ -1,0 +1,32 @@
+{
+  Map accountProperties=getAccountID().getAccountProperties();
+  String serverAddress=(String)accountProperties.get(ProtocolProviderFactory.SERVER_ADDRESS);
+  String serverPort=(String)accountProperties.get(ProtocolProviderFactory.SERVER_PORT);
+  if (serverPort == null || serverPort.equals("")) {
+    serverPort="6667";
+  }
+  String serverPassword=IrcActivator.getProtocolProviderFactory().loadPassword(getAccountID());
+  boolean autoNickChange=true;
+  boolean passwordRequired=true;
+  if (accountProperties.get(ProtocolProviderFactory.AUTO_CHANGE_USER_NAME) != null) {
+    autoNickChange=new Boolean((String)accountProperties.get(ProtocolProviderFactory.AUTO_CHANGE_USER_NAME)).booleanValue();
+  }
+  if (accountProperties.get(ProtocolProviderFactory.PASSWORD_REQUIRED) != null) {
+    passwordRequired=new Boolean((String)accountProperties.get(ProtocolProviderFactory.PASSWORD_REQUIRED)).booleanValue();
+  }
+  if (serverPassword == null && passwordRequired) {
+    UserCredentials credentials=new UserCredentials();
+    credentials.setUserName(getAccountID().getUserID());
+    credentials=authority.obtainCredentials(ProtocolNames.IRC,credentials);
+    char[] pass=credentials.getPassword();
+    if (pass == null) {
+      fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"");
+      return;
+    }
+    serverPassword=new String(pass);
+    if (credentials.isPasswordPersistent()) {
+      IrcActivator.getProtocolProviderFactory().storePassword(getAccountID(),serverPassword);
+    }
+  }
+  this.ircStack.connect(serverAddress,Integer.parseInt(serverPort),serverPassword,autoNickChange);
+}

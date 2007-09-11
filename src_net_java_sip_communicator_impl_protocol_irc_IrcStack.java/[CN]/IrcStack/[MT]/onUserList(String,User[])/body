@@ -1,0 +1,24 @@
+{
+  if (logger.isDebugEnabled())   logger.debug("NAMES on " + channel);
+  ChatRoomIrcImpl chatRoom=ircMUCOpSet.getChatRoom(channel);
+  chatRoom.clearChatRoomMemberList();
+  for (int i=0; i < users.length; i++) {
+    User user=users[i];
+    ChatRoomMemberRole newMemberRole;
+    if (user.getPrefix().equalsIgnoreCase("@")) {
+      newMemberRole=ChatRoomMemberRole.ADMINISTRATOR;
+    }
+ else     if (user.getPrefix().equalsIgnoreCase("%")) {
+      newMemberRole=ChatRoomMemberRole.MODERATOR;
+    }
+ else     if (user.getPrefix().equalsIgnoreCase("+")) {
+      newMemberRole=ChatRoomMemberRole.MEMBER;
+    }
+ else {
+      newMemberRole=ChatRoomMemberRole.GUEST;
+    }
+    ChatRoomMemberIrcImpl newMember=new ChatRoomMemberIrcImpl(parentProvider,chatRoom,user.getNick(),null,null,newMemberRole);
+    chatRoom.addChatRoomMember(user.getNick(),newMember);
+    chatRoom.fireMemberPresenceEvent(newMember,null,ChatRoomMemberPresenceChangeEvent.MEMBER_JOINED,null);
+  }
+}
