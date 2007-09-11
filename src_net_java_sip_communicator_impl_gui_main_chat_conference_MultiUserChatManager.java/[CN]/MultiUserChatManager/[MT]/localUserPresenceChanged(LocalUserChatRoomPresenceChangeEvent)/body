@@ -1,8 +1,8 @@
 {
   ChatRoom sourceChatRoom=evt.getChatRoom();
+  ChatRoomsList chatRoomsList=mainFrame.getChatRoomsListPanel().getChatRoomsList();
+  ChatRoomWrapper chatRoomWrapper=chatRoomsList.findChatRoomWrapperFromChatRoom(sourceChatRoom);
   if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED)) {
-    ChatRoomsList chatRoomsList=mainFrame.getChatRoomsListPanel().getChatRoomsList();
-    ChatRoomWrapper chatRoomWrapper=chatRoomsList.findChatRoomWrapperFromChatRoom(sourceChatRoom);
     if (chatRoomWrapper != null) {
       chatRoomsList.refresh();
       if (chatWindowManager.isChatOpenedForChatRoom(chatRoomWrapper)) {
@@ -10,14 +10,16 @@
         chatPanel.loadChatRoom(sourceChatRoom);
       }
     }
- else {
-      chatRoomsList.addChatRoom(new ChatRoomWrapper(sourceChatRoom));
-    }
     sourceChatRoom.addMessageListener(this);
   }
  else   if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOIN_FAILED)) {
   }
  else   if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT)) {
+    ChatWindowManager chatWindowManager=mainFrame.getChatWindowManager();
+    ChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper);
+    chatWindowManager.closeChat(chatPanel);
+    mainFrame.getChatRoomsListPanel().getChatRoomsList().refresh();
+    sourceChatRoom.removeMessageListener(this);
   }
  else   if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_KICKED)) {
   }
