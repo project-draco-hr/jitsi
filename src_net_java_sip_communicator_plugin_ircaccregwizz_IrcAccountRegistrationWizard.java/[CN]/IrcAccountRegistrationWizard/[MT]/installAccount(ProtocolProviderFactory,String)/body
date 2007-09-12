@@ -1,0 +1,24 @@
+{
+  Hashtable accountProperties=new Hashtable();
+  accountProperties.put(ProtocolProviderFactory.SERVER_ADDRESS,registration.getServer());
+  if (registration.isRememberPassword() && registration.isRequiredPassword() && !registration.getPassword().equals("")) {
+    accountProperties.put(ProtocolProviderFactory.PASSWORD,registration.getPassword());
+  }
+  if (!registration.getPort().equals("")) {
+    accountProperties.put(ProtocolProviderFactory.SERVER_PORT,registration.getPort());
+  }
+  accountProperties.put(ProtocolProviderFactory.AUTO_CHANGE_USER_NAME,new Boolean(registration.isAutoChangeNick()).toString());
+  accountProperties.put(ProtocolProviderFactory.PASSWORD_REQUIRED,new Boolean(registration.isRequiredPassword()).toString());
+  try {
+    AccountID accountID=providerFactory.installAccount(user,accountProperties);
+    ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
+    protocolProvider=(ProtocolProviderService)IrcAccRegWizzActivator.bundleContext.getService(serRef);
+  }
+ catch (  IllegalArgumentException exc) {
+    new ErrorDialog(null,exc.getMessage(),exc).showDialog();
+  }
+catch (  IllegalStateException exc) {
+    new ErrorDialog(null,exc.getMessage(),exc).showDialog();
+  }
+  return protocolProvider;
+}
