@@ -1,0 +1,16 @@
+{
+  String myEmail=yahooProvider.getAccountID().getAccountAddress();
+  String yahooMailLogon="http://mail." + myEmail.substring(myEmail.indexOf("@") + 1);
+  yahooMailLogon="<a href=\"" + yahooMailLogon + "\">"+ yahooMailLogon+ "</a>";
+  String newMail="<small>New mail, subject :</small> " + ev.getSubject();
+  newMail+="\n<br /><small>From :</small> " + ev.getEmailAddress();
+  newMail+="\n<br />&nbsp;&nbsp;&nbsp;&nbsp;" + yahooMailLogon;
+  Message newMailMessage=new MessageYahooImpl(newMail,CONTENT_TYPE_HTML,DEFAULT_MIME_ENCODING,null);
+  Contact sourceContact=opSetPersPresence.findContactByID(ev.getFrom());
+  if (sourceContact == null) {
+    logger.debug("received a new mail from an unknown contact: " + ev.getFrom());
+    sourceContact=opSetPersPresence.createVolatileContact(ev.getFrom());
+  }
+  MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(newMailMessage,sourceContact,new Date(),MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
+  fireMessageEvent(msgReceivedEvt);
+}
