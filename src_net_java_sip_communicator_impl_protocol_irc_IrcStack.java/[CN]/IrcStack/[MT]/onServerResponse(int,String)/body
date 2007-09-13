@@ -115,12 +115,14 @@
   }
  else   if (code != RPL_LISTSTART && code != RPL_LIST && code != RPL_LISTEND) {
     logger.trace("Server response: Code : " + code + " Response : "+ response);
+    int delimiterIndex=response.indexOf(':');
+    if (delimiterIndex != -1 && delimiterIndex < response.length() - 1)     response=response.substring(delimiterIndex + 1);
     MessageIrcImpl message=new MessageIrcImpl(response,MessageIrcImpl.DEFAULT_MIME_TYPE,MessageIrcImpl.DEFAULT_MIME_ENCODING,null);
     ChatRoomIrcImpl serverRoom=(ChatRoomIrcImpl)ircMUCOpSet.getSystemRoom();
     if (serverRoom == null)     serverRoom=ircMUCOpSet.createSystemRoom();
     ChatRoomMember sourceMember=null;
     if (serverRoom.getMembers().size() > 0)     sourceMember=(ChatRoomMember)serverRoom.getMembers().get(0);
- else     sourceMember=new ChatRoomMemberIrcImpl(parentProvider,serverRoom,"","","",ChatRoomMemberRole.GUEST);
+ else     sourceMember=new ChatRoomMemberIrcImpl(parentProvider,serverRoom,parentProvider.getAccountID().getService(),"","",ChatRoomMemberRole.GUEST);
     serverRoom.fireMessageReceivedEvent(message,sourceMember,new Date(System.currentTimeMillis()),ChatRoomMessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
   }
 }
