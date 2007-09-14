@@ -9,7 +9,12 @@
   }
  catch (  XMPPException ex) {
     String errorMessage;
-    if (ex.getXMPPError().getCode() == 401) {
+    if (ex.getXMPPError() == null) {
+      errorMessage="Failed to join room " + getName() + " with nickname: "+ nickname;
+      logger.error(errorMessage,ex);
+      throw new OperationFailedException(errorMessage,OperationFailedException.GENERAL_ERROR,ex);
+    }
+ else     if (ex.getXMPPError().getCode() == 401) {
       errorMessage="Failed to join chat room " + getName() + " with nickname: "+ nickname+ ". The chat room requests a password.";
       logger.error(errorMessage,ex);
       throw new OperationFailedException(errorMessage,OperationFailedException.AUTHENTICATION_FAILED,ex);
@@ -24,5 +29,10 @@
       logger.error(errorMessage,ex);
       throw new OperationFailedException(errorMessage,OperationFailedException.GENERAL_ERROR,ex);
     }
+  }
+catch (  Exception ex) {
+    String errorMessage="Failed to join room " + getName() + " with nickname: "+ nickname;
+    logger.error(errorMessage,ex);
+    throw new OperationFailedException(errorMessage,OperationFailedException.GENERAL_ERROR,ex);
   }
 }
