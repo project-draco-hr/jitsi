@@ -18,6 +18,24 @@
     throw new IOException("Failed to get a reference to the contact " + "list file=" + fileName + ". error was:"+ ex.getMessage());
   }
   try {
+    File backup=faService.getPrivatePersistentFile(fileName + ".bak");
+    if (backup.exists()) {
+      FileInputStream in=new FileInputStream(backup);
+      FileOutputStream out=new FileOutputStream(contactlistFile);
+      byte[] buf=new byte[1024];
+      int len;
+      while ((len=in.read(buf)) > 0) {
+        out.write(buf,0,len);
+      }
+      in.close();
+      out.close();
+      backup.delete();
+    }
+  }
+ catch (  Exception e) {
+    logger.error("Failed to restore the backup contact list file",e);
+  }
+  try {
     DocumentBuilderFactory factory=DocumentBuilderFactory.newInstance();
     DocumentBuilder builder=factory.newDocumentBuilder();
     if (contactlistFile.length() == 0) {
