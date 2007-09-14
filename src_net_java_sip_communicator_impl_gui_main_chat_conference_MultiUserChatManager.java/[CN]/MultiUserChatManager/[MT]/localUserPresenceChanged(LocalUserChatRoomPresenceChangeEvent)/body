@@ -10,19 +10,39 @@
         chatPanel.loadChatRoom(sourceChatRoom);
       }
     }
+    if (sourceChatRoom.isSystem()) {
+      MultiUserChatServerWrapper serverWrapper=chatRoomsList.findServerWrapperFromProvider(sourceChatRoom.getParentProvider());
+      serverWrapper.setSystemRoom(sourceChatRoom);
+    }
     sourceChatRoom.addMessageListener(this);
   }
  else   if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOIN_FAILED)) {
   }
  else   if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT)) {
     ChatWindowManager chatWindowManager=mainFrame.getChatWindowManager();
-    ChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper);
-    chatWindowManager.closeChat(chatPanel);
+    if (chatWindowManager.isChatOpenedForChatRoom(chatRoomWrapper)) {
+      ChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper);
+      chatWindowManager.closeChat(chatPanel);
+    }
     mainFrame.getChatRoomsListPanel().getChatRoomsList().refresh();
     sourceChatRoom.removeMessageListener(this);
   }
  else   if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_KICKED)) {
+    ChatWindowManager chatWindowManager=mainFrame.getChatWindowManager();
+    if (chatWindowManager.isChatOpenedForChatRoom(chatRoomWrapper)) {
+      ChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper);
+      chatWindowManager.closeChat(chatPanel);
+    }
+    mainFrame.getChatRoomsListPanel().getChatRoomsList().refresh();
+    sourceChatRoom.removeMessageListener(this);
   }
  else   if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_DROPPED)) {
+    ChatWindowManager chatWindowManager=mainFrame.getChatWindowManager();
+    if (chatWindowManager.isChatOpenedForChatRoom(chatRoomWrapper)) {
+      ChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper);
+      chatWindowManager.closeChat(chatPanel);
+    }
+    mainFrame.getChatRoomsListPanel().getChatRoomsList().refresh();
+    sourceChatRoom.removeMessageListener(this);
   }
 }
