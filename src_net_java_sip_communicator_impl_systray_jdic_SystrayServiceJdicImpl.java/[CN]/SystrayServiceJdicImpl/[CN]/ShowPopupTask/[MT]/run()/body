@@ -4,12 +4,19 @@
   SystrayMessage msg=(SystrayMessage)messageQueue.get(0);
   if (messageNumber > maxMessageNumber) {
     messageQueue.clear();
-    String messageContent=msg.getMessageContent();
-    if (!messageContent.endsWith("..."))     messageContent.concat("...");
-    messageQueue.add(new SystrayMessage("You have received " + messageNumber + " new messages. For more info check your chat window.","Messages starts by: " + messageContent,TrayIcon.INFO_MESSAGE_TYPE));
+    if (aggregatedMessage != null) {
+      aggregatedMessage.addAggregatedMessageNumber(messageNumber);
+    }
+ else {
+      String messageContent=msg.getMessageContent();
+      if (!messageContent.endsWith("..."))       messageContent.concat("...");
+      aggregatedMessage=new SystrayMessage("Messages start by: " + messageContent,messageNumber);
+    }
+    messageQueue.add(aggregatedMessage);
   }
  else {
     trayIcon.displayMessage(msg.getTitle(),msg.getMessageContent(),msg.getMessageType());
     messageQueue.remove(0);
+    if (msg.equals(aggregatedMessage))     aggregatedMessage=null;
   }
 }
