@@ -4,17 +4,23 @@
   if (protocolProvider.getConnection() == null) {
     throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + "we don't have a valid XMPPConnection.",OperationFailedException.INTERNAL_ERROR);
   }
-  String fullCalleeURI=protocolProvider.getConnection().getRoster().getPresence(calleeAddress).getFrom();
+  String fullCalleeURI=null;
+  if (calleeAddress.indexOf('/') > 0) {
+    fullCalleeURI=calleeAddress;
+  }
+ else {
+    fullCalleeURI=protocolProvider.getConnection().getRoster().getPresence(calleeAddress).getFrom();
+  }
   if (fullCalleeURI.indexOf('/') < 0) {
     throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + "user " + calleeAddress + " is unknwon to us.",OperationFailedException.INTERNAL_ERROR);
   }
   try {
     DiscoverInfo di=ServiceDiscoveryManager.getInstanceFor(protocolProvider.getConnection()).discoverInfo(fullCalleeURI);
     if (di.containsFeature("http://www.xmpp.org/extensions/xep-0166.html#ns")) {
-      logger.info(fullCalleeURI + ": telephony supported ");
+      logger.info(fullCalleeURI + ": jingle supported ");
     }
  else {
-      logger.info(calleeAddress + ": telephony not supported ??? ");
+      logger.info(calleeAddress + ": jingle not supported ??? ");
     }
   }
  catch (  XMPPException ex) {
