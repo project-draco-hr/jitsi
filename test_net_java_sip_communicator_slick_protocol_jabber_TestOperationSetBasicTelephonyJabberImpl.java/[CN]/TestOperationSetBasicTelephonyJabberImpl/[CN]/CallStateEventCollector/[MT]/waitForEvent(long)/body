@@ -1,0 +1,19 @@
+{
+  logger.trace("Waiting for a CallParticpantEvent");
+synchronized (this) {
+    if (listenedCall.getCallState() == awaitedState) {
+      logger.trace("Event already received. " + collectedEvents);
+      listenedCall.removeCallChangeListener(this);
+      return;
+    }
+    try {
+      wait(waitFor);
+      if (collectedEvents.size() > 0)       logger.trace("Received a CallChangeEvent.");
+ else       logger.trace("No CallChangeEvent received for " + waitFor + "ms.");
+      listenedCall.removeCallChangeListener(this);
+    }
+ catch (    InterruptedException ex) {
+      logger.debug("Interrupted while waiting for a " + "CallParticpantEvent",ex);
+    }
+  }
+}
