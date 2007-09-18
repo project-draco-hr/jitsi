@@ -26,8 +26,17 @@
   this.mainPanel.add(personNameLabel,BorderLayout.CENTER);
   this.add(personPhotoLabel,BorderLayout.WEST);
   this.add(mainPanel,BorderLayout.CENTER);
-  this.callButton.setEnabled(false);
-  this.sendFileButton.setEnabled(false);
+  ProtocolProviderService pps=chatContact.getProtocolProvider();
+  if (chatContact.getSourceContact() instanceof Contact) {
+    Contact c=(Contact)chatContact.getSourceContact();
+    MetaContact m=chatPanel.getChatWindow().getMainFrame().getContactList().findMetaContactByContact(c);
+    if (m.getDefaultContact(OperationSetBasicTelephony.class) == null)     this.callButton.setEnabled(false);
+    if (m.getDefaultContact(OperationSetFileTransfer.class) == null)     this.sendFileButton.setEnabled(false);
+  }
+ else {
+    if (pps.getOperationSet(OperationSetBasicTelephony.class) == null)     this.callButton.setEnabled(false);
+    if (pps.getOperationSet(OperationSetFileTransfer.class) == null)     this.sendFileButton.setEnabled(false);
+  }
   new Thread(){
     public void run(){
       contactPhotoIcon=chatContact.getImage();
@@ -43,7 +52,6 @@
     }
   }
 .start();
-  ProtocolProviderService pps=chatContact.getProtocolProvider();
   Object contactInfoOpSet=pps.getOperationSet(OperationSetWebContactInfo.class);
   if (contactInfoOpSet == null)   infoButton.setEnabled(false);
  else   infoButton.setEnabled(true);

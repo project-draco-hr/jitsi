@@ -1,0 +1,33 @@
+{
+  Contact defaultOpSetContact=null;
+  try {
+    if (getDefaultContact().getProtocolProvider().getOperationSet(Class.forName(operationSet.getName())) != null) {
+      defaultOpSetContact=getDefaultContact();
+    }
+ else {
+      for (int i=0; i < this.protoContacts.size(); i++) {
+        PresenceStatus currentStatus=null;
+        Contact protoContact=(Contact)this.protoContacts.get(i);
+        if (protoContact.getProtocolProvider().getOperationSet(Class.forName(operationSet.getName())) != null) {
+          PresenceStatus contactStatus=protoContact.getPresenceStatus();
+          if (currentStatus != null) {
+            if (currentStatus.getStatus() < contactStatus.getStatus()) {
+              currentStatus=contactStatus;
+              defaultOpSetContact=protoContact;
+            }
+          }
+ else {
+            currentStatus=contactStatus;
+            defaultOpSetContact=protoContact;
+          }
+        }
+      }
+    }
+  }
+ catch (  ClassNotFoundException ex) {
+    logger.info("cannot find a default " + operationSet.getName() + " contact for "+ this,ex);
+  }
+ finally {
+    return defaultOpSetContact;
+  }
+}
