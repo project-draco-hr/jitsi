@@ -24,8 +24,19 @@
  else   if (buttonText.equalsIgnoreCase("sendFile")) {
   }
  else   if (buttonText.equalsIgnoreCase("history")) {
-    HistoryWindow history=new HistoryWindow(messageWindow.getMainFrame(),chatPanel.getChatIdentifier());
-    history.setVisible(true);
+    HistoryWindow history;
+    HistoryWindowManager historyWindowManager=messageWindow.getMainFrame().getHistoryWindowManager();
+    Object historyContact=chatPanel.getChatIdentifier();
+    if (historyWindowManager.containsHistoryWindowForContact(historyContact)) {
+      history=historyWindowManager.getHistoryWindowForContact(historyContact);
+      if (history.getState() == JFrame.ICONIFIED)       history.setState(JFrame.NORMAL);
+      history.toFront();
+    }
+ else {
+      history=new HistoryWindow(messageWindow.getMainFrame(),chatPanel.getChatIdentifier());
+      history.setVisible(true);
+      historyWindowManager.addHistoryWindowForContact(historyContact,history);
+    }
   }
  else   if (buttonText.equalsIgnoreCase("font")) {
   }

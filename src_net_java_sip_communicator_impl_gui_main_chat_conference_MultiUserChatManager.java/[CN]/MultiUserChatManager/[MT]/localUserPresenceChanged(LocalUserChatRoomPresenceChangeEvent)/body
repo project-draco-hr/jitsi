@@ -5,9 +5,12 @@
   if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED)) {
     if (chatRoomWrapper != null) {
       chatRoomsList.refresh();
+      ConferenceChatPanel chatPanel=(ConferenceChatPanel)chatWindowManager.getMultiChat(chatRoomWrapper);
       if (chatWindowManager.isChatOpenedForChatRoom(chatRoomWrapper)) {
-        ConferenceChatPanel chatPanel=(ConferenceChatPanel)chatWindowManager.getMultiChat(chatRoomWrapper);
         chatPanel.loadChatRoom(sourceChatRoom);
+      }
+ else {
+        chatWindowManager.openChat(chatPanel,true);
       }
     }
     if (sourceChatRoom.isSystem()) {
@@ -17,6 +20,7 @@
     sourceChatRoom.addMessageListener(this);
   }
  else   if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOIN_FAILED)) {
+    new ErrorDialog(mainFrame,Messages.getI18NString("failedToJoinChatRoom",new String[]{sourceChatRoom.getName()}).getText() + evt.getReason(),Messages.getI18NString("error").getText()).showDialog();
   }
  else   if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT)) {
     ChatWindowManager chatWindowManager=mainFrame.getChatWindowManager();
