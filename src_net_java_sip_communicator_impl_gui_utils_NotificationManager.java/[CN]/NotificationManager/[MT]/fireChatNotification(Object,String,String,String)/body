@@ -2,7 +2,13 @@
   NotificationService notificationService=GuiActivator.getNotificationService();
   if (notificationService == null)   return;
   NotificationActionHandler popupActionHandler=null;
-  if (eventType.equals(INCOMING_MESSAGE) && GuiActivator.getUIService().getChat(contact).isChatFocused()) {
+  Chat chatPanel=null;
+  if (contact instanceof Contact)   chatPanel=GuiActivator.getUIService().getChat((Contact)contact);
+ else   if (contact instanceof ChatRoom) {
+    if ((contact instanceof ChatRoom) && ((ChatRoom)contact).isSystem())     return;
+    chatPanel=GuiActivator.getUIService().getChat((ChatRoom)contact);
+  }
+  if (eventType.equals(INCOMING_MESSAGE) && chatPanel.isChatFocused()) {
     popupActionHandler=notificationService.getEventNotificationActionHandler(eventType,NotificationService.ACTION_POPUP_MESSAGE);
     popupActionHandler.setEnabled(false);
   }
