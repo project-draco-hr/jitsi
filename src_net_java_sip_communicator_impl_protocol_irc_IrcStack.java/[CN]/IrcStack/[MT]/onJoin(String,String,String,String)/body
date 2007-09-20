@@ -1,7 +1,14 @@
 {
   if (logger.isDebugEnabled())   logger.debug("JOIN on " + channel + ": Received from "+ sender+ " "+ login+ "@"+ hostname);
   ChatRoomIrcImpl chatRoom=(ChatRoomIrcImpl)ircMUCOpSet.findRoom(channel);
-  if (chatRoom.getUserNickname().equals(sender))   ircMUCOpSet.fireLocalUserPresenceEvent(chatRoom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,"");
+  if (joinTimeoutTimers.containsKey(chatRoom)) {
+    Timer timer=(Timer)joinTimeoutTimers.get(chatRoom);
+    timer.cancel();
+    joinTimeoutTimers.remove(chatRoom);
+  }
+  if (chatRoom.getUserNickname().equals(sender)) {
+    ircMUCOpSet.fireLocalUserPresenceEvent(chatRoom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,"");
+  }
  else {
     ChatRoomMemberIrcImpl member=new ChatRoomMemberIrcImpl(parentProvider,chatRoom,sender,login,hostname,ChatRoomMemberRole.GUEST);
     chatRoom.addChatRoomMember(sender,member);

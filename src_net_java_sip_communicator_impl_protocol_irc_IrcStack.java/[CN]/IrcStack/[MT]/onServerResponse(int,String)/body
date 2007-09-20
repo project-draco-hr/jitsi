@@ -113,7 +113,15 @@
       this.onWhoIs(userInfo);
     }
   }
- else   if (code != RPL_LISTSTART && code != RPL_LIST && code != RPL_LISTEND && code != RPL_ENDOFNAMES && code != RPL_ENDOFMOTD) {
+ else   if (code == RPL_ENDOFMOTD) {
+    this.isInitialized=true;
+    ArrayList joinCacheCopy=new ArrayList(joinCache);
+    joinCache.clear();
+    for (int i=0; i < joinCacheCopy.size(); i++) {
+      this.join((ChatRoom)joinCacheCopy.get(i));
+    }
+  }
+ else   if (code != RPL_LISTSTART && code != RPL_LIST && code != RPL_LISTEND && code != RPL_ENDOFNAMES) {
     logger.trace("Server response: Code : " + code + " Response : "+ response);
     int delimiterIndex=response.indexOf(':');
     if (delimiterIndex != -1 && delimiterIndex < response.length() - 1)     response=response.substring(delimiterIndex + 1);

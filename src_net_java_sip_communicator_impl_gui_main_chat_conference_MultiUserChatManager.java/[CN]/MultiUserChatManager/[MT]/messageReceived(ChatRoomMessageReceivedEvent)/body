@@ -14,9 +14,17 @@
   logger.trace("MESSAGE RECEIVED from contact: " + sourceMember.getContactAddress());
   Date date=evt.getTimestamp();
   Message message=evt.getMessage();
-  ConferenceChatPanel chatPanel=chatWindowManager.getMultiChat(sourceChatRoom);
+  ChatRoomsList chatRoomList=mainFrame.getChatRoomsListPanel().getChatRoomsList();
+  ConferenceChatPanel chatPanel=null;
+  if (sourceChatRoom.isSystem()) {
+    MultiUserChatServerWrapper serverWrapper=chatRoomList.findServerWrapperFromProvider(sourceChatRoom.getParentProvider());
+    chatPanel=chatWindowManager.getMultiChat(serverWrapper.getSystemRoomWrapper());
+  }
+ else {
+    chatPanel=chatWindowManager.getMultiChat(sourceChatRoom);
+  }
   chatPanel.processMessage(sourceMember.getName(),date,messageType,message.getContent(),message.getContentType());
   chatWindowManager.openChat(chatPanel,false);
   String title=Messages.getI18NString("msgReceived",new String[]{sourceMember.getName()}).getText();
-  NotificationManager.fireNotification(NotificationManager.INCOMING_MESSAGE,title,message.getContent());
+  NotificationManager.fireChatNotification(sourceChatRoom,NotificationManager.INCOMING_MESSAGE,title,message.getContent());
 }
