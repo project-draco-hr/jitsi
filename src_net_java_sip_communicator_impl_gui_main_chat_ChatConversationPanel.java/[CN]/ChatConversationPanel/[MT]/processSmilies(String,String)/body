@@ -6,14 +6,12 @@
     endPlainTextTag="</PLAINTEXT>";
   }
  else {
-    if (HTML_CONTENT_TYPE.equals(contentType)) {
-      message=removeAltFromHTMLSmilies(message);
-    }
     startPlainTextTag="";
     endPlainTextTag="";
   }
   ArrayList smiliesList=ImageLoader.getDefaultSmiliesPack();
   StringBuffer regexp=new StringBuffer();
+  regexp.append("(?<!(alt='|alt=\"))(");
   for (int i=0; i < smiliesList.size(); i++) {
     Smiley smiley=(Smiley)smiliesList.get(i);
     String[] smileyStrings=smiley.getSmileyStrings();
@@ -22,6 +20,7 @@
     }
   }
   regexp=regexp.deleteCharAt(regexp.length() - 1);
+  regexp.append(')');
   Pattern p=Pattern.compile(regexp.toString());
   Matcher m=p.matcher(message);
   StringBuffer msgBuffer=new StringBuffer();
