@@ -1,0 +1,17 @@
+{
+  StringBuffer msgBuffer=new StringBuffer();
+  Pattern p=Pattern.compile("(.*?)(<a[\\s][^<]*(/>|</a>))",Pattern.CASE_INSENSITIVE);
+  Matcher m=p.matcher(message);
+  int lastMatchIndex=0;
+  while (m.find()) {
+    lastMatchIndex=m.end();
+    String matchGroup1=m.group(1);
+    String matchGroup2=m.group(2);
+    String formattedString=this.formatLinksToHTML(matchGroup1);
+    m.appendReplacement(msgBuffer,replaceSpecialRegExpChars(formattedString) + matchGroup2);
+  }
+  String tailString=message.substring(lastMatchIndex);
+  String formattedTailString=formatLinksToHTML(tailString);
+  msgBuffer.append(formattedTailString);
+  return msgBuffer.toString();
+}
