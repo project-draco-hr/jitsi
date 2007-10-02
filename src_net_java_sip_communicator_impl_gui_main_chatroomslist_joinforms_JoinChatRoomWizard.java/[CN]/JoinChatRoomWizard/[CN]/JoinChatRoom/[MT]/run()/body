@@ -1,0 +1,20 @@
+{
+  ChatRoom chatRoom=null;
+  String chatRoomName=newChatRoom.getChatRoomName();
+  OperationSetMultiUserChat multiUserChatOpSet=(OperationSetMultiUserChat)newChatRoom.getProtocolProvider().getOperationSet(OperationSetMultiUserChat.class);
+  try {
+    chatRoom=multiUserChatOpSet.findRoom(chatRoomName);
+  }
+ catch (  OperationFailedException e1) {
+    logger.error("Failed to find chat room with name:" + chatRoomName,e1);
+  }
+catch (  OperationNotSupportedException e1) {
+    logger.error("Failed to find chat room with name:" + chatRoomName,e1);
+  }
+  if (chatRoom == null) {
+    new ErrorDialog(mainFrame,Messages.getI18NString("chatRoomNotExist",new String[]{chatRoomName,newChatRoom.getProtocolProvider().getAccountID().getService()}).getText(),Messages.getI18NString("error").getText()).showDialog();
+  }
+ else {
+    mainFrame.getMultiUserChatManager().joinChatRoom(chatRoom);
+  }
+}
