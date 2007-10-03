@@ -1,2 +1,18 @@
 {
+  if (chatRoomWrapper.getChatRoom() == null)   return;
+  new Thread(){
+    public void run(){
+      MessageHistoryService msgHistory=GuiActivator.getMsgHistoryService();
+      ChatConversationPanel conversationPanel=getChatConversationPanel();
+      Date firstMsgDate=conversationPanel.getPageFirstMsgTimestamp();
+      Collection c=null;
+      if (firstMsgDate != null) {
+        c=msgHistory.findLastMessagesBefore(chatRoomWrapper.getChatRoom(),firstMsgDate,MESSAGES_PER_PAGE);
+      }
+      if (c != null && c.size() > 0) {
+        SwingUtilities.invokeLater(new HistoryMessagesLoader(c));
+      }
+    }
+  }
+.start();
 }

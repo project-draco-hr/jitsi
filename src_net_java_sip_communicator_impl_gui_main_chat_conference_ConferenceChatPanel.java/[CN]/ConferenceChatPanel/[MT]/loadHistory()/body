@@ -1,2 +1,24 @@
 {
+  if (chatRoomWrapper.getChatRoom() == null)   return;
+  final MessageHistoryService msgHistory=GuiActivator.getMsgHistoryService();
+  if (msgHistory == null)   return;
+  new Thread(){
+    public void run(){
+      loadHistoryPeriod(chatRoomWrapper.getChatRoom());
+      Collection historyList=msgHistory.findLast(chatRoomWrapper.getChatRoom(),Constants.CHAT_HISTORY_SIZE);
+      if (historyList.size() > 0) {
+class ProcessHistory implements Runnable {
+          Collection historyList;
+          ProcessHistory(          Collection historyList){
+            this.historyList=historyList;
+          }
+          public void run(){
+            processHistory(historyList,null);
+          }
+        }
+        SwingUtilities.invokeLater(new ProcessHistory(historyList));
+      }
+    }
+  }
+.start();
 }
