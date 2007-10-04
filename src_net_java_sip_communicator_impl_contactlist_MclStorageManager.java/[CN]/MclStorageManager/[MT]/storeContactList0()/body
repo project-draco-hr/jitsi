@@ -2,24 +2,20 @@
   logger.trace("storing contact list. because is started ==" + isStarted());
   logger.trace("storing contact list. because is modified ==" + isModified);
   if (isStarted()) {
-    File backup=new File(contactlistFile.getAbsolutePath() + ".bak.part");
-    FileInputStream in=new FileInputStream(contactlistFile);
-    FileOutputStream out=new FileOutputStream(backup);
-    byte[] buf=new byte[1024];
-    int len;
-    while ((len=in.read(buf)) > 0) {
-      out.write(buf,0,len);
+    try {
+      contactlistTrans.beginTransaction();
     }
-    in.close();
-    out.close();
-    File final_backup=new File(contactlistFile.getAbsolutePath() + ".bak");
-    if (final_backup.exists()) {
-      final_backup.delete();
+ catch (    IllegalStateException e) {
+      logger.error("the contactlist file is missing",e);
     }
-    backup.renameTo(final_backup);
     OutputStream stream=new FileOutputStream(contactlistFile);
     XMLUtils.indentedWriteXML(contactListDocument,stream);
     stream.close();
-    final_backup.delete();
+    try {
+      contactlistTrans.commit();
+    }
+ catch (    IllegalStateException e) {
+      logger.error("the contactlist file is missing",e);
+    }
   }
 }

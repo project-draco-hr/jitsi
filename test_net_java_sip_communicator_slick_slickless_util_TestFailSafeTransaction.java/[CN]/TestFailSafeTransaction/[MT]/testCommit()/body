@@ -1,0 +1,23 @@
+{
+  try {
+    File temp=File.createTempFile(tempName + "a",null);
+    FileOutputStream out=new FileOutputStream(temp);
+    out.write(origData.getBytes());
+    FailSafeTransaction trans=new FailSafeTransaction(temp);
+    trans.beginTransaction();
+    out.write(addedData.getBytes());
+    trans.commit();
+    out.close();
+    assertEquals("the file hasn't the right size after a commit",temp.length(),origData.length() + addedData.length());
+    FileInputStream in=new FileInputStream(temp);
+    byte[] buffer=new byte[in.available()];
+    in.read(buffer);
+    in.close();
+    String content=new String(buffer);
+    assertEquals("the file content isn't correct",origData + addedData,content);
+    temp.delete();
+  }
+ catch (  Exception e) {
+    Assert.fail(e.getMessage());
+  }
+}
