@@ -39,11 +39,10 @@ catch (  ParseException exc) {
   ArrayList viaHeaders=this.sipProvider.getLocalViaHeaders(destinationInetAddress,this.sipProvider.getDefaultListeningPoint());
   MaxForwardsHeader maxForwards=this.sipProvider.getMaxForwardsHeader();
   ContentTypeHeader contTypeHeader;
-  ContentEncodingHeader contEncodHeader;
   ContentLengthHeader contLengthHeader;
   try {
     contTypeHeader=this.sipProvider.getHeaderFactory().createContentTypeHeader(getType(message),getSubType(message));
-    contEncodHeader=this.sipProvider.getHeaderFactory().createContentEncodingHeader(message.getEncoding());
+    if (!DEFAULT_MIME_ENCODING.equalsIgnoreCase(message.getEncoding()))     contTypeHeader.setParameter("charset",message.getEncoding());
     contLengthHeader=this.sipProvider.getHeaderFactory().createContentLengthHeader(message.getSize());
   }
  catch (  ParseException ex) {
@@ -62,7 +61,6 @@ catch (  InvalidArgumentException exc) {
     logger.error("Failed to create message Request!",ex);
     throw new OperationFailedException("Failed to create message Request!",OperationFailedException.INTERNAL_ERROR,ex);
   }
-  req.addHeader(contEncodHeader);
   req.addHeader(contLengthHeader);
   return req;
 }
