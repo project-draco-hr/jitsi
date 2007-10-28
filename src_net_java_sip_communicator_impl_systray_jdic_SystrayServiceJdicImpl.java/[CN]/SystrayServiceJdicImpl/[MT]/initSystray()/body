@@ -10,11 +10,13 @@
     logoIcon=new ImageIcon(Resources.getImage("trayIconMacOSX"));
     logoIconWhite=new ImageIcon(Resources.getImage("trayIconMacOSXWhite"));
     envelopeIcon=new ImageIcon(Resources.getImage("messageIconMacOSX"));
+    envelopeIconWhite=new ImageIcon(Resources.getImage("messageIconMacOSXWhite"));
   }
  else {
     logoIcon=new ImageIcon(Resources.getImage("trayIcon"));
     envelopeIcon=new ImageIcon(Resources.getImage("messageIcon"));
   }
+  currentIcon=logoIcon;
   trayIcon=new TrayIcon(logoIcon,"SIP Communicator",menu);
   trayIcon.setIconAutoSize(true);
   trayIcon.addActionListener(new ActionListener(){
@@ -31,13 +33,27 @@
   if (osName.startsWith("Mac OS X")) {
     menu.addPopupMenuListener(new PopupMenuListener(){
       public void popupMenuWillBecomeVisible(      PopupMenuEvent e){
-        trayIcon.setIcon(logoIconWhite);
+        if (currentIcon == envelopeIcon) {
+          trayIcon.setIcon(envelopeIconWhite);
+          currentIcon=envelopeIconWhite;
+        }
+ else {
+          trayIcon.setIcon(logoIconWhite);
+          currentIcon=logoIconWhite;
+        }
       }
       public void popupMenuWillBecomeInvisible(      PopupMenuEvent e){
-        trayIcon.setIcon(logoIcon);
+        if (currentIcon == envelopeIconWhite) {
+          trayIcon.setIcon(envelopeIcon);
+          currentIcon=envelopeIcon;
+        }
+ else {
+          trayIcon.setIcon(logoIcon);
+          currentIcon=logoIcon;
+        }
       }
       public void popupMenuCanceled(      PopupMenuEvent e){
-        trayIcon.setIcon(logoIconWhite);
+        popupMenuWillBecomeInvisible(e);
       }
     }
 );
