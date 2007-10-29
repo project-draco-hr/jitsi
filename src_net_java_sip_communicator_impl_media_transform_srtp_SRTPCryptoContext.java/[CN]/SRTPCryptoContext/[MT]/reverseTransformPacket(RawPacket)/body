@@ -1,0 +1,23 @@
+{
+  if (this.policy.getAuthType() == SRTPPolicy.HMACSHA1_AUTHENTICATION) {
+    int tagLength=this.policy.getAuthTagLength();
+    byte[] originalTag=pkt.readRegion(pkt.getLength() - tagLength,tagLength);
+    pkt.shrink(tagLength);
+    byte[] calculatedTag=authenticatePacketHMCSHA1(pkt);
+    if (!Arrays.equals(originalTag,calculatedTag)) {
+      return false;
+    }
+  }
+  int seqNum=PacketManipulator.GetRTPSequenceNumber(pkt);
+  if (!checkReplay(seqNum)) {
+    return false;
+  }
+  if (this.policy.getEncType() == SRTPPolicy.AESCM_ENCRYPTION) {
+    processPacketAESCM(pkt);
+  }
+ else   if (this.policy.getEncType() == SRTPPolicy.AESF8_ENCRYPTION) {
+    processPacketAESF8(pkt);
+  }
+  update(seqNum);
+  return true;
+}

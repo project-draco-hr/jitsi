@@ -1,0 +1,16 @@
+{
+  final int BLKLEN=AESCipher.BLOCK_SIZE;
+  byte[] in=new byte[BLKLEN];
+  byte[] tmp=new byte[BLKLEN];
+  System.arraycopy(iv,0,in,0,14);
+  int ctr;
+  for (ctr=0; ctr < length / BLKLEN; ctr++) {
+    in[14]=(byte)((ctr & 0xFF00) >> 8);
+    in[15]=(byte)((ctr & 0x00FF));
+    this.aesCipher.encryptBlock(in,0,out,ctr * BLKLEN);
+  }
+  in[14]=(byte)((ctr & 0xFF00) >> 8);
+  in[15]=(byte)((ctr & 0x00FF));
+  this.aesCipher.encryptBlock(in,0,tmp,0);
+  System.arraycopy(tmp,0,out,ctr * BLKLEN,length % BLKLEN);
+}

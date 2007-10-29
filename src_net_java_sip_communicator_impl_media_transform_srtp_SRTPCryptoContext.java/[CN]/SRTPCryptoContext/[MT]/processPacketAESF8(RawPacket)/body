@@ -1,0 +1,26 @@
+{
+  long ssrc=PacketManipulator.GetRTPSSRC(pkt);
+  boolean isMarked=PacketManipulator.IsPacketMarked(pkt);
+  int seqNum=PacketManipulator.GetRTPSequenceNumber(pkt);
+  byte payload=PacketManipulator.GetRTPPayloadType(pkt);
+  byte[] iv=new byte[16];
+  iv[0]=0;
+  iv[1]=(byte)(isMarked ? 0x80 : 0x00);
+  iv[1]|=payload & 0x7f;
+  iv[2]=(byte)(seqNum >> 8);
+  iv[3]=(byte)seqNum;
+  byte[] timeStamp=PacketManipulator.ReadTimeStampIntoByteArray(pkt);
+  System.arraycopy(timeStamp,0,iv,4,4);
+  iv[8]=(byte)(ssrc >> 24);
+  iv[9]=(byte)(ssrc >> 16);
+  iv[10]=(byte)(ssrc >> 8);
+  iv[11]=(byte)ssrc;
+  iv[12]=(byte)(this.roc >> 24);
+  iv[13]=(byte)(this.roc >> 16);
+  iv[14]=(byte)(this.roc >> 8);
+  iv[15]=(byte)this.roc;
+  SRTPCipher cipher=new SRTPCipherF8(this.encKey,this.saltKey);
+  final int payloadOffset=PacketManipulator.GetRTPHeaderLength(pkt);
+  final int payloadLength=PacketManipulator.GetRTPPayloadLength(pkt);
+  cipher.process(pkt.getBuffer(),pkt.getOffset() + payloadOffset,payloadLength,iv);
+}

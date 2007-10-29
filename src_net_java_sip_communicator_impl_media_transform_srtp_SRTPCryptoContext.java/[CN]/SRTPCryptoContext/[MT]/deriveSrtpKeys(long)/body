@@ -1,0 +1,18 @@
+{
+  byte[] iv=new byte[16];
+  long label=0;
+  computeIv(iv,label,index,this.keyDerivationRate,this.masterSalt);
+  SRTPCipherCTR aes=new SRTPCipherCTR(this.masterKey);
+  aes.getCipherStream(this.encKey,this.policy.getEncKeyLength(),iv);
+  if (this.authKey != null) {
+    label=0x01;
+    computeIv(iv,label,index,this.keyDerivationRate,this.masterSalt);
+    aes=new SRTPCipherCTR(this.masterKey);
+    aes.getCipherStream(this.authKey,this.policy.getAuthKeyLength(),iv);
+    this.digest=new SRTPDigest(this.authKey);
+  }
+  label=0x02;
+  computeIv(iv,label,index,this.keyDerivationRate,this.masterSalt);
+  aes=new SRTPCipherCTR(this.masterKey);
+  aes.getCipherStream(this.saltKey,this.policy.getSaltKeyLength(),iv);
+}

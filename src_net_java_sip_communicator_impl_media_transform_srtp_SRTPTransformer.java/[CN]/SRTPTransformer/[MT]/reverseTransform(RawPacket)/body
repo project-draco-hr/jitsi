@@ -1,0 +1,15 @@
+{
+  long ssrc=PacketManipulator.GetRTPSSRC(pkt);
+  int seqNum=PacketManipulator.GetRTPSequenceNumber(pkt);
+  SRTPCryptoContext context=(SRTPCryptoContext)this.contexts.get(new Long(ssrc));
+  if (context == null) {
+    context=this.engine.getDefaultContext().deriveContext(ssrc,0,0);
+    context.deriveSrtpKeys(seqNum);
+    this.contexts.put(new Long(ssrc),context);
+  }
+  boolean validPacket=context.reverseTransformPacket(pkt);
+  if (!validPacket) {
+    return null;
+  }
+  return pkt;
+}
