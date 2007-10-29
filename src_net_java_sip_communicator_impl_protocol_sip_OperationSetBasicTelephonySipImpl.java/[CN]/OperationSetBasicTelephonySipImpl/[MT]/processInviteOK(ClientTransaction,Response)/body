@@ -27,10 +27,22 @@ catch (  SipException ex) {
   callParticipant.setSdpDescription(new String(ok.getRawContent()));
   CallSession callSession=((CallSipImpl)callParticipant.getCall()).getMediaCallSession();
   try {
-    if (callSession == null) {
-      callSession=SipActivator.getMediaService().createCallSession(callParticipant.getCall());
-      String sdp=callSession.processSdpOffer(callParticipant,callParticipant.getSdpDescription());
-      ack.setContent(sdp,contentTypeHeader);
+    try {
+      if (callSession == null) {
+        callSession=SipActivator.getMediaService().createCallSession(callParticipant.getCall());
+        String sdp=callSession.processSdpOffer(callParticipant,callParticipant.getSdpDescription());
+        ack.setContent(sdp,contentTypeHeader);
+      }
+    }
+  finally {
+      try {
+        clientTransaction.getDialog().sendAck(ack);
+      }
+ catch (      SipException ex) {
+        logger.error("Failed to acknowledge call!",ex);
+        callParticipant.setState(CallParticipantState.FAILED);
+        return;
+      }
     }
     callSession.processSdpAnswer(callParticipant,callParticipant.getSdpDescription());
   }
@@ -41,14 +53,6 @@ catch (  SipException ex) {
 catch (  MediaException exc) {
     logger.error("We failed to process the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")"+ ". Error was: "+ exc.getMessage(),exc);
     callParticipant.setState(CallParticipantState.FAILED,"We failed to process the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")"+ ". Error was: "+ exc.getMessage());
-  }
-  try {
-    clientTransaction.getDialog().sendAck(ack);
-  }
- catch (  SipException ex) {
-    logger.error("Failed to acknowledge call!",ex);
-    callParticipant.setState(CallParticipantState.FAILED);
-    return;
   }
   callParticipant.setState(CallParticipantState.CONNECTED);
 }
