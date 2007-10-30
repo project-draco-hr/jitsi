@@ -1,0 +1,20 @@
+{
+  if ((message.getFromAddr() == null) || (message.getFromAddr().indexOf('@') < 0)) {
+    return;
+  }
+  String subject=message.getSubject();
+  try {
+    subject=MimeUtility.decodeText(subject);
+  }
+ catch (  Exception exception) {
+    exception.printStackTrace();
+  }
+  Message newMailMessage=new MessageMsnImpl(MessageFormat.format(Resources.getString("newMail"),new Object[]{message.getFrom(),message.getFromAddr(),subject}),DEFAULT_MIME_TYPE,DEFAULT_MIME_ENCODING,subject);
+  Contact sourceContact=opSetPersPresence.findContactByID(message.getFromAddr());
+  if (sourceContact == null) {
+    logger.debug("received a new mail from an unknown contact: " + message.getFrom() + " &lt;"+ message.getFromAddr()+ "&gt;");
+    sourceContact=opSetPersPresence.createVolatileContact(message.getFromAddr());
+  }
+  MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(newMailMessage,sourceContact,new Date(),MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
+  fireMessageEvent(msgReceivedEvt);
+}
