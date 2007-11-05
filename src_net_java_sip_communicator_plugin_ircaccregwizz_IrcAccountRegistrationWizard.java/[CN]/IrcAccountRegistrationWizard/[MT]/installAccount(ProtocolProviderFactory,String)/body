@@ -9,16 +9,21 @@
   }
   accountProperties.put(ProtocolProviderFactory.AUTO_CHANGE_USER_NAME,new Boolean(registration.isAutoChangeNick()).toString());
   accountProperties.put(ProtocolProviderFactory.PASSWORD_REQUIRED,new Boolean(registration.isRequiredPassword()).toString());
+  if (isModification) {
+    providerFactory.uninstallAccount(protocolProvider.getAccountID());
+    this.protocolProvider=null;
+    this.isModification=false;
+  }
   try {
     AccountID accountID=providerFactory.installAccount(user,accountProperties);
     ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
     protocolProvider=(ProtocolProviderService)IrcAccRegWizzActivator.bundleContext.getService(serRef);
   }
  catch (  IllegalArgumentException exc) {
-    new ErrorDialog(null,exc.getMessage(),exc).showDialog();
+    IrcAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
   }
 catch (  IllegalStateException exc) {
-    new ErrorDialog(null,exc.getMessage(),exc).showDialog();
+    IrcAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
   }
   return protocolProvider;
 }

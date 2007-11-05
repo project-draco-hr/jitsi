@@ -3,16 +3,21 @@
   if (registration.isRememberPassword()) {
     accountProperties.put(ProtocolProviderFactory.PASSWORD,registration.getPassword());
   }
+  if (isModification) {
+    providerFactory.uninstallAccount(protocolProvider.getAccountID());
+    this.protocolProvider=null;
+    this.isModification=false;
+  }
   try {
     AccountID accountID=providerFactory.installAccount(user,accountProperties);
     ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
     protocolProvider=(ProtocolProviderService)GibberishAccRegWizzActivator.bundleContext.getService(serRef);
   }
  catch (  IllegalArgumentException exc) {
-    new ErrorDialog(null,exc.getMessage(),exc).showDialog();
+    GibberishAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
   }
 catch (  IllegalStateException exc) {
-    new ErrorDialog(null,exc.getMessage(),exc).showDialog();
+    GibberishAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
   }
   return protocolProvider;
 }

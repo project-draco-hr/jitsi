@@ -3,16 +3,17 @@
   if (registration.isRememberPassword()) {
     accountProperties.put(ProtocolProviderFactory.PASSWORD,passwd);
   }
-  if (registration.getProxyType() != null) {
-    accountProperties.put(ProtocolProviderFactory.PROXY_ADDRESS,registration.getProxy());
-    accountProperties.put(ProtocolProviderFactory.PROXY_PORT,registration.getProxyPort());
-    accountProperties.put(ProtocolProviderFactory.PROXY_TYPE,registration.getProxyType());
-    accountProperties.put(ProtocolProviderFactory.PROXY_USERNAME,registration.getProxyUsername());
-    accountProperties.put(ProtocolProviderFactory.PROXY_PASSWORD,registration.getProxyPassword());
+  if (registration.isAdvancedSettingsEnabled()) {
+    if (registration.getProxy() != null)     accountProperties.put(ProtocolProviderFactory.PROXY_ADDRESS,registration.getProxy());
+    if (registration.getProxyPort() != null)     accountProperties.put(ProtocolProviderFactory.PROXY_PORT,registration.getProxyPort());
+    if (registration.getProxyType() != null)     accountProperties.put(ProtocolProviderFactory.PROXY_TYPE,registration.getProxyType());
+    if (registration.getProxyUsername() != null)     accountProperties.put(ProtocolProviderFactory.PROXY_USERNAME,registration.getProxyUsername());
+    if (registration.getProxyPassword() != null)     accountProperties.put(ProtocolProviderFactory.PROXY_PASSWORD,registration.getProxyPassword());
   }
   if (isModification) {
     providerFactory.uninstallAccount(protocolProvider.getAccountID());
     this.protocolProvider=null;
+    this.isModification=false;
   }
   try {
     AccountID accountID=providerFactory.installAccount(user,accountProperties);
@@ -20,10 +21,10 @@
     protocolProvider=(ProtocolProviderService)IcqAccRegWizzActivator.bundleContext.getService(serRef);
   }
  catch (  IllegalArgumentException e) {
-    new ErrorDialog(null,e.getMessage(),e).showDialog();
+    IcqAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(e.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
   }
 catch (  IllegalStateException e) {
-    new ErrorDialog(null,e.getMessage(),e).showDialog();
+    IcqAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(e.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
   }
   return protocolProvider;
 }

@@ -15,15 +15,18 @@
   if (isModification) {
     providerFactory.uninstallAccount(protocolProvider.getAccountID());
     this.protocolProvider=null;
+    this.isModification=false;
   }
   try {
     AccountID accountID=providerFactory.installAccount(user,accountProperties);
     ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
     protocolProvider=(ProtocolProviderService)SIPAccRegWizzActivator.bundleContext.getService(serRef);
   }
- catch (  Exception exc) {
-    logger.error(exc.getMessage(),exc);
-    throw new RuntimeException(exc.getMessage(),exc);
+ catch (  IllegalArgumentException exc) {
+    SIPAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
+  }
+catch (  IllegalStateException exc) {
+    SIPAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
   }
   return protocolProvider;
 }

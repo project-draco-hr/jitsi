@@ -1,6 +1,6 @@
 {
   String uin=uinField.getText();
-  if (isExistingAccount(uin)) {
+  if (!wizard.isModification() && isExistingAccount(uin)) {
     nextPageIdentifier=FIRST_PAGE_IDENTIFIER;
     uinPassPanel.add(existingAccountLabel,BorderLayout.NORTH);
     this.revalidate();
@@ -8,15 +8,17 @@
  else {
     nextPageIdentifier=SUMMARY_PAGE_IDENTIFIER;
     uinPassPanel.remove(existingAccountLabel);
+    IcqAccountRegistration registration=wizard.getRegistration();
     registration.setUin(uin);
     registration.setPassword(new String(passField.getPassword()));
     registration.setRememberPassword(rememberPassBox.isSelected());
     if (enableAdvOpButton.isSelected()) {
+      registration.setAdvancedSettingsEnabled(true);
       registration.setProxy(proxyField.getText());
       registration.setProxyPort(proxyPortField.getText());
-      registration.setProxyType(proxyTypeCombo.getSelectedItem().toString());
+      if (proxyTypeCombo.getSelectedItem() != null)       registration.setProxyType(proxyTypeCombo.getSelectedItem().toString());
       registration.setProxyUsername(proxyUsernameField.getText());
-      registration.setProxyPassword(new String(proxyPassField.getPassword()));
+      if (proxyPassField.getPassword() != null)       registration.setProxyPassword(new String(proxyPassField.getPassword()));
     }
   }
 }

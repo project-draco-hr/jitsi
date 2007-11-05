@@ -4,16 +4,21 @@
   accountProperties.put("last",registration.getLast());
   accountProperties.put("mail",registration.getMail());
   accountProperties.put("rememberContacts",new Boolean(registration.isRememberContacts()).toString());
+  if (isModification) {
+    providerFactory.uninstallAccount(protocolProvider.getAccountID());
+    this.protocolProvider=null;
+    this.isModification=false;
+  }
   try {
     AccountID accountID=providerFactory.installAccount(user,accountProperties);
     ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
     protocolProvider=(ProtocolProviderService)ZeroconfAccRegWizzActivator.bundleContext.getService(serRef);
   }
  catch (  IllegalArgumentException exc) {
-    new ErrorDialog(null,exc.getMessage(),exc).showDialog();
+    ZeroconfAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
   }
 catch (  IllegalStateException exc) {
-    new ErrorDialog(null,exc.getMessage(),exc).showDialog();
+    ZeroconfAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
   }
   return protocolProvider;
 }

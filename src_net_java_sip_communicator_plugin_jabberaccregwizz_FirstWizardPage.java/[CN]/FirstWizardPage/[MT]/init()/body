@@ -1,6 +1,5 @@
 {
   this.userIDField.getDocument().addDocumentListener(this);
-  this.resourceField.getDocument().addDocumentListener(this);
   this.rememberPassBox.setSelected(true);
   this.existingAccountLabel.setForeground(Color.RED);
   this.userIDExampleLabel.setForeground(Color.GRAY);
@@ -18,17 +17,23 @@
   userIDPassPanel.add(rememberPassBox,BorderLayout.SOUTH);
   userIDPassPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("userIDAndPassword")));
   mainPanel.add(userIDPassPanel);
-  serverField.setEditable(false);
-  portField.setEditable(false);
-  resourceField.setEditable(false);
-  priorityField.setEditable(false);
+  serverField.setEnabled(false);
+  portField.setEnabled(false);
+  resourceField.setEnabled(false);
+  priorityField.setEnabled(false);
   enableAdvOpButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent evt){
       JCheckBox cb=(JCheckBox)evt.getSource();
-      serverField.setEditable(cb.isSelected());
-      portField.setEditable(cb.isSelected());
-      resourceField.setEditable(cb.isSelected());
-      priorityField.setEditable(cb.isSelected());
+      if (!wizard.isModification())       serverField.setEnabled(cb.isSelected());
+      portField.setEnabled(cb.isSelected());
+      resourceField.setEnabled(cb.isSelected());
+      priorityField.setEnabled(cb.isSelected());
+      if (!cb.isSelected()) {
+        setServerFieldAccordingToUserID();
+        portField.setText(DEFAULT_PORT);
+        resourceField.setText(DEFAULT_RESOURCE);
+        priorityField.setText(DEFAULT_PRIORITY);
+      }
     }
   }
 );
@@ -85,7 +90,7 @@
   }
 );
   buttonPanel.add(registerButton);
-  registerArea.setEditable(false);
+  registerArea.setEnabled(false);
   registerArea.setOpaque(false);
   registerArea.setLineWrap(true);
   registerArea.setWrapStyleWord(true);
