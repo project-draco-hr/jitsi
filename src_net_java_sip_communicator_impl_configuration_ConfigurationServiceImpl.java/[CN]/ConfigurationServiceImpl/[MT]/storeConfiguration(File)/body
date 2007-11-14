@@ -16,7 +16,17 @@
   Iterator propNames=fileExtractedProperties.keySet().iterator();
   while (propNames.hasNext())   newlyAddedProperties.remove(propNames.next());
   this.processNewProperties(propertiesDocument,newlyAddedProperties);
-  OutputStream stream=new FileOutputStream(getConfigurationFile());
-  XMLUtils.indentedWriteXML(propertiesDocument,stream);
-  stream.close();
+  File config=getConfigurationFile();
+  FailSafeTransaction trans=this.faService.createFailSafeTransaction(config);
+  try {
+    trans.beginTransaction();
+    OutputStream stream=new FileOutputStream(config);
+    XMLUtils.indentedWriteXML(propertiesDocument,stream);
+    stream.close();
+    trans.commit();
+  }
+ catch (  Exception e) {
+    logger.error("can't write data in the configuration file",e);
+    trans.rollback();
+  }
 }

@@ -1,0 +1,46 @@
+{
+  if (presenceState == null || contacts == null || curStatus == null) {
+    return null;
+  }
+  Iterator iter=contacts.iterator();
+  while (iter.hasNext()) {
+    Object tab[]=(Object[])iter.next();
+    Contact contact=(Contact)tab[0];
+    float priority=((Float)tab[1]).floatValue();
+    int pos=0, i=0;
+    boolean skip=false;
+    Iterator iter2=curStatus.iterator();
+    while (iter2.hasNext()) {
+      Object tab2[]=(Object[])iter2.next();
+      Contact curContact=(Contact)tab2[0];
+      float curPriority=((Float)tab2[1]).floatValue();
+      if (pos == 0 && curPriority <= priority) {
+        pos=i;
+      }
+      if (curContact.equals(contact)) {
+        if (curPriority > priority) {
+          skip=true;
+          break;
+        }
+ else         if (curPriority < priority) {
+          curStatus.remove(i);
+        }
+ else {
+          SipStatusEnum curPresence=(SipStatusEnum)tab2[2];
+          if (curPresence.getStatus() >= presenceState.getStatus()) {
+            skip=true;
+            break;
+          }
+          curStatus.remove(i);
+        }
+      }
+      i++;
+    }
+    if (skip) {
+      continue;
+    }
+    Object tabRes[]={contact,new Float(priority),presenceState};
+    curStatus.insertElementAt(tabRes,pos);
+  }
+  return curStatus;
+}

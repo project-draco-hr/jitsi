@@ -6,8 +6,11 @@
   logger.debug("parsing:\n" + presenceDoc);
   NodeList presList=doc.getElementsByTagNameNS(NS_VALUE,PRESENCE_ELEMENT);
   if (presList.getLength() == 0) {
-    logger.error("no presence element in this document");
-    return;
+    presList=doc.getElementsByTagNameNS(ANY_NS,PRESENCE_ELEMENT);
+    if (presList.getLength() == 0) {
+      logger.error("no presence element in this document");
+      return;
+    }
   }
   if (presList.getLength() > 1) {
     logger.warn("more than one presence element in this document");
@@ -63,22 +66,26 @@
       }
     }
   }
-  NodeList tupleList=presence.getElementsByTagNameNS(NS_VALUE,TUPLE_ELEMENT);
+  Vector newPresenceStates=new Vector(3,2);
+  NodeList tupleList=getPidfChilds(presence,TUPLE_ELEMENT);
   for (int i=0; i < tupleList.getLength(); i++) {
     Node tupleNode=tupleList.item(i);
     if (tupleNode.getNodeType() != Node.ELEMENT_NODE) {
       continue;
     }
     Element tuple=(Element)tupleNode;
-    NodeList contactList=tuple.getElementsByTagNameNS(NS_VALUE,CONTACT_ELEMENT);
+    NodeList contactList=getPidfChilds(tuple,CONTACT_ELEMENT);
     Vector sipcontact=new Vector(1,3);
     String contactID=null;
     if (contactList.getLength() == 0) {
       contactID=XMLUtils.getAttribute(presNode,ENTITY_ATTRIBUTE);
-      if (contactID.startsWith("pres:"))       contactID=contactID.substring("pres:".length());
+      if (contactID.startsWith("pres:")) {
+        contactID=contactID.substring("pres:".length());
+      }
       Contact tmpContact=resolveContactID(contactID);
       if (tmpContact != null) {
-        sipcontact.add(tmpContact);
+        Object tab[]={tmpContact,new Float(0f)};
+        sipcontact.add(tab);
       }
     }
  else {
@@ -89,9 +96,54 @@
         }
         Element contact=(Element)contactNode;
         contactID=getTextContent(contact);
+        if (contactID.startsWith("pres:")) {
+          contactID=contactID.substring("pres:".length());
+        }
         Contact tmpContact=resolveContactID(contactID);
-        if (tmpContact != null) {
-          sipcontact.add(tmpContact);
+        if (tmpContact == null) {
+          continue;
+        }
+        Object tab[]=new Object[2];
+        String prioStr=contact.getAttribute(PRIORITY_ATTRIBUTE);
+        Float prio=null;
+        try {
+          if (prioStr == null || prioStr.length() == 0) {
+            prio=new Float(0f);
+          }
+ else {
+            prio=Float.valueOf(prioStr);
+          }
+        }
+ catch (        NumberFormatException e) {
+          logger.debug("contact priority is not a valid float",e);
+          prio=new Float(0f);
+        }
+        if (prio.floatValue() < 0) {
+          prio=new Float(0f);
+        }
+        if (prio.floatValue() > 1) {
+          prio=new Float(1f);
+        }
+        tab[0]=tmpContact;
+        tab[1]=prio;
+        Iterator iter=sipcontact.iterator();
+        boolean contactAlreadyListed=false;
+        int k=0;
+        while (iter.hasNext()) {
+          Object tmp[];
+          tmp=((Object[])iter.next());
+          if (((Contact)tmp[0]).equals(tmpContact)) {
+            contactAlreadyListed=true;
+            if (((Float)tmp[1]).floatValue() < prio.floatValue()) {
+              sipcontact.remove(k);
+              sipcontact.add(tab);
+            }
+            break;
+          }
+          k++;
+        }
+        if (!contactAlreadyListed) {
+          sipcontact.add(tab);
         }
       }
     }
@@ -100,12 +152,10 @@
       continue;
     }
     if (personStatus != null) {
-      for (int j=0; j < sipcontact.size(); j++) {
-        changePresenceStatusForContact((ContactSipImpl)sipcontact.get(j),personStatus);
-      }
+      newPresenceStates=setStatusForContacts(personStatus,sipcontact,newPresenceStates);
       continue;
     }
-    NodeList statusList=tuple.getElementsByTagNameNS(NS_VALUE,STATUS_ELEMENT);
+    NodeList statusList=getPidfChilds(tuple,STATUS_ELEMENT);
     int index=statusList.getLength() - 1;
     Node statusNode=null;
     do {
@@ -123,7 +173,7 @@
     }
  else {
       Element status=(Element)statusNode;
-      NodeList basicList=status.getElementsByTagNameNS(NS_VALUE,BASIC_ELEMENT);
+      NodeList basicList=getPidfChilds(status,BASIC_ELEMENT);
       index=basicList.getLength() - 1;
       Node basicNode=null;
       do {
@@ -142,7 +192,7 @@
         basic=(Element)basicNode;
       }
     }
-    NodeList noteList=tuple.getElementsByTagNameNS(NS_VALUE,NOTE_ELEMENT);
+    NodeList noteList=getPidfChilds(tuple,NOTE_ELEMENT);
     boolean changed=false;
     for (int k=0; k < noteList.getLength() && !changed; k++) {
       Node noteNode=noteList.item(k);
@@ -156,23 +206,17 @@
         SipStatusEnum current=(SipStatusEnum)states.next();
         if (current.getStatusName().equalsIgnoreCase(state)) {
           changed=true;
-          for (int j=0; j < sipcontact.size(); j++) {
-            changePresenceStatusForContact((ContactSipImpl)sipcontact.get(j),current);
-          }
+          newPresenceStates=setStatusForContacts(current,sipcontact,newPresenceStates);
           break;
         }
       }
     }
     if (changed == false && basic != null) {
       if (getTextContent(basic).equalsIgnoreCase(ONLINE_STATUS)) {
-        for (int j=0; j < sipcontact.size(); j++) {
-          changePresenceStatusForContact((ContactSipImpl)sipcontact.get(j),SipStatusEnum.ONLINE);
-        }
+        newPresenceStates=setStatusForContacts(SipStatusEnum.ONLINE,sipcontact,newPresenceStates);
       }
  else       if (getTextContent(basic).equalsIgnoreCase(OFFLINE_STATUS)) {
-        for (int j=0; j < sipcontact.size(); j++) {
-          changePresenceStatusForContact((ContactSipImpl)sipcontact.get(j),SipStatusEnum.OFFLINE);
-        }
+        newPresenceStates=setStatusForContacts(SipStatusEnum.OFFLINE,sipcontact,newPresenceStates);
       }
     }
  else {
@@ -180,5 +224,12 @@
         logger.debug("no suitable presence state found in this " + "tuple");
       }
     }
+  }
+  Iterator iter=newPresenceStates.iterator();
+  while (iter.hasNext()) {
+    Object tab[]=(Object[])iter.next();
+    ContactSipImpl contact=(ContactSipImpl)tab[0];
+    SipStatusEnum status=(SipStatusEnum)tab[2];
+    changePresenceStatusForContact(contact,status);
   }
 }

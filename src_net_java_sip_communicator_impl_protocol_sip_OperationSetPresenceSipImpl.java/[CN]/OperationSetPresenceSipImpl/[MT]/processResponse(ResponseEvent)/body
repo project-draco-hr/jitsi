@@ -181,6 +181,10 @@ synchronized (this.waitedCallIds) {
         logger.error("no Expires header in the response");
         return;
       }
+      if (expires.getExpires() == 0) {
+        this.distantPAET=null;
+        return;
+      }
       if (this.republishTask != null) {
         this.republishTask.cancel();
       }
@@ -211,6 +215,32 @@ synchronized (this.waitedCallIds) {
       Request req=null;
       try {
         req=createPublish(min.getExpires(),true);
+      }
+ catch (      OperationFailedException e) {
+        logger.error("can't create the new publish request",e);
+        return;
+      }
+      ClientTransaction transac=null;
+      try {
+        transac=this.parentProvider.getDefaultJainSipProvider().getNewClientTransaction(req);
+      }
+ catch (      TransactionUnavailableException e) {
+        logger.error("can't create the client transaction",e);
+        return;
+      }
+      try {
+        transac.sendRequest();
+      }
+ catch (      SipException e) {
+        logger.error("can't send the PUBLISH request",e);
+        return;
+      }
+    }
+ else     if (response.getStatusCode() == Response.CONDITIONAL_REQUEST_FAILED) {
+      this.distantPAET=null;
+      Request req=null;
+      try {
+        req=createPublish(this.subscriptionDuration,true);
       }
  catch (      OperationFailedException e) {
         logger.error("can't create the new publish request",e);
