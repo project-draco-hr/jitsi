@@ -1,3 +1,20 @@
 {
+synchronized (registeredWizards) {
+    registeredWizards.put(wizard.getClass().getName(),wizard);
+  }
+  Set set=GuiActivator.getProtocolProviderFactories().entrySet();
+  Iterator iter=set.iterator();
+  boolean hasRegisteredAccounts=false;
+  while (iter.hasNext()) {
+    Map.Entry entry=(Map.Entry)iter.next();
+    ProtocolProviderFactory providerFactory=(ProtocolProviderFactory)entry.getValue();
+    ArrayList accountsList=providerFactory.getRegisteredAccounts();
+    if (accountsList != null && accountsList.size() > 0)     hasRegisteredAccounts=true;
+  }
+  String preferredWizardName=LOGIN_RESOURCE_BUNDLE.getString("preferredAccountWizard");
+  if (!hasRegisteredAccounts && preferredWizardName != null && wizard.getClass().getName().equals(preferredWizardName)) {
+    this.setCurrentWizard(wizard);
+    this.showDialog(true);
+  }
   this.fireAccountRegistrationEvent(wizard,AccountRegistrationEvent.REGISTRATION_ADDED);
 }
