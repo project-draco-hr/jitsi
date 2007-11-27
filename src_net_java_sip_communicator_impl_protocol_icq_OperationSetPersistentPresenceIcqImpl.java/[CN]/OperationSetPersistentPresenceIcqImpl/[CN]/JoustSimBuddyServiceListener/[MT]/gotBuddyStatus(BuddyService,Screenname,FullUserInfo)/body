@@ -16,8 +16,6 @@
  else   newStatus=statusLongToPresenceStatus(info.getIcqStatus());
   sourceContact.updatePresenceStatus(newStatus);
   ContactGroupIcqImpl parent=ssContactList.findContactGroup(sourceContact);
-  logger.debug("Will Dispatch the contact status event.");
-  fireContactPresenceStatusChangeEvent(sourceContact,parent,oldStatus,newStatus);
   List extraInfoBlocks=info.getExtraInfoBlocks();
   if (extraInfoBlocks != null) {
     for (int i=0; i < extraInfoBlocks.size(); i++) {
@@ -25,7 +23,10 @@
       if (block.getType() == ExtraInfoBlock.TYPE_AVAILMSG) {
         String status=ExtraInfoData.readAvailableMessage(block.getExtraData());
         logger.info("Status Message is: " + status + ".");
+        sourceContact.setStatusMessage(status);
       }
     }
   }
+  logger.debug("Will Dispatch the contact status event.");
+  fireContactPresenceStatusChangeEvent(sourceContact,parent,oldStatus,newStatus);
 }
