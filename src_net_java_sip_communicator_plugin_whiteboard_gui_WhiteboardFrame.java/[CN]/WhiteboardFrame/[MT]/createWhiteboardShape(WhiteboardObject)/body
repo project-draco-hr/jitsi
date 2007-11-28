@@ -1,0 +1,81 @@
+{
+  logger.debug("CreateWhiteboardShape");
+  WhiteboardShape wShape=null;
+  String id=wbo.getID();
+  int color=wbo.getColor();
+  int t=wbo.getThickness();
+  if (wbo instanceof WhiteboardObjectPath) {
+    WhiteboardObjectPath path=(WhiteboardObjectPath)wbo;
+    logger.debug("[log] : WB_PATH");
+    Color c=Color.getColor("",color);
+    List points=path.getPoints();
+    wShape=new WhiteboardShapePath(id,t,c,points);
+  }
+ else   if (wbo instanceof WhiteboardObjectPolyLine) {
+    WhiteboardObjectPolyLine pLine=(WhiteboardObjectPolyLine)wbo;
+    logger.debug("[log] : WB_POLYLINE");
+    Color c=Color.getColor("",color);
+    List points=pLine.getPoints();
+    wShape=new WhiteboardShapePolyLine(id,t,c,points,false);
+  }
+ else   if (wbo instanceof WhiteboardObjectPolygon) {
+    WhiteboardObjectPolygon polygon=(WhiteboardObjectPolygon)wbo;
+    logger.debug("[log] : WB_POLYGON");
+    Color c=Color.getColor("",color);
+    List points=polygon.getPoints();
+    boolean fill=polygon.isFill();
+    wShape=new WhiteboardShapePolygon(id,t,c,points,fill);
+  }
+ else   if (wbo instanceof WhiteboardObjectLine) {
+    WhiteboardObjectLine line=(WhiteboardObjectLine)wbo;
+    logger.debug("[log] : WB_LINE");
+    WhiteboardPoint pStart=line.getWhiteboardPointStart();
+    WhiteboardPoint pEnd=line.getWhiteboardPointEnd();
+    Color c=Color.getColor("",color);
+    wShape=new WhiteboardShapeLine(id,t,c,pStart,pEnd);
+  }
+ else   if (wbo instanceof WhiteboardObjectRect) {
+    WhiteboardObjectRect rect=(WhiteboardObjectRect)wbo;
+    logger.debug("[log] : WB_RECT");
+    Color c=Color.getColor("",color);
+    double height, width;
+    WhiteboardPoint p=rect.getWhiteboardPoint();
+    width=rect.getWidth();
+    height=rect.getHeight();
+    boolean fill=rect.isFill();
+    wShape=new WhiteboardShapeRect(id,t,c,p,width,height,fill);
+  }
+ else   if (wbo instanceof WhiteboardObjectCircle) {
+    WhiteboardObjectCircle circle=(WhiteboardObjectCircle)wbo;
+    logger.debug("[log] : WB_CIRCLE");
+    Color c=Color.getColor("",color);
+    WhiteboardPoint p=circle.getWhiteboardPoint();
+    double r=circle.getRadius();
+    boolean fill=circle.isFill();
+    wShape=new WhiteboardShapeCircle(id,t,c,p,r,fill);
+  }
+ else   if (wbo instanceof WhiteboardObjectText) {
+    WhiteboardObjectText text=(WhiteboardObjectText)wbo;
+    logger.debug("[log] : WB_TEXT");
+    Color c=Color.getColor("",color);
+    WhiteboardPoint p=text.getWhiteboardPoint();
+    int size;
+    String txt, fontFamily;
+    size=text.getFontSize();
+    txt=text.getText();
+    fontFamily=text.getFontName();
+    wShape=new WhiteboardShapeText(id,c,p,size,txt);
+  }
+ else   if (wbo instanceof WhiteboardObjectImage) {
+    WhiteboardObjectImage img=(WhiteboardObjectImage)wbo;
+    logger.debug("[log] : WB_IMAGE");
+    Color c=Color.getColor("",color);
+    double height, width;
+    WhiteboardPoint p=img.getWhiteboardPoint();
+    width=img.getWidth();
+    height=img.getHeight();
+    byte[] b=img.getBackgroundImage();
+    wShape=new WhiteboardShapeImage(id,p,width,height,b);
+  }
+  return wShape;
+}

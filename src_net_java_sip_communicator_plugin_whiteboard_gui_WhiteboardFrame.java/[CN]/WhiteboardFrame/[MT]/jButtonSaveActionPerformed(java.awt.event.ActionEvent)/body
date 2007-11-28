@@ -1,0 +1,27 @@
+{
+  JFileChooser chooser=new JFileChooser(lastDir);
+  chooser.removeChoosableFileFilter(chooser.getAcceptAllFileFilter());
+  WhiteboardFileFilter filterJpg=new WhiteboardFileFilter("jpg","JPEG Files (*.jpg)");
+  WhiteboardFileFilter filterPng=new WhiteboardFileFilter("png","PNG Files (*.png)");
+  chooser.setFileFilter(filterJpg);
+  chooser.addChoosableFileFilter(filterPng);
+  int returnVal=chooser.showSaveDialog(WhiteboardFrame.this);
+  if (returnVal == JFileChooser.APPROVE_OPTION) {
+    try {
+      File file=chooser.getSelectedFile();
+      WhiteboardFileFilter ff=(WhiteboardFileFilter)chooser.getFileFilter();
+      if (!ff.getExtension().equals(ff.getExtension(file))) {
+        file=new File(file.getAbsolutePath() + "." + ff.getExtension());
+      }
+      lastDir=file.getParentFile();
+      BufferedImage buf=new BufferedImage(drawCanvas.getWidth(),drawCanvas.getHeight(),BufferedImage.TYPE_INT_RGB);
+      Graphics2D g=buf.createGraphics();
+      this.drawCanvas.paint(g);
+      g.dispose();
+      ImageIO.write(buf,ff.getExtension(),file);
+    }
+ catch (    IOException ex) {
+      ex.printStackTrace();
+    }
+  }
+}

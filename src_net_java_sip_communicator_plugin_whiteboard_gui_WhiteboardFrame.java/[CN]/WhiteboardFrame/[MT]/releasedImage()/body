@@ -1,0 +1,21 @@
+{
+  doneDrawing=true;
+  JFileChooser chooser=new JFileChooser(lastDir);
+  WhiteboardFileFilter filter=new WhiteboardFileFilter("jpg","JPEG Files (*.jpg)");
+  chooser.setFileFilter(filter);
+  int returnVal=chooser.showOpenDialog(WhiteboardFrame.this);
+  if (returnVal == JFileChooser.APPROVE_OPTION) {
+    try {
+      File file=chooser.getSelectedFile();
+      lastDir=file.getParentFile();
+      FileInputStream in=new FileInputStream(file);
+      byte buffer[]=new byte[in.available()];
+      in.read(buffer);
+      WhiteboardShapeImage image=new WhiteboardShapeImage(id(),new WhiteboardPoint(drawX,drawY),originWidth,originHeight,buffer);
+      appendAndSend(image);
+    }
+ catch (    IOException ex) {
+      ex.printStackTrace();
+    }
+  }
+}

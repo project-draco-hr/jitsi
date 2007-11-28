@@ -1,0 +1,243 @@
+{
+  drawCanvas.addMouseListener(new java.awt.event.MouseListener(){
+    /** 
+ * Invoked when the mouse button has been clicked (pressed and
+ * released) on a component.
+ */
+    public void mouseClicked(    MouseEvent e){
+switch (currentTool) {
+case POLYLINE:
+        if (e.getClickCount() == 1) {
+          polyOperation(e);
+        }
+      if (e.getClickCount() == 2) {
+        releasedPolyline(false);
+      }
+    break;
+case FILL_POLYLINE:
+  if (e.getClickCount() == 1) {
+    polyOperation(e);
+  }
+if (e.getClickCount() == 2) {
+  releasedPolyline(true);
+}
+break;
+case POLYGON:
+if (e.getClickCount() == 1) {
+polyOperation(e);
+}
+if (e.getClickCount() == 2) {
+releasedPolygon(false);
+}
+break;
+case FILL_POLYGON:
+if (e.getClickCount() == 1) {
+polyOperation(e);
+}
+if (e.getClickCount() == 2) {
+releasedPolygon(true);
+}
+break;
+}
+}
+/** 
+ * Invoked when a mouse button has been pressed on a component.
+ */
+public void mousePressed(MouseEvent e){
+selectedShape=null;
+if (currentTool == SELECTION) {
+deselect();
+for (int i=displayList.size() - 1; i >= 0; i--) {
+WhiteboardShape shape=(WhiteboardShape)displayList.get(i);
+if (shape.contains(s2w.transform(e.getPoint(),null))) {
+shape.setSelected(true);
+selectedShape=shape;
+spinModel.setValue(new Integer(selectedShape.getThickness()));
+jLabelColor.setBackground(Color.getColor("",selectedShape.getColor()));
+break;
+}
+}
+repaint();
+}
+ else if (currentTool == MODIF) {
+deselect();
+for (int i=displayList.size() - 1; i >= 0; i--) {
+WhiteboardShape shape=(WhiteboardShape)displayList.get(i);
+WhiteboardPoint point=shape.getSelectionPoint(s2w.transform(e.getPoint(),null));
+if (point != null) {
+shape.setSelected(true);
+shape.setModifyPoint(point);
+selectedShape=shape;
+spinModel.setValue(new Integer(selectedShape.getThickness()));
+jLabelColor.setBackground(Color.getColor("",selectedShape.getColor()));
+break;
+}
+}
+repaint();
+}
+ else if (currentTool == PAN) {
+previousPoint=e.getPoint();
+}
+}
+/** 
+ * Invoked when a mouse button has been released on a component.
+ */
+public void mouseReleased(MouseEvent e){
+switch (currentTool) {
+case SELECTION:
+releasedMove();
+break;
+case MODIF:
+releasedModif();
+break;
+case PEN:
+releasedPen();
+break;
+case LINE:
+releasedLine();
+break;
+case RECTANGLE:
+releasedRectangle(false);
+break;
+case FILL_RECTANGLE:
+releasedRectangle(true);
+break;
+case CIRCLE:
+releasedCircle(false);
+break;
+case FILL_CIRCLE:
+releasedCircle(true);
+break;
+case TEXT:
+releasedText(e.getX(),e.getY());
+break;
+case IMAGE:
+releasedImage();
+break;
+case POLYLINE:
+polyOperation(e);
+case POLYGON:
+polyOperation(e);
+case FILL_POLYGON:
+polyOperation(e);
+}
+}
+/** 
+ * Invoked when the mouse enters a component.
+ */
+public void mouseEntered(MouseEvent e){
+toggleCursor();
+}
+/** 
+ * Invoked when the mouse exits a component.
+ */
+public void mouseExited(MouseEvent e){
+setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+}
+}
+);
+drawCanvas.addMouseMotionListener(new java.awt.event.MouseMotionListener(){
+/** 
+ * Invoked when a mouse button is pressed on a component and
+ * then dragged.
+ * @param e
+ */
+public void mouseDragged(MouseEvent e){
+switch (currentTool) {
+case SELECTION:
+moveOperation(e);
+break;
+case MODIF:
+modifOperation(e);
+break;
+case PEN:
+penOperation(e);
+break;
+case LINE:
+lineOperation(e);
+break;
+case RECTANGLE:
+rectangleOperation(e);
+break;
+case FILL_RECTANGLE:
+rectangleOperation(e);
+break;
+case CIRCLE:
+circleOperation(e);
+break;
+case FILL_CIRCLE:
+circleOperation(e);
+break;
+case IMAGE:
+imageOperation(e);
+break;
+case PAN:
+panOperation(e);
+break;
+case POLYLINE:
+polyDragOperation(e);
+break;
+case POLYGON:
+polyDragOperation(e);
+break;
+case FILL_POLYGON:
+polyDragOperation(e);
+break;
+}
+}
+/** 
+ * Invoked when the mouse cursor has been moved onto a component
+ * but no buttons have been pushed.
+ * @param e
+ */
+public void mouseMoved(MouseEvent e){
+WhiteboardShape shape;
+for (int i=0; i < displayList.size(); i++) {
+shape=(WhiteboardShape)displayList.get(i);
+if (shape.contains(s2w.transform(e.getPoint(),null))) {
+if (currentTool == MODIF) {
+setCursor(Cursor.getDefaultCursor());
+}
+ else setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+if (currentTool == SELECTION || currentTool == MODIF) {
+if (preselected == null) {
+Graphics g=drawCanvas.getGraphics();
+shape.preselect(g,w2s);
+preselected=shape;
+}
+ else if (!preselected.equals(shape)) {
+repaint();
+Graphics g=drawCanvas.getGraphics();
+shape.preselect(g,w2s);
+preselected=shape;
+}
+}
+return;
+}
+ else if (shape.getSelectionPoint(s2w.transform(e.getPoint(),null)) != null) {
+if (currentTool == MODIF) {
+setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+if (preselected == null) {
+Graphics g=drawCanvas.getGraphics();
+shape.preselect(g,w2s);
+preselected=shape;
+}
+ else if (!preselected.equals(shape)) {
+repaint();
+Graphics g=drawCanvas.getGraphics();
+shape.preselect(g,w2s);
+preselected=shape;
+}
+}
+return;
+}
+}
+if (preselected != null) {
+preselected=null;
+repaint();
+}
+toggleCursor();
+}
+}
+);
+}
