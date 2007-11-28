@@ -1,0 +1,30 @@
+{
+  ProtocolProviderService pps=contact.getProtocolProvider();
+  opSetWb=(OperationSetWhiteboarding)pps.getOperationSet(OperationSetWhiteboarding.class);
+  if (opSetWb == null)   return;
+  WhiteboardFrame wbf=getWhiteboardFrame(contact);
+  if (wbf != null) {
+    wbf.setVisible(true);
+    return;
+  }
+  new Thread(){
+    public void run(){
+      try {
+        WhiteboardSession wbSession=opSetWb.createWhiteboardSession(contact.getDisplayName(),null);
+        WhiteboardFrame wbFrame=new WhiteboardFrame(WhiteboardSessionManager.this,wbSession);
+        wbFrames.add(wbFrame);
+        wbFrame.setContact(contact);
+        wbFrame.setVisible(true);
+        wbSession.join();
+        wbSession.invite(contact.getAddress());
+      }
+ catch (      OperationFailedException e) {
+        logger.error("Creating a whiteboard session failed.",e);
+      }
+catch (      OperationNotSupportedException e) {
+        logger.error("Do not support create of whiteboard session",e);
+      }
+    }
+  }
+.start();
+}

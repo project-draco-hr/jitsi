@@ -1,0 +1,25 @@
+{
+  WhiteboardSession whiteboardSession=evt.getWhiteboardSession();
+  if (evt.getEventType().equals(WhiteboardSessionPresenceChangeEvent.LOCAL_USER_JOINED)) {
+    whiteboardSession.addWhiteboardObjectListener(WhiteboardSessionManager.this);
+    WhiteboardFrame frame=getWhiteboardFrame(evt.getWhiteboardSession());
+    if (frame == null) {
+      frame=new WhiteboardFrame(WhiteboardSessionManager.this,whiteboardSession);
+      frame.setVisible(true);
+      wbFrames.add(frame);
+    }
+  }
+ else   if (evt.getEventType().equals(WhiteboardSessionPresenceChangeEvent.LOCAL_USER_JOIN_FAILED)) {
+    WhiteboardActivator.getUiService().getPopupDialog().showMessagePopupDialog(Resources.getString("failedToJoinWhiteboard",new String[]{whiteboardSession.getWhiteboardID()}) + evt.getReason(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
+  }
+ else   if (evt.getEventType().equals(WhiteboardSessionPresenceChangeEvent.LOCAL_USER_LEFT)) {
+    WhiteboardFrame frame=getWhiteboardFrame(whiteboardSession);
+    if (frame == null)     return;
+    frame.dispose();
+    whiteboardSession.removeWhiteboardObjectListener(WhiteboardSessionManager.this);
+  }
+ else   if (evt.getEventType().equals(WhiteboardSessionPresenceChangeEvent.LOCAL_USER_KICKED)) {
+  }
+ else   if (evt.getEventType().equals(WhiteboardSessionPresenceChangeEvent.LOCAL_USER_DROPPED)) {
+  }
+}
