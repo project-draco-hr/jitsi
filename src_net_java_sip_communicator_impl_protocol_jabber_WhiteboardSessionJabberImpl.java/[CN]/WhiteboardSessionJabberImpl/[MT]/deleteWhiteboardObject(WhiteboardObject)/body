@@ -1,0 +1,33 @@
+{
+  Iterator participants=getWhiteboardParticipants();
+  if (!participants.hasNext())   return;
+  WhiteboardParticipantJabberImpl participant=(WhiteboardParticipantJabberImpl)participants.next();
+  Contact contact=participant.getContact();
+  try {
+    assertConnected();
+    org.jivesoftware.smack.MessageListener msgListener=new org.jivesoftware.smack.MessageListener(){
+      public void processMessage(      Chat arg0,      org.jivesoftware.smack.packet.Message arg1){
+      }
+    }
+;
+    Chat chat=jabberProvider.getConnection().getChatManager().createChat(contact.getAddress(),msgListener);
+    org.jivesoftware.smack.packet.Message msg=new org.jivesoftware.smack.packet.Message();
+    WhiteboardObjectPacketExtensionImpl messageJI=new WhiteboardObjectPacketExtensionImpl(obj.getID(),WhiteboardObjectPacketExtensionImpl.ACTION_DELETE);
+    msg.addExtension(messageJI);
+    msg.addExtension(new Version());
+    MessageEventManager.addNotificationsRequests(msg,true,false,false,true);
+    chat.sendMessage(msg);
+    WhiteboardObjectDeliveredEvent msgDeliveredEvt=new WhiteboardObjectDeliveredEvent(this,obj,contact,new Date());
+    fireMessageEvent(msgDeliveredEvt);
+    int i=0;
+    while (i < whiteboardObjects.size()) {
+      WhiteboardObjectJabberImpl wbObj=(WhiteboardObjectJabberImpl)whiteboardObjects.get(i);
+      if (wbObj.getID().equals(obj.getID()))       whiteboardObjects.remove(i);
+ else       i++;
+    }
+  }
+ catch (  XMPPException ex) {
+    ex.printStackTrace();
+    logger.error("message not send",ex);
+  }
+}

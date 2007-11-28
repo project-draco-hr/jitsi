@@ -1,0 +1,37 @@
+{
+  logger.debug("Dispatching a WhiteboardMessageEvent event to " + messageListeners.size() + " listeners. event is: "+ evt.toString());
+  Iterator listeners=null;
+synchronized (messageListeners) {
+    listeners=new ArrayList(messageListeners).iterator();
+  }
+  while (listeners.hasNext()) {
+    WhiteboardObjectListener listener=(WhiteboardObjectListener)listeners.next();
+    if (evt instanceof WhiteboardObjectDeliveredEvent) {
+      listener.whiteboardObjectDelivered((WhiteboardObjectDeliveredEvent)evt);
+    }
+ else     if (evt instanceof WhiteboardObjectReceivedEvent) {
+      WhiteboardObjectJabberImpl wbObj=(WhiteboardObjectJabberImpl)((WhiteboardObjectReceivedEvent)evt).getSourceWhiteboardObject();
+      listener.whiteboardObjectReceived((WhiteboardObjectReceivedEvent)evt);
+      whiteboardObjects.add(wbObj);
+    }
+ else     if (evt instanceof WhiteboardObjectDeletedEvent) {
+      String wbObjID=((WhiteboardObjectDeletedEvent)evt).getId();
+      listener.whiteboardObjectDeleted((WhiteboardObjectDeletedEvent)evt);
+      int i=0;
+      while (i < whiteboardObjects.size()) {
+        WhiteboardObjectJabberImpl wbObj=(WhiteboardObjectJabberImpl)whiteboardObjects.get(i);
+        if (wbObj.getID().equals(wbObjID))         whiteboardObjects.remove(i);
+ else         i++;
+      }
+    }
+ else     if (evt instanceof WhiteboardObjectModifiedEvent) {
+      WhiteboardObjectJabberImpl wbObj=(WhiteboardObjectJabberImpl)((WhiteboardObjectReceivedEvent)evt).getSourceWhiteboardObject();
+      listener.whiteboardObjecModified((WhiteboardObjectModifiedEvent)evt);
+      whiteboardObjects.remove(wbObj);
+      whiteboardObjects.add(wbObj);
+    }
+ else     if (evt instanceof WhiteboardObjectDeliveryFailedEvent) {
+      listener.whiteboardObjectDeliveryFailed((WhiteboardObjectDeliveryFailedEvent)evt);
+    }
+  }
+}

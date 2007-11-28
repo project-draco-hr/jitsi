@@ -1,0 +1,21 @@
+{
+  if (!(packet instanceof org.jivesoftware.smack.packet.Message))   return;
+  PacketExtension ext=packet.getExtension(WhiteboardObjectPacketExtensionImpl.ELEMENT_NAME,WhiteboardObjectPacketExtensionImpl.NAMESPACE);
+  org.jivesoftware.smack.packet.Message msg=(org.jivesoftware.smack.packet.Message)packet;
+  if (ext == null)   return;
+  String fromUserID=StringUtils.parseBareAddress(msg.getFrom());
+  for (int i=0; i < whiteboardSessions.size(); i++) {
+    WhiteboardSessionJabberImpl session=(WhiteboardSessionJabberImpl)whiteboardSessions.get(i);
+    if (session.isJoined() && session.isParticipantContained(fromUserID))     return;
+  }
+  WhiteboardObjectPacketExtensionImpl newMessage=(WhiteboardObjectPacketExtensionImpl)ext;
+  WhiteboardSessionJabberImpl session=new WhiteboardSessionJabberImpl(jabberProvider,OperationSetWhiteboardingJabberImpl.this);
+  whiteboardSessions.add(session);
+  ContactJabberImpl sourceContact=(ContactJabberImpl)presenceOpSet.findContactByID(fromUserID);
+  if (sourceContact == null) {
+    logger.debug("Received a message from an unknown contact: " + fromUserID);
+    sourceContact=presenceOpSet.createVolatileContact(fromUserID);
+  }
+  session.addWhiteboardParticipant(new WhiteboardParticipantJabberImpl(sourceContact,session));
+  fireInvitationEvent(session,newMessage.getWhiteboardObject(),fromUserID,null,null);
+}
