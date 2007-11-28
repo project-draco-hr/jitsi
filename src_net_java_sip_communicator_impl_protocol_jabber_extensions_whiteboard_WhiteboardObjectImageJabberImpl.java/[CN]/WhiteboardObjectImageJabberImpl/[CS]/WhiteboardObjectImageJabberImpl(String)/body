@@ -1,0 +1,35 @@
+{
+  DocumentBuilderFactory factory=DocumentBuilderFactory.newInstance();
+  DocumentBuilder builder;
+  try {
+    builder=factory.newDocumentBuilder();
+    InputStream in=new ByteArrayInputStream(xml.getBytes());
+    Document doc=builder.parse(in);
+    Element e=doc.getDocumentElement();
+    String elementName=e.getNodeName();
+    if (elementName.equals("image")) {
+      String id=e.getAttribute("id");
+      double x=Double.parseDouble(e.getAttribute("x"));
+      double y=Double.parseDouble(e.getAttribute("y"));
+      double width=Double.parseDouble(e.getAttribute("width"));
+      double height=Double.parseDouble(e.getAttribute("height"));
+      String img=e.getTextContent();
+      this.setID(id);
+      this.setWhiteboardPoint(new WhiteboardPoint(x,y));
+      this.setWidth(width);
+      this.setHeight(height);
+      byte[] b=img.getBytes();
+      img=new String(Base64.decode(b));
+      this.setBackgroundImage(img.getBytes());
+    }
+  }
+ catch (  ParserConfigurationException ex) {
+    logger.debug("Problem WhiteboardObject : " + xml);
+  }
+catch (  IOException ex) {
+    logger.debug("Problem WhiteboardObject : " + xml);
+  }
+catch (  Exception ex) {
+    logger.debug("Problem WhiteboardObject : " + xml);
+  }
+}

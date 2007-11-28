@@ -1,0 +1,51 @@
+{
+  DocumentBuilderFactory factory=DocumentBuilderFactory.newInstance();
+  DocumentBuilder builder;
+  try {
+    builder=factory.newDocumentBuilder();
+    InputStream in=new ByteArrayInputStream(xml.getBytes());
+    Document doc=builder.parse(in);
+    Element e=doc.getDocumentElement();
+    String elementName=e.getNodeName();
+    this.action=WhiteboardObjectPacketExtensionImpl.ACTION_DRAW;
+    if (elementName.equals("rect")) {
+      whiteboardObject=new WhiteboardObjectRectJabberImpl(xml);
+    }
+ else     if (elementName.equals("circle")) {
+      whiteboardObject=new WhiteboardObjectCircleJabberImpl(xml);
+    }
+ else     if (elementName.equals("path")) {
+      whiteboardObject=new WhiteboardObjectPathJabberImpl(xml);
+    }
+ else     if (elementName.equals("polyline")) {
+      whiteboardObject=new WhiteboardObjectPolyLineJabberImpl(xml);
+    }
+ else     if (elementName.equals("polygon")) {
+      whiteboardObject=new WhiteboardObjectPolygonJabberImpl(xml);
+    }
+ else     if (elementName.equals("line")) {
+      whiteboardObject=new WhiteboardObjectLineJabberImpl(xml);
+    }
+ else     if (elementName.equals("text")) {
+      whiteboardObject=new WhiteboardObjectTextJabberImpl(xml);
+    }
+ else     if (elementName.equals("image")) {
+      whiteboardObject=new WhiteboardObjectImageJabberImpl(xml);
+    }
+ else     if (elementName.equals("delete")) {
+      this.setWhiteboardObjectID(e.getAttribute("id"));
+      this.action=WhiteboardObjectPacketExtensionImpl.ACTION_DELETE;
+    }
+ else     logger.debug("elementName unknow\n");
+    System.out.println("XML =====================================" + xml);
+  }
+ catch (  ParserConfigurationException ex) {
+    logger.debug("Problem WhiteboardObject : " + xml,ex);
+  }
+catch (  IOException ex) {
+    logger.debug("Problem WhiteboardObject : " + xml,ex);
+  }
+catch (  Exception ex) {
+    logger.debug("Problem WhiteboardObject : " + xml,ex);
+  }
+}
