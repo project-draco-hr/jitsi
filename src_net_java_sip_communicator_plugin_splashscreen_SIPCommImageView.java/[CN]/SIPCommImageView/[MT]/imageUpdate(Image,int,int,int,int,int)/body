@@ -1,0 +1,44 @@
+{
+  if (fImage == null || fImage != img)   return false;
+  if ((flags & (ABORT | ERROR)) != 0) {
+    fImage=null;
+    repaint(0);
+    return false;
+  }
+  short changed=0;
+  if ((flags & ImageObserver.HEIGHT) != 0)   if (!getElement().getAttributes().isDefined(HTML.Attribute.HEIGHT)) {
+    changed|=1;
+  }
+  if ((flags & ImageObserver.WIDTH) != 0)   if (!getElement().getAttributes().isDefined(HTML.Attribute.WIDTH)) {
+    changed|=2;
+  }
+synchronized (this) {
+    if ((changed & 1) == 1) {
+      fWidth=width;
+    }
+    if ((changed & 2) == 2) {
+      fHeight=height;
+    }
+    if (loading) {
+      return true;
+    }
+  }
+  if (changed != 0) {
+    Document doc=getDocument();
+    try {
+      if (doc instanceof AbstractDocument) {
+        ((AbstractDocument)doc).readLock();
+      }
+      preferenceChanged(this,true,true);
+    }
+  finally {
+      if (doc instanceof AbstractDocument) {
+        ((AbstractDocument)doc).readUnlock();
+      }
+    }
+    return true;
+  }
+  if ((flags & (FRAMEBITS | ALLBITS)) != 0)   repaint(0);
+ else   if ((flags & SOMEBITS) != 0)   if (sIsInc)   repaint(sIncRate);
+  return ((flags & ALLBITS) == 0);
+}

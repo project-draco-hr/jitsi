@@ -1,0 +1,63 @@
+{
+synchronized (this) {
+    loading=true;
+    fWidth=fHeight=0;
+  }
+  int width=0;
+  int height=0;
+  boolean customWidth=false;
+  boolean customHeight=false;
+  try {
+    fElement=elem;
+    if (isURL()) {
+      URL src=getSourceURL();
+      if (src != null) {
+        Dictionary cache=(Dictionary)getDocument().getProperty(IMAGE_CACHE_PROPERTY);
+        if (cache != null)         fImage=(Image)cache.get(src);
+ else         fImage=Toolkit.getDefaultToolkit().getImage(src);
+      }
+    }
+ else {
+      String src=(String)fElement.getAttributes().getAttribute(HTML.Attribute.SRC);
+      if (src == null)       return;
+      try {
+        fImage=ImageIO.read(SIPCommImageView.class.getResource(src));
+        try {
+          waitForImage();
+        }
+ catch (        InterruptedException e) {
+          fImage=null;
+        }
+      }
+ catch (      IOException e) {
+        fImage=null;
+        logger.error("Failed to read image.",e);
+      }
+catch (      IllegalArgumentException iae) {
+        fImage=null;
+        logger.error("Failed to read image.",iae);
+      }
+    }
+    height=getIntAttr(HTML.Attribute.HEIGHT,-1);
+    customHeight=(height > 0);
+    if (!customHeight && fImage != null)     height=fImage.getHeight(this);
+    if (height <= 0)     height=DEFAULT_HEIGHT;
+    width=getIntAttr(HTML.Attribute.WIDTH,-1);
+    customWidth=(width > 0);
+    if (!customWidth && fImage != null)     width=fImage.getWidth(this);
+    if (width <= 0)     width=DEFAULT_WIDTH;
+    if (fImage != null)     if (customWidth && customHeight)     Toolkit.getDefaultToolkit().prepareImage(fImage,height,width,this);
+ else     Toolkit.getDefaultToolkit().prepareImage(fImage,-1,-1,this);
+  }
+  finally {
+synchronized (this) {
+      loading=false;
+      if (customWidth || fWidth == 0) {
+        fWidth=width;
+      }
+      if (customHeight || fHeight == 0) {
+        fHeight=height;
+      }
+    }
+  }
+}
