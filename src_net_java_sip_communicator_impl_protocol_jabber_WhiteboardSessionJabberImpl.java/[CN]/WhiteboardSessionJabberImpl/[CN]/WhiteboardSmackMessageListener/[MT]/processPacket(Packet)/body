@@ -1,8 +1,15 @@
 {
   if (!(packet instanceof org.jivesoftware.smack.packet.Message))   return;
-  PacketExtension ext=packet.getExtension(WhiteboardObjectPacketExtensionImpl.ELEMENT_NAME,WhiteboardObjectPacketExtensionImpl.NAMESPACE);
+  PacketExtension objectExt=packet.getExtension(WhiteboardObjectPacketExtension.ELEMENT_NAME,WhiteboardObjectPacketExtension.NAMESPACE);
+  PacketExtension sessionExt=packet.getExtension(WhiteboardSessionPacketExtension.ELEMENT_NAME,WhiteboardSessionPacketExtension.NAMESPACE);
   org.jivesoftware.smack.packet.Message msg=(org.jivesoftware.smack.packet.Message)packet;
-  if (ext == null)   return;
+  if (sessionExt != null) {
+    WhiteboardSessionPacketExtension sessionMessage=(WhiteboardSessionPacketExtension)sessionExt;
+    if (sessionMessage.getAction().equals(WhiteboardSessionPacketExtension.ACTION_LEAVE)) {
+      fireWhiteboardParticipantEvent(findWhiteboardParticipantFromContactAddress(sessionMessage.getContactAddress()),WhiteboardParticipantEvent.WHITEBOARD_PARTICIPANT_REMOVED);
+    }
+  }
+  if (objectExt == null)   return;
   String fromUserID=StringUtils.parseBareAddress(msg.getFrom());
   if (logger.isDebugEnabled()) {
     logger.debug("Received from " + fromUserID + " the message "+ msg.toXML());
@@ -11,7 +18,7 @@
   if (presenceOpSet == null)   return;
   Contact sourceContact=presenceOpSet.findContactByID(fromUserID);
   if (!wbParticipants.containsKey(sourceContact.getAddress()))   return;
-  WhiteboardObjectPacketExtensionImpl newMessage=(WhiteboardObjectPacketExtensionImpl)ext;
+  WhiteboardObjectPacketExtension newMessage=(WhiteboardObjectPacketExtension)objectExt;
   if (msg.getType() == org.jivesoftware.smack.packet.Message.Type.error) {
     logger.info("WBObject error received from " + fromUserID);
     int errorCode=packet.getError().getCode();
@@ -26,11 +33,11 @@
     fireMessageEvent(evt);
     return;
   }
-  if (newMessage.getAction().equals(WhiteboardObjectPacketExtensionImpl.ACTION_DELETE)) {
+  if (newMessage.getAction().equals(WhiteboardObjectPacketExtension.ACTION_DELETE)) {
     WhiteboardObjectDeletedEvent msgDeletedEvt=new WhiteboardObjectDeletedEvent(WhiteboardSessionJabberImpl.this,newMessage.getWhiteboardObjectID(),sourceContact,new Date());
     fireMessageEvent(msgDeletedEvt);
   }
- else   if (newMessage.getAction().equals(WhiteboardObjectPacketExtensionImpl.ACTION_DRAW)) {
+ else   if (newMessage.getAction().equals(WhiteboardObjectPacketExtension.ACTION_DRAW)) {
     WhiteboardObjectReceivedEvent msgReceivedEvt=new WhiteboardObjectReceivedEvent(WhiteboardSessionJabberImpl.this,newMessage.getWhiteboardObject(),sourceContact,new Date());
     fireMessageEvent(msgReceivedEvt);
   }
