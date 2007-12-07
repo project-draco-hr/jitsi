@@ -1,3 +1,21 @@
 {
   this.metaContact=metaContact;
+  this.removeAll();
+  Iterator iter=metaContact.getContacts();
+  while (iter.hasNext()) {
+    Contact contact=(Contact)iter.next();
+    ProtocolProviderService pps=contact.getProtocolProvider();
+    OperationSetWhiteboarding opSetWb=(OperationSetWhiteboarding)pps.getOperationSet(OperationSetWhiteboarding.class);
+    String contactDisplayName=contact.getDisplayName();
+    JMenuItem contactItem=new JMenuItem(contactDisplayName);
+    contactItem.setName(contact.getDisplayName() + pps.getProtocolName());
+    if (opSetWb != null) {
+      contactItem.addActionListener(this);
+    }
+ else {
+      contactItem.setEnabled(false);
+      contactItem.setToolTipText(Resources.getString("whiteboardMenuItemNotSupportedTooltip"));
+    }
+    this.add(contactItem);
+  }
 }
