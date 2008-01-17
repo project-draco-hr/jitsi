@@ -2,14 +2,19 @@
   if (!(groupToRemove instanceof MetaContactGroupImpl)) {
     throw new IllegalArgumentException(groupToRemove + " is not an instance of MetaContactGroupImpl");
   }
-  Iterator protoGroups=((MetaContactGroupImpl)groupToRemove).getContactGroups();
-  while (protoGroups.hasNext()) {
-    ContactGroup protoGroup=(ContactGroup)protoGroups.next();
-    OperationSetPersistentPresence opSetPersPresence=(OperationSetPersistentPresence)protoGroup.getProtocolProvider().getSupportedOperationSets().get(OperationSetPersistentPresence.class.getName());
-    if (opSetPersPresence == null) {
-      return;
+  try {
+    Iterator protoGroups=((MetaContactGroupImpl)groupToRemove).getContactGroups();
+    while (protoGroups.hasNext()) {
+      ContactGroup protoGroup=(ContactGroup)protoGroups.next();
+      OperationSetPersistentPresence opSetPersPresence=(OperationSetPersistentPresence)protoGroup.getProtocolProvider().getSupportedOperationSets().get(OperationSetPersistentPresence.class.getName());
+      if (opSetPersPresence == null) {
+        return;
+      }
+      opSetPersPresence.removeServerStoredContactGroup(protoGroup);
     }
-    opSetPersPresence.removeServerStoredContactGroup(protoGroup);
+  }
+ catch (  Exception ex) {
+    throw new MetaContactListException(ex.getMessage(),MetaContactListException.CODE_REMOVE_GROUP_ERROR);
   }
   MetaContactGroupImpl parentMetaGroup=(MetaContactGroupImpl)findParentMetaContactGroup((MetaContactGroupImpl)groupToRemove);
   parentMetaGroup.removeSubgroup(groupToRemove);

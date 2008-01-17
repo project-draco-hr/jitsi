@@ -8,13 +8,17 @@
     protocolStatusCombo=new SimpleStatusSelectorBox(this.mainFrame,protocolProvider,providerIndex);
   }
   protocolStatusCombo.addComponentListener(this);
-  if (protocolStatusCombos.size() == 1) {
+  boolean isHidden=protocolProvider.getAccountID().getAccountProperties().get("HIDDEN_PROTOCOL") != null;
+  if (isHidden)   hiddenProviders++;
+  if (protocolStatusCombos.size() - hiddenProviders == 1) {
     this.globalStatusBox=new GlobalStatusSelectorBox(mainFrame);
     Icon statusSeparatorIcon=new ImageIcon(ImageLoader.getImage(ImageLoader.STATUS_SEPARATOR_ICON));
     this.add(new JLabel(statusSeparatorIcon),FlowLayout.LEFT);
     this.add(globalStatusBox,FlowLayout.LEFT);
   }
   this.protocolStatusCombos.put(protocolProvider,protocolStatusCombo);
-  this.add(protocolStatusCombo);
-  this.getParent().validate();
+  if (!isHidden) {
+    this.add(protocolStatusCombo);
+    this.getParent().validate();
+  }
 }

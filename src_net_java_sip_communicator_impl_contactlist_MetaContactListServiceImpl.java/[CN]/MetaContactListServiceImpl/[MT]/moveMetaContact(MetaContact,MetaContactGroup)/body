@@ -8,14 +8,22 @@
   MetaContactGroupImpl currentParent=(MetaContactGroupImpl)findParentMetaContactGroup(metaContact);
   currentParent.removeMetaContact((MetaContactImpl)metaContact);
   ((MetaContactGroupImpl)newMetaGroup).addMetaContact((MetaContactImpl)metaContact);
-  Iterator contacts=metaContact.getContacts();
-  while (contacts.hasNext()) {
-    Contact protoContact=(Contact)contacts.next();
-    ContactGroup protoGroup=resolveProtoPath(protoContact.getProtocolProvider(),(MetaContactGroupImpl)newMetaGroup);
-    OperationSetPersistentPresence opSetPresence=(OperationSetPersistentPresence)protoContact.getProtocolProvider().getSupportedOperationSets().get(OperationSetPersistentPresence.class.getName());
-    if (opSetPresence == null) {
+  try {
+    Iterator contacts=metaContact.getContacts();
+    while (contacts.hasNext()) {
+      Contact protoContact=(Contact)contacts.next();
+      ContactGroup protoGroup=resolveProtoPath(protoContact.getProtocolProvider(),(MetaContactGroupImpl)newMetaGroup);
+      OperationSetPersistentPresence opSetPresence=(OperationSetPersistentPresence)protoContact.getProtocolProvider().getSupportedOperationSets().get(OperationSetPersistentPresence.class.getName());
+      if (opSetPresence == null) {
+      }
+      opSetPresence.moveContactToGroup(protoContact,protoGroup);
     }
-    opSetPresence.moveContactToGroup(protoContact,protoGroup);
+  }
+ catch (  Exception ex) {
+    logger.error("Cannot move contact",ex);
+    ((MetaContactGroupImpl)newMetaGroup).removeMetaContact((MetaContactImpl)metaContact);
+    currentParent.addMetaContact((MetaContactImpl)metaContact);
+    throw new MetaContactListException(ex.getMessage(),MetaContactListException.CODE_MOVE_CONTACT_ERROR);
   }
   fireMetaContactEvent(new MetaContactMovedEvent(metaContact,currentParent,newMetaGroup));
 }
