@@ -1,7 +1,44 @@
 {
   logger.debug("Message received : " + ev);
-  String formattedMessage=processLinks(ev.getMessage());
-  Message newMessage=createMessage(formattedMessage.getBytes(),CONTENT_TYPE_HTML,DEFAULT_MIME_ENCODING,null);
+  String formattedMessage=processLinks(messageDecoder.decodeToHTML(ev.getMessage()));
+  Pattern p1=Pattern.compile("<font.*>",Pattern.CASE_INSENSITIVE);
+  Matcher m1=p1.matcher(new String(formattedMessage));
+  StringBuilder goodFormat=new StringBuilder(formattedMessage);
+  int fontsize;
+  while (m1.find()) {
+    String yfont=m1.group();
+    Pattern p2=Pattern.compile("size=\".*\"",Pattern.CASE_INSENSITIVE);
+    Matcher m2=p2.matcher(yfont);
+    String replace=null;
+    if (m2.find()) {
+      fontsize=16;
+      String str=m2.group();
+      int open=str.indexOf('"');
+      int clos=str.indexOf('"',open + 1);
+      int yfontsize;
+      try {
+        yfontsize=Integer.parseInt(str.substring(open + 1,clos));
+      }
+ catch (      Exception ex) {
+        logger.debug(ex);
+        yfontsize=0;
+      }
+      if (yfontsize != 0) {
+        fontsize=(int)(yfontsize * 16.0 / 10.0);
+      }
+      replace=m2.replaceFirst("style=\"font-size:" + fontsize + "px\"");
+    }
+    if (replace != null) {
+      goodFormat.replace(m1.start(),m1.end(),replace);
+      m1=p1.matcher(new String(goodFormat));
+    }
+  }
+  if (ev.getMessage().contains("<font")) {
+    logger.debug("original message: " + ev.getMessage());
+    logger.debug("jYMSG decoded message: " + formattedMessage);
+    logger.debug("final message: " + goodFormat);
+  }
+  Message newMessage=createMessage(goodFormat.toString().getBytes(),CONTENT_TYPE_HTML,DEFAULT_MIME_ENCODING,null);
   Contact sourceContact=opSetPersPresence.findContactByID(ev.getFrom());
   if (sourceContact == null) {
     logger.debug("received a message from an unknown contact: " + ev.getFrom());
