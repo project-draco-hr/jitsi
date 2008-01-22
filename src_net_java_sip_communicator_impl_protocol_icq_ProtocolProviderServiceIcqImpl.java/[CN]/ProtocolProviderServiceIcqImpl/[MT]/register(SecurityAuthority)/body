@@ -26,7 +26,6 @@ synchronized (initializationLock) {
     if (USING_ICQ && password.length() > 8)     password=password.substring(0,8);
     session=new DefaultAppSession();
     aimSession=session.openAimSession(new Screenname(getAccountID().getUserID()));
-    aimConnection=aimSession.openConnection(new AimConnectionProperties(new Screenname(getAccountID().getUserID()),password));
     String proxyAddress=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.PROXY_ADDRESS);
     if (proxyAddress != null && proxyAddress.length() > 0) {
       String proxyPortStr=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.PROXY_PORT);
@@ -41,9 +40,18 @@ synchronized (initializationLock) {
       if (proxyType == null)       throw new OperationFailedException("Missing proxy type",OperationFailedException.INVALID_ACCOUNT_PROPERTIES);
       String proxyUsername=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.PROXY_USERNAME);
       String proxyPassword=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.PROXY_PASSWORD);
-      if (proxyType.equals("http"))       aimConnection.setProxy(AimProxyInfo.forHttp(proxyAddress,proxyPort,proxyUsername,proxyPassword));
- else       if (proxyType.equals("socks4"))       aimConnection.setProxy(AimProxyInfo.forSocks4(proxyAddress,proxyPort,proxyUsername));
- else       if (proxyType.equals("socks5"))       aimConnection.setProxy(AimProxyInfo.forSocks5(proxyAddress,proxyPort,proxyUsername,proxyPassword));
+      if (proxyType.equals("http")) {
+        AimConnectionProperties connProps=new AimConnectionProperties(new Screenname(getAccountID().getUserID()),password);
+        connProps.setLoginHost("login.icq.com");
+        connProps.setLoginPort(443);
+        aimConnection=aimSession.openConnection(connProps);
+        aimConnection.setProxy(AimProxyInfo.forHttp(proxyAddress,proxyPort,proxyUsername,proxyPassword));
+      }
+ else {
+        aimConnection=aimSession.openConnection(new AimConnectionProperties(new Screenname(getAccountID().getUserID()),password));
+        if (proxyType.equals("socks4"))         aimConnection.setProxy(AimProxyInfo.forSocks4(proxyAddress,proxyPort,proxyUsername));
+ else         if (proxyType.equals("socks5"))         aimConnection.setProxy(AimProxyInfo.forSocks5(proxyAddress,proxyPort,proxyUsername,proxyPassword));
+      }
     }
     aimConnStateListener=new AimConnStateListener();
     aimConnection.addStateListener(aimConnStateListener);
