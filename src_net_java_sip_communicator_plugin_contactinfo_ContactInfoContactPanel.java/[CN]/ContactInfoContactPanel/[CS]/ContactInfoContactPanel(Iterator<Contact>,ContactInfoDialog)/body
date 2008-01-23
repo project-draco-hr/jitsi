@@ -1,0 +1,31 @@
+{
+  super(new BorderLayout());
+  this.contactInfoDialog=dialog;
+  this.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder(Resources.getString("contacts")),BorderFactory.createEmptyBorder(5,5,5,5)));
+  this.contactList.setOpaque(false);
+  this.contactList.setModel(contactListModel);
+  this.contactList.setCellRenderer(new ContactPanelCellRenderer());
+  this.contactList.addListSelectionListener(new ListSelectionListener(){
+    public void valueChanged(    ListSelectionEvent e){
+      if (!e.getValueIsAdjusting()) {
+        JList list=(JList)e.getSource();
+        Contact selectedContact=(Contact)list.getSelectedValue();
+        contactInfoDialog.loadContactDetails(selectedContact);
+      }
+    }
+  }
+);
+  boolean isFirstIter=true;
+  while (contacts.hasNext()) {
+    Contact contact=contacts.next();
+    this.contactListModel.addElement(contact);
+    if (isFirstIter) {
+      isFirstIter=false;
+      contactInfoDialog.loadContactDetails(contact);
+      contactList.setSelectedIndex(0);
+    }
+  }
+  this.contactScrollPane.setPreferredSize(new Dimension(100,200));
+  this.contactScrollPane.getViewport().add(contactList);
+  this.add(contactScrollPane);
+}

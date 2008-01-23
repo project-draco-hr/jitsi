@@ -1,0 +1,100 @@
+{
+  JPanel summaryPanel=new JPanel();
+  summaryPanel.setLayout(new BorderLayout(10,5));
+  summaryPanel.setSize(this.getWidth(),this.getHeight());
+  JPanel avatarPanel=new JPanel();
+  avatarPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+  byte[] bytes=this.contact.getImage();
+  ImageIcon avatarImage=null;
+  if (bytes != null)   avatarImage=new ImageIcon(bytes);
+ else   avatarImage=Resources.getImage("defaultPersonIcon");
+  ImageIcon scaledImage=new ImageIcon(avatarImage.getImage().getScaledInstance(105,130,Image.SCALE_SMOOTH));
+  JLabel label=new JLabel(scaledImage);
+  avatarPanel.add(label);
+  summaryPanel.add(avatarPanel,BorderLayout.WEST);
+  JPanel detailsPanel=new JPanel();
+  detailsPanel.setLayout(new BorderLayout());
+  detailsPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+  summaryPanel.add(detailsPanel);
+  JPanel labelsPanel=new JPanel(new GridLayout(0,1,5,5));
+  labelsPanel.add(new JLabel(Resources.getString("firstNameNS")));
+  labelsPanel.add(new JLabel(Resources.getString("middleNameNS")));
+  labelsPanel.add(new JLabel(Resources.getString("lastNameNS")));
+  labelsPanel.add(new JLabel(Resources.getString("genderNS")));
+  labelsPanel.add(new JLabel(Resources.getString("ageNS")));
+  labelsPanel.add(new JLabel(Resources.getString("bdayNS")));
+  labelsPanel.add(new JLabel(Resources.getString("emailNS")));
+  labelsPanel.add(new JLabel(Resources.getString("phoneNS")));
+  detailsPanel.add(labelsPanel,BorderLayout.WEST);
+  JPanel valuesPanel=new JPanel(new GridLayout(0,1,5,5));
+  detailsPanel.add(valuesPanel,BorderLayout.CENTER);
+  Iterator contactDetails;
+  GenericDetail genericDetail;
+  contactDetails=contactInfoOpSet.getDetails(contact,FirstNameDetail.class);
+  String firstNameDetail="";
+  while (contactDetails.hasNext()) {
+    genericDetail=(FirstNameDetail)contactDetails.next();
+    firstNameDetail=firstNameDetail + " " + genericDetail.getDetailValue();
+  }
+  if (firstNameDetail.equals(""))   firstNameDetail=Resources.getString("notSpecified");
+  valuesPanel.add(new JLabel(firstNameDetail));
+  contactDetails=contactInfoOpSet.getDetails(contact,MiddleNameDetail.class);
+  String middleNameDetail="";
+  while (contactDetails.hasNext()) {
+    genericDetail=(MiddleNameDetail)contactDetails.next();
+    middleNameDetail=middleNameDetail + " " + genericDetail.getDetailValue();
+  }
+  if (middleNameDetail.trim().equals(""))   middleNameDetail=Resources.getString("notSpecified");
+  valuesPanel.add(new JLabel(middleNameDetail));
+  contactDetails=contactInfoOpSet.getDetails(contact,LastNameDetail.class);
+  String lastNameDetail="";
+  while (contactDetails.hasNext()) {
+    genericDetail=(LastNameDetail)contactDetails.next();
+    lastNameDetail=lastNameDetail + " " + genericDetail.getDetailValue();
+  }
+  if (lastNameDetail.trim().equals(""))   lastNameDetail=Resources.getString("notSpecified");
+  valuesPanel.add(new JLabel(lastNameDetail));
+  contactDetails=contactInfoOpSet.getDetails(contact,GenderDetail.class);
+  String genderDetail="";
+  while (contactDetails.hasNext()) {
+    genericDetail=(GenderDetail)contactDetails.next();
+    genderDetail=genderDetail + " " + genericDetail.getDetailValue();
+  }
+  if (genderDetail.trim().equals(""))   genderDetail=Resources.getString("notSpecified");
+  valuesPanel.add(new JLabel(genderDetail));
+  contactDetails=contactInfoOpSet.getDetails(contact,BirthDateDetail.class);
+  String birthDateDetail="";
+  String ageDetail="";
+  if (contactDetails.hasNext()) {
+    genericDetail=(BirthDateDetail)contactDetails.next();
+    Calendar calendarDetail=(Calendar)genericDetail.getDetailValue();
+    Date birthDate=calendarDetail.getTime();
+    DateFormat dateFormat=DateFormat.getDateInstance();
+    birthDateDetail=dateFormat.format(birthDate).trim();
+    Calendar c=Calendar.getInstance();
+    int age=c.get(Calendar.YEAR) - calendarDetail.get(Calendar.YEAR);
+    if (c.get(Calendar.MONTH) < calendarDetail.get(Calendar.MONTH))     age--;
+    ageDetail=new Integer(age).toString().trim();
+  }
+  if (birthDateDetail.equals(""))   birthDateDetail=Resources.getString("notSpecified");
+  if (ageDetail.equals(""))   ageDetail=Resources.getString("notSpecified");
+  valuesPanel.add(new JLabel(birthDateDetail));
+  valuesPanel.add(new JLabel(ageDetail));
+  contactDetails=contactInfoOpSet.getDetails(contact,EmailAddressDetail.class);
+  String emailDetail="";
+  while (contactDetails.hasNext()) {
+    genericDetail=(EmailAddressDetail)contactDetails.next();
+    emailDetail=emailDetail + " " + genericDetail.getDetailValue();
+  }
+  if (emailDetail.trim().equals(""))   emailDetail=Resources.getString("notSpecified");
+  valuesPanel.add(new JLabel(emailDetail));
+  contactDetails=contactInfoOpSet.getDetails(contact,PhoneNumberDetail.class);
+  String phoneNumberDetail="";
+  while (contactDetails.hasNext()) {
+    genericDetail=(PhoneNumberDetail)contactDetails.next();
+    phoneNumberDetail=phoneNumberDetail + " " + genericDetail.getDetailValue();
+  }
+  if (phoneNumberDetail.trim().equals(""))   phoneNumberDetail=Resources.getString("notSpecified");
+  valuesPanel.add(new JLabel(phoneNumberDetail));
+  return summaryPanel;
+}
