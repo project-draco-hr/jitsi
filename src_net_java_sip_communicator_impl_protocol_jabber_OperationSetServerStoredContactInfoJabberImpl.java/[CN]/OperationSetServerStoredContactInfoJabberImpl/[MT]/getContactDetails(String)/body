@@ -1,0 +1,36 @@
+{
+  List result=(List)retreivedDetails.get(contactAddress);
+  if (result == null) {
+    result=new LinkedList();
+    try {
+      XMPPConnection connection=jabberProvider.getConnection();
+      if (connection == null || !connection.isAuthenticated())       return null;
+      VCard card=new VCard();
+      card.load(connection,contactAddress);
+      String tmp=null;
+      tmp=card.getFirstName();
+      if (tmp != null)       result.add(new ServerStoredDetails.FirstNameDetail(tmp));
+      tmp=card.getMiddleName();
+      if (tmp != null)       result.add(new ServerStoredDetails.MiddleNameDetail(tmp));
+      tmp=card.getLastName();
+      if (tmp != null)       result.add(new ServerStoredDetails.LastNameDetail(tmp));
+      tmp=card.getNickName();
+      if (tmp != null)       result.add(new ServerStoredDetails.NicknameDetail(tmp));
+      tmp=card.getEmailHome();
+      if (tmp != null)       result.add(new ServerStoredDetails.EmailAddressDetail(tmp));
+      tmp=card.getEmailWork();
+      if (tmp != null)       result.add(new ServerStoredDetails.EmailAddressDetail(tmp));
+      tmp=card.getOrganization();
+      if (tmp != null)       result.add(new ServerStoredDetails.WorkOrganizationNameDetail(tmp));
+      tmp=card.getOrganizationUnit();
+      if (tmp != null)       result.add(new WorkDepartmentNameDetail(tmp));
+      byte[] imageBytes=card.getAvatar();
+      if (imageBytes != null && imageBytes.length > 0)       result.add(new ServerStoredDetails.ImageDetail("Image",imageBytes));
+    }
+ catch (    Exception exc) {
+      logger.error("Cannot load details for contact " + this + " : "+ exc.getMessage(),exc);
+    }
+  }
+  retreivedDetails.put(contactAddress,result);
+  return new LinkedList(result);
+}
