@@ -1,0 +1,27 @@
+{
+  Contact contact=(Contact)contactSelectorBox.getMenu().getSelectedObject();
+  OperationSetSmsMessaging smsOpSet=(OperationSetSmsMessaging)contact.getProtocolProvider().getOperationSet(OperationSetSmsMessaging.class);
+  if (smsOpSet == null) {
+    logger.error("Failed to send SMS.");
+    this.refreshWriteArea();
+    this.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,text,"plain/text");
+    this.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,Messages.getI18NString("sendSmsNotSupported").getText(),"plain/text");
+    return;
+  }
+  Message message=smsOpSet.createMessage(text);
+  try {
+    smsOpSet.sendSmsMessage(contact,message);
+  }
+ catch (  IllegalStateException ex) {
+    logger.error("Failed to send SMS.",ex);
+    this.refreshWriteArea();
+    this.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,message.getContent(),message.getContentType());
+    this.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,Messages.getI18NString("msgSendConnectionProblem").getText(),"text");
+  }
+catch (  Exception ex) {
+    logger.error("Failed to send SMS.",ex);
+    this.refreshWriteArea();
+    this.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,message.getContent(),message.getContentType());
+    this.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,Messages.getI18NString("msgDeliveryInternalError").getText(),"text");
+  }
+}
