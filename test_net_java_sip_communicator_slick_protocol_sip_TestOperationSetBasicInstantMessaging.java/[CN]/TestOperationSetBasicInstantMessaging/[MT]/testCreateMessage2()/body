@@ -5,10 +5,17 @@
   String subject="test message";
   net.java.sip.communicator.service.protocol.Message msg=opSetBasicIM1.createMessage(body.getBytes(),contentType,encoding,subject);
   assertEquals("message body",body,msg.getContent());
-  assertTrue("message body bytes",Arrays.equals(body.getBytes(),msg.getRawData()));
-  assertEquals("message length",body.length(),msg.getSize());
-  assertEquals("message content type",contentType,msg.getContentType());
   assertEquals("message encoding",encoding,msg.getEncoding());
+  try {
+    assertTrue("message body bytes",Arrays.equals(body.getBytes(encoding),msg.getRawData()));
+    assertEquals("message length",body.getBytes(encoding).length,msg.getSize());
+  }
+ catch (  UnsupportedEncodingException e) {
+    logger.warn("The current content encoding isn't supported",e);
+    assertTrue("message body bytes",Arrays.equals(body.getBytes(),msg.getRawData()));
+    assertEquals("message length",body.getBytes().length,msg.getSize());
+  }
+  assertEquals("message content type",contentType,msg.getContentType());
   assertNotNull("message uid",msg.getMessageUID());
   net.java.sip.communicator.service.protocol.Message msg2=opSetBasicIM1.createMessage(body);
   assertFalse("message uid",msg.getMessageUID().equals(msg2.getMessageUID()));
