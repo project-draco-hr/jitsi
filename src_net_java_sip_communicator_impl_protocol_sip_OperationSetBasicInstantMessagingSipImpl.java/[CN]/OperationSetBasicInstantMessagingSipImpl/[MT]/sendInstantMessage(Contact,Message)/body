@@ -17,26 +17,5 @@
     fireMessageEvent(evt);
     return;
   }
-  ClientTransaction messageTransaction;
-  SipProvider jainSipProvider=this.sipProvider.getDefaultJainSipProvider();
-  try {
-    messageTransaction=jainSipProvider.getNewClientTransaction(mes);
-  }
- catch (  TransactionUnavailableException ex) {
-    logger.error("Failed to create messageTransaction.\n" + "This is most probably a network connection error.",ex);
-    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date());
-    fireMessageEvent(evt);
-    return;
-  }
-  try {
-    messageTransaction.sendRequest();
-  }
- catch (  SipException ex) {
-    logger.error("Failed to send the message.",ex);
-    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
-    fireMessageEvent(evt);
-    return;
-  }
-  String key=((CallIdHeader)mes.getHeader(CallIdHeader.NAME)).getCallId();
-  this.sentMsg.put(key,message);
+  sendRequestMessage(mes,to,message);
 }
