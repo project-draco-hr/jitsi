@@ -1,0 +1,26 @@
+{
+  super(new BorderLayout());
+  Set set=AccountInfoActivator.getProtocolProviderFactories().entrySet();
+  Iterator iter=set.iterator();
+  boolean hasRegisteredAccounts=false;
+  while (iter.hasNext()) {
+    Map.Entry entry=(Map.Entry)iter.next();
+    ProtocolProviderFactory providerFactory=(ProtocolProviderFactory)entry.getValue();
+    ArrayList accountsList=providerFactory.getRegisteredAccounts();
+    AccountID accountID;
+    ServiceReference serRef;
+    ProtocolProviderService protocolProvider;
+    for (int i=0; i < accountsList.size(); i++) {
+      accountID=(AccountID)accountsList.get(i);
+      boolean isHidden=accountID.getAccountProperties().get("HIDDEN_PROTOCOL") != null;
+      if (!isHidden)       hasRegisteredAccounts=true;
+      serRef=providerFactory.getProviderForAccount(accountID);
+      protocolProvider=(ProtocolProviderService)AccountInfoActivator.bundleContext.getService(serRef);
+      detailsPanel=new AccountDetailsPanel(protocolProvider);
+      accountsTable.put(protocolProvider,detailsPanel);
+      protocolProvider.addRegistrationStateChangeListener(new RegistrationStateChangeListenerImpl());
+      this.accountsTabbedPane.addTab(accountID.getUserID(),detailsPanel);
+    }
+  }
+  this.add(accountsTabbedPane,BorderLayout.CENTER);
+}
