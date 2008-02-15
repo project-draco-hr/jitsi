@@ -1,0 +1,59 @@
+{
+  JLabel button=(JLabel)e.getSource();
+  String buttonName=button.getName();
+  if (buttonName.equals("add")) {
+    AddContactWizard wizard=new AddContactWizard(mainFrame);
+    wizard.setVisible(true);
+  }
+ else   if (buttonName.equals("config")) {
+    configDialog=GuiActivator.getUIService().getConfigurationWindow();
+    configDialog.setVisible(true);
+  }
+ else   if (buttonName.equals("search")) {
+    ContactList contactList=mainFrame.getContactListPanel().getContactList();
+    ContactListModel listModel=(ContactListModel)contactList.getModel();
+    Object selectedObject=null;
+    int currentlySelectedIndex=contactList.getSelectedIndex();
+    if (currentlySelectedIndex != -1) {
+      selectedObject=listModel.getElementAt(currentlySelectedIndex);
+    }
+    contactList.setShowOffline(!ConfigurationManager.isShowOffline());
+    if (selectedObject != null) {
+      if (selectedObject instanceof MetaContact) {
+        contactList.setSelectedIndex(listModel.indexOf((MetaContact)selectedObject));
+      }
+ else {
+        contactList.setSelectedIndex(listModel.indexOf((MetaContactGroup)selectedObject));
+      }
+    }
+  }
+ else   if (buttonName.equals("info")) {
+    MetaContact selectedMetaContact=(MetaContact)mainFrame.getContactListPanel().getContactList().getSelectedValue();
+    if (selectedMetaContact != null) {
+      OperationSetWebContactInfo wContactInfo=null;
+      Iterator protocolContacts=selectedMetaContact.getContacts();
+      while (protocolContacts.hasNext()) {
+        Contact protoContact=(Contact)protocolContacts.next();
+        wContactInfo=mainFrame.getWebContactInfoOpSet(protoContact.getProtocolProvider());
+        if (wContactInfo != null)         break;
+      }
+      if (wContactInfo != null) {
+        Contact defaultContact=selectedMetaContact.getDefaultContact();
+        GuiActivator.getBrowserLauncher().openURL(wContactInfo.getWebContactInfo(defaultContact).toString());
+      }
+ else {
+        new ErrorDialog(mainFrame,Messages.getI18NString("warning").getText(),Messages.getI18NString("selectContactSupportingInfo").getText(),ErrorDialog.WARNING).showDialog();
+      }
+    }
+  }
+ else   if (buttonName.equals("sound")) {
+    if (GuiActivator.getAudioNotifier().isMute()) {
+      updateMuteButton(false);
+      GuiActivator.getAudioNotifier().setMute(false);
+    }
+ else {
+      updateMuteButton(true);
+      GuiActivator.getAudioNotifier().setMute(true);
+    }
+  }
+}
