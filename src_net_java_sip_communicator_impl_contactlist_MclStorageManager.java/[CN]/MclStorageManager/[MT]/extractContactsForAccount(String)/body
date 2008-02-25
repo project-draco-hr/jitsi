@@ -1,13 +1,25 @@
 {
   if (!isStarted())   return;
+  this.mclServiceImpl.removeMetaContactListListener(this);
   try {
-    this.mclServiceImpl.removeMetaContactListListener(this);
     Element root=findMetaContactGroupNode(mclServiceImpl.getRoot().getMetaUID());
-    processGroupXmlNode(mclServiceImpl,accountID,root,null,null);
-    scheduleContactListStorage();
-    this.mclServiceImpl.addMetaContactListListener(this);
+    if (root == null) {
+      logger.fatal("The contactlist file is recreated cause its broken");
+      DocumentBuilderFactory factory=DocumentBuilderFactory.newInstance();
+      DocumentBuilder builder=factory.newDocumentBuilder();
+      contactListDocument=builder.newDocument();
+      initVirginDocument(mclServiceImpl,contactListDocument);
+      storeContactList0();
+    }
+ else {
+      processGroupXmlNode(mclServiceImpl,accountID,root,null,null);
+      scheduleContactListStorage();
+    }
   }
  catch (  Throwable exc) {
     throw new XMLException("Failed to extract contacts for account " + accountID,exc);
+  }
+ finally {
+    this.mclServiceImpl.addMetaContactListListener(this);
   }
 }
