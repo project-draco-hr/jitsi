@@ -27,9 +27,20 @@
       if (contactToAdd == null) {
         contactToAdd=new ContactMsnImpl(contact,ServerStoredContactListMsnImpl.this,true,true);
       }
-      waitAddInGroup.remove(contactID);
-      dstGroup.addContact(contactToAdd);
-      fireContactAdded(dstGroup,contactToAdd);
+ else {
+        if (!contactToAdd.isPersistent()) {
+          logger.info("hummm");
+          waitAddInGroup.remove(contactID);
+          contactToAdd.setResolved(contact);
+          dstGroup.addContact(contactToAdd);
+          fireContactMoved(contactToAdd.getParentContactGroup(),dstGroup,contactToAdd);
+        }
+ else {
+          waitAddInGroup.remove(contactID);
+          dstGroup.addContact(contactToAdd);
+          fireContactAdded(dstGroup,contactToAdd);
+        }
+      }
     }
  else {
       logger.trace("Contact not found!" + contact);

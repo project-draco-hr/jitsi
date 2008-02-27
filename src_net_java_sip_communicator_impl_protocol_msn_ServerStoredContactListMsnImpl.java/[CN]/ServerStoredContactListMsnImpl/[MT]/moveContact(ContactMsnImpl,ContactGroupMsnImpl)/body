@@ -6,8 +6,18 @@
     msnProvider.getMessenger().copyFriend(contact.getSourceContact().getEmail(),newParent.getSourceGroup().getGroupId());
   }
  else {
-    logger.trace("Will Move from " + contact.getParentContactGroup() + " to : "+ newParent+ " - contact: "+ contact);
-    contactListModListenerImpl.waitForMove(contact.getAddress());
-    msnProvider.getMessenger().moveFriend(contact.getSourceContact().getEmail(),((ContactGroupMsnImpl)contact.getParentContactGroup()).getSourceGroup().getGroupId(),newParent.getSourceGroup().getGroupId());
+    if (!contact.isPersistent() && !contact.getParentContactGroup().isPersistent()) {
+      try {
+        addContact(newParent,contact.getAddress());
+      }
+ catch (      OperationFailedException ex) {
+        logger.error("Failed to add contact from " + "NotInContactList group to new group: " + newParent,ex);
+      }
+    }
+ else {
+      logger.trace("Will Move from " + contact.getParentContactGroup() + " to : "+ newParent+ " - contact: "+ contact);
+      contactListModListenerImpl.waitForMove(contact.getAddress());
+      msnProvider.getMessenger().moveFriend(contact.getSourceContact().getEmail(),((ContactGroupMsnImpl)contact.getParentContactGroup()).getSourceGroup().getGroupId(),newParent.getSourceGroup().getGroupId());
+    }
   }
 }
