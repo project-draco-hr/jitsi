@@ -8,6 +8,10 @@
     logger.error("Failed to create a content type header for the INVITE " + "request",ex);
     throw new OperationFailedException("Failed to create a content type header for the INVITE " + "request",OperationFailedException.INTERNAL_ERROR,ex);
   }
+  CallIdHeader call=(CallIdHeader)invite.getHeader(CallIdHeader.NAME);
+  String callid=call.getCallId();
+  AuthorizationHeader authorization=protocolProvider.getSipSecurityManager().getCachedAuthorizationHeader(callid);
+  if (authorization != null)   invite.addHeader(authorization);
   ClientTransaction inviteTransaction;
   SipProvider jainSipProvider=protocolProvider.getDefaultJainSipProvider();
   try {

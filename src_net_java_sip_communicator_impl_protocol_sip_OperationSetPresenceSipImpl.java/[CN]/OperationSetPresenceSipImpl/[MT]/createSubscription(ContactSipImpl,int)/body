@@ -75,5 +75,9 @@ catch (  ParseException ex) {
     throw new OperationFailedException("An unexpected error occurred while" + "constructing the ExpiresHeader",OperationFailedException.INTERNAL_ERROR,e);
   }
   req.setHeader(expHeader);
+  CallIdHeader call=(CallIdHeader)req.getHeader(CallIdHeader.NAME);
+  String callid=call.getCallId();
+  AuthorizationHeader authorization=parentProvider.getSipSecurityManager().getCachedAuthorizationHeader(callid);
+  if (authorization != null)   req.addHeader(authorization);
   return req;
 }
