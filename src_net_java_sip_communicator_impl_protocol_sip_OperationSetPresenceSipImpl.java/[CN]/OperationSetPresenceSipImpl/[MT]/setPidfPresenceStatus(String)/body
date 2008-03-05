@@ -21,7 +21,7 @@
     return;
   }
   Element presence=(Element)presNode;
-  SipStatusEnum personStatus=null;
+  PresenceStatus personStatus=null;
   NodeList personList=presence.getElementsByTagNameNS(ANY_NS,PERSON_ELEMENT);
   if (personList.getLength() > 0) {
     Node personNode=personList.item(0);
@@ -45,15 +45,15 @@
           if (statusNode.getNodeType() == Node.ELEMENT_NODE) {
             String statusname=statusNode.getLocalName();
             if (statusname.equals(AWAY_ELEMENT)) {
-              personStatus=SipStatusEnum.AWAY;
+              personStatus=sipStatusEnum.getStatus(SipStatusEnum.AWAY);
               break;
             }
  else             if (statusname.equals(BUSY_ELEMENT)) {
-              personStatus=SipStatusEnum.BUSY;
+              personStatus=sipStatusEnum.getStatus(SipStatusEnum.BUSY);
               break;
             }
  else             if (statusname.equals(OTP_ELEMENT)) {
-              personStatus=SipStatusEnum.ON_THE_PHONE;
+              personStatus=sipStatusEnum.getStatus(SipStatusEnum.ON_THE_PHONE);
               break;
             }
           }
@@ -197,9 +197,9 @@
       }
       Element note=(Element)noteNode;
       String state=getTextContent(note);
-      Iterator states=SipStatusEnum.supportedStatusSet();
+      Iterator states=sipStatusEnum.getSupportedStatusSet();
       while (states.hasNext()) {
-        SipStatusEnum current=(SipStatusEnum)states.next();
+        PresenceStatus current=(PresenceStatus)states.next();
         if (current.getStatusName().equalsIgnoreCase(state)) {
           changed=true;
           newPresenceStates=setStatusForContacts(current,sipcontact,newPresenceStates);
@@ -209,10 +209,10 @@
     }
     if (changed == false && basic != null) {
       if (getTextContent(basic).equalsIgnoreCase(ONLINE_STATUS)) {
-        newPresenceStates=setStatusForContacts(SipStatusEnum.ONLINE,sipcontact,newPresenceStates);
+        newPresenceStates=setStatusForContacts(sipStatusEnum.getStatus(SipStatusEnum.ONLINE),sipcontact,newPresenceStates);
       }
  else       if (getTextContent(basic).equalsIgnoreCase(OFFLINE_STATUS)) {
-        newPresenceStates=setStatusForContacts(SipStatusEnum.OFFLINE,sipcontact,newPresenceStates);
+        newPresenceStates=setStatusForContacts(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE),sipcontact,newPresenceStates);
       }
     }
  else {
@@ -225,7 +225,7 @@
   while (iter.hasNext()) {
     Object tab[]=(Object[])iter.next();
     ContactSipImpl contact=(ContactSipImpl)tab[0];
-    SipStatusEnum status=(SipStatusEnum)tab[2];
+    PresenceStatus status=(PresenceStatus)tab[2];
     changePresenceStatusForContact(contact,status);
   }
 }
