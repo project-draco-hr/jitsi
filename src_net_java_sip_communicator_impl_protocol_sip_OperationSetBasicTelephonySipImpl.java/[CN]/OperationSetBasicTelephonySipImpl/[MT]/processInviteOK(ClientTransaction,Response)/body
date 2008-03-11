@@ -12,12 +12,17 @@
   Request ack=null;
   ContentTypeHeader contentTypeHeader=null;
   try {
-    ack=clientTransaction.getDialog().createRequest(Request.ACK);
+    CSeqHeader cseq=((CSeqHeader)ok.getHeader(CSeqHeader.NAME));
+    ack=clientTransaction.getDialog().createAck(cseq.getSeqNumber());
     contentTypeHeader=protocolProvider.getHeaderFactory().createContentTypeHeader("application","sdp");
   }
  catch (  ParseException ex) {
     callParticipant.setState(CallParticipantState.FAILED,"Failed to create a content type header for the ACK request");
     logger.error("Failed to create a content type header for the ACK request",ex);
+  }
+catch (  InvalidArgumentException ex) {
+    callParticipant.setState(CallParticipantState.FAILED,"Failed ACK request, problem with the supplied cseq");
+    logger.error("Failed ACK request, problem with the supplied cseq",ex);
   }
 catch (  SipException ex) {
     logger.error("Failed to create ACK request!",ex);
