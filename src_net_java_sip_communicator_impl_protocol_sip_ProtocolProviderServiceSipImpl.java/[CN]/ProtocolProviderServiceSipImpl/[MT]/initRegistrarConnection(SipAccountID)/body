@@ -7,10 +7,20 @@
   InetAddress registrarAddress=null;
   try {
     registrarAddress=InetAddress.getByName(registrarAddressStr);
+    accountID.putProperty(ProtocolProviderFactory.SERVER_ADDRESS_VALIDATED,Boolean.toString(true));
   }
  catch (  UnknownHostException ex) {
     logger.error(registrarAddressStr + " appears to be an either invalid or inaccessible address: ",ex);
-    throw new IllegalArgumentException(registrarAddressStr + " appears to be an either invalid or inaccessible address: " + ex.getMessage());
+    String serverValidatedString=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_ADDRESS_VALIDATED);
+    boolean isServerValidated=false;
+    if (serverValidatedString != null)     isServerValidated=new Boolean(serverValidatedString).booleanValue();
+    if (serverValidatedString == null || !isServerValidated) {
+      throw new IllegalArgumentException(registrarAddressStr + " appears to be an either invalid or inaccessible address: " + ex.getMessage());
+    }
+  }
+  if (registrarAddress == null) {
+    fireRegistrationStateChanged(RegistrationState.UNREGISTERED,RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,"Invalid or inaccessible server address.");
+    return;
   }
   int registrarPort=ListeningPoint.PORT_5060;
   String registrarPortStr=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_PORT);

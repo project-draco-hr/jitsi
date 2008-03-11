@@ -3,12 +3,18 @@
   InetAddress proxyAddress=null;
   try {
     proxyAddress=InetAddress.getByName(proxyAddressStr);
+    accountID.putProperty(ProtocolProviderFactory.PROXY_ADDRESS_VALIDATED,Boolean.toString(true));
   }
  catch (  UnknownHostException ex) {
     logger.error(proxyAddressStr + " appears to be an either invalid or inaccessible address",ex);
-    throw new IllegalArgumentException(proxyAddressStr + " appears to be an either invalid or inaccessible address " + ex.getMessage());
+    String proxyValidatedString=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PROXY_ADDRESS_VALIDATED);
+    boolean isProxyValidated=false;
+    if (proxyValidatedString != null)     isProxyValidated=new Boolean(proxyValidatedString).booleanValue();
+    if (proxyValidatedString == null || !isProxyValidated) {
+      throw new IllegalArgumentException(proxyAddressStr + " appears to be an either invalid or inaccessible address " + ex.getMessage());
+    }
   }
-  if (proxyAddressStr == null || proxyAddressStr.length() == 0) {
+  if (proxyAddressStr == null || proxyAddressStr.length() == 0 || proxyAddress == null) {
     return;
   }
   int proxyPort=ListeningPoint.PORT_5060;

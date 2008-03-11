@@ -10,7 +10,15 @@
     retryTran.sendRequest();
     return;
   }
- catch (  Exception exc) {
+ catch (  OperationFailedException exc) {
+    if (exc.getErrorCode() == OperationFailedException.AUTHENTICATION_CANCELED) {
+      this.setRegistrationState(RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"User has canceled the authentication process.");
+    }
+ else {
+      this.setRegistrationState(RegistrationState.AUTHENTICATION_FAILED,RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED,"We failed to authenticate with the server.");
+    }
+  }
+catch (  Exception exc) {
     logger.error("We failed to authenticate a Register request.",exc);
     this.setRegistrationState(RegistrationState.AUTHENTICATION_FAILED,RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED,"We failed to authenticate with the server.");
   }

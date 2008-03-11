@@ -1,16 +1,28 @@
 {
   String sourcePackageName=getFactoryImplPackageName();
-  String accNodeName="acc" + Long.toString(System.currentTimeMillis());
+  String accountNodeName=null;
   ServiceReference confReference=bundleContext.getServiceReference(ConfigurationService.class.getName());
   ConfigurationService configurationService=(ConfigurationService)bundleContext.getService(confReference);
-  configurationService.setProperty(sourcePackageName + "." + accNodeName,accNodeName);
-  configurationService.setProperty(sourcePackageName + "." + accNodeName+ "."+ ACCOUNT_UID,accountID.getAccountUniqueID());
+  List accounts=configurationService.getPropertyNamesByPrefix(sourcePackageName,true);
+  Iterator accountsIter=accounts.iterator();
+  while (accountsIter.hasNext()) {
+    String accountRootPropName=(String)accountsIter.next();
+    String accountIDString=configurationService.getString(accountRootPropName + ".ACCOUNT_UID");
+    if (accountIDString.equals(accountID.getAccountUniqueID())) {
+      accountNodeName=configurationService.getString(accountRootPropName);
+    }
+  }
+  if (accountNodeName == null) {
+    accountNodeName="acc" + Long.toString(System.currentTimeMillis());
+    configurationService.setProperty(sourcePackageName + "." + accountNodeName,accountNodeName);
+    configurationService.setProperty(sourcePackageName + "." + accountNodeName+ "."+ ACCOUNT_UID,accountID.getAccountUniqueID());
+  }
   Iterator accountPropKeys=accountID.getAccountProperties().keySet().iterator();
   while (accountPropKeys.hasNext()) {
     String propKey=(String)accountPropKeys.next();
     String propValue=(String)accountID.getAccountProperties().get(propKey);
     if (propKey.equals(PASSWORD))     propValue=new String(Base64.encode(propValue.getBytes()));
-    configurationService.setProperty(sourcePackageName + "." + accNodeName+ "."+ propKey,propValue);
+    configurationService.setProperty(sourcePackageName + "." + accountNodeName+ "."+ propKey,propValue);
   }
   logger.debug("Stored account for id " + accountID.getAccountUniqueID() + " for package "+ getFactoryImplPackageName());
 }
