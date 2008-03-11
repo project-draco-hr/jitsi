@@ -1,0 +1,26 @@
+{
+  String pkgName=Resources.getConfigString("pkgName") + "-";
+  EditorKit kit=new HTMLEditorKit();
+  Document doc=kit.createDefaultDocument();
+  doc.putProperty("IgnoreCharsetDirective",Boolean.TRUE);
+  try {
+    Reader rd=getReader(Resources.getConfigString("destinationPath") + "/windows");
+    kit.read(rd,doc,0);
+    ElementIterator it=new ElementIterator(doc);
+    Element elem;
+    while ((elem=it.next()) != null) {
+      SimpleAttributeSet s=(SimpleAttributeSet)elem.getAttributes().getAttribute(HTML.Tag.A);
+      if (s != null) {
+        String link=s.getAttribute(HTML.Attribute.HREF).toString();
+        if (!link.startsWith(pkgName))         continue;
+        link=link.replaceAll(pkgName,"");
+        link=link.substring(0,link.lastIndexOf('.'));
+        return link.compareTo(currentVersionStr) <= 0;
+      }
+    }
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+  }
+  return false;
+}
