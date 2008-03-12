@@ -27,7 +27,20 @@
     setRegistrationState(RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"Registration terminated.");
   }
  else {
-    scheduleReRegistration(grantedExpiration);
+    int scheduleTime=grantedExpiration;
+    String regAnticipObj=(String)sipProvider.getAccountID().getAccountProperties().get("REGISTRATION_ANTICIPATION");
+    if (regAnticipObj != null) {
+      try {
+        int registrationAnticipation=Integer.valueOf(regAnticipObj).intValue();
+        if (registrationAnticipation < grantedExpiration) {
+          scheduleTime=registrationAnticipation;
+        }
+      }
+ catch (      Exception ex) {
+        logger.error("Wrong value for REGISTRATION_ANTICIPATION");
+      }
+    }
+    scheduleReRegistration(scheduleTime);
     setRegistrationState(RegistrationState.REGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
   }
 }
