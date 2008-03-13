@@ -23,6 +23,16 @@
  else   if (newState == State.FAILED) {
     logger.debug("The aim Connection failed! " + event.getNewStateInfo());
   }
+  if (event.getNewStateInfo() instanceof LoginFailureStateInfo) {
+    LoginFailureInfo loginFailure=((LoginFailureStateInfo)event.getNewStateInfo()).getLoginFailureInfo();
+    if (loginFailure instanceof AuthFailureInfo) {
+      AuthFailureInfo afi=(AuthFailureInfo)loginFailure;
+      logger.debug("AuthFailureInfo code : " + afi.getErrorCode());
+      int code=ConnectionClosedListener.convertAuthCodeToReasonCode(afi);
+      reasonCode=ConnectionClosedListener.convertCodeToRegistrationStateChangeEvent(code);
+      reasonStr=ConnectionClosedListener.convertCodeToStringReason(code);
+    }
+  }
   if (reasonCode == RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED) {
     if (USING_ICQ)     IcqActivator.getIcqProtocolProviderFactory().storePassword(getAccountID(),null);
  else     IcqActivator.getAimProtocolProviderFactory().storePassword(getAccountID(),null);
