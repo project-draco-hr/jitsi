@@ -1,0 +1,33 @@
+{
+synchronized (initializationLock) {
+    String password=MsnActivator.getProtocolProviderFactory().loadPassword(getAccountID());
+    if (password == null) {
+      UserCredentials credentials=new UserCredentials();
+      credentials.setUserName(getAccountID().getUserID());
+      credentials=authority.obtainCredentials(ProtocolNames.MSN,credentials,reasonCode);
+      if (credentials == null) {
+        fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"");
+        return;
+      }
+      char[] pass=credentials.getPassword();
+      if (pass == null) {
+        fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"");
+        return;
+      }
+      password=new String(pass);
+      if (credentials.isPasswordPersistent()) {
+        MsnActivator.getProtocolProviderFactory().storePassword(getAccountID(),password);
+      }
+    }
+    messenger=MsnMessengerFactory.createMsnMessenger(getAccountID().getUserID(),password);
+    messenger.addMessengerListener(new MsnConnectionListener());
+    persistentPresence.setMessenger(messenger);
+    typingNotifications.setMessenger(messenger);
+    try {
+      messenger.login();
+    }
+ catch (    UnresolvedAddressException ex) {
+      fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,null);
+    }
+  }
+}

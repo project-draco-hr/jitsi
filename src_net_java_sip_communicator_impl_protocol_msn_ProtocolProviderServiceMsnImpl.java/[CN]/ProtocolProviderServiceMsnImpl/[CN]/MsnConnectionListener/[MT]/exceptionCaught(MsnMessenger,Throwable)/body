@@ -3,6 +3,11 @@
     unregister(false);
     MsnActivator.getProtocolProviderFactory().storePassword(getAccountID(),null);
     fireRegistrationStateChanged(getRegistrationState(),RegistrationState.AUTHENTICATION_FAILED,RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED,"Incorrect Password");
+    reconnect(SecurityAuthority.WRONG_PASSWORD);
+  }
+ else   if (throwable instanceof UnknownHostException || throwable instanceof SocketException) {
+    unregister(false);
+    fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,"A network error occured. Could not connect to server.");
   }
  else {
     if (throwable instanceof MsnProtocolException) {
@@ -22,6 +27,7 @@ case 911:
       unregister(false);
       MsnActivator.getProtocolProviderFactory().storePassword(getAccountID(),null);
       fireRegistrationStateChanged(getRegistrationState(),RegistrationState.AUTHENTICATION_FAILED,RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED,null);
+      reconnect(SecurityAuthority.WRONG_PASSWORD);
     }
   break;
 }

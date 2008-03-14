@@ -1,0 +1,62 @@
+{
+synchronized (initializationLock) {
+    ProtocolProviderFactoryIcqImpl protocolProviderFactory=null;
+    if (USING_ICQ)     protocolProviderFactory=IcqActivator.getIcqProtocolProviderFactory();
+ else     protocolProviderFactory=IcqActivator.getAimProtocolProviderFactory();
+    String password=protocolProviderFactory.loadPassword(getAccountID());
+    if (password == null) {
+      UserCredentials credentials=new UserCredentials();
+      credentials.setUserName(this.getAccountID().getUserID());
+      credentials=authority.obtainCredentials(getProtocolName(),credentials,reasonCode);
+      if (credentials == null) {
+        fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"");
+        return;
+      }
+      char[] pass=credentials.getPassword();
+      if (pass == null) {
+        fireRegistrationStateChanged(RegistrationState.UNREGISTERED,RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"");
+        return;
+      }
+      password=new String(pass);
+      if (credentials.isPasswordPersistent()) {
+        protocolProviderFactory.storePassword(getAccountID(),password);
+      }
+    }
+    if (USING_ICQ && password.length() > 8)     password=password.substring(0,8);
+    session=new DefaultAppSession();
+    aimSession=session.openAimSession(new Screenname(getAccountID().getUserID()));
+    String proxyAddress=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.PROXY_ADDRESS);
+    if (proxyAddress != null && proxyAddress.length() > 0) {
+      String proxyPortStr=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.PROXY_PORT);
+      int proxyPort;
+      try {
+        proxyPort=Integer.parseInt(proxyPortStr);
+      }
+ catch (      NumberFormatException ex) {
+        throw new OperationFailedException("Wrong port",OperationFailedException.INVALID_ACCOUNT_PROPERTIES,ex);
+      }
+      String proxyType=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.PROXY_TYPE);
+      if (proxyType == null)       throw new OperationFailedException("Missing proxy type",OperationFailedException.INVALID_ACCOUNT_PROPERTIES);
+      String proxyUsername=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.PROXY_USERNAME);
+      String proxyPassword=(String)getAccountID().getAccountProperties().get(ProtocolProviderFactory.PROXY_PASSWORD);
+      if (proxyType.equals("http")) {
+        AimConnectionProperties connProps=new AimConnectionProperties(new Screenname(getAccountID().getUserID()),password);
+        connProps.setLoginHost("login.icq.com");
+        connProps.setLoginPort(443);
+        aimConnection=aimSession.openConnection(connProps);
+        aimConnection.setProxy(AimProxyInfo.forHttp(proxyAddress,proxyPort,proxyUsername,proxyPassword));
+      }
+ else {
+        aimConnection=aimSession.openConnection(new AimConnectionProperties(new Screenname(getAccountID().getUserID()),password));
+        if (proxyType.equals("socks4"))         aimConnection.setProxy(AimProxyInfo.forSocks4(proxyAddress,proxyPort,proxyUsername));
+ else         if (proxyType.equals("socks5"))         aimConnection.setProxy(AimProxyInfo.forSocks5(proxyAddress,proxyPort,proxyUsername,proxyPassword));
+      }
+    }
+ else {
+      aimConnection=aimSession.openConnection(new AimConnectionProperties(new Screenname(getAccountID().getUserID()),password));
+    }
+    aimConnStateListener=new AimConnStateListener();
+    aimConnection.addStateListener(aimConnStateListener);
+    aimConnection.connect();
+  }
+}

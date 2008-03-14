@@ -2,7 +2,7 @@
   if (authority == null)   throw new IllegalArgumentException("The register method needs a valid non-null authority impl " + " in order to be able and retrieve passwords.");
   this.authority=authority;
   try {
-    connectAndLogin(authority);
+    connectAndLogin(authority,SecurityAuthority.AUTHENTICATION_REQUIRED);
   }
  catch (  XMPPException ex) {
     logger.error("Error registering",ex);
@@ -16,6 +16,7 @@
       JabberActivator.getProtocolProviderFactory().storePassword(getAccountID(),null);
       reason=RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED;
       regState=RegistrationState.AUTHENTICATION_FAILED;
+      reregister(SecurityAuthority.WRONG_PASSWORD);
     }
     fireRegistrationStateChanged(getRegistrationState(),regState,reason,null);
   }
