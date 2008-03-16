@@ -1,0 +1,26 @@
+{
+  if (evt.getNewState() == RegistrationState.UNREGISTERING || evt.getNewState() == RegistrationState.CONNECTION_FAILED) {
+    if (keepAliveTimer != null) {
+      keepAliveTimer.cancel();
+      keepAliveTimer=null;
+    }
+  }
+ else   if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
+    String keepAliveMethod=(String)provider.getAccountID().getAccountProperties().get(ProtocolProviderServiceSipImpl.KEEP_ALIVE_METHOD);
+    if (keepAliveMethod == null || !keepAliveMethod.equalsIgnoreCase("options"))     return;
+    String keepAliveIntStr=(String)provider.getAccountID().getAccountProperties().get(ProtocolProviderServiceSipImpl.KEEP_ALIVE_INTERVAL);
+    if (keepAliveIntStr != null) {
+      int keepAliveInterval=-1;
+      try {
+        keepAliveInterval=Integer.valueOf(keepAliveIntStr).intValue();
+      }
+ catch (      Exception ex) {
+        logger.error("Wrong value for keep-alive interval");
+      }
+      if (keepAliveInterval > 0) {
+        if (keepAliveTimer == null)         keepAliveTimer=new Timer();
+        keepAliveTimer.schedule(new KeepAliveTask(),0,keepAliveInterval * 1000);
+      }
+    }
+  }
+}
