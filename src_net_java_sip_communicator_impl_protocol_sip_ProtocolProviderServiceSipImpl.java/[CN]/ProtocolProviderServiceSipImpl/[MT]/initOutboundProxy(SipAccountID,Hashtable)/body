@@ -2,6 +2,21 @@
   String proxyAddressStr=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PROXY_ADDRESS);
   InetAddress proxyAddress=null;
   try {
+    try {
+      String lookupStr=null;
+      String proxyTransport=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PREFERRED_TRANSPORT);
+      if (proxyTransport == null)       proxyTransport=getDefaultTransport();
+      if (proxyTransport.equalsIgnoreCase(ListeningPoint.UDP))       lookupStr="_sip._udp." + proxyAddressStr;
+ else       if (proxyTransport.equalsIgnoreCase(ListeningPoint.TCP))       lookupStr="_sip._tcp." + proxyAddressStr;
+ else       if (proxyTransport.equalsIgnoreCase(ListeningPoint.TLS))       lookupStr="_sips._tcp." + proxyAddressStr;
+      InetSocketAddress hosts[]=NetworkUtils.getSRVRecords(lookupStr);
+      if (hosts != null && hosts.length > 0) {
+        logger.trace("Will set server address from SRV records " + hosts[0]);
+        proxyAddressStr=hosts[0].getHostName();
+      }
+    }
+ catch (    Exception ex) {
+    }
     proxyAddress=InetAddress.getByName(proxyAddressStr);
     accountID.putProperty(ProtocolProviderFactory.PROXY_ADDRESS_VALIDATED,Boolean.toString(true));
   }
