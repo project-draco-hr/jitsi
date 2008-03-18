@@ -1,9 +1,26 @@
 {
-  Iterator pluginComponents=GuiActivator.getUIService().getComponentsForContainer(UIService.CONTAINER_GROUP_RIGHT_BUTTON_MENU);
+  Iterator pluginComponents=GuiActivator.getUIService().getComponentsForContainer(Container.CONTAINER_GROUP_RIGHT_BUTTON_MENU);
   if (pluginComponents.hasNext())   this.addSeparator();
   while (pluginComponents.hasNext()) {
     Component o=(Component)pluginComponents.next();
     this.add(o);
     if (o instanceof ContactAwareComponent)     ((ContactAwareComponent)o).setCurrentContactGroup(group);
   }
+  ServiceReference[] serRefs=null;
+  String osgiFilter="(" + Container.CONTAINER_ID + "="+ Container.CONTAINER_GROUP_RIGHT_BUTTON_MENU.getID()+ ")";
+  try {
+    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponent.class.getName(),osgiFilter);
+  }
+ catch (  InvalidSyntaxException exc) {
+    exc.printStackTrace();
+  }
+  if (serRefs == null)   return;
+  for (int i=0; i < serRefs.length; i++) {
+    PluginComponent component=(PluginComponent)GuiActivator.bundleContext.getService(serRefs[i]);
+    ;
+    component.setCurrentContactGroup(group);
+    this.add((Component)component.getComponent());
+    this.repaint();
+  }
+  GuiActivator.getUIService().addPluginComponentListener(this);
 }

@@ -4,5 +4,19 @@
     Component o=(Component)pluginComponents.next();
     this.add(o,BorderLayout.SOUTH);
   }
+  ServiceReference[] serRefs=null;
+  String osgiFilter="(" + Container.CONTAINER_ID + "="+ Container.CONTAINER_CHAT_WINDOW.getID()+ ")";
+  try {
+    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponent.class.getName(),osgiFilter);
+  }
+ catch (  InvalidSyntaxException exc) {
+    logger.error("Could not obtain plugin component reference.",exc);
+  }
+  if (serRefs == null)   return;
+  for (int i=0; i < serRefs.length; i++) {
+    PluginComponent c=(PluginComponent)GuiActivator.bundleContext.getService(serRefs[i]);
+    Object borderLayoutConstraint=UIServiceImpl.getBorderLayoutConstraintsFromContainer(c.getConstraints());
+    this.add((Component)c.getComponent(),borderLayoutConstraint);
+  }
   GuiActivator.getUIService().addPluginComponentListener(this);
 }

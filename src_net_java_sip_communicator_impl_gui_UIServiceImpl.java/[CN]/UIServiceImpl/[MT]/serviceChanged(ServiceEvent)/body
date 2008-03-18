@@ -1,0 +1,18 @@
+{
+  Object sService=GuiActivator.bundleContext.getService(event.getServiceReference());
+  if (!(sService instanceof PluginComponent)) {
+    return;
+  }
+  PluginComponent pluginComponent=(PluginComponent)sService;
+  if (event.getType() == ServiceEvent.REGISTERED) {
+    logger.debug("Handling registration of a new Plugin Component.");
+    if (!(pluginComponent.getComponent() instanceof Component)) {
+      logger.error("Plugin Component type is not supported." + "Should provide a plugin in AWT, SWT or Swing.");
+      return;
+    }
+    this.firePluginEvent(pluginComponent,PluginComponentEvent.PLUGIN_COMPONENT_ADDED);
+  }
+ else   if (event.getType() == ServiceEvent.UNREGISTERING) {
+    this.firePluginEvent(pluginComponent,PluginComponentEvent.PLUGIN_COMPONENT_REMOVED);
+  }
+}
