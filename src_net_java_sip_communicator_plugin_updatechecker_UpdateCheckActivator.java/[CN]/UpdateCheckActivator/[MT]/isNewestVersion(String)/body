@@ -1,26 +1,19 @@
 {
-  String pkgName=Resources.getConfigString("pkgName") + "-";
-  EditorKit kit=new HTMLEditorKit();
-  Document doc=kit.createDefaultDocument();
-  doc.putProperty("IgnoreCharsetDirective",Boolean.TRUE);
   try {
-    Reader rd=getReader(Resources.getConfigString("destinationPath") + "/windows");
-    kit.read(rd,doc,0);
-    ElementIterator it=new ElementIterator(doc);
-    Element elem;
-    while ((elem=it.next()) != null) {
-      SimpleAttributeSet s=(SimpleAttributeSet)elem.getAttributes().getAttribute(HTML.Tag.A);
-      if (s != null) {
-        String link=s.getAttribute(HTML.Attribute.HREF).toString();
-        if (!link.startsWith(pkgName))         continue;
-        link=link.replaceAll(pkgName,"");
-        link=link.substring(0,link.lastIndexOf('.'));
-        return link.compareTo(currentVersionStr) <= 0;
-      }
-    }
+    String osName=System.getProperty("os.name");
+    String osDir=null;
+    if (osName.startsWith("Mac"))     osDir="/macosx";
+ else     if (osName.startsWith("Linux"))     osDir="/linux";
+ else     if (osName.startsWith("Windows"))     osDir="/windows";
+    URL url=new URL(Resources.getConfigString("destinationPath") + osDir + "/versionupdate.properties");
+    Properties props=new Properties();
+    props.load(url.openStream());
+    String lastVersion=props.getProperty("last_version");
+    downloadLink=props.getProperty("download_link");
+    return lastVersion.compareTo(currentVersionStr) <= 0;
   }
  catch (  Exception e) {
-    e.printStackTrace();
+    logger.error("Cannot get and compare versions!",e);
   }
   return false;
 }
