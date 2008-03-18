@@ -19,5 +19,21 @@
     Component o=(Component)pluginComponents.next();
     this.getContentPane().add(o,BorderLayout.WEST);
   }
+  ServiceReference[] serRefs=null;
+  String osgiFilter="(" + Container.CONTAINER_ID + "="+ Container.CONTAINER_MAIN_TABBED_PANE.getID()+ ")";
+  try {
+    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponent.class.getName(),osgiFilter);
+  }
+ catch (  InvalidSyntaxException exc) {
+    logger.error("Could not obtain plugin reference.",exc);
+  }
+  if (serRefs == null)   return;
+  for (int i=0; i < serRefs.length; i++) {
+    PluginComponent c=(PluginComponent)GuiActivator.bundleContext.getService(serRefs[i]);
+    Object constraints=null;
+    if (c.getConstraints() != null)     constraints=UIServiceImpl.getBorderLayoutConstraintsFromContainer(c.getConstraints());
+ else     constraints=BorderLayout.SOUTH;
+    this.getContentPane().add((Component)c.getComponent(),constraints);
+  }
   GuiActivator.getUIService().addPluginComponentListener(this);
 }
