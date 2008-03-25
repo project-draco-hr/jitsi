@@ -28,19 +28,18 @@
   }
  else {
     int scheduleTime=grantedExpiration;
-    String keepAliveMethod=(String)sipProvider.getAccountID().getAccountProperties().get("KEEP_ALIVE_METHOD");
-    if (keepAliveMethod != null && keepAliveMethod.equalsIgnoreCase("register")) {
-      String keepAliveInterval=(String)sipProvider.getAccountID().getAccountProperties().get("KEEP_ALIVE_INTERVAL");
-      if (keepAliveInterval != null) {
-        try {
-          int registrationInterval=Integer.valueOf(keepAliveInterval).intValue();
-          if (registrationInterval < grantedExpiration) {
-            scheduleTime=registrationInterval;
-          }
+    String keepAliveMethod=(String)sipProvider.getAccountID().getAccountProperties().get(KEEP_ALIVE_METHOD);
+    if ((keepAliveMethod != null && keepAliveMethod.equalsIgnoreCase("register")) || keepAliveMethod == null) {
+      String keepAliveInterval=(String)sipProvider.getAccountID().getAccountProperties().get(KEEP_ALIVE_INTERVAL);
+      if (keepAliveInterval == null)       keepAliveInterval=KEEP_ALIVE_INTERVAL_DEFAULT_VALUE;
+      try {
+        int registrationInterval=Integer.valueOf(keepAliveInterval).intValue();
+        if (registrationInterval < grantedExpiration) {
+          scheduleTime=registrationInterval;
         }
- catch (        Exception ex) {
-          logger.error("Wrong value for KEEP_ALIVE_INTERVAL");
-        }
+      }
+ catch (      Exception ex) {
+        logger.error("Wrong value for KEEP_ALIVE_INTERVAL");
       }
     }
     scheduleReRegistration(scheduleTime);
