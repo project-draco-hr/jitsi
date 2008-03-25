@@ -9,7 +9,7 @@
     ContactListModel clistModel=(ContactListModel)contactList.getModel();
     clistModel.addActiveContact(metaContact);
     contactList.refreshContact(metaContact);
-    MetaContactChatPanel chatPanel=chatWindowManager.getContactChat(metaContact,protocolContact,message.getMessageUID());
+    final MetaContactChatPanel chatPanel=chatWindowManager.getContactChat(metaContact,protocolContact,message.getMessageUID());
     String messageType=null;
     if (eventType == MessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED) {
       messageType=Constants.INCOMING_MESSAGE;
@@ -21,7 +21,12 @@
       messageType=Constants.SMS_MESSAGE;
     }
     chatPanel.processMessage(protocolContact.getDisplayName(),date,messageType,message.getContent(),message.getContentType());
-    chatWindowManager.openChat(chatPanel,false);
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        chatWindowManager.openChat(chatPanel,false);
+      }
+    }
+);
     String title=Messages.getI18NString("msgReceived",new String[]{evt.getSourceContact().getDisplayName()}).getText();
     NotificationManager.fireChatNotification(protocolContact,NotificationManager.INCOMING_MESSAGE,title,message.getContent());
     chatPanel.treatReceivedMessage(protocolContact);
