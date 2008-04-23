@@ -1,15 +1,20 @@
 {
   URL rssURL=null;
-  if (contactIdentifier.startsWith("feed"))   contactIdentifier=contactIdentifier.replaceFirst("feed","http");
+  String contactIdentifierURL=contactIdentifier;
+  if (contactIdentifierURL.startsWith("feed"))   contactIdentifierURL=contactIdentifierURL.replaceFirst("feed","http");
+  if (findContactByID(contactIdentifier) != null) {
+    logger.debug("contact with same id already exists - " + contactIdentifier);
+    return;
+  }
   try {
-    rssURL=new URL(contactIdentifier);
+    rssURL=new URL(contactIdentifierURL);
   }
  catch (  MalformedURLException ex) {
     throw new IllegalArgumentException("failed to create a URL for address " + contactIdentifier + ". Error was: "+ ex.getMessage());
   }
   RssFeedReader rssFeedReader=new RssFeedReader(rssURL);
   rssFeedReader.retrieveFlow();
-  ContactRssImpl contact=new ContactRssImpl(rssURL,rssFeedReader,parentProvider);
+  ContactRssImpl contact=new ContactRssImpl(contactIdentifier,rssURL,rssFeedReader,parentProvider);
   ((ContactGroupRssImpl)parent).addContact(contact);
   fireSubscriptionEvent(contact,parent,SubscriptionEvent.SUBSCRIPTION_CREATED);
   changePresenceStatusForContact(contact,getPresenceStatus());

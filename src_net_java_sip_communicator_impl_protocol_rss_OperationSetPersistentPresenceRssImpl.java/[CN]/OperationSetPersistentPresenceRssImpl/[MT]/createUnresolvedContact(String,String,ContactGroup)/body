@@ -1,12 +1,14 @@
 {
   URL rssURL=null;
+  String contactIdentifierURL=address;
+  if (contactIdentifierURL.startsWith("feed"))   contactIdentifierURL=contactIdentifierURL.replaceFirst("feed","http");
   try {
-    rssURL=new URL(address);
+    rssURL=new URL(contactIdentifierURL);
   }
  catch (  MalformedURLException ex) {
     throw new IllegalArgumentException("failed to create a URL for address " + address + ". Error was: "+ ex.getMessage());
   }
-  ContactRssImpl contact=new ContactRssImpl(rssURL,new RssFeedReader(rssURL),parentProvider);
+  ContactRssImpl contact=new ContactRssImpl(address,rssURL,new RssFeedReader(rssURL),parentProvider);
   contact.setResolved(false);
   ((ContactGroupRssImpl)parent).addContact(contact);
   fireSubscriptionEvent(contact,parent,SubscriptionEvent.SUBSCRIPTION_CREATED);
