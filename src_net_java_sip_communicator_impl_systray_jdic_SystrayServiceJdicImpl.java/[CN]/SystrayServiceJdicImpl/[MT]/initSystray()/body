@@ -1,5 +1,7 @@
 {
   popupTimer.scheduleAtFixedRate(new ShowPopupTask(),0,messageDelay);
+  Object o=Toolkit.getDefaultToolkit().getDesktopProperty("awt.multiClickInterval");
+  final int doubleClickSpeed=(o instanceof Integer ? ((Integer)o).intValue() : 500);
   menu=new TrayMenu(this);
   String osName=System.getProperty("os.name");
   if (osName.startsWith("Windows")) {
@@ -21,9 +23,16 @@
   trayIcon.setIconAutoSize(true);
   trayIcon.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
+      long currentTime=System.currentTimeMillis();
       UIService uiService=SystrayActivator.getUIService();
       boolean isVisible;
       isVisible=!uiService.isVisible();
+      if (isVisible) {
+        setVisibleTime=currentTime;
+      }
+ else       if (currentTime < (setVisibleTime + doubleClickSpeed)) {
+        return;
+      }
       uiService.setVisible(isVisible);
       ConfigurationService configService=SystrayActivator.getConfigurationService();
       configService.setProperty("net.java.sip.communicator.impl.systray.showApplication",new Boolean(isVisible));
