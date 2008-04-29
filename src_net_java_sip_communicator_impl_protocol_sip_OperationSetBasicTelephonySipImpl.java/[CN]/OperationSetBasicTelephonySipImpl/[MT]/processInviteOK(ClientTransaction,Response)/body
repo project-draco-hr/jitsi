@@ -2,8 +2,25 @@
   Dialog dialog=clientTransaction.getDialog();
   CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(dialog);
   if (callParticipant == null) {
-    logger.debug("Received a stray ok response.");
-    return;
+    CallIdHeader call=(CallIdHeader)ok.getHeader(CallIdHeader.NAME);
+    String callid=call.getCallId();
+    Iterator activeCallsIter=activeCallsRepository.getActiveCalls();
+    while (activeCallsIter.hasNext()) {
+      CallSipImpl activeCall=(CallSipImpl)activeCallsIter.next();
+      Iterator callParticipantsIter=activeCall.getCallParticipants();
+      while (callParticipantsIter.hasNext()) {
+        CallParticipantSipImpl cp=(CallParticipantSipImpl)callParticipantsIter.next();
+        Dialog callPartDialog=cp.getDialog();
+        if (callPartDialog != null && callPartDialog.getCallId() != null && cp.getFirstTransaction() != null && cp.getDialog().getCallId().getCallId().equals(callid) && clientTransaction.getBranchId().equals(cp.getFirstTransaction().getBranchId())) {
+          callParticipant=cp;
+          cp.setDialog(dialog);
+        }
+      }
+    }
+    if (callParticipant == null) {
+      logger.debug("Received a stray ok response.");
+      return;
+    }
   }
   if (callParticipant.getState() == CallParticipantState.CONNECTED) {
     logger.debug("Ignoring invite OK since call participant is " + "already connected.");
