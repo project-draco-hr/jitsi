@@ -7,13 +7,13 @@
       MetaContact contactDest=(MetaContact)dest;
       if (draggedElement.getMetaContact() != contactDest) {
         if (draggedElement.getContact() != null) {
-          mainFrame.getContactList().moveContact(draggedElement.getContact(),contactDest);
+          new MoveContactToMetaContactThread(draggedElement.getContact(),contactDest).start();
         }
  else {
           Iterator i=draggedElement.getMetaContact().getContacts();
           while (i.hasNext()) {
             Contact contact=(Contact)i.next();
-            mainFrame.getContactList().moveContact(contact,contactDest);
+            new MoveContactToMetaContactThread(contact,contactDest).start();
           }
         }
       }
@@ -22,15 +22,15 @@
       MetaContactGroup contactDest=(MetaContactGroup)dest;
       if (draggedElement.getContact() != null) {
         if (draggedElement.getMetaContact().getContactCount() > 1) {
-          mainFrame.getContactList().moveContact(draggedElement.getContact(),contactDest);
+          new MoveContactToGroupThread(draggedElement.getContact(),contactDest).start();
         }
  else         if (!contactDest.contains(draggedElement.getMetaContact())) {
-          mainFrame.getContactList().moveMetaContact(draggedElement.getMetaContact(),contactDest);
+          new MoveMetaContactThread(draggedElement.getMetaContact(),contactDest).start();
         }
       }
  else       if (!contactDest.contains(draggedElement.getMetaContact())) {
         try {
-          mainFrame.getContactList().moveMetaContact(draggedElement.getMetaContact(),contactDest);
+          new MoveMetaContactThread(draggedElement.getMetaContact(),contactDest).start();
         }
  catch (        Exception ex) {
           new ErrorDialog(mainFrame,Messages.getI18NString("moveToGroup").getText(),Messages.getI18NString("moveContactError").getText(),ex).showDialog();
