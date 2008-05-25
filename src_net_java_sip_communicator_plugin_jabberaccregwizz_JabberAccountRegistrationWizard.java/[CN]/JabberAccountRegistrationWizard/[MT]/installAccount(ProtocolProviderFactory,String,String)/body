@@ -4,7 +4,14 @@
     accountProperties.put(ProtocolProviderFactory.PASSWORD,passwd);
   }
   accountProperties.put("SEND_KEEP_ALIVE",String.valueOf(registration.isSendKeepAlive()));
-  accountProperties.put(ProtocolProviderFactory.SERVER_ADDRESS,registration.getServerAddress());
+  String serverName=null;
+  if (registration.getServerAddress() != null) {
+    serverName=registration.getServerAddress();
+  }
+ else {
+    serverName=getServerFromUserName(userName);
+  }
+  accountProperties.put(ProtocolProviderFactory.SERVER_ADDRESS,serverName);
   accountProperties.put(ProtocolProviderFactory.SERVER_PORT,String.valueOf(registration.getPort()));
   accountProperties.put(ProtocolProviderFactory.RESOURCE,registration.getResource());
   accountProperties.put(ProtocolProviderFactory.RESOURCE_PRIORITY,String.valueOf(registration.getPriority()));
@@ -14,7 +21,7 @@
     this.isModification=false;
   }
   try {
-    AccountID accountID=providerFactory.installAccount(user,accountProperties);
+    AccountID accountID=providerFactory.installAccount(userName,accountProperties);
     ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
     protocolProvider=(ProtocolProviderService)JabberAccRegWizzActivator.bundleContext.getService(serRef);
   }

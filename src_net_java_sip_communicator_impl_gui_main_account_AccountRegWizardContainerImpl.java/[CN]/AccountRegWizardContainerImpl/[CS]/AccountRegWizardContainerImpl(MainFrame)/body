@@ -6,4 +6,20 @@
   this.registerWizardPage(defaultPage.getIdentifier(),defaultPage);
   this.registerWizardPage(summaryPage.getIdentifier(),summaryPage);
   this.addAccountRegistrationListener(defaultPage);
+  ServiceReference[] accountWizardRefs=null;
+  try {
+    accountWizardRefs=GuiActivator.bundleContext.getServiceReferences(AccountRegistrationWizard.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException ex) {
+    logger.error("Error while retrieving service refs",ex);
+    return;
+  }
+  if (accountWizardRefs != null) {
+    logger.debug("Found " + accountWizardRefs.length + " already installed providers.");
+    for (int i=0; i < accountWizardRefs.length; i++) {
+      AccountRegistrationWizard wizard=(AccountRegistrationWizard)GuiActivator.bundleContext.getService(accountWizardRefs[i]);
+      this.addAccountRegistrationWizard(wizard);
+    }
+  }
+  GuiActivator.bundleContext.addServiceListener(this);
 }

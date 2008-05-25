@@ -1,0 +1,29 @@
+{
+  Hashtable accountProperties=new Hashtable();
+  accountProperties.put(ProtocolProviderFactory.SERVER_ADDRESS,registration.getServer());
+  if (password != null && !password.equals("")) {
+    accountProperties.put(ProtocolProviderFactory.PASSWORD,registration.getPassword());
+  }
+  if (!registration.getPort().equals("")) {
+    accountProperties.put(ProtocolProviderFactory.SERVER_PORT,registration.getPort());
+  }
+  accountProperties.put(ProtocolProviderFactory.AUTO_CHANGE_USER_NAME,new Boolean(registration.isAutoChangeNick()).toString());
+  accountProperties.put(ProtocolProviderFactory.PASSWORD_REQUIRED,new Boolean(registration.isRequiredPassword()).toString());
+  if (isModification) {
+    providerFactory.uninstallAccount(protocolProvider.getAccountID());
+    this.protocolProvider=null;
+    this.isModification=false;
+  }
+  try {
+    AccountID accountID=providerFactory.installAccount(user,accountProperties);
+    ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
+    protocolProvider=(ProtocolProviderService)IrcAccRegWizzActivator.bundleContext.getService(serRef);
+  }
+ catch (  IllegalArgumentException exc) {
+    IrcAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
+  }
+catch (  IllegalStateException exc) {
+    IrcAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
+  }
+  return protocolProvider;
+}
