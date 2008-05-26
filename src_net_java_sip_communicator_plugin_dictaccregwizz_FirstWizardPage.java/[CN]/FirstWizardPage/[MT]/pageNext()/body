@@ -1,0 +1,38 @@
+{
+  String host=hostField.getText();
+  int port=Integer.parseInt(portField.getText());
+  int stPos;
+  boolean isModified=false;
+  if (this.initAccountID instanceof AccountID) {
+    String accHost=(String)this.initAccountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_ADDRESS);
+    int accPort=Integer.parseInt((String)this.initAccountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_PORT));
+    if (accHost != host || accPort != port) {
+      isModified=true;
+    }
+  }
+  if (this.strategyList.size() == 0) {
+    this.populateStrategies();
+    while (this.populateThread.isRunning()) {
+      ;
+    }
+  }
+  if (this.strategyList.size() == 0) {
+    nextPageIdentifier=FIRST_PAGE_IDENTIFIER;
+    this.revalidate();
+  }
+ else   if ((!wizard.isModification() && isExistingAccount(host,port)) || (isModified && isExistingAccount(host,port))) {
+    nextPageIdentifier=FIRST_PAGE_IDENTIFIER;
+    hostPortPanel.add(existingAccountLabel,BorderLayout.NORTH);
+    this.revalidate();
+  }
+ else {
+    nextPageIdentifier=SUMMARY_PAGE_IDENTIFIER;
+    hostPortPanel.remove(existingAccountLabel);
+    DictAccountRegistration registration=wizard.getRegistration();
+    registration.setHost(host);
+    registration.setPort(port);
+    stPos=this.strategyBox.getSelectedIndex();
+    registration.setStrategyCode(this.strategiesAssoc.get(stPos));
+    registration.setStrategy(this.strategyBox.getSelectedValue().toString());
+  }
+}
