@@ -7,6 +7,14 @@
     PresenceStatus oldStatus=currentStatus;
     currentStatus=MsnStatusEnum.OFFLINE;
     fireProviderPresenceStatusChangeEvent(oldStatus,currentStatus);
+    Iterator rootContactsIter=getServerStoredContactListRoot().contacts();
+    while (rootContactsIter.hasNext()) {
+      ContactMsnImpl contact=(ContactMsnImpl)rootContactsIter.next();
+      PresenceStatus oldContactStatus=contact.getPresenceStatus();
+      if (!oldContactStatus.isOnline())       continue;
+      contact.updatePresenceStatus(MsnStatusEnum.OFFLINE);
+      fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldContactStatus,MsnStatusEnum.OFFLINE);
+    }
     Iterator groupsIter=getServerStoredContactListRoot().subgroups();
     while (groupsIter.hasNext()) {
       ContactGroupMsnImpl group=(ContactGroupMsnImpl)groupsIter.next();
