@@ -1,0 +1,16 @@
+{
+  ContactDictImpl newVolatileContact=new ContactDictImpl(contactAddress,this.parentProvider);
+  newVolatileContact.setPersistent(false);
+  ContactGroupDictImpl theVolatileGroup=getNonPersistentGroup();
+  if (theVolatileGroup == null) {
+    List emptyBuddies=new LinkedList();
+    theVolatileGroup=new ContactGroupDictImpl("NotInContactList",parentProvider);
+    theVolatileGroup.setResolved(false);
+    theVolatileGroup.setPersistent(false);
+    this.contactListRoot.addSubgroup(theVolatileGroup);
+    fireServerStoredGroupEvent(theVolatileGroup,ServerStoredGroupEvent.GROUP_CREATED_EVENT);
+  }
+  theVolatileGroup.addContact(newVolatileContact);
+  fireSubscriptionEvent(newVolatileContact,theVolatileGroup,SubscriptionEvent.SUBSCRIPTION_CREATED);
+  return newVolatileContact;
+}

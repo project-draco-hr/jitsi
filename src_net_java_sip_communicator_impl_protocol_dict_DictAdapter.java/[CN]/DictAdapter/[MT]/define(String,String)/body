@@ -1,0 +1,32 @@
+{
+  String fromServer;
+  boolean quit=false;
+  DictResultset result=new DictResultset();
+  String[] test;
+  this.connect();
+  try {
+    fromServer=this.query("DEFINE " + database + " "+ word);
+    if (fromServer.startsWith("150")) {
+      while (quit == false && (fromServer=this.in.readLine()) != null) {
+        if (fromServer.startsWith("151")) {
+          test=fromServer.split(" ",4);
+          result.newResultset(test[3].substring(1,test[3].length() - 1));
+          continue;
+        }
+ else         if (fromServer.startsWith("250")) {
+          quit=true;
+        }
+ else         if (!fromServer.equals(".")) {
+          result.addResult(fromServer);
+        }
+      }
+    }
+ else {
+      throw new DictException(fromServer.substring(0,3));
+    }
+  }
+ catch (  IOException ioe) {
+    throw new DictException(ioe);
+  }
+  return result;
+}

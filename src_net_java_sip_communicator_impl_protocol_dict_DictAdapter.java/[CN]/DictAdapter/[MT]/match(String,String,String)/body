@@ -1,0 +1,27 @@
+{
+  String fromServer;
+  boolean quit=false;
+  DictResultset result=new DictResultset();
+  this.connect();
+  try {
+    fromServer=this.query("MATCH " + database + " "+ strat+ " "+ word);
+    if (fromServer.startsWith("152")) {
+      result.newResultset();
+      while (quit == false && (fromServer=this.in.readLine()) != null) {
+        if (fromServer.startsWith("250")) {
+          quit=true;
+        }
+ else         if (!fromServer.equals(".")) {
+          result.addResult(fromServer);
+        }
+      }
+    }
+ else {
+      throw new DictException(fromServer.substring(0,3));
+    }
+  }
+ catch (  IOException ioe) {
+    throw new DictException(ioe);
+  }
+  return result;
+}

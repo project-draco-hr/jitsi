@@ -1,0 +1,16 @@
+{
+  String host=(String)this.accountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_ADDRESS);
+  int port=Integer.parseInt((String)this.accountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_PORT));
+  String strategy=(String)this.accountID.getAccountProperties().get(ProtocolProviderFactory.STRATEGY);
+  String key=this.accountID.getUserID();
+  DictAdapter result=DictRegistry.get(key);
+  if (!(result instanceof DictAdapter)) {
+    result=new DictAdapter(host,port,strategy);
+    BundleContext bundleContext=DictActivator.getBundleContext();
+    ServiceReference versionServRef=bundleContext.getServiceReference(VersionService.class.getName());
+    VersionService versionService=(VersionService)bundleContext.getService(versionServRef);
+    result.setClientName(versionService.getCurrentVersion().toString());
+    DictRegistry.put(key,result);
+  }
+  return result;
+}

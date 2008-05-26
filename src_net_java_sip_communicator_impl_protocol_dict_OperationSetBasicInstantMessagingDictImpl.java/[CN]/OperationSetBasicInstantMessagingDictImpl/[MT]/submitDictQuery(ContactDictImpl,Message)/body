@@ -1,0 +1,40 @@
+{
+  Message msg=this.createMessage("");
+  String database=dictContact.getContactID();
+  DictAdapter dictAdapter=dictContact.getDictAdapter();
+  boolean doMatch=false;
+  DictResultset fctResult;
+  String word;
+  word=message.getContent().replace("\"","").trim();
+  if (word.indexOf(' ') > 0) {
+    word="\"" + word + "\"";
+  }
+  try {
+    fctResult=dictAdapter.define(database,word);
+    msg=this.createMessage(this.retrieveDefine(fctResult,word));
+  }
+ catch (  DictException dex) {
+    if (dex.getErrorCode() == 552) {
+      doMatch=true;
+    }
+ else {
+      msg=this.createMessage(dex.getErrorMessage());
+    }
+  }
+catch (  Exception ex) {
+    logger.error("Failed to retrieve Definition. Error was: " + ex.getMessage(),ex);
+  }
+  if (doMatch) {
+    try {
+      fctResult=dictAdapter.match(database,word);
+      msg=this.createMessage(this.retrieveMatch(fctResult,word));
+    }
+ catch (    DictException dex) {
+      msg=this.createMessage(dex.getErrorMessage());
+    }
+catch (    Exception ex) {
+      logger.error("Failed to retrieve Match. Error was: " + ex.getMessage(),ex);
+    }
+  }
+  fireMessageReceived(msg,dictContact);
+}

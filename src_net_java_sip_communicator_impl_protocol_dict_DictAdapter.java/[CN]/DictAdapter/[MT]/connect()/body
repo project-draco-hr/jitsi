@@ -1,0 +1,26 @@
+{
+  String fromServer;
+  if (this.isConnected()) {
+    return;
+  }
+  try {
+    this.socket=new Socket(this.host,this.port);
+    this.out=new PrintWriter(new OutputStreamWriter(this.socket.getOutputStream(),"UTF-8"),true);
+    this.in=new BufferedReader(new InputStreamReader(this.socket.getInputStream(),"UTF-8"));
+    fromServer=this.in.readLine();
+    if (fromServer.startsWith("220")) {
+      this.connected=true;
+      this.client("SIP Communicator");
+      return;
+    }
+ else {
+      throw new DictException(fromServer.substring(0,3));
+    }
+  }
+ catch (  UnknownHostException uhe) {
+    throw new DictException(uhe);
+  }
+catch (  IOException ioe) {
+    throw new DictException(ioe);
+  }
+}
