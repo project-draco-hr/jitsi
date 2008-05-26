@@ -1,0 +1,28 @@
+{
+  ArrayList<String> strategies=null;
+  String temp[];
+  if (adapter == null) {
+    adapter=new DictAdapter();
+  }
+  this.wizard.setStrategyButtonEnable(false);
+  this.wizard.threadMessage("Trying to connect to server");
+  if (!adapter.connect(this.host,this.port)) {
+    this.wizard.threadMessage("Connexion attempt failed, this isn't a" + "dict server or the server is offline");
+    return;
+  }
+  this.wizard.threadMessage("Retrieving strategies");
+  strategies=adapter.getStrategies();
+  if (strategies == null) {
+    this.wizard.threadMessage("No strategy found on the server");
+    return;
+  }
+  for (int i=0; i < strategies.size(); i++) {
+    temp=strategies.get(i).split(" ",2);
+    this.wizard.threadAddStrategy(temp[0],temp[1].replace("\"",""));
+  }
+  this.wizard.autoSelectStrategy();
+  this.wizard.threadMessage("Closing connexion");
+  adapter.close();
+  this.wizard.threadRemoveMessage();
+  this.wizard.setStrategyButtonEnable(true);
+}

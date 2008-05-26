@@ -1,0 +1,24 @@
+{
+  Hashtable accountProperties=new Hashtable();
+  accountProperties.put(ProtocolProviderFactory.SERVER_ADDRESS,host);
+  accountProperties.put(ProtocolProviderFactory.SERVER_PORT,String.valueOf(port));
+  accountProperties.put(ProtocolProviderFactory.STRATEGY,strategy);
+  if (isModification) {
+    providerFactory.uninstallAccount(protocolProvider.getAccountID());
+    this.protocolProvider=null;
+    this.isModification=false;
+  }
+  try {
+    String uid=this.generateUID();
+    AccountID accountID=providerFactory.installAccount(uid,accountProperties);
+    ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
+    protocolProvider=(ProtocolProviderService)DictAccRegWizzActivator.bundleContext.getService(serRef);
+  }
+ catch (  IllegalArgumentException e) {
+    DictAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(e.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
+  }
+catch (  IllegalStateException e) {
+    DictAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(e.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
+  }
+  return protocolProvider;
+}
