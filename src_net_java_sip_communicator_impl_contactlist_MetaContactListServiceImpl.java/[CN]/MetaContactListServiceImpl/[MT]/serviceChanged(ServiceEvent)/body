@@ -5,6 +5,16 @@
     return;
   }
   logger.debug("Service is a protocol provider.");
+  ProtocolProviderService provider=(ProtocolProviderService)sService;
+  ProtocolProviderFactory sourceFactory=null;
+  ServiceReference[] allBundleServices=event.getServiceReference().getBundle().getRegisteredServices();
+  for (int i=0; i < allBundleServices.length; i++) {
+    Object service=bundleContext.getService(allBundleServices[i]);
+    if (service instanceof ProtocolProviderFactory) {
+      sourceFactory=(ProtocolProviderFactory)service;
+      break;
+    }
+  }
   if (event.getType() == ServiceEvent.REGISTERED) {
     logger.debug("Handling registration of a new Protocol Provider.");
     String providerMask=System.getProperty(MetaContactListService.PROVIDER_MASK_PROPERTY);
@@ -14,19 +24,12 @@
         return;
       }
     }
+    if (sourceFactory.getRegisteredAccounts().contains(provider.getAccountID())) {
+      return;
+    }
     this.handleProviderAdded((ProtocolProviderService)sService);
   }
  else   if (event.getType() == ServiceEvent.UNREGISTERING) {
-    ProtocolProviderService provider=(ProtocolProviderService)sService;
-    ProtocolProviderFactory sourceFactory=null;
-    ServiceReference[] allBundleServices=event.getServiceReference().getBundle().getRegisteredServices();
-    for (int i=0; i < allBundleServices.length; i++) {
-      Object service=bundleContext.getService(allBundleServices[i]);
-      if (service instanceof ProtocolProviderFactory) {
-        sourceFactory=(ProtocolProviderFactory)service;
-        break;
-      }
-    }
     if (sourceFactory == null) {
       return;
     }
