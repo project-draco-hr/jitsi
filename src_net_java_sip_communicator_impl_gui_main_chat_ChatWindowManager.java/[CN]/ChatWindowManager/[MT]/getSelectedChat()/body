@@ -1,5 +1,19 @@
 {
+  ChatPanel selectedChat=null;
+  Enumeration chatPanels=chats.keys();
 synchronized (syncChat) {
-    return chatWindow.getCurrentChatPanel();
+    if (ConfigurationManager.isMultiChatWindowEnabled()) {
+      if (chatPanels.hasMoreElements()) {
+        ChatPanel firstChatPanel=(ChatPanel)chatPanels.nextElement();
+        selectedChat=firstChatPanel.getChatWindow().getCurrentChatPanel();
+      }
+    }
+ else {
+      while (chatPanels.hasMoreElements()) {
+        ChatPanel chatPanel=(ChatPanel)chatPanels.nextElement();
+        if (chatPanel.getChatWindow().isFocusOwner())         selectedChat=chatPanel;
+      }
+    }
+    return selectedChat;
   }
 }
