@@ -16,6 +16,8 @@
   this.rightPanel.add(labelsPanel,BorderLayout.NORTH);
   this.add(iconLabel,BorderLayout.WEST);
   this.add(rightPanel,BorderLayout.CENTER);
+  String lastGroupName=ConfigurationManager.getLastContactParent();
+  Object lastSelectedGroup=null;
   Iterator groupsList=wizard.getMainFrame().getAllGroups();
   if (groupsList.hasNext()) {
     infoLabel.setText(Messages.getI18NString("selectGroupWizard").getText());
@@ -23,8 +25,11 @@
     this.groupPanel.add(groupCombo,BorderLayout.CENTER);
     while (groupsList.hasNext()) {
       MetaContactGroup group=(MetaContactGroup)groupsList.next();
-      groupCombo.addItem(new GroupWrapper(group));
+      GroupWrapper gr=new GroupWrapper(group);
+      if (lastGroupName != null && lastGroupName.equals(group.getGroupName()))       lastSelectedGroup=gr;
+      groupCombo.addItem(gr);
     }
+    if (lastSelectedGroup != null)     groupCombo.setSelectedItem(lastSelectedGroup);
   }
  else {
     infoLabel.setForeground(Color.RED);
