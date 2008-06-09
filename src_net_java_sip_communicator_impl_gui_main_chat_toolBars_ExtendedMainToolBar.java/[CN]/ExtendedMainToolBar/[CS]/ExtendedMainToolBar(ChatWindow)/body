@@ -16,6 +16,8 @@
   this.add(nextButton);
   this.addSeparator();
   this.add(historyButton);
+  this.addSeparator();
+  this.add(addButton);
   this.saveButton.setName("save");
   this.saveButton.setToolTipText(Messages.getI18NString("save").getText() + " Ctrl-S");
   this.printButton.setName("print");
@@ -36,6 +38,8 @@
   this.sendFileButton.setToolTipText(Messages.getI18NString("sendFile").getText());
   this.historyButton.setName("history");
   this.historyButton.setToolTipText(Messages.getI18NString("history").getText() + " Ctrl-H");
+  this.addButton.setName("addContact");
+  this.addButton.setToolTipText(Messages.getI18NString("addContact").getText());
   this.fontButton.setName("font");
   this.fontButton.setToolTipText(Messages.getI18NString("font").getText());
   int buttonWidth=calculateButtonWidth();
@@ -58,10 +62,37 @@
   this.nextButton.addMouseListener(this);
   this.sendFileButton.addMouseListener(this);
   this.historyButton.addMouseListener(this);
+  this.addButton.addMouseListener(this);
   this.fontButton.addMouseListener(this);
   this.saveButton.setEnabled(false);
   this.printButton.setEnabled(false);
   this.sendFileButton.setEnabled(false);
   this.fontButton.setEnabled(false);
   this.initPluginComponents();
+  messageWindow.addChatChangeListener(new ChatChangeListener(){
+    public void chatChanged(    ChatPanel panel){
+      if (panel instanceof MetaContactChatPanel) {
+        MetaContact contact=((MetaContactChatPanel)panel).getMetaContact();
+        if (contact == null)         return;
+        Contact defaultContact=contact.getDefaultContact();
+        if (defaultContact == null)         return;
+        ContactGroup parent=defaultContact.getParentContactGroup();
+        boolean isParentPersist=true;
+        boolean isParentResolved=true;
+        if (parent != null) {
+          isParentPersist=parent.isPersistent();
+          isParentResolved=parent.isResolved();
+        }
+        if (!defaultContact.isPersistent() && !defaultContact.isResolved() && !isParentPersist&& !isParentResolved) {
+          addButton.setVisible(true);
+          currentChatContact=defaultContact;
+        }
+ else {
+          addButton.setVisible(false);
+          currentChatContact=null;
+        }
+      }
+    }
+  }
+);
 }
