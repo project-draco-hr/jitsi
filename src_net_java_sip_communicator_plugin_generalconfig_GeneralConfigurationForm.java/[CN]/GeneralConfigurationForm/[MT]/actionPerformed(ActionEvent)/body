@@ -1,6 +1,26 @@
 {
   Object sourceObject=event.getSource();
   if (sourceObject.equals(autoStartCheckBox)) {
+    try {
+      String workingDir=new File(".").getCanonicalPath();
+      String appName=Resources.getApplicationString("applicationName");
+      ShellLink shortcut=new ShellLink(ShellLink.STARTUP,appName);
+      shortcut.setLinkType(ShellLink.STARTUP);
+      shortcut.setUserType(ShellLink.CURRENT_USER);
+      shortcut.setDescription("This starts " + appName + " Application");
+      shortcut.setIconLocation(workingDir + File.separator + "sc-logo.ico",0);
+      shortcut.setShowCommand(ShellLink.MINNOACTIVE);
+      shortcut.setTargetPath(workingDir + File.separator + "run.exe");
+      shortcut.setWorkingDirectory(workingDir);
+      if (autoStartCheckBox.isSelected())       shortcut.save();
+ else {
+        shortcut.save();
+        new File(shortcut.getFileName()).delete();
+      }
+    }
+ catch (    Exception e) {
+      logger.error("Cannot create/delete startup shortcut",e);
+    }
   }
   if (sourceObject.equals(groupMessagesCheckBox)) {
     ConfigurationManager.setMultiChatWindowEnabled(groupMessagesCheckBox.isSelected());
