@@ -40,7 +40,28 @@
       String displayName=XMLUtils.getText(displayNameNode);
       List protoContacts=extractProtoContacts((Element)currentMetaContactNode,accountID,protoGroupsMap);
       if (protoContacts.size() < 1)       continue;
-      mclServiceImpl.loadStoredMetaContact(currentMetaGroup,uid,displayName,protoContacts,accountID);
+      Hashtable details=new Hashtable();
+      try {
+        List detailsNodes=XMLUtils.findChildren((Element)currentMetaContactNode,META_CONTACT_DETAIL_NAME_NODE_NAME);
+        for (int j=0; j < detailsNodes.size(); j++) {
+          Element e=(Element)detailsNodes.get(j);
+          String name=e.getAttribute(DETAIL_NAME_ATTR_NAME);
+          String value=e.getAttribute(DETAIL_VALUE_ATTR_NAME);
+          Object detailsObj=details.get(name);
+          if (detailsObj == null)           details.put(name,value);
+ else           if (detailsObj instanceof List)           ((List)detailsObj).add(value);
+ else           if (detailsObj instanceof String) {
+            ArrayList ds=new ArrayList();
+            ds.add(detailsObj);
+            ds.add(value);
+            details.put(name,ds);
+          }
+        }
+      }
+ catch (      Exception ex) {
+        logger.error("Cannot load details for contact node " + currentMetaContactNode,ex);
+      }
+      mclServiceImpl.loadStoredMetaContact(currentMetaGroup,uid,displayName,details,protoContacts,accountID);
     }
  catch (    Throwable thr) {
       logger.warn("Failed to parse meta contact " + currentMetaContactNode + ". Will remove and continue with other contacts",thr);

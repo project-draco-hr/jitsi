@@ -1,0 +1,72 @@
+{
+  String name=evt.getModificationName();
+  Element metaContactNode=findMetaContactNode(evt.getSourceMetaContact().getMetaUID());
+  if (metaContactNode == null) {
+    logger.error("Save after renam failed. Contact not found: " + evt.getSourceMetaContact());
+    return;
+  }
+  Object oldValue=evt.getOldValue();
+  Object newValue=evt.getNewValue();
+  boolean isChanged=false;
+  if (oldValue == null && newValue != null) {
+    if (!(newValue instanceof String))     return;
+    Element detailElement=contactListDocument.createElement(META_CONTACT_DETAIL_NAME_NODE_NAME);
+    detailElement.setAttribute(DETAIL_NAME_ATTR_NAME,name);
+    detailElement.setAttribute(DETAIL_VALUE_ATTR_NAME,(String)newValue);
+    metaContactNode.appendChild(detailElement);
+    isChanged=true;
+  }
+ else   if (oldValue != null && newValue == null) {
+    if (oldValue instanceof List) {
+      List valuesToRemove=(List)oldValue;
+      List nodes=XMLUtils.locateElements(metaContactNode,META_CONTACT_DETAIL_NAME_NODE_NAME,DETAIL_NAME_ATTR_NAME,name);
+      ArrayList nodesToRemove=new ArrayList();
+      for (int i=0; i < nodes.size(); i++) {
+        Element e=(Element)nodes.get(i);
+        if (valuesToRemove.contains(e.getAttribute(DETAIL_VALUE_ATTR_NAME))) {
+          nodesToRemove.add(e);
+        }
+      }
+      for (int i=0; i < nodesToRemove.size(); i++) {
+        Element e=(Element)nodesToRemove.get(i);
+        metaContactNode.removeChild(e);
+      }
+      if (nodesToRemove.size() > 0)       isChanged=true;
+    }
+ else     if (oldValue instanceof String) {
+      List nodes=XMLUtils.locateElements(metaContactNode,META_CONTACT_DETAIL_NAME_NODE_NAME,DETAIL_NAME_ATTR_NAME,name);
+      Element elementToRemove=null;
+      for (int i=0; i < nodes.size(); i++) {
+        Element e=(Element)nodes.get(i);
+        if (e.getAttribute(DETAIL_VALUE_ATTR_NAME).equals(oldValue)) {
+          elementToRemove=e;
+          break;
+        }
+      }
+      if (elementToRemove == null)       return;
+      metaContactNode.removeChild(elementToRemove);
+      isChanged=true;
+    }
+  }
+ else   if (oldValue != null && newValue != null) {
+    List nodes=XMLUtils.locateElements(metaContactNode,META_CONTACT_DETAIL_NAME_NODE_NAME,DETAIL_NAME_ATTR_NAME,name);
+    Element changedElement=null;
+    for (int i=0; i < nodes.size(); i++) {
+      Element e=(Element)nodes.get(i);
+      if (e.getAttribute(DETAIL_VALUE_ATTR_NAME).equals(oldValue)) {
+        changedElement=e;
+        break;
+      }
+    }
+    if (changedElement == null)     return;
+    changedElement.setAttribute(DETAIL_VALUE_ATTR_NAME,(String)newValue);
+    isChanged=true;
+  }
+  if (!isChanged)   return;
+  try {
+    scheduleContactListStorage();
+  }
+ catch (  IOException ex) {
+    logger.error("Writing CL failed after rename of " + evt.getSourceMetaContact(),ex);
+  }
+}
