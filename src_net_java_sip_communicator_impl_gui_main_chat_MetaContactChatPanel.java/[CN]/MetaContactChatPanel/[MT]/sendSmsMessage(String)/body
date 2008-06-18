@@ -1,31 +1,5 @@
 {
   OperationSetSmsMessaging smsOpSet=null;
-  Contact contact=null;
-  Iterator contacts=metaContact.getContacts();
-  while (contacts.hasNext()) {
-    contact=(Contact)contacts.next();
-    smsOpSet=(OperationSetSmsMessaging)contact.getProtocolProvider().getOperationSet(OperationSetSmsMessaging.class);
-    if (smsOpSet != null)     break;
-  }
-  if (smsOpSet != null) {
-    Message message=smsOpSet.createMessage(text);
-    try {
-      smsOpSet.sendSmsMessage(contact,message);
-    }
- catch (    IllegalStateException ex) {
-      logger.error("Failed to send SMS.",ex);
-      this.refreshWriteArea();
-      this.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,message.getContent(),message.getContentType());
-      this.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,Messages.getI18NString("msgSendConnectionProblem").getText(),"text");
-    }
-catch (    Exception ex) {
-      logger.error("Failed to send SMS.",ex);
-      this.refreshWriteArea();
-      this.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,message.getContent(),message.getContentType());
-      this.processMessage(contact.getDisplayName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,Messages.getI18NString("msgDeliveryInternalError").getText(),"text");
-    }
-    return;
-  }
   Iterator protocolProviders=chatWindow.getMainFrame().getProtocolProviders();
   while (protocolProviders.hasNext()) {
     ProtocolProviderService protocolProvider=(ProtocolProviderService)protocolProviders.next();
