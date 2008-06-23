@@ -1,0 +1,30 @@
+{
+  JButton sourceButton=(JButton)e.getSource();
+  if (sourceButton.equals(removeButton)) {
+    ProtocolProviderFactory providerFactory=GuiActivator.getProtocolProviderFactory(protocolProvider);
+    if (providerFactory != null) {
+      int result=JOptionPane.showConfirmDialog(this,Messages.getI18NString("removeAccountMessage").getText(),Messages.getI18NString("removeAccount").getText(),JOptionPane.YES_NO_CANCEL_OPTION);
+      if (result == JOptionPane.YES_OPTION) {
+        ConfigurationService configService=GuiActivator.getConfigurationService();
+        String prefix="net.java.sip.communicator.impl.gui.accounts";
+        List accounts=configService.getPropertyNamesByPrefix(prefix,true);
+        Iterator accountsIter=accounts.iterator();
+        while (accountsIter.hasNext()) {
+          String accountRootPropName=(String)accountsIter.next();
+          String accountUID=configService.getString(accountRootPropName);
+          if (accountUID.equals(protocolProvider.getAccountID().getAccountUniqueID())) {
+            configService.setProperty(accountRootPropName,null);
+            break;
+          }
+        }
+        providerFactory.uninstallAccount(protocolProvider.getAccountID());
+      }
+    }
+  }
+ else   if (sourceButton.equals(modifyButton)) {
+    AccountRegWizardContainerImpl wizard=(AccountRegWizardContainerImpl)GuiActivator.getUIService().getAccountRegWizardContainer();
+    wizard.setTitle(Messages.getI18NString("accountRegistrationWizard").getText());
+    wizard.modifyAccount(protocolProvider);
+    wizard.showDialog(false);
+  }
+}

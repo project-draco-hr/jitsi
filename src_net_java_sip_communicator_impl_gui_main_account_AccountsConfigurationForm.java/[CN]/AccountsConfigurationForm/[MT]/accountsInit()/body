@@ -1,0 +1,23 @@
+{
+  this.accountsPanel.setLayout(new BoxLayout(accountsPanel,BoxLayout.Y_AXIS));
+  Set set=GuiActivator.getProtocolProviderFactories().entrySet();
+  Iterator iter=set.iterator();
+  while (iter.hasNext()) {
+    Map.Entry entry=(Map.Entry)iter.next();
+    ProtocolProviderFactory providerFactory=(ProtocolProviderFactory)entry.getValue();
+    ArrayList accountsList=providerFactory.getRegisteredAccounts();
+    AccountID accountID;
+    ServiceReference serRef;
+    ProtocolProviderService protocolProvider;
+    for (int i=0; i < accountsList.size(); i++) {
+      accountID=(AccountID)accountsList.get(i);
+      boolean isHidden=(accountID.getAccountProperties().get("HIDDEN_PROTOCOL") != null);
+      if (isHidden)       continue;
+      serRef=providerFactory.getProviderForAccount(accountID);
+      protocolProvider=(ProtocolProviderService)GuiActivator.bundleContext.getService(serRef);
+      AccountPanel accountPanel=new AccountPanel(protocolProvider);
+      accountsPanel.add(accountPanel);
+      accounts.put(protocolProvider,accountPanel);
+    }
+  }
+}
