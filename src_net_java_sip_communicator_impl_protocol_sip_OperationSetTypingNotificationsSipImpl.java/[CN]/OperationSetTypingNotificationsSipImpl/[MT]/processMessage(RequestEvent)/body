@@ -1,0 +1,75 @@
+{
+  String content=null;
+  Request req=requestEvent.getRequest();
+  ContentTypeHeader ctheader=(ContentTypeHeader)req.getHeader(ContentTypeHeader.NAME);
+  if (ctheader == null && !ctheader.getContentSubType().equalsIgnoreCase(CONTENT_SUBTYPE))   return true;
+  content=new String(req.getRawContent());
+  if (content == null || content.length() == 0) {
+    sendResponse(requestEvent,Response.BAD_REQUEST);
+    return false;
+  }
+  FromHeader fromHeader=(FromHeader)requestEvent.getRequest().getHeader(FromHeader.NAME);
+  if (fromHeader == null) {
+    logger.error("received a request without a from header");
+    return true;
+  }
+  Contact from=opSetPersPresence.resolveContactID(fromHeader.getAddress().getURI().toString());
+  Document doc=null;
+  try {
+    doc=opSetPersPresence.convertDocument(content);
+  }
+ catch (  Exception e) {
+  }
+  if (doc == null) {
+    sendResponse(requestEvent,Response.BAD_REQUEST);
+    return false;
+  }
+  logger.debug("parsing:\n" + content);
+  NodeList stateList=doc.getElementsByTagNameNS(NS_VALUE,STATE_ELEMENT);
+  if (stateList.getLength() == 0) {
+    logger.error("no state element in this document");
+    sendResponse(requestEvent,Response.BAD_REQUEST);
+    return false;
+  }
+  Node stateNode=stateList.item(0);
+  if (stateNode.getNodeType() != Node.ELEMENT_NODE) {
+    logger.error("the state node is not an element");
+    sendResponse(requestEvent,Response.BAD_REQUEST);
+    return false;
+  }
+  String state=XMLUtils.getText((Element)stateNode);
+  if (state == null || state.length() == 0) {
+    logger.error("the state element without value");
+    sendResponse(requestEvent,Response.BAD_REQUEST);
+    return false;
+  }
+  NodeList refreshList=doc.getElementsByTagNameNS(NS_VALUE,REFRESH_ELEMENT);
+  int refresh=REFRESH_DEFAULT_TIME;
+  if (refreshList.getLength() != 0) {
+    Node refreshNode=refreshList.item(0);
+    if (refreshNode.getNodeType() == Node.ELEMENT_NODE) {
+      String refreshStr=XMLUtils.getText((Element)refreshNode);
+      try {
+        refresh=Integer.parseInt(refreshStr);
+      }
+ catch (      Exception e) {
+        logger.error("Wrong content for refresh",e);
+      }
+    }
+  }
+  if (state.equals(COMPOSING_STATE_ACTIVE)) {
+    TypingTask task=findTypigTask(from);
+    if (task == null) {
+      task=new TypingTask(from);
+      typingTasks.add(task);
+    }
+ else     task.cancel();
+    timer.schedule(task,refresh * 1000);
+    fireTypingNotificationsEvent(from,STATE_TYPING);
+  }
+ else   if (state.equals(COMPOSING_STATE_IDLE)) {
+    fireTypingNotificationsEvent(from,STATE_PAUSED);
+  }
+  sendResponse(requestEvent,Response.OK);
+  return false;
+}

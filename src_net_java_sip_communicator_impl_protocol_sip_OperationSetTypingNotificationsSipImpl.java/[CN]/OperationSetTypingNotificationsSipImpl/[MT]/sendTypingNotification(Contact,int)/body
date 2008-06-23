@@ -1,0 +1,35 @@
+{
+  assertConnected();
+  if (!(to instanceof ContactSipImpl))   throw new IllegalArgumentException("The specified contact is not a Sip contact." + to);
+  Document doc=opSetPersPresence.createDocument();
+  Element rootEl=doc.createElementNS(NS_VALUE,"isComposing");
+  rootEl.setAttribute("xmlns:xsi","http://www.w3.org/2001/XMLSchema-instance");
+  doc.appendChild(rootEl);
+  if (typingState == STATE_TYPING) {
+    Element state=doc.createElement("state");
+    Node stateValue=doc.createTextNode(COMPOSING_STATE_ACTIVE);
+    state.appendChild(stateValue);
+    rootEl.appendChild(state);
+    Element refresh=doc.createElement("refresh");
+    Node refreshValue=doc.createTextNode("60");
+    refresh.appendChild(refreshValue);
+    rootEl.appendChild(refresh);
+  }
+ else   if (typingState == STATE_STOPPED) {
+    Element state=doc.createElement("state");
+    Node stateValue=doc.createTextNode(COMPOSING_STATE_IDLE);
+    state.appendChild(stateValue);
+    rootEl.appendChild(state);
+  }
+ else   return;
+  Message message=opSetBasicIm.createMessage(new String(opSetPersPresence.convertDocument(doc)).getBytes(),CONTENT_TYPE,OperationSetBasicInstantMessaging.DEFAULT_MIME_ENCODING,null);
+  Request mes;
+  try {
+    mes=opSetBasicIm.createMessage(to,message);
+  }
+ catch (  OperationFailedException ex) {
+    logger.error("Failed to create the message.",ex);
+    return;
+  }
+  opSetBasicIm.sendRequestMessage(mes,to,message);
+}
