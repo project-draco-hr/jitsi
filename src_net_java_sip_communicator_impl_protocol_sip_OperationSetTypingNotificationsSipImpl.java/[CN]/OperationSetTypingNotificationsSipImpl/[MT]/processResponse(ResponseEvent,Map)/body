@@ -2,11 +2,16 @@
   String content=null;
   Request req=responseEvent.getClientTransaction().getRequest();
   ContentTypeHeader ctheader=(ContentTypeHeader)req.getHeader(ContentTypeHeader.NAME);
-  if (ctheader == null && !ctheader.getContentSubType().equalsIgnoreCase(CONTENT_SUBTYPE))   return true;
+  if (ctheader == null || !ctheader.getContentSubType().equalsIgnoreCase(CONTENT_SUBTYPE))   return true;
   int status=responseEvent.getResponse().getStatusCode();
+  String key=((CallIdHeader)req.getHeader(CallIdHeader.NAME)).getCallId();
   if (status >= 200 && status < 300) {
     logger.debug("Ack received from the network : " + responseEvent.getResponse().getReasonPhrase());
-    String key=((CallIdHeader)req.getHeader(CallIdHeader.NAME)).getCallId();
+    sentMsg.remove(key);
+    return false;
+  }
+ else   if (status >= 400 && status != 401 && status != 407) {
+    logger.warn("Error received : " + responseEvent.getResponse().getReasonPhrase());
     sentMsg.remove(key);
     return false;
   }
