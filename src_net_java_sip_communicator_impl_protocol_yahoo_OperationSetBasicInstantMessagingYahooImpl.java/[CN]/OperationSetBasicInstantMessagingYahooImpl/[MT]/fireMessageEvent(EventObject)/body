@@ -1,4 +1,23 @@
 {
+  Iterator<EventFilter> filters=null;
+synchronized (eventFilters) {
+    filters=new ArrayList<EventFilter>(eventFilters).iterator();
+  }
+  boolean filtered=false;
+  while (filters.hasNext()) {
+    try {
+      if (filters.next().filterEvent(evt)) {
+        filtered=true;
+      }
+    }
+ catch (    Exception exc) {
+      logger.error("An exception occurred while filtering an event.",exc);
+    }
+  }
+  if (filtered) {
+    logger.trace("Message event filtered.");
+    return;
+  }
   Iterator listeners=null;
 synchronized (messageListeners) {
     listeners=new ArrayList(messageListeners).iterator();
