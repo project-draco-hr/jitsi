@@ -5,17 +5,30 @@
       String workingDir=new File(".").getCanonicalPath();
       String appName=Resources.getApplicationString("applicationName");
       ShellLink shortcut=new ShellLink(ShellLink.STARTUP,appName);
-      shortcut.setLinkType(ShellLink.STARTUP);
       shortcut.setUserType(ShellLink.CURRENT_USER);
       shortcut.setDescription("This starts " + appName + " Application");
       shortcut.setIconLocation(workingDir + File.separator + "sc-logo.ico",0);
       shortcut.setShowCommand(ShellLink.MINNOACTIVE);
       shortcut.setTargetPath(workingDir + File.separator + "run.exe");
       shortcut.setWorkingDirectory(workingDir);
-      if (autoStartCheckBox.isSelected())       shortcut.save();
+      String f1=shortcut.getcurrentUserLinkPath() + File.separator + appName+ ".lnk";
+      String f2=f1.replaceAll(System.getProperty("user.name"),"All Users");
+      if (autoStartCheckBox.isSelected()) {
+        if (!new File(f1).exists() && !new File(f2).exists())         shortcut.save();
+      }
  else {
-        shortcut.save();
-        new File(shortcut.getFileName()).delete();
+        boolean isFileDeleted=false;
+        try {
+          isFileDeleted=new File(f1).delete();
+        }
+ catch (        Exception e) {
+        }
+        try {
+          new File(f2).delete();
+        }
+ catch (        Exception e) {
+          if (!isFileDeleted)           GeneralConfigPluginActivator.getUIService().getPopupDialog().showMessagePopupDialog(e.getMessage(),Resources.getString("errorPermission"),PopupDialog.ERROR_MESSAGE);
+        }
       }
     }
  catch (    Exception e) {
