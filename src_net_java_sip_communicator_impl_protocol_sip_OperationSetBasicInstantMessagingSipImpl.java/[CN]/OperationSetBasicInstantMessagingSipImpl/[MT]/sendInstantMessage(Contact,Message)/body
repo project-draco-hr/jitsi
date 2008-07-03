@@ -17,5 +17,19 @@
     fireMessageEvent(evt);
     return;
   }
-  sendRequestMessage(mes,to,message);
+  try {
+    sendRequestMessage(mes,to,message);
+  }
+ catch (  TransactionUnavailableException ex) {
+    logger.error("Failed to create messageTransaction.\n" + "This is most probably a network connection error.",ex);
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date());
+    fireMessageEvent(evt);
+    return;
+  }
+catch (  SipException ex) {
+    logger.error("Failed to send the message.",ex);
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
+    fireMessageEvent(evt);
+    return;
+  }
 }
