@@ -2,8 +2,8 @@
   String[] supportedAudioEncodings=mediaServCallback.getMediaControl(getCall()).getSupportedAudioEncodings();
   String[] supportedVideoEncodings=mediaServCallback.getMediaControl(getCall()).getSupportedVideoEncodings();
   if (offerMediaDescs != null && offerMediaDescs.size() > 0) {
-    Vector offeredVideoEncodings=new Vector();
-    Vector offeredAudioEncodings=new Vector();
+    Vector<String> offeredVideoEncodings=new Vector<String>();
+    Vector<String> offeredAudioEncodings=new Vector<String>();
     Iterator offerDescsIter=offerMediaDescs.iterator();
     while (offerDescsIter.hasNext()) {
       MediaDescription desc=(MediaDescription)offerDescsIter.next();
@@ -18,16 +18,14 @@
         continue;
       }
     }
-    Hashtable encodings=new Hashtable(2);
+    Hashtable<String,List<String>> encodings=new Hashtable<String,List<String>>(2);
     encodings.put("audio",offeredAudioEncodings);
     encodings.put("video",offeredVideoEncodings);
     encodings=intersectMediaEncodings(encodings);
-    List intersectedAudioEncsList=(List)encodings.get("audio");
-    List intersectedVideoEncsList=(List)encodings.get("video");
-    supportedAudioEncodings=new String[intersectedAudioEncsList.size()];
-    supportedVideoEncodings=new String[intersectedVideoEncsList.size()];
-    for (int i=0; i < supportedAudioEncodings.length; i++)     supportedAudioEncodings[i]=(String)intersectedAudioEncsList.get(i);
-    for (int i=0; i < supportedVideoEncodings.length; i++)     supportedVideoEncodings[i]=(String)intersectedVideoEncsList.get(i);
+    List<String> intersectedAudioEncsList=(List<String>)encodings.get("audio");
+    List<String> intersectedVideoEncsList=(List<String>)encodings.get("video");
+    supportedAudioEncodings=intersectedAudioEncsList.toArray(new String[0]);
+    supportedVideoEncodings=intersectedVideoEncsList.toArray(new String[0]);
   }
   Vector mediaDescs=new Vector();
   if (supportedAudioEncodings.length > 0) {
