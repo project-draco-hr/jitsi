@@ -1,0 +1,64 @@
+{
+  logger.debug("Debut action added");
+  String eventName=(String)event.getSourceEventType();
+  Iterator it=null;
+  int row=0;
+  NotificationsTableEntry tmpNTE=null;
+  NotificationActionHandler handler=event.getActionHandler();
+  boolean isActionEnabled=(handler != null && handler.isEnabled());
+  if (dataVector.size() <= 0) {
+    tmpNTE=new NotificationsTableEntry();
+    tmpNTE.setEvent(eventName);
+    if (event.getSourceActionType().equals(NotificationService.ACTION_POPUP_MESSAGE)) {
+      tmpNTE.setPopup(isActionEnabled);
+    }
+ else     if (event.getSourceActionType().equals(notificationService.ACTION_COMMAND)) {
+      tmpNTE.setProgram(isActionEnabled);
+      tmpNTE.setProgramFile(((CommandNotificationHandler)event.getActionHandler()).getDescriptor());
+    }
+ else     if (event.getSourceActionType().equals(NotificationService.ACTION_SOUND)) {
+      tmpNTE.setSound(isActionEnabled);
+      tmpNTE.setSoundFile(((SoundNotificationHandler)event.getActionHandler()).getDescriptor());
+    }
+    this.addRowAtVector(tmpNTE);
+    logger.debug("Fin action added");
+    return;
+  }
+  it=dataVector.iterator();
+  while (it.hasNext()) {
+    tmpNTE=(NotificationsTableEntry)it.next();
+    if (tmpNTE.getEvent().equals(eventName)) {
+      if (event.getSourceActionType().equals(NotificationService.ACTION_POPUP_MESSAGE)) {
+        tmpNTE.setPopup(isActionEnabled);
+      }
+ else       if (event.getSourceActionType().equals(notificationService.ACTION_COMMAND)) {
+        tmpNTE.setProgram(isActionEnabled);
+        tmpNTE.setProgramFile(((CommandNotificationHandler)event.getActionHandler()).getDescriptor());
+      }
+ else       if (event.getSourceActionType().equals(NotificationService.ACTION_SOUND)) {
+        tmpNTE.setSound(isActionEnabled);
+        tmpNTE.setSoundFile(((SoundNotificationHandler)event.getActionHandler()).getDescriptor());
+      }
+      this.updateTableRow(tmpNTE,row);
+      logger.debug("Fin action added");
+      return;
+    }
+    row++;
+  }
+  tmpNTE=new NotificationsTableEntry();
+  tmpNTE.setEvent(eventName);
+  if (event.getSourceActionType().equals(NotificationService.ACTION_POPUP_MESSAGE)) {
+    tmpNTE.setPopup(isActionEnabled);
+  }
+ else   if (event.getSourceActionType().equals(notificationService.ACTION_COMMAND)) {
+    tmpNTE.setProgram(isActionEnabled);
+    tmpNTE.setProgramFile(((CommandNotificationHandler)event.getActionHandler()).getDescriptor());
+  }
+ else   if (event.getSourceActionType().equals(NotificationService.ACTION_SOUND)) {
+    tmpNTE.setSound(isActionEnabled);
+    tmpNTE.setSoundFile(((SoundNotificationHandler)event.getActionHandler()).getDescriptor());
+  }
+  this.addRowAtVector(tmpNTE);
+  logger.debug("Fin action added");
+  return;
+}

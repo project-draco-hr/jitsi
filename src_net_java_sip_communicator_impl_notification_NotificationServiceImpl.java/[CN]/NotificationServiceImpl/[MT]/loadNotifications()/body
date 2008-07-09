@@ -5,6 +5,7 @@
   Iterator eventTypesIter=eventTypes.iterator();
   while (eventTypesIter.hasNext()) {
     String eventTypeRootPropName=(String)eventTypesIter.next();
+    boolean isEventActive=Boolean.parseBoolean((String)configService.getProperty(eventTypeRootPropName + ".active"));
     String eventType=configService.getString(eventTypeRootPropName);
     List actions=configService.getPropertyNamesByPrefix(eventTypeRootPropName + ".actions",true);
     Iterator actionsIter=actions.iterator();
@@ -16,21 +17,33 @@
         String soundFileDescriptor=configService.getString(actionPropName + ".soundFileDescriptor");
         String loopInterval=configService.getString(actionPropName + ".loopInterval");
         handler=new SoundNotificationHandlerImpl(soundFileDescriptor,new Integer(loopInterval).intValue());
+        boolean isEnabled=Boolean.parseBoolean(configService.getString(actionPropName + ".enabled"));
+        handler.setEnabled(isEnabled);
       }
- else       if (handler instanceof PopupMessageNotificationHandler) {
+ else       if (actionType.equals(ACTION_POPUP_MESSAGE)) {
         String defaultMessage=configService.getString(actionPropName + ".defaultMessage");
         handler=new PopupMessageNotificationHandlerImpl(defaultMessage);
+        boolean isEnabled=Boolean.parseBoolean(configService.getString(actionPropName + ".enabled"));
+        handler.setEnabled(isEnabled);
       }
- else       if (handler instanceof LogMessageNotificationHandler) {
+ else       if (actionType.equals(ACTION_LOG_MESSAGE)) {
         String logType=configService.getString(actionPropName + ".logType");
         handler=new LogMessageNotificationHandlerImpl(logType);
+        boolean isEnabled=Boolean.parseBoolean(configService.getString(actionPropName + ".enabled"));
+        handler.setEnabled(isEnabled);
       }
- else       if (handler instanceof CommandNotificationHandler) {
+ else       if (actionType.equals(ACTION_COMMAND)) {
         String commandDescriptor=configService.getString(actionPropName + ".commandDescriptor");
-        handler=new LogMessageNotificationHandlerImpl(commandDescriptor);
+        handler=new CommandNotificationHandlerImpl(commandDescriptor);
+        boolean isEnabled=Boolean.parseBoolean(configService.getString(actionPropName + ".enabled"));
+        handler.setEnabled(isEnabled);
       }
-      EventNotification notification=new EventNotification(eventType);
-      notificationsTable.put(eventType,notification);
+      EventNotification notification=(EventNotification)notificationsTable.get(eventType);
+      if (notification == null) {
+        notification=new EventNotification(eventType);
+        notificationsTable.put(eventType,notification);
+      }
+      notification.setActive(isEventActive);
       notification.addAction(actionType,handler);
     }
   }

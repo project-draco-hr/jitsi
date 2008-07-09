@@ -1,0 +1,23 @@
+{
+  logger.debug("Debut action changed");
+  String eventName=(String)event.getSourceEventType();
+  Iterator it=null;
+  int row=0;
+  NotificationsTableEntry tmpNTE=null;
+  it=dataVector.iterator();
+  while (it.hasNext()) {
+    tmpNTE=(NotificationsTableEntry)it.next();
+    if (tmpNTE.getEvent().equals(eventName)) {
+      if (event.getSourceActionType().equals(notificationService.ACTION_COMMAND)) {
+        tmpNTE.setProgramFile(((CommandNotificationHandler)event.getActionHandler()).getDescriptor());
+      }
+ else       if (event.getSourceActionType().equals(NotificationService.ACTION_SOUND)) {
+        tmpNTE.setSoundFile(((SoundNotificationHandler)event.getActionHandler()).getDescriptor());
+      }
+      this.updateTableRow(tmpNTE,row);
+      logger.debug("Fin action changed");
+      return;
+    }
+    row++;
+  }
+}

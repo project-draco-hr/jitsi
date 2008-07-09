@@ -1,0 +1,190 @@
+{
+  if (e.getSource() == activate) {
+    NotificationsTableEntry tmpNTE=(NotificationsTableEntry)dataVector.elementAt(index);
+    tmpNTE.setEnabled(true);
+    this.updateTableRow(tmpNTE,index);
+    activate.setEnabled(false);
+    desactivate.setEnabled(true);
+    tmpNTE.setModify(true);
+  }
+ else   if (e.getSource() == desactivate) {
+    NotificationsTableEntry tmpNTE=(NotificationsTableEntry)dataVector.elementAt(index);
+    tmpNTE.setEnabled(false);
+    this.updateTableRow(tmpNTE,index);
+    activate.setEnabled(true);
+    desactivate.setEnabled(false);
+    tmpNTE.setModify(true);
+  }
+ else   if (e.getSource() == soundFileChooser) {
+    int returnVal=fileChooserSound.showOpenDialog(this);
+    noListener=true;
+    if (returnVal == JFileChooser.APPROVE_OPTION) {
+      try {
+        NotificationsTableEntry tmpNTE=(NotificationsTableEntry)dataVector.elementAt(index);
+        File file=fileChooserSound.getSelectedFile();
+        logger.debug("Opening: " + file.toURL().toExternalForm());
+        tmpNTE.setSoundFile(file.toURL().toExternalForm());
+        tmpNTE.setSound(true);
+        tmpNTE.setModify(true);
+        this.updateTableRow(tmpNTE,index);
+        notificationList.setLine(tmpNTE,index);
+        soundFileTextField.setText(file.toURL().toExternalForm());
+      }
+ catch (      MalformedURLException ex) {
+        logger.error("Error file path parsing",ex);
+      }
+    }
+ else {
+      logger.debug("Open command cancelled by user.");
+    }
+    noListener=false;
+  }
+ else   if (e.getSource() == programFileChooser) {
+    int returnVal=fileChooserProgram.showOpenDialog(this);
+    noListener=true;
+    if (returnVal == JFileChooser.APPROVE_OPTION) {
+      NotificationsTableEntry tmpNTE=(NotificationsTableEntry)dataVector.elementAt(index);
+      File file=fileChooserProgram.getSelectedFile();
+      logger.debug("Opening: " + file.getAbsolutePath());
+      tmpNTE.setProgramFile(file.getAbsolutePath());
+      tmpNTE.setProgram(true);
+      tmpNTE.setModify(true);
+      this.updateTableRow(tmpNTE,index);
+      notificationList.setLine(tmpNTE,index);
+      programFileTextField.setText(file.getAbsolutePath());
+    }
+ else {
+      logger.debug("Open command cancelled by user.");
+    }
+    noListener=false;
+  }
+ else   if (e.getSource() == playSoundButton) {
+    if (playSoundCheckBox.isSelected() == true) {
+      String soundFile=soundFileTextField.getText();
+      logger.debug("****" + soundFile + "****"+ soundFile.length());
+      if (soundFile.length() != 0) {
+        AudioNotifierService audioNotifServ=NotificationConfigurationActivator.getAudioNotifierService();
+        SCAudioClip sound=audioNotifServ.createAudio(soundFile);
+        sound.play();
+      }
+ else {
+        logger.debug("Aucun fichier specifie");
+      }
+    }
+ else {
+      logger.debug("Son non actif");
+    }
+  }
+ else   if (e.getSource() == turnOnAll) {
+    Iterator it=dataVector.iterator();
+    NotificationsTableEntry tmpNTE=null;
+    int cpt=0;
+    if (!it.hasNext())     return;
+    turnAll=true;
+    while (it.hasNext()) {
+      tmpNTE=(NotificationsTableEntry)it.next();
+      if (((String)comboBoxTurnOn.getSelectedItem()).equals("Sounds")) {
+        if (tmpNTE.getSoundFile().trim().length() != 0) {
+          tmpNTE.setSound(true);
+          tmpNTE.setModify(true);
+        }
+      }
+      if (((String)comboBoxTurnOn.getSelectedItem()).equals("Program Execution")) {
+        if (tmpNTE.getProgramFile().trim().length() != 0) {
+          tmpNTE.setProgram(true);
+          tmpNTE.setModify(true);
+        }
+      }
+      if (((String)comboBoxTurnOn.getSelectedItem()).equals("Messages Popup")) {
+        tmpNTE.setPopup(true);
+        tmpNTE.setModify(true);
+      }
+      notificationList.setLine(tmpNTE,cpt);
+      cpt++;
+    }
+    notificationList.setRowSelectionInterval(index,index);
+    tmpNTE=(NotificationsTableEntry)dataVector.elementAt(index);
+    if (((String)comboBoxTurnOn.getSelectedItem()).equals("Sounds")) {
+      playSoundCheckBox.setSelected(tmpNTE.getSound());
+    }
+ else     if (((String)comboBoxTurnOn.getSelectedItem()).equals("Program Execution")) {
+      programCheckBox.setSelected(tmpNTE.getProgram());
+    }
+ else     if (((String)comboBoxTurnOn.getSelectedItem()).equals("Messages Popup")) {
+      popupCheckBox.setSelected(tmpNTE.getPopup());
+    }
+    turnAll=false;
+  }
+ else   if (e.getSource() == turnOffAll) {
+    Iterator it=dataVector.iterator();
+    NotificationsTableEntry tmpNTE=null;
+    int cpt=0;
+    if (!it.hasNext())     return;
+    turnAll=true;
+    while (it.hasNext()) {
+      tmpNTE=(NotificationsTableEntry)it.next();
+      if (((String)comboBoxTurnOff.getSelectedItem()).equals("Sounds")) {
+        tmpNTE.setSound(false);
+        tmpNTE.setModify(true);
+      }
+      if (((String)comboBoxTurnOff.getSelectedItem()).equals("Program Execution")) {
+        tmpNTE.setProgram(false);
+        tmpNTE.setModify(true);
+      }
+      if (((String)comboBoxTurnOff.getSelectedItem()).equals("Messages Popup")) {
+        tmpNTE.setPopup(false);
+        tmpNTE.setModify(true);
+      }
+      notificationList.setLine(tmpNTE,cpt);
+      cpt++;
+    }
+    notificationList.setRowSelectionInterval(index,index);
+    tmpNTE=(NotificationsTableEntry)dataVector.elementAt(index);
+    if (((String)comboBoxTurnOn.getSelectedItem()).equals("Sounds")) {
+      playSoundCheckBox.setSelected(tmpNTE.getSound());
+    }
+ else     if (((String)comboBoxTurnOn.getSelectedItem()).equals("Program Execution")) {
+      programCheckBox.setSelected(tmpNTE.getProgram());
+    }
+ else     if (((String)comboBoxTurnOn.getSelectedItem()).equals("Messages Popup")) {
+      popupCheckBox.setSelected(tmpNTE.getPopup());
+    }
+    turnAll=false;
+  }
+ else   if (e.getSource() == apply) {
+    Iterator it=dataVector.iterator();
+    NotificationsTableEntry tmpNTE=null;
+    while (it.hasNext()) {
+      tmpNTE=(NotificationsTableEntry)it.next();
+      if (tmpNTE.isModified()) {
+        logger.debug("Event modify : " + tmpNTE.getEvent());
+        notificationService.setActive(tmpNTE.getEvent(),tmpNTE.getEnabled());
+        if (tmpNTE.getSound() == true) {
+          notificationService.registerNotificationForEvent(tmpNTE.getEvent(),notificationService.ACTION_SOUND,tmpNTE.getSoundFile(),"");
+          logger.debug("Adding Sound");
+        }
+ else {
+          notificationService.removeEventNotificationAction(tmpNTE.getEvent(),notificationService.ACTION_SOUND);
+          logger.debug("Deleting Sound");
+        }
+        if (tmpNTE.getProgram() == true) {
+          notificationService.registerNotificationForEvent(tmpNTE.getEvent(),notificationService.ACTION_COMMAND,tmpNTE.getProgramFile(),"");
+          logger.debug("Program");
+        }
+ else {
+          notificationService.removeEventNotificationAction(tmpNTE.getEvent(),notificationService.ACTION_COMMAND);
+          logger.debug("Deleting Program");
+        }
+        if (tmpNTE.getPopup()) {
+          notificationService.registerNotificationForEvent(tmpNTE.getEvent(),notificationService.ACTION_POPUP_MESSAGE,"","");
+          logger.debug("Popup");
+        }
+ else {
+          notificationService.removeEventNotificationAction(tmpNTE.getEvent(),notificationService.ACTION_POPUP_MESSAGE);
+          logger.debug("Deleting Popup");
+        }
+        tmpNTE.setModify(false);
+      }
+    }
+  }
+}

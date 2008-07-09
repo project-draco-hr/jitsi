@@ -1,0 +1,54 @@
+{
+  ConfigurationService configService=NotificationActivator.getConfigurationService();
+  String eventPrefix="net.java.sip.communicator.impl.notifications";
+  String eventTypeNodeName=null;
+  String actionTypeNodeName=null;
+  List eventTypes=configService.getPropertyNamesByPrefix(eventPrefix,true);
+  Iterator eventTypesIter=eventTypes.iterator();
+  while (eventTypesIter.hasNext()) {
+    String eventTypeRootPropName=(String)eventTypesIter.next();
+    String eType=configService.getString(eventTypeRootPropName);
+    if (eType.equals(eventType))     eventTypeNodeName=eventTypeRootPropName;
+  }
+  if (eventTypeNodeName == null) {
+    eventTypeNodeName=eventPrefix + ".eventType" + Long.toString(System.currentTimeMillis());
+    configService.setProperty(eventTypeNodeName,eventType);
+  }
+  if (actionType == null && actionHandler == null) {
+    configService.setProperty(eventTypeNodeName + ".active",Boolean.toString(isActive));
+    return;
+  }
+  String actionPrefix=eventTypeNodeName + ".actions";
+  List actionTypes=configService.getPropertyNamesByPrefix(actionPrefix,true);
+  Iterator actionTypesIter=actionTypes.iterator();
+  while (actionTypesIter.hasNext()) {
+    String actionTypeRootPropName=(String)actionTypesIter.next();
+    String aType=configService.getString(actionTypeRootPropName);
+    if (aType.equals(actionType))     actionTypeNodeName=actionTypeRootPropName;
+  }
+  if (actionTypeNodeName == null) {
+    actionTypeNodeName=actionPrefix + ".actionType" + Long.toString(System.currentTimeMillis());
+    configService.setProperty(actionTypeNodeName,actionType);
+  }
+  if (actionHandler instanceof SoundNotificationHandler) {
+    SoundNotificationHandler soundHandler=(SoundNotificationHandler)actionHandler;
+    configService.setProperty(actionTypeNodeName + ".soundFileDescriptor",soundHandler.getDescriptor());
+    configService.setProperty(actionTypeNodeName + ".loopInterval",new Integer(soundHandler.getLoopInterval()));
+    configService.setProperty(actionTypeNodeName + ".enabled",Boolean.toString(isActive));
+  }
+ else   if (actionHandler instanceof PopupMessageNotificationHandler) {
+    PopupMessageNotificationHandler messageHandler=(PopupMessageNotificationHandler)actionHandler;
+    configService.setProperty(actionTypeNodeName + ".defaultMessage",messageHandler.getDefaultMessage());
+    configService.setProperty(actionTypeNodeName + ".enabled",Boolean.toString(isActive));
+  }
+ else   if (actionHandler instanceof LogMessageNotificationHandler) {
+    LogMessageNotificationHandler logMessageHandler=(LogMessageNotificationHandler)actionHandler;
+    configService.setProperty(actionTypeNodeName + ".logType",logMessageHandler.getLogType());
+    configService.setProperty(actionTypeNodeName + ".enabled",Boolean.toString(isActive));
+  }
+ else   if (actionHandler instanceof CommandNotificationHandler) {
+    CommandNotificationHandler commandHandler=(CommandNotificationHandler)actionHandler;
+    configService.setProperty(actionTypeNodeName + ".commandDescriptor",commandHandler.getDescriptor());
+    configService.setProperty(actionTypeNodeName + ".enabled",Boolean.toString(isActive));
+  }
+}
