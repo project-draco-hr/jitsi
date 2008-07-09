@@ -106,12 +106,15 @@
     tmpNTE=(NotificationsTableEntry)dataVector.elementAt(index);
     if (((String)comboBoxTurnOn.getSelectedItem()).equals("Sounds")) {
       playSoundCheckBox.setSelected(tmpNTE.getSound());
+      playSoundCheckBox.setEnabled(tmpNTE.getSound());
     }
  else     if (((String)comboBoxTurnOn.getSelectedItem()).equals("Program Execution")) {
       programCheckBox.setSelected(tmpNTE.getProgram());
+      programCheckBox.setEnabled(tmpNTE.getProgram());
     }
  else     if (((String)comboBoxTurnOn.getSelectedItem()).equals("Messages Popup")) {
       popupCheckBox.setSelected(tmpNTE.getPopup());
+      popupCheckBox.setEnabled(tmpNTE.getPopup());
     }
     turnAll=false;
   }
@@ -142,12 +145,15 @@
     tmpNTE=(NotificationsTableEntry)dataVector.elementAt(index);
     if (((String)comboBoxTurnOn.getSelectedItem()).equals("Sounds")) {
       playSoundCheckBox.setSelected(tmpNTE.getSound());
+      playSoundCheckBox.setEnabled(tmpNTE.getSound());
     }
  else     if (((String)comboBoxTurnOn.getSelectedItem()).equals("Program Execution")) {
       programCheckBox.setSelected(tmpNTE.getProgram());
+      programCheckBox.setEnabled(tmpNTE.getProgram());
     }
  else     if (((String)comboBoxTurnOn.getSelectedItem()).equals("Messages Popup")) {
       popupCheckBox.setSelected(tmpNTE.getPopup());
+      popupCheckBox.setEnabled(tmpNTE.getPopup());
     }
     turnAll=false;
   }
@@ -186,5 +192,19 @@
         tmpNTE.setModify(false);
       }
     }
+  }
+ else   if (e.getSource() == restore) {
+    notificationService.registerNotificationForEvent(INCOMING_MESSAGE,NotificationService.ACTION_POPUP_MESSAGE,null,null);
+    notificationService.registerNotificationForEvent(INCOMING_MESSAGE,NotificationService.ACTION_SOUND,SOUND_INCOMING_MESSAGE,null);
+    notificationService.registerNotificationForEvent(INCOMING_CALL,NotificationService.ACTION_POPUP_MESSAGE,null,null);
+    SoundNotificationHandler inCallSoundHandler=(SoundNotificationHandler)notificationService.createSoundNotificationHandler(SOUND_INCOMING_CALL,2000);
+    notificationService.registerNotificationForEvent(INCOMING_CALL,NotificationService.ACTION_SOUND,inCallSoundHandler);
+    SoundNotificationHandler outCallSoundHandler=(SoundNotificationHandler)notificationService.createSoundNotificationHandler(SOUND_OUTGOING_CALL,3000);
+    notificationService.registerNotificationForEvent(OUTGOING_CALL,NotificationService.ACTION_SOUND,outCallSoundHandler);
+    SoundNotificationHandler busyCallSoundHandler=(SoundNotificationHandler)notificationService.createSoundNotificationHandler(SOUND_BUSY,1);
+    notificationService.registerNotificationForEvent(BUSY_CALL,NotificationService.ACTION_SOUND,busyCallSoundHandler);
+    int ix=notificationList.getLine();
+    NotificationsTableEntry tmpNTE=(NotificationsTableEntry)dataVector.elementAt(ix);
+    updatePanel(tmpNTE);
   }
 }
