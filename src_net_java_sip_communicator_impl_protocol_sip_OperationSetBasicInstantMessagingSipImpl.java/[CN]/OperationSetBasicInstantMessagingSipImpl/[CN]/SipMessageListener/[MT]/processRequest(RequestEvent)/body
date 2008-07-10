@@ -7,8 +7,8 @@ synchronized (messageProcessors) {
     }
   }
   String content=null;
+  Request req=requestEvent.getRequest();
   try {
-    Request req=requestEvent.getRequest();
     content=new String(req.getRawContent(),getCharset(req));
   }
  catch (  UnsupportedEncodingException ex) {
@@ -21,7 +21,18 @@ synchronized (messageProcessors) {
     return;
   }
   Contact from=opSetPersPresence.resolveContactID(fromHeader.getAddress().getURI().toString());
-  Message newMessage=createMessage(content);
+  ContentTypeHeader ctheader=(ContentTypeHeader)req.getHeader(ContentTypeHeader.NAME);
+  String ctype=null;
+  String cencoding=null;
+  if (ctheader == null) {
+    ctype=DEFAULT_MIME_TYPE;
+  }
+ else {
+    ctype=ctheader.getContentType() + "/" + ctheader.getContentSubType();
+    cencoding=ctheader.getParameter("charset");
+  }
+  if (cencoding == null)   cencoding=DEFAULT_MIME_ENCODING;
+  Message newMessage=createMessage(content.getBytes(),ctype,cencoding,null);
   if (from == null) {
     logger.debug("received a message from an unknown contact: " + fromHeader.getAddress().getURI().toString());
     from=opSetPersPresence.createVolatileContact(fromHeader.getAddress().getURI().toString().substring(4));
