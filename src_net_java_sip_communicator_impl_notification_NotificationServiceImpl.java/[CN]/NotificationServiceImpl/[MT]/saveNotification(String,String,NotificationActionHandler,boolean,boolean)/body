@@ -1,9 +1,7 @@
 {
-  ConfigurationService configService=NotificationActivator.getConfigurationService();
-  String eventPrefix="net.java.sip.communicator.impl.notifications";
   String eventTypeNodeName=null;
   String actionTypeNodeName=null;
-  List eventTypes=configService.getPropertyNamesByPrefix(eventPrefix,true);
+  List eventTypes=configService.getPropertyNamesByPrefix(NOTIFICATIONS_PREFIX,true);
   Iterator eventTypesIter=eventTypes.iterator();
   while (eventTypesIter.hasNext()) {
     String eventTypeRootPropName=(String)eventTypesIter.next();
@@ -11,7 +9,7 @@
     if (eType.equals(eventType))     eventTypeNodeName=eventTypeRootPropName;
   }
   if (eventTypeNodeName == null) {
-    eventTypeNodeName=eventPrefix + ".eventType" + Long.toString(System.currentTimeMillis());
+    eventTypeNodeName=NOTIFICATIONS_PREFIX + ".eventType" + Long.toString(System.currentTimeMillis());
     configService.setProperty(eventTypeNodeName,eventType);
   }
   if (actionType == null && actionHandler == null) {
@@ -35,20 +33,24 @@
     configService.setProperty(actionTypeNodeName + ".soundFileDescriptor",soundHandler.getDescriptor());
     configService.setProperty(actionTypeNodeName + ".loopInterval",new Integer(soundHandler.getLoopInterval()));
     configService.setProperty(actionTypeNodeName + ".enabled",Boolean.toString(isActive));
+    configService.setProperty(actionTypeNodeName + ".default",Boolean.toString(isDefault));
   }
  else   if (actionHandler instanceof PopupMessageNotificationHandler) {
     PopupMessageNotificationHandler messageHandler=(PopupMessageNotificationHandler)actionHandler;
     configService.setProperty(actionTypeNodeName + ".defaultMessage",messageHandler.getDefaultMessage());
     configService.setProperty(actionTypeNodeName + ".enabled",Boolean.toString(isActive));
+    configService.setProperty(actionTypeNodeName + ".default",Boolean.toString(isDefault));
   }
  else   if (actionHandler instanceof LogMessageNotificationHandler) {
     LogMessageNotificationHandler logMessageHandler=(LogMessageNotificationHandler)actionHandler;
     configService.setProperty(actionTypeNodeName + ".logType",logMessageHandler.getLogType());
     configService.setProperty(actionTypeNodeName + ".enabled",Boolean.toString(isActive));
+    configService.setProperty(actionTypeNodeName + ".default",Boolean.toString(isDefault));
   }
  else   if (actionHandler instanceof CommandNotificationHandler) {
     CommandNotificationHandler commandHandler=(CommandNotificationHandler)actionHandler;
     configService.setProperty(actionTypeNodeName + ".commandDescriptor",commandHandler.getDescriptor());
     configService.setProperty(actionTypeNodeName + ".enabled",Boolean.toString(isActive));
+    configService.setProperty(actionTypeNodeName + ".default",Boolean.toString(isDefault));
   }
 }

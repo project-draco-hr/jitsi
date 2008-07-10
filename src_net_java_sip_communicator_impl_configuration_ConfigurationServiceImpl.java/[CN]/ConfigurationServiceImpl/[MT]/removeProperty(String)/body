@@ -1,0 +1,20 @@
+{
+  List childPropertyNames=getPropertyNamesByPrefix(propertyName,false);
+  Iterator propsIter=childPropertyNames.iterator();
+  while (propsIter.hasNext()) {
+    String pName=(String)propsIter.next();
+    removeProperty(pName);
+  }
+  Object oldValue=getProperty(propertyName);
+  if (changeEventDispatcher.hasVetoableChangeListeners(propertyName))   changeEventDispatcher.fireVetoableChange(propertyName,oldValue,null);
+  logger.trace("Will remove prop: " + propertyName + ".");
+  properties.remove(propertyName);
+  fileExtractedProperties.remove(propertyName);
+  if (changeEventDispatcher.hasPropertyChangeListeners(propertyName))   changeEventDispatcher.firePropertyChange(propertyName,oldValue,null);
+  try {
+    storeConfiguration();
+  }
+ catch (  IOException ex) {
+    logger.error("Failed to store configuration after " + "a property change");
+  }
+}
