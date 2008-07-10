@@ -2,12 +2,13 @@
   logger.debug("The Jabber provider changed state from: " + evt.getOldState() + " to: "+ evt.getNewState());
   if (evt.getNewState() == RegistrationState.REGISTERED) {
     jabberProvider.getConnection().getRoster().addRosterListener(new ContactChangesListener());
-    fireProviderPresenceStatusChangeEvent(currentStatus,JabberStatusEnum.AVAILABLE);
+    fireProviderPresenceStatusChangeEvent(currentStatus,jabberProvider.getJabberStatusEnum().getStatus(JabberStatusEnum.AVAILABLE));
     ssContactList.init();
   }
  else   if (evt.getNewState() == RegistrationState.UNREGISTERED || evt.getNewState() == RegistrationState.AUTHENTICATION_FAILED || evt.getNewState() == RegistrationState.CONNECTION_FAILED) {
     PresenceStatus oldStatus=currentStatus;
-    currentStatus=JabberStatusEnum.OFFLINE;
+    PresenceStatus offlineStatus=jabberProvider.getJabberStatusEnum().getStatus(JabberStatusEnum.OFFLINE);
+    currentStatus=offlineStatus;
     fireProviderPresenceStatusChangeEvent(oldStatus,currentStatus);
     Iterator groupsIter=getServerStoredContactListRoot().subgroups();
     while (groupsIter.hasNext()) {
@@ -17,8 +18,8 @@
         ContactJabberImpl contact=(ContactJabberImpl)contactsIter.next();
         PresenceStatus oldContactStatus=contact.getPresenceStatus();
         if (!oldContactStatus.isOnline())         continue;
-        contact.updatePresenceStatus(JabberStatusEnum.OFFLINE);
-        fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldContactStatus,JabberStatusEnum.OFFLINE);
+        contact.updatePresenceStatus(offlineStatus);
+        fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldContactStatus,offlineStatus);
       }
     }
     Iterator contactsIter=getServerStoredContactListRoot().contacts();
@@ -26,8 +27,8 @@
       ContactJabberImpl contact=(ContactJabberImpl)contactsIter.next();
       PresenceStatus oldContactStatus=contact.getPresenceStatus();
       if (!oldContactStatus.isOnline())       continue;
-      contact.updatePresenceStatus(JabberStatusEnum.OFFLINE);
-      fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldContactStatus,JabberStatusEnum.OFFLINE);
+      contact.updatePresenceStatus(offlineStatus);
+      fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldContactStatus,offlineStatus);
     }
   }
 }

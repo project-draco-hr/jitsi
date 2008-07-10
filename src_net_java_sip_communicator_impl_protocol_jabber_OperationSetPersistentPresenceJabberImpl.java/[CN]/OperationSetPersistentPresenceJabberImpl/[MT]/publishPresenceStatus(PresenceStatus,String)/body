@@ -1,14 +1,22 @@
 {
   assertConnected();
-  if (!(status instanceof JabberStatusEnum))   throw new IllegalArgumentException(status + " is not a valid Jabber status");
+  JabberStatusEnum jabberStatusEnum=jabberProvider.getJabberStatusEnum();
+  boolean isValidStatus=false;
+  for (Iterator supportedStatusIter=jabberStatusEnum.getSupportedStatusSet(); supportedStatusIter.hasNext(); ) {
+    if (supportedStatusIter.next().equals(status)) {
+      isValidStatus=true;
+      break;
+    }
+  }
+  if (!isValidStatus)   throw new IllegalArgumentException(status + " is not a valid Jabber status");
   Presence presence=null;
-  if (((JabberStatusEnum)status).equals(JabberStatusEnum.OFFLINE)) {
+  if (status.equals(jabberStatusEnum.getStatus(JabberStatusEnum.OFFLINE))) {
     presence=new Presence(Presence.Type.unavailable);
     jabberProvider.unregister();
   }
  else {
     presence=new Presence(Presence.Type.available);
-    presence.setMode(presenceStatusToJabberMode((JabberStatusEnum)status));
+    presence.setMode(presenceStatusToJabberMode(status));
     presence.setPriority(resourcePriority);
     presence.setStatus(statusMessage);
     presence.addExtension(new Version());
