@@ -1,0 +1,37 @@
+{
+  Hashtable accountProperties=new Hashtable();
+  accountProperties.put(ProtocolProviderFactory.PROTOCOL,PROTOCOL);
+  accountProperties.put(ProtocolProviderFactory.PROTOCOL_ICON_PATH,GoogleTalkAccountRegistrationWizard.class.getClassLoader().getResource("resources/images/protocol/googletalk").toString());
+  if (registration.isRememberPassword()) {
+    accountProperties.put(ProtocolProviderFactory.PASSWORD,passwd);
+  }
+  accountProperties.put("SEND_KEEP_ALIVE",String.valueOf(registration.isSendKeepAlive()));
+  String serverName=null;
+  if (registration.getServerAddress() != null) {
+    serverName=registration.getServerAddress();
+  }
+ else {
+    serverName=getServerFromUserName(userName);
+  }
+  accountProperties.put(ProtocolProviderFactory.SERVER_ADDRESS,serverName);
+  accountProperties.put(ProtocolProviderFactory.SERVER_PORT,String.valueOf(registration.getPort()));
+  accountProperties.put(ProtocolProviderFactory.RESOURCE,registration.getResource());
+  accountProperties.put(ProtocolProviderFactory.RESOURCE_PRIORITY,String.valueOf(registration.getPriority()));
+  if (isModification) {
+    providerFactory.modifyAccount(protocolProvider,accountProperties);
+    this.isModification=false;
+    return protocolProvider;
+  }
+  try {
+    AccountID accountID=providerFactory.installAccount(userName,accountProperties);
+    ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
+    protocolProvider=(ProtocolProviderService)GoogleTalkAccRegWizzActivator.bundleContext.getService(serRef);
+  }
+ catch (  IllegalArgumentException exc) {
+    GoogleTalkAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
+  }
+catch (  IllegalStateException exc) {
+    GoogleTalkAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
+  }
+  return protocolProvider;
+}

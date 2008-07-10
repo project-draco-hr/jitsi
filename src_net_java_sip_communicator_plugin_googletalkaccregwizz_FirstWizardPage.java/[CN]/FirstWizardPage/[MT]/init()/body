@@ -1,0 +1,96 @@
+{
+  this.userIDField.getDocument().addDocumentListener(this);
+  this.rememberPassBox.setSelected(true);
+  this.existingAccountLabel.setForeground(Color.RED);
+  this.userIDExampleLabel.setForeground(Color.GRAY);
+  this.userIDExampleLabel.setFont(userIDExampleLabel.getFont().deriveFont(8));
+  this.emptyPanel.setMaximumSize(new Dimension(40,35));
+  this.userIDExampleLabel.setBorder(BorderFactory.createEmptyBorder(0,0,8,0));
+  labelsPanel.add(userIDLabel);
+  labelsPanel.add(emptyPanel);
+  labelsPanel.add(passLabel);
+  valuesPanel.add(userIDField);
+  valuesPanel.add(userIDExampleLabel);
+  valuesPanel.add(passField);
+  userIDPassPanel.add(labelsPanel,BorderLayout.WEST);
+  userIDPassPanel.add(valuesPanel,BorderLayout.CENTER);
+  userIDPassPanel.add(rememberPassBox,BorderLayout.SOUTH);
+  userIDPassPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("userIDAndPassword")));
+  mainPanel.add(userIDPassPanel);
+  serverField.setEnabled(false);
+  portField.setEnabled(false);
+  resourceField.setEnabled(false);
+  priorityField.setEnabled(false);
+  enableAdvOpButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent evt){
+      JCheckBox cb=(JCheckBox)evt.getSource();
+      if (!wizard.isModification())       serverField.setEnabled(cb.isSelected());
+      portField.setEnabled(cb.isSelected());
+      resourceField.setEnabled(cb.isSelected());
+      priorityField.setEnabled(cb.isSelected());
+      if (!cb.isSelected()) {
+        setServerFieldAccordingToUserID();
+        portField.setText(GoogleTalkAccountRegistration.DEFAULT_PORT);
+        resourceField.setText(GoogleTalkAccountRegistration.DEFAULT_RESOURCE);
+        priorityField.setText(GoogleTalkAccountRegistration.DEFAULT_PRIORITY);
+      }
+    }
+  }
+);
+  portField.getDocument().addDocumentListener(new DocumentListener(){
+    public void changedUpdate(    DocumentEvent evt){
+    }
+    public void insertUpdate(    DocumentEvent evt){
+      setNextButtonAccordingToPortAndPriority();
+    }
+    public void removeUpdate(    DocumentEvent evt){
+      setNextButtonAccordingToPortAndPriority();
+    }
+  }
+);
+  priorityField.getDocument().addDocumentListener(new DocumentListener(){
+    public void changedUpdate(    DocumentEvent evt){
+    }
+    public void insertUpdate(    DocumentEvent evt){
+      setNextButtonAccordingToPortAndPriority();
+    }
+    public void removeUpdate(    DocumentEvent evt){
+      setNextButtonAccordingToPortAndPriority();
+    }
+  }
+);
+  labelsAdvOpPanel.add(serverLabel);
+  labelsAdvOpPanel.add(portLabel);
+  labelsAdvOpPanel.add(resourceLabel);
+  labelsAdvOpPanel.add(priorityLabel);
+  valuesAdvOpPanel.add(serverField);
+  valuesAdvOpPanel.add(portField);
+  valuesAdvOpPanel.add(resourceField);
+  valuesAdvOpPanel.add(priorityField);
+  JPanel checkBoxesPanel=new JPanel(new GridLayout(0,1,10,10));
+  checkBoxesPanel.add(sendKeepAliveBox);
+  checkBoxesPanel.add(enableAdvOpButton);
+  advancedOpPanel.add(checkBoxesPanel,BorderLayout.NORTH);
+  advancedOpPanel.add(labelsAdvOpPanel,BorderLayout.WEST);
+  advancedOpPanel.add(valuesAdvOpPanel,BorderLayout.CENTER);
+  advancedOpPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("advancedOptions")));
+  mainPanel.add(advancedOpPanel);
+  registerButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent evt){
+      logger.debug("Reg OK");
+      wizard.webSignup();
+      logger.debug("Reg End");
+    }
+  }
+);
+  buttonPanel.add(registerButton);
+  registerArea.setEnabled(false);
+  registerArea.setOpaque(false);
+  registerArea.setLineWrap(true);
+  registerArea.setWrapStyleWord(true);
+  registerPanel.add(registerArea);
+  registerPanel.add(buttonPanel);
+  registerPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("registerNewAccount")));
+  mainPanel.add(registerPanel);
+  this.add(mainPanel,BorderLayout.NORTH);
+}
