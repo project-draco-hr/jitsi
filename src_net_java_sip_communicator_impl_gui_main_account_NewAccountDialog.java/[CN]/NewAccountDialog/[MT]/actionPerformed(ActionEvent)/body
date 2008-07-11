@@ -1,15 +1,16 @@
 {
   JButton sourceButton=(JButton)event.getSource();
   AccountRegistrationWizard wizard=(AccountRegistrationWizard)networkComboBox.getSelectedItem();
+  AccountRegWizardContainerImpl wizardContainer=((AccountRegWizardContainerImpl)GuiActivator.getUIService().getAccountRegWizardContainer());
   if (sourceButton.equals(advancedButton)) {
     wizard.setModification(false);
-    AccountRegWizardContainerImpl wizardContainer=((AccountRegWizardContainerImpl)GuiActivator.getUIService().getAccountRegWizardContainer());
     wizardContainer.setTitle(Messages.getI18NString("accountRegistrationWizard").getText());
     wizardContainer.setCurrentWizard(wizard);
     wizardContainer.showDialog(false);
   }
  else   if (sourceButton.equals(addAccountButton)) {
-    wizard.signin();
+    ProtocolProviderService protocolProvider=wizard.signin();
+    if (protocolProvider != null)     wizardContainer.saveAccountWizard(protocolProvider,wizard);
     this.dispose();
   }
  else   if (sourceButton.equals(cancelButton)) {
