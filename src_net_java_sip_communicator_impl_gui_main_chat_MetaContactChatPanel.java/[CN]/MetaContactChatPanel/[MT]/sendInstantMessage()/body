@@ -2,7 +2,18 @@
   Contact contact=(Contact)contactSelectorBox.getMenu().getSelectedObject();
   OperationSetBasicInstantMessaging im=(OperationSetBasicInstantMessaging)contact.getProtocolProvider().getOperationSet(OperationSetBasicInstantMessaging.class);
   OperationSetTypingNotifications tn=(OperationSetTypingNotifications)contact.getProtocolProvider().getOperationSet(OperationSetTypingNotifications.class);
-  Message msg=im.createMessage(text);
+  String htmlText=getTextFromWriteArea("text/html");
+  String plainText=getTextFromWriteArea(OperationSetBasicInstantMessaging.DEFAULT_MIME_TYPE);
+  System.out.println("HTML==========" + htmlText);
+  System.out.println("HTML==========" + plainText);
+  Message msg;
+  if (im.isContentTypeSupported("text/html") && !htmlText.equals(plainText)) {
+    msg=im.createMessage(htmlText.getBytes(),"text/html","utf-8","");
+  }
+ else {
+    msg=im.createMessage(plainText);
+  }
+  this.refreshWriteArea();
   if (tn != null) {
     getChatWritePanel().stopTypingTimer();
   }

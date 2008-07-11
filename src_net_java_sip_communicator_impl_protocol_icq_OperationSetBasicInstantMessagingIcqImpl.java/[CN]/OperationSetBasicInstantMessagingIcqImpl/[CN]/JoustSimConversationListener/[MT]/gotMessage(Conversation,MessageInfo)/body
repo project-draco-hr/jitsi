@@ -5,9 +5,12 @@
     receivedKeepAlivePackets.addLast(msgBody);
     return;
   }
-  Message newMessage=null;
-  if (icqProvider.USING_ICQ)   newMessage=createMessage(msgBody);
- else   newMessage=createMessage(msgBody.getBytes(),CONTENT_TYPE_HTML,DEFAULT_MIME_ENCODING,null);
+  String msgContent;
+  if (msgBody.startsWith(defaultHtmlStartTag)) {
+    msgContent=msgBody.substring(msgBody.indexOf(defaultHtmlStartTag) + defaultHtmlStartTag.length(),msgBody.indexOf(defaultHtmlEndTag));
+  }
+ else   msgContent=msgBody;
+  Message newMessage=createMessage(msgContent.getBytes(),CONTENT_TYPE_HTML,DEFAULT_MIME_ENCODING,null);
   Contact sourceContact=opSetPersPresence.findContactByID(conversation.getBuddy().getFormatted());
   if (sourceContact == null) {
     logger.debug("received a message from a unknown contact: " + conversation.getBuddy());

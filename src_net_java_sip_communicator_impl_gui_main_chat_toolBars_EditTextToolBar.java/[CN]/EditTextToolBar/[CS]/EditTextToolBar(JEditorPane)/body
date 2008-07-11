@@ -1,0 +1,51 @@
+{
+  this.chatEditorPane=panel;
+  this.fontNameCombo=new JComboBox(getSystemFontFamilies());
+  this.fontSizeCombo.setEditable(true);
+  fontNameCombo.setSelectedItem(ApplicationProperties.getProperty("fontName"));
+  fontSizeCombo.setSelectedItem(ApplicationProperties.getProperty("fontSize"));
+  this.setRollover(true);
+  this.setLayout(new FlowLayout(FlowLayout.LEFT,2,0));
+  this.setBorder(BorderFactory.createEmptyBorder(0,5,5,5));
+  this.fontSizeCombo.setPreferredSize(new Dimension(55,21));
+  colorLabel.setPreferredSize(new Dimension(25,25));
+  this.initToolbarButtons();
+  this.addSeparator();
+  this.add(fontNameCombo);
+  this.add(fontSizeCombo);
+  this.addSeparator();
+  this.add(colorLabel);
+  fontNameCombo.addItemListener(new ItemListener(){
+    public void itemStateChanged(    ItemEvent evt){
+      String fontName=(String)evt.getItem();
+      ActionEvent actionEvent=new ActionEvent(chatEditorPane,ActionEvent.ACTION_PERFORMED,"");
+      Action action=new HTMLEditorKit.FontFamilyAction(fontName,fontName);
+      action.actionPerformed(actionEvent);
+      chatEditorPane.requestFocus();
+    }
+  }
+);
+  fontSizeCombo.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      ActionEvent evt=new ActionEvent(chatEditorPane,ActionEvent.ACTION_PERFORMED,"");
+      String fontSizeString=(String)fontSizeCombo.getSelectedItem();
+      Action action=new HTMLEditorKit.FontSizeAction(fontSizeString,new Integer(fontSizeString).intValue());
+      action.actionPerformed(evt);
+      chatEditorPane.requestFocus();
+    }
+  }
+);
+  colorLabel.setOpaque(true);
+  colorLabel.setBackground(Color.BLACK);
+  colorLabel.addMouseListener(new MouseAdapter(){
+    public void mousePressed(    MouseEvent arg0){
+      Color newColor=JColorChooser.showDialog(new JColorChooser(),"Choose a colour",colorLabel.getBackground());
+      colorLabel.setBackground(newColor);
+      ActionEvent evt=new ActionEvent(chatEditorPane,ActionEvent.ACTION_PERFORMED,"");
+      Action action=new HTMLEditorKit.ForegroundAction(new Integer(newColor.getRGB()).toString(),newColor);
+      action.actionPerformed(evt);
+      chatEditorPane.requestFocus();
+    }
+  }
+);
+}
