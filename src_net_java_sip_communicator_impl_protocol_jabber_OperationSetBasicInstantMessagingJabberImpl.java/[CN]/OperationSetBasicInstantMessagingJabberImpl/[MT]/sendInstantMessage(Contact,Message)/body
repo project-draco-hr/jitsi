@@ -9,7 +9,14 @@
 ;
     Chat chat=jabberProvider.getConnection().getChatManager().createChat(to.getAddress(),msgListener);
     org.jivesoftware.smack.packet.Message msg=new org.jivesoftware.smack.packet.Message();
-    msg.setBody(message.getContent());
+    String content=message.getContent();
+    if (message.getContentType().equals(HTML_MIME_TYPE)) {
+      msg.setBody(html2Txt.extractText(content));
+      XHTMLManager.addBody(msg,OPEN_BODY_TAG + content + CLOSE_BODY_TAG);
+    }
+ else {
+      msg.setBody(content);
+    }
     msg.addExtension(new Version());
     MessageEventManager.addNotificationsRequests(msg,true,false,false,true);
     chat.sendMessage(msg);

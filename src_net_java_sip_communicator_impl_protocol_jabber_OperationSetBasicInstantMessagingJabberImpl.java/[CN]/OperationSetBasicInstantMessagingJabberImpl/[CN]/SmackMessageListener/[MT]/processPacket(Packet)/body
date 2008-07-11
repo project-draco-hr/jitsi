@@ -7,6 +7,17 @@
     logger.debug("Received from " + fromUserID + " the message "+ msg.toXML());
   }
   Message newMessage=createMessage(msg.getBody());
+  PacketExtension ext=msg.getExtension("http://jabber.org/protocol/xhtml-im");
+  if (ext != null) {
+    XHTMLExtension xhtmlExt=(XHTMLExtension)ext;
+    Iterator bodies=xhtmlExt.getBodies();
+    StringBuffer messageBuff=new StringBuffer();
+    while (bodies.hasNext()) {
+      String body=(String)bodies.next();
+      messageBuff.append(body);
+    }
+    if (messageBuff.length() > 0)     newMessage=createMessage(messageBuff.toString().getBytes(),HTML_MIME_TYPE);
+  }
   Contact sourceContact=opSetPersPresence.findContactByID(fromUserID);
   if (msg.getType() == org.jivesoftware.smack.packet.Message.Type.error) {
     logger.info("Message error received from " + fromUserID);
