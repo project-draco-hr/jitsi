@@ -1,0 +1,40 @@
+{
+  if (!(to instanceof ContactSipImpl))   throw new IllegalArgumentException("The specified contact is not a Sip contact." + to);
+  assertConnected();
+  Request mes;
+  try {
+    mes=opSetBasicIm.createMessage(to,message);
+  }
+ catch (  OperationFailedException ex) {
+    logger.error("Failed to create the message.",ex);
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
+    fireMessageEvent(evt);
+    return;
+  }
+  Header smsHeader=null;
+  try {
+    smsHeader=this.sipProvider.getHeaderFactory().createHeader(SMS_OUTGOING_MESSAGE_HEADER,SMS_OUTGOING_DEFAULT_MESSAGE_HEADER_VALUE);
+  }
+ catch (  ParseException exc) {
+    logger.error("An unexpected error occurred while" + "constructing the SmsHeadder",exc);
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
+    fireMessageEvent(evt);
+    return;
+  }
+  mes.addHeader(smsHeader);
+  try {
+    opSetBasicIm.sendRequestMessage(mes,to,message);
+  }
+ catch (  TransactionUnavailableException ex) {
+    logger.error("Failed to create messageTransaction.\n" + "This is most probably a network connection error.",ex);
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date());
+    fireMessageEvent(evt);
+    return;
+  }
+catch (  SipException ex) {
+    logger.error("Failed to send the message.",ex);
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
+    fireMessageEvent(evt);
+    return;
+  }
+}

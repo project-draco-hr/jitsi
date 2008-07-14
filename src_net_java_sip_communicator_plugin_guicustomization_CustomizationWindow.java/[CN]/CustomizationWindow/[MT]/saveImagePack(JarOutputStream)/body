@@ -1,0 +1,21 @@
+{
+  String resources=new CustomImagePackImpl().getResourcePackBaseName();
+  Properties props=new Properties();
+  String imagePathPrefix="resources/images/";
+  int imageName=0;
+  Hashtable<String,byte[]> h=imagesPanel.getImages();
+  Iterator<String> iter=h.keySet().iterator();
+  while (iter.hasNext()) {
+    String k=iter.next();
+    String fileName=imagePathPrefix + String.valueOf(imageName++) + ".png";
+    byte[] bs=h.get(k);
+    if (bs.length > 0) {
+      props.put(k,fileName);
+      addNewZipEntry(fileName,outFile,bs);
+    }
+ else     props.put(k,"");
+  }
+  ByteArrayOutputStream outB=new ByteArrayOutputStream();
+  props.store(outB,"Custom Color resources");
+  addNewZipEntry(resources.replaceAll("\\.","/") + ".properties",outFile,outB.toByteArray());
+}

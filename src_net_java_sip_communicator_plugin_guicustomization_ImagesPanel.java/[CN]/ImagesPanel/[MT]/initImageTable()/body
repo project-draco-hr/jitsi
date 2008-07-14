@@ -1,0 +1,29 @@
+{
+  Iterator imageKeys=GuiCustomizationActivator.getResources().getCurrentImages();
+  int rowHeight=40;
+  while (imageKeys.hasNext()) {
+    String key=(String)imageKeys.next();
+    ImageIcon image=getImage(key);
+    final JLabel imageLabel=new JLabel();
+    JLabel imageSizeLabel=new JLabel();
+    int currentImageWidth=0;
+    int currentImageHeight=0;
+    if (image != null) {
+      imageLabel.setIcon(image);
+      currentImageWidth=image.getImage().getWidth(null);
+      currentImageHeight=image.getImage().getHeight(null);
+      imageSizeLabel.setText(currentImageWidth + "x" + currentImageHeight);
+      images.put(key,getImageBytes(key));
+    }
+    JButton fileChooserButton=new JButton();
+    fileChooserButton.setAction(new ChangeImageAction(key,imageLabel,imageSizeLabel,currentImageWidth,currentImageHeight));
+    imagesTableModel.addRow(new Object[]{key,imageSizeLabel,imageLabel,fileChooserButton});
+    fileChooserButton.setText("Change image");
+    if (image != null && rowHeight < image.getIconHeight()) {
+      imagesTable.setRowHeight(imagesTableModel.getRowCount() - 1,image.getIconHeight());
+    }
+ else {
+      imagesTable.setRowHeight(imagesTableModel.getRowCount() - 1,rowHeight);
+    }
+  }
+}

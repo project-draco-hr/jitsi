@@ -1,0 +1,21 @@
+{
+  String resources=new CustomSoundPackImpl().getResourcePackBaseName();
+  Properties props=new Properties();
+  String sndPathPrefix="resources/sounds/";
+  int sndName=0;
+  Hashtable<String,URL> h=soundsPanel.getSounds();
+  Iterator<String> iter=h.keySet().iterator();
+  while (iter.hasNext()) {
+    String k=iter.next();
+    URL u=h.get(k);
+    String fileName=sndPathPrefix + String.valueOf(sndName++);
+    props.put(k,fileName);
+    InputStream in=u.openStream();
+    byte[] bs=new byte[in.available()];
+    in.read(bs);
+    addNewZipEntry(fileName,outFile,bs);
+  }
+  ByteArrayOutputStream outB=new ByteArrayOutputStream();
+  props.store(outB,"Custom Color resources");
+  addNewZipEntry(resources.replaceAll("\\.","/") + ".properties",outFile,outB.toByteArray());
+}
