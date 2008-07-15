@@ -1,0 +1,58 @@
+{
+  this.chatWritePanel=writePanel;
+  this.chatEditorPane=writePanel.getEditorPane();
+  this.setRollover(true);
+  this.setLayout(new FlowLayout(FlowLayout.LEFT,2,0));
+  this.setBorder(BorderFactory.createEmptyBorder(5,0,5,0));
+  this.initStyleToolbarButtons();
+  this.addSeparator();
+  this.add(fontButton);
+  this.addSeparator();
+  this.initColorLabel();
+  this.addSeparator();
+  this.smiliesBox=new SmiliesSelectorBox(ImageLoader.getDefaultSmiliesPack(),chatWritePanel);
+  this.smiliesBox.setName("smiley");
+  this.smiliesBox.setToolTipText(Messages.getI18NString("insertSmiley").getText() + " Ctrl-M");
+  this.add(smiliesBox);
+  logger.trace("[GUI] Editor Pane font name: " + chatEditorPane.getFont().getName());
+  fontButton.setPreferredSize(new Dimension(25,25));
+  fontButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent event){
+      JFontChooser fontChooser=new JFontChooser();
+      fontChooser.setSelectedFontFamily(chatEditorPane.getFont().getFontName());
+      fontChooser.setSelectedFontSize(chatEditorPane.getFont().getSize());
+      if (boldButton.isSelected())       fontChooser.setSelectedFontStyle(Font.BOLD);
+ else       if (italicButton.isSelected())       fontChooser.setSelectedFontStyle(Font.ITALIC);
+      int result=fontChooser.showDialog(chatWritePanel);
+      if (result == JFontChooser.OK_OPTION) {
+        String fontName=fontChooser.getSelectedFontFamily();
+        int fontSize=fontChooser.getSelectedFontSize();
+        int fontStyle=fontChooser.getSelectedFontStyle();
+        ActionEvent fontNameActionEvent=new ActionEvent(chatEditorPane,ActionEvent.ACTION_PERFORMED,fontName);
+        Action action=new StyledEditorKit.FontFamilyAction(fontName,fontName);
+        action.actionPerformed(fontNameActionEvent);
+        ActionEvent fontSizeActionEvent=new ActionEvent(chatEditorPane,ActionEvent.ACTION_PERFORMED,new Integer(fontSize).toString());
+        action=new StyledEditorKit.FontSizeAction(new Integer(fontSize).toString(),fontSize);
+        action.actionPerformed(fontSizeActionEvent);
+        if (fontStyle == Font.BOLD) {
+          if (!boldButton.isSelected())           boldButton.doClick();
+          if (italicButton.isSelected())           italicButton.doClick();
+        }
+ else         if (fontStyle == Font.ITALIC) {
+          if (!italicButton.isSelected())           italicButton.doClick();
+          if (boldButton.isSelected())           boldButton.doClick();
+        }
+ else         if (fontStyle == (Font.BOLD + Font.ITALIC)) {
+          if (!boldButton.isSelected())           boldButton.doClick();
+          if (!italicButton.isSelected())           italicButton.doClick();
+        }
+ else {
+          if (boldButton.isSelected())           boldButton.doClick();
+          if (italicButton.isSelected())           italicButton.doClick();
+        }
+        chatEditorPane.requestFocus();
+      }
+    }
+  }
+);
+}

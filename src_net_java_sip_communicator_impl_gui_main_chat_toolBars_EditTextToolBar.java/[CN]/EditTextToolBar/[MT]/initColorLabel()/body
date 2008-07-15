@@ -1,0 +1,40 @@
+{
+  final ColorLabel colorLabel=new ColorLabel();
+  colorLabel.setPreferredSize(new Dimension(21,21));
+  colorLabel.setOpaque(true);
+  colorLabel.setBackground(Color.BLACK);
+  this.add(colorLabel);
+  colorLabel.addMouseListener(new MouseAdapter(){
+    public void mousePressed(    MouseEvent arg0){
+      Color newColor=JColorChooser.showDialog(new JColorChooser(),"Choose a colour",colorLabel.getBackground());
+      colorLabel.setBackground(newColor);
+      ActionEvent evt=new ActionEvent(chatEditorPane,ActionEvent.ACTION_PERFORMED,"");
+      Action action=new HTMLEditorKit.ForegroundAction(new Integer(newColor.getRGB()).toString(),newColor);
+      action.actionPerformed(evt);
+      chatEditorPane.requestFocus();
+    }
+  }
+);
+  chatEditorPane.addCaretListener(new CaretListener(){
+    public void caretUpdate(    CaretEvent e){
+      selectColor(StyleConstants.Foreground,colorLabel);
+    }
+  }
+);
+  chatEditorPane.addKeyListener(new KeyAdapter(){
+    public void keyTyped(    KeyEvent e){
+      if (chatWritePanel.getText().length() > 0) {
+        Color currentColor=(Color)((HTMLEditorKit)chatEditorPane.getEditorKit()).getInputAttributes().getAttribute(StyleConstants.Foreground);
+        if (currentColor != null)         colorLabel.setBackground(currentColor);
+ else         colorLabel.setBackground(Color.BLACK);
+      }
+    }
+  }
+);
+  chatEditorPane.addMouseListener(new MouseAdapter(){
+    public void mouseClicked(    MouseEvent e){
+      selectColor(StyleConstants.Foreground,colorLabel);
+    }
+  }
+);
+}
