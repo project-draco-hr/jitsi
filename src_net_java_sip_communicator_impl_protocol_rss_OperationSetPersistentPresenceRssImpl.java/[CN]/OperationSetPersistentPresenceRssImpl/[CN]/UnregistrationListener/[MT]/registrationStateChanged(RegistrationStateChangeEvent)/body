@@ -1,17 +1,14 @@
 {
-  if (!evt.getNewState().equals(RegistrationState.UNREGISTERED) && !evt.getNewState().equals(RegistrationState.AUTHENTICATION_FAILED) && !evt.getNewState().equals(RegistrationState.CONNECTION_FAILED)) {
-    return;
+  if (evt.getNewState() == RegistrationState.REGISTERED) {
+    if (presenceStatus != RssStatusEnum.ONLINE) {
+      presenceStatus=RssStatusEnum.ONLINE;
+      changePresenceStatusForAllContacts(contactListRoot,presenceStatus);
+    }
   }
-  Iterator groupsIter=getServerStoredContactListRoot().subgroups();
-  while (groupsIter.hasNext()) {
-    ContactGroupRssImpl group=(ContactGroupRssImpl)groupsIter.next();
-    Iterator contactsIter=group.contacts();
-    while (contactsIter.hasNext()) {
-      ContactRssImpl contact=(ContactRssImpl)contactsIter.next();
-      PresenceStatus oldContactStatus=contact.getPresenceStatus();
-      if (!oldContactStatus.isOnline())       continue;
-      contact.setPresenceStatus(RssStatusEnum.ONLINE);
-      fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldContactStatus);
+ else   if (evt.getNewState() == RegistrationState.UNREGISTERED || evt.getNewState() == RegistrationState.AUTHENTICATION_FAILED || evt.getNewState() == RegistrationState.CONNECTION_FAILED) {
+    if (presenceStatus != RssStatusEnum.OFFLINE) {
+      presenceStatus=RssStatusEnum.OFFLINE;
+      changePresenceStatusForAllContacts(contactListRoot,presenceStatus);
     }
   }
 }
