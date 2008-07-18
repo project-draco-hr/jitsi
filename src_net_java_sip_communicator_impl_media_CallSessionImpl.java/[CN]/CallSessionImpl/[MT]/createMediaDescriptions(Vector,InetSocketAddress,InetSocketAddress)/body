@@ -30,16 +30,20 @@
   Vector mediaDescs=new Vector();
   if (supportedAudioEncodings.length > 0) {
     MediaDescription am=mediaServCallback.getSdpFactory().createMediaDescription("audio",publicAudioAddress.getPort(),1,"RTP/AVP",supportedAudioEncodings);
+    byte onHold=this.onHold;
     if (!mediaServCallback.getDeviceConfiguration().isAudioCaptureSupported()) {
-      am.setAttribute("recvonly",null);
+      onHold|=ON_HOLD_REMOTELY;
     }
+    setAttributeOnHold(am,onHold);
     mediaDescs.add(am);
   }
   if (supportedVideoEncodings.length > 0) {
     MediaDescription vm=mediaServCallback.getSdpFactory().createMediaDescription("video",publicVideoAddress.getPort(),1,"RTP/AVP",supportedVideoEncodings);
+    byte onHold=this.onHold;
     if (!mediaServCallback.getDeviceConfiguration().isVideoCaptureSupported()) {
-      vm.setAttribute("recvonly",null);
+      onHold|=ON_HOLD_REMOTELY;
     }
+    setAttributeOnHold(vm,onHold);
     mediaDescs.add(vm);
   }
   return mediaDescs;

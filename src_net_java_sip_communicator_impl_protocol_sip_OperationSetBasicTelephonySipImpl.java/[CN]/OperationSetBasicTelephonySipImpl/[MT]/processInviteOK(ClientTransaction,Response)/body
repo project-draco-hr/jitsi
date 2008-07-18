@@ -22,10 +22,6 @@
       return;
     }
   }
-  if (callParticipant.getState() == CallParticipantState.CONNECTED) {
-    logger.debug("Ignoring invite OK since call participant is " + "already connected.");
-    return;
-  }
   Request ack=null;
   ContentTypeHeader contentTypeHeader=null;
   try {
@@ -67,7 +63,10 @@ catch (  SipException ex) {
         return;
       }
     }
-    callSession.processSdpAnswer(callParticipant,callParticipant.getSdpDescription());
+    CallParticipantState callParticipantState=callParticipant.getState();
+    if ((callParticipantState != CallParticipantState.CONNECTED) && !CallParticipantState.isOnHold(callParticipantState)) {
+      callSession.processSdpAnswer(callParticipant,callParticipant.getSdpDescription());
+    }
     callParticipant.setCallInfoURL(callSession.getCallInfoURL());
   }
  catch (  ParseException exc) {
@@ -78,5 +77,5 @@ catch (  MediaException exc) {
     logger.error("We failed to process the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")"+ ". Error was: "+ exc.getMessage(),exc);
     callParticipant.setState(CallParticipantState.FAILED,"We failed to process the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")"+ ". Error was: "+ exc.getMessage());
   }
-  callParticipant.setState(CallParticipantState.CONNECTED);
+  if (!CallParticipantState.isOnHold(callParticipant.getState()))   callParticipant.setState(CallParticipantState.CONNECTED);
 }

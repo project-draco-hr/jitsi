@@ -17,12 +17,13 @@ catch (    TransactionUnavailableException ex) {
   }
   if (request.getMethod().equals(Request.INVITE)) {
     logger.debug("received INVITE");
-    if (serverTransaction.getDialog().getState() == null) {
-      if (logger.isDebugEnabled())       logger.debug("request is an INVITE. Dialog state=" + serverTransaction.getDialog().getState());
+    DialogState dialogState=serverTransaction.getDialog().getState();
+    if ((dialogState == null) || dialogState.equals(DialogState.CONFIRMED)) {
+      if (logger.isDebugEnabled())       logger.debug("request is an INVITE. Dialog state=" + dialogState);
       processInvite(jainSipProvider,serverTransaction,request);
     }
  else {
-      logger.error("reINVITE-s are not currently supported.");
+      logger.error("reINVITEs while the dialog is not confirmed are not currently supported.");
     }
   }
  else   if (request.getMethod().equals(Request.ACK)) {

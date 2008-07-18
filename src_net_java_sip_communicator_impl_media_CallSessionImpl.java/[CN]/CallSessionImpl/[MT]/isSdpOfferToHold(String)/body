@@ -1,0 +1,36 @@
+{
+  SessionDescription description=null;
+  try {
+    description=mediaServCallback.getSdpFactory().createSessionDescription(sdpOffer);
+  }
+ catch (  SdpParseException ex) {
+    throwMediaException("Failed to parse SDP offer.",MediaException.INTERNAL_ERROR,ex);
+  }
+  Vector mediaDescriptions=null;
+  try {
+    mediaDescriptions=description.getMediaDescriptions(true);
+  }
+ catch (  SdpException ex) {
+    throwMediaException("Failed to get media descriptions from SDP offer.",MediaException.INTERNAL_ERROR,ex);
+  }
+  boolean isOfferToHold=true;
+  for (Iterator mediaDescriptionIter=mediaDescriptions.iterator(); mediaDescriptionIter.hasNext() && isOfferToHold; ) {
+    MediaDescription mediaDescription=(MediaDescription)mediaDescriptionIter.next();
+    Vector attributes=mediaDescription.getAttributes(false);
+    isOfferToHold=false;
+    if (attributes != null) {
+      for (Iterator attributeIter=attributes.iterator(); attributeIter.hasNext() && !isOfferToHold; ) {
+        try {
+          String attribute=((Attribute)attributeIter.next()).getName();
+          if ("sendonly".equalsIgnoreCase(attribute) || "inactive".equalsIgnoreCase(attribute)) {
+            isOfferToHold=true;
+          }
+        }
+ catch (        SdpParseException ex) {
+          throwMediaException("Failed to get SDP media description attribute name",MediaException.INTERNAL_ERROR,ex);
+        }
+      }
+    }
+  }
+  return isOfferToHold;
+}

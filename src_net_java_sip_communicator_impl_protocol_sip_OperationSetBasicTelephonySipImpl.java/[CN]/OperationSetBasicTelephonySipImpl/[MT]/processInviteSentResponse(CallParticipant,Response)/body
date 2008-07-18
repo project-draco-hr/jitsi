@@ -1,0 +1,25 @@
+{
+  CallSession callSession=((CallSipImpl)participant.getCall()).getMediaCallSession();
+  CallParticipantSipImpl sipParticipant=(CallParticipantSipImpl)participant;
+  boolean on=false;
+  try {
+    on=callSession.isSdpOfferToHold(sipParticipant.getSdpDescription());
+  }
+ catch (  MediaException ex) {
+    throwOperationFailedException("Failed to create SDP answer to put-on/off-hold request.",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  callSession.putOnHold(on,false);
+  CallParticipantState state=sipParticipant.getState();
+  if (CallParticipantState.ON_HOLD_LOCALLY.equals(state)) {
+    if (on)     sipParticipant.setState(CallParticipantState.ON_HOLD_MUTUALLY);
+  }
+ else   if (CallParticipantState.ON_HOLD_MUTUALLY.equals(state)) {
+    if (!on)     sipParticipant.setState(CallParticipantState.ON_HOLD_LOCALLY);
+  }
+ else   if (CallParticipantState.ON_HOLD_REMOTELY.equals(state)) {
+    if (!on)     sipParticipant.setState(CallParticipantState.CONNECTED);
+  }
+ else   if (on) {
+    sipParticipant.setState(CallParticipantState.ON_HOLD_REMOTELY);
+  }
+}

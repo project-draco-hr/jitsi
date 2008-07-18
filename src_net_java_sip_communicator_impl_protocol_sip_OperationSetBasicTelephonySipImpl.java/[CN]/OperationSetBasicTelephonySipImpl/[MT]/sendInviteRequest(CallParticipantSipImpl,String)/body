@@ -1,0 +1,33 @@
+{
+  Dialog dialog=sipParticipant.getDialog();
+  Request invite=null;
+  try {
+    invite=dialog.createRequest(Request.INVITE);
+  }
+ catch (  SipException ex) {
+    throwOperationFailedException("Failed to create invite request.",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  AuthorizationHeader authorization=protocolProvider.getSipSecurityManager().getCachedAuthorizationHeader(((CallIdHeader)invite.getHeader(CallIdHeader.NAME)).getCallId());
+  if (authorization != null) {
+    invite.setHeader(authorization);
+  }
+  try {
+    invite.setContent(sdpOffer,protocolProvider.getHeaderFactory().createContentTypeHeader("application","sdp"));
+  }
+ catch (  ParseException ex) {
+    throwOperationFailedException("Failed to parse SDP offer for the new invite.",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ClientTransaction clientTransaction=null;
+  try {
+    clientTransaction=sipParticipant.getJainSipProvider().getNewClientTransaction(invite);
+  }
+ catch (  TransactionUnavailableException ex) {
+    throwOperationFailedException("Failed to create a client transaction for the new invite.",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  try {
+    dialog.sendRequest(clientTransaction);
+  }
+ catch (  SipException ex) {
+    throwOperationFailedException("Failed to send the new invite.",OperationFailedException.NETWORK_FAILURE,ex);
+  }
+}

@@ -1,8 +1,14 @@
 {
-  logger.trace("Creating call participant.");
   Dialog dialog=serverTransaction.getDialog();
-  CallParticipantSipImpl callParticipant=createCallParticipantFor(serverTransaction,sourceProvider);
-  logger.trace("call participant created = " + callParticipant);
+  CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(dialog);
+  int statusCode;
+  if (callParticipant == null) {
+    statusCode=Response.RINGING;
+    logger.trace("Creating call participant.");
+    callParticipant=createCallParticipantFor(serverTransaction,sourceProvider);
+    logger.trace("call participant created = " + callParticipant);
+  }
+ else   statusCode=Response.OK;
   ContentLengthHeader cl=invite.getContentLength();
   if (cl != null && cl.getContentLength() > 0) {
     callParticipant.setSdpDescription(new String(invite.getRawContent()));
@@ -40,14 +46,25 @@
       }
     }
   }
-  logger.debug("Invite seems ok, we'll say RINGING.");
-  Response ringing=null;
+  String statusCodeString=(statusCode == Response.RINGING) ? "RINGING" : "OK";
+  logger.debug("Invite seems ok, we'll say " + statusCodeString + ".");
+  Response response=null;
   try {
-    ringing=protocolProvider.getMessageFactory().createResponse(Response.RINGING,invite);
-    protocolProvider.attachToTag(ringing,dialog);
-    ringing.setHeader(protocolProvider.getSipCommUserAgentHeader());
-    ((ToHeader)ringing.getHeader(ToHeader.NAME)).getAddress().setDisplayName(protocolProvider.getOurDisplayName());
-    ringing.addHeader(protocolProvider.getContactHeader());
+    response=protocolProvider.getMessageFactory().createResponse(statusCode,invite);
+    protocolProvider.attachToTag(response,dialog);
+    response.setHeader(protocolProvider.getSipCommUserAgentHeader());
+    ((ToHeader)response.getHeader(ToHeader.NAME)).getAddress().setDisplayName(protocolProvider.getOurDisplayName());
+    response.addHeader(protocolProvider.getContactHeader());
+    if (statusCode != Response.RINGING) {
+      try {
+        processInviteSendingResponse(callParticipant,response);
+      }
+ catch (      OperationFailedException ex) {
+        logger.error("Error while trying to send a request",ex);
+        callParticipant.setState(CallParticipantState.FAILED,"Internal Error: " + ex.getMessage());
+        return;
+      }
+    }
   }
  catch (  ParseException ex) {
     logger.error("Error while trying to send a request",ex);
@@ -55,13 +72,21 @@
     return;
   }
   try {
-    logger.trace("will send ringing response: ");
-    serverTransaction.sendResponse(ringing);
-    logger.debug("sent a ringing response: " + ringing);
+    logger.trace("will send " + statusCodeString + " response: ");
+    serverTransaction.sendResponse(response);
+    logger.debug("sent a " + statusCodeString + " response: "+ response);
   }
  catch (  Exception ex) {
     logger.error("Error while trying to send a request",ex);
     callParticipant.setState(CallParticipantState.FAILED,"Internal Error: " + ex.getMessage());
     return;
+  }
+  if (statusCode != Response.RINGING) {
+    try {
+      processInviteSentResponse(callParticipant,response);
+    }
+ catch (    OperationFailedException ex) {
+      logger.error("Error after sending a request",ex);
+    }
   }
 }

@@ -1,0 +1,13 @@
+{
+  CallSession callSession=((CallSipImpl)participant.getCall()).getMediaCallSession();
+  CallParticipantSipImpl sipParticipant=(CallParticipantSipImpl)participant;
+  String sdpOffer=sipParticipant.getSdpDescription();
+  String sdpAnswer=null;
+  try {
+    sdpAnswer=callSession.createSdpDescriptionForHold(sdpOffer,callSession.isSdpOfferToHold(sdpOffer));
+  }
+ catch (  MediaException ex) {
+    throwOperationFailedException("Failed to create SDP answer to put-on/off-hold request.",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  response.setContent(sdpAnswer,protocolProvider.getHeaderFactory().createContentTypeHeader("application","sdp"));
+}

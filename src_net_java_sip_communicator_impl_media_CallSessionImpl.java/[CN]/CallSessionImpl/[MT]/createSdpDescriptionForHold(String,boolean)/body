@@ -1,0 +1,35 @@
+{
+  SessionDescription participantDescription=null;
+  System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!+" + participantSdpDescription);
+  try {
+    participantDescription=mediaServCallback.getSdpFactory().createSessionDescription(participantSdpDescription);
+  }
+ catch (  SdpParseException ex) {
+    throwMediaException("Failed to parse the SDP description of the participant.",MediaException.INTERNAL_ERROR,ex);
+  }
+  SessionDescription sdpOffer=createSessionDescription(participantDescription,null);
+  Vector mediaDescriptions=null;
+  try {
+    mediaDescriptions=sdpOffer.getMediaDescriptions(true);
+  }
+ catch (  SdpException ex) {
+    throwMediaException("Failed to get media descriptions from SDP offer.",MediaException.INTERNAL_ERROR,ex);
+  }
+  for (Iterator mediaDescriptionIter=mediaDescriptions.iterator(); mediaDescriptionIter.hasNext(); ) {
+    MediaDescription mediaDescription=(MediaDescription)mediaDescriptionIter.next();
+    Vector attributes=mediaDescription.getAttributes(false);
+    try {
+      modifyMediaDescriptionForHold(on,mediaDescription,attributes);
+    }
+ catch (    SdpException ex) {
+      throwMediaException("Failed to modify media description for hold.",MediaException.INTERNAL_ERROR,ex);
+    }
+  }
+  try {
+    sdpOffer.setMediaDescriptions(mediaDescriptions);
+  }
+ catch (  SdpException ex) {
+    throwMediaException("Failed to set media descriptions to SDP offer.",MediaException.INTERNAL_ERROR,ex);
+  }
+  return sdpOffer.toString();
+}

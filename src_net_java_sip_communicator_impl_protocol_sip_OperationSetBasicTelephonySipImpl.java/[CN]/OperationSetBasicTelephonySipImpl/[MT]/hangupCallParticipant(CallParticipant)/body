@@ -4,25 +4,25 @@
     return;
   }
   CallParticipantSipImpl callParticipant=(CallParticipantSipImpl)participant;
-  Dialog dialog=callParticipant.getDialog();
-  if (callParticipant.getState().equals(CallParticipantState.CONNECTED)) {
+  CallParticipantState participantState=callParticipant.getState();
+  if (participantState.equals(CallParticipantState.CONNECTED) || CallParticipantState.isOnHold(participantState)) {
     sayBye(callParticipant);
     callParticipant.setState(CallParticipantState.DISCONNECTED);
   }
- else   if (callParticipant.getState().equals(CallParticipantState.CONNECTING) || callParticipant.getState().equals(CallParticipantState.ALERTING_REMOTE_SIDE)) {
+ else   if (participantState.equals(CallParticipantState.CONNECTING) || participantState.equals(CallParticipantState.ALERTING_REMOTE_SIDE)) {
     if (callParticipant.getFirstTransaction() != null) {
       sayCancel(callParticipant);
     }
     callParticipant.setState(CallParticipantState.DISCONNECTED);
   }
- else   if (callParticipant.getState().equals(CallParticipantState.INCOMING_CALL)) {
+ else   if (participantState.equals(CallParticipantState.INCOMING_CALL)) {
     callParticipant.setState(CallParticipantState.DISCONNECTED);
     sayBusyHere(callParticipant);
   }
- else   if (callParticipant.getState().equals(CallParticipantState.BUSY)) {
+ else   if (participantState.equals(CallParticipantState.BUSY)) {
     callParticipant.setState(CallParticipantState.DISCONNECTED);
   }
- else   if (callParticipant.getState().equals(CallParticipantState.FAILED)) {
+ else   if (participantState.equals(CallParticipantState.FAILED)) {
     callParticipant.setState(CallParticipantState.DISCONNECTED);
   }
  else {

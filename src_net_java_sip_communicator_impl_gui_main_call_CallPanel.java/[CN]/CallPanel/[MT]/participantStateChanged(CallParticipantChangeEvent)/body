@@ -3,30 +3,33 @@
   if (sourceParticipant.getCall() != call)   return;
   CallParticipantPanel participantPanel=getParticipantPanel(sourceParticipant);
   participantPanel.setState(sourceParticipant.getState().getStateString());
-  if (evt.getNewValue() == CallParticipantState.ALERTING_REMOTE_SIDE) {
+  Object newState=evt.getNewValue();
+  if (newState == CallParticipantState.ALERTING_REMOTE_SIDE) {
     NotificationManager.fireNotification(NotificationManager.OUTGOING_CALL);
   }
- else   if (evt.getNewValue() == CallParticipantState.BUSY) {
+ else   if (newState == CallParticipantState.BUSY) {
     NotificationManager.stopSound(NotificationManager.OUTGOING_CALL);
     NotificationManager.fireNotification(NotificationManager.BUSY_CALL);
   }
- else   if (evt.getNewValue() == CallParticipantState.CONNECTED) {
-    NotificationManager.stopSound(NotificationManager.OUTGOING_CALL);
-    NotificationManager.stopSound(NotificationManager.INCOMING_CALL);
-    participantPanel.startCallTimer();
+ else   if (newState == CallParticipantState.CONNECTED) {
+    if (!CallParticipantState.isOnHold((CallParticipantState)evt.getOldValue())) {
+      NotificationManager.stopSound(NotificationManager.OUTGOING_CALL);
+      NotificationManager.stopSound(NotificationManager.INCOMING_CALL);
+      participantPanel.startCallTimer();
+    }
   }
- else   if (evt.getNewValue() == CallParticipantState.CONNECTING) {
+ else   if (newState == CallParticipantState.CONNECTING) {
   }
- else   if (evt.getNewValue() == CallParticipantState.DISCONNECTED) {
+ else   if (newState == CallParticipantState.DISCONNECTED) {
   }
- else   if (evt.getNewValue() == CallParticipantState.FAILED) {
+ else   if (newState == CallParticipantState.FAILED) {
   }
- else   if (evt.getNewValue() == CallParticipantState.INCOMING_CALL) {
+ else   if (newState == CallParticipantState.INCOMING_CALL) {
   }
- else   if (evt.getNewValue() == CallParticipantState.INITIATING_CALL) {
+ else   if (newState == CallParticipantState.INITIATING_CALL) {
   }
- else   if (evt.getNewValue() == CallParticipantState.ON_HOLD) {
+ else   if (CallParticipantState.isOnHold((CallParticipantState)newState)) {
   }
- else   if (evt.getNewValue() == CallParticipantState.UNKNOWN) {
+ else   if (newState == CallParticipantState.UNKNOWN) {
   }
 }
