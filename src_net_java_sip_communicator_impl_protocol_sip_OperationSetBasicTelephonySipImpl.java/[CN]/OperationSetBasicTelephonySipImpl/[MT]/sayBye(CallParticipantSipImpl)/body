@@ -3,6 +3,17 @@
   Request bye=null;
   try {
     bye=callParticipant.getDialog().createRequest(Request.BYE);
+    InetAddress destinationInetAddress=null;
+    String host=((SipURI)bye.getRequestURI()).getHost();
+    try {
+      destinationInetAddress=InetAddress.getByName(host);
+    }
+ catch (    UnknownHostException ex) {
+      throw new IllegalArgumentException(host + " is not a valid internet address " + ex.getMessage());
+    }
+    ArrayList viaHeaders=protocolProvider.getLocalViaHeaders(destinationInetAddress,protocolProvider.getRegistrarConnection().getRegistrarListeningPoint());
+    bye.setHeader((ViaHeader)viaHeaders.get(0));
+    bye.addHeader(protocolProvider.getSipCommUserAgentHeader());
   }
  catch (  SipException ex) {
     logger.error("Failed to create bye request!",ex);

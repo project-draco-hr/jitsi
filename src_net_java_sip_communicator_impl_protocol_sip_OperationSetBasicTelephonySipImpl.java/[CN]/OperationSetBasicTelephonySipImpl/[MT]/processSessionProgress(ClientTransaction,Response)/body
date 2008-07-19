@@ -1,0 +1,36 @@
+{
+  Dialog dialog=clientTransaction.getDialog();
+  CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(dialog);
+  if (callParticipant.getState() == CallParticipantState.CONNECTING_WITH_EARLY_MEDIA) {
+    logger.warn("Ignoring invite 183 since call participant is " + "already exchanging early media.");
+    return;
+  }
+  if (sessionProgress.getContentLength().getContentLength() == 0) {
+    logger.warn("Ignoring a 183 with no content");
+    return;
+  }
+  ContentTypeHeader contentTypeHeader=(ContentTypeHeader)sessionProgress.getHeader(ContentTypeHeader.NAME);
+  if (!contentTypeHeader.getContentType().equalsIgnoreCase("application") || !contentTypeHeader.getContentSubType().equalsIgnoreCase("sdp")) {
+    logger.warn("Ignoring invite 183 since call participant is " + "already exchanging early media.");
+    return;
+  }
+  callParticipant.setSdpDescription(new String(sessionProgress.getRawContent()));
+  CallSession callSession=((CallSipImpl)callParticipant.getCall()).getMediaCallSession();
+  if (callSession == null) {
+    logger.warn("Could not find call session.");
+    return;
+  }
+  try {
+    callSession.processSdpAnswer(callParticipant,new String(sessionProgress.getRawContent()));
+  }
+ catch (  ParseException exc) {
+    logger.error("There was an error parsing the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")",exc);
+    callParticipant.setState(CallParticipantState.FAILED,"There was an error parsing the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")");
+  }
+catch (  MediaException exc) {
+    logger.error("We failed to process the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")"+ ". Error was: "+ exc.getMessage(),exc);
+    callParticipant.setState(CallParticipantState.FAILED,"We failed to process the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")"+ ". Error was: "+ exc.getMessage());
+  }
+  callParticipant.setCallInfoURL(callSession.getCallInfoURL());
+  callParticipant.setState(CallParticipantState.CONNECTING_WITH_EARLY_MEDIA);
+}
