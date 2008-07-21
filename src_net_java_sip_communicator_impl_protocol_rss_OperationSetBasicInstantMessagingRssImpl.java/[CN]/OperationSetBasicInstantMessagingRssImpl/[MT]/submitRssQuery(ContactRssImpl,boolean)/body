@@ -8,8 +8,17 @@
   RssFeedReader rssFeed=rssContact.getRssFeedReader();
   try {
     rssFeed.retrieveFlow();
+    if (rssContact.getPresenceStatus() == RssStatusEnum.OFFLINE) {
+      getParentProvider().getOperationSetPresence().changePresenceStatusForContact(rssContact,RssStatusEnum.ONLINE);
+    }
   }
- catch (  OperationFailedException ex) {
+ catch (  FileNotFoundException ex) {
+    handleFileNotFoundException(rssContact,ex);
+    logger.warn("RSS flow no longer exists. Error was: " + ex.getMessage());
+    logger.debug(ex);
+    return;
+  }
+catch (  OperationFailedException ex) {
     logger.error("Failed to retrieve RSS flow. Error was: " + ex.getMessage(),ex);
     return;
   }
