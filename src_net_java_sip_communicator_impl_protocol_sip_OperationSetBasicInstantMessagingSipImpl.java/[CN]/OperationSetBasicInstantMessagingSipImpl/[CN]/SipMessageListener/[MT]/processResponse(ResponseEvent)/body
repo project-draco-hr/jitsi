@@ -23,7 +23,7 @@ synchronized (messageProcessors) {
   }
   Contact to=opSetPersPresence.resolveContactID(toHeader.getAddress().getURI().toString());
   if (to == null) {
-    logger.error("Error received a response from an unknown contact : " + toHeader.getAddress().getURI().toString() + " : "+ responseEvent.getResponse().getReasonPhrase());
+    logger.error("Error received a response from an unknown contact : " + toHeader.getAddress().getURI().toString() + " : "+ responseEvent.getResponse().getStatusCode()+ " "+ responseEvent.getResponse().getReasonPhrase());
     MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(createMessage(content),to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
     fireMessageEvent(evt);
     return;
@@ -37,13 +37,13 @@ synchronized (messageProcessors) {
     return;
   }
   if (status >= 400 && status != 401 && status != 407) {
-    logger.info("Error received from the network : " + responseEvent.getResponse().getReasonPhrase());
-    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date(),responseEvent.getResponse().getReasonPhrase());
+    logger.info(responseEvent.getResponse().getStatusCode() + " " + responseEvent.getResponse().getReasonPhrase());
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date(),responseEvent.getResponse().getStatusCode() + " " + responseEvent.getResponse().getReasonPhrase());
     fireMessageEvent(evt);
     sentMsg.remove(key);
   }
  else   if (status == 401 || status == 407) {
-    logger.debug("proxy asks authentication : " + responseEvent.getResponse().getReasonPhrase());
+    logger.debug("proxy asks authentication : " + responseEvent.getResponse().getStatusCode() + " "+ responseEvent.getResponse().getReasonPhrase());
     ClientTransaction clientTransaction=responseEvent.getClientTransaction();
     SipProvider sourceProvider=(SipProvider)responseEvent.getSource();
     try {
@@ -57,7 +57,7 @@ synchronized (messageProcessors) {
     }
   }
  else   if (status >= 200) {
-    logger.debug("Ack received from the network : " + responseEvent.getResponse().getReasonPhrase());
+    logger.debug("Ack received from the network : " + responseEvent.getResponse().getStatusCode() + " "+ responseEvent.getResponse().getReasonPhrase());
     MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(newMessage,to,new Date());
     fireMessageEvent(msgDeliveredEvt);
     sentMsg.remove(key);
