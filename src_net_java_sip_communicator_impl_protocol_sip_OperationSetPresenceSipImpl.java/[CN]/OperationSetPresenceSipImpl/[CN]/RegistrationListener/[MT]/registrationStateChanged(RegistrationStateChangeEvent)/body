@@ -1,8 +1,6 @@
 {
   if (evt.getNewState() == RegistrationState.UNREGISTERING) {
-    if (timer != null) {
-      timer.cancel();
-    }
+    cancelTimer();
     try {
       publishPresenceStatus(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE),"");
     }
@@ -27,7 +25,7 @@ synchronized (this) {
   }
  else   if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
     logger.debug("enter registered state");
-    if (presenceEnabled == false) {
+    if ((presenceEnabled == false) || (pollingTask != null)) {
       return;
     }
     Iterator groupsIter=getServerStoredContactListRoot().subgroups();
@@ -43,9 +41,8 @@ synchronized (this) {
         forcePollContact(contact);
       }
     }
-    timer=new Timer(true);
     pollingTask=new PollOfflineContactsTask();
-    timer.schedule(pollingTask,pollingTaskPeriod,pollingTaskPeriod);
+    getTimer().schedule(pollingTask,pollingTaskPeriod,pollingTaskPeriod);
   }
  else   if (evt.getNewState() == RegistrationState.CONNECTION_FAILED) {
     Iterator groupsIter=getServerStoredContactListRoot().subgroups();
@@ -62,9 +59,7 @@ synchronized (this) {
         fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldContactStatus);
       }
     }
-    if (timer != null) {
-      timer.cancel();
-    }
+    cancelTimer();
     waitedCallIds.clear();
   }
 }

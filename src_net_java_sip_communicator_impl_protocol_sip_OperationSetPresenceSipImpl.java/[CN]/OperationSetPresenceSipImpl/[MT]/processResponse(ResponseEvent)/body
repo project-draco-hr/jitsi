@@ -42,13 +42,9 @@ synchronized (this.waitedCallIds) {
         }
         RefreshSubscriptionTask refresh=new RefreshSubscriptionTask(contact);
         contact.setResfreshTask(refresh);
-        try {
-          this.timer.schedule(refresh,(expHeader.getExpires() - REFRESH_MARGIN) * 1000);
-        }
- catch (        IllegalArgumentException e) {
-          logger.debug("the expires value seems to be less than a " + "minute, let's assume it");
-          this.timer.schedule(refresh,expHeader.getExpires() * 1000);
-        }
+        int refreshDelay=expHeader.getExpires();
+        if (refreshDelay >= REFRESH_MARGIN)         refreshDelay-=REFRESH_MARGIN;
+        getTimer().schedule(refresh,refreshDelay * 1000);
         contact.setClientDialog(clientTransaction.getDialog());
         try {
           if (!contact.isResolved()) {
@@ -203,13 +199,9 @@ synchronized (this.waitedCallIds) {
         this.republishTask.cancel();
       }
       this.republishTask=new RePublishTask();
-      try {
-        this.timer.schedule(this.republishTask,(expires.getExpires() - REFRESH_MARGIN) * 1000);
-      }
- catch (      IllegalArgumentException e) {
-        logger.error("the expires value seems to be less than a " + "minute, let's assume it",e);
-        this.timer.schedule(this.republishTask,expires.getExpires() * 1000);
-      }
+      int republishDelay=expires.getExpires();
+      if (republishDelay >= REFRESH_MARGIN)       republishDelay-=REFRESH_MARGIN;
+      getTimer().schedule(this.republishTask,republishDelay * 1000);
     }
  else     if (response.getStatusCode() == Response.UNAUTHORIZED || response.getStatusCode() == Response.PROXY_AUTHENTICATION_REQUIRED) {
       try {
@@ -286,6 +278,7 @@ synchronized (this.waitedCallIds) {
       this.useDistantPA=false;
       if (this.republishTask != null) {
         this.republishTask.cancel();
+        this.republishTask=null;
       }
     }
   }
