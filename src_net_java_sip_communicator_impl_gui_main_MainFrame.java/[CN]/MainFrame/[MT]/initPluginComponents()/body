@@ -1,4 +1,10 @@
 {
+  pluginPanelEast.setLayout(new BoxLayout(pluginPanelEast,BoxLayout.Y_AXIS));
+  pluginPanelSouth.setLayout(new BoxLayout(pluginPanelSouth,BoxLayout.Y_AXIS));
+  pluginPanelWest.setLayout(new BoxLayout(pluginPanelWest,BoxLayout.Y_AXIS));
+  this.getContentPane().add(pluginPanelEast,BorderLayout.EAST);
+  this.getContentPane().add(pluginPanelEast,BorderLayout.SOUTH);
+  this.getContentPane().add(pluginPanelEast,BorderLayout.WEST);
   ServiceReference[] serRefs=null;
   String osgiFilter="(" + Container.CONTAINER_ID + "="+ Container.CONTAINER_CONTACT_LIST.getID()+ ")";
   try {
@@ -10,10 +16,13 @@
   if (serRefs != null) {
     for (int i=0; i < serRefs.length; i++) {
       PluginComponent c=(PluginComponent)GuiActivator.bundleContext.getService(serRefs[i]);
-      Object constraints=null;
-      if (c.getConstraints() != null)       constraints=UIServiceImpl.getBorderLayoutConstraintsFromContainer(c.getConstraints());
- else       constraints=BorderLayout.SOUTH;
-      this.getContentPane().add((Component)c.getComponent(),constraints);
+      if (c.isNativeComponent())       nativePluginsTable.put(c,new JPanel());
+ else {
+        Object constraints=null;
+        if (c.getConstraints() != null)         constraints=UIServiceImpl.getBorderLayoutConstraintsFromContainer(c.getConstraints());
+ else         constraints=BorderLayout.SOUTH;
+        this.addPluginComponent((Component)c.getComponent(),constraints);
+      }
     }
   }
   GuiActivator.getUIService().addPluginComponentListener(this);

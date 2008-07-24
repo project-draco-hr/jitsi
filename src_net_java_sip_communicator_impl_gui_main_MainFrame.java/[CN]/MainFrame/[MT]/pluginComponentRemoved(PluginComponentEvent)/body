@@ -1,7 +1,23 @@
 {
-  PluginComponent c=event.getPluginComponent();
-  Container containerID=c.getContainer();
+  final PluginComponent pluginComponent=event.getPluginComponent();
+  Container containerID=pluginComponent.getContainer();
   if (containerID.equals(Container.CONTAINER_CONTACT_LIST)) {
-    this.getContentPane().remove((Component)c.getComponent());
+    if (pluginComponent.isNativeComponent()) {
+      if (nativePluginsTable.containsKey(pluginComponent)) {
+        final Component c=(Component)nativePluginsTable.get(pluginComponent);
+        SwingUtilities.invokeLater(new Runnable(){
+          public void run(){
+            removePluginComponent(c,pluginComponent.getConstraints());
+            getContentPane().repaint();
+            pack();
+          }
+        }
+);
+      }
+    }
+ else {
+      this.removePluginComponent((Component)pluginComponent.getComponent(),pluginComponent.getConstraints());
+    }
+    nativePluginsTable.remove(pluginComponent);
   }
 }
