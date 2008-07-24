@@ -3,25 +3,42 @@
   int y=this.getY();
   int width=this.getWidth();
   int height=this.getHeight();
-  if (x < 0 || y < 0) {
-    this.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - this.getWidth() / 2,50);
-    x=this.getX();
-    y=this.getY();
-  }
   Rectangle virtualBounds=ScreenInformation.getScreenBounds();
-  if (!(virtualBounds.contains(x,y) && virtualBounds.contains(x + width,y + height))) {
-    if (x + width > virtualBounds.width) {
-      x=virtualBounds.width - width;
-      if (x < 20) {
-        x=20;
-        width=virtualBounds.width - 40;
+  final int borderDistance=10;
+  if (!(virtualBounds.contains(x,y))) {
+    if (x < virtualBounds.x) {
+      x=virtualBounds.x + borderDistance;
+    }
+ else     if (x > virtualBounds.x) {
+      x=virtualBounds.x + virtualBounds.width - width - borderDistance;
+      if (x < virtualBounds.x + borderDistance) {
+        x=virtualBounds.x + borderDistance;
       }
     }
-    if (y + height > virtualBounds.height) {
-      y=virtualBounds.height - height;
-      if (y < 20) {
-        y=20;
-        height=virtualBounds.height - 40;
+    if (y < virtualBounds.y) {
+      y=virtualBounds.y + borderDistance;
+    }
+ else     if (y > virtualBounds.y) {
+      y=virtualBounds.y + virtualBounds.height - height - borderDistance;
+      if (y < virtualBounds.y + borderDistance) {
+        y=virtualBounds.y + borderDistance;
+      }
+    }
+    this.setLocation(x,y);
+  }
+  if (!(virtualBounds.contains(x + width,y + height))) {
+    if (x + width > virtualBounds.x + virtualBounds.width) {
+      x=virtualBounds.x + virtualBounds.width - width - borderDistance;
+      if (x < virtualBounds.x + borderDistance) {
+        x=virtualBounds.x + borderDistance;
+        width=virtualBounds.width - 2 * borderDistance;
+      }
+    }
+    if (y + height > virtualBounds.y + virtualBounds.height) {
+      y=virtualBounds.y + virtualBounds.height - height - borderDistance;
+      if (y < virtualBounds.y + borderDistance) {
+        y=virtualBounds.y + borderDistance;
+        height=virtualBounds.height - 2 * borderDistance;
       }
     }
     this.setPreferredSize(new Dimension(width,height));
