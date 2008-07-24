@@ -2,12 +2,15 @@
   final PluginComponent pluginComponent=event.getPluginComponent();
   Container containerID=pluginComponent.getContainer();
   if (containerID.equals(Container.CONTAINER_CONTACT_LIST)) {
+    Object constraints=UIServiceImpl.getBorderLayoutConstraintsFromContainer(pluginComponent.getConstraints());
+    if (constraints == null)     constraints=BorderLayout.SOUTH;
     if (pluginComponent.isNativeComponent()) {
       if (nativePluginsTable.containsKey(pluginComponent)) {
         final Component c=(Component)nativePluginsTable.get(pluginComponent);
+        final Object finalConstraints=constraints;
         SwingUtilities.invokeLater(new Runnable(){
           public void run(){
-            removePluginComponent(c,pluginComponent.getConstraints());
+            removePluginComponent(c,finalConstraints);
             getContentPane().repaint();
             pack();
           }
@@ -16,7 +19,7 @@
       }
     }
  else {
-      this.removePluginComponent((Component)pluginComponent.getComponent(),pluginComponent.getConstraints());
+      this.removePluginComponent((Component)pluginComponent.getComponent(),constraints);
     }
     nativePluginsTable.remove(pluginComponent);
   }
