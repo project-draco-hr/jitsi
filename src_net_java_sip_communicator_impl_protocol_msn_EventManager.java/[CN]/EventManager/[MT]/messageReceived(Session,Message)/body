@@ -4,22 +4,6 @@
   if (incoming instanceof IncomingACK) {
     fireMessageDelivered(((IncomingACK)incoming).getTransactionId());
   }
- else   if (incoming instanceof IncomingADC) {
-    IncomingADC incomingADC=(IncomingADC)incoming;
-    if (incomingADC.getId() != null && incomingADC.getList().equals(MsnList.FL)) {
-      MsnContact contact=msnMessenger.getContactList().getContactById(incomingADC.getId());
-      if (incomingADC.getGroupId() != null) {
-        MsnGroup group=msnMessenger.getContactList().getGroup(incomingADC.getGroupId());
-        fireContactAddedInGroup(contact,group);
-      }
- else       fireContactAdded(contact);
-    }
-  }
- else   if (incoming instanceof IncomingADG) {
-    IncomingADG incomingADG=(IncomingADG)incoming;
-    MsnGroupImpl group=(MsnGroupImpl)msnMessenger.getContactList().getGroup(incomingADG.getGroupId());
-    fireGroupAdded(group);
-  }
  else   if (incoming instanceof IncomingNAK) {
     fireMessageDeliveredFailed(((IncomingNAK)incoming).getTransactionId());
   }
@@ -27,26 +11,6 @@
     IncomingREG incomingREG=(IncomingREG)incoming;
     MsnGroupImpl group=(MsnGroupImpl)msnMessenger.getContactList().getGroup(incomingREG.getGroupId());
     fireGroupRenamed(group);
-  }
- else   if (incoming instanceof IncomingRMG) {
-    IncomingRMG incomingRMG=(IncomingRMG)incoming;
-    fireGroupRemoved(incomingRMG.getGroupId());
-  }
- else   if (incoming instanceof IncomingREM) {
-    IncomingREM incomingREM=(IncomingREM)incoming;
-    if (incomingREM.getList().equals(MsnList.FL)) {
-      if (incomingREM.getGroupId() == null) {
-        MsnContactImpl contact=(MsnContactImpl)msnMessenger.getContactList().getContactById(incomingREM.getId());
-        if (contact != null) {
-          fireContactRemoved(contact);
-        }
-      }
- else {
-        MsnContact contact=msnMessenger.getContactList().getContactById(incomingREM.getId());
-        MsnGroup group=msnMessenger.getContactList().getGroup(incomingREM.getGroupId());
-        fireContactRemovedFromGroup(contact,group);
-      }
-    }
   }
  else   if (incoming instanceof IncomingOUT) {
     IncomingOUT incomingOUT=(IncomingOUT)incoming;

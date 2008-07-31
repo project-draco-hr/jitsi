@@ -6,13 +6,10 @@
     throw new OperationFailedException("Contact " + id + " already exists.",OperationFailedException.SUBSCRIPTION_ALREADY_EXISTS);
   }
   if (parent != null) {
-    contactListModListenerImpl.waitForAddInGroup(id);
-    ModListenerAddContactInGroup modListenerAddContactInGroup=new ModListenerAddContactInGroup(id,parent);
-    contactListModManager.addModificationListener(modListenerAddContactInGroup);
     msnProvider.getMessenger().unblockFriend(Email.parseStr(id));
+    skipAddEvent.add(id);
     msnProvider.getMessenger().addFriend(Email.parseStr(id),id);
-    modListenerAddContactInGroup.waitForEvent(1500);
-    contactListModManager.removeModificationListener(modListenerAddContactInGroup);
+    msnProvider.getMessenger().copyFriend(Email.parseStr(id),parent.getSourceGroup().getGroupId());
   }
  else {
     msnProvider.getMessenger().unblockFriend(Email.parseStr(id));
