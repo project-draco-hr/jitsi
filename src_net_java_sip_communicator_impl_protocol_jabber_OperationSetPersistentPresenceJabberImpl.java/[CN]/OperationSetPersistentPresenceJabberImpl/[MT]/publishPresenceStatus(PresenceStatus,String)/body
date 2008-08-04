@@ -1,6 +1,6 @@
 {
   assertConnected();
-  JabberStatusEnum jabberStatusEnum=jabberProvider.getJabberStatusEnum();
+  JabberStatusEnum jabberStatusEnum=parentProvider.getJabberStatusEnum();
   boolean isValidStatus=false;
   for (Iterator supportedStatusIter=jabberStatusEnum.getSupportedStatusSet(); supportedStatusIter.hasNext(); ) {
     if (supportedStatusIter.next().equals(status)) {
@@ -12,7 +12,7 @@
   Presence presence=null;
   if (status.equals(jabberStatusEnum.getStatus(JabberStatusEnum.OFFLINE))) {
     presence=new Presence(Presence.Type.unavailable);
-    jabberProvider.unregister();
+    parentProvider.unregister();
   }
  else {
     presence=new Presence(Presence.Type.available);
@@ -20,7 +20,7 @@
     presence.setPriority(resourcePriority);
     presence.setStatus(statusMessage);
     presence.addExtension(new Version());
-    jabberProvider.getConnection().sendPacket(presence);
+    parentProvider.getConnection().sendPacket(presence);
   }
   fireProviderPresenceStatusChangeEvent(currentStatus,status);
   if (!getCurrentStatusMessage().equals(statusMessage)) {

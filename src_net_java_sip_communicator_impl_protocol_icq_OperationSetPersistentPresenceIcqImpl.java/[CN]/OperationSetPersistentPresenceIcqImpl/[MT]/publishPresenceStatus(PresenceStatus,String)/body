@@ -2,8 +2,8 @@
   assertConnected();
   if (!(status instanceof IcqStatusEnum || status instanceof AimStatusEnum))   throw new IllegalArgumentException(status + " is not a valid ICQ/AIM status");
   logger.debug("Will set status: " + status);
-  MainBosService bosService=icqProvider.getAimConnection().getBosService();
-  if (!icqProvider.USING_ICQ) {
+  MainBosService bosService=parentProvider.getAimConnection().getBosService();
+  if (!parentProvider.USING_ICQ) {
     if (status.equals(AimStatusEnum.AWAY)) {
       if (getPresenceStatus().equals(AimStatusEnum.INVISIBLE))       bosService.setVisibleStatus(true);
       bosService.getOscarConnection().sendSnac(new SetInfoCmd(new InfoData(null,"I'm away!",null,null)));
@@ -23,8 +23,8 @@
     long icqStatus=presenceStatusToStatusLong((IcqStatusEnum)status);
     logger.debug("Will set status: " + status + " long="+ icqStatus);
     bosService.getOscarConnection().sendSnac(new SetExtraInfoCmd(icqStatus));
-    if (status.equals(IcqStatusEnum.AWAY))     icqProvider.getAimConnection().getInfoService().setAwayMessage(statusMessage);
+    if (status.equals(IcqStatusEnum.AWAY))     parentProvider.getAimConnection().getInfoService().setAwayMessage(statusMessage);
  else     bosService.setStatusMessage(statusMessage);
   }
-  queryContactStatus(icqProvider.getAimConnection().getScreenname().getFormatted());
+  queryContactStatus(parentProvider.getAimConnection().getScreenname().getFormatted());
 }

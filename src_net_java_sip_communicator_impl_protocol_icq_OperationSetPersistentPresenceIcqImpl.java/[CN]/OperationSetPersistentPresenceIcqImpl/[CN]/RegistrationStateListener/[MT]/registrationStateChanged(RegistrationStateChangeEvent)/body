@@ -2,14 +2,14 @@
   logger.debug("The ICQ provider changed state from: " + evt.getOldState() + " to: "+ evt.getNewState());
   if (evt.getNewState() == RegistrationState.REGISTERED) {
     logger.debug("adding a Bos Service Listener");
-    icqProvider.getAimConnection().getBosService().addMainBosServiceListener(joustSimBosListener);
-    ssContactList.init(icqProvider.getAimConnection().getSsiService());
-    icqProvider.getAimConnection().getBuddyService().addBuddyListener(joustSimBuddySerListener);
-    icqProvider.getAimConnection().getBuddyInfoManager().addGlobalBuddyInfoListener(new GlobalBuddyInfoListener());
-    icqProvider.getAimConnection().getExternalServiceManager().getIconServiceArbiter().addIconRequestListener(new IconUpdateListener());
-    icqProvider.getAimConnection().getInfoService().addInfoListener(new AwayMessageListener());
-    if (icqProvider.USING_ICQ) {
-      opSetExtendedAuthorizations=(OperationSetExtendedAuthorizationsIcqImpl)icqProvider.getSupportedOperationSets().get(OperationSetExtendedAuthorizations.class.getName());
+    parentProvider.getAimConnection().getBosService().addMainBosServiceListener(joustSimBosListener);
+    ssContactList.init(parentProvider.getAimConnection().getSsiService());
+    parentProvider.getAimConnection().getBuddyService().addBuddyListener(joustSimBuddySerListener);
+    parentProvider.getAimConnection().getBuddyInfoManager().addGlobalBuddyInfoListener(new GlobalBuddyInfoListener());
+    parentProvider.getAimConnection().getExternalServiceManager().getIconServiceArbiter().addIconRequestListener(new IconUpdateListener());
+    parentProvider.getAimConnection().getInfoService().addInfoListener(new AwayMessageListener());
+    if (parentProvider.USING_ICQ) {
+      opSetExtendedAuthorizations=(OperationSetExtendedAuthorizationsIcqImpl)parentProvider.getSupportedOperationSets().get(OperationSetExtendedAuthorizations.class.getName());
       if (presenceQueryTimer == null)       presenceQueryTimer=new Timer();
  else {
         presenceQueryTimer.cancel();
@@ -31,7 +31,7 @@
         ContactIcqImpl contact=(ContactIcqImpl)contactsIter.next();
         PresenceStatus oldContactStatus=contact.getPresenceStatus();
         if (!oldContactStatus.isOnline())         continue;
-        if (icqProvider.USING_ICQ) {
+        if (parentProvider.USING_ICQ) {
           contact.updatePresenceStatus(IcqStatusEnum.OFFLINE);
           fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldContactStatus,IcqStatusEnum.OFFLINE);
         }
