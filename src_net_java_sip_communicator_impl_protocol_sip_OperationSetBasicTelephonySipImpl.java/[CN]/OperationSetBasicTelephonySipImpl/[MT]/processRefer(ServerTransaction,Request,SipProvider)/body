@@ -1,0 +1,82 @@
+{
+  ReferToHeader referToHeader=(ReferToHeader)referRequest.getHeader(ReferToHeader.NAME);
+  if (referToHeader == null) {
+    logger.error("No Refer-To header in REFER request:\n" + referRequest);
+    return;
+  }
+  Address referToAddress=referToHeader.getAddress();
+  if (referToAddress == null) {
+    logger.error("No address in REFER request Refer-To header:\n" + referRequest);
+    return;
+  }
+  final Dialog dialog=serverTransaction.getDialog();
+  Response ok=null;
+  boolean removeSubscription=false;
+  try {
+    ok=createOKResponse(referRequest,dialog);
+  }
+ catch (  ParseException ex) {
+    logger.error("Failed to create OK response to REFER request:\n" + referRequest,ex);
+  }
+  if (ok != null) {
+    Throwable failure=null;
+    try {
+      serverTransaction.sendResponse(ok);
+    }
+ catch (    InvalidArgumentException ex) {
+      failure=ex;
+    }
+catch (    SipException ex) {
+      failure=ex;
+    }
+    if (failure != null) {
+      ok=null;
+      logger.error("Failed to send OK response to REFER request:\n" + referRequest,failure);
+    }
+ else {
+      try {
+        removeSubscription=DialogUtils.addSubscription(dialog,referRequest);
+      }
+ catch (      SipException ex) {
+        logger.error("Failed to make the REFER request keep the dialog alive after BYE:\n" + referRequest,ex);
+      }
+      try {
+        sendReferNotifyRequest(dialog,SubscriptionStateHeader.ACTIVE,null,"SIP/2.0 100 Trying",sipProvider);
+      }
+ catch (      OperationFailedException ex) {
+      }
+    }
+  }
+  Call referToCall;
+  try {
+    referToCall=createOutgoingCall(referToAddress);
+  }
+ catch (  OperationFailedException ex) {
+    referToCall=null;
+    logger.error("Failed to create outgoing call to " + referToAddress,ex);
+  }
+  final Call referToCallListenerSource=referToCall;
+  final boolean sendNotifyRequest=(ok != null);
+  final Object subscription=(removeSubscription ? referRequest : null);
+  CallChangeListener referToCallListener=new CallChangeAdapter(){
+    /** 
+ * The indicator which determines whether the job of this listener
+ * has been done i.e. whether a single subscription-terminating
+ * NOTIFY with the final result of the REFER has been sent.
+ */
+    private boolean done;
+    public synchronized void callStateChanged(    CallChangeEvent evt){
+      if (!done && referToCallStateChanged(referToCallListenerSource,sendNotifyRequest,dialog,sipProvider,subscription)) {
+        done=true;
+        if (referToCallListenerSource != null) {
+          referToCallListenerSource.removeCallChangeListener(this);
+        }
+      }
+    }
+  }
+;
+  if (referToCall != null) {
+    referToCall.addCallChangeListener(referToCallListener);
+  }
+  referToCallListener.callStateChanged(null);
+}

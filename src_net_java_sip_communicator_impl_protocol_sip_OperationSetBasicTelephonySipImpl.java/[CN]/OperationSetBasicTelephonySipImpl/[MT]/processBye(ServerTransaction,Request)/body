@@ -1,14 +1,13 @@
 {
-  CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(serverTransaction.getDialog());
+  Dialog dialog=serverTransaction.getDialog();
+  CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(dialog);
   if (callParticipant == null) {
     logger.debug("Received a stray bye request.");
     return;
   }
   Response ok=null;
   try {
-    ok=protocolProvider.getMessageFactory().createResponse(Response.OK,byeRequest);
-    protocolProvider.attachToTag(ok,serverTransaction.getDialog());
-    ok.setHeader(protocolProvider.getSipCommUserAgentHeader());
+    ok=createOKResponse(byeRequest,dialog);
   }
  catch (  ParseException ex) {
     logger.error("Error while trying to send a response to a bye",ex);
@@ -21,5 +20,18 @@
  catch (  Exception ex) {
     logger.error("Failed to send an OK response to BYE request," + "exception was:\n",ex);
   }
-  callParticipant.setState(CallParticipantState.DISCONNECTED);
+  boolean dialogIsAlive;
+  try {
+    dialogIsAlive=DialogUtils.processByeThenIsDialogAlive(dialog);
+  }
+ catch (  SipException ex) {
+    dialogIsAlive=false;
+    logger.error("Failed to determine whether the dialog should stay alive.",ex);
+  }
+  if (dialogIsAlive) {
+    ((CallSipImpl)callParticipant.getCall()).getMediaCallSession().stopStreaming();
+  }
+ else {
+    callParticipant.setState(CallParticipantState.DISCONNECTED);
+  }
 }

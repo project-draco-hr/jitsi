@@ -1,0 +1,21 @@
+{
+  CallState referToCallState=(referToCall == null) ? null : referToCall.getCallState();
+  if (CallState.CALL_INITIALIZATION.equals(referToCallState)) {
+    return false;
+  }
+  if (sendNotifyRequest) {
+    String referStatus=CallState.CALL_IN_PROGRESS.equals(referToCallState) ? "SIP/2.0 200 OK" : "SIP/2.0 603 Declined";
+    try {
+      sendReferNotifyRequest(dialog,SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.NO_RESOURCE,referStatus,sipProvider);
+    }
+ catch (    OperationFailedException ex) {
+    }
+  }
+  if (DialogUtils.removeSubscriptionThenIsDialogAlive(dialog,subscription) == false) {
+    CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(dialog);
+    if (callParticipant != null) {
+      callParticipant.setState(CallParticipantState.DISCONNECTED);
+    }
+  }
+  return true;
+}
