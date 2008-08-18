@@ -1,0 +1,17 @@
+{
+  logger.trace(chat.getParticipant() + " entered the " + state.name()+ " state.");
+  String fromID=StringUtils.parseBareAddress(chat.getParticipant());
+  Contact sourceContact=opSetPersPresence.findContactByID(fromID);
+  if (sourceContact == null) {
+    sourceContact=opSetPersPresence.createVolatileContact(fromID);
+  }
+  if (ChatState.composing.equals(state)) {
+    fireTypingNotificationsEvent(sourceContact,STATE_TYPING);
+  }
+ else   if (ChatState.paused.equals(state) || ChatState.active.equals(state)) {
+    fireTypingNotificationsEvent(sourceContact,STATE_PAUSED);
+  }
+ else   if (ChatState.inactive.equals(state) || ChatState.gone.equals(state)) {
+    fireTypingNotificationsEvent(sourceContact,STATE_STOPPED);
+  }
+}

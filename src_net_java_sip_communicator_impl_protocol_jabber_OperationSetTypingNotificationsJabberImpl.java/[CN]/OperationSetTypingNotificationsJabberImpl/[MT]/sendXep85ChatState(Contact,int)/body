@@ -1,0 +1,23 @@
+{
+  logger.trace("Sending XEP-0085 chat state=" + state + " to "+ contact.getAddress());
+  Chat chat=jabberProvider.getConnection().getChatManager().createChat(contact.getAddress(),null);
+  ChatState chatState=null;
+  if (state == STATE_TYPING) {
+    chatState=ChatState.composing;
+  }
+ else   if (state == STATE_STOPPED) {
+    chatState=ChatState.inactive;
+  }
+ else   if (state == STATE_PAUSED) {
+    chatState=ChatState.paused;
+  }
+ else {
+    chatState=ChatState.gone;
+  }
+  try {
+    ChatStateManager.getInstance(jabberProvider.getConnection()).setCurrentState(chatState,chat);
+  }
+ catch (  XMPPException exc) {
+    logger.warn("Failed to send state [" + state + "] to ["+ contact.getAddress()+ "].",exc);
+  }
+}
