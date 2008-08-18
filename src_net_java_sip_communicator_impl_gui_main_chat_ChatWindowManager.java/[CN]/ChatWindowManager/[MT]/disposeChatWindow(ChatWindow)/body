@@ -1,7 +1,23 @@
 {
+  ChatPanel[] removedChatPanels=null;
 synchronized (chats) {
-    if (ConfigurationManager.isMultiChatWindowEnabled())     chats.clear();
- else     chats.remove(chatWindow.getCurrentChatPanel().getChatIdentifier());
+    if (ConfigurationManager.isMultiChatWindowEnabled()) {
+      Collection values=chats.values();
+      removedChatPanels=new ChatPanel[values.size()];
+      values.toArray(removedChatPanels);
+      chats.clear();
+    }
+ else {
+      ChatPanel removedChatPanel=(ChatPanel)chats.remove(chatWindow.getCurrentChatPanel().getChatIdentifier());
+      if (removedChatPanel != null) {
+        removedChatPanels=new ChatPanel[]{removedChatPanel};
+      }
+    }
+  }
+  if (removedChatPanels != null) {
+    for (int i=0; i < removedChatPanels.length; i++) {
+      removedChatPanels[i].dispose();
+    }
   }
   if (chatWindow.getChatCount() > 0)   chatWindow.removeAllChats();
   GuiActivator.getUIService().unregisterExportedWindow(chatWindow);
