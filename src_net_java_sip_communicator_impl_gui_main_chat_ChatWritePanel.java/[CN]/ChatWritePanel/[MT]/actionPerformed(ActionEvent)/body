@@ -1,0 +1,24 @@
+{
+  Object source=e.getSource();
+  if (typingTimer.equals(source)) {
+    if (typingState == OperationSetTypingNotifications.STATE_TYPING) {
+      chatPanel.sendTypingNotification(OperationSetTypingNotifications.STATE_TYPING);
+    }
+  }
+ else   if (stoppedTypingTimer.equals(source)) {
+    typingTimer.stop();
+    if (typingState == OperationSetTypingNotifications.STATE_TYPING) {
+      try {
+        typingState=OperationSetTypingNotifications.STATE_PAUSED;
+        int result=chatPanel.sendTypingNotification(typingState);
+        if (result == ChatPanel.TYPING_NOTIFICATION_SUCCESSFULLY_SENT)         stoppedTypingTimer.setDelay(3 * 1000);
+      }
+ catch (      Exception ex) {
+        logger.error("Failed to send typing notifications.",ex);
+      }
+    }
+ else     if (typingState == OperationSetTypingNotifications.STATE_PAUSED) {
+      stopTypingTimer();
+    }
+  }
+}
