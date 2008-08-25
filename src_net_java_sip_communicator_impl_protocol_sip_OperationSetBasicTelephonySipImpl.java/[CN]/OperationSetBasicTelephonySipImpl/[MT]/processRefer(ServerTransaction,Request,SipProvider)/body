@@ -10,18 +10,20 @@
     return;
   }
   final Dialog dialog=serverTransaction.getDialog();
-  Response ok=null;
-  boolean removeSubscription=false;
+  Response accepted=null;
   try {
-    ok=createOKResponse(referRequest,dialog);
+    accepted=protocolProvider.getMessageFactory().createResponse(Response.ACCEPTED,referRequest);
+    protocolProvider.attachToTag(accepted,dialog);
+    accepted.setHeader(protocolProvider.getSipCommUserAgentHeader());
   }
  catch (  ParseException ex) {
-    logger.error("Failed to create OK response to REFER request:\n" + referRequest,ex);
+    logger.error("Failed to create Accepted response to REFER request:\n" + referRequest,ex);
   }
-  if (ok != null) {
+  boolean removeSubscription=false;
+  if (accepted != null) {
     Throwable failure=null;
     try {
-      serverTransaction.sendResponse(ok);
+      serverTransaction.sendResponse(accepted);
     }
  catch (    InvalidArgumentException ex) {
       failure=ex;
@@ -30,8 +32,8 @@ catch (    SipException ex) {
       failure=ex;
     }
     if (failure != null) {
-      ok=null;
-      logger.error("Failed to send OK response to REFER request:\n" + referRequest,failure);
+      accepted=null;
+      logger.error("Failed to send Accepted response to REFER request:\n" + referRequest,failure);
     }
  else {
       try {
@@ -56,7 +58,7 @@ catch (    SipException ex) {
     logger.error("Failed to create outgoing call to " + referToAddress,ex);
   }
   final Call referToCallListenerSource=referToCall;
-  final boolean sendNotifyRequest=(ok != null);
+  final boolean sendNotifyRequest=(accepted != null);
   final Object subscription=(removeSubscription ? referRequest : null);
   CallChangeListener referToCallListener=new CallChangeAdapter(){
     /** 

@@ -7,31 +7,42 @@
   }
   String method=cseq.getMethod();
   SipProvider sourceProvider=(SipProvider)responseEvent.getSource();
-  if (response.getStatusCode() == Response.OK) {
+  int responseStatusCode=response.getStatusCode();
+switch (responseStatusCode) {
+case Response.OK:
     if (method.equals(Request.INVITE)) {
       processInviteOK(clientTransaction,response);
     }
  else     if (method.equals(Request.BYE)) {
     }
-  }
- else   if (response.getStatusCode() == Response.RINGING) {
-    processRinging(clientTransaction,response);
-  }
-  if (response.getStatusCode() == Response.SESSION_PROGRESS) {
-    processSessionProgress(clientTransaction,response);
-  }
- else   if (response.getStatusCode() == Response.TRYING) {
-    processTrying(clientTransaction,response);
-  }
- else   if (response.getStatusCode() == Response.BUSY_HERE) {
-    processBusyHere(clientTransaction,response);
-  }
- else   if (response.getStatusCode() == Response.UNAUTHORIZED || response.getStatusCode() == Response.PROXY_AUTHENTICATION_REQUIRED) {
-    processAuthenticationChallenge(clientTransaction,response,sourceProvider);
-  }
- else   if (response.getStatusCode() / 100 == 4 || response.getStatusCode() / 100 == 5) {
-    CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(clientTransaction.getDialog());
-    logger.error("Received error: " + response.getStatusCode() + " "+ response.getReasonPhrase());
-    if (callParticipant != null)     callParticipant.setState(CallParticipantState.FAILED);
-  }
+  break;
+case Response.RINGING:
+processRinging(clientTransaction,response);
+break;
+case Response.SESSION_PROGRESS:
+processSessionProgress(clientTransaction,response);
+break;
+case Response.TRYING:
+processTrying(clientTransaction,response);
+break;
+case Response.BUSY_HERE:
+processBusyHere(clientTransaction,response);
+break;
+case Response.ACCEPTED:
+if (Request.REFER.equals(method)) {
+processReferAccepted(clientTransaction,response);
+}
+break;
+case Response.UNAUTHORIZED:
+case Response.PROXY_AUTHENTICATION_REQUIRED:
+processAuthenticationChallenge(clientTransaction,response,sourceProvider);
+break;
+default :
+if ((responseStatusCode / 100 == 4) || (responseStatusCode / 100 == 5)) {
+CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(clientTransaction.getDialog());
+logger.error("Received error: " + response.getStatusCode() + " "+ response.getReasonPhrase());
+if (callParticipant != null) callParticipant.setState(CallParticipantState.FAILED);
+}
+break;
+}
 }

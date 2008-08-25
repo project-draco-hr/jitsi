@@ -1,8 +1,9 @@
 {
+  Dialog dialog=callParticipant.getDialog();
   Request request=callParticipant.getFirstTransaction().getRequest();
   Request bye=null;
   try {
-    bye=callParticipant.getDialog().createRequest(Request.BYE);
+    bye=dialog.createRequest(Request.BYE);
     InetAddress destinationInetAddress=null;
     String host=((SipURI)bye.getRequestURI()).getHost();
     try {
@@ -16,22 +17,14 @@
     bye.addHeader(protocolProvider.getSipCommUserAgentHeader());
   }
  catch (  SipException ex) {
-    logger.error("Failed to create bye request!",ex);
-    throw new OperationFailedException("Failed to create bye request!",OperationFailedException.INTERNAL_ERROR,ex);
+    throwOperationFailedException("Failed to create bye request!",OperationFailedException.INTERNAL_ERROR,ex);
   }
-  ClientTransaction clientTransaction=null;
+  sendRequest(callParticipant.getJainSipProvider(),bye,dialog);
   try {
-    clientTransaction=callParticipant.getJainSipProvider().getNewClientTransaction(bye);
-  }
- catch (  TransactionUnavailableException ex) {
-    logger.error("Failed to construct a client transaction from the BYE request",ex);
-    throw new OperationFailedException("Failed to construct a client transaction from the BYE request",OperationFailedException.INTERNAL_ERROR,ex);
-  }
-  try {
-    callParticipant.getDialog().sendRequest(clientTransaction);
-    logger.debug("sent request:\n" + bye);
+    return DialogUtils.processByeThenIsDialogAlive(dialog);
   }
  catch (  SipException ex) {
-    throw new OperationFailedException("Failed to send the BYE request",OperationFailedException.NETWORK_FAILURE,ex);
+    throwOperationFailedException("Failed to determine whether the dialog should stay alive.",OperationFailedException.INTERNAL_ERROR,ex);
+    return false;
   }
 }
