@@ -43,10 +43,13 @@ catch (      InvalidArgumentException e) {
     }
   }
   String method=request.getMethod();
-  SipListener processor=(SipListener)methodProcessors.get(method);
-  if (processor == null) {
-    return;
+  List<MethodProcessor> processors=methodProcessors.get(method);
+  if (processors != null) {
+    logger.debug("Found " + processors.size() + " processor(s) for method "+ method);
+    for (Iterator<MethodProcessor> processorIter=processors.iterator(); processorIter.hasNext(); ) {
+      if (processorIter.next().processRequest(requestEvent)) {
+        break;
+      }
+    }
   }
-  logger.debug("Found one processor for method " + method + ", processor is="+ processor.toString());
-  processor.processRequest(requestEvent);
 }

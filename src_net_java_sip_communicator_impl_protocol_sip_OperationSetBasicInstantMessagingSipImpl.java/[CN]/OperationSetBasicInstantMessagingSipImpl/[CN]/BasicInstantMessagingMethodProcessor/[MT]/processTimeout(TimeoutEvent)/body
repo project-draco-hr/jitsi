@@ -3,13 +3,13 @@ synchronized (messageProcessors) {
     Iterator iter=messageProcessors.iterator();
     while (iter.hasNext()) {
       SipMessageProcessor listener=(SipMessageProcessor)iter.next();
-      if (!listener.processTimeout(timeoutEvent,sentMsg))       return;
+      if (!listener.processTimeout(timeoutEvent,sentMsg))       return true;
     }
   }
   logger.error("Timeout event thrown : " + timeoutEvent.toString());
   if (timeoutEvent.isServerTransaction()) {
     logger.warn("The sender has probably not received our OK");
-    return;
+    return false;
   }
   Request req=timeoutEvent.getClientTransaction().getRequest();
   String content=null;
@@ -23,7 +23,7 @@ synchronized (messageProcessors) {
   ToHeader toHeader=(ToHeader)req.getHeader(ToHeader.NAME);
   if (toHeader == null) {
     logger.error("received a request without a to header");
-    return;
+    return false;
   }
   Contact to=opSetPersPresence.resolveContactID(toHeader.getAddress().getURI().toString());
   Message failedMessage=null;
@@ -41,4 +41,5 @@ synchronized (messageProcessors) {
   }
   MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(failedMessage,to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
   fireMessageEvent(evt);
+  return true;
 }

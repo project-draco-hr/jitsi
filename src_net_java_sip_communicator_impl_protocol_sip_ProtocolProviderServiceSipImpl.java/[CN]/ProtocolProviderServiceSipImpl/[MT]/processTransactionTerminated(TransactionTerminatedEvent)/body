@@ -8,10 +8,14 @@
   }
   Request request=transaction.getRequest();
   logger.debug("Transaction terminated for req=" + request);
-  SipListener processor=(SipListener)methodProcessors.get(request.getMethod());
-  if (processor == null) {
-    return;
+  String method=request.getMethod();
+  List<MethodProcessor> processors=methodProcessors.get(method);
+  if (processors != null) {
+    logger.debug("Found " + processors.size() + " processor(s) for method "+ method);
+    for (Iterator<MethodProcessor> processorIter=processors.iterator(); processorIter.hasNext(); ) {
+      if (processorIter.next().processTransactionTerminated(transactionTerminatedEvent)) {
+        break;
+      }
+    }
   }
-  logger.debug("Found one processor for method " + request.getMethod() + ", processor is="+ processor.toString());
-  processor.processTransactionTerminated(transactionTerminatedEvent);
 }

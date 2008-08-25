@@ -3,7 +3,7 @@ synchronized (messageProcessors) {
     Iterator iter=messageProcessors.iterator();
     while (iter.hasNext()) {
       SipMessageProcessor listener=(SipMessageProcessor)iter.next();
-      if (!listener.processMessage(requestEvent))       return;
+      if (!listener.processMessage(requestEvent))       return true;
     }
   }
   String content=null;
@@ -18,7 +18,7 @@ synchronized (messageProcessors) {
   FromHeader fromHeader=(FromHeader)requestEvent.getRequest().getHeader(FromHeader.NAME);
   if (fromHeader == null) {
     logger.error("received a request without a from header");
-    return;
+    return false;
   }
   Contact from=opSetPersPresence.resolveContactID(fromHeader.getAddress().getURI().toString());
   ContentTypeHeader ctheader=(ContentTypeHeader)req.getHeader(ContentTypeHeader.NAME);
@@ -53,4 +53,5 @@ catch (  InvalidArgumentException exc) {
   }
   MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(newMessage,from,new Date());
   fireMessageEvent(msgReceivedEvt);
+  return true;
 }

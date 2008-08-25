@@ -5,22 +5,29 @@
   String method=((CSeqHeader)response.getHeader(CSeqHeader.NAME)).getMethod();
   Response responseClone=(Response)response.clone();
   SipProvider sourceProvider=(SipProvider)responseEvent.getSource();
+  boolean processed=false;
   if (response.getStatusCode() == Response.OK) {
     processOK(clientTransaction,response);
+    processed=true;
   }
  else   if (response.getStatusCode() == Response.NOT_IMPLEMENTED) {
     processNotImplemented(clientTransaction,response);
+    processed=true;
   }
  else   if (response.getStatusCode() == Response.TRYING) {
   }
  else   if (response.getStatusCode() == Response.UNAUTHORIZED || response.getStatusCode() == Response.PROXY_AUTHENTICATION_REQUIRED) {
     processAuthenticationChallenge(clientTransaction,response,sourceProvider);
+    processed=true;
   }
  else   if (response.getStatusCode() == Response.FORBIDDEN) {
     processForbidden(clientTransaction,response,sourceProvider);
+    processed=true;
   }
  else   if (response.getStatusCode() / 100 == 4) {
     logger.error("Received an error response.");
     this.setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,"Received an error while trying to register. " + "Server returned error:" + response.getReasonPhrase());
+    processed=true;
   }
+  return processed;
 }

@@ -1,18 +1,18 @@
 {
   EventHeader eventHeader=(EventHeader)notifyRequest.getHeader(EventHeader.NAME);
   if ((eventHeader == null) || !"refer".equals(eventHeader.getEventType())) {
-    return;
+    return false;
   }
   SubscriptionStateHeader ssHeader=(SubscriptionStateHeader)notifyRequest.getHeader(SubscriptionStateHeader.NAME);
   if (ssHeader == null) {
     logger.error("NOTIFY of refer event type with no Subscription-State header.");
-    return;
+    return false;
   }
   Dialog dialog=serverTransaction.getDialog();
   CallParticipantSipImpl participant=activeCallsRepository.findCallParticipant(dialog);
   if (participant == null) {
     logger.debug("Received a stray refer NOTIFY request.");
-    return;
+    return false;
   }
   Response ok;
   try {
@@ -22,7 +22,7 @@
     String message="Failed to create OK response to refer NOTIFY request.";
     logger.error(message,ex);
     participant.setState(CallParticipantState.DISCONNECTED,message);
-    return;
+    return false;
   }
   try {
     serverTransaction.sendResponse(ok);
@@ -31,7 +31,7 @@
     String message="Failed to send OK response to refer NOTIFY request.";
     logger.error(message,ex);
     participant.setState(CallParticipantState.DISCONNECTED,message);
-    return;
+    return false;
   }
   if (SubscriptionStateHeader.TERMINATED.equals(ssHeader.getState()) && (DialogUtils.removeSubscriptionThenIsDialogAlive(dialog,"refer") == false)) {
     participant.setState(CallParticipantState.DISCONNECTED);
@@ -49,4 +49,5 @@
       participant.setState(CallParticipantState.DISCONNECTED);
     }
   }
+  return true;
 }

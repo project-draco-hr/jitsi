@@ -3,7 +3,7 @@ synchronized (messageProcessors) {
     Iterator iter=messageProcessors.iterator();
     while (iter.hasNext()) {
       SipMessageProcessor listener=(SipMessageProcessor)iter.next();
-      if (!listener.processResponse(responseEvent,sentMsg))       return;
+      if (!listener.processResponse(responseEvent,sentMsg))       return true;
     }
   }
   Request req=responseEvent.getClientTransaction().getRequest();
@@ -19,14 +19,14 @@ synchronized (messageProcessors) {
   ToHeader toHeader=(ToHeader)req.getHeader(ToHeader.NAME);
   if (toHeader == null) {
     logger.error("send a request without a to header");
-    return;
+    return false;
   }
   Contact to=opSetPersPresence.resolveContactID(toHeader.getAddress().getURI().toString());
   if (to == null) {
     logger.error("Error received a response from an unknown contact : " + toHeader.getAddress().getURI().toString() + " : "+ responseEvent.getResponse().getStatusCode()+ " "+ responseEvent.getResponse().getReasonPhrase());
     MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(createMessage(content),to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
     fireMessageEvent(evt);
-    return;
+    return false;
   }
   String key=((CallIdHeader)req.getHeader(CallIdHeader.NAME)).getCallId();
   Message newMessage=(Message)sentMsg.get(key);
@@ -34,7 +34,7 @@ synchronized (messageProcessors) {
     logger.error("Couldn't find the message sent");
     MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(createMessage(content),to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
     fireMessageEvent(evt);
-    return;
+    return true;
   }
   if (status >= 400 && status != 401 && status != 407) {
     logger.info(responseEvent.getResponse().getStatusCode() + " " + responseEvent.getResponse().getReasonPhrase());
@@ -62,4 +62,5 @@ synchronized (messageProcessors) {
     fireMessageEvent(msgDeliveredEvt);
     sentMsg.remove(key);
   }
+  return true;
 }

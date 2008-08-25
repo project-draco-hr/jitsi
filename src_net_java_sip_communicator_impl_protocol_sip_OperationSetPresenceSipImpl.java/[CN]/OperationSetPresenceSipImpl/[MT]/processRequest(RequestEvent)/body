@@ -1,6 +1,6 @@
 {
   if (this.presenceEnabled == false) {
-    return;
+    return false;
   }
   ServerTransaction serverTransaction=requestEvent.getServerTransaction();
   SipProvider jainSipProvider=(SipProvider)requestEvent.getSource();
@@ -11,24 +11,25 @@
     }
  catch (    TransactionAlreadyExistsException ex) {
       logger.error("Failed to create a new server" + "transaction for an incoming request\n" + "(Next message contains the request)",ex);
-      return;
+      return false;
     }
 catch (    TransactionUnavailableException ex) {
       logger.error("Failed to create a new server" + "transaction for an incoming request\n" + "(Next message contains the request)",ex);
-      return;
+      return false;
     }
   }
   EventHeader eventHeader=(EventHeader)request.getHeader(EventHeader.NAME);
   if (eventHeader == null || !eventHeader.getEventType().equalsIgnoreCase("presence")) {
-    return;
+    return false;
   }
+  boolean processed=false;
   if (request.getMethod().equals(Request.NOTIFY)) {
     Response response=null;
     logger.debug("notify received");
     SubscriptionStateHeader sstateHeader=(SubscriptionStateHeader)request.getHeader(SubscriptionStateHeader.NAME);
     if (sstateHeader == null) {
       logger.error("no subscription state in this request");
-      return;
+      return false;
     }
     CallIdHeader idheader=(CallIdHeader)request.getHeader(CallIdHeader.NAME);
     ContactSipImpl contact=(ContactSipImpl)this.subscribedContacts.get(idheader.getCallId());
@@ -45,7 +46,7 @@ synchronized (this.waitedCallIds) {
       }
  catch (      ParseException e) {
         logger.error("failed to create the 481 response",e);
-        return;
+        return false;
       }
       try {
         serverTransaction.sendResponse(response);
@@ -56,7 +57,7 @@ synchronized (this.waitedCallIds) {
 catch (      InvalidArgumentException e) {
         logger.error("invalid argument provided while trying" + " to send the response",e);
       }
-      return;
+      return true;
     }
     ContentTypeHeader ctheader=(ContentTypeHeader)request.getHeader(ContentTypeHeader.NAME);
     if (ctheader != null && !ctheader.getContentSubType().equalsIgnoreCase(PIDF_XML)) {
@@ -65,7 +66,7 @@ catch (      InvalidArgumentException e) {
       }
  catch (      ParseException e) {
         logger.error("failed to create the OK response",e);
-        return;
+        return false;
       }
       AcceptHeader acceptHeader=null;
       try {
@@ -73,7 +74,7 @@ catch (      InvalidArgumentException e) {
       }
  catch (      ParseException e) {
         logger.error("failed to create the accept header",e);
-        return;
+        return false;
       }
       response.setHeader(acceptHeader);
       try {
@@ -103,7 +104,7 @@ synchronized (this.waitedCallIds) {
     }
  catch (    ParseException e) {
       logger.error("failed to create the OK response",e);
-      return;
+      return false;
     }
     try {
       serverTransaction.sendResponse(response);
@@ -117,6 +118,7 @@ catch (    InvalidArgumentException e) {
     if (request.getRawContent() != null && !sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED)) {
       setPidfPresenceStatus(new String(request.getRawContent()));
     }
+    processed=true;
   }
  else   if (request.getMethod().equals(Request.SUBSCRIBE)) {
     FromHeader from=(FromHeader)request.getHeader(FromHeader.NAME);
@@ -149,7 +151,7 @@ catch (    InvalidArgumentException e) {
       }
  catch (      Exception e) {
         logger.error("Error while creating the response 423",e);
-        return;
+        return false;
       }
       MinExpiresHeader min=null;
       try {
@@ -157,7 +159,7 @@ catch (    InvalidArgumentException e) {
       }
  catch (      InvalidArgumentException e) {
         logger.error("can't create the min expires header",e);
-        return;
+        return false;
       }
       response.setHeader(min);
       try {
@@ -165,9 +167,9 @@ catch (    InvalidArgumentException e) {
       }
  catch (      Exception e) {
         logger.error("Error while sending the response 423",e);
-        return;
+        return false;
       }
-      return;
+      return true;
     }
     if (this.ourWatchers.contains(contact) && expires != 0 && contact.getServerDialog().equals(serverTransaction.getDialog())) {
       contact.getTimeoutTask().cancel();
@@ -180,14 +182,14 @@ catch (    InvalidArgumentException e) {
       }
  catch (      Exception e) {
         logger.error("Error while creating the response 200",e);
-        return;
+        return false;
       }
       try {
         expHeader=this.parentProvider.getHeaderFactory().createExpiresHeader(expires);
       }
  catch (      InvalidArgumentException e) {
         logger.error("Can't create the expires header");
-        return;
+        return false;
       }
       response.setHeader(expHeader);
       try {
@@ -195,9 +197,9 @@ catch (    InvalidArgumentException e) {
       }
  catch (      Exception e) {
         logger.error("Error while sending the response 200",e);
-        return;
+        return false;
       }
-      return;
+      return true;
     }
     Dialog dialog=contact.getServerDialog();
     if (expires == 0) {
@@ -213,14 +215,14 @@ synchronized (this.ourWatchers) {
       }
  catch (      Exception e) {
         logger.error("Error while creating the response 200",e);
-        return;
+        return false;
       }
       try {
         expHeader=this.parentProvider.getHeaderFactory().createExpiresHeader(0);
       }
  catch (      InvalidArgumentException e) {
         logger.error("Can't create the expires header",e);
-        return;
+        return false;
       }
       response.setHeader(expHeader);
       try {
@@ -228,7 +230,7 @@ synchronized (this.ourWatchers) {
       }
  catch (      Exception e) {
         logger.error("Error while sending the response 200",e);
-        return;
+        return false;
       }
       ClientTransaction transac=null;
       try {
@@ -236,16 +238,16 @@ synchronized (this.ourWatchers) {
       }
  catch (      OperationFailedException e) {
         logger.error("failed to create the new notify",e);
-        return;
+        return false;
       }
       try {
         dialog.sendRequest(transac);
       }
  catch (      Exception e) {
         logger.error("Can't send the request",e);
-        return;
+        return false;
       }
-      return;
+      return true;
     }
     if (this.ourWatchers.contains(contact) && !contact.getServerDialog().equals(serverTransaction.getDialog())) {
       logger.debug("contact " + contact + " try to resubscribe, "+ "we will remove the first subscription");
@@ -255,7 +257,7 @@ synchronized (this.ourWatchers) {
       }
  catch (      OperationFailedException e) {
         logger.error("failed to create the new notify",e);
-        return;
+        return false;
       }
       contact.setServerDialog(null);
 synchronized (this.ourWatchers) {
@@ -269,7 +271,7 @@ synchronized (this.ourWatchers) {
       }
  catch (      Exception e) {
         logger.error("Can't send the request",e);
-        return;
+        return false;
       }
     }
 synchronized (contact) {
@@ -282,14 +284,14 @@ synchronized (contact) {
     }
  catch (    Exception e) {
       logger.error("Error while creating the response 200",e);
-      return;
+      return false;
     }
     try {
       expHeader=this.parentProvider.getHeaderFactory().createExpiresHeader(expires);
     }
  catch (    InvalidArgumentException e) {
       logger.error("Can't create the expires header",e);
-      return;
+      return false;
     }
     response.setHeader(expHeader);
     try {
@@ -297,7 +299,7 @@ synchronized (contact) {
     }
  catch (    Exception e) {
       logger.error("Error while sending the response 200",e);
-      return;
+      return false;
     }
     ClientTransaction transac=null;
     try {
@@ -305,14 +307,14 @@ synchronized (contact) {
     }
  catch (    OperationFailedException e) {
       logger.error("failed to create the new notify",e);
-      return;
+      return false;
     }
     try {
       dialog.sendRequest(transac);
     }
  catch (    Exception e) {
       logger.error("Can't send the request",e);
-      return;
+      return false;
     }
 synchronized (this.ourWatchers) {
       this.ourWatchers.add(contact);
@@ -320,6 +322,7 @@ synchronized (this.ourWatchers) {
     watcherTimeoutTask timeout=new watcherTimeoutTask(contact);
     contact.setTimeoutTask(timeout);
     getTimer().schedule(timeout,expires * 1000);
+    processed=true;
   }
  else   if (request.getMethod().equals(Request.PUBLISH)) {
     Response response=null;
@@ -328,14 +331,16 @@ synchronized (this.ourWatchers) {
     }
  catch (    Exception e) {
       logger.error("Error while creating the response 501",e);
-      return;
+      return false;
     }
     try {
       serverTransaction.sendResponse(response);
     }
  catch (    Exception e) {
       logger.error("Error while sending the response 501",e);
-      return;
+      return false;
     }
+    processed=true;
   }
+  return processed;
 }

@@ -1,16 +1,17 @@
 {
   if (this.presenceEnabled == false) {
-    return;
+    return false;
   }
   ClientTransaction clientTransaction=responseEvent.getClientTransaction();
   Response response=responseEvent.getResponse();
   CSeqHeader cseq=((CSeqHeader)response.getHeader(CSeqHeader.NAME));
   if (cseq == null) {
     logger.error("An incoming response did not contain a CSeq header");
-    return;
+    return false;
   }
   String method=cseq.getMethod();
   SipProvider sourceProvider=(SipProvider)responseEvent.getSource();
+  boolean processed=false;
   if (method.equals(Request.SUBSCRIBE)) {
     CallIdHeader idheader=(CallIdHeader)response.getHeader(CallIdHeader.NAME);
     ContactSipImpl contact=(ContactSipImpl)this.subscribedContacts.get(idheader.getCallId());
@@ -19,6 +20,7 @@
       if (response.getStatusCode() == Response.UNAUTHORIZED || response.getStatusCode() == Response.PROXY_AUTHENTICATION_REQUIRED) {
         try {
           processAuthenticationChallenge(clientTransaction,response,sourceProvider);
+          processed=true;
         }
  catch (        OperationFailedException e) {
           logger.error("can't handle the challenge",e);
@@ -28,14 +30,15 @@
 synchronized (this.waitedCallIds) {
           this.waitedCallIds.remove(idheader.getCallId());
         }
+        processed=true;
       }
-      return;
+      return processed;
     }
     if (response.getStatusCode() >= Response.OK && response.getStatusCode() < Response.MULTIPLE_CHOICES) {
       if (response.getStatusCode() == Response.OK || response.getStatusCode() == Response.ACCEPTED) {
         if (expHeader == null) {
           logger.error("no Expires header in this response");
-          return;
+          return false;
         }
         if (contact.getResfreshTask() != null) {
           contact.getResfreshTask().cancel();
@@ -58,7 +61,7 @@ synchronized (this.waitedCallIds) {
         }
  catch (        NullPointerException e) {
           logger.debug("failed to finalize the subscription of the" + "contact",e);
-          return;
+          return false;
         }
       }
     }
@@ -70,7 +73,7 @@ synchronized (this.waitedCallIds) {
         MinExpiresHeader min=(MinExpiresHeader)response.getHeader(MinExpiresHeader.NAME);
         if (min == null) {
           logger.error("no minimal expires value in this 423 " + "response");
-          return;
+          return false;
         }
         Request request=responseEvent.getClientTransaction().getRequest();
         ExpiresHeader exp=request.getExpires();
@@ -79,7 +82,7 @@ synchronized (this.waitedCallIds) {
         }
  catch (        InvalidArgumentException e) {
           logger.error("can't set the new expires value",e);
-          return;
+          return false;
         }
         ClientTransaction transac=null;
         try {
@@ -87,16 +90,16 @@ synchronized (this.waitedCallIds) {
         }
  catch (        TransactionUnavailableException e) {
           logger.error("can't create the client transaction",e);
-          return;
+          return false;
         }
         try {
           transac.sendRequest();
         }
  catch (        SipException e) {
           logger.error("can't send the new request",e);
-          return;
+          return false;
         }
-        return;
+        return true;
       }
  else       if (response.getStatusCode() == Response.UNAUTHORIZED || response.getStatusCode() == Response.PROXY_AUTHENTICATION_REQUIRED) {
         try {
@@ -130,8 +133,16 @@ synchronized (this.waitedCallIds) {
         fireSubscriptionEvent(contact,contact.getParentContactGroup(),SubscriptionEvent.SUBSCRIPTION_FAILED,response.getStatusCode(),response.getReasonPhrase());
       }
     }
+    processed=true;
   }
  else   if (method.equals(Request.NOTIFY)) {
+    Request notifyRequest=clientTransaction.getRequest();
+    if (notifyRequest != null) {
+      EventHeader eventHeader=(EventHeader)notifyRequest.getHeader(EventHeader.NAME);
+      if ((eventHeader == null) || !"presence".equalsIgnoreCase(eventHeader.getEventType())) {
+        return false;
+      }
+    }
     if (response.getStatusCode() != Response.UNAUTHORIZED && response.getStatusCode() != Response.PROXY_AUTHENTICATION_REQUIRED) {
 synchronized (this.waitedCallIds) {
         this.waitedCallIds.remove(((CallIdHeader)response.getHeader(CallIdHeader.NAME)).getCallId());
@@ -172,6 +183,7 @@ synchronized (this.ourWatchers) {
         }
       }
     }
+    processed=true;
   }
  else   if (method.equals(Request.PUBLISH)) {
     if (response.getStatusCode() != Response.UNAUTHORIZED && response.getStatusCode() != Response.PROXY_AUTHENTICATION_REQUIRED && response.getStatusCode() != Response.INTERVAL_TOO_BRIEF) {
@@ -183,17 +195,17 @@ synchronized (this.waitedCallIds) {
       SIPETagHeader etHeader=(SIPETagHeader)response.getHeader(SIPETagHeader.NAME);
       if (etHeader == null) {
         logger.debug("can't find the ETag header");
-        return;
+        return false;
       }
       this.distantPAET=etHeader.getETag();
       ExpiresHeader expires=(ExpiresHeader)response.getHeader(ExpiresHeader.NAME);
       if (expires == null) {
         logger.error("no Expires header in the response");
-        return;
+        return false;
       }
       if (expires.getExpires() == 0) {
         this.distantPAET=null;
-        return;
+        return true;
       }
       if (this.republishTask != null) {
         this.republishTask.cancel();
@@ -209,14 +221,14 @@ synchronized (this.waitedCallIds) {
       }
  catch (      OperationFailedException e) {
         logger.error("can't handle the challenge",e);
-        return;
+        return false;
       }
     }
  else     if (response.getStatusCode() == Response.INTERVAL_TOO_BRIEF) {
       MinExpiresHeader min=(MinExpiresHeader)response.getHeader(MinExpiresHeader.NAME);
       if (min == null) {
         logger.error("can't find a min expires header in the 423" + " error message");
-        return;
+        return false;
       }
       Request req=null;
       try {
@@ -224,7 +236,7 @@ synchronized (this.waitedCallIds) {
       }
  catch (      OperationFailedException e) {
         logger.error("can't create the new publish request",e);
-        return;
+        return false;
       }
       ClientTransaction transac=null;
       try {
@@ -232,14 +244,14 @@ synchronized (this.waitedCallIds) {
       }
  catch (      TransactionUnavailableException e) {
         logger.error("can't create the client transaction",e);
-        return;
+        return false;
       }
       try {
         transac.sendRequest();
       }
  catch (      SipException e) {
         logger.error("can't send the PUBLISH request",e);
-        return;
+        return false;
       }
     }
  else     if (response.getStatusCode() == Response.CONDITIONAL_REQUEST_FAILED) {
@@ -250,7 +262,7 @@ synchronized (this.waitedCallIds) {
       }
  catch (      OperationFailedException e) {
         logger.error("can't create the new publish request",e);
-        return;
+        return false;
       }
       ClientTransaction transac=null;
       try {
@@ -258,21 +270,21 @@ synchronized (this.waitedCallIds) {
       }
  catch (      TransactionUnavailableException e) {
         logger.error("can't create the client transaction",e);
-        return;
+        return false;
       }
       try {
         transac.sendRequest();
       }
  catch (      SipException e) {
         logger.error("can't send the PUBLISH request",e);
-        return;
+        return false;
       }
     }
  else {
       logger.debug("error received from the network" + response);
       this.distantPAET=null;
       if (this.useDistantPA == false) {
-        return;
+        return true;
       }
       logger.debug("we enter into the peer to peer mode as the " + "distant PA mode fails");
       this.useDistantPA=false;
@@ -281,5 +293,7 @@ synchronized (this.waitedCallIds) {
         this.republishTask=null;
       }
     }
+    processed=true;
   }
+  return processed;
 }

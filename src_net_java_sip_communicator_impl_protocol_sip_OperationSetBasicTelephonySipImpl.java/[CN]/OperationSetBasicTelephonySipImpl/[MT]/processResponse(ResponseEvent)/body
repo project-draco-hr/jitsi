@@ -8,41 +8,51 @@
   String method=cseq.getMethod();
   SipProvider sourceProvider=(SipProvider)responseEvent.getSource();
   int responseStatusCode=response.getStatusCode();
+  boolean processed=false;
 switch (responseStatusCode) {
 case Response.OK:
     if (method.equals(Request.INVITE)) {
       processInviteOK(clientTransaction,response);
+      processed=true;
     }
  else     if (method.equals(Request.BYE)) {
     }
   break;
 case Response.RINGING:
 processRinging(clientTransaction,response);
+processed=true;
 break;
 case Response.SESSION_PROGRESS:
 processSessionProgress(clientTransaction,response);
+processed=true;
 break;
 case Response.TRYING:
 processTrying(clientTransaction,response);
+processed=true;
 break;
 case Response.BUSY_HERE:
 processBusyHere(clientTransaction,response);
+processed=true;
 break;
 case Response.ACCEPTED:
 if (Request.REFER.equals(method)) {
 processReferAccepted(clientTransaction,response);
+processed=true;
 }
 break;
 case Response.UNAUTHORIZED:
 case Response.PROXY_AUTHENTICATION_REQUIRED:
 processAuthenticationChallenge(clientTransaction,response,sourceProvider);
+processed=true;
 break;
 default :
 if ((responseStatusCode / 100 == 4) || (responseStatusCode / 100 == 5)) {
 CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(clientTransaction.getDialog());
 logger.error("Received error: " + response.getStatusCode() + " "+ response.getReasonPhrase());
 if (callParticipant != null) callParticipant.setState(CallParticipantState.FAILED);
+processed=true;
 }
 break;
 }
+return processed;
 }
