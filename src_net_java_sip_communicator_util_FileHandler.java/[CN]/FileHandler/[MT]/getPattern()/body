@@ -1,10 +1,13 @@
 {
   if (pattern == null) {
     pattern=LogManager.getLogManager().getProperty(FileHandler.class.getName() + ".pattern");
-    if (pattern == null) {
-      pattern=System.getProperty("net.java.sip.communicator.SC_HOME_DIR_LOCATION") + "/" + System.getProperty("net.java.sip.communicator.SC_HOME_DIR_NAME")+ "/log/sip-communicator%u.log";
+    String homeLocation=System.getProperty("net.java.sip.communicator.SC_HOME_DIR_LOCATION");
+    String dirName=System.getProperty("net.java.sip.communicator.SC_HOME_DIR_NAME");
+    if (homeLocation != null && dirName != null) {
+      if (pattern == null)       pattern=homeLocation + "/" + dirName+ "/log/sip-communicator%u.log";
+ else       pattern=pattern.replaceAll("\\%s",homeLocation + "/" + dirName);
     }
-    pattern=pattern.replaceAll("\\%s",System.getProperty("net.java.sip.communicator.SC_HOME_DIR_LOCATION") + "/" + System.getProperty("net.java.sip.communicator.SC_HOME_DIR_NAME"));
+    if (pattern == null)     pattern="./log/sip-communicator%u.log";
     checkDestinationDirectory(pattern);
   }
   return pattern;
