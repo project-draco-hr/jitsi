@@ -1,0 +1,19 @@
+{
+  Collection<MessageListener> listeners=null;
+synchronized (this.messageListeners) {
+    listeners=new ArrayList<MessageListener>(this.messageListeners);
+  }
+  logger.debug("Dispatching Message Listeners=" + listeners.size() + " evt="+ evt);
+  for (Iterator<MessageListener> listenerIter=listeners.iterator(); listenerIter.hasNext(); ) {
+    MessageListener listener=listenerIter.next();
+    if (evt instanceof MessageDeliveredEvent) {
+      listener.messageDelivered((MessageDeliveredEvent)evt);
+    }
+ else     if (evt instanceof MessageReceivedEvent) {
+      listener.messageReceived((MessageReceivedEvent)evt);
+    }
+ else     if (evt instanceof MessageDeliveryFailedEvent) {
+      listener.messageDeliveryFailed((MessageDeliveryFailedEvent)evt);
+    }
+  }
+}
