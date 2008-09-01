@@ -42,7 +42,7 @@ catch (  SipException ex) {
     callParticipant.setState(CallParticipantState.FAILED);
     return;
   }
-  callParticipant.setSdpDescription(new String(ok.getRawContent()));
+  if (!CallParticipantState.CONNECTING_WITH_EARLY_MEDIA.equals(callParticipant.getState()))   callParticipant.setSdpDescription(new String(ok.getRawContent()));
   CallSession callSession=((CallSipImpl)callParticipant.getCall()).getMediaCallSession();
   try {
     try {
@@ -64,7 +64,7 @@ catch (  SipException ex) {
       }
     }
     CallParticipantState callParticipantState=callParticipant.getState();
-    if ((callParticipantState != CallParticipantState.CONNECTED) && !CallParticipantState.isOnHold(callParticipantState)) {
+    if ((callParticipantState != CallParticipantState.CONNECTED) && !CallParticipantState.isOnHold(callParticipantState) && !CallParticipantState.CONNECTING_WITH_EARLY_MEDIA.equals(callParticipantState)) {
       callSession.processSdpAnswer(callParticipant,callParticipant.getSdpDescription());
     }
     callParticipant.setCallInfoURL(callSession.getCallInfoURL());
