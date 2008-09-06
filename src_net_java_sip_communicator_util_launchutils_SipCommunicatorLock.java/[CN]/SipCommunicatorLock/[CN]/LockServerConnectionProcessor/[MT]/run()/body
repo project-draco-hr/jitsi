@@ -1,0 +1,41 @@
+{
+  InputStream is;
+  PrintWriter printer;
+  try {
+    is=connectionSocket.getInputStream();
+    printer=new PrintWriter(connectionSocket.getOutputStream());
+  }
+ catch (  IOException exc) {
+    logger.warn("Failed to read arguments from another SC instance",exc);
+    return;
+  }
+  ArrayList<String> argsList=new ArrayList<String>();
+  logger.debug("Handling incoming connection");
+  int argCount=1024;
+  try {
+    while (true) {
+      BufferedReader lineReader=new BufferedReader(new InputStreamReader(is));
+      String line=lineReader.readLine();
+      logger.debug(line);
+      if (line.startsWith(ARG_COUNT)) {
+        argCount=Integer.parseInt(line.substring((ARG_COUNT + "=").length()));
+      }
+ else       if (line.startsWith(ARGUMENT)) {
+        String arg=line.substring((ARGUMENT + "=").length());
+        argsList.add(arg);
+      }
+ else {
+      }
+      if (argCount <= argsList.size())       break;
+    }
+    printer.print(ARG_COUNT + "=" + argCount+ CRLF);
+    printer.close();
+    connectionSocket.close();
+    String[] args=new String[argsList.size()];
+    LaunchArgHandler.getInstance().handleArgs(argsList.toArray(args));
+  }
+ catch (  IOException exc) {
+    logger.info("An IOException is thrown while " + "processing remote args",exc);
+    printer.print(ERROR_ARG + "=" + exc.getMessage());
+  }
+}

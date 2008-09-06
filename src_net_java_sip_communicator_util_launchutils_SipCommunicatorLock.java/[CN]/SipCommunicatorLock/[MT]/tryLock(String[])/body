@@ -1,0 +1,20 @@
+{
+  File lockFile=getLockFile();
+  if (lockFile.exists()) {
+    InetSocketAddress lockAddress=readLockFile(lockFile);
+    if (lockAddress != null) {
+      if (interInstanceConnect(lockAddress,args) == SUCCESS) {
+        return ALREADY_STARTED;
+      }
+    }
+    lockFile.delete();
+  }
+  try {
+    lockFile.createNewFile();
+  }
+ catch (  IOException e) {
+    logger.error("Failed to create lock file",e);
+  }
+  lockFile.deleteOnExit();
+  return lock(lockFile);
+}

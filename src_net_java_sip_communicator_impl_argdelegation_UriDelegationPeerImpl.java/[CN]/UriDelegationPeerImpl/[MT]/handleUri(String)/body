@@ -1,0 +1,22 @@
+{
+  logger.trace("Handling URI: " + uriArg);
+  int colonIndex=uriArg.indexOf(":");
+  if (colonIndex == -1) {
+    ArgDelegationActivator.getUIService().getPopupDialog().showMessagePopupDialog("Could not determine how to handle: " + uriArg + ".\nNo protocol scheme found.","Error handling URI",PopupDialog.ERROR_MESSAGE);
+    return;
+  }
+  String scheme=uriArg.substring(0,colonIndex);
+  UriHandler handler=uriHandlers.get(scheme);
+  if (handler == null) {
+    logger.trace("Couldn't open " + uriArg + "No handler found for protocol"+ scheme);
+    ArgDelegationActivator.getUIService().getPopupDialog().showMessagePopupDialog("\"" + scheme + "\" URIs are currently not supported.","Error handling URI",PopupDialog.ERROR_MESSAGE);
+    return;
+  }
+  try {
+    handler.handleUri(uriArg);
+  }
+ catch (  Throwable thr) {
+    ArgDelegationActivator.getUIService().getPopupDialog().showMessagePopupDialog("Error handling " + uriArg,"Error handling URI",PopupDialog.ERROR_MESSAGE);
+    logger.error("Failed to handle \"" + uriArg + "\"",thr);
+  }
+}

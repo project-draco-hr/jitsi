@@ -1,0 +1,35 @@
+{
+  Properties lockProperties=new Properties();
+  try {
+    lockProperties.load(new FileInputStream(lockFile));
+  }
+ catch (  Exception exc) {
+    logger.error("Failed to read lock properties.",exc);
+    return null;
+  }
+  String lockAddressStr=lockProperties.getProperty(PNAME_LOCK_ADDRESS);
+  if (lockAddressStr == null) {
+    logger.error("Lock file contains no lock address.");
+    return null;
+  }
+  String lockPort=lockProperties.getProperty(PNAME_LOCK_PORT);
+  if (lockPort == null) {
+    logger.error("Lock file contains no lock port.");
+    return null;
+  }
+  InetAddress lockAddress=findLocalAddress(lockAddressStr);
+  if (lockAddress == null) {
+    logger.error(lockAddressStr + " is not a valid local address.");
+    return null;
+  }
+  int port;
+  try {
+    port=Integer.parseInt(lockPort);
+  }
+ catch (  NumberFormatException exc) {
+    logger.error(lockPort + " is not a valid port number.",exc);
+    return null;
+  }
+  InetSocketAddress lockSocketAddress=new InetSocketAddress(lockAddress,port);
+  return lockSocketAddress;
+}

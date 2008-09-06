@@ -1,0 +1,48 @@
+{
+  int returnAction=ACTION_CONTINUE;
+  for (int i=0; i < args.length; i++) {
+    logger.trace("handling arg " + i);
+    if (args[i].equals("--version") || args[i].equals("-v")) {
+      handleVersionArg();
+      returnAction=ACTION_EXIT;
+      break;
+    }
+ else     if (args[i].equals("--help") || args[i].equals("-h")) {
+      handleHelpArg();
+      returnAction=ACTION_EXIT;
+      break;
+    }
+ else     if (args[i].equals("--debug") || args[i].equals("-d")) {
+      handleDebugArg(args[i]);
+      continue;
+    }
+ else     if (args[i].startsWith("--config=")) {
+      returnAction=handleConfigArg(args[i]);
+      if (returnAction == ACTION_ERROR)       break;
+ else       continue;
+    }
+ else     if (args[i].equals("-c")) {
+      if (i == args.length - 1) {
+        System.out.println("The \"-c\" option expects a directory parameter.");
+        returnAction=ACTION_ERROR;
+        break;
+      }
+      handleConfigArg(args[++i]);
+      continue;
+    }
+ else     if (args[i].equals("--multiple") || args[i].equals("-m")) {
+      handleMultipleArg(args[i]);
+      continue;
+    }
+ else     if (i == args.length - 1 && !args[i].startsWith("-")) {
+      handleUri(args[i]);
+    }
+ else {
+      handleUnknownArg(args[i]);
+      errorCode=ERROR_CODE_UNKNOWN_ARG;
+      returnAction=ACTION_ERROR;
+      break;
+    }
+  }
+  return returnAction;
+}

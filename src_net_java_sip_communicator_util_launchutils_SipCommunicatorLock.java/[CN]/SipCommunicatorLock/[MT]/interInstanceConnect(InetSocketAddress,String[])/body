@@ -1,0 +1,25 @@
+{
+  try {
+    Socket interInstanceSocket=new Socket(sockAddr.getAddress(),sockAddr.getPort());
+    LockClient lockClient=new LockClient(interInstanceSocket);
+    lockClient.start();
+    PrintStream printStream=new PrintStream(interInstanceSocket.getOutputStream());
+    printStream.print(ARG_COUNT + "=" + args.length+ CRLF);
+    for (int i=0; i < args.length; i++) {
+      printStream.print(ARGUMENT + "=" + args[i]+ CRLF);
+    }
+    lockClient.waitForReply(LOCK_COMMUNICATION_DELAY);
+    String serverReadArgCountStr=lockClient.message.substring((ARG_COUNT + "=").length());
+    int serverReadArgCount=Integer.parseInt(serverReadArgCountStr);
+    logger.debug("Server read " + serverReadArgCount + " args.");
+    if (serverReadArgCount != args.length)     return LOCK_ERROR;
+    printStream.flush();
+    printStream.close();
+    interInstanceSocket.close();
+  }
+ catch (  Exception e) {
+    logger.debug("Failed to connect to a running sc instance.");
+    return LOCK_ERROR;
+  }
+  return SUCCESS;
+}
