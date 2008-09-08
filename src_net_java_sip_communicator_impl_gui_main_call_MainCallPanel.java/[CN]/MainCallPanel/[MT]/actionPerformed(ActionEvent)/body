@@ -1,0 +1,35 @@
+{
+  JButton button=(JButton)evt.getSource();
+  String buttonName=button.getName();
+  if (buttonName.equals(CALL_BUTTON)) {
+    if (isCallMetaContact) {
+      Object[] selectedContacts=mainFrame.getContactListPanel().getContactList().getSelectedValues();
+      Vector telephonyContacts=new Vector();
+      for (int i=0; i < selectedContacts.length; i++) {
+        Object o=selectedContacts[i];
+        if (o instanceof MetaContact) {
+          Contact contact=((MetaContact)o).getDefaultContact(OperationSetBasicTelephony.class);
+          if (contact != null)           telephonyContacts.add(contact);
+ else {
+            new ErrorDialog(this.mainFrame,Messages.getI18NString("warning").getText(),Messages.getI18NString("contactNotSupportingTelephony",new String[]{((MetaContact)o).getDisplayName()}).getText()).showDialog();
+          }
+        }
+      }
+      if (telephonyContacts.size() > 0)       CallManager.createCall(protocolProvider,telephonyContacts);
+    }
+ else     if (!phoneNumberCombo.isComboFieldEmpty()) {
+      String stringContact=phoneNumberCombo.getEditor().getItem().toString();
+      CallManager.createCall(protocolProvider,stringContact);
+    }
+  }
+ else   if (buttonName.equals(DIAL_BUTTON)) {
+    if (!dialpadDialog.isVisible()) {
+      dialpadDialog.setSize(mainFrame.getWidth() - 20,dialpadDialog.getHeight());
+      dialpadDialog.setLocation(mainFrame.getX() + 10,dialButton.getLocationOnScreen().y - dialpadDialog.getHeight());
+      dialpadDialog.setVisible(true);
+    }
+ else {
+      dialpadDialog.setVisible(false);
+    }
+  }
+}

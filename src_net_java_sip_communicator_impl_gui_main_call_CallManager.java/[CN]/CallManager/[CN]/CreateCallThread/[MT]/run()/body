@@ -1,38 +1,21 @@
 {
-  if (telephony == null)   return;
-  Call createdCall=null;
-  if (contacts != null) {
-    Contact contact=(Contact)contacts.get(0);
-    try {
-      createdCall=telephony.createCall(contact);
+  OperationSetBasicTelephony telephonyOpSet=(OperationSetBasicTelephony)protocolProvider.getOperationSet(OperationSetBasicTelephony.class);
+  if (telephonyOpSet == null)   return;
+  try {
+    if (contacts != null) {
+      Contact contact=(Contact)contacts.get(0);
+      telephonyOpSet.createCall(contact);
     }
- catch (    OperationFailedException e) {
-      logger.error("The call could not be created: " + e);
-      callPanel.getParticipantPanel(contact.getDisplayName()).setState(e.getMessage());
-      removeCallPanelWait(callPanel);
-    }
-    if (createdCall != null) {
-      callPanel.setCall(createdCall,GuiCallParticipantRecord.OUTGOING_CALL);
-      activeCalls.put(createdCall,callPanel);
+ else {
+      telephonyOpSet.createCall(stringContact);
     }
   }
- else {
-    try {
-      createdCall=telephony.createCall(stringContact);
-    }
- catch (    ParseException e) {
-      logger.error("The call could not be created: " + e);
-      callPanel.getParticipantPanel(stringContact).setState(e.getMessage());
-      removeCallPanelWait(callPanel);
-    }
-catch (    OperationFailedException e) {
-      logger.error("The call could not be created: " + e);
-      callPanel.getParticipantPanel(stringContact).setState(e.getMessage());
-      removeCallPanelWait(callPanel);
-    }
-    if (createdCall != null) {
-      callPanel.setCall(createdCall,GuiCallParticipantRecord.OUTGOING_CALL);
-      activeCalls.put(createdCall,callPanel);
-    }
+ catch (  OperationFailedException e) {
+    logger.error("The call could not be created: " + e);
+    new ErrorDialog(null,GuiActivator.getResources().getI18NString("error"),e.getMessage(),ErrorDialog.ERROR).showDialog();
+  }
+catch (  ParseException e) {
+    logger.error("The call could not be created: " + e);
+    new ErrorDialog(null,GuiActivator.getResources().getI18NString("error"),e.getMessage(),ErrorDialog.ERROR).showDialog();
   }
 }

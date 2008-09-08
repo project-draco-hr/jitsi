@@ -7,7 +7,16 @@
   this.wizardContainer=new AccountRegWizardContainerImpl(mainFrame);
   this.configurationFrame=new ConfigurationFrame(mainFrame);
   mainFrame.setContactList(GuiActivator.getMetaContactListService());
-  if (ConfigurationManager.isApplicationVisible())   SwingUtilities.invokeLater(new RunApplicationGui());
+  if (ConfigurationManager.isTransparentWindowEnabled()) {
+    try {
+      WindowUtils.setWindowTransparent(mainFrame,true);
+    }
+ catch (    UnsupportedOperationException ex) {
+      logger.error(ex.getMessage(),ex);
+      ConfigurationManager.setTransparentWindowEnabled(false);
+    }
+  }
+  if (ConfigurationManager.isApplicationVisible())   mainFrame.setVisible(true);
   SwingUtilities.invokeLater(new RunLoginGui());
   this.initExportedWindows();
 }

@@ -1,0 +1,26 @@
+{
+  int status=0;
+  Iterator pProviders=mainFrame.getProtocolProviders();
+  boolean isProtocolHidden;
+  while (pProviders.hasNext()) {
+    ProtocolProviderService protocolProvider=(ProtocolProviderService)pProviders.next();
+    isProtocolHidden=protocolProvider.getAccountID().getAccountProperties().get(ProtocolProviderFactory.IS_PROTOCOL_HIDDEN) != null;
+    if (isProtocolHidden)     continue;
+    OperationSetPresence presence=(OperationSetPresence)protocolProvider.getOperationSet(OperationSetPresence.class);
+    if (presence == null) {
+      if (protocolProvider.isRegistered() && status < PresenceStatus.AVAILABLE_THRESHOLD) {
+        status=PresenceStatus.AVAILABLE_THRESHOLD;
+      }
+    }
+ else {
+      if (protocolProvider.isRegistered() && status < presence.getPresenceStatus().getStatus()) {
+        status=presence.getPresenceStatus().getStatus();
+      }
+    }
+  }
+  JMenuItem item=getItemFromStatus(status);
+  SelectedObject selectedObject=new SelectedObject(item.getText(),(ImageIcon)item.getIcon(),item);
+  setSelected(selectedObject);
+  this.revalidate();
+  setSystrayIcon(status);
+}

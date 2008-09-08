@@ -1,0 +1,27 @@
+{
+  StatusSelectorMenu accountMenu=(StatusSelectorMenu)accountMenus.get(protocolProvider);
+  if (accountMenu == null)   return;
+  if (accountMenu instanceof PresenceStatusMenu) {
+    PresenceStatusMenu presenceStatusMenu=(PresenceStatusMenu)accountMenu;
+    if (!protocolProvider.isRegistered())     presenceStatusMenu.updateStatus(presenceStatusMenu.getOfflineStatus());
+ else {
+      if (presenceStatusMenu.getLastSelectedStatus() != null) {
+        presenceStatusMenu.updateStatus(presenceStatusMenu.getLastSelectedStatus());
+      }
+ else {
+        PresenceStatus lastStatus=getLastPresenceStatus(protocolProvider);
+        if (lastStatus == null) {
+          presenceStatusMenu.updateStatus(presenceStatusMenu.getOnlineStatus());
+        }
+ else {
+          presenceStatusMenu.updateStatus(lastStatus);
+        }
+      }
+    }
+  }
+ else {
+    ((SimpleStatusMenu)accountMenu).updateStatus();
+  }
+  accountMenu.repaint();
+  this.updateGlobalStatus();
+}

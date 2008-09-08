@@ -5,19 +5,14 @@
   OperationSetPresence presence=mainFrame.getProtocolPresenceOpSet(protocolProvider);
   OperationSetMultiUserChat multiUserChat=mainFrame.getMultiUserChatOpSet(protocolProvider);
   if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
-    this.mainFrame.getStatusPanel().updateStatus(protocolProvider);
-    if (mainFrame.getCallManager().containsCallAccount(protocolProvider)) {
-      this.mainFrame.getCallManager().updateCallAccountStatus(protocolProvider);
-    }
     if (presence != null) {
       presence.setAuthorizationHandler(new AuthorizationHandlerImpl(mainFrame));
     }
     if (multiUserChat != null) {
-      mainFrame.getChatRoomsListPanel().getChatRoomsList().synchronizeOpSetWithLocalContactList(protocolProvider,multiUserChat);
+      mainFrame.getMultiUserChatManager().getChatRoomList().synchronizeOpSetWithLocalContactList(protocolProvider,multiUserChat);
     }
   }
  else   if (evt.getNewState().equals(RegistrationState.AUTHENTICATION_FAILED)) {
-    this.mainFrame.getStatusPanel().updateStatus(evt.getProvider());
     if (evt.getReasonCode() == RegistrationStateChangeEvent.REASON_RECONNECTION_RATE_LIMIT_EXCEEDED) {
       String msgText=Messages.getI18NString("reconnectionLimitExceeded",new String[]{accountID.getUserID(),accountID.getService()}).getText();
       new ErrorDialog(null,Messages.getI18NString("error").getText(),msgText).showDialog();
@@ -29,7 +24,6 @@
     logger.error(evt.getReason());
   }
  else   if (evt.getNewState().equals(RegistrationState.CONNECTION_FAILED)) {
-    this.mainFrame.getStatusPanel().updateStatus(evt.getProvider());
     String msgText=Messages.getI18NString("connectionFailedMessage",new String[]{accountID.getUserID(),accountID.getService()}).getText();
     int result=new MessageDialog(null,Messages.getI18NString("error").getText(),msgText,Messages.getI18NString("retry").getText(),false).showDialog();
     if (result == MessageDialog.OK_RETURN_CODE) {
@@ -38,16 +32,11 @@
     logger.error(evt.getReason());
   }
  else   if (evt.getNewState().equals(RegistrationState.EXPIRED)) {
-    this.mainFrame.getStatusPanel().updateStatus(evt.getProvider());
     String msgText=Messages.getI18NString("connectionExpiredMessage",new String[]{protocolProvider.getProtocolDisplayName()}).getText();
     new ErrorDialog(null,Messages.getI18NString("error").getText(),msgText).showDialog();
     logger.error(evt.getReason());
   }
  else   if (evt.getNewState().equals(RegistrationState.UNREGISTERED)) {
-    this.mainFrame.getStatusPanel().updateStatus(evt.getProvider());
-    if (mainFrame.getCallManager().containsCallAccount(protocolProvider)) {
-      this.mainFrame.getCallManager().updateCallAccountStatus(protocolProvider);
-    }
     if (!manuallyDisconnected) {
       if (evt.getReasonCode() == RegistrationStateChangeEvent.REASON_MULTIPLE_LOGINS) {
         String msgText=Messages.getI18NString("multipleLogins",new String[]{accountID.getUserID(),accountID.getService()}).getText();
