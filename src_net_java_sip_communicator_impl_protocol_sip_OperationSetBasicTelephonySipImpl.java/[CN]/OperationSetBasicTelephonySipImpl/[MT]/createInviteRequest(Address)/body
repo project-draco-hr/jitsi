@@ -1,7 +1,18 @@
 {
   InetAddress destinationInetAddress=null;
   try {
-    destinationInetAddress=InetAddress.getByName(((SipURI)toAddress.getURI()).getHost());
+    String destinationURI=((SipURI)toAddress.getURI()).getHost();
+    if (NetworkUtils.isValidIPAddress(destinationURI)) {
+      byte[] addr=null;
+      addr=IPAddressUtil.textToNumericFormatV4(destinationURI);
+      if (addr == null) {
+        addr=IPAddressUtil.textToNumericFormatV6(destinationURI);
+      }
+      destinationInetAddress=InetAddress.getByAddress(destinationURI,addr);
+    }
+ else {
+      destinationInetAddress=InetAddress.getByName(destinationURI);
+    }
   }
  catch (  UnknownHostException ex) {
     throw new IllegalArgumentException(((SipURI)toAddress.getURI()).getHost() + " is not a valid internet address " + ex.getMessage());
@@ -19,7 +30,7 @@ catch (  ParseException exc) {
     logger.error("An unexpected erro occurred while" + "constructing the CSeqHeadder",exc);
     throw new OperationFailedException("An unexpected erro occurred while" + "constructing the CSeqHeadder",OperationFailedException.INTERNAL_ERROR,exc);
   }
-  String localTag=protocolProvider.generateLocalTag();
+  String localTag=ProtocolProviderServiceSipImpl.generateLocalTag();
   FromHeader fromHeader=null;
   ToHeader toHeader=null;
   try {

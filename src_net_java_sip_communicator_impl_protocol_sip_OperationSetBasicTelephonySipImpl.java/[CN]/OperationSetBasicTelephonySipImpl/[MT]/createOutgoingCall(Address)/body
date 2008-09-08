@@ -33,7 +33,17 @@
     if (calleeURI.isSipURI()) {
       String host=((SipURI)calleeURI).getHost();
       try {
-        intendedDestination=InetAddress.getByName(host);
+        if (NetworkUtils.isValidIPAddress(host)) {
+          byte[] addr=null;
+          addr=IPAddressUtil.textToNumericFormatV4(host);
+          if (addr == null) {
+            addr=IPAddressUtil.textToNumericFormatV6(host);
+          }
+          intendedDestination=InetAddress.getByAddress(host,addr);
+        }
+ else {
+          intendedDestination=InetAddress.getByName(host);
+        }
         invite.setContent(callSession.createSdpOffer(intendedDestination),contentTypeHeader);
       }
  catch (      UnknownHostException ex) {
