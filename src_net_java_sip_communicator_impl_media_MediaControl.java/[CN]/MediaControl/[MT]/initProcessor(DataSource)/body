@@ -30,8 +30,8 @@ catch (  IOException ex) {
   sourceProcessor.setContentDescriptor(new ContentDescriptor(ContentDescriptor.RAW_RTP));
   TrackControl[] trackControls=sourceProcessor.getTrackControls();
   logger.debug("We will be able to transmit in:");
-  List transmittableAudioEncodings=new ArrayList();
-  List transmittableVideoEncodings=new ArrayList();
+  List<String> transmittableAudioEncodings=new ArrayList<String>();
+  List<String> transmittableVideoEncodings=new ArrayList<String>();
   for (int i=0; i < trackControls.length; i++) {
     Format[] formats=trackControls[i].getSupportedFormats();
     for (int j=0; j < formats.length; j++) {
@@ -48,7 +48,7 @@ catch (  IOException ex) {
             transmittableAudioEncodings.add(sdp);
           }
         }
-        if (format instanceof VideoFormat) {
+ else         if (format instanceof VideoFormat) {
           if (!transmittableVideoEncodings.contains(sdp)) {
             if (logger.isDebugEnabled()) {
               logger.debug("Video=[" + (j + 1) + "]="+ encoding+ "; sdp="+ sdp);
@@ -62,20 +62,16 @@ catch (  IOException ex) {
       }
     }
   }
-  if (transmittableAudioEncodings.size() > 0) {
-    supportedAudioEncodings=new String[transmittableAudioEncodings.size()];
-    for (int i=0; i < supportedAudioEncodings.length; i++) {
-      supportedAudioEncodings[i]=(String)transmittableAudioEncodings.get(i);
-    }
+  final int transmittableAudioEncodingCount=transmittableAudioEncodings.size();
+  if (transmittableAudioEncodingCount > 0) {
+    supportedAudioEncodings=transmittableAudioEncodings.toArray(new String[transmittableAudioEncodingCount]);
     this.sortEncodingsArray(supportedAudioEncodings);
   }
 {
   }
-  if (transmittableVideoEncodings.size() > 0) {
-    supportedVideoEncodings=new String[transmittableVideoEncodings.size()];
-    for (int i=0; i < supportedVideoEncodings.length; i++) {
-      supportedVideoEncodings[i]=(String)transmittableVideoEncodings.get(i);
-    }
+  final int transmittableVideoEncodingCount=transmittableVideoEncodings.size();
+  if (transmittableVideoEncodingCount > 0) {
+    supportedVideoEncodings=transmittableVideoEncodings.toArray(new String[transmittableVideoEncodingCount]);
     this.sortEncodingsArray(supportedVideoEncodings);
   }
 {
