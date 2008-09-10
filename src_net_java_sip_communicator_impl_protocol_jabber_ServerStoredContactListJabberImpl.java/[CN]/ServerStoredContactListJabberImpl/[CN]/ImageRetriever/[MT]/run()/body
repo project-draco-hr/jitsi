@@ -1,19 +1,20 @@
 {
   try {
-    Collection copyContactsForUpdate=null;
+    Collection<ContactJabberImpl> copyContactsForUpdate=null;
     while (true) {
 synchronized (contactsForUpdate) {
         if (contactsForUpdate.isEmpty())         contactsForUpdate.wait();
-        copyContactsForUpdate=new Vector(contactsForUpdate);
+        copyContactsForUpdate=new Vector<ContactJabberImpl>(contactsForUpdate);
         contactsForUpdate.clear();
       }
-      Iterator iter=copyContactsForUpdate.iterator();
+      Iterator<ContactJabberImpl> iter=copyContactsForUpdate.iterator();
       while (iter.hasNext()) {
-        ContactJabberImpl contact=(ContactJabberImpl)iter.next();
+        ContactJabberImpl contact=iter.next();
         byte[] imgBytes=getAvatar(contact);
         if (imgBytes != null) {
+          byte[] oldImage=contact.getImage(false);
           contact.setImage(imgBytes);
-          parentOperationSet.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_IMAGE,contact,null,imgBytes);
+          parentOperationSet.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_IMAGE,contact,oldImage,imgBytes);
         }
       }
     }

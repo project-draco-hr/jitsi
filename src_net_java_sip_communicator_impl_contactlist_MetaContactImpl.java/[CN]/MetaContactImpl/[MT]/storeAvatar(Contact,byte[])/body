@@ -1,10 +1,12 @@
 {
   String protocolName=protoContact.getProtocolProvider().getProtocolName();
-  String avatarDirPath=AVATAR_DIR + "/" + protocolName;
+  String avatarDirPath=AVATAR_DIR + File.separator + protocolName;
   String escapedProtocolId=escapeSpecialCharacters(protoContact.getAddress());
+  File avatarDir=null;
+  File avatarFile=null;
   try {
-    File avatarDir=ContactlistActivator.getFileAccessService().getPrivatePersistentDirectory(avatarDirPath);
-    File avatarFile=ContactlistActivator.getFileAccessService().getPrivatePersistentFile(avatarDirPath + "/" + escapedProtocolId);
+    avatarDir=ContactlistActivator.getFileAccessService().getPrivatePersistentDirectory(avatarDirPath);
+    avatarFile=ContactlistActivator.getFileAccessService().getPrivatePersistentFile(avatarDirPath + File.separator + escapedProtocolId);
     if (!avatarFile.exists()) {
       if (!avatarDir.exists())       if (!avatarDir.mkdirs())       throw new IOException("Failed to create directory: " + avatarDir.getAbsolutePath());
       if (!avatarFile.createNewFile())       throw new IOException("Failed to create file" + avatarFile.getAbsolutePath());
@@ -15,6 +17,6 @@
     fileOutStream.close();
   }
  catch (  Exception e) {
-    logger.error("Failed to store avatar.",e);
+    logger.error("Failed to store avatar. dir =" + avatarDir + " file="+ avatarFile,e);
   }
 }
