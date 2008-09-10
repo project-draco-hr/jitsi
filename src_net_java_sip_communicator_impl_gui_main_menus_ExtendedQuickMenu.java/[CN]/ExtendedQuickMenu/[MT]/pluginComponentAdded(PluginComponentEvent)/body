@@ -1,10 +1,20 @@
 {
   PluginComponent pluginComponent=event.getPluginComponent();
   if (!pluginComponent.getContainer().equals(Container.CONTAINER_MAIN_TOOL_BAR))   return;
-  Object constraints=UIServiceImpl.getBorderLayoutConstraintsFromContainer(pluginComponent.getConstraints());
+  int position=pluginComponent.getPositionIndex();
   Component c=(Component)pluginComponent.getComponent();
-  if (constraints != null)   this.add(c,constraints);
- else   this.add(c);
+  if (c == null)   return;
+  if (position > -1) {
+    this.toolBar.add(c,position);
+    components.add(position,c);
+  }
+ else {
+    this.toolBar.add(c);
+    components.add(c);
+  }
+  pluginsTable.put(pluginComponent,c);
+  c.setPreferredSize(new Dimension(DEFAULT_BUTTON_WIDTH,DEFAULT_BUTTON_HEIGHT));
+  c.addComponentListener(this);
   Object selectedValue=mainFrame.getContactListPanel().getContactList().getSelectedValue();
   if (selectedValue instanceof MetaContact) {
     pluginComponent.setCurrentContact((MetaContact)selectedValue);

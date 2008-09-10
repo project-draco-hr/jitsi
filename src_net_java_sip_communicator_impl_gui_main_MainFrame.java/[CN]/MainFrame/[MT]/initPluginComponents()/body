@@ -1,12 +1,14 @@
 {
-  pluginPanelEast.setLayout(new BoxLayout(pluginPanelEast,BoxLayout.Y_AXIS));
   pluginPanelSouth.setLayout(new BoxLayout(pluginPanelSouth,BoxLayout.Y_AXIS));
+  pluginPanelNorth.setLayout(new BoxLayout(pluginPanelNorth,BoxLayout.Y_AXIS));
+  pluginPanelEast.setLayout(new BoxLayout(pluginPanelEast,BoxLayout.Y_AXIS));
   pluginPanelWest.setLayout(new BoxLayout(pluginPanelWest,BoxLayout.Y_AXIS));
+  this.getContentPane().add(pluginPanelNorth,BorderLayout.NORTH);
   this.getContentPane().add(pluginPanelEast,BorderLayout.EAST);
-  this.getContentPane().add(pluginPanelSouth,BorderLayout.SOUTH);
   this.getContentPane().add(pluginPanelWest,BorderLayout.WEST);
+  this.mainPanel.add(pluginPanelSouth,BorderLayout.SOUTH);
   ServiceReference[] serRefs=null;
-  String osgiFilter="(" + Container.CONTAINER_ID + "="+ Container.CONTAINER_MAIN_WINDOW.getID()+ ")";
+  String osgiFilter="(|(" + Container.CONTAINER_ID + "="+ Container.CONTAINER_MAIN_WINDOW.getID()+ ")"+ "("+ Container.CONTAINER_ID+ "="+ Container.CONTAINER_STATUS_BAR.getID()+ "))";
   try {
     serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponent.class.getName(),osgiFilter);
   }
@@ -21,7 +23,7 @@
         Object constraints=null;
         if (c.getConstraints() != null)         constraints=UIServiceImpl.getBorderLayoutConstraintsFromContainer(c.getConstraints());
  else         constraints=BorderLayout.SOUTH;
-        this.addPluginComponent((Component)c.getComponent(),constraints);
+        this.addPluginComponent((Component)c.getComponent(),c.getContainer(),constraints);
       }
     }
   }

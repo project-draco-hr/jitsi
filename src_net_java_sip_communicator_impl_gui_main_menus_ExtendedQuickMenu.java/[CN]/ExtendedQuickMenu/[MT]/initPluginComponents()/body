@@ -12,6 +12,7 @@
       PluginComponent component=(PluginComponent)GuiActivator.bundleContext.getService(serRefs[i]);
       ;
       Object selectedValue=mainFrame.getContactListPanel().getContactList().getSelectedValue();
+      if (component.getComponent() == null)       continue;
       if (selectedValue instanceof MetaContact) {
         component.setCurrentContact((MetaContact)selectedValue);
       }
@@ -19,9 +20,19 @@
         component.setCurrentContactGroup((MetaContactGroup)selectedValue);
       }
       Component c=(Component)component.getComponent();
-      this.pluginsTable.put(component,c);
-      this.add(c);
-      this.repaint();
+      if (c != null) {
+        if (component.getPositionIndex() > -1) {
+          int index=component.getPositionIndex();
+          this.toolBar.add(c,index);
+          this.components.add(index,c);
+        }
+ else {
+          this.toolBar.add(c);
+          this.components.add(c);
+        }
+        this.pluginsTable.put(component,c);
+        this.repaint();
+      }
     }
   }
   GuiActivator.getUIService().addPluginComponentListener(this);
