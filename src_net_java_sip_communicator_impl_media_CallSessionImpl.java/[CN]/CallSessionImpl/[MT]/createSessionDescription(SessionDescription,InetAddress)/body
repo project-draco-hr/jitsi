@@ -17,6 +17,18 @@ catch (        UnknownHostException ex) {
           logger.warn("error reading remote sdp. " + c.toString() + " does not contain a valid address.",ex);
         }
       }
+      Iterator<MediaDescription> mediaDescriptions=(Iterator<MediaDescription>)offer.getMediaDescriptions(true).iterator();
+      while (mediaDescriptions.hasNext()) {
+        Connection conn=mediaDescriptions.next().getConnection();
+        if (conn == null)         continue;
+        try {
+          intendedDestination=NetworkUtils.getInetAddress(conn.getAddress());
+          break;
+        }
+ catch (        UnknownHostException e) {
+          logger.debug("Couldn't determine indtended " + "destination from address" + conn.getAddress(),e);
+        }
+      }
     }
     if ((audioSessionAddress == null) || (videoSessionAddress == null)) {
       allocateMediaPorts(intendedDestination);

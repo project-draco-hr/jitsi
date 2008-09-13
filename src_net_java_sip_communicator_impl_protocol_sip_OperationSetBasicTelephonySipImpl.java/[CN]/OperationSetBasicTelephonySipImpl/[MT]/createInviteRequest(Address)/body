@@ -2,17 +2,7 @@
   InetAddress destinationInetAddress=null;
   try {
     String destinationURI=((SipURI)toAddress.getURI()).getHost();
-    if (NetworkUtils.isValidIPAddress(destinationURI)) {
-      byte[] addr=null;
-      addr=IPAddressUtil.textToNumericFormatV4(destinationURI);
-      if (addr == null) {
-        addr=IPAddressUtil.textToNumericFormatV6(destinationURI);
-      }
-      destinationInetAddress=InetAddress.getByAddress(destinationURI,addr);
-    }
- else {
-      destinationInetAddress=InetAddress.getByName(destinationURI);
-    }
+    destinationInetAddress=protocolProvider.resolveSipAddress(destinationURI).getAddress();
   }
  catch (  UnknownHostException ex) {
     throw new IllegalArgumentException(((SipURI)toAddress.getURI()).getHost() + " is not a valid internet address " + ex.getMessage());

@@ -1,0 +1,21 @@
+{
+  InetSocketAddress sockAddr=null;
+  if (NetworkUtils.isValidIPAddress(address)) {
+    InetAddress addressObj=NetworkUtils.getInetAddress(address);
+    return new InetSocketAddress(addressObj,getListeningPoint(transport).getPort());
+  }
+  try {
+    if (transport.equalsIgnoreCase(ListeningPoint.TLS)) {
+      sockAddr=NetworkUtils.getSRVRecord("sips",ListeningPoint.TCP,address);
+    }
+ else {
+      sockAddr=NetworkUtils.getSRVRecord("sip",transport,address);
+    }
+  }
+ catch (  ParseException e) {
+    throw new UnknownHostException(address);
+  }
+  if (sockAddr != null)   return sockAddr;
+  InetAddress addressObj=InetAddress.getByName(address);
+  return new InetSocketAddress(addressObj,getListeningPoint(transport).getPort());
+}

@@ -32,26 +32,15 @@
     InetAddress intendedDestination=null;
     if (calleeURI.isSipURI()) {
       String host=((SipURI)calleeURI).getHost();
-      try {
-        if (NetworkUtils.isValidIPAddress(host)) {
-          byte[] addr=null;
-          addr=IPAddressUtil.textToNumericFormatV4(host);
-          if (addr == null) {
-            addr=IPAddressUtil.textToNumericFormatV6(host);
-          }
-          intendedDestination=InetAddress.getByAddress(host,addr);
-        }
- else {
-          intendedDestination=InetAddress.getByName(host);
-        }
-        invite.setContent(callSession.createSdpOffer(intendedDestination),contentTypeHeader);
-      }
- catch (      UnknownHostException ex) {
-        logger.warn("Failed to obtain an InetAddress for " + host,ex);
-      }
+      intendedDestination=protocolProvider.resolveSipAddress(host).getAddress();
+      invite.setContent(callSession.createSdpOffer(intendedDestination),contentTypeHeader);
     }
   }
- catch (  ParseException ex) {
+ catch (  UnknownHostException ex) {
+    logger.warn("Failed to obtain an InetAddress." + ex.getMessage(),ex);
+    throw new OperationFailedException("Failed to obtain an InetAddress for " + ex.getMessage(),OperationFailedException.NETWORK_FAILURE,ex);
+  }
+catch (  ParseException ex) {
     logger.error("Failed to parse sdp data while creating invite request!",ex);
     throw new OperationFailedException("Failed to parse sdp data while creating invite request!",OperationFailedException.INTERNAL_ERROR,ex);
   }
