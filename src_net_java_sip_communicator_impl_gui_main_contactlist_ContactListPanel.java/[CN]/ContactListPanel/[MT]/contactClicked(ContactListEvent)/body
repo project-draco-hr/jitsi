@@ -5,13 +5,14 @@
   OperationSetBasicInstantMessaging defaultIM=(OperationSetBasicInstantMessaging)defaultProvider.getOperationSet(OperationSetBasicInstantMessaging.class);
   ProtocolProviderService protoContactProvider;
   OperationSetBasicInstantMessaging protoContactIM;
-  if (defaultContact.getPresenceStatus().getStatus() < 1 && (!defaultIM.isOfflineMessagingSupported() || !defaultProvider.isRegistered())) {
+  boolean isOfflineMessagingSupported=defaultIM != null && !defaultIM.isOfflineMessagingSupported();
+  if (defaultContact.getPresenceStatus().getStatus() < 1 && (!isOfflineMessagingSupported || !defaultProvider.isRegistered())) {
     Iterator<Contact> protoContacts=metaContact.getContacts();
     while (protoContacts.hasNext()) {
       Contact contact=protoContacts.next();
       protoContactProvider=contact.getProtocolProvider();
       protoContactIM=(OperationSetBasicInstantMessaging)protoContactProvider.getOperationSet(OperationSetBasicInstantMessaging.class);
-      if (protoContactIM.isOfflineMessagingSupported() && protoContactProvider.isRegistered()) {
+      if (protoContactIM != null && protoContactIM.isOfflineMessagingSupported() && protoContactProvider.isRegistered()) {
         defaultContact=contact;
       }
     }
