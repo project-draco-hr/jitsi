@@ -2,7 +2,7 @@
   final ProtocolProviderService protocolProvider=evt.getProvider();
   this.updateStatus(protocolProvider);
   if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
-    SwingUtilities.invokeLater(new Runnable(){
+    new Thread(new Runnable(){
       public void run(){
         OperationSetServerStoredAccountInfo accountInfoOpSet=(OperationSetServerStoredAccountInfo)protocolProvider.getOperationSet(OperationSetServerStoredAccountInfo.class);
         if (accountInfoOpSet != null) {
@@ -20,7 +20,8 @@
             accountName+=" " + lastName;
           }
           if (accountName.length() == 0) {
-            accountName+=AccountInfoUtils.getDisplayName(accountInfoOpSet);
+            String displayName=AccountInfoUtils.getDisplayName(accountInfoOpSet);
+            if (displayName != null)             accountName=displayName;
           }
           if (accountName.length() > 0) {
             accountNameLabel.setText(accountName);
@@ -30,6 +31,6 @@
         }
       }
     }
-);
+).start();
   }
 }
