@@ -1,12 +1,23 @@
 {
-  try {
-    versionProperties.load(getClass().getResourceAsStream(VERSION_PROPERTIES));
-    String osName=System.getProperty("os.name");
-    if (osName.startsWith("Mac")) {
-      new AEGetURLEventHandler(this);
+  InputStream versionPropertiesStream=getClass().getResourceAsStream(VERSION_PROPERTIES);
+  boolean versionPropertiesAreLoaded=false;
+  if (versionPropertiesStream != null) {
+    try {
+      try {
+        versionProperties.load(versionPropertiesStream);
+        versionPropertiesAreLoaded=true;
+      }
+  finally {
+        versionPropertiesStream.close();
+      }
+    }
+ catch (    IOException exc) {
     }
   }
- catch (  IOException exc) {
+  if (!versionPropertiesAreLoaded) {
     logger.trace("Couldn't open version.properties");
+  }
+  if (System.getProperty("os.name").startsWith("Mac")) {
+    new AEGetURLEventHandler(this);
   }
 }

@@ -7,14 +7,10 @@
  catch (  InvalidSyntaxException e) {
     logger.error("Unable to obtain service references. " + e);
   }
-  for (int i=0; i < serRefs.length; i++) {
-    ProtocolProviderFactory providerFactory=(ProtocolProviderFactory)bundleContext.getService(serRefs[i]);
-    ArrayList accountsList=providerFactory.getRegisteredAccounts();
-    AccountID accountID;
-    ServiceReference serRef;
-    ProtocolProviderService protocolProvider;
-    for (int j=0; j < accountsList.size(); j++) {
-      accountID=(AccountID)accountsList.get(j);
+  for (int serRefIndex=0; serRefIndex < serRefs.length; serRefIndex++) {
+    ProtocolProviderFactory providerFactory=(ProtocolProviderFactory)bundleContext.getService(serRefs[serRefIndex]);
+    for (Iterator<AccountID> registeredAccountIter=providerFactory.getRegisteredAccounts().iterator(); registeredAccountIter.hasNext(); ) {
+      AccountID accountID=registeredAccountIter.next();
       boolean isHidden=accountID.getAccountProperties().get(ProtocolProviderFactory.IS_PROTOCOL_HIDDEN) != null;
       if (!isHidden) {
         hasRegisteredAccounts=true;

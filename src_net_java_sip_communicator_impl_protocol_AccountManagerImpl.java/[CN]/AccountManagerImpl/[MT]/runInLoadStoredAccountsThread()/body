@@ -1,0 +1,40 @@
+{
+  boolean interrupted=false;
+  while (!interrupted) {
+    try {
+      ProtocolProviderFactory factory;
+synchronized (loadStoredAccountsQueue) {
+        factory=loadStoredAccountsQueue.poll();
+        if (factory == null) {
+          try {
+            loadStoredAccountsQueue.wait(LOAD_STORED_ACCOUNTS_TIMEOUT);
+          }
+ catch (          InterruptedException ex) {
+            logger.warn("The loading of the stored accounts has been interrupted",ex);
+            interrupted=true;
+            break;
+          }
+          factory=loadStoredAccountsQueue.poll();
+        }
+      }
+      if (factory != null) {
+        try {
+          loadStoredAccounts(factory);
+        }
+ catch (        Exception ex) {
+          logger.error("Failed to load accounts for " + factory,ex);
+        }
+      }
+    }
+  finally {
+synchronized (loadStoredAccountsQueue) {
+        if (!interrupted && (loadStoredAccountsQueue.size() <= 0)) {
+          if (loadStoredAccountsThread == Thread.currentThread()) {
+            loadStoredAccountsThread=null;
+          }
+          break;
+        }
+      }
+    }
+  }
+}

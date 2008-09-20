@@ -1,0 +1,34 @@
+{
+  ConfigurationService configService=getConfigurationService();
+  String factoryPackage=getFactoryImplPackageName(factory);
+  List<String> storedAccounts=configService.getPropertyNamesByPrefix(factoryPackage,true);
+  logger.debug("Discovered " + storedAccounts.size() + " stored "+ factoryPackage+ " accounts");
+  for (Iterator<String> storedAccountIter=storedAccounts.iterator(); storedAccountIter.hasNext(); ) {
+    String storedAccount=storedAccountIter.next();
+    logger.debug("Loading account " + storedAccount);
+    List<String> storedAccountProperties=configService.getPropertyNamesByPrefix(storedAccount,true);
+    Map<String,String> accountProperties=new Hashtable<String,String>();
+    for (Iterator<String> storedAccountPropertyIter=storedAccountProperties.iterator(); storedAccountPropertyIter.hasNext(); ) {
+      String property=storedAccountPropertyIter.next();
+      String value=configService.getString(property);
+      property=stripPackagePrefix(property);
+      if (ProtocolProviderFactory.PASSWORD.equals(property)) {
+        if (value == null) {
+          value="";
+        }
+ else         if (value.length() != 0) {
+          value=new String(Base64.decode(value));
+        }
+      }
+      if (value != null) {
+        accountProperties.put(property,value);
+      }
+    }
+    try {
+      factory.loadAccount(accountProperties);
+    }
+ catch (    Exception ex) {
+      logger.error("Failed to load account " + accountProperties,ex);
+    }
+  }
+}
