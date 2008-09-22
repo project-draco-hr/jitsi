@@ -1,0 +1,33 @@
+{
+  if (cryptoProvider == null) {
+    return false;
+  }
+  if (timeoutProvider == null) {
+    timeoutProvider=new TimeoutProvider("ZRTP");
+    timeoutProvider.setDaemon(true);
+    timeoutProvider.start();
+  }
+  ZidFile zf=ZidFile.getInstance();
+  if (!zf.isOpen()) {
+    String fname;
+    if (zidFilename == null) {
+      String home=System.getenv("HOME");
+      String baseDir=(home != null) ? ((home) + ("/.")) : ".";
+      fname=baseDir + "GNUZRTP4J.zid";
+      zidFilename=fname;
+    }
+    if (zf.open(zidFilename) < 0) {
+      enableZrtp=false;
+      return false;
+    }
+  }
+  enableZrtp=autoEnable;
+  try {
+    zrtpEngine=new ZRtp(zf.getZid(),this,clientIdString,cryptoProvider);
+  }
+ catch (  GeneralSecurityException e) {
+    e.printStackTrace();
+  }
+  userCallback.init();
+  return true;
+}

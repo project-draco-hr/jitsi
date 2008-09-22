@@ -1,0 +1,31 @@
+{
+  while (!stop) {
+synchronized (sync) {
+      while (!newTask && !stop) {
+        try {
+          sync.wait();
+        }
+ catch (        InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+    long endTime=System.currentTimeMillis() + nextDelay;
+    long currentTime=System.currentTimeMillis();
+synchronized (sync) {
+      while ((currentTime <= endTime) && newTask && !stop) {
+        try {
+          sync.wait(endTime - currentTime);
+        }
+ catch (        InterruptedException e) {
+          e.printStackTrace();
+        }
+        currentTime=System.currentTimeMillis();
+      }
+    }
+    if (newTask && !stop) {
+      newTask=false;
+      executor.handleTimeout();
+    }
+  }
+}

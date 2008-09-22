@@ -1,0 +1,25 @@
+{
+  ZrtpRawPacket zPkt=new ZrtpRawPacket(pkt);
+  if (!zPkt.isZrtpPacket()) {
+    if (!started && enableZrtp && sendPacketCount >= 1) {
+      startZrtp();
+    }
+    if (srtpInTransformer == null) {
+      return pkt;
+    }
+    pkt=srtpInTransformer.reverseTransform(pkt);
+    return pkt;
+  }
+  if (enableZrtp) {
+    if (!zPkt.checkCrc()) {
+      userCallback.showMessage(ZrtpCodes.MessageSeverity.Warning,EnumSet.of(ZrtpCodes.WarningCodes.WarningCRCmismatch));
+      return null;
+    }
+    if (!zPkt.hasMagic() || zrtpEngine == null) {
+      return null;
+    }
+    byte[] extHeader=zPkt.getMessagePart();
+    zrtpEngine.processZrtpMessage(extHeader);
+  }
+  return null;
+}

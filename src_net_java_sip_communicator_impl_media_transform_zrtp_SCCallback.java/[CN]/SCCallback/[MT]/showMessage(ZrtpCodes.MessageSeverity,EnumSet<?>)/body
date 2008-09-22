@@ -1,0 +1,31 @@
+{
+  Iterator ii=subCode.iterator();
+  Object msgCode=ii.next();
+  logger.info("Show message sub code: " + msgCode);
+  System.err.println("Show message sub code: " + msgCode);
+  if (msgCode.equals(CallSessionImpl.ZRTPCustomInfoCodes.ZRTPNotEnabledByUser)) {
+    zrtpLabel.setBorder(BorderFactory.createLineBorder(Color.RED));
+    zrtpLabel.setText(SCCallbackResources.SAS_NOT_SECURED_MESSAGE);
+    zrtpLabel.setToolTipText(SCCallbackResources.SAS_NOT_SECURED_TOOLTIP);
+    showTooltip();
+  }
+  if (msgCode.equals(CallSessionImpl.ZRTPCustomInfoCodes.ZRTPDisabledByCallEnd)) {
+    zrtpLabel.setBorder(BorderFactory.createLineBorder(Color.BLUE));
+    zrtpLabel.setText(SCCallbackResources.DEFAULT_SAS_MESSAGE);
+    zrtpLabel.setToolTipText(SCCallbackResources.DEFAULT_SAS_TOOLTIP);
+    String command=zrtpButton.getActionCommand();
+    if (!command.equals("startSecureMode")) {
+      zrtpButton.removeActionListener(this);
+      for (int i=0; i < listeners.length; i++)       zrtpButton.addActionListener(listeners[i]);
+      zrtpButton.setActionCommand("startSecureMode");
+    }
+  }
+  if (msgCode.equals(CallSessionImpl.ZRTPCustomInfoCodes.ZRTPEngineInitFailure)) {
+    zrtpLabel.setBorder(BorderFactory.createLineBorder(Color.RED));
+    zrtpLabel.setText(SCCallbackResources.ENGINE_FAIL_SAS_MESSAGE);
+    zrtpLabel.setToolTipText(SCCallbackResources.ENGINE_FAIL_SAS_TOOLTIP);
+    zrtpButton.setActionCommand("zrtpInitFail");
+    zrtpButton.doClick();
+    showTooltip();
+  }
+}
