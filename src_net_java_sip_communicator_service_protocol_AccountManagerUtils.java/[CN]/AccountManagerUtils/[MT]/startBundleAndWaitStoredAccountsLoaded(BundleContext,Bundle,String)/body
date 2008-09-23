@@ -1,0 +1,33 @@
+{
+  AccountManager accountManager=getAccountManager(bundleContextWithAccountManager);
+  final boolean[] storedAccountsAreLoaded=new boolean[1];
+  AccountManagerListener listener=new AccountManagerListener(){
+    public void handleAccountManagerEvent(    AccountManagerEvent event){
+      if (AccountManagerEvent.STORED_ACCOUNTS_LOADED == event.getType()) {
+        ProtocolProviderFactory factory=event.getFactory();
+        if ((factory == null) || protocolNameToWait.equals(factory.getProtocolName())) {
+synchronized (storedAccountsAreLoaded) {
+            storedAccountsAreLoaded[0]=true;
+            storedAccountsAreLoaded.notify();
+          }
+        }
+      }
+    }
+  }
+;
+  accountManager.addListener(listener);
+  try {
+    bundleToStart.start();
+    while (true) {
+synchronized (storedAccountsAreLoaded) {
+        if (storedAccountsAreLoaded[0]) {
+          break;
+        }
+        storedAccountsAreLoaded.wait();
+      }
+    }
+  }
+  finally {
+    accountManager.removeListener(listener);
+  }
+}
