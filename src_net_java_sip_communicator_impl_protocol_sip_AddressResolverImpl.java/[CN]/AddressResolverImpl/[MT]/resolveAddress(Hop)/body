@@ -1,14 +1,16 @@
 {
   try {
-    String lookupStr=null;
-    if (inputAddress.getTransport().equalsIgnoreCase(ListeningPoint.UDP))     lookupStr="_sip._udp." + inputAddress.getHost();
- else     if (inputAddress.getTransport().equalsIgnoreCase(ListeningPoint.TCP))     lookupStr="_sip._tcp." + inputAddress.getHost();
- else     if (inputAddress.getTransport().equalsIgnoreCase(ListeningPoint.TLS))     lookupStr="_sips._tcp." + inputAddress.getHost();
-    InetSocketAddress hosts[]=NetworkUtils.getSRVRecords(lookupStr);
-    if (hosts != null && hosts.length > 0) {
-      logger.trace("Will set server address from SRV records " + hosts[0]);
-      return new HopImpl(hosts[0].getHostName(),hosts[0].getPort(),inputAddress.getTransport());
+    InetSocketAddress host=null;
+    String transport=inputAddress.getTransport();
+    if (transport == null)     transport=ListeningPoint.UDP;
+    if (transport.equalsIgnoreCase(ListeningPoint.TLS)) {
+      host=NetworkUtils.getSRVRecord("sips",ListeningPoint.TCP,inputAddress.getHost());
     }
+ else {
+      host=NetworkUtils.getSRVRecord("sip",transport,inputAddress.getHost());
+    }
+    if (logger.isTraceEnabled())     logger.trace("Returning hop as follows" + " host= " + host.getHostName() + " port= "+ host.getPort()+ " transport= "+ transport);
+    return new HopImpl(host.getHostName(),host.getPort(),transport);
   }
  catch (  Exception ex) {
     logger.error("Domain not resolved " + ex.getMessage());

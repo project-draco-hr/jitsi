@@ -1,11 +1,12 @@
 {
   try {
+    logger.logEntry();
     FromHeader fromHeader=null;
     try {
       fromHeader=provider.getHeaderFactory().createFromHeader(provider.getOurSipAddress(),ProtocolProviderServiceSipImpl.generateLocalTag());
     }
  catch (    ParseException ex) {
-      logger.error("Failed to generate a from header for our register request.",ex);
+      logger.error("Failed to generate a from header for " + "our register request.",ex);
       return;
     }
     CallIdHeader callIdHeader=provider.getDefaultJainSipProvider().getNewCallId();
@@ -44,9 +45,10 @@ catch (    InvalidArgumentException ex) {
       String domain=((SipURI)toHeader.getAddress().getURI()).getHost();
       SipURI requestURI=provider.getAddressFactory().createSipURI(null,domain);
       request=provider.getMessageFactory().createRequest(requestURI,Request.OPTIONS,callIdHeader,cSeqHeader,fromHeader,toHeader,viaHeaders,maxForwardsHeader);
+      if (logger.isDebugEnabled())       logger.debug("Created OPTIONS request " + request);
     }
  catch (    ParseException ex) {
-      logger.error("Could not create the register request!",ex);
+      logger.error("Could not create an OPTIONS request!",ex);
       return;
     }
     Iterator supportedMethods=provider.getSupportedMethods().iterator();

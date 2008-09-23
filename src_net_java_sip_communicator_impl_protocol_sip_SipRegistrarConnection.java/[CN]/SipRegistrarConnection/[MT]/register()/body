@@ -9,7 +9,7 @@
     setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,ex.getMessage());
     throw new OperationFailedException("Failed to generate a from header for our register request.",OperationFailedException.INTERNAL_ERROR,ex);
   }
-  CallIdHeader callIdHeader=this.getRegistrarJainSipProvider().getNewCallId();
+  CallIdHeader callIdHeader=this.getJainSipProvider().getNewCallId();
   CSeqHeader cSeqHeader=null;
   try {
     cSeqHeader=sipProvider.getHeaderFactory().createCSeqHeader(getNextCSeqValue(),Request.REGISTER);
@@ -33,7 +33,7 @@ catch (  InvalidArgumentException ex) {
     setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,ex.getMessage());
     throw new OperationFailedException("Could not create a To header for address:" + fromHeader.getAddress(),OperationFailedException.INTERNAL_ERROR,ex);
   }
-  ArrayList viaHeaders=sipProvider.getLocalViaHeaders(registrarAddress,getRegistrarListeningPoint());
+  ArrayList viaHeaders=sipProvider.getLocalViaHeaders(registrarAddress,getListeningPoint());
   MaxForwardsHeader maxForwardsHeader=sipProvider.getMaxForwardsHeader();
   Request request=null;
   try {
@@ -70,7 +70,7 @@ catch (  InvalidArgumentException ex) {
     }
   }
   request.addHeader(expHeader);
-  ContactHeader contactHeader=sipProvider.getContactHeader(registrarAddress,getRegistrarListeningPoint());
+  ContactHeader contactHeader=sipProvider.getContactHeader(registrarAddress,getListeningPoint());
   try {
     contactHeader.setExpires(registrationsExpiration);
   }
@@ -79,7 +79,7 @@ catch (  InvalidArgumentException ex) {
   }
   request.addHeader(contactHeader);
   try {
-    regTrans=getRegistrarJainSipProvider().getNewClientTransaction(request);
+    regTrans=getJainSipProvider().getNewClientTransaction(request);
   }
  catch (  TransactionUnavailableException ex) {
     logger.error("Could not create a register transaction!\n" + "Check that the Registrar address is correct!",ex);
