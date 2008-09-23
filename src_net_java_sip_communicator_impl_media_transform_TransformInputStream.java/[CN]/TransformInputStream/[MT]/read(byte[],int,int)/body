@@ -1,26 +1,10 @@
 {
-  while (true) {
-    DatagramPacket p=new DatagramPacket(this.buffer,0,65535);
-    try {
-      this.socket.receive(p);
-    }
- catch (    IOException e) {
-      return -1;
-    }
-    RawPacket pkt=this.transformer.reverseTransform(new RawPacket(this.buffer,0,p.getLength()));
-    if (pkt == null) {
-      continue;
-    }
- else {
-      if (length < pkt.getLength()) {
-        throw new IOException("Input buffer not big enough for " + String.valueOf(pkt.getLength()));
-      }
-      System.arraycopy(pkt.getBuffer(),pkt.getOffset(),buffer,offset,pkt.getLength());
-synchronized (this) {
-        this.gotData=true;
-        notifyAll();
-      }
-      return pkt.getLength();
-    }
+  if (ioError) {
+    return -1;
   }
+  if (length < pkt.getLength()) {
+    throw new IOException("Input buffer not big enough for " + String.valueOf(pkt.getLength()));
+  }
+  System.arraycopy(pkt.getBuffer(),pkt.getOffset(),inBuffer,offset,pkt.getLength());
+  return pkt.getLength();
 }

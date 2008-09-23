@@ -1,0 +1,21 @@
+{
+  final int BLKLEN=16;
+  byte[] in=new byte[BLKLEN];
+  byte[] tmp=new byte[BLKLEN];
+  System.arraycopy(iv,0,in,0,14);
+  try {
+    int ctr;
+    for (ctr=0; ctr < length / BLKLEN; ctr++) {
+      in[14]=(byte)((ctr & 0xFF00) >> 8);
+      in[15]=(byte)((ctr & 0x00FF));
+      aesCipher.update(in,0,BLKLEN,out,ctr * BLKLEN);
+    }
+    in[14]=(byte)((ctr & 0xFF00) >> 8);
+    in[15]=(byte)((ctr & 0x00FF));
+    aesCipher.doFinal(in,0,BLKLEN,tmp,0);
+    System.arraycopy(tmp,0,out,ctr * BLKLEN,length % BLKLEN);
+  }
+ catch (  GeneralSecurityException e) {
+    e.printStackTrace();
+  }
+}

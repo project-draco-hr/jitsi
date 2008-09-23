@@ -29,7 +29,16 @@
       target=new SessionAddress(inetAddress,port);
       RTPManager rtpManager=type.equals("video") ? getVideoRtpManager() : getAudioRtpManager();
       try {
-        rtpManager.addTarget(target);
+        if (selectedKeyProviderAlgorithm != null && rtpManager.equals(audioRtpManager)) {
+          TransformConnector transConnector=(TransformConnector)this.transConnectors.get(rtpManager);
+          if (transConnector == null) {
+            throw new Exception();
+          }
+          transConnector.addTarget(target);
+        }
+ else {
+          rtpManager.addTarget(target);
+        }
         logger.trace("added target " + target + " for type "+ type);
       }
  catch (      Exception exc) {

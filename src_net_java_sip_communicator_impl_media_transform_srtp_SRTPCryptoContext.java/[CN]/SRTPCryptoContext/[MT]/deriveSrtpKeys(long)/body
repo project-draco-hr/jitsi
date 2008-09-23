@@ -2,17 +2,34 @@
   byte[] iv=new byte[16];
   long label=0;
   computeIv(iv,label,index,this.keyDerivationRate,this.masterSalt);
-  SRTPCipherCTR aes=new SRTPCipherCTR(this.masterKey);
-  aes.getCipherStream(this.encKey,this.policy.getEncKeyLength(),iv);
+  SecretKey encryptionKey=new SecretKeySpec(masterKey,0,policy.getEncKeyLength(),"AES");
+  try {
+    AEScipher.init(Cipher.ENCRYPT_MODE,encryptionKey);
+  }
+ catch (  InvalidKeyException e1) {
+    e1.printStackTrace();
+  }
+  SRTPCipherCTR.getCipherStream(AEScipher,encKey,policy.getEncKeyLength(),iv);
   if (this.authKey != null) {
     label=0x01;
     computeIv(iv,label,index,this.keyDerivationRate,this.masterSalt);
-    aes=new SRTPCipherCTR(this.masterKey);
-    aes.getCipherStream(this.authKey,this.policy.getAuthKeyLength(),iv);
-    this.digest=new SRTPDigest(this.authKey);
+    SRTPCipherCTR.getCipherStream(AEScipher,authKey,policy.getAuthKeyLength(),iv);
+    SecretKey key=new SecretKeySpec(authKey,"HMAC");
+    try {
+      hmacSha1.init(key);
+    }
+ catch (    InvalidKeyException e) {
+      e.printStackTrace();
+    }
   }
   label=0x02;
   computeIv(iv,label,index,this.keyDerivationRate,this.masterSalt);
-  aes=new SRTPCipherCTR(this.masterKey);
-  aes.getCipherStream(this.saltKey,this.policy.getSaltKeyLength(),iv);
+  SRTPCipherCTR.getCipherStream(AEScipher,saltKey,policy.getSaltKeyLength(),iv);
+  encryptionKey=new SecretKeySpec(encKey,0,policy.getEncKeyLength(),"AES");
+  try {
+    AEScipher.init(Cipher.ENCRYPT_MODE,encryptionKey);
+  }
+ catch (  InvalidKeyException e) {
+    e.printStackTrace();
+  }
 }

@@ -1,0 +1,35 @@
+{
+  F8Context f8ctx=new SRTPCipherF8().new F8Context();
+  f8ctx.ivAccent=new byte[BLKLEN];
+  byte[] saltMask=new byte[key.length];
+  byte[] maskedKey=new byte[key.length];
+  System.arraycopy(salt,0,saltMask,0,salt.length);
+  for (int i=salt.length; i < saltMask.length; ++i) {
+    saltMask[i]=0x55;
+  }
+  for (int i=0; i < key.length; i++) {
+    maskedKey[i]=(byte)(key[i] ^ saltMask[i]);
+  }
+  SecretKey encryptionKey=new SecretKeySpec(maskedKey,0,maskedKey.length,"AES");
+  try {
+    f8Cipher.init(Cipher.ENCRYPT_MODE,encryptionKey);
+    f8Cipher.doFinal(iv,0,BLKLEN,f8ctx.ivAccent,0);
+  }
+ catch (  GeneralSecurityException e) {
+    e.printStackTrace();
+  }
+  saltMask=null;
+  maskedKey=null;
+  f8ctx.J=0;
+  f8ctx.S=new byte[BLKLEN];
+  Arrays.fill(f8ctx.S,(byte)0);
+  int inLen=len;
+  while (inLen >= BLKLEN) {
+    processBlock(aesCipher,f8ctx,data,off,data,off,BLKLEN);
+    inLen-=BLKLEN;
+    off+=BLKLEN;
+  }
+  if (inLen > 0) {
+    processBlock(aesCipher,f8ctx,data,off,data,off,inLen);
+  }
+}

@@ -1,6 +1,36 @@
 {
+  selectedKeyProviderAlgorithm=selectKeyProviderAlgorithm(0);
   try {
-    rtpManager.initialize(bindAddress);
+    if (selectedKeyProviderAlgorithm != null && selectedKeyProviderAlgorithm.getProviderType() == KeyProviderAlgorithm.ProviderType.ZRTP_PROVIDER && rtpManager.equals(audioRtpManager)) {
+      TransformConnector transConnector=null;
+      TransformManager.initializeProviders();
+      transConnector=TransformManager.createZRTPConnector(bindAddress,"BouncyCastle",this);
+      rtpManager.initialize(transConnector);
+      this.transConnectors.put(rtpManager,transConnector);
+      ZRTPTransformEngine engine=(ZRTPTransformEngine)transConnector.getEngine();
+      if (usingSRTP) {
+        if (!engine.initialize("my_zid.zid"))         engine.sendInfo(ZrtpCodes.MessageSeverity.Info,EnumSet.of(ZRTPCustomInfoCodes.ZRTPEngineInitFailure));
+      }
+ else {
+        engine.sendInfo(ZrtpCodes.MessageSeverity.Info,EnumSet.of(ZRTPCustomInfoCodes.ZRTPNotEnabledByUser));
+      }
+      logger.trace("RTP" + (rtpManager.equals(audioRtpManager) ? " audio " : "video") + "manager initialized through connector");
+    }
+ else     if (selectedKeyProviderAlgorithm != null && selectedKeyProviderAlgorithm.getProviderType() == KeyProviderAlgorithm.ProviderType.DUMMY_PROVIDER && rtpManager.equals(audioRtpManager)) {
+      SRTPPolicy srtpPolicy=new SRTPPolicy(SRTPPolicy.AESF8_ENCRYPTION,16,SRTPPolicy.HMACSHA1_AUTHENTICATION,20,10,14);
+      byte[] masterKey={0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f};
+      byte[] masterSalt={0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d};
+      TransformConnector transConnector=null;
+      TransformManager.initializeProviders();
+      transConnector=TransformManager.createSRTPConnector(bindAddress,masterKey,masterSalt,srtpPolicy,srtpPolicy,"BouncyCastle");
+      rtpManager.initialize(transConnector);
+      this.transConnectors.put(rtpManager,transConnector);
+      logger.trace("RTP" + (rtpManager.equals(audioRtpManager) ? " audio " : "video") + "manager initialized through connector");
+    }
+ else {
+      rtpManager.initialize(bindAddress);
+      logger.trace("RTP" + (rtpManager.equals(audioRtpManager) ? " audio " : "video") + "manager initialized normally");
+    }
   }
  catch (  Exception exc) {
     logger.error("Failed to init an RTP manager.",exc);

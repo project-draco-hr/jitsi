@@ -1,0 +1,26 @@
+{
+  int newStatus=event.getEventID();
+  OperationSetBasicTelephony.SecureStatusChangeSource source=event.getSource();
+  TransformConnector transConnector=(TransformConnector)this.transConnectors.get(manager);
+  ZRTPTransformEngine engine=(ZRTPTransformEngine)transConnector.getEngine();
+  if (source == OperationSetBasicTelephony.SecureStatusChangeSource.SECURE_STATUS_CHANGE_BY_LOCAL) {
+    if (newStatus == SecureEvent.SECURE_COMMUNICATION) {
+      if (!engine.isStarted()) {
+        logger.trace("Normal call securing event processing");
+        if (!engine.initialize("my_zid.zid"))         engine.sendInfo(ZrtpCodes.MessageSeverity.Info,EnumSet.of(ZRTPCustomInfoCodes.ZRTPEngineInitFailure));
+      }
+ else {
+        logger.trace("GoSecure call event processing");
+        SCCallback cb=(SCCallback)engine.getUserCallback();
+        cb.setGCGSByPeerFlag(false);
+        engine.requestGoSecure();
+      }
+    }
+ else {
+      logger.trace("GoClear call event processing");
+      SCCallback cb=(SCCallback)engine.getUserCallback();
+      cb.setGCGSByPeerFlag(false);
+      engine.requestGoClear();
+    }
+  }
+}

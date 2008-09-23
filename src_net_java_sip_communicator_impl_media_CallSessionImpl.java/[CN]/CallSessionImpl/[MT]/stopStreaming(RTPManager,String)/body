@@ -23,7 +23,17 @@
       logger.warn("Failed to stop stream.",ex);
     }
   }
-  rtpManager.removeTargets("Session ended.");
+  if (selectedKeyProviderAlgorithm != null && rtpManager.equals(audioRtpManager)) {
+    TransformConnector transConnector=(TransformConnector)this.transConnectors.get(rtpManager);
+    if (transConnector != null) {
+      ZRTPTransformEngine engine=(ZRTPTransformEngine)transConnector.getEngine();
+      engine.sendInfo(ZrtpCodes.MessageSeverity.Info,EnumSet.of(ZRTPCustomInfoCodes.ZRTPDisabledByCallEnd));
+      transConnector.removeTargets();
+    }
+  }
+ else {
+    rtpManager.removeTargets("Session ended.");
+  }
   printFlowStatistics(rtpManager);
   rtpManager.removeReceiveStreamListener(this);
   rtpManager.removeSendStreamListener(this);
