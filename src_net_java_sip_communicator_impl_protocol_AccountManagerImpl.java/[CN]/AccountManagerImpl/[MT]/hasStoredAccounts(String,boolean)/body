@@ -11,19 +11,24 @@
     ConfigurationService configService=getConfigurationService();
     for (int factoryRefI=0; factoryRefI < factoryRefs.length; factoryRefI++) {
       ProtocolProviderFactory factory=(ProtocolProviderFactory)bundleContext.getService(factoryRefs[factoryRefI]);
+      if ((protocolName != null) && !protocolName.equals(factory.getProtocolName())) {
+        continue;
+      }
       String factoryPackage=getFactoryImplPackageName(factory);
       List<String> storedAccounts=configService.getPropertyNamesByPrefix(factoryPackage,true);
       for (Iterator<String> storedAccountIter=storedAccounts.iterator(); storedAccountIter.hasNext(); ) {
         String storedAccount=storedAccountIter.next();
         List<String> storedAccountProperties=configService.getPropertyNamesByPrefix(storedAccount,true);
         boolean hidden=false;
-        for (Iterator<String> storedAccountPropertyIter=storedAccountProperties.iterator(); storedAccountPropertyIter.hasNext(); ) {
-          String property=storedAccountPropertyIter.next();
-          String value=configService.getString(property);
-          property=stripPackagePrefix(property);
-          if (ProtocolProviderFactory.IS_PROTOCOL_HIDDEN.equals(property)) {
-            hidden=(value != null);
-            break;
+        if (!includeHidden) {
+          for (Iterator<String> storedAccountPropertyIter=storedAccountProperties.iterator(); storedAccountPropertyIter.hasNext(); ) {
+            String property=storedAccountPropertyIter.next();
+            String value=configService.getString(property);
+            property=stripPackagePrefix(property);
+            if (ProtocolProviderFactory.IS_PROTOCOL_HIDDEN.equals(property)) {
+              hidden=(value != null);
+              break;
+            }
           }
         }
         if (!hidden) {
@@ -31,7 +36,7 @@
           break;
         }
       }
-      if (hasStoredAccounts) {
+      if (hasStoredAccounts || (protocolName != null)) {
         break;
       }
     }
