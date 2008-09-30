@@ -1,28 +1,22 @@
 {
-  InetAddress destinationInetAddress=null;
-  try {
-    destinationInetAddress=InetAddress.getByName(((SipURI)this.parentProvider.getOurSipAddress().getURI()).getHost());
-  }
- catch (  UnknownHostException ex) {
-    throw new OperationFailedException(((SipURI)this.parentProvider.getOurSipAddress().getURI()).getHost() + " is not a valid internet address " + ex.getMessage(),OperationFailedException.INTERNAL_ERROR);
-  }
   CallIdHeader callIdHeader=this.parentProvider.getDefaultJainSipProvider().getNewCallId();
   String localTag=ProtocolProviderServiceSipImpl.generateLocalTag();
   FromHeader fromHeader=null;
   ToHeader toHeader=null;
   try {
-    fromHeader=this.parentProvider.getHeaderFactory().createFromHeader(this.parentProvider.getOurSipAddress(),localTag);
-    toHeader=this.parentProvider.getHeaderFactory().createToHeader(this.parentProvider.getOurSipAddress(),null);
+    Address ourAOR=parentProvider.getRegistrarConnection().getAddressOfRecord();
+    fromHeader=this.parentProvider.getHeaderFactory().createFromHeader(ourAOR,localTag);
+    toHeader=this.parentProvider.getHeaderFactory().createToHeader(ourAOR,null);
   }
  catch (  ParseException ex) {
     logger.error("An unexpected error occurred while" + "constructing the FromHeader or ToHeader",ex);
     throw new OperationFailedException("An unexpected error occurred while" + "constructing the FromHeader or ToHeader",OperationFailedException.INTERNAL_ERROR,ex);
   }
-  ArrayList viaHeaders=this.parentProvider.getLocalViaHeaders(destinationInetAddress,this.parentProvider.getDefaultListeningPoint());
+  ArrayList<ViaHeader> viaHeaders=parentProvider.getLocalViaHeaders(toHeader.getAddress());
   MaxForwardsHeader maxForwards=this.parentProvider.getMaxForwardsHeader();
   byte[] doc=null;
   if (insertPresDoc) {
-    doc=getPidfPresenceStatus((ContactSipImpl)this.getLocalContact());
+    doc=getPidfPresenceStatus((ContactSipImpl)this.getLocalContactForDst(toHeader.getAddress()));
   }
  else {
     doc=new byte[0];

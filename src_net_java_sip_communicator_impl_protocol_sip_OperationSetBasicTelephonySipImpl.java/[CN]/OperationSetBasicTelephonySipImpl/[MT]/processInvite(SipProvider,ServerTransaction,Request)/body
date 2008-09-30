@@ -19,7 +19,7 @@
     boolean assertUserMatch=Boolean.valueOf(SipActivator.getConfigurationService().getString(FAIL_CALLS_ON_DEST_USER_MISMATCH)).booleanValue();
     if (assertUserMatch) {
       String calleeUser=((SipURI)calleeURI).getUser();
-      String localUser=((SipURI)protocolProvider.getOurSipAddress().getURI()).getUser();
+      String localUser=protocolProvider.getAccountID().getUserID();
       if (calleeUser != null && !calleeUser.equals(localUser)) {
         callParticipant.setState(CallParticipantState.FAILED,"A call was received here while it appeared " + "destined to someone else. The call was rejected.");
         Response notFound=null;
@@ -54,7 +54,8 @@
     protocolProvider.attachToTag(response,dialog);
     response.setHeader(protocolProvider.getSipCommUserAgentHeader());
     ((ToHeader)response.getHeader(ToHeader.NAME)).getAddress().setDisplayName(protocolProvider.getOurDisplayName());
-    response.addHeader(protocolProvider.getContactHeader());
+    Address callerAddress=((FromHeader)response.getHeader(FromHeader.NAME)).getAddress();
+    response.addHeader(protocolProvider.getContactHeader(callerAddress));
     if (statusCode != Response.RINGING) {
       try {
         processInviteSendingResponse(callParticipant,response);

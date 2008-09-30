@@ -11,21 +11,14 @@
     logger.error("Can't create the NOTIFY message",e);
     throw new OperationFailedException("Can't create the NOTIFY" + " message",OperationFailedException.INTERNAL_ERROR,e);
   }
-  InetAddress destinationInetAddress=null;
   Address toAddress=dialog.getRemoteTarget();
   if (toAddress == null) {
     toAddress=dialog.getRemoteParty();
   }
-  try {
-    destinationInetAddress=InetAddress.getByName(((SipURI)toAddress.getURI()).getHost());
-  }
- catch (  UnknownHostException ex) {
-    throw new OperationFailedException(((SipURI)toAddress.getURI()).getHost() + " is not a valid internet address ",OperationFailedException.INTERNAL_ERROR,ex);
-  }
-  ArrayList viaHeaders=null;
+  ArrayList<ViaHeader> viaHeaders=null;
   MaxForwardsHeader maxForwards=null;
   try {
-    viaHeaders=this.parentProvider.getLocalViaHeaders(destinationInetAddress,this.parentProvider.getDefaultListeningPoint());
+    viaHeaders=this.parentProvider.getLocalViaHeaders(toAddress);
     maxForwards=this.parentProvider.getMaxForwardsHeader();
   }
  catch (  OperationFailedException e) {
@@ -40,7 +33,7 @@
     logger.error("An unexpected error occurred while" + "constructing the EventHeader",e);
     throw new OperationFailedException("Can't create the Event" + " header",OperationFailedException.INTERNAL_ERROR,e);
   }
-  ContactHeader contactHeader=this.parentProvider.getContactHeader();
+  ContactHeader contactHeader=this.parentProvider.getContactHeader(toAddress);
   SubscriptionStateHeader sStateHeader=null;
   try {
     sStateHeader=this.parentProvider.getHeaderFactory().createSubscriptionStateHeader(subscriptionState);

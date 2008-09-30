@@ -1,0 +1,19 @@
+{
+  SipRegistrarConnection src=getRegistrarConnection();
+  if (src != null & !src.isRegistrarless())   return src.getAddressOfRecord();
+  InetAddress destinationAddr=getIntendedDestination(intendedDestination);
+  InetAddress localHost=SipActivator.getNetworkAddressManagerService().getLocalHost(destinationAddr);
+  String userID=getAccountID().getUserID();
+  try {
+    SipURI ourSipURI=getAddressFactory().createSipURI(userID,localHost.getHostAddress());
+    ListeningPoint lp=getListeningPoint(intendedDestination);
+    ourSipURI.setTransportParam(lp.getTransport());
+    ourSipURI.setPort(lp.getPort());
+    Address ourSipAddress=getAddressFactory().createAddress(getOurDisplayName(),ourSipURI);
+    ourSipAddress.setDisplayName(getOurDisplayName());
+    return ourSipAddress;
+  }
+ catch (  ParseException exc) {
+    throw new IllegalArgumentException("Failed to create our SIP AOR address",exc);
+  }
+}

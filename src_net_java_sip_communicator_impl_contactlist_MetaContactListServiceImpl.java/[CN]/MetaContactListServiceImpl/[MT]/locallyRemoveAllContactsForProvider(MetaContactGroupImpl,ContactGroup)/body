@@ -1,8 +1,8 @@
 {
-  Iterator childrenContactsIter=parentMetaGroup.getChildContacts();
+  Iterator<MetaContactImpl> childrenContactsIter=parentMetaGroup.getChildContacts();
   while (childrenContactsIter.hasNext()) {
     MetaContactImpl child=(MetaContactImpl)childrenContactsIter.next();
-    Iterator contactsToRemove=child.getContactsForContactGroup(groupToRemove);
+    Iterator<Contact> contactsToRemove=child.getContactsForContactGroup(groupToRemove);
     child.removeContactsForGroup(groupToRemove);
     if (child.getContactCount() == 0) {
       parentMetaGroup.removeMetaContact(child);
@@ -10,17 +10,17 @@
     }
  else {
       while (contactsToRemove.hasNext()) {
-        fireProtoContactEvent((Contact)contactsToRemove.next(),ProtoContactEvent.PROTO_CONTACT_REMOVED,child,null);
+        fireProtoContactEvent(contactsToRemove.next(),ProtoContactEvent.PROTO_CONTACT_REMOVED,child,null);
       }
     }
   }
-  Iterator subgroupsIter=parentMetaGroup.getSubgroups();
+  Iterator<MetaContactGroupImpl> subgroupsIter=parentMetaGroup.getSubgroups();
   while (subgroupsIter.hasNext()) {
-    MetaContactGroupImpl subMetaGroup=(MetaContactGroupImpl)subgroupsIter.next();
-    Iterator contactGroups=subMetaGroup.getContactGroups();
+    MetaContactGroupImpl subMetaGroup=subgroupsIter.next();
+    Iterator<ContactGroup> contactGroups=subMetaGroup.getContactGroups();
     ContactGroup protoGroup=null;
     while (contactGroups.hasNext()) {
-      protoGroup=(ContactGroup)contactGroups.next();
+      protoGroup=contactGroups.next();
       if (groupToRemove == protoGroup.getParentContactGroup())       this.locallyRemoveAllContactsForProvider(subMetaGroup,protoGroup);
     }
     if (subMetaGroup.countSubgroups() == 0 && subMetaGroup.countChildContacts() == 0) {

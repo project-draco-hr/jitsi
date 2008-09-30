@@ -1,14 +1,9 @@
 {
-  InetAddress destinationInetAddress=null;
   Address toAddress=null;
   try {
-    toAddress=parseAddressStr(contact.getAddress());
-    destinationInetAddress=InetAddress.getByName(((SipURI)toAddress.getURI()).getHost());
+    toAddress=parentProvider.parseAddressString(contact.getAddress());
   }
- catch (  UnknownHostException ex) {
-    throw new IllegalArgumentException(((SipURI)toAddress.getURI()).getHost() + " is not a valid internet address " + ex.getMessage());
-  }
-catch (  ParseException ex) {
+ catch (  ParseException ex) {
     logger.error("An unexpected error occurred while" + "constructing the address",ex);
     throw new OperationFailedException("An unexpected error occurred while" + "constructing the address",OperationFailedException.INTERNAL_ERROR,ex);
   }
@@ -30,14 +25,14 @@ catch (  ParseException ex) {
   FromHeader fromHeader=null;
   ToHeader toHeader=null;
   try {
-    fromHeader=this.parentProvider.getHeaderFactory().createFromHeader(this.parentProvider.getOurSipAddress(),localTag);
+    fromHeader=this.parentProvider.getHeaderFactory().createFromHeader(this.parentProvider.getOurSipAddress(toAddress),localTag);
     toHeader=this.parentProvider.getHeaderFactory().createToHeader(toAddress,null);
   }
  catch (  ParseException ex) {
     logger.error("An unexpected error occurred while" + "constructing the FromHeader or ToHeader",ex);
     throw new OperationFailedException("An unexpected error occurred while" + "constructing the FromHeader or ToHeader",OperationFailedException.INTERNAL_ERROR,ex);
   }
-  ArrayList viaHeaders=this.parentProvider.getLocalViaHeaders(destinationInetAddress,this.parentProvider.getDefaultListeningPoint());
+  ArrayList<ViaHeader> viaHeaders=this.parentProvider.getLocalViaHeaders(toAddress);
   MaxForwardsHeader maxForwards=this.parentProvider.getMaxForwardsHeader();
   try {
     req=this.parentProvider.getMessageFactory().createRequest(toHeader.getAddress().getURI(),Request.SUBSCRIBE,callIdHeader,cSeqHeader,fromHeader,toHeader,viaHeaders,maxForwards);
@@ -54,7 +49,7 @@ catch (  ParseException ex) {
     logger.error("An unexpected error occurred while" + "constructing the EventHeader",e);
     throw new OperationFailedException("An unexpected error occurred while" + "constructing the EventHeader",OperationFailedException.INTERNAL_ERROR,e);
   }
-  ContactHeader contactHeader=this.parentProvider.getContactHeader();
+  ContactHeader contactHeader=this.parentProvider.getContactHeader(toAddress);
   req.setHeader(evHeader);
   req.setHeader(contactHeader);
   AcceptHeader accept=null;

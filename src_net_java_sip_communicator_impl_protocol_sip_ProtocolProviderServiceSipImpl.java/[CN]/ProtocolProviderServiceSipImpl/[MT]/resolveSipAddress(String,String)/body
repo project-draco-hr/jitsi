@@ -11,11 +11,14 @@
  else {
       sockAddr=NetworkUtils.getSRVRecord("sip",transport,address);
     }
+    logger.trace("Returned SRV " + sockAddr);
   }
  catch (  ParseException e) {
     throw new UnknownHostException(address);
   }
   if (sockAddr != null)   return sockAddr;
   InetAddress addressObj=InetAddress.getByName(address);
-  return new InetSocketAddress(addressObj,getListeningPoint(transport).getPort());
+  int defaultPort=ListeningPoint.PORT_5060;
+  if (transport.equalsIgnoreCase(ListeningPoint.TLS))   defaultPort=ListeningPoint.PORT_5061;
+  return new InetSocketAddress(addressObj,defaultPort);
 }

@@ -1,12 +1,4 @@
 {
-  InetAddress destinationInetAddress=null;
-  try {
-    String destinationURI=((SipURI)toAddress.getURI()).getHost();
-    destinationInetAddress=protocolProvider.resolveSipAddress(destinationURI).getAddress();
-  }
- catch (  UnknownHostException ex) {
-    throw new IllegalArgumentException(((SipURI)toAddress.getURI()).getHost() + " is not a valid internet address " + ex.getMessage());
-  }
   CallIdHeader callIdHeader=protocolProvider.getDefaultJainSipProvider().getNewCallId();
   CSeqHeader cSeqHeader=null;
   try {
@@ -24,16 +16,16 @@ catch (  ParseException exc) {
   FromHeader fromHeader=null;
   ToHeader toHeader=null;
   try {
-    fromHeader=protocolProvider.getHeaderFactory().createFromHeader(protocolProvider.getOurSipAddress(),localTag);
+    fromHeader=protocolProvider.getHeaderFactory().createFromHeader(protocolProvider.getOurSipAddress(toAddress),localTag);
     toHeader=protocolProvider.getHeaderFactory().createToHeader(toAddress,null);
   }
  catch (  ParseException ex) {
     logger.error("An unexpected erro occurred while" + "constructing the ToHeader",ex);
     throw new OperationFailedException("An unexpected erro occurred while" + "constructing the ToHeader",OperationFailedException.INTERNAL_ERROR,ex);
   }
-  ArrayList viaHeaders=protocolProvider.getLocalViaHeaders(destinationInetAddress,protocolProvider.getDefaultListeningPoint());
+  ArrayList<ViaHeader> viaHeaders=protocolProvider.getLocalViaHeaders(toAddress);
   MaxForwardsHeader maxForwards=protocolProvider.getMaxForwardsHeader();
-  ContactHeader contactHeader=protocolProvider.getContactHeader();
+  ContactHeader contactHeader=protocolProvider.getContactHeader(toHeader.getAddress());
   Request invite=null;
   try {
     invite=protocolProvider.getMessageFactory().createRequest(toHeader.getAddress().getURI(),Request.INVITE,callIdHeader,cSeqHeader,fromHeader,toHeader,viaHeaders,maxForwards);

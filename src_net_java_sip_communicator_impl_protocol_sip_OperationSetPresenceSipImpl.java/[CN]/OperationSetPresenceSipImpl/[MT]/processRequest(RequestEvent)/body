@@ -131,7 +131,7 @@ catch (    InvalidArgumentException e) {
     }
     ContactSipImpl contact=(ContactSipImpl)resolveContactID(from.getAddress().getURI().toString());
     if (contact == null) {
-      contact=new ContactSipImpl(from.getAddress().getURI().toString(),this.parentProvider);
+      contact=new ContactSipImpl(from.getAddress(),this.parentProvider);
       contact.setResolved(true);
       contact.setResolvable(false);
     }
@@ -173,7 +173,7 @@ catch (    InvalidArgumentException e) {
     }
     if (this.ourWatchers.contains(contact) && expires != 0 && contact.getServerDialog().equals(serverTransaction.getDialog())) {
       contact.getTimeoutTask().cancel();
-      watcherTimeoutTask timeout=new watcherTimeoutTask(contact);
+      WatcherTimeoutTask timeout=new WatcherTimeoutTask(contact);
       contact.setTimeoutTask(timeout);
       getTimer().schedule(timeout,expires * 1000);
       Response response=null;
@@ -234,7 +234,7 @@ synchronized (this.ourWatchers) {
       }
       ClientTransaction transac=null;
       try {
-        transac=createNotify(contact,getPidfPresenceStatus((ContactSipImpl)getLocalContact()),SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.TIMEOUT);
+        transac=createNotify(contact,getPidfPresenceStatus((ContactSipImpl)getLocalContactForDst(contact)),SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.TIMEOUT);
       }
  catch (      OperationFailedException e) {
         logger.error("failed to create the new notify",e);
@@ -253,7 +253,7 @@ synchronized (this.ourWatchers) {
       logger.debug("contact " + contact + " try to resubscribe, "+ "we will remove the first subscription");
       ClientTransaction transac=null;
       try {
-        transac=createNotify(contact,getPidfPresenceStatus((ContactSipImpl)getLocalContact()),SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.REJECTED);
+        transac=createNotify(contact,getPidfPresenceStatus((ContactSipImpl)getLocalContactForDst(contact)),SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.REJECTED);
       }
  catch (      OperationFailedException e) {
         logger.error("failed to create the new notify",e);
@@ -303,7 +303,7 @@ synchronized (contact) {
     }
     ClientTransaction transac=null;
     try {
-      transac=createNotify(contact,getPidfPresenceStatus((ContactSipImpl)getLocalContact()),SubscriptionStateHeader.ACTIVE,null);
+      transac=createNotify(contact,getPidfPresenceStatus((ContactSipImpl)getLocalContactForDst(contact)),SubscriptionStateHeader.ACTIVE,null);
     }
  catch (    OperationFailedException e) {
       logger.error("failed to create the new notify",e);
@@ -319,7 +319,7 @@ synchronized (contact) {
 synchronized (this.ourWatchers) {
       this.ourWatchers.add(contact);
     }
-    watcherTimeoutTask timeout=new watcherTimeoutTask(contact);
+    WatcherTimeoutTask timeout=new WatcherTimeoutTask(contact);
     contact.setTimeoutTask(timeout);
     getTimer().schedule(timeout,expires * 1000);
     processed=true;

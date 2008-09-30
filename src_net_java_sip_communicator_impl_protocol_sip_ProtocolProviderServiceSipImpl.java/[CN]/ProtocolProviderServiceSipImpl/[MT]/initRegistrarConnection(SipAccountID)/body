@@ -2,15 +2,24 @@
   String registrarAddressStr=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_ADDRESS);
   if (registrarAddressStr == null) {
     String userID=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.USER_ID);
-    registrarAddressStr=userID.substring(userID.indexOf("@") + 1);
+    if (userID.indexOf("@") > -1)     registrarAddressStr=userID.substring(userID.indexOf("@") + 1);
+  }
+  if (registrarAddressStr == null || registrarAddressStr.trim().length() == 0) {
+    initRegistrarlessConnection(accountID);
+    return;
   }
   InetAddress registrarAddress=null;
+  int registrarPort=ListeningPoint.PORT_5060;
   try {
-    registrarAddress=NetworkUtils.getInetAddress(registrarAddressStr);
+    String registrarTransport=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PREFERRED_TRANSPORT);
+    if (registrarTransport == null)     registrarTransport=getDefaultTransport();
+    InetSocketAddress registrarSocketAddress=resolveSipAddress(registrarAddressStr,registrarTransport);
+    registrarAddress=registrarSocketAddress.getAddress();
+    registrarPort=registrarSocketAddress.getPort();
     accountID.putProperty(ProtocolProviderFactory.SERVER_ADDRESS_VALIDATED,Boolean.toString(true));
   }
  catch (  UnknownHostException ex) {
-    logger.error(registrarAddressStr + " appears to be an either invalid or inaccessible address: ",ex);
+    logger.debug(registrarAddressStr + " appears to be an either invalid or inaccessible address: ",ex);
     String serverValidatedString=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_ADDRESS_VALIDATED);
     boolean isServerValidated=false;
     if (serverValidatedString != null)     isServerValidated=new Boolean(serverValidatedString).booleanValue();
@@ -22,7 +31,6 @@
     fireRegistrationStateChanged(RegistrationState.UNREGISTERED,RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,"Invalid or inaccessible server address.");
     return;
   }
-  int registrarPort=ListeningPoint.PORT_5060;
   String registrarPortStr=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_PORT);
   if (registrarPortStr != null && registrarPortStr.length() > 0) {
     try {
@@ -65,5 +73,4 @@
     logger.error("Failed to create a registrar connection with " + registrarAddress.getHostAddress(),ex);
     throw new IllegalArgumentException("Failed to create a registrar connection with " + registrarAddress.getHostAddress() + ": "+ ex.getMessage());
   }
-  ClientCapabilities capabilities=new ClientCapabilities(this);
 }

@@ -1,24 +1,11 @@
 {
-  InetAddress destinationInetAddress=null;
   Address toAddress=null;
   try {
-    toAddress=sipProvider.parseAddressStr(to.getAddress());
+    toAddress=sipProvider.parseAddressString(to.getAddress());
   }
  catch (  ParseException exc) {
     logger.error("An unexpected error occurred while" + "constructing the address",exc);
     throw new OperationFailedException("An unexpected error occurred while" + "constructing the address",OperationFailedException.INTERNAL_ERROR,exc);
-  }
-  try {
-    destinationInetAddress=InetAddress.getByName(((SipURI)toAddress.getURI()).getHost());
-  }
- catch (  UnknownHostException ex) {
-    logger.warn(((SipURI)toAddress.getURI()).getHost() + " is not a valid internet address " + ex.getMessage());
-    if (sipProvider.getOutboundProxy() != null) {
-      destinationInetAddress=sipProvider.getOutboundProxy().getAddress();
-    }
- else {
-      destinationInetAddress=sipProvider.getRegistrarConnection().getRegistrarAddress();
-    }
   }
   CallIdHeader callIdHeader=this.sipProvider.getDefaultJainSipProvider().getNewCallId();
   CSeqHeader cSeqHeader=null;
@@ -37,14 +24,14 @@ catch (  ParseException exc) {
   FromHeader fromHeader=null;
   ToHeader toHeader=null;
   try {
-    fromHeader=this.sipProvider.getHeaderFactory().createFromHeader(this.sipProvider.getOurSipAddress(),localTag);
+    fromHeader=this.sipProvider.getHeaderFactory().createFromHeader(sipProvider.getOurSipAddress(toAddress),localTag);
     toHeader=this.sipProvider.getHeaderFactory().createToHeader(toAddress,null);
   }
  catch (  ParseException ex) {
     logger.error("An unexpected error occurred while" + "constructing the FromHeader or ToHeader",ex);
     throw new OperationFailedException("An unexpected error occurred while" + "constructing the FromHeader or ToHeader",OperationFailedException.INTERNAL_ERROR,ex);
   }
-  ArrayList viaHeaders=this.sipProvider.getLocalViaHeaders(destinationInetAddress,this.sipProvider.getDefaultListeningPoint());
+  ArrayList<ViaHeader> viaHeaders=this.sipProvider.getLocalViaHeaders(toAddress);
   MaxForwardsHeader maxForwards=this.sipProvider.getMaxForwardsHeader();
   ContentTypeHeader contTypeHeader;
   ContentLengthHeader contLengthHeader;

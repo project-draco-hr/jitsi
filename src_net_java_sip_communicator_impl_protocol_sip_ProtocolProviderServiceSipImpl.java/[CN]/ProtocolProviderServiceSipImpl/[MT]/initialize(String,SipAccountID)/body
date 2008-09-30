@@ -96,25 +96,10 @@ synchronized (initializationLock) {
     this.supportedOperationSets.put(OperationSetTypingNotifications.class.getName(),opSetTyping);
     OperationSetDTMF opSetDTMF=new OperationSetDTMFSipImpl(this);
     this.supportedOperationSets.put(OperationSetDTMF.class.getName(),opSetDTMF);
-    String ourUserID=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.USER_ID);
-    String sipUriHost=null;
-    if (ourUserID.indexOf("@") != -1 && ourUserID.indexOf("@") < ourUserID.length() - 1) {
-      sipUriHost=ourUserID.substring(ourUserID.indexOf("@") + 1);
-      ourUserID=ourUserID.substring(0,ourUserID.indexOf("@"));
-    }
+    ClientCapabilities capabilities=new ClientCapabilities(this);
     ourDisplayName=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.DISPLAY_NAME);
-    if (sipUriHost == null)     sipUriHost=sipRegistrarConnection.getRegistrarAddress().getHostName();
-    SipURI ourSipURI=null;
-    try {
-      ourSipURI=addressFactory.createSipURI(ourUserID,sipUriHost);
-      if (ourDisplayName == null || ourDisplayName.trim().length() == 0) {
-        ourDisplayName=ourUserID;
-      }
-      ourSipAddress=addressFactory.createAddress(ourDisplayName,ourSipURI);
-    }
- catch (    ParseException ex) {
-      logger.error("Could not create a SIP URI for user " + ourUserID + "@"+ sipUriHost+ " and registrar "+ sipRegistrarConnection.getRegistrarAddress().getHostName(),ex);
-      throw new IllegalArgumentException("Could not create a SIP URI for user " + ourUserID + "@"+ sipUriHost+ " and registrar "+ sipRegistrarConnection.getRegistrarAddress().getHostName());
+    if (ourDisplayName == null || ourDisplayName.trim().length() == 0) {
+      ourDisplayName=accountID.getUserID();
     }
     this.sipSecurityManager=new SipSecurityManager(accountID);
     sipSecurityManager.setHeaderFactory(headerFactory);

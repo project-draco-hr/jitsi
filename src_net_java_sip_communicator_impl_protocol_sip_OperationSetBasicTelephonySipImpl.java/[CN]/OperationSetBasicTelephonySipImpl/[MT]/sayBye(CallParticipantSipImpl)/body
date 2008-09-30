@@ -1,18 +1,10 @@
 {
   Dialog dialog=callParticipant.getDialog();
-  Request request=callParticipant.getFirstTransaction().getRequest();
   Request bye=null;
   try {
     bye=dialog.createRequest(Request.BYE);
-    InetAddress destinationInetAddress=null;
-    String host=((SipURI)bye.getRequestURI()).getHost();
-    try {
-      destinationInetAddress=InetAddress.getByName(host);
-    }
- catch (    UnknownHostException ex) {
-      throw new IllegalArgumentException(host + " is not a valid internet address " + ex.getMessage());
-    }
-    ArrayList viaHeaders=protocolProvider.getLocalViaHeaders(destinationInetAddress,protocolProvider.getRegistrarConnection().getListeningPoint());
+    SipURI destination=(SipURI)bye.getRequestURI();
+    ArrayList<ViaHeader> viaHeaders=protocolProvider.getLocalViaHeaders(destination);
     bye.setHeader((ViaHeader)viaHeaders.get(0));
     bye.addHeader(protocolProvider.getSipCommUserAgentHeader());
   }
