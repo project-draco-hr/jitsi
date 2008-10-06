@@ -1,4 +1,21 @@
 {
+  BundleContext bc=MediaActivator.getBundleContext();
+  ServiceReference faServiceReference=bc.getServiceReference(FileAccessService.class.getName());
+  FileAccessService faService=(FileAccessService)bc.getService(faServiceReference);
+  File file=null;
+  try {
+    file=faService.getPrivatePersistentFile(zidFilename);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+  }
+  String zidFilePath=null;
+  try {
+    zidFilePath=file.getAbsolutePath();
+  }
+ catch (  SecurityException e) {
+    e.printStackTrace();
+  }
   if (cryptoProvider == null) {
     return false;
   }
@@ -10,11 +27,14 @@
   ZidFile zf=ZidFile.getInstance();
   if (!zf.isOpen()) {
     String fname;
-    if (zidFilename == null) {
+    if (zidFilePath == null) {
       String home=System.getenv("HOME");
       String baseDir=(home != null) ? ((home) + ("/.")) : ".";
       fname=baseDir + "GNUZRTP4J.zid";
       zidFilename=fname;
+    }
+ else {
+      zidFilename=zidFilePath;
     }
     if (zf.open(zidFilename) < 0) {
       enableZrtp=false;
