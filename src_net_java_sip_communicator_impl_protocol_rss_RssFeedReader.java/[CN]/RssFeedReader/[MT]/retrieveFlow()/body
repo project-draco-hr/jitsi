@@ -4,26 +4,23 @@
     this.feed=input.build(new XmlReader(rssURL));
   }
  catch (  FileNotFoundException ex) {
+    this.isFeedJoinable=false;
     throw ex;
   }
 catch (  IOException ex) {
+    this.isFeedJoinable=false;
     throw new OperationFailedException("Failed to create and XmlReader for url: " + rssURL,OperationFailedException.GENERAL_ERROR,ex);
   }
 catch (  FeedException fex) {
+    this.isFeedJoinable=false;
     throw new OperationFailedException("Failed to create and XmlReader for url: " + rssURL,OperationFailedException.GENERAL_ERROR,fex);
   }
-  feed.getEntries();
+  this.isFeedJoinable=true;
+  this.feed.getEntries();
   this.title=this.feed.getTitle();
-  items=(SyndEntry[])this.feed.getEntries().toArray(new SyndEntry[0]);
-  if (items.length == 0) {
-    lastItemKey=new RssItemKey(new Date(0));
-    return;
-  }
-  if (items[items.length - 1].getPublishedDate() != null) {
-    Arrays.sort(items,syndEntryComparator);
-    lastItemKey=new RssItemKey(items[items.length - 1].getPublishedDate());
-  }
- else {
-    lastItemKey=new RssItemKey(items[0].getLink());
+  this.items=(SyndEntry[])this.feed.getEntries().toArray(new SyndEntry[0]);
+  Arrays.sort(items,new SyndEntryComparator());
+  for (int i=0; i < items.length; ++i) {
+    System.out.println("CHENZO item_list[" + i + "] URI: "+ items[i].getUri()+ ", Date: "+ items[i].getUpdatedDate()+ ", Title: "+ items[i].getTitle());
   }
 }

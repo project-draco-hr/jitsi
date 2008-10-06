@@ -1,28 +1,53 @@
 {
   StringTokenizer reader=new StringTokenizer(settings,";");
-  RssItemKey result=new RssItemKey();
+  Date date=null;
+  String uri=null;
+  boolean useInitialized=false;
+  boolean isDateUsed=false;
   while (reader.hasMoreTokens()) {
     String data[]=reader.nextToken().split("=",2);
     if (data[0].equals("itemDate")) {
       if (data.length == 2) {
         try {
-          result.itemDate=formatter.parse(data[1]);
+          date=formatter.parse(data[1]);
         }
  catch (        ParseException e) {
-          result.itemDate=null;
+          logger.error("Failed to deserialize RSS settings. Parse date error: " + settings,e);
+          return null;
         }
       }
- else       result.itemDate=null;
+ else {
+        logger.error("Failed to deserialize RSS settings. Parse itemDate error: " + settings,new Exception("Parse itemDate error: " + settings));
+        return null;
+      }
     }
-    if (data[0].equals("itemUri")) {
-      if (data.length == 2)       result.itemUri=data[1];
- else       result.itemUri=null;
+ else     if (data[0].equals("itemUri")) {
+      if (data.length == 2) {
+        uri=data[1];
+      }
+ else {
+        logger.error("Failed to deserialize RSS settings. Parse itemUri error: " + settings,new Exception("Parse itemUri error: " + settings));
+        return null;
+      }
     }
-    if (data[0].equals("usesDate")) {
-      if (data.length == 2)       result.usesDate=Boolean.valueOf(data[1]).booleanValue();
- else       result.usesDate=result.itemDate == null;
+ else     if (data[0].equals("usesDate")) {
+      if (data.length == 2) {
+        isDateUsed=Boolean.valueOf(data[1]).booleanValue();
+        useInitialized=true;
+      }
+ else {
+        logger.error("Failed to deserialize RSS settings. Parse usesDate error: " + settings,new Exception("Parse usesDate error: " + settings));
+        return null;
+      }
     }
   }
-  if (result.itemDate == null && result.itemUri == null)   return null;
- else   return result;
+  if (useInitialized) {
+    if (isDateUsed && date != null) {
+      return new RssItemKey(date);
+    }
+ else     if (!isDateUsed && uri != null) {
+      return new RssItemKey(uri);
+    }
+  }
+  return null;
 }

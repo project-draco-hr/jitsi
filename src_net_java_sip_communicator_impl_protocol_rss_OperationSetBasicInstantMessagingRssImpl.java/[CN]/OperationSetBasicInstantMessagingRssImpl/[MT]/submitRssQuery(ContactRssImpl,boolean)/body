@@ -1,50 +1,21 @@
 {
-  Message msg;
-  boolean newName=false;
-  boolean newItem=false;
-  boolean update=false;
-  String newDisplayName=new String();
-  String oldDisplayName=new String();
+  String newDisplayName;
+  String oldDisplayName;
+  String news;
   RssFeedReader rssFeed=rssContact.getRssFeedReader();
-  try {
-    rssFeed.retrieveFlow();
-    if (rssContact.getPresenceStatus() == RssStatusEnum.OFFLINE) {
-      getParentProvider().getOperationSetPresence().changePresenceStatusForContact(rssContact,RssStatusEnum.ONLINE);
-    }
+  news=rssFeed.getNewFeeds();
+  if (rssContact.getPresenceStatus() == RssStatusEnum.OFFLINE) {
+    getParentProvider().getOperationSetPresence().changePresenceStatusForContact(rssContact,RssStatusEnum.ONLINE);
   }
- catch (  FileNotFoundException ex) {
-    handleFileNotFoundException(rssContact,ex);
-    logger.warn("RSS flow no longer exists. Error was: " + ex.getMessage());
-    logger.debug(ex);
-    return;
+  if (news != null) {
+    oldDisplayName=rssContact.getDisplayName();
+    newDisplayName=rssFeed.getTitle();
+    rssContact.setDisplayName(newDisplayName);
+    this.opSetPersPresence.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_DISPLAY_NAME,rssContact,oldDisplayName,newDisplayName);
+    fireMessageEvent(new MessageReceivedEvent(createMessage(news),rssContact,new Date()));
   }
-catch (  OperationFailedException ex) {
-    logger.error("Failed to retrieve RSS flow. Error was: " + ex.getMessage(),ex);
-    return;
-  }
-  oldDisplayName=rssContact.getDisplayName();
-  newDisplayName=rssFeed.getTitle();
-  if (!(newDisplayName.equals(oldDisplayName))) {
-    newName=true;
-  }
-  rssContact.setDisplayName(newDisplayName);
-  msg=createMessage(rssFeed.feedToString(rssContact.getLastItemKey()));
-  if (rssFeed.getLastItemKey().usesDate()) {
-    if (rssFeed.getLastItemKey().getItemDate().compareTo(rssContact.getLastItemKey().getItemDate()) > 0) {
-      rssContact.setLastItemKey(new RssItemKey(rssFeed.getLastItemKey().getItemDate()));
-      newItem=true;
-      update=true;
-    }
-  }
- else {
-    if (!rssFeed.getLastItemKey().getItemUri().equalsIgnoreCase(rssContact.getLastItemKey().getItemUri())) {
-      rssContact.setLastItemKey(new RssItemKey(rssFeed.getLastItemKey().getItemUri()));
-      newItem=true;
-      update=true;
-    }
-  }
-  if (newName || newItem)   this.opSetPersPresence.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_DISPLAY_NAME,rssContact,oldDisplayName,newDisplayName);
-  if (update || userRequestedUpdate) {
-    fireMessageEvent(new MessageReceivedEvent(msg,rssContact,new Date()));
+ else   if (userRequestedUpdate) {
+    news=rssFeed.getNoNewFeedString();
+    fireMessageEvent(new MessageReceivedEvent(createMessage(news),rssContact,new Date()));
   }
 }

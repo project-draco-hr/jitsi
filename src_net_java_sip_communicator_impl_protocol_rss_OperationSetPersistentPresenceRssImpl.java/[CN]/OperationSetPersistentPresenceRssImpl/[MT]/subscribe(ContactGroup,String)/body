@@ -17,16 +17,14 @@
  catch (  MalformedURLException ex) {
     throw new IllegalArgumentException("failed to create a URL for address " + contactIdentifier + ". Error was: "+ ex.getMessage());
   }
-  RssFeedReader rssFeedReader=new RssFeedReader(rssURL);
   try {
-    rssFeedReader.retrieveFlow();
+    ContactRssImpl contact=new ContactRssImpl(contactIdentifier,rssURL,null,parentProvider);
+    ((ContactGroupRssImpl)parent).addContact(contact);
+    fireSubscriptionEvent(contact,parent,SubscriptionEvent.SUBSCRIPTION_CREATED);
+    changePresenceStatusForContact(contact,getPresenceStatus());
+    parentProvider.getBasicInstantMessaging().threadedContactFeedUpdate(contact);
   }
  catch (  FileNotFoundException ex) {
     logger.debug("failed to create a URL for address " + contactIdentifier + ". Error was: "+ ex.getMessage(),ex);
   }
-  ContactRssImpl contact=new ContactRssImpl(contactIdentifier,rssURL,rssFeedReader,parentProvider);
-  ((ContactGroupRssImpl)parent).addContact(contact);
-  fireSubscriptionEvent(contact,parent,SubscriptionEvent.SUBSCRIPTION_CREATED);
-  changePresenceStatusForContact(contact,getPresenceStatus());
-  parentProvider.getBasicInstantMessaging().threadedContactFeedUpdate(contact);
 }
