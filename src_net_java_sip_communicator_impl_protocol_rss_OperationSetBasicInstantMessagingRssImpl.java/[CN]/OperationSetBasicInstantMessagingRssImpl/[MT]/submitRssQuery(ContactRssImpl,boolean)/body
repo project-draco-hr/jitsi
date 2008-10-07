@@ -3,9 +3,21 @@
   String oldDisplayName;
   String news;
   RssFeedReader rssFeed=rssContact.getRssFeedReader();
-  news=rssFeed.getNewFeeds();
-  if (rssContact.getPresenceStatus() == RssStatusEnum.OFFLINE) {
-    getParentProvider().getOperationSetPresence().changePresenceStatusForContact(rssContact,RssStatusEnum.ONLINE);
+  try {
+    news=rssFeed.getNewFeeds();
+    if (rssContact.getPresenceStatus() == RssStatusEnum.OFFLINE) {
+      getParentProvider().getOperationSetPresence().changePresenceStatusForContact(rssContact,RssStatusEnum.ONLINE);
+    }
+  }
+ catch (  FileNotFoundException ex) {
+    handleFileNotFoundException(rssContact,ex);
+    logger.warn("RSS flow no longer exists. Error was: " + ex.getMessage());
+    logger.debug(ex);
+    return;
+  }
+catch (  OperationFailedException ex) {
+    logger.error("Failed to retrieve RSS flow. Error was: " + ex.getMessage(),ex);
+    return;
   }
   if (news != null) {
     oldDisplayName=rssContact.getDisplayName();
