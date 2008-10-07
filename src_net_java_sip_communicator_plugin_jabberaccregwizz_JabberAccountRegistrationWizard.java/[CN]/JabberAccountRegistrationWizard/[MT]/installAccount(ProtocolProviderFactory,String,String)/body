@@ -1,4 +1,7 @@
 {
+  if (logger.isTraceEnabled()) {
+    logger.trace("Preparing to install account for user " + userName);
+  }
   Hashtable accountProperties=new Hashtable();
   if (registration.isRememberPassword()) {
     accountProperties.put(ProtocolProviderFactory.PASSWORD,passwd);
@@ -21,14 +24,19 @@
     return protocolProvider;
   }
   try {
+    if (logger.isTraceEnabled()) {
+      logger.trace("Will install account for user " + userName + " with the following properties."+ accountProperties);
+    }
     AccountID accountID=providerFactory.installAccount(userName,accountProperties);
     ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
     protocolProvider=(ProtocolProviderService)JabberAccRegWizzActivator.bundleContext.getService(serRef);
   }
  catch (  IllegalArgumentException exc) {
+    logger.warn("Failed to create a jabber account.",exc);
     JabberAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
   }
 catch (  IllegalStateException exc) {
+    logger.warn("Failed to create a jabber account.",exc);
     JabberAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("error"),PopupDialog.ERROR_MESSAGE);
   }
   return protocolProvider;

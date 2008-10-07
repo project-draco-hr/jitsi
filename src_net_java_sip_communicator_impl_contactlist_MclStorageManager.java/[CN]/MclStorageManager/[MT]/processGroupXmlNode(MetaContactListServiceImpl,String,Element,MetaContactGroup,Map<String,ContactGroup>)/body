@@ -1,6 +1,6 @@
 {
   MetaContactGroupImpl currentMetaGroup=null;
-  Map protoGroupsMap=new Hashtable();
+  Map<String,ContactGroup> protoGroupsMap=new Hashtable<String,ContactGroup>();
   if (parentGroup == null) {
     currentMetaGroup=mclServiceImpl.rootMetaGroup;
   }
@@ -38,9 +38,9 @@
       String uid=XMLUtils.getAttribute(currentMetaContactNode,UID_ATTR_NAME);
       Element displayNameNode=XMLUtils.findChild((Element)currentMetaContactNode,META_CONTACT_DISPLAY_NAME_NODE_NAME);
       String displayName=XMLUtils.getText(displayNameNode);
-      List protoContacts=extractProtoContacts((Element)currentMetaContactNode,accountID,protoGroupsMap);
+      List<MclStorageManager.StoredProtoContactDescriptor> protoContacts=extractProtoContacts((Element)currentMetaContactNode,accountID,protoGroupsMap);
       if (protoContacts.size() < 1)       continue;
-      Hashtable details=new Hashtable();
+      Hashtable<String,List<String>> details=new Hashtable<String,List<String>>();
       try {
         List detailsNodes=XMLUtils.findChildren((Element)currentMetaContactNode,META_CONTACT_DETAIL_NAME_NODE_NAME);
         for (int j=0; j < detailsNodes.size(); j++) {
@@ -49,7 +49,7 @@
           String value=e.getAttribute(DETAIL_VALUE_ATTR_NAME);
           Object detailsObj=details.get(name);
           if (detailsObj == null) {
-            ArrayList ds=new ArrayList();
+            ArrayList<String> ds=new ArrayList<String>();
             ds.add(value);
             details.put(name,ds);
           }
