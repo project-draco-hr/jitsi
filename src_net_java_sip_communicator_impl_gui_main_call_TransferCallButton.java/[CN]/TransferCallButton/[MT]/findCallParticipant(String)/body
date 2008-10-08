@@ -1,0 +1,23 @@
+{
+  BundleContext bundleContext=GuiActivator.bundleContext;
+  ServiceReference[] serviceReferences;
+  try {
+    serviceReferences=bundleContext.getServiceReferences(ProtocolProviderService.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException ex) {
+    throw new OperationFailedException("Failed to retrieve ProtocolProviderService references.",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  Class telephonyClass=OperationSetBasicTelephony.class;
+  CallParticipant participant=null;
+  for (int i=0; i < serviceReferences.length; i++) {
+    ProtocolProviderService service=(ProtocolProviderService)bundleContext.getService(serviceReferences[i]);
+    OperationSetBasicTelephony telephony=(OperationSetBasicTelephony)service.getOperationSet(telephonyClass);
+    if (telephony != null) {
+      participant=findCallParticipant(telephony,address);
+      if (participant != null) {
+        break;
+      }
+    }
+  }
+  return participant;
+}

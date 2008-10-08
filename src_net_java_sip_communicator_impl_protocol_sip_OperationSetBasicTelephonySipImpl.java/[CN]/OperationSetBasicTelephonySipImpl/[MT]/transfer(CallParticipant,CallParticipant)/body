@@ -1,0 +1,23 @@
+{
+  Address targetAddress=parseAddressString(target.getAddress());
+  Dialog targetDialog=((CallParticipantSipImpl)target).getDialog();
+  String remoteTag=targetDialog.getRemoteTag();
+  String localTag=targetDialog.getLocalTag();
+  Replaces replacesHeader=null;
+  SipURI sipURI=(SipURI)targetAddress.getURI();
+  try {
+    replacesHeader=(Replaces)((HeaderFactoryImpl)protocolProvider.getHeaderFactory()).createReplacesHeader(targetDialog.getCallId().getCallId(),(remoteTag == null) ? "0" : remoteTag,(localTag == null) ? "0" : localTag);
+  }
+ catch (  ParseException ex) {
+    throwOperationFailedException("Failed to create Replaces header for target dialog " + targetDialog,OperationFailedException.ILLEGAL_ARGUMENT,ex);
+  }
+  try {
+    sipURI.setHeader(ReplacesHeader.NAME,replacesHeader.encodeBody());
+  }
+ catch (  ParseException ex) {
+    throwOperationFailedException("Failed to set Replaces header " + replacesHeader + " to SipURI "+ sipURI,OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  putOnHold(participant);
+  putOnHold(target);
+  transfer(participant,targetAddress);
+}

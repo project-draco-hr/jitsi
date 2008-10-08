@@ -33,10 +33,10 @@
     participant.setState(CallParticipantState.DISCONNECTED,message);
     return false;
   }
-  if (SubscriptionStateHeader.TERMINATED.equals(ssHeader.getState()) && (DialogUtils.removeSubscriptionThenIsDialogAlive(dialog,"refer") == false)) {
+  if (SubscriptionStateHeader.TERMINATED.equals(ssHeader.getState()) && !DialogUtils.removeSubscriptionThenIsDialogAlive(dialog,"refer")) {
     participant.setState(CallParticipantState.DISCONNECTED);
   }
-  if ((CallParticipantState.DISCONNECTED.equals(participant.getState()) == false) && (DialogUtils.isByeProcessed(dialog) == false)) {
+  if (!CallParticipantState.DISCONNECTED.equals(participant.getState()) && !DialogUtils.isByeProcessed(dialog)) {
     boolean dialogIsAlive;
     try {
       dialogIsAlive=sayBye(participant);
@@ -45,7 +45,7 @@
       logger.error("Failed to send BYE in response to refer NOTIFY request.",ex);
       dialogIsAlive=false;
     }
-    if (dialogIsAlive == false) {
+    if (!dialogIsAlive) {
       participant.setState(CallParticipantState.DISCONNECTED);
     }
   }

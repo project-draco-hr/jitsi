@@ -1,14 +1,22 @@
 {
   CallEvent cEvent=new CallEvent(sourceCall,eventID);
-  logger.debug("Dispatching a CallEvent to " + callListeners.size() + " listeners. event is: "+ cEvent.toString());
-  Iterator listeners=null;
+  List<CallListener> listeners;
 synchronized (callListeners) {
-    listeners=new ArrayList(callListeners).iterator();
+    listeners=new ArrayList<CallListener>(callListeners);
   }
-  while (listeners.hasNext()) {
-    CallListener listener=(CallListener)listeners.next();
-    if (eventID == CallEvent.CALL_INITIATED)     listener.outgoingCallCreated(cEvent);
- else     if (eventID == CallEvent.CALL_RECEIVED)     listener.incomingCallReceived(cEvent);
- else     if (eventID == CallEvent.CALL_ENDED)     listener.callEnded(cEvent);
-  }
+  logger.debug("Dispatching a CallEvent to " + listeners.size() + " listeners. event is: "+ cEvent);
+  for (Iterator<CallListener> listenerIter=listeners.iterator(); listenerIter.hasNext(); ) {
+    CallListener listener=listenerIter.next();
+switch (eventID) {
+case CallEvent.CALL_INITIATED:
+      listener.outgoingCallCreated(cEvent);
+    break;
+case CallEvent.CALL_RECEIVED:
+  listener.incomingCallReceived(cEvent);
+break;
+case CallEvent.CALL_ENDED:
+listener.callEnded(cEvent);
+break;
+}
+}
 }

@@ -1,8 +1,9 @@
 {
   CallIdHeader callIdHeader=protocolProvider.getDefaultJainSipProvider().getNewCallId();
+  HeaderFactory headerFactory=protocolProvider.getHeaderFactory();
   CSeqHeader cSeqHeader=null;
   try {
-    cSeqHeader=protocolProvider.getHeaderFactory().createCSeqHeader(1l,Request.INVITE);
+    cSeqHeader=headerFactory.createCSeqHeader(1l,Request.INVITE);
   }
  catch (  InvalidArgumentException ex) {
     logger.error("An unexpected erro occurred while" + "constructing the CSeqHeadder",ex);
@@ -12,12 +13,13 @@ catch (  ParseException exc) {
     logger.error("An unexpected erro occurred while" + "constructing the CSeqHeadder",exc);
     throw new OperationFailedException("An unexpected erro occurred while" + "constructing the CSeqHeadder",OperationFailedException.INTERNAL_ERROR,exc);
   }
+  Header replacesHeader=stripReplacesHeader(toAddress);
   String localTag=ProtocolProviderServiceSipImpl.generateLocalTag();
   FromHeader fromHeader=null;
   ToHeader toHeader=null;
   try {
-    fromHeader=protocolProvider.getHeaderFactory().createFromHeader(protocolProvider.getOurSipAddress(toAddress),localTag);
-    toHeader=protocolProvider.getHeaderFactory().createToHeader(toAddress,null);
+    fromHeader=headerFactory.createFromHeader(protocolProvider.getOurSipAddress(toAddress),localTag);
+    toHeader=headerFactory.createToHeader(toAddress,null);
   }
  catch (  ParseException ex) {
     logger.error("An unexpected erro occurred while" + "constructing the ToHeader",ex);
@@ -37,5 +39,8 @@ catch (  ParseException exc) {
   UserAgentHeader userAgentHeader=protocolProvider.getSipCommUserAgentHeader();
   if (userAgentHeader != null)   invite.addHeader(userAgentHeader);
   invite.addHeader(contactHeader);
+  if (replacesHeader != null) {
+    invite.setHeader(replacesHeader);
+  }
   return invite;
 }
