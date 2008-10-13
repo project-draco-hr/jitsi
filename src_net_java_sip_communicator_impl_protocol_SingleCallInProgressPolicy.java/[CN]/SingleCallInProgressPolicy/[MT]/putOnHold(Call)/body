@@ -1,0 +1,17 @@
+{
+  OperationSetBasicTelephony telephony=(OperationSetBasicTelephony)call.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
+  if (telephony != null) {
+    for (Iterator<CallParticipant> participantIter=call.getCallParticipants(); participantIter.hasNext(); ) {
+      CallParticipant participant=participantIter.next();
+      CallParticipantState participantState=participant.getState();
+      if (!CallParticipantState.DISCONNECTED.equals(participantState) && !CallParticipantState.FAILED.equals(participantState) && !CallParticipantState.isOnHold(participantState)) {
+        try {
+          telephony.putOnHold(participant);
+        }
+ catch (        OperationFailedException ex) {
+          logger.error("Failed to put " + participant + " on hold.",ex);
+        }
+      }
+    }
+  }
+}

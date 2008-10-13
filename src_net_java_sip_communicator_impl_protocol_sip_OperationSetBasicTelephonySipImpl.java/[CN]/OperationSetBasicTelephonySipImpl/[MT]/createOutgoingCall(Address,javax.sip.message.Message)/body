@@ -8,8 +8,7 @@
     contentTypeHeader=protocolProvider.getHeaderFactory().createContentTypeHeader("application","sdp");
   }
  catch (  ParseException ex) {
-    logger.error("Failed to create a content type header for the INVITE " + "request",ex);
-    throw new OperationFailedException("Failed to create a content type header for the INVITE " + "request",OperationFailedException.INTERNAL_ERROR,ex);
+    throwOperationFailedException("Failed to create a content type header for the INVITE request",OperationFailedException.INTERNAL_ERROR,ex);
   }
   CallIdHeader call=(CallIdHeader)invite.getHeader(CallIdHeader.NAME);
   String callid=call.getCallId();
@@ -18,14 +17,13 @@
   if (cause != null) {
     reflectCauseOnEffect(cause,invite);
   }
-  ClientTransaction inviteTransaction;
+  ClientTransaction inviteTransaction=null;
   SipProvider jainSipProvider=protocolProvider.getDefaultJainSipProvider();
   try {
     inviteTransaction=jainSipProvider.getNewClientTransaction(invite);
   }
  catch (  TransactionUnavailableException ex) {
-    logger.error("Failed to create inviteTransaction.\n" + "This is most probably a network connection error.",ex);
-    throw new OperationFailedException("Failed to create inviteTransaction.\n" + "This is most probably a network connection error.",OperationFailedException.INTERNAL_ERROR,ex);
+    throwOperationFailedException("Failed to create inviteTransaction.\n" + "This is most probably a network connection error.",OperationFailedException.INTERNAL_ERROR,ex);
   }
   CallParticipantSipImpl callParticipant=createCallParticipantFor(inviteTransaction,jainSipProvider);
   try {
@@ -44,20 +42,17 @@
     throw new OperationFailedException("Failed to obtain an InetAddress for " + ex.getMessage(),OperationFailedException.NETWORK_FAILURE,ex);
   }
 catch (  ParseException ex) {
-    logger.error("Failed to parse sdp data while creating invite request!",ex);
-    throw new OperationFailedException("Failed to parse sdp data while creating invite request!",OperationFailedException.INTERNAL_ERROR,ex);
+    throwOperationFailedException("Failed to parse sdp data while creating invite request!",OperationFailedException.INTERNAL_ERROR,ex);
   }
 catch (  MediaException ex) {
-    logger.error("Could not access media devices!",ex);
-    throw new OperationFailedException("Could not access media devices!",OperationFailedException.INTERNAL_ERROR,ex);
+    throwOperationFailedException("Could not access media devices!",OperationFailedException.INTERNAL_ERROR,ex);
   }
   try {
     inviteTransaction.sendRequest();
     if (logger.isDebugEnabled())     logger.debug("sent request: " + invite);
   }
  catch (  SipException ex) {
-    logger.error("An error occurred while sending invite request",ex);
-    throw new OperationFailedException("An error occurred while sending invite request",OperationFailedException.NETWORK_FAILURE,ex);
+    throwOperationFailedException("An error occurred while sending invite request",OperationFailedException.NETWORK_FAILURE,ex);
   }
   return (CallSipImpl)callParticipant.getCall();
 }

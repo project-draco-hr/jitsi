@@ -30,16 +30,13 @@
     contentTypeHeader=protocolProvider.getHeaderFactory().createContentTypeHeader("application","sdp");
   }
  catch (  ParseException ex) {
-    callParticipant.setState(CallParticipantState.FAILED,"Failed to create a content type header for the ACK request");
-    logger.error("Failed to create a content type header for the ACK request",ex);
+    logErrorAndFailCallParticipant("Failed to create a content type header for the ACK request",ex,callParticipant);
   }
 catch (  InvalidArgumentException ex) {
-    callParticipant.setState(CallParticipantState.FAILED,"Failed ACK request, problem with the supplied cseq");
-    logger.error("Failed ACK request, problem with the supplied cseq",ex);
+    logErrorAndFailCallParticipant("Failed ACK request, problem with the supplied cseq",ex,callParticipant);
   }
 catch (  SipException ex) {
-    logger.error("Failed to create ACK request!",ex);
-    callParticipant.setState(CallParticipantState.FAILED);
+    logErrorAndFailCallParticipant("Failed to create ACK request!",ex,callParticipant);
     return;
   }
   if (!CallParticipantState.CONNECTING_WITH_EARLY_MEDIA.equals(callParticipant.getState()))   callParticipant.setSdpDescription(new String(ok.getRawContent()));
@@ -58,8 +55,7 @@ catch (  SipException ex) {
         clientTransaction.getDialog().sendAck(ack);
       }
  catch (      SipException ex) {
-        logger.error("Failed to acknowledge call!",ex);
-        callParticipant.setState(CallParticipantState.FAILED);
+        logErrorAndFailCallParticipant("Failed to acknowledge call!",ex,callParticipant);
         return;
       }
     }
@@ -70,12 +66,10 @@ catch (  SipException ex) {
     callParticipant.setCallInfoURL(callSession.getCallInfoURL());
   }
  catch (  ParseException exc) {
-    logger.error("There was an error parsing the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")",exc);
-    callParticipant.setState(CallParticipantState.FAILED,"There was an error parsing the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")");
+    logErrorAndFailCallParticipant("There was an error parsing the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")",exc,callParticipant);
   }
 catch (  MediaException exc) {
-    logger.error("We failed to process the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")"+ ". Error was: "+ exc.getMessage(),exc);
-    callParticipant.setState(CallParticipantState.FAILED,"We failed to process the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")"+ ". Error was: "+ exc.getMessage());
+    logErrorAndFailCallParticipant("We failed to process the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")"+ ". Error was: "+ exc.getMessage(),exc,callParticipant);
   }
   if (!CallParticipantState.isOnHold(callParticipant.getState()))   callParticipant.setState(CallParticipantState.CONNECTED);
 }

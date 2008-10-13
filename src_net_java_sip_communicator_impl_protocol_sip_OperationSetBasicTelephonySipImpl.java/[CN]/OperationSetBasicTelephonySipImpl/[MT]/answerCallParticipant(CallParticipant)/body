@@ -18,8 +18,7 @@
   }
  catch (  ParseException ex) {
     callParticipant.setState(CallParticipantState.DISCONNECTED);
-    logger.error("Failed to construct an OK response to an INVITE request",ex);
-    throw new OperationFailedException("Failed to construct an OK response to an INVITE request",OperationFailedException.INTERNAL_ERROR,ex);
+    throwOperationFailedException("Failed to construct an OK response to an INVITE request",OperationFailedException.INTERNAL_ERROR,ex);
   }
   ContentTypeHeader contentTypeHeader=null;
   try {
@@ -27,15 +26,15 @@
   }
  catch (  ParseException ex) {
     callParticipant.setState(CallParticipantState.DISCONNECTED);
-    logger.error("Failed to create a content type header for the OK response",ex);
-    throw new OperationFailedException("Failed to create a content type header for the OK response",OperationFailedException.INTERNAL_ERROR,ex);
+    throwOperationFailedException("Failed to create a content type header for the OK response",OperationFailedException.INTERNAL_ERROR,ex);
   }
   try {
     CallSession callSession=SipActivator.getMediaService().createCallSession(callParticipant.getCall());
     ((CallSipImpl)callParticipant.getCall()).setMediaCallSession(callSession);
+    String sdpOffer=callParticipant.getSdpDescription();
     String sdp=null;
-    if (callParticipant.getSdpDescription() != null && callParticipant.getSdpDescription().length() > 0) {
-      sdp=callSession.processSdpOffer(callParticipant,callParticipant.getSdpDescription());
+    if ((sdpOffer != null) && (sdpOffer.length() > 0)) {
+      sdp=callSession.processSdpOffer(callParticipant,sdpOffer);
       callParticipant.setCallInfoURL(callSession.getCallInfoURL());
     }
  else {
@@ -45,13 +44,11 @@
   }
  catch (  MediaException ex) {
     this.sayError((CallParticipantSipImpl)participant,Response.NOT_ACCEPTABLE_HERE);
-    logger.error("No sdp data was provided for the ok response to " + "an INVITE request!",ex);
-    throw new OperationFailedException("Failed to created an SDP description for an ok response " + "to an INVITE request!",OperationFailedException.INTERNAL_ERROR,ex);
+    throwOperationFailedException("Failed to created an SDP description for an ok response " + "to an INVITE request!",OperationFailedException.INTERNAL_ERROR,ex);
   }
 catch (  ParseException ex) {
     callParticipant.setState(CallParticipantState.DISCONNECTED);
-    logger.error("Failed to parse sdp data while creating invite request!",ex);
-    throw new OperationFailedException("Failed to parse sdp data while creating invite request!",OperationFailedException.INTERNAL_ERROR,ex);
+    throwOperationFailedException("Failed to parse sdp data while creating invite request!",OperationFailedException.INTERNAL_ERROR,ex);
   }
   ContactHeader contactHeader=protocolProvider.getContactHeader(dialog.getRemoteTarget());
   ok.addHeader(contactHeader);
@@ -61,7 +58,6 @@ catch (  ParseException ex) {
   }
  catch (  Exception ex) {
     callParticipant.setState(CallParticipantState.DISCONNECTED);
-    logger.error("Failed to send an OK response to an INVITE request",ex);
-    throw new OperationFailedException("Failed to send an OK response to an INVITE request",OperationFailedException.NETWORK_FAILURE,ex);
+    throwOperationFailedException("Failed to send an OK response to an INVITE request",OperationFailedException.NETWORK_FAILURE,ex);
   }
 }
