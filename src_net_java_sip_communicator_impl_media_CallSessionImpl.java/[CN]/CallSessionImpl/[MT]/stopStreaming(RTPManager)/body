@@ -1,4 +1,5 @@
 {
+  boolean stoppedAtLeastOneStream=false;
   Vector sendStreams=rtpManager.getSendStreams();
   Iterator ssIter=sendStreams.iterator();
   while (ssIter.hasNext()) {
@@ -11,6 +12,7 @@
  catch (    IOException ex) {
       logger.warn("Failed to stop stream.",ex);
     }
+    stoppedAtLeastOneStream=true;
   }
   Vector receiveStreams=rtpManager.getReceiveStreams();
   Iterator rsIter=receiveStreams.iterator();
@@ -22,9 +24,10 @@
  catch (    IOException ex) {
       logger.warn("Failed to stop stream.",ex);
     }
+    stoppedAtLeastOneStream=true;
   }
   if (selectedKeyProviderAlgorithm != null && rtpManager.equals(audioRtpManager)) {
-    TransformConnector transConnector=(TransformConnector)this.transConnectors.get(rtpManager);
+    TransformConnector transConnector=this.transConnectors.get(rtpManager);
     if (transConnector != null) {
       ZRTPTransformEngine engine=(ZRTPTransformEngine)transConnector.getEngine();
       engine.sendInfo(ZrtpCodes.MessageSeverity.Info,EnumSet.of(ZRTPCustomInfoCodes.ZRTPDisabledByCallEnd));
@@ -39,4 +42,5 @@
   rtpManager.removeSendStreamListener(this);
   rtpManager.removeSessionListener(this);
   rtpManager.dispose();
+  return stoppedAtLeastOneStream;
 }

@@ -1,7 +1,8 @@
 {
+  SdpFactory sdpFactory=mediaServCallback.getSdpFactory();
   try {
-    SessionDescription sessDescr=mediaServCallback.getSdpFactory().createSessionDescription();
-    Version v=mediaServCallback.getSdpFactory().createVersion(0);
+    SessionDescription sessDescr=sdpFactory.createSessionDescription();
+    Version v=sdpFactory.createVersion(0);
     sessDescr.setVersion(v);
     NetworkAddressManagerService netAddressManager=MediaActivator.getNetworkAddressManagerService();
     if (offer != null) {
@@ -17,31 +18,49 @@ catch (        UnknownHostException ex) {
           logger.warn("error reading remote sdp. " + c.toString() + " does not contain a valid address.",ex);
         }
       }
-      Iterator<MediaDescription> mediaDescriptions=(Iterator<MediaDescription>)offer.getMediaDescriptions(true).iterator();
+      Iterator<MediaDescription> mediaDescriptions=offer.getMediaDescriptions(true).iterator();
       while (mediaDescriptions.hasNext()) {
         Connection conn=mediaDescriptions.next().getConnection();
-        if (conn == null)         continue;
-        try {
-          intendedDestination=NetworkUtils.getInetAddress(conn.getAddress());
-          break;
-        }
- catch (        UnknownHostException e) {
-          logger.debug("Couldn't determine indtended " + "destination from address" + conn.getAddress(),e);
+        if (conn != null) {
+          try {
+            intendedDestination=NetworkUtils.getInetAddress(conn.getAddress());
+            break;
+          }
+ catch (          UnknownHostException e) {
+            logger.debug("Couldn't determine indtended " + "destination from address" + conn.getAddress(),e);
+          }
         }
       }
     }
+    boolean allocateMediaPorts=false;
+    boolean startStreaming=false;
     if ((audioSessionAddress == null) || (videoSessionAddress == null)) {
+      allocateMediaPorts=true;
+    }
+ else {
+      if (((lastIntendedDestination == null) && (intendedDestination != null)) || ((lastIntendedDestination != null) && !lastIntendedDestination.equals(intendedDestination))) {
+        startStreaming=stopStreaming();
+        audioRtpManager=RTPManager.newInstance();
+        videoRtpManager=RTPManager.newInstance();
+        allocateMediaPorts=true;
+      }
+    }
+    if (allocateMediaPorts) {
       allocateMediaPorts(intendedDestination);
+      lastIntendedDestination=intendedDestination;
+      if (startStreaming) {
+        startStreaming();
+        applyOnHold();
+      }
     }
     InetAddress publicIpAddress=audioPublicAddress.getAddress();
     String addrType=publicIpAddress instanceof Inet6Address ? Connection.IP6 : Connection.IP4;
-    Origin o=mediaServCallback.getSdpFactory().createOrigin(call.getProtocolProvider().getAccountID().getUserID(),0,0,"IN",addrType,publicIpAddress.getHostAddress());
+    Origin o=sdpFactory.createOrigin(call.getProtocolProvider().getAccountID().getUserID(),0,0,"IN",addrType,publicIpAddress.getHostAddress());
     sessDescr.setOrigin(o);
-    Connection c=mediaServCallback.getSdpFactory().createConnection("IN",addrType,publicIpAddress.getHostAddress());
+    Connection c=sdpFactory.createConnection("IN",addrType,publicIpAddress.getHostAddress());
     sessDescr.setConnection(c);
-    SessionName s=mediaServCallback.getSdpFactory().createSessionName("-");
-    sessDescr.setSessionName(s);
-    TimeDescription t=mediaServCallback.getSdpFactory().createTimeDescription();
+    sessDescr.setSessionName(sdpFactory.createSessionName("-"));
+    TimeDescription t=sdpFactory.createTimeDescription();
     Vector<TimeDescription> timeDescs=new Vector<TimeDescription>();
     timeDescs.add(t);
     sessDescr.setTimeDescriptions(timeDescs);
