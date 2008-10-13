@@ -2,14 +2,17 @@
   try {
     File temp=File.createTempFile(tempName + "d",null);
     FileOutputStream out=new FileOutputStream(temp);
-    out.write(origData.getBytes());
+    byte[] origDataBytes=origData.getBytes();
+    out.write(origDataBytes);
+    out.flush();
     FailSafeTransaction trans=this.fileAccessService.createFailSafeTransaction(temp);
     FailSafeTransaction trans2=this.fileAccessService.createFailSafeTransaction(temp);
     trans.beginTransaction();
     out.write(wrongData.getBytes());
+    out.flush();
     trans2.restoreFile();
     out.close();
-    assertEquals("the file hasn't the right size after a commit",temp.length(),origData.length());
+    assertEquals("the file hasn't the right size after a commit",temp.length(),origDataBytes.length);
     FileInputStream in=new FileInputStream(temp);
     byte[] buffer=new byte[in.available()];
     in.read(buffer);
