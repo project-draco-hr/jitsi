@@ -1,9 +1,13 @@
 {
+  if (logger.isTraceEnabled()) {
+    logger.trace("Querying a localhost addr for dst=" + intendedDestination);
+  }
   InetAddress localHost=null;
-  localHostFinderSocket.connect(intendedDestination,this.RANDOM_ADDR_DISC_PORT);
+  localHostFinderSocket.connect(intendedDestination,RANDOM_ADDR_DISC_PORT);
   localHost=localHostFinderSocket.getLocalAddress();
   localHostFinderSocket.disconnect();
   if (localHost.isAnyLocalAddress()) {
+    logger.trace("Socket returned the AnyLocalAddress. " + "Trying a workaround.");
     try {
       if (intendedDestination instanceof Inet6Address) {
         Enumeration<NetworkInterface> interfaces=NetworkInterface.getNetworkInterfaces();
@@ -14,6 +18,9 @@
             InetAddress address=addresses.nextElement();
             if (address instanceof Inet6Address) {
               if (!address.isAnyLocalAddress() && !address.isLinkLocalAddress() && !address.isSiteLocalAddress()&& !address.isLoopbackAddress()) {
+                if (logger.isTraceEnabled()) {
+                  logger.trace("will return ipv6 addr " + address);
+                }
                 return address;
               }
             }
@@ -25,6 +32,9 @@
  catch (    Exception ex) {
       logger.warn("Failed to get localhost ",ex);
     }
+  }
+  if (logger.isTraceEnabled()) {
+    logger.trace("Will return the following localhost address" + localHost);
   }
   return localHost;
 }
