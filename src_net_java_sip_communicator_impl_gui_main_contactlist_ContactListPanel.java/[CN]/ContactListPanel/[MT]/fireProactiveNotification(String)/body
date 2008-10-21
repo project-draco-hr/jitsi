@@ -1,0 +1,18 @@
+{
+  long currentTime=System.currentTimeMillis();
+  if (this.proactiveTimer.size() > 0) {
+    Iterator<Map.Entry<String,Long>> entries=this.proactiveTimer.entrySet().iterator();
+    while (entries.hasNext()) {
+      Map.Entry<String,Long> entry=entries.next();
+      Long lastNotificationDate=entry.getValue();
+      if (lastNotificationDate.longValue() + 30000 < currentTime) {
+        entries.remove();
+      }
+    }
+    if (this.proactiveTimer.containsKey(contactName)) {
+      return;
+    }
+  }
+  this.proactiveTimer.put(contactName,currentTime);
+  NotificationManager.fireNotification(NotificationManager.PROACTIVE_NOTIFICATION,contactName,Messages.getI18NString("proactiveNotification").getText());
+}
