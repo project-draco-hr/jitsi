@@ -1,0 +1,27 @@
+{
+  Point currentMouseLocation=MouseInfo.getPointerInfo().getLocation();
+  SwingUtilities.convertPointFromScreen(currentMouseLocation,this);
+  int index=this.locationToIndex(currentMouseLocation);
+  Object element=this.getModel().getElementAt(index);
+  MetaContactTooltip tip=new MetaContactTooltip();
+  if (element instanceof MetaContact) {
+    MetaContact metaContact=(MetaContact)element;
+    byte[] avatarImage=metaContact.getAvatar();
+    if (avatarImage != null && avatarImage.length > 0)     tip.setImage(new ImageIcon(metaContact.getAvatar()));
+    tip.setTitle(metaContact.getDisplayName());
+    Iterator<Contact> i=metaContact.getContacts();
+    while (i.hasNext()) {
+      Contact protocolContact=(Contact)i.next();
+      Image protocolStatusIcon=ImageLoader.getBytesInImage(protocolContact.getPresenceStatus().getStatusIcon());
+      String contactAddress=protocolContact.getAddress();
+      String statusMessage=protocolContact.getStatusMessage();
+      tip.addProtocolContact(new ImageIcon(protocolStatusIcon),contactAddress);
+    }
+  }
+ else   if (element instanceof MetaContactGroup) {
+    MetaContactGroup metaGroup=(MetaContactGroup)element;
+    tip.setTitle(metaGroup.getGroupName());
+  }
+  tip.setComponent(this);
+  return tip;
+}
