@@ -1,44 +1,36 @@
 {
-  this(callParticipant.getAddress());
   this.callParticipant=callParticipant;
-  this.stateLabel.setText(callParticipant.getState().getStateString());
-  Component holdButton=new HoldButton(this.callParticipant);
-  Component muteButton=new MuteButton(this.callParticipant);
-  Component transferCallButton=createTransferCallButton();
-  Component secureButton=createSecureCallButton();
-  if (secureButton != null) {
-    holdButton.setBounds(3,74,36,36);
-    muteButton.setBounds(39,74,36,36);
-    contactPanel.add(holdButton,new Integer(1));
-    contactPanel.add(muteButton,new Integer(1));
-    if (transferCallButton != null) {
-      transferCallButton.setBounds(75,74,36,36);
-      contactPanel.add(transferCallButton,new Integer(1));
-    }
-    secureButton.setName("secureButton");
-    secureButton.setBounds(111,74,36,36);
-    ((JButton)secureButton).setActionCommand("startSecureMode");
-    ((JButton)secureButton).setToolTipText(Messages.getI18NString("toggleOnSecurity").getText());
-    contactPanel.add(secureButton,new Integer(1));
-    this.secureLabel.setName("secureLabel");
-    callParticipant.getCall().addSecureGUIComponent(secureButton.getName(),secureButton);
-    callParticipant.getCall().addSecureGUIComponent(secureLabel.getName(),secureLabel);
-    secureLabel.setPreferredSize(new Dimension(110,50));
-    secureLabel.setBorder(BorderFactory.createLineBorder(Color.BLUE));
-    secureLabel.setToolTipText(Messages.getI18NString("defaultSASMessage").getText());
-    namePanel.add(secureLabel);
-    contactPanel.setPreferredSize(new Dimension(150,170));
-    photoLabel.setBounds(30,0,90,100);
-    namePanel.setBounds(0,110,150,50);
+  this.participantName=callParticipant.getAddress();
+  Calendar c=Calendar.getInstance();
+  c.set(0,0,0,0,0,0);
+  this.callDuration=c.getTime();
+  Component center=createCenter();
+  Component buttonBar=createButtonBar();
+  Component statusBar=createStatusBar();
+  GridBagLayout layout=new GridBagLayout();
+  setLayout(layout);
+  if (center != null) {
+    GridBagConstraints constraints=new GridBagConstraints();
+    constraints.fill=GridBagConstraints.BOTH;
+    constraints.gridx=0;
+    constraints.weightx=1;
+    constraints.weighty=1;
+    layout.setConstraints(center,constraints);
+    add(center);
   }
- else {
-    holdButton.setBounds(9,74,36,36);
-    muteButton.setBounds(45,74,36,36);
-    contactPanel.add(holdButton,new Integer(1));
-    contactPanel.add(muteButton,new Integer(1));
-    if (transferCallButton != null) {
-      transferCallButton.setBounds(81,74,36,36);
-      contactPanel.add(transferCallButton,new Integer(1));
-    }
+  if (buttonBar != null) {
+    GridBagConstraints constraints=new GridBagConstraints();
+    constraints.gridx=0;
+    layout.setConstraints(buttonBar,constraints);
+    add(buttonBar);
   }
+  if (statusBar != null) {
+    GridBagConstraints constraints=new GridBagConstraints();
+    constraints.gridx=0;
+    layout.setConstraints(statusBar,constraints);
+    add(statusBar);
+  }
+  setPreferredSize(new Dimension(130,150));
+  this.timer=new Timer(1000,new CallTimerListener());
+  this.timer.setRepeats(true);
 }

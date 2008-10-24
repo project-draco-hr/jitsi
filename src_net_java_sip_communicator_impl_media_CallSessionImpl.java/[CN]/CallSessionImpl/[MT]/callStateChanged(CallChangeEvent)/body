@@ -1,5 +1,12 @@
 {
-  if (evt.getNewValue() == CallState.CALL_IN_PROGRESS && evt.getNewValue() != evt.getOldValue()) {
+  Object newValue=evt.getNewValue();
+  if (newValue == evt.getOldValue()) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Ignoring call state change from " + newValue + " to the same state.");
+    }
+    return;
+  }
+  if (newValue == CallState.CALL_IN_PROGRESS) {
     try {
       logger.debug("call connected. starting streaming");
       startStreaming();
@@ -9,7 +16,7 @@
       logger.error("Failed to start streaming.",ex);
     }
   }
- else   if (evt.getNewValue() == CallState.CALL_ENDED && evt.getNewValue() != evt.getOldValue()) {
+ else   if (newValue == CallState.CALL_ENDED) {
     logger.warn("Stopping streaming.");
     stopStreaming();
     mediaServCallback.getMediaControl(getCall()).stopProcessingMedia(this);
@@ -17,21 +24,14 @@
     while (playersIter.hasNext()) {
       Player player=playersIter.next();
       player.stop();
+      Component visualComponent=getVisualComponent(player);
+      if (visualComponent != null) {
+        fireVideoEvent(VideoEvent.VIDEO_REMOVED,visualComponent);
+      }
       player.deallocate();
       player.close();
       playersIter.remove();
     }
-    Iterator<javax.swing.JFrame> videoFramesIter=videoFrames.iterator();
-    while (videoFramesIter.hasNext()) {
-      javax.swing.JFrame frame=videoFramesIter.next();
-      frame.setVisible(false);
-      frame.dispose();
-      videoFramesIter.remove();
-    }
     evt.getSourceCall().removeCallChangeListener(this);
-    RTPManager audioRtpMan=getAudioRtpManager();
-    if (audioRtpMan != null)     audioRtpMan.dispose();
-    RTPManager videoRtpMan=getVideoRtpManager();
-    if (videoRtpMan != null)     videoRtpMan.dispose();
   }
 }
