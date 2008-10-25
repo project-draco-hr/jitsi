@@ -1,0 +1,36 @@
+{
+  super(new BorderLayout());
+  setFocusable(true);
+  JTabbedPane chooserPanes=new JTabbedPane(JTabbedPane.LEFT);
+  this.addFocusListener(new FocusAdapter(){
+    public void focusLost(    FocusEvent event){
+      for (      SIPChooser chooser : choosers.values()) {
+        chooser.setSelected(null);
+      }
+    }
+  }
+);
+  for (  KeybindingSet.Category category : KeybindingSet.Category.values()) {
+    KeybindingSet bindingSet=service.getBindings(category);
+    if (bindingSet == null)     continue;
+    SIPChooser newChooser=new SIPChooser();
+    newChooser.putAllBindings(bindingSet.getBindings());
+    JPanel chooserWrapper=new JPanel(new BorderLayout());
+    chooserWrapper.add(newChooser,BorderLayout.NORTH);
+    JScrollPane scroller=new JScrollPane(chooserWrapper);
+    this.addKeyListener(newChooser.makeAdaptor());
+    chooserPanes.addTab(getReadableConstant(category.toString()),scroller);
+    this.choosers.put(bindingSet,newChooser);
+  }
+  add(chooserPanes);
+  JButton apply=new JButton("Apply");
+  apply.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent event){
+      for (      KeybindingSet set : choosers.keySet())       set.setBindings(choosers.get(set).getBindingMap());
+    }
+  }
+);
+  JPanel bottomWrapper=new JPanel(new FlowLayout(FlowLayout.RIGHT));
+  bottomWrapper.add(apply);
+  add(bottomWrapper,BorderLayout.SOUTH);
+}
