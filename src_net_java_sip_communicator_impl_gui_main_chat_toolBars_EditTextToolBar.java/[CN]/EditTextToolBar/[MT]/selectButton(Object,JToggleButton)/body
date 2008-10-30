@@ -2,28 +2,13 @@
   boolean selected=false;
   if (chatEditorPane.getSelectedText() == null) {
     int index=chatEditorPane.getCaretPosition();
-    if (index == 0) {
-      index=1;
-    }
-    AttributeSet attributes=((HTMLDocument)chatEditorPane.getDocument()).getCharacterElement(index - 1).getAttributes();
-    if (attributes.getAttribute(styleConstant) != null) {
-      selected=attributes.containsAttribute(styleConstant,true);
-    }
+    selected=((HTMLDocument)chatEditorPane.getDocument()).getCharacterElement(index - 1).getAttributes().containsAttribute(styleConstant,true);
   }
  else {
-    int index=chatEditorPane.getSelectionStart();
-    if (index < chatEditorPane.getSelectionEnd()) {
+    for (int index=chatEditorPane.getSelectionStart(); index < chatEditorPane.getSelectionEnd(); index++) {
       AttributeSet attributes=((HTMLDocument)chatEditorPane.getDocument()).getCharacterElement(index).getAttributes();
-      if (attributes.getAttribute(styleConstant) != null) {
-        selected=attributes.containsAttribute(styleConstant,true);
-      }
-    }
-    for (index++; index < chatEditorPane.getSelectionEnd(); index++) {
-      AttributeSet attributes=((HTMLDocument)chatEditorPane.getDocument()).getCharacterElement(index).getAttributes();
-      if (attributes.getAttribute(styleConstant) != null) {
-        selected=selected && attributes.containsAttribute(styleConstant,true);
-      }
+      selected=selected || attributes.containsAttribute(styleConstant,true);
     }
   }
-  button.setSelected(selected);
+  if (chatEditorPane.getText().length() > 0)   button.setSelected(selected);
 }
