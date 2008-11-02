@@ -1,0 +1,35 @@
+{
+  long currentStamp=inputBuffer.getTimeStamp();
+  boolean hasMarker=(inputBuffer.getFlags() & Buffer.FLAG_RTP_MARKER) != 0;
+  if (!(currentStamp == lastTimestamp)) {
+    encodedFrame=new byte[MAX_FRAME_SIZE];
+    encodedFrameLen=0;
+  }
+  lastTimestamp=currentStamp;
+  byte[] inData=(byte[])inputBuffer.getData();
+  int inputOffset=inputBuffer.getOffset();
+  byte fByte=inData[inputOffset];
+  int type=fByte & 0x1f;
+  if (type >= 1 && type <= 23) {
+    System.arraycopy(startSequence,0,encodedFrame,encodedFrameLen,startSequence.length);
+    encodedFrameLen+=startSequence.length;
+    int len=inputBuffer.getLength();
+    System.arraycopy(inData,inputOffset,encodedFrame,encodedFrameLen,len);
+    encodedFrameLen+=len;
+  }
+ else   if (type == 24) {
+  }
+ else   if (type == 28) {
+    deencapsulateFU(fByte,inputBuffer);
+  }
+ else {
+    logger.warn("Skipping unsupported NAL unit type");
+    return false;
+  }
+  if (hasMarker) {
+    return true;
+  }
+ else {
+    return false;
+  }
+}

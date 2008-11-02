@@ -1,0 +1,34 @@
+{
+  if (!opened) {
+    super.open();
+    if (inputFormat == null)     throw new ResourceUnavailableException("No input format selected");
+    if (outputFormat == null)     throw new ResourceUnavailableException("No output format selected");
+    AVCODEC.avcodec_init();
+    avcodec=AVCODEC.avcodec_find_encoder(AVCodecLibrary.CODEC_ID_H264);
+    avcontext=AVCODEC.avcodec_alloc_context();
+    avpicture=AVCODEC.avcodec_alloc_frame();
+    avcontext.pix_fmt=AVFormatLibrary.PIX_FMT_YUV420P;
+    avcontext.width=DEF_WIDTH;
+    avcontext.height=DEF_HEIGHT;
+    avcontext.time_base=new FFMPEGLibrary.AVRational(1,TARGET_FRAME_RATE);
+    avpicture.linesize[0]=DEF_WIDTH;
+    avpicture.linesize[1]=DEF_WIDTH / 2;
+    avpicture.linesize[2]=DEF_WIDTH / 2;
+    avcontext.qcompress=1;
+    AVUTIL.av_log_set_callback(new AVUtilLibrary.LogCallback(){
+      public void callback(      Pointer p,      int l,      String fmtS,      Pointer va_list){
+        logger.info("encoder: " + fmtS);
+      }
+    }
+);
+    if (AVCODEC.avcodec_open(avcontext,avcodec) < 0)     throw new RuntimeException("Could not open codec ");
+    opened=true;
+    encFrameLen=(DEF_WIDTH * DEF_HEIGHT * 3) / 2;
+    rawFrameBuffer=AVUTIL.av_malloc(encFrameLen);
+    encFrameBuffer=AVUTIL.av_malloc(encFrameLen);
+    int size=DEF_WIDTH * DEF_HEIGHT;
+    avpicture.data0=rawFrameBuffer;
+    avpicture.data1=avpicture.data0.share(size);
+    avpicture.data2=avpicture.data1.share(size / 4);
+  }
+}
