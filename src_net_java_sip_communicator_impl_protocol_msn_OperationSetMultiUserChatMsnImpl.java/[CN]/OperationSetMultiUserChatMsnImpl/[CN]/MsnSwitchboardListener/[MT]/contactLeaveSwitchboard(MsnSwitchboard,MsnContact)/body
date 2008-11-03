@@ -1,0 +1,20 @@
+{
+  logger.debug(contact.getDisplayName() + " has left the Switchboard");
+  Object attachment=switchboard.getAttachment();
+  try {
+    ChatRoomMsnImpl chatRoom=null;
+    if (attachment == null)     chatRoom=(ChatRoomMsnImpl)findRoom(switchboard);
+    if (attachment != null && userCreatedChatRoomList.containsKey(attachment))     chatRoom=(ChatRoomMsnImpl)userCreatedChatRoomList.get(attachment);
+    if (chatRoom == null)     return;
+    ChatRoomMemberMsnImpl member=chatRoom.getChatRoomMember(contact.getDisplayName(),contact.getEmail().getEmailAddress());
+    if (member != null) {
+      chatRoom.removeChatRoomMember(member);
+    }
+  }
+ catch (  OperationFailedException e) {
+    logger.debug("Could not find a chat room corresponding" + "to the given switchboard.",e);
+  }
+catch (  OperationNotSupportedException e) {
+    logger.debug("Could not find a chat room corresponding" + "to the given switchboard.",e);
+  }
+}
