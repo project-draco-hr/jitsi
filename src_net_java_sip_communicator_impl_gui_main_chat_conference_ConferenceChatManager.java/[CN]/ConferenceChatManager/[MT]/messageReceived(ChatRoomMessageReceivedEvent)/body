@@ -1,0 +1,30 @@
+{
+  ChatRoom sourceChatRoom=(ChatRoom)evt.getSource();
+  ChatRoomMember sourceMember=evt.getSourceChatRoomMember();
+  String messageType=null;
+  if (evt.getEventType() == ChatRoomMessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED) {
+    messageType=Constants.INCOMING_MESSAGE;
+  }
+ else   if (evt.getEventType() == ChatRoomMessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED) {
+    messageType=Constants.SYSTEM_MESSAGE;
+  }
+ else   if (evt.getEventType() == ChatRoomMessageReceivedEvent.ACTION_MESSAGE_RECEIVED) {
+    messageType=Constants.ACTION_MESSAGE;
+  }
+  logger.trace("MESSAGE RECEIVED from contact: " + sourceMember.getContactAddress());
+  Date date=evt.getTimestamp();
+  Message message=evt.getMessage();
+  ChatPanel chatPanel=null;
+  ChatWindowManager chatWindowManager=GuiActivator.getUIService().getChatWindowManager();
+  if (sourceChatRoom.isSystem()) {
+    ChatRoomProviderWrapper serverWrapper=chatRoomList.findServerWrapperFromProvider(sourceChatRoom.getParentProvider());
+    chatPanel=chatWindowManager.getMultiChat(serverWrapper.getSystemRoomWrapper());
+  }
+ else {
+    chatPanel=chatWindowManager.getMultiChat(sourceChatRoom,message.getMessageUID());
+  }
+  chatPanel.processMessage(sourceMember.getName(),date,messageType,message.getContent(),message.getContentType());
+  chatWindowManager.openChat(chatPanel,false);
+  String title=Messages.getI18NString("msgReceived",new String[]{sourceMember.getName()}).getText();
+  NotificationManager.fireChatNotification(sourceChatRoom,NotificationManager.INCOMING_MESSAGE,title,message.getContent());
+}

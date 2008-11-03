@@ -1,20 +1,23 @@
 {
   ChatWindow chatWindow;
   if (ConfigurationManager.isMultiChatWindowEnabled()) {
-    if (chats.elements().hasMoreElements()) {
-      chatWindow=((ChatPanel)chats.elements().nextElement()).getChatWindow();
+    Iterator<ChatPanel> chatPanelsIter=chatPanels.iterator();
+    if (chatPanelsIter.hasNext()) {
+      chatWindow=chatPanelsIter.next().getChatWindow();
     }
  else {
-      chatWindow=new ChatWindow(mainFrame);
+      chatWindow=new ChatWindow();
       GuiActivator.getUIService().registerExportedWindow(chatWindow);
     }
   }
  else {
-    chatWindow=new ChatWindow(mainFrame);
+    chatWindow=new ChatWindow();
   }
-  ConferenceChatPanel chatPanel=new ConferenceChatPanel(chatWindow,chatRoomWrapper);
-synchronized (chats) {
-    this.chats.put(chatRoomWrapper,chatPanel);
+  ChatPanel chatPanel=new ChatPanel(chatWindow);
+  ConferenceChatSession chatSession=new ConferenceChatSession(chatPanel,chatRoomWrapper);
+  chatPanel.setChatSession(chatSession);
+synchronized (chatPanels) {
+    this.chatPanels.add(chatPanel);
   }
   if (ConfigurationManager.isHistoryShown()) {
     if (escapedMessageID != null)     chatPanel.loadHistory(escapedMessageID);

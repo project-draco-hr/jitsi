@@ -2,13 +2,12 @@
   String prop=evt.getPropertyName();
   if ((prop.equals(propertyName)) && (evt.getNewValue() != null) && (evt.getNewValue() instanceof Component)&& ((Component)evt.getNewValue()).getFocusCycleRootAncestor() instanceof ChatWindow) {
     ChatWindow chatWindow=(ChatWindow)((Component)evt.getNewValue()).getFocusCycleRootAncestor();
-    ChatPanel chatPanel=chatWindow.getCurrentChatPanel();
-    if (chatPanel instanceof MetaContactChatPanel) {
-      MetaContact selectedMetaContact=((MetaContactChatPanel)chatPanel).getMetaContact();
-      ContactList clist=chatWindow.getMainFrame().getContactListPanel().getContactList();
-      ContactListModel clistModel=(ContactListModel)clist.getModel();
-      if (clistModel.isContactActive(selectedMetaContact)) {
-        clistModel.removeActiveContact(selectedMetaContact);
+    ChatSession chatSession=chatWindow.getCurrentChatPanel().getChatSession();
+    if (chatSession instanceof MetaContactChatSession) {
+      MetaContact selectedMetaContact=(MetaContact)chatSession.getDescriptor();
+      ContactList clist=GuiActivator.getUIService().getMainFrame().getContactListPanel().getContactList();
+      if (clist.isMetaContactActive(selectedMetaContact)) {
+        clist.removeActiveContact(selectedMetaContact);
         clist.refreshContact(selectedMetaContact);
       }
       fireChatFocusEvent(ChatFocusEvent.FOCUS_GAINED);

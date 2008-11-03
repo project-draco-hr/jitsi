@@ -1,0 +1,35 @@
+{
+  ChatRoom sourceChatRoom=(ChatRoom)evt.getSource();
+  if (!sourceChatRoom.equals(chatRoomWrapper.getChatRoom()))   return;
+  String eventType=evt.getEventType();
+  ChatRoomMember chatRoomMember=evt.getChatRoomMember();
+  ConferenceChatContact chatContact=null;
+  String statusMessage=null;
+  if (eventType.equals(ChatRoomMemberPresenceChangeEvent.MEMBER_JOINED)) {
+    chatContact=new ConferenceChatContact(chatRoomMember);
+    chatParticipants.add(chatContact);
+    sessionRenderer.addChatContact(chatContact);
+    statusMessage=Messages.getI18NString("chatRoomUserJoined",new String[]{sourceChatRoom.getName()}).getText();
+    sessionRenderer.updateChatContactStatus(chatContact,statusMessage);
+  }
+ else   if (eventType.equals(ChatRoomMemberPresenceChangeEvent.MEMBER_LEFT) || eventType.equals(ChatRoomMemberPresenceChangeEvent.MEMBER_KICKED) || eventType.equals(ChatRoomMemberPresenceChangeEvent.MEMBER_QUIT)) {
+    if (eventType.equals(ChatRoomMemberPresenceChangeEvent.MEMBER_LEFT)) {
+      statusMessage=Messages.getI18NString("chatRoomUserLeft",new String[]{sourceChatRoom.getName()}).getText();
+    }
+ else     if (eventType.equals(ChatRoomMemberPresenceChangeEvent.MEMBER_KICKED)) {
+      statusMessage=Messages.getI18NString("chatRoomUserKicked",new String[]{sourceChatRoom.getName()}).getText();
+    }
+ else     if (eventType.equals(ChatRoomMemberPresenceChangeEvent.MEMBER_QUIT)) {
+      statusMessage=Messages.getI18NString("chatRoomUserQuit",new String[]{sourceChatRoom.getName()}).getText();
+    }
+    Iterator<ConferenceChatContact> chatContactsIter=chatParticipants.iterator();
+    while (chatContactsIter.hasNext()) {
+      chatContact=chatContactsIter.next();
+      if (chatContact.getDescriptor().equals(chatRoomMember)) {
+        sessionRenderer.updateChatContactStatus(chatContact,statusMessage);
+        sessionRenderer.removeChatContact(chatContact);
+        break;
+      }
+    }
+  }
+}

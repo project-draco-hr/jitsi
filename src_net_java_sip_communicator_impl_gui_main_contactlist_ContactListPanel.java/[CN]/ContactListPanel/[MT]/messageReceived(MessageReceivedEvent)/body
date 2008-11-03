@@ -6,10 +6,9 @@
   int eventType=evt.getEventType();
   MetaContact metaContact=mainFrame.getContactList().findMetaContactByContact(protocolContact);
   if (metaContact != null) {
-    ContactListModel clistModel=(ContactListModel)contactList.getModel();
-    clistModel.addActiveContact(metaContact);
+    contactList.addActiveContact(metaContact);
     contactList.refreshContact(metaContact);
-    final MetaContactChatPanel chatPanel=chatWindowManager.getContactChat(metaContact,protocolContact,message.getMessageUID());
+    final ChatPanel chatPanel=chatWindowManager.getContactChat(metaContact,protocolContact,message.getMessageUID());
     String messageType=null;
     if (eventType == MessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED) {
       messageType=Constants.INCOMING_MESSAGE;
@@ -30,7 +29,8 @@
 );
     String title=Messages.getI18NString("msgReceived",new String[]{evt.getSourceContact().getDisplayName()}).getText();
     NotificationManager.fireChatNotification(protocolContact,NotificationManager.INCOMING_MESSAGE,title,message.getContent());
-    chatPanel.treatReceivedMessage(protocolContact);
+    ChatTransport chatTransport=chatPanel.getChatSession().findChatTransportForDescriptor(protocolContact);
+    chatPanel.setSelectedChatTransport(chatTransport);
   }
  else {
     logger.trace("MetaContact not found for protocol contact: " + protocolContact + ".");

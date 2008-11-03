@@ -1,50 +1,18 @@
 {
   JMenuItem menuItem=(JMenuItem)e.getSource();
   String itemName=menuItem.getName();
-  final ChatRoom chatRoom=chatRoomWrapper.getChatRoom();
+  ConferenceChatManager conferenceManager=GuiActivator.getUIService().getConferenceChatManager();
   if (itemName.equals("removeChatRoom")) {
-    ChatWindowManager chatWindowManager=mainFrame.getChatWindowManager();
-    ConferenceChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper);
-    chatWindowManager.closeChat(chatPanel);
-    mainFrame.getMultiUserChatManager().getChatRoomList().removeChatRoom(chatRoomWrapper);
-    if (chatRoom == null)     return;
-    new Thread(){
-      public void run(){
-        chatRoom.leave();
-      }
-    }
-.start();
+    conferenceManager.removeChatRoom(chatRoomWrapper);
   }
  else   if (itemName.equals("leaveChatRoom")) {
-    if (chatRoom == null) {
-      new ErrorDialog(mainFrame,Messages.getI18NString("warning").getText(),Messages.getI18NString("haveToBeConnectedToLeave").getText()).showDialog();
-      return;
-    }
-    new Thread(){
-      public void run(){
-        mainFrame.getMultiUserChatManager().leaveChatRoom(chatRoom);
-      }
-    }
-.start();
+    conferenceManager.leaveChatRoom(chatRoomWrapper);
   }
  else   if (itemName.equals("joinChatRoom")) {
-    if (chatRoom == null) {
-      new ErrorDialog(mainFrame,Messages.getI18NString("warning").getText(),Messages.getI18NString("haveToBeConnectedToJoin").getText()).showDialog();
-      return;
-    }
-    new Thread(){
-      public void run(){
-        mainFrame.getMultiUserChatManager().joinChatRoom(chatRoom);
-      }
-    }
-.start();
+    conferenceManager.joinChatRoom(chatRoomWrapper);
   }
  else   if (itemName.equals("joinAsChatRoom")) {
-    if (chatRoom == null) {
-      new ErrorDialog(mainFrame,Messages.getI18NString("warning").getText(),Messages.getI18NString("haveToBeConnectedToJoin").getText()).showDialog();
-      return;
-    }
-    ChatRoomAuthenticationWindow authWindow=new ChatRoomAuthenticationWindow(mainFrame,chatRoom);
+    ChatRoomAuthenticationWindow authWindow=new ChatRoomAuthenticationWindow(chatRoomWrapper);
     authWindow.setVisible(true);
   }
 }

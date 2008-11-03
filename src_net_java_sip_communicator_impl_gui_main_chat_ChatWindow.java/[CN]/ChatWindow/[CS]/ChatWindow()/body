@@ -1,0 +1,43 @@
+{
+  if (!ConfigurationManager.isWindowDecorated()) {
+    this.setUndecorated(true);
+  }
+  this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+  if (ConfigurationManager.isMultiChatWindowEnabled()) {
+    chatTabbedPane=new SIPCommTabbedPane(true,false);
+    chatTabbedPane.addCloseListener(new CloseListener(){
+      public void closeOperation(      MouseEvent e){
+        int tabIndex=chatTabbedPane.getOverTabIndex();
+        ChatPanel chatPanel=(ChatPanel)chatTabbedPane.getComponentAt(tabIndex);
+        GuiActivator.getUIService().getChatWindowManager().closeChat(chatPanel);
+      }
+    }
+);
+  }
+  menuBar=new MessageWindowMenuBar(this);
+  this.setJMenuBar(menuBar);
+  JPanel northPanel=new JPanel(new BorderLayout());
+  boolean isToolBarExtended=new Boolean(GuiActivator.getResources().getSettingsString("isToolBarExteneded")).booleanValue();
+  if (isToolBarExtended)   mainToolBar=new ExtendedMainToolBar(this);
+ else   mainToolBar=new MainToolBar(this);
+  northPanel.setBorder(BorderFactory.createEmptyBorder(3,0,0,0));
+  northPanel.add(new LogoBar(),BorderLayout.NORTH);
+  northPanel.add(mainToolBar,BorderLayout.CENTER);
+  northPanel.add(contactPhotoPanel,BorderLayout.EAST);
+  this.mainPanel.add(northPanel,BorderLayout.NORTH);
+  this.getContentPane().add(mainPanel,BorderLayout.CENTER);
+  this.getContentPane().add(statusBarPanel,BorderLayout.SOUTH);
+  this.initPluginComponents();
+  this.setKeybindingInput(KeybindingSet.Category.CHAT);
+  this.addKeybindingAction("chat-nextTab",new ForwordTabAction());
+  this.addKeybindingAction("chat-previousTab",new BackwordTabAction());
+  this.addKeybindingAction("chat-copy",new CopyAction());
+  this.addKeybindingAction("chat-paste",new PasteAction());
+  this.addKeybindingAction("chat-openSmilies",new OpenSmileyAction());
+  this.addKeybindingAction("chat-openHistory",new OpenHistoryAction());
+  this.addKeybindingAction("chat-close",new CloseAction());
+  this.addWindowListener(new ChatWindowAdapter());
+  int width=GuiActivator.getResources().getSettingsInt("chatWindowWidth");
+  int height=GuiActivator.getResources().getSettingsInt("chatWindowHeight");
+  this.setSize(width,height);
+}

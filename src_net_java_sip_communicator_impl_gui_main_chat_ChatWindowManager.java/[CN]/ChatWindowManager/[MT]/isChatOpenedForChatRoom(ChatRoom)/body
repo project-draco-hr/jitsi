@@ -1,17 +1,17 @@
 {
 synchronized (syncChat) {
-    ChatRoomWrapper chatRoomWrapper=null;
-    Enumeration chatKeys=chats.keys();
-    while (chatKeys.hasMoreElements()) {
-      Object o=chatKeys.nextElement();
-      if (o instanceof ChatRoomWrapper) {
-        if (((ChatRoomWrapper)o).getChatRoom().equals(chatRoom)) {
-          chatRoomWrapper=(ChatRoomWrapper)o;
-          break;
+    Iterator<ChatPanel> chatPanelsIter=chatPanels.iterator();
+    while (chatPanelsIter.hasNext()) {
+      ChatPanel chatPanel=chatPanelsIter.next();
+      ChatSession chatSession=chatPanel.getChatSession();
+      Object descriptor=chatSession.getDescriptor();
+      if (descriptor instanceof ChatRoomWrapper) {
+        ChatRoomWrapper chatRoomWrapper=(ChatRoomWrapper)descriptor;
+        if (chatRoomWrapper.getChatRoom().equals(chatRoom) && getChat(chatSession).isShown()) {
+          return true;
         }
       }
     }
-    if (containsChat(chatRoomWrapper) && getChat(chatRoomWrapper).isShown())     return true;
     return false;
   }
 }

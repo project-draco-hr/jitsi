@@ -1,0 +1,19 @@
+{
+  chatTransport.getParentChatSession().setDefaultSmsNumber(phoneNumber);
+  try {
+    chatTransport.sendSmsMessage(phoneNumber,message);
+  }
+ catch (  IllegalStateException ex) {
+    logger.error("Failed to send SMS.",ex);
+    chatPanel.refreshWriteArea();
+    chatPanel.processMessage(phoneNumber,new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,message,"text/plain");
+    chatPanel.processMessage(phoneNumber,new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,Messages.getI18NString("smsSendConnectionProblem").getText(),"text");
+  }
+catch (  Exception ex) {
+    logger.error("Failed to send SMS.",ex);
+    chatPanel.refreshWriteArea();
+    chatPanel.processMessage(phoneNumber,new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,message,"text/plain");
+    chatPanel.processMessage(phoneNumber,new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,Messages.getI18NString("msgDeliveryUnknownError",new String[]{ex.getMessage()}).getText(),"text");
+  }
+  this.dispose();
+}

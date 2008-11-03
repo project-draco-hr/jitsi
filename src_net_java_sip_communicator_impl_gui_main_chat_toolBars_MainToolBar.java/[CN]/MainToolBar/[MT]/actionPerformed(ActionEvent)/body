@@ -25,25 +25,21 @@
   }
  else   if (buttonText.equalsIgnoreCase("history")) {
     HistoryWindow history;
-    HistoryWindowManager historyWindowManager=messageWindow.getMainFrame().getHistoryWindowManager();
-    Object historyContact=chatPanel.getChatIdentifier();
-    if (historyWindowManager.containsHistoryWindowForContact(historyContact)) {
-      history=historyWindowManager.getHistoryWindowForContact(historyContact);
+    HistoryWindowManager historyWindowManager=GuiActivator.getUIService().getHistoryWindowManager();
+    ChatSession chatSession=chatPanel.getChatSession();
+    if (historyWindowManager.containsHistoryWindowForContact(chatSession.getDescriptor())) {
+      history=historyWindowManager.getHistoryWindowForContact(chatSession.getDescriptor());
       if (history.getState() == JFrame.ICONIFIED)       history.setState(JFrame.NORMAL);
       history.toFront();
     }
  else {
-      history=new HistoryWindow(messageWindow.getMainFrame(),chatPanel.getChatIdentifier());
+      history=new HistoryWindow(chatPanel.getChatSession().getDescriptor());
       history.setVisible(true);
-      historyWindowManager.addHistoryWindowForContact(historyContact,history);
+      historyWindowManager.addHistoryWindowForContact(chatSession.getDescriptor(),history);
     }
   }
- else   if (buttonText.equalsIgnoreCase("font")) {
-  }
- else   if (buttonText.equalsIgnoreCase("addContact")) {
-    if (currentChatContact != null) {
-      AddContactWizard addCWizz=new AddContactWizard(messageWindow.getMainFrame(),currentChatContact.getAddress(),currentChatContact.getProtocolProvider());
-      addCWizz.setVisible(true);
-    }
+ else   if (buttonText.equalsIgnoreCase("conference")) {
+    ChatInviteDialog inviteDialog=new ChatInviteDialog(chatPanel);
+    inviteDialog.setVisible(true);
   }
 }

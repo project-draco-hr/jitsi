@@ -2,20 +2,25 @@
   this.index=index;
   this.photoLabel.setIcon(null);
   ContactList contactList=(ContactList)list;
-  ContactListModel listModel=(ContactListModel)contactList.getModel();
   if (value instanceof MetaContact) {
     this.setPreferredSize(new Dimension(20,30));
-    MetaContact contactItem=(MetaContact)value;
-    String displayName=contactItem.getDisplayName();
+    MetaContact metaContact=(MetaContact)value;
+    String displayName=metaContact.getDisplayName();
     if (displayName == null || displayName.length() < 1) {
       displayName=Messages.getI18NString("unknown").getText();
     }
     this.nameLabel.setText(displayName);
-    this.nameLabel.setIcon(listModel.getMetaContactStatusIcon(contactItem));
+    if (contactList.isMetaContactActive(metaContact)) {
+      statusIcon.setImage(msgReceivedImage);
+    }
+ else {
+      statusIcon.setImage(Constants.getStatusIcon(contactList.getMetaContactStatus(metaContact)));
+    }
+    this.nameLabel.setIcon(statusIcon);
     this.nameLabel.setFont(this.getFont().deriveFont(Font.PLAIN));
     if (contactForegroundColor != null)     this.nameLabel.setForeground(contactForegroundColor);
     this.setBorder(BorderFactory.createEmptyBorder(1,5,1,1));
-    byte[] avatar=contactItem.getAvatar(true);
+    byte[] avatar=metaContact.getAvatar(true);
     if (avatar != null && avatar.length > 0) {
       ImageIcon roundedAvatar=ImageUtils.getScaledRoundedImage(avatar,AVATAR_WIDTH,AVATAR_HEIGHT);
       if (roundedAvatar != null)       this.photoLabel.setIcon(roundedAvatar);

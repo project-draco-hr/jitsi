@@ -1,0 +1,26 @@
+{
+  ChatRoom sourceChatRoom=(ChatRoom)evt.getSource();
+  String errorMsg=null;
+  Message sourceMessage=(Message)evt.getSource();
+  ChatRoomMember destMember=evt.getDestinationChatRoomMember();
+  if (evt.getErrorCode() == MessageDeliveryFailedEvent.OFFLINE_MESSAGES_NOT_SUPPORTED) {
+    errorMsg=Messages.getI18NString("msgDeliveryOfflineNotSupported").getText();
+  }
+ else   if (evt.getErrorCode() == MessageDeliveryFailedEvent.NETWORK_FAILURE) {
+    errorMsg=Messages.getI18NString("msgNotDelivered").getText();
+  }
+ else   if (evt.getErrorCode() == MessageDeliveryFailedEvent.PROVIDER_NOT_REGISTERED) {
+    errorMsg=Messages.getI18NString("msgSendConnectionProblem").getText();
+  }
+ else   if (evt.getErrorCode() == MessageDeliveryFailedEvent.INTERNAL_ERROR) {
+    errorMsg=Messages.getI18NString("msgDeliveryInternalError").getText();
+  }
+ else {
+    errorMsg=Messages.getI18NString("msgDeliveryFailedUnknownError").getText();
+  }
+  ChatWindowManager chatWindowManager=GuiActivator.getUIService().getChatWindowManager();
+  ChatPanel chatPanel=chatWindowManager.getMultiChat(sourceChatRoom);
+  chatPanel.processMessage(destMember.getName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,sourceMessage.getContent(),sourceMessage.getContentType());
+  chatPanel.processMessage(destMember.getName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,errorMsg,"text");
+  chatWindowManager.openChat(chatPanel,false);
+}

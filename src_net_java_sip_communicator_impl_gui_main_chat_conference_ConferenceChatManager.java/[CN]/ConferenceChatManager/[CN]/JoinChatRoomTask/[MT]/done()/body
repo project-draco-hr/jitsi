@@ -1,0 +1,31 @@
+{
+  String returnCode=null;
+  try {
+    returnCode=get();
+  }
+ catch (  InterruptedException ignore) {
+  }
+catch (  ExecutionException ignore) {
+  }
+  ConfigurationManager.updateChatRoomStatus(chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),Constants.ONLINE_STATUS);
+  String errorMessage=null;
+  if (returnCode.equals(AUTHENTICATION_FAILED)) {
+    ChatRoomAuthenticationWindow authWindow=new ChatRoomAuthenticationWindow(chatRoomWrapper);
+    authWindow.setVisible(true);
+  }
+ else   if (returnCode.equals(REGISTRATION_REQUIRED)) {
+    errorMessage=GuiActivator.getResources().getI18NString("chatRoomRegistrationRequired",new String[]{chatRoomWrapper.getChatRoomName()});
+  }
+ else   if (returnCode.equals(PROVIDER_NOT_REGISTERED)) {
+    errorMessage=GuiActivator.getResources().getI18NString("chatRoomNotConnected",new String[]{chatRoomWrapper.getChatRoomName()});
+  }
+ else   if (returnCode.equals(SUBSCRIPTION_ALREADY_EXISTS)) {
+    errorMessage=GuiActivator.getResources().getI18NString("chatRoomAlreadyJoined",new String[]{chatRoomWrapper.getChatRoomName()});
+  }
+ else {
+    errorMessage=GuiActivator.getResources().getI18NString("failedToJoinChatRoom",new String[]{chatRoomWrapper.getChatRoomName()});
+  }
+  if (!returnCode.equals(SUCCESS) && !returnCode.equals(AUTHENTICATION_FAILED)) {
+    new ErrorDialog(GuiActivator.getUIService().getMainFrame(),Messages.getI18NString("error").getText(),errorMessage).showDialog();
+  }
+}

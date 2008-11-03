@@ -1,0 +1,19 @@
+{
+  if (event.getServiceReference().getBundle().getState() == Bundle.STOPPING) {
+    return;
+  }
+  Object service=GuiActivator.bundleContext.getService(event.getServiceReference());
+  if (!(service instanceof ProtocolProviderService)) {
+    return;
+  }
+  ProtocolProviderService protocolProvider=(ProtocolProviderService)service;
+  if (event.getType() == ServiceEvent.REGISTERED) {
+    chatRoomList.addChatProvider(protocolProvider);
+  }
+ else   if (event.getType() == ServiceEvent.UNREGISTERING) {
+    ChatRoomProviderWrapper chatRoomProvider=chatRoomList.findServerWrapperFromProvider(protocolProvider);
+    if (chatRoomProvider != null) {
+      chatRoomList.removeChatProvider(chatRoomProvider);
+    }
+  }
+}

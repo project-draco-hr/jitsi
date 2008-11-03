@@ -1,0 +1,40 @@
+{
+  this.chatSession=chatSession;
+  if (chatSession instanceof MetaContactChatSession) {
+    if (subjectPanel != null) {
+      this.remove(subjectPanel);
+      this.revalidate();
+      this.repaint();
+    }
+    if (chatContactListPanel != null)     topSplitPane.remove(chatContactListPanel);
+    if (topSplitPane != null) {
+      this.messagePane.remove(topSplitPane);
+    }
+    this.messagePane.setTopComponent(conversationPanel);
+    initChatTransportSelectorBox();
+    ActionMap amap=this.getActionMap();
+    amap.put("ChangeProtocol",new ChangeTransportAction());
+    InputMap imap=this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+    imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_P,KeyEvent.CTRL_DOWN_MASK),"ChangeProtocol");
+  }
+ else   if (chatSession instanceof ConferenceChatSession) {
+    removeChatTransportSelectorBox();
+    messagePane.remove(conversationPanel);
+    this.chatContactListPanel=new ChatRoomMemberListPanel(this);
+    this.chatContactListPanel.setPreferredSize(new Dimension(150,100));
+    this.chatContactListPanel.setMinimumSize(new Dimension(150,100));
+    this.topSplitPane=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+    this.topSplitPane.setBorder(null);
+    this.topSplitPane.setResizeWeight(1.0D);
+    this.topSplitPane.setOneTouchExpandable(true);
+    topSplitPane.setLeftComponent(conversationPanel);
+    this.messagePane.setTopComponent(topSplitPane);
+    topSplitPane.setRightComponent(chatContactListPanel);
+    Iterator<ChatContact> chatParticipants=chatSession.getParticipants();
+    while (chatParticipants.hasNext()) {
+      ChatContact chatContact=chatParticipants.next();
+      chatContactListPanel.addContact(chatContact);
+    }
+  }
+  if (!chatSession.getCurrentChatTransport().allowsSmsMessage())   sendSmsCheckBox.setEnabled(false);
+}

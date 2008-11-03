@@ -1,0 +1,27 @@
+{
+  final OperationSetMultiUserChat groupChatOpSet=(OperationSetMultiUserChat)protocolProvider.getOperationSet(OperationSetMultiUserChat.class);
+  for (  final ChatRoomWrapper chatRoomWrapper : chatRoomsOrderedCopy) {
+    new Thread(){
+      public void run(){
+        ChatRoom chatRoom=null;
+        try {
+          chatRoom=groupChatOpSet.findRoom(chatRoomWrapper.getChatRoomName());
+        }
+ catch (        OperationFailedException e1) {
+          logger.error("Failed to find chat room with name:" + chatRoomWrapper.getChatRoomName(),e1);
+        }
+catch (        OperationNotSupportedException e1) {
+          logger.error("Failed to find chat room with name:" + chatRoomWrapper.getChatRoomName(),e1);
+        }
+        if (chatRoom != null) {
+          chatRoomWrapper.setChatRoom(chatRoom);
+          String lastChatRoomStatus=ConfigurationManager.getChatRoomStatus(protocolProvider,chatRoomWrapper.getChatRoomID());
+          if (lastChatRoomStatus == null || lastChatRoomStatus.equals(Constants.ONLINE_STATUS)) {
+            GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(chatRoom);
+          }
+        }
+      }
+    }
+.start();
+  }
+}

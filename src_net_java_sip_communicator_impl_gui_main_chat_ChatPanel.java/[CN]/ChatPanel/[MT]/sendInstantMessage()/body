@@ -1,0 +1,33 @@
+{
+  String htmlText=getTextFromWriteArea("text/html");
+  String plainText=getTextFromWriteArea(OperationSetBasicInstantMessaging.DEFAULT_MIME_TYPE);
+  String messageText;
+  String mimeType;
+  if ((htmlText.indexOf("<b") > -1 || htmlText.indexOf("<i") > -1 || htmlText.indexOf("<u") > -1 || htmlText.indexOf("<font") > -1)) {
+    messageText=htmlText;
+    mimeType=OperationSetBasicInstantMessaging.HTML_MIME_TYPE;
+  }
+ else {
+    messageText=plainText;
+    mimeType=OperationSetBasicInstantMessaging.DEFAULT_MIME_TYPE;
+  }
+  try {
+    chatSession.getCurrentChatTransport().sendInstantMessage(messageText,mimeType);
+  }
+ catch (  IllegalStateException ex) {
+    logger.error("Failed to send message.",ex);
+    this.processMessage(chatSession.getCurrentChatTransport().getName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,messageText,mimeType);
+    this.processMessage(chatSession.getCurrentChatTransport().getName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,Messages.getI18NString("msgSendConnectionProblem").getText(),"text");
+  }
+catch (  Exception ex) {
+    logger.error("Failed to send message.",ex);
+    this.refreshWriteArea();
+    this.processMessage(chatSession.getCurrentChatTransport().getName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,messageText,mimeType);
+    this.processMessage(chatSession.getCurrentChatTransport().getName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,Messages.getI18NString("msgDeliveryUnknownError",new String[]{ex.getMessage()}).getText(),"text");
+  }
+  if (chatSession.getCurrentChatTransport().allowsTypingNotifications()) {
+    getChatWritePanel().stopTypingTimer();
+  }
+  this.refreshWriteArea();
+  this.requestFocusInWriteArea();
+}

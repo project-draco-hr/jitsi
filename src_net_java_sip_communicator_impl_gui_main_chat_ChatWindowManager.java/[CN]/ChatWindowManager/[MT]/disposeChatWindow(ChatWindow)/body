@@ -1,29 +1,16 @@
 {
-  ChatPanel[] removedChatPanels=null;
-synchronized (chats) {
-    if (ConfigurationManager.isMultiChatWindowEnabled()) {
-      Collection values=chats.values();
-      removedChatPanels=new ChatPanel[values.size()];
-      values.toArray(removedChatPanels);
-      chats.clear();
-    }
- else {
-      ChatPanel removedChatPanel=(ChatPanel)chats.remove(chatWindow.getCurrentChatPanel().getChatIdentifier());
-      if (removedChatPanel != null) {
-        removedChatPanels=new ChatPanel[]{removedChatPanel};
-      }
-    }
+  Iterator<ChatPanel> chatPanelsIter=chatPanels.iterator();
+  while (chatPanelsIter.hasNext()) {
+    ChatPanel chatPanel=chatPanelsIter.next();
+    chatPanel.dispose();
   }
-  if (removedChatPanels != null) {
-    for (int i=0; i < removedChatPanels.length; i++) {
-      removedChatPanels[i].dispose();
-    }
+synchronized (chatPanels) {
+    chatPanels.clear();
   }
   if (chatWindow.getChatCount() > 0)   chatWindow.removeAllChats();
   GuiActivator.getUIService().unregisterExportedWindow(chatWindow);
   chatWindow.dispose();
-  ContactList clist=mainFrame.getContactListPanel().getContactList();
-  ContactListModel clistModel=(ContactListModel)clist.getModel();
-  clistModel.removeAllActiveContacts();
+  ContactList clist=GuiActivator.getUIService().getMainFrame().getContactListPanel().getContactList();
+  clist.removeAllActiveContacts();
   clist.refreshAll();
 }

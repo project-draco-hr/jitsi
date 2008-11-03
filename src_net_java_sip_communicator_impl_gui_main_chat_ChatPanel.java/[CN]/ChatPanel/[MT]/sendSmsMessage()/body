@@ -1,0 +1,25 @@
+{
+  String messageText=getTextFromWriteArea(OperationSetBasicInstantMessaging.DEFAULT_MIME_TYPE);
+  ChatTransport smsChatTransport=chatSession.getCurrentChatTransport();
+  if (!smsChatTransport.allowsSmsMessage()) {
+    Iterator<ChatTransport> chatTransports=chatSession.getChatTransports();
+    while (chatTransports.hasNext()) {
+      ChatTransport transport=chatTransports.next();
+      if (transport.allowsSmsMessage()) {
+        smsChatTransport=transport;
+        break;
+      }
+    }
+  }
+  if (!smsChatTransport.allowsSmsMessage()) {
+    logger.error("Failed to send SMS.");
+    this.refreshWriteArea();
+    this.processMessage(smsChatTransport.getName(),new Date(System.currentTimeMillis()),Constants.OUTGOING_MESSAGE,messageText,"plain/text");
+    this.processMessage(smsChatTransport.getName(),new Date(System.currentTimeMillis()),Constants.ERROR_MESSAGE,Messages.getI18NString("sendSmsNotSupported").getText(),"plain/text");
+    return;
+  }
+  smsChatTransport.addSmsMessageListener(new SmsMessageListener(smsChatTransport));
+  SendSmsDialog smsDialog=new SendSmsDialog(this,smsChatTransport,messageText);
+  smsDialog.setPreferredSize(new Dimension(400,200));
+  smsDialog.setVisible(true);
+}

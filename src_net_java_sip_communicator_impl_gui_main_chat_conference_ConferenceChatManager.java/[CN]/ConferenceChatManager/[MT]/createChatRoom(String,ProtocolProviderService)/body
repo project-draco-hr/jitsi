@@ -1,0 +1,24 @@
+{
+  ChatRoomWrapper chatRoomWrapper=null;
+  OperationSetMultiUserChat groupChatOpSet=(OperationSetMultiUserChat)protocolProvider.getOperationSet(OperationSetMultiUserChat.class);
+  if (groupChatOpSet == null)   return null;
+  ChatRoom chatRoom=null;
+  try {
+    chatRoom=groupChatOpSet.createChatRoom(chatRoomName,new Hashtable());
+  }
+ catch (  OperationFailedException ex) {
+    logger.error("Failed to create chat room.",ex);
+    new ErrorDialog(GuiActivator.getUIService().getMainFrame(),Messages.getI18NString("error").getText(),Messages.getI18NString("createChatRoomError",new String[]{chatRoomName}).getText(),ex).showDialog();
+  }
+catch (  OperationNotSupportedException ex) {
+    logger.error("Failed to create chat room.",ex);
+    new ErrorDialog(GuiActivator.getUIService().getMainFrame(),Messages.getI18NString("error").getText(),Messages.getI18NString("createChatRoomError",new String[]{chatRoomName}).getText(),ex).showDialog();
+  }
+  if (chatRoom != null) {
+    ChatRoomProviderWrapper parentProvider=chatRoomList.findServerWrapperFromProvider(protocolProvider);
+    chatRoomWrapper=new ChatRoomWrapper(parentProvider,chatRoom);
+    chatRoomList.addChatRoom(chatRoomWrapper);
+    fireChatRoomListChanedEvent(chatRoomWrapper,ChatRoomListChangeEvent.CHAT_ROOM_ADDED);
+  }
+  return chatRoomWrapper;
+}

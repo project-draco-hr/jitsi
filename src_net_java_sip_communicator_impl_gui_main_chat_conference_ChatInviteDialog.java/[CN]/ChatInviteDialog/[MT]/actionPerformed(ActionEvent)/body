@@ -1,7 +1,17 @@
 {
   JButton button=(JButton)e.getSource();
   if (button.equals(inviteButton)) {
-    this.chatPanel.inviteChatContact(contactAddressField.getText(),reasonField.getText());
+    ArrayList selectedContactAddresses=new ArrayList();
+    Enumeration selectedContacts=selectedContactListModel.elements();
+    while (selectedContacts.hasMoreElements()) {
+      MetaContact metaContact=(MetaContact)selectedContacts.nextElement();
+      Iterator<Contact> contactsIter=metaContact.getContactsForProvider(inviteChatTransport.getProtocolProvider());
+      if (contactsIter.hasNext()) {
+        Contact inviteContact=contactsIter.next();
+        selectedContactAddresses.add(inviteContact.getAddress());
+      }
+    }
+    chatPanel.inviteContacts(inviteChatTransport,selectedContactAddresses,reasonArea.getText());
   }
   this.dispose();
 }

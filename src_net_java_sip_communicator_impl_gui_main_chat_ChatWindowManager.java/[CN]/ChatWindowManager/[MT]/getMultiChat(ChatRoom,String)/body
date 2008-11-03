@@ -1,16 +1,16 @@
 {
 synchronized (syncChat) {
-    Enumeration chatKeys=chats.keys();
-    while (chatKeys.hasMoreElements()) {
-      Object o=chatKeys.nextElement();
-      if (o instanceof ChatRoomWrapper) {
-        if (((ChatRoomWrapper)o).getChatRoom().equals(chatRoom)) {
-          return (ConferenceChatPanel)getChat((ChatRoomWrapper)o);
-        }
-      }
+    ChatRoomList chatRoomList=GuiActivator.getUIService().getConferenceChatManager().getChatRoomList();
+    ChatRoomWrapper chatRoomWrapper=chatRoomList.findChatRoomWrapperFromChatRoom(chatRoom);
+    if (chatRoomWrapper == null) {
+      ChatRoomProviderWrapper parentProvider=chatRoomList.findServerWrapperFromProvider(chatRoom.getParentProvider());
+      chatRoomWrapper=new ChatRoomWrapper(parentProvider,chatRoom);
+      chatRoomList.addChatRoom(chatRoomWrapper);
     }
-    ChatRoomWrapper chatRoomWrapper=mainFrame.getMultiUserChatManager().getChatRoomList().findChatRoomWrapperFromChatRoom(chatRoom);
-    if (chatRoomWrapper == null)     chatRoomWrapper=new ChatRoomWrapper(chatRoom);
+    ChatSession chatSession=findChatSessionForDescriptor(chatRoomWrapper);
+    if (chatSession != null) {
+      return getChat(chatSession);
+    }
     return createChat(chatRoomWrapper,escapedMessageID);
   }
 }

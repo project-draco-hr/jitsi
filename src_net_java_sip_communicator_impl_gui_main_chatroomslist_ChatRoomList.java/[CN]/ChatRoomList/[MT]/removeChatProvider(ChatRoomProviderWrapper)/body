@@ -1,0 +1,18 @@
+{
+  ConfigurationService configService=GuiActivator.getConfigurationService();
+  String prefix="net.java.sip.communicator.impl.gui.accounts";
+  Iterator<String> accountsIter=configService.getPropertyNamesByPrefix(prefix,true).iterator();
+  while (accountsIter.hasNext()) {
+    String accountRootPropName=accountsIter.next();
+    String accountUID=configService.getString(accountRootPropName);
+    if (accountUID.equals(chatRoomProvider.getProtocolProvider().getAccountID().getAccountUniqueID())) {
+      List<String> chatRooms=configService.getPropertyNamesByPrefix(accountRootPropName + ".chatRooms",true);
+      Iterator<String> chatRoomsIter=chatRooms.iterator();
+      while (chatRoomsIter.hasNext()) {
+        String chatRoomPropName=chatRoomsIter.next();
+        configService.setProperty(chatRoomPropName + ".chatRoomName",null);
+      }
+      configService.setProperty(accountRootPropName,null);
+    }
+  }
+}
