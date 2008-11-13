@@ -1,44 +1,13 @@
 {
   this.mainFrame=mainFrame;
-  this.contactList=mainFrame.getContactList();
-  this.listModel=new ContactListModel(contactList);
-  this.setModel(listModel);
+  this.contactListService=GuiActivator.getMetaContactListService();
+  this.listModel=new ContactListModel(contactListService);
   this.setOpaque(false);
-  this.setBorder(BorderFactory.createEmptyBorder(3,3,3,3));
+  this.setModel(listModel);
   this.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
   this.setCellRenderer(new ContactListCellRenderer());
   this.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-  this.contactList.addMetaContactListListener(this);
-  this.addMouseListener(this);
-  this.addMouseMotionListener(this);
-  this.addFocusListener(new FocusAdapter(){
-    public void focusLost(    FocusEvent e){
-      if (draggedElement != null) {
-        draggedElement.setVisible(false);
-        draggedElement=null;
-      }
-    }
-  }
-);
-  this.addKeyListener(new KeyAdapter(){
-    public void keyPressed(    KeyEvent e){
-      if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-        if (draggedElement != null) {
-          draggedElement.setVisible(false);
-          draggedElement=null;
-        }
-      }
-    }
-  }
-);
-  this.addListSelectionListener(new ListSelectionListener(){
-    public void valueChanged(    ListSelectionEvent e){
-      if (!e.getValueIsAdjusting()) {
-        currentlySelectedObject=getSelectedValue();
-      }
-    }
-  }
-);
   this.setShowOffline(ConfigurationManager.isShowOffline());
+  this.initListeners();
   new ContactListRefresh().start();
 }

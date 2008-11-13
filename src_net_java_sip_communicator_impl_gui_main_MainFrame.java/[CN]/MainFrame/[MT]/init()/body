@@ -1,20 +1,27 @@
 {
+  if (GuiActivator.getUIService().getExitOnMainWindowClose())   this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+ else   this.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
   this.setKeybindingInput(KeybindingSet.Category.MAIN);
   this.addKeybindingAction("main-rename",new RenameAction());
-  JPanel northPanel=new JPanel(new BorderLayout());
-  JPanel centerPanel=new JPanel(new BorderLayout());
-  northPanel.setOpaque(false);
-  centerPanel.setOpaque(false);
-  this.statusBarPanel.setOpaque(false);
-  this.contactListPanel.setOpaque(false);
-  this.mainCallPanel.setOpaque(false);
+  TransparentPanel northPanel=new TransparentPanel(new BorderLayout());
+  TransparentPanel centerPanel=new TransparentPanel(new BorderLayout(0,0));
+  String isToolbarExtendedString=GuiActivator.getResources().getSettingsString("isToolBarExteneded");
+  boolean isToolBarExtended=new Boolean(isToolbarExtendedString).booleanValue();
   JPanel menusPanel=new JPanel(new BorderLayout());
+  if (isToolBarExtended) {
+    quickMenu=new ExtendedQuickMenu(this);
+    menusPanel.add(quickMenu,BorderLayout.SOUTH);
+  }
   this.setJMenuBar(menu);
-  menusPanel.add(quickMenu,BorderLayout.SOUTH);
   menusPanel.setUI(new SIPCommOpaquePanelUI());
   northPanel.add(new LogoBar(),BorderLayout.NORTH);
   northPanel.add(menusPanel,BorderLayout.CENTER);
-  centerPanel.add(accountStatusPanel,BorderLayout.NORTH);
+  northPanel.add(accountStatusPanel,BorderLayout.SOUTH);
+  TransparentPanel moreActionsPanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER,0,0));
+  moreActionsPanel.add(moreActionsLabel);
+  moreActionsLabel.setToolTipText(GuiActivator.getResources().getI18NString("openTools"));
+  moreActionsLabel.addMouseListener(new ActionMenuMouseListener());
+  centerPanel.add(moreActionsPanel,BorderLayout.NORTH);
   centerPanel.add(contactListPanel,BorderLayout.CENTER);
   centerPanel.add(mainCallPanel,BorderLayout.SOUTH);
   this.mainPanel.add(northPanel,BorderLayout.NORTH);
