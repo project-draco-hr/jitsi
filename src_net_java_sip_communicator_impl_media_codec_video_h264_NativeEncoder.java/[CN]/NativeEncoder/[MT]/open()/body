@@ -7,6 +7,7 @@
     avcodec=AVCODEC.avcodec_find_encoder(AVCodecLibrary.CODEC_ID_H264);
     avcontext=AVCODEC.avcodec_alloc_context();
     avpicture=AVCODEC.avcodec_alloc_frame();
+    avcontext.crf=1f;
     avcontext.pix_fmt=AVFormatLibrary.PIX_FMT_YUV420P;
     avcontext.width=DEF_WIDTH;
     avcontext.height=DEF_HEIGHT;
@@ -15,14 +16,33 @@
     avpicture.linesize[1]=DEF_WIDTH / 2;
     avpicture.linesize[2]=DEF_WIDTH / 2;
     avcontext.qcompress=1;
-    int _bitRate=267000;
-    avcontext.bit_rate=(_bitRate * 3) >> 2;
-    AVUTIL.av_log_set_callback(new AVUtilLibrary.LogCallback(){
-      public void callback(      Pointer p,      int l,      String fmtS,      Pointer va_list){
-        logger.info("encoder: " + fmtS);
-      }
-    }
-);
+    int _bitRate=48000;
+    avcontext.bit_rate=_bitRate;
+    avcontext.bit_rate_tolerance=_bitRate;
+    avcontext.rc_max_rate=_bitRate;
+    avcontext.sample_aspect_ratio.den=0;
+    avcontext.sample_aspect_ratio.num=0;
+    avcontext.thread_count=0;
+    avcontext.time_base.den=15;
+    avcontext.time_base.num=1000;
+    avcontext.qmin=10;
+    avcontext.qmax=22;
+    avcontext.max_qdiff=4;
+    avcontext.partitions|=0x111;
+    avcontext.flags|=AVCodecLibrary.CODEC_FLAG_PASS1;
+    avcontext.mb_decision=AVCodecContext.FF_MB_DECISION_SIMPLE;
+    avcontext.rc_eq="blurCplx^(1-qComp)";
+    avcontext.flags|=AVCodecLibrary.CODEC_FLAG_LOOP_FILTER;
+    avcontext.me_method=1;
+    avcontext.me_subpel_quality=5;
+    avcontext.me_range=16;
+    avcontext.me_cmp|=AVCodecContext.FF_CMP_CHROMA;
+    avcontext.thread_count=1;
+    avcontext.scenechange_threshold=40;
+    avcontext.crf=0;
+    avcontext.gop_size=IFRAME_INTERVAL;
+    framesSinceLastIFrame=IFRAME_INTERVAL + 1;
+    avcontext.i_quant_factor=1f / 1.4f;
     if (AVCODEC.avcodec_open(avcontext,avcodec) < 0)     throw new RuntimeException("Could not open codec ");
     opened=true;
     encFrameLen=(DEF_WIDTH * DEF_HEIGHT * 3) / 2;
