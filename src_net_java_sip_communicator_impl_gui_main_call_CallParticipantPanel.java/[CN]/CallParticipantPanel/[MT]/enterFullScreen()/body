@@ -1,0 +1,51 @@
+{
+  final JFrame frame=new JFrame();
+  frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+  frame.setTitle(getParticipantName());
+  frame.setUndecorated(true);
+  Component center=createCenter();
+  final Component buttonBar=createFullScreenButtonBar();
+  final Container contentPane=frame.getContentPane();
+  contentPane.setLayout(new FullScreenLayout(false));
+  if (center != null)   contentPane.add(center,FullScreenLayout.CENTER);
+  if (buttonBar != null) {
+    contentPane.add(buttonBar,FullScreenLayout.SOUTH);
+    buttonBar.setVisible(false);
+    addMouseMotionListener(contentPane,new MouseMotionAdapter(){
+      public void mouseMoved(      MouseEvent event){
+        Component component=event.getComponent();
+        if ((component != null) && !component.equals(buttonBar)) {
+          Point pointInContentPane=SwingUtilities.convertPoint(component,event.getPoint(),contentPane);
+          buttonBar.setVisible(buttonBar.getBounds().contains(pointInContentPane));
+        }
+      }
+    }
+);
+  }
+  Color background=Color.black;
+  contentPane.setBackground(background);
+  setBackground(center,background);
+  addKeyListener(frame,new KeyAdapter(){
+    public void keyPressed(    KeyEvent event){
+      if (!event.isConsumed() && (event.getKeyCode() == KeyEvent.VK_ESCAPE)) {
+        event.consume();
+        exitFullScreen(frame);
+      }
+    }
+  }
+);
+  frame.addWindowStateListener(new WindowStateListener(){
+    public void windowStateChanged(    WindowEvent event){
+switch (event.getID()) {
+case WindowEvent.WINDOW_CLOSED:
+case WindowEvent.WINDOW_DEACTIVATED:
+case WindowEvent.WINDOW_ICONIFIED:
+case WindowEvent.WINDOW_LOST_FOCUS:
+        exitFullScreen(frame);
+      break;
+  }
+}
+}
+);
+getGraphicsConfiguration().getDevice().setFullScreenWindow(frame);
+}

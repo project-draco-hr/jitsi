@@ -1,0 +1,66 @@
+{
+  final Call call=callParticipant.getCall();
+  if (call == null)   return null;
+  final OperationSetVideoTelephony telephony=(OperationSetVideoTelephony)call.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
+  if (telephony == null)   return null;
+  final VideoListener videoListener=new VideoListener(){
+    public void videoAdded(    VideoEvent event){
+      handleVideoEvent(event);
+    }
+    public void videoRemoved(    VideoEvent event){
+      handleVideoEvent(event);
+    }
+  }
+;
+  CallChangeListener callListener=new CallChangeListener(){
+    private boolean videoListenerIsAdded;
+    private void addVideoListener(){
+      telephony.addVideoListener(callParticipant,videoListener);
+      try {
+        telephony.createLocalVisualComponent(callParticipant,videoListener);
+      }
+ catch (      OperationFailedException ex) {
+        logger.error("Failed to create local video/visual Component.",ex);
+      }
+      videoListenerIsAdded=true;
+synchronized (videoContainers) {
+        videoTelephony=telephony;
+        handleVideoEvent(null);
+      }
+    }
+    public synchronized void callParticipantAdded(    CallParticipantEvent event){
+      if (callParticipant.equals(event.getSourceCallParticipant()) && !videoListenerIsAdded) {
+        Call call=callParticipant.getCall();
+        if ((call != null) && CallState.CALL_IN_PROGRESS.equals(call.getCallState()))         addVideoListener();
+      }
+    }
+    public synchronized void callParticipantRemoved(    CallParticipantEvent event){
+      if (callParticipant.equals(event.getSourceCallParticipant()) && videoListenerIsAdded) {
+        Call call=callParticipant.getCall();
+        if (call != null)         removeVideoListener();
+      }
+    }
+    public synchronized void callStateChanged(    CallChangeEvent event){
+      CallState newCallState=(CallState)event.getNewValue();
+      if (CallState.CALL_ENDED.equals(newCallState)) {
+        if (videoListenerIsAdded)         removeVideoListener();
+        call.removeCallChangeListener(this);
+      }
+ else       if (CallState.CALL_IN_PROGRESS.equals(newCallState)) {
+        if (!videoListenerIsAdded)         addVideoListener();
+      }
+    }
+    private void removeVideoListener(){
+      telephony.removeVideoListener(callParticipant,videoListener);
+      if (localVideo != null)       telephony.disposeLocalVisualComponent(callParticipant,localVideo);
+      videoListenerIsAdded=false;
+synchronized (videoTelephony) {
+        if (telephony.equals(videoTelephony))         videoTelephony=null;
+      }
+    }
+  }
+;
+  call.addCallChangeListener(callListener);
+  callListener.callStateChanged(new CallChangeEvent(call,CallChangeEvent.CALL_STATE_CHANGE,null,call.getCallState()));
+  return telephony;
+}

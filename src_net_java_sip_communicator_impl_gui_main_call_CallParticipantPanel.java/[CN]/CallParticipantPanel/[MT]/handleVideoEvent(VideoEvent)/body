@@ -1,0 +1,38 @@
+{
+synchronized (videoContainers) {
+    if ((event != null) && !event.isConsumed() && (event.getOrigin() == VideoEvent.LOCAL)) {
+      Component localVideo=event.getVisualComponent();
+switch (event.getType()) {
+case VideoEvent.VIDEO_ADDED:
+        this.localVideo=localVideo;
+      event.consume();
+    break;
+case VideoEvent.VIDEO_REMOVED:
+  if (this.localVideo == localVideo)   this.localVideo=null;
+break;
+}
+}
+}
+if (!SwingUtilities.isEventDispatchThread()) {
+SwingUtilities.invokeLater(new Runnable(){
+public void run(){
+handleVideoEvent(event);
+}
+}
+);
+return;
+}
+synchronized (videoContainers) {
+int videoContainerCount;
+if ((videoTelephony != null) && ((videoContainerCount=videoContainers.size()) > 0)) {
+Container videoContainer=videoContainers.get(videoContainerCount - 1);
+int zOrder=0;
+videoContainer.removeAll();
+if (localVideo != null) videoContainer.add(localVideo,VideoLayout.LOCAL,zOrder++);
+Component[] videos=videoTelephony.getVisualComponents(callParticipant);
+Component video=((videos == null) || (videos.length < 1)) ? null : videos[0];
+if (video != null) videoContainer.add(video,VideoLayout.REMOTE,zOrder++);
+videoContainer.validate();
+}
+}
+}
