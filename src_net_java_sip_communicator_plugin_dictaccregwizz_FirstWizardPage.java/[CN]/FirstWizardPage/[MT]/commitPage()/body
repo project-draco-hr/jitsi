@@ -1,7 +1,6 @@
 {
   String host=hostField.getText();
   int port=Integer.parseInt(portField.getText());
-  int stPos;
   boolean isModified=false;
   if (this.initAccountID instanceof AccountID) {
     String accHost=(String)this.initAccountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_ADDRESS);
@@ -10,13 +9,13 @@
       isModified=true;
     }
   }
-  if (this.strategyList.size() == 0) {
+  if (this.strategiesList.getModel().getSize() == 0) {
     this.populateStrategies();
-    while (this.populateThread.isRunning()) {
-      ;
+    if (!this.searchThread.waitThread()) {
+      this.strategiesList.clear();
     }
   }
-  if (this.strategyList.size() == 0) {
+  if (this.strategiesList.getModel().getSize() == 0) {
     nextPageIdentifier=FIRST_PAGE_IDENTIFIER;
     this.revalidate();
   }
@@ -31,9 +30,7 @@
     DictAccountRegistration registration=wizard.getRegistration();
     registration.setHost(host);
     registration.setPort(port);
-    stPos=this.strategyBox.getSelectedIndex();
-    registration.setStrategyCode(this.strategiesAssoc.get(stPos));
-    registration.setStrategy(this.strategyBox.getSelectedValue().toString());
+    registration.setStrategy((Strategy)this.strategiesList.getSelectedValue());
   }
   isPageCommitted=true;
 }

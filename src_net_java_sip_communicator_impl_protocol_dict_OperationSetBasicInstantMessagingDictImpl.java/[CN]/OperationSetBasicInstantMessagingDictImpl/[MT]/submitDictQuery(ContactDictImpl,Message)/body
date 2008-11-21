@@ -1,39 +1,32 @@
 {
   Message msg=this.createMessage("");
   String database=dictContact.getContactID();
-  DictAdapter dictAdapter=dictContact.getDictAdapter();
+  DictConnection conn=this.parentProvider.getConnection();
   boolean doMatch=false;
-  DictResultset fctResult;
   String word;
   word=message.getContent().replace("\"","").trim();
   if (word.indexOf(' ') > 0) {
     word="\"" + word + "\"";
   }
   try {
-    fctResult=dictAdapter.define(database,word);
-    msg=this.createMessage(this.retrieveDefine(fctResult,word),HTML_MIME_TYPE,DEFAULT_MIME_ENCODING,null);
+    List<Definition> definitions=conn.define(database,word);
+    msg=this.createMessage(retrieveDefine(definitions,word));
   }
- catch (  DictException dex) {
-    if (dex.getErrorCode() == 552) {
+ catch (  DictException dx) {
+    if (dx.getErrorCode() == DictReturnCode.NO_MATCH) {
       doMatch=true;
     }
  else {
-      msg=this.createMessage(manageException(dex,database));
+      msg=this.createMessage(manageException(dx,database));
     }
-  }
-catch (  Exception ex) {
-    logger.error("Failed to retrieve Definition. Error was: " + ex.getMessage(),ex);
   }
   if (doMatch) {
     try {
-      fctResult=dictAdapter.match(database,word);
-      msg=this.createMessage(this.retrieveMatch(fctResult,word));
+      List<MatchWord> matchWords=conn.match(database,word,this.accountID.getStrategy());
+      msg=this.createMessage(retrieveMatch(matchWords,word));
     }
- catch (    DictException dex) {
-      msg=this.createMessage(manageException(dex,database));
-    }
-catch (    Exception ex) {
-      logger.error("Failed to retrieve Match. Error was: " + ex.getMessage(),ex);
+ catch (    DictException dx) {
+      msg=this.createMessage(manageException(dx,database));
     }
   }
   fireMessageReceived(msg,dictContact);

@@ -1,14 +1,19 @@
 {
   if (dictName == null) {
-    try {
-      dictName=getDictAdapter().getDictionaryName(contactID);
-      if (dictName == null) {
-        dictName=contactID;
-      }
+    if (this.contactID.equals("*")) {
+      this.dictName=DictActivator.getResources().getI18NString("dict.anyDictionary");
     }
- catch (    Exception e) {
-      logger.error("Error while getting dictionary long name",e);
-      dictName=contactID;
+ else     if (this.contactID.equals("!")) {
+      this.dictName=DictActivator.getResources().getI18NString("dict.firstMatch");
+    }
+ else {
+      try {
+        this.dictName=this.parentProvider.getConnection().getDictionaryName(this.contactID);
+      }
+ catch (      DictException dx) {
+        logger.error("Error while getting dictionary long name",dx);
+      }
+      if (this.dictName == null)       this.dictName=this.contactID;
     }
   }
   return dictName;
