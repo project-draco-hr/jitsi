@@ -1,0 +1,21 @@
+{
+  logger.debug("ChatRoomSessionState changed to: " + newChatSessionState);
+  if (chatInvitation == null && newChatSessionState.equals(ChatSessionState.INROOM)) {
+    try {
+      chatRoom.join();
+    }
+ catch (    Exception e) {
+      logger.debug("Failed to join the chat room: " + e);
+    }
+  }
+  if (inviteUserList != null && newChatSessionState.equals(ChatSessionState.INROOM)) {
+    Iterator<Map.Entry<String,String>> invitesIter=inviteUserList.entrySet().iterator();
+    while (invitesIter.hasNext()) {
+      Map.Entry<String,String> entry=invitesIter.next();
+      chatRoom.invite(entry.getKey(),entry.getValue());
+    }
+  }
+  if (newChatSessionState.equals(ChatSessionState.CLOSED) || newChatSessionState.equals(ChatSessionState.FAILED)) {
+    updateMemberList(chatRoomSession.getUsers(),true);
+  }
+}
