@@ -1,0 +1,26 @@
+{
+  Set<String> registeredPlugins=new HashSet<String>();
+  registeredPlugins.addAll(PlugInManager.getPlugInList(null,null,PlugInManager.CODEC));
+  for (int i=0; i < customCodecs.length; i++) {
+    String className=customCodecs[i];
+    if (registeredPlugins.contains(className)) {
+      logger.debug("Codec : " + className + " is already registered");
+    }
+ else {
+      try {
+        Object instance=Class.forName(className).newInstance();
+        boolean result=PlugInManager.addPlugIn(className,((Codec)instance).getSupportedInputFormats(),((Codec)instance).getSupportedOutputFormats(null),PlugInManager.CODEC);
+        logger.debug("Codec : " + className + " is succsefully registered : "+ result);
+      }
+ catch (      Throwable ex) {
+        logger.debug("Codec : " + className + " is NOT succsefully registered",ex);
+      }
+    }
+  }
+  try {
+    PlugInManager.commit();
+  }
+ catch (  IOException ex) {
+    logger.error("Cannot commit to PlugInManager",ex);
+  }
+}
