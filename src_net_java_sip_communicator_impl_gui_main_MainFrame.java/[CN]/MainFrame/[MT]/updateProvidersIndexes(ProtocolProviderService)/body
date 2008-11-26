@@ -1,11 +1,9 @@
 {
   ConfigurationService configService=GuiActivator.getConfigurationService();
   String prefix="net.java.sip.communicator.impl.gui.accounts";
-  Iterator pproviders=protocolProviders.keySet().iterator();
   ProtocolProviderService currentProvider=null;
   int sameProtocolProvidersCount=0;
-  while (pproviders.hasNext()) {
-    ProtocolProviderService pps=(ProtocolProviderService)pproviders.next();
+  for (  ProtocolProviderService pps : protocolProviders.keySet()) {
     if (pps.getProtocolDisplayName().equals(removedProvider.getProtocolDisplayName())) {
       sameProtocolProvidersCount++;
       if (sameProtocolProvidersCount > 1) {
@@ -16,10 +14,8 @@
   }
   if (sameProtocolProvidersCount < 2 && currentProvider != null) {
     protocolProviders.put(currentProvider,new Integer(0));
-    List accounts=configService.getPropertyNamesByPrefix(prefix,true);
-    Iterator accountsIter=accounts.iterator();
-    while (accountsIter.hasNext()) {
-      String rootPropName=(String)accountsIter.next();
+    List<String> accounts=configService.getPropertyNamesByPrefix(prefix,true);
+    for (    String rootPropName : accounts) {
       String accountUID=configService.getString(rootPropName);
       if (accountUID.equals(currentProvider.getAccountID().getAccountUniqueID())) {
         configService.setProperty(rootPropName + ".accountIndex",new Integer(0));
