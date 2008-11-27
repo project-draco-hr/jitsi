@@ -1,10 +1,26 @@
 {
   videoContainer.removeAll();
   if (device == null)   return;
-  Player player=null;
+  DataSource dataSource=null;
   Exception exception=null;
   try {
-    player=Manager.createPlayer(device.getLocator());
+    dataSource=Manager.createDataSource(device.getLocator());
+  }
+ catch (  IOException ex) {
+    exception=ex;
+  }
+catch (  NoDataSourceException ex) {
+    exception=ex;
+  }
+  if (exception != null) {
+    logger.error("Failed to create preview for device " + device,exception);
+    return;
+  }
+  Dimension size=videoContainer.getPreferredSize();
+  MediaControl.selectVideoSize(dataSource,size.width,size.height);
+  Player player=null;
+  try {
+    player=Manager.createPlayer(dataSource);
   }
  catch (  IOException ex) {
     exception=ex;
