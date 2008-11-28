@@ -1,55 +1,33 @@
 {
+  ConfigurationService config=MediaActivator.getConfigurationService();
   logger.info("Scanning for configured Audio Devices.");
   CaptureDeviceInfo[] audioCaptureDevices=getAvailableAudioCaptureDevices();
-  if (audioCaptureDevices.length < 1) {
+  if (config.getBoolean(PROP_AUDIO_DEVICE_IS_DISABLED,false))   audioCaptureDevice=null;
+ else   if (audioCaptureDevices.length < 1) {
     logger.warn("No Audio Device was found.");
     audioCaptureDevice=null;
   }
  else {
     logger.debug("Found " + audioCaptureDevices.length + " capture devices: "+ audioCaptureDevices);
-    String audioDevName=(String)MediaActivator.getConfigurationService().getProperty(PROP_AUDIO_DEVICE);
+    String audioDevName=config.getString(PROP_AUDIO_DEVICE);
     if (audioDevName == null)     audioCaptureDevice=audioCaptureDevices[0];
  else {
-      for (int i=0; i < audioCaptureDevices.length; i++) {
-        CaptureDeviceInfo captureDeviceInfo=audioCaptureDevices[i];
-        if (audioDevName.equals(captureDeviceInfo.getName()))         audioCaptureDevice=captureDeviceInfo;
-      }
-    }
-    logger.info("Found " + audioCaptureDevice.getName() + " as an audio capture device.");
-  }
-  logger.info("Scanning for configured Video Devices.");
-  Vector videoCaptureDevices=CaptureDeviceManager.getDeviceList(new VideoFormat(VideoFormat.RGB));
-  if (videoCaptureDevices.size() > 0) {
-    String videoDevName=(String)MediaActivator.getConfigurationService().getProperty(PROP_VIDEO_DEVICE);
-    if (videoDevName == null) {
-      videoCaptureDevice=(CaptureDeviceInfo)videoCaptureDevices.get(0);
-    }
- else {
-      for (int i=0; i < videoCaptureDevices.size(); i++) {
-        CaptureDeviceInfo captureDeviceInfo=(CaptureDeviceInfo)videoCaptureDevices.get(i);
-        if (videoDevName.equals(captureDeviceInfo.getName()))         videoCaptureDevice=captureDeviceInfo;
-      }
-    }
-    logger.info("Found " + videoCaptureDevice.getName() + " as an RGB Video Device.");
-  }
- else {
-    videoCaptureDevices=CaptureDeviceManager.getDeviceList(new VideoFormat(VideoFormat.YUV));
-    if (videoCaptureDevices.size() > 0) {
-      String videoDevName=(String)MediaActivator.getConfigurationService().getProperty(PROP_VIDEO_DEVICE);
-      if (videoDevName == null) {
-        videoCaptureDevice=(CaptureDeviceInfo)videoCaptureDevices.get(0);
-      }
- else {
-        for (int i=0; i < videoCaptureDevices.size(); i++) {
-          CaptureDeviceInfo captureDeviceInfo=(CaptureDeviceInfo)videoCaptureDevices.get(i);
-          if (videoDevName.equals(captureDeviceInfo.getName()))           videoCaptureDevice=captureDeviceInfo;
+      for (      CaptureDeviceInfo captureDeviceInfo : audioCaptureDevices) {
+        if (audioDevName.equals(captureDeviceInfo.getName())) {
+          audioCaptureDevice=captureDeviceInfo;
+          break;
         }
       }
-      logger.info("Found " + videoCaptureDevice.getName() + " as an YUV Video Device.");
     }
+    if (audioCaptureDevice != null)     logger.info("Found " + audioCaptureDevice.getName() + " as an audio capture device.");
+  }
+  if (config.getBoolean(PROP_VIDEO_DEVICE_IS_DISABLED,false))   videoCaptureDevice=null;
  else {
-      logger.info("No Video Device was found.");
-      videoCaptureDevice=null;
+    logger.info("Scanning for configured Video Devices.");
+    videoCaptureDevice=extractConfiguredVideoCaptureDevice(VideoFormat.RGB);
+    if (videoCaptureDevice == null) {
+      videoCaptureDevice=extractConfiguredVideoCaptureDevice(VideoFormat.YUV);
+      if (videoCaptureDevice == null)       logger.info("No Video Device was found.");
     }
   }
 }

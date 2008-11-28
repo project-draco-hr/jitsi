@@ -4,19 +4,18 @@
   CaptureDeviceInfo audioDeviceInfo=null;
   CaptureDeviceInfo videoDeviceInfo=null;
   audioDeviceInfo=deviceConfiguration.getAudioCaptureDevice();
+  muteAudioDataSource=null;
   if (audioDeviceInfo != null) {
     audioDataSource=createDataSource(audioDeviceInfo.getLocator());
     if (audioDataSource instanceof PushBufferDataSource)     audioDataSource=muteAudioDataSource=new MutePushBufferDataSource((PushBufferDataSource)audioDataSource);
   }
   videoDeviceInfo=deviceConfiguration.getVideoCaptureDevice();
+  cloneableVideoDataSource=null;
   if (videoDeviceInfo != null) {
     videoDataSource=createDataSource(videoDeviceInfo.getLocator());
     selectVideoSize(videoDataSource);
     DataSource cloneableVideoDataSource=Manager.createCloneableDataSource(videoDataSource);
-    if (cloneableVideoDataSource == null) {
-      this.cloneableVideoDataSource=null;
-    }
- else {
+    if (cloneableVideoDataSource != null) {
       videoDataSource=cloneableVideoDataSource;
       this.cloneableVideoDataSource=(SourceCloneable)cloneableVideoDataSource;
     }
@@ -31,15 +30,8 @@
       throw new InternalError("Failed to create a media data source!" + "Media transmission won't be enabled!" + exc.getMessage());
     }
   }
- else {
-    if (audioDataSource != null) {
-      avDataSource=audioDataSource;
-    }
-    if (videoDataSource != null) {
-      avDataSource=videoDataSource;
-    }
-  }
-  if (avDataSource != null) {
-    initProcessor(avDataSource);
-  }
+ else   if (audioDataSource != null)   avDataSource=audioDataSource;
+ else   if (videoDataSource != null)   avDataSource=videoDataSource;
+ else   avDataSource=null;
+  if (avDataSource != null)   initProcessor(avDataSource);
 }
