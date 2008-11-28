@@ -1,13 +1,26 @@
 {
-  this.pack();
-  this.setVisible(true);
-synchronized (lock) {
+  if (!SwingUtilities.isEventDispatchThread()) {
+    final int[] returnCodes=new int[1];
+    Exception exception=null;
     try {
-      lock.wait();
+      SwingUtilities.invokeAndWait(new Runnable(){
+        public void run(){
+          returnCodes[0]=showDialog();
+        }
+      }
+);
     }
- catch (    InterruptedException e) {
-      e.printStackTrace();
+ catch (    InterruptedException ex) {
+      exception=ex;
     }
+catch (    InvocationTargetException ex) {
+      exception=ex;
+    }
+    if (exception != null)     throw new UndeclaredThrowableException(exception);
+    return returnCodes[0];
   }
+  pack();
+  setModal(true);
+  setVisible(true);
   return returnCode;
 }
