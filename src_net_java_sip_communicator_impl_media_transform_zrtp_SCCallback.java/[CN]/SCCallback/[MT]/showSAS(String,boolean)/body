@@ -1,16 +1,14 @@
 {
   logger.info("SAS: " + sas);
-  zrtpLabel.setBorder(BorderFactory.createLineBorder(Color.GREEN));
-  zrtpLabel.setText(SCCallbackResources.SAS_SECURED_MESSAGE + sas);
-  zrtpLabel.setToolTipText(SCCallbackResources.SAS_SECURED_TOOLTIP);
-  showTooltip();
-  if (!firstSecuring && gcgsByPeerFlag) {
-    zrtpButton.setActionCommand("goSecureRemoteToggle");
-    zrtpButton.doClick();
-    zrtpButton.setActionCommand("defaultZRTPAction");
+  HashMap<String,Object> state=new HashMap<String,Object>(3);
+  state.put(SecurityGUIEventZrtp.SESSION_TYPE,SecurityGUIEventZrtp.AUDIO);
+  state.put(SecurityGUIEventZrtp.SAS,sas);
+  if (verified) {
+    state.put(SecurityGUIEventZrtp.SAS_VERIFY,Boolean.TRUE);
   }
- else   if (!firstSecuring) {
-    gcgsByPeerFlag=true;
+ else {
+    state.put(SecurityGUIEventZrtp.SAS_VERIFY,Boolean.FALSE);
   }
-  firstSecuring=false;
+  SecurityGUIEventZrtp evt=new SecurityGUIEventZrtp(participant,state);
+  fireStateChangedEvent(evt);
 }

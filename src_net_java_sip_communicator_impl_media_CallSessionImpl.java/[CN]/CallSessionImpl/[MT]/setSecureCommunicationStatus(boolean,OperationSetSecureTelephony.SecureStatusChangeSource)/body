@@ -2,6 +2,15 @@
   logger.trace("Call session secure status change event received");
   usingSRTP=activator;
   if (source != OperationSetSecureTelephony.SecureStatusChangeSource.SECURE_STATUS_REVERTED) {
-    fireSecureStatusChanged(activator,source);
+    SecureEvent secureEvent=null;
+    if (activator) {
+      secureEvent=new SecureEvent(this,SecureEvent.SECURE_COMMUNICATION,source);
+    }
+ else {
+      secureEvent=new SecureEvent(this,SecureEvent.UNSECURE_COMMUNICATION,source);
+    }
+    if (selectedKeyProviderAlgorithm.getProviderType() == KeyProviderAlgorithm.ProviderType.ZRTP_PROVIDER) {
+      zrtpChangeStatus(this.audioRtpManager,secureEvent);
+    }
   }
 }
