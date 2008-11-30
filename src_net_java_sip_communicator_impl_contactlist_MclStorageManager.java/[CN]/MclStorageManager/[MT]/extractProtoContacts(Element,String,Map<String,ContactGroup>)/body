@@ -1,7 +1,7 @@
 {
-  List protoContacts=new LinkedList();
+  List<StoredProtoContactDescriptor> protoContacts=new LinkedList<StoredProtoContactDescriptor>();
   NodeList children=metaContactNode.getChildNodes();
-  List duplicates=new LinkedList();
+  List<Node> duplicates=new LinkedList<Node>();
   for (int i=0; i < children.getLength(); i++) {
     Node currentNode=children.item(i);
     if (currentNode.getNodeType() != Node.ELEMENT_NODE || !currentNode.getNodeName().equals(PROTO_CONTACT_NODE_NAME))     continue;
@@ -14,12 +14,10 @@
     }
     String protoGroupUID=XMLUtils.getAttribute(currentNode,PARENT_PROTO_GROUP_UID_ATTR_NAME);
     Element persistentDataNode=XMLUtils.findChild((Element)currentNode,PERSISTENT_DATA_NODE_NAME);
-    String persistentData=XMLUtils.getText(persistentDataNode);
-    protoContacts.add(new StoredProtoContactDescriptor(contactAddress,persistentData,(ContactGroup)protoGroups.get(protoGroupUID)));
+    String persistentData=(persistentDataNode == null) ? "" : XMLUtils.getText(persistentDataNode);
+    protoContacts.add(new StoredProtoContactDescriptor(contactAddress,persistentData,protoGroups.get(protoGroupUID)));
   }
-  Iterator duplicatesIter=duplicates.iterator();
-  while (duplicatesIter.hasNext()) {
-    Node node=(Node)duplicatesIter.next();
+  for (  Node node : duplicates) {
     metaContactNode.removeChild(node);
   }
   return protoContacts;
