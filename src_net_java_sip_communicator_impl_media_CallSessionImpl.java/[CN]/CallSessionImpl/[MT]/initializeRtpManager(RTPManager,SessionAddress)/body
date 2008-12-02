@@ -1,16 +1,28 @@
 {
   selectedKeyProviderAlgorithm=selectKeyProviderAlgorithm(0);
   try {
-    if (selectedKeyProviderAlgorithm != null && selectedKeyProviderAlgorithm.getProviderType() == KeyProviderAlgorithm.ProviderType.ZRTP_PROVIDER && rtpManager.equals(audioRtpManager)) {
-      TransformConnector transConnector=null;
+    if (selectedKeyProviderAlgorithm != null && selectedKeyProviderAlgorithm.getProviderType() == KeyProviderAlgorithm.ProviderType.ZRTP_PROVIDER) {
       TransformManager.initializeProviders();
-      transConnector=TransformManager.createZRTPConnector(bindAddress,"BouncyCastle",this);
+      TransformConnector transConnector=TransformManager.createZRTPConnector(bindAddress,"BouncyCastle",this);
       rtpManager.initialize(transConnector);
       this.transConnectors.put(rtpManager,transConnector);
+      SCCallback callback=new SCCallback(this);
+      boolean zrtpAutoStart=false;
+      if (rtpManager.equals(audioRtpManager)) {
+        if (zrtpDHSession == null) {
+          zrtpDHSession=transConnector;
+          zrtpAutoStart=true;
+          callback.setDHSession(true);
+        }
+        callback.setType(SecurityGUIEventZrtp.AUDIO);
+      }
+ else       if (rtpManager.equals(videoRtpManager)) {
+        callback.setType(SecurityGUIEventZrtp.VIDEO);
+      }
       ZRTPTransformEngine engine=(ZRTPTransformEngine)transConnector.getEngine();
-      engine.setUserCallback(new SCCallback(this));
+      engine.setUserCallback(callback);
       if (usingSRTP) {
-        if (!engine.initialize("GNUZRTP4J.zid"))         engine.sendInfo(ZrtpCodes.MessageSeverity.Info,EnumSet.of(ZRTPCustomInfoCodes.ZRTPEngineInitFailure));
+        if (!engine.initialize("GNUZRTP4J.zid",zrtpAutoStart))         engine.sendInfo(ZrtpCodes.MessageSeverity.Info,EnumSet.of(ZRTPCustomInfoCodes.ZRTPEngineInitFailure));
       }
  else {
         engine.sendInfo(ZrtpCodes.MessageSeverity.Info,EnumSet.of(ZRTPCustomInfoCodes.ZRTPNotEnabledByUser));
@@ -34,6 +46,7 @@
     }
   }
  catch (  Exception exc) {
+    exc.printStackTrace();
     logger.error("Failed to init an RTP manager.",exc);
     throw new MediaException("Failed to init an RTP manager.",MediaException.IO_ERROR,exc);
   }

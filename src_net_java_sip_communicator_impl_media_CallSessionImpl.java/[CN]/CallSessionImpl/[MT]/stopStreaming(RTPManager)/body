@@ -26,11 +26,12 @@
     }
     stoppedAtLeastOneStream=true;
   }
-  if (selectedKeyProviderAlgorithm != null && rtpManager.equals(audioRtpManager)) {
+  if (selectedKeyProviderAlgorithm != null && selectedKeyProviderAlgorithm.getProviderType() == KeyProviderAlgorithm.ProviderType.ZRTP_PROVIDER) {
     TransformConnector transConnector=this.transConnectors.get(rtpManager);
     if (transConnector != null) {
       ZRTPTransformEngine engine=(ZRTPTransformEngine)transConnector.getEngine();
-      engine.sendInfo(ZrtpCodes.MessageSeverity.Info,EnumSet.of(ZRTPCustomInfoCodes.ZRTPDisabledByCallEnd));
+      engine.stopZrtp();
+      engine.cleanup();
       transConnector.removeTargets();
     }
   }
