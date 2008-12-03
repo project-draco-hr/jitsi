@@ -12,15 +12,13 @@
   Color background=Color.black;
   contentPane.setBackground(background);
   setBackground(center,background);
-class FullScreenListener implements ContainerListener, KeyListener, MouseMotionListener, WindowStateListener {
+class FullScreenListener implements ContainerListener, KeyListener, WindowStateListener {
     public void componentAdded(    ContainerEvent event){
       Component child=event.getChild();
       child.addKeyListener(this);
-      child.addMouseMotionListener(this);
     }
     public void componentRemoved(    ContainerEvent event){
       Component child=event.getChild();
-      child.removeMouseMotionListener(this);
       child.removeKeyListener(this);
     }
     public void keyPressed(    KeyEvent event){
@@ -32,19 +30,6 @@ class FullScreenListener implements ContainerListener, KeyListener, MouseMotionL
     public void keyReleased(    KeyEvent event){
     }
     public void keyTyped(    KeyEvent event){
-    }
-    public void mouseDragged(    MouseEvent event){
-    }
-    public void mouseMoved(    MouseEvent event){
-      Component component=event.getComponent();
-      if ((buttonBar != null) && (component != null) && !component.equals(buttonBar)) {
-        Point pointInContentPane=SwingUtilities.convertPoint(component,event.getPoint(),contentPane);
-        Rectangle hotSpotBounds=buttonBar.getBounds();
-        hotSpotBounds.x=0;
-        hotSpotBounds.width=contentPane.getWidth();
-        boolean visible=hotSpotBounds.contains(pointInContentPane);
-        buttonBar.setVisible(visible);
-      }
     }
     public void windowStateChanged(    WindowEvent event){
 switch (event.getID()) {
@@ -58,10 +43,6 @@ case WindowEvent.WINDOW_LOST_FOCUS:
 }
 }
 FullScreenListener listener=new FullScreenListener();
-if (buttonBar != null) {
-buttonBar.setVisible(false);
-addMouseMotionListener(contentPane,listener);
-}
 addKeyListener(frame,listener);
 if (center instanceof Container) ((Container)center).addContainerListener(listener);
 frame.addWindowStateListener(listener);
