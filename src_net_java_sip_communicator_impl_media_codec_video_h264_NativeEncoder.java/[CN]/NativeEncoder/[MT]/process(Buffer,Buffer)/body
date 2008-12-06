@@ -18,19 +18,21 @@
     reset();
     return BUFFER_PROCESSED_OK;
   }
-  rawFrameBuffer.write(0,(byte[])inBuffer.getData(),inBuffer.getOffset(),encFrameLen);
-  if (framesSinceLastIFrame >= IFRAME_INTERVAL) {
-    avpicture.key_frame=1;
-    framesSinceLastIFrame=0;
-  }
+synchronized (AVCODEC) {
+    rawFrameBuffer.write(0,(byte[])inBuffer.getData(),inBuffer.getOffset(),encFrameLen);
+    if (framesSinceLastIFrame >= IFRAME_INTERVAL) {
+      avpicture.key_frame=1;
+      framesSinceLastIFrame=0;
+    }
  else {
-    framesSinceLastIFrame++;
-    avpicture.key_frame=0;
+      framesSinceLastIFrame++;
+      avpicture.key_frame=0;
+    }
+    int encLen=AVCODEC.avcodec_encode_video(avcontext,encFrameBuffer,encFrameLen,avpicture);
+    byte[] r=encFrameBuffer.getByteArray(0,encLen);
+    outBuffer.setData(r);
+    outBuffer.setLength(r.length);
+    outBuffer.setOffset(0);
+    return BUFFER_PROCESSED_OK;
   }
-  int encLen=AVCODEC.avcodec_encode_video(avcontext,encFrameBuffer,encFrameLen,avpicture);
-  byte[] r=encFrameBuffer.getByteArray(0,encLen);
-  outBuffer.setData(r);
-  outBuffer.setLength(r.length);
-  outBuffer.setOffset(0);
-  return BUFFER_PROCESSED_OK;
 }

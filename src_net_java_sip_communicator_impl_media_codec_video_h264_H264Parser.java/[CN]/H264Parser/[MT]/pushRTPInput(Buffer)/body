@@ -2,8 +2,7 @@
   long currentStamp=inputBuffer.getTimeStamp();
   boolean hasMarker=(inputBuffer.getFlags() & Buffer.FLAG_RTP_MARKER) != 0;
   if (!(currentStamp == lastTimestamp)) {
-    encodedFrame=new byte[MAX_FRAME_SIZE];
-    encodedFrameLen=0;
+    reset();
   }
   lastTimestamp=currentStamp;
   byte[] inData=(byte[])inputBuffer.getData();
@@ -30,7 +29,8 @@
   }
  catch (  Exception ex) {
     logger.warn("Cannot parse incoming " + ex.getMessage());
-    return true;
+    reset();
+    return false;
   }
   if (hasMarker) {
     return true;
