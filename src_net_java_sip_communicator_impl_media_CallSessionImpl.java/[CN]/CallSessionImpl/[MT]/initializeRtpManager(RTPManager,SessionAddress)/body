@@ -21,8 +21,14 @@
       }
       ZRTPTransformEngine engine=(ZRTPTransformEngine)transConnector.getEngine();
       engine.setUserCallback(callback);
-      if (usingSRTP) {
-        if (!engine.initialize("GNUZRTP4J.zid",zrtpAutoStart))         engine.sendInfo(ZrtpCodes.MessageSeverity.Info,EnumSet.of(ZRTPCustomInfoCodes.ZRTPEngineInitFailure));
+      if (this.getCall().isDefaultEncrypted()) {
+        if (engine.initialize("GNUZRTP4J.zid")) {
+          usingSRTP=true;
+          engine.sendInfo(ZrtpCodes.MessageSeverity.Info,EnumSet.of(ZRTPCustomInfoCodes.ZRTPEnabledByDefault));
+        }
+ else {
+          engine.sendInfo(ZrtpCodes.MessageSeverity.Info,EnumSet.of(ZRTPCustomInfoCodes.ZRTPEngineInitFailure));
+        }
       }
  else {
         engine.sendInfo(ZrtpCodes.MessageSeverity.Info,EnumSet.of(ZRTPCustomInfoCodes.ZRTPNotEnabledByUser));
