@@ -1,0 +1,61 @@
+{
+  String proxyAddressStr=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PROXY_ADDRESS);
+  if (proxyAddressStr == null || proxyAddressStr.trim().length() == 0)   return;
+  InetAddress proxyAddress=null;
+  int proxyPort=ListeningPoint.PORT_5060;
+  try {
+    String proxyTransport=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PREFERRED_TRANSPORT);
+    if (proxyTransport == null)     proxyTransport=getDefaultTransport();
+    InetSocketAddress proxySocketAddress=resolveSipAddress(proxyAddressStr,proxyTransport);
+    proxyAddress=proxySocketAddress.getAddress();
+    proxyPort=proxySocketAddress.getPort();
+    proxyAddressStr=proxyAddress.getHostName();
+    logger.trace("Setting proxy address = " + proxyAddressStr);
+    accountID.putProperty(ProtocolProviderFactory.PROXY_ADDRESS_VALIDATED,Boolean.toString(true));
+  }
+ catch (  UnknownHostException ex) {
+    logger.error(proxyAddressStr + " appears to be an either invalid or inaccessible address",ex);
+    String proxyValidatedString=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PROXY_ADDRESS_VALIDATED);
+    boolean isProxyValidated=false;
+    if (proxyValidatedString != null)     isProxyValidated=new Boolean(proxyValidatedString).booleanValue();
+    if (proxyValidatedString == null || !isProxyValidated) {
+      throw new IllegalArgumentException(proxyAddressStr + " appears to be an either invalid or inaccessible address " + ex.getMessage());
+    }
+  }
+  if (proxyAddressStr == null || proxyAddressStr.length() == 0 || proxyAddress == null) {
+    return;
+  }
+  String proxyPortStr=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PROXY_PORT);
+  if (proxyPortStr != null && proxyPortStr.length() > 0) {
+    try {
+      proxyPort=Integer.parseInt(proxyPortStr);
+    }
+ catch (    NumberFormatException ex) {
+      logger.error(proxyPortStr + " is not a valid port value. Expected an integer",ex);
+    }
+    if (proxyPort > NetworkUtils.MAX_PORT_NUMBER) {
+      throw new IllegalArgumentException(proxyPort + " is larger than " + NetworkUtils.MAX_PORT_NUMBER+ " and does not therefore represent a valid port nubmer.");
+    }
+  }
+  String proxyTransport=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PREFERRED_TRANSPORT);
+  if (proxyTransport != null && proxyTransport.length() > 0) {
+    if (!proxyTransport.equals(ListeningPoint.UDP) && !proxyTransport.equals(ListeningPoint.TCP) && !proxyTransport.equals(ListeningPoint.TLS)) {
+      throw new IllegalArgumentException(proxyTransport + " is not a valid transport protocol. Transport must be " + "left blanc or set to TCP, UDP or TLS.");
+    }
+  }
+ else {
+    proxyTransport=ListeningPoint.UDP;
+  }
+  StringBuffer proxyStringBuffer=new StringBuffer(proxyAddress.getHostAddress());
+  if (proxyAddress instanceof Inet6Address) {
+    proxyStringBuffer.insert(0,'[');
+    proxyStringBuffer.append(']');
+  }
+  proxyStringBuffer.append(':');
+  proxyStringBuffer.append(Integer.toString(proxyPort));
+  proxyStringBuffer.append('/');
+  proxyStringBuffer.append(proxyTransport);
+  this.outboundProxyString=proxyStringBuffer.toString();
+  this.outboundProxySocketAddress=new InetSocketAddress(proxyAddress,proxyPort);
+  this.outboundProxyTransport=proxyTransport;
+}

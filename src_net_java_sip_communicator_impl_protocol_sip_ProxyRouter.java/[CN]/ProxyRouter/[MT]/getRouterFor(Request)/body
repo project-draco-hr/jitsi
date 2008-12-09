@@ -1,0 +1,18 @@
+{
+  Address address=((FromHeader)request.getHeader(FromHeader.NAME)).getAddress();
+  Set<ProtocolProviderServiceSipImpl> services=ProtocolProviderServiceSipImpl.getAllInstances();
+  for (  ProtocolProviderServiceSipImpl service : services) {
+    if (request.getRequestURI().isSipURI() && service.getOurSipAddress((SipURI)request.getRequestURI()).equals(address)) {
+      String proxy=service.getOutboundProxyString();
+      if (proxy == null)       return null;
+ else       if (this.routers.containsKey(proxy))       return this.routers.get(proxy);
+ else {
+        Router router=new DefaultRouter(this.stack,service.getOutboundProxyString());
+        this.routers.put(proxy,router);
+        return router;
+      }
+    }
+  }
+  logger.error("couldn't build a router for this request");
+  return null;
+}

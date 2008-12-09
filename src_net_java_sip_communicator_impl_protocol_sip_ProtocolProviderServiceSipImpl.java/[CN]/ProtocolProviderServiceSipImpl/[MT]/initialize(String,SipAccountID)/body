@@ -1,35 +1,11 @@
 {
 synchronized (initializationLock) {
-    String logDir=SipActivator.getConfigurationService().getScHomeDirLocation() + System.getProperty("file.separator") + SipActivator.getConfigurationService().getScHomeDirName()+ System.getProperty("file.separator");
-    if (!NSPVALUE_DEBUG_LOG.startsWith(logDir)) {
-      NSPVALUE_DEBUG_LOG=logDir + NSPVALUE_DEBUG_LOG;
-    }
-    if (!NSPVALUE_SERVER_LOG.startsWith(logDir)) {
-      NSPVALUE_SERVER_LOG=logDir + NSPVALUE_SERVER_LOG;
-    }
     this.accountID=accountID;
     String protocolIconPath=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PROTOCOL_ICON_PATH);
     if (protocolIconPath == null)     protocolIconPath="resources/images/protocol/sip";
     this.protocolIcon=new ProtocolIconSipImpl(protocolIconPath);
     this.sipStatusEnum=new SipStatusEnum(protocolIconPath);
-    sipFactory=SipFactory.getInstance();
-    sipFactory.setPathName("gov.nist");
-    this.jainSipStackProperties=new Properties();
-    initOutboundProxy(accountID,jainSipStackProperties);
-    jainSipStackProperties.setProperty(JSPNAME_STACK_NAME,"SIP Communicator:" + getAccountID().getAccountUniqueID());
-    jainSipStackProperties.setProperty(NSPNAME_DEBUG_LOG,NSPVALUE_DEBUG_LOG);
-    jainSipStackProperties.setProperty(NSPNAME_SERVER_LOG,NSPVALUE_SERVER_LOG);
-    jainSipStackProperties.setProperty(NSPNAME_CACHE_CLIENT_CONNECTIONS,NSPVALUE_CACHE_CLIENT_CONNECTIONS);
-    jainSipStackProperties.setProperty(NSPNAME_TRACE_LEVEL,NSPVALUE_TRACE_LEVEL);
-    jainSipStackProperties.setProperty(NSPNAME_DELIVER_UNSOLICITED_NOTIFY,NSPVALUE_DELIVER_UNSOLICITED_NOTIFY);
-    try {
-      jainSipStack=new SipStackImpl(jainSipStackProperties);
-      logger.debug("Created stack: " + jainSipStack);
-    }
- catch (    PeerUnavailableException exc) {
-      logger.fatal("Failed to initialize SIP Stack.",exc);
-      throw new OperationFailedException("Failed to create sip stack",OperationFailedException.INTERNAL_ERROR,exc);
-    }
+    initOutboundProxy(accountID);
     int preferredSipPort=ListeningPoint.PORT_5060;
     String proxyPortStr=SipActivator.getConfigurationService().getString(PREFERRED_SIP_PORT);
     if (proxyPortStr != null && proxyPortStr.length() > 0) {
@@ -43,7 +19,7 @@ synchronized (initializationLock) {
         logger.error(preferredSipPort + " is larger than " + NetworkUtils.MAX_PORT_NUMBER+ " and does not "+ "therefore represent a valid port nubmer.");
       }
     }
-    initListeningPoints(preferredSipPort);
+    if (sipStackSharing == null)     sipStackSharing=new SipStackSharing();
     String enablePresenceObj=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.IS_PRESENCE_ENABLED);
     boolean enablePresence=true;
     if (enablePresenceObj != null) {

@@ -1,0 +1,123 @@
+{
+  if (request == null) {
+    logger.error("request shouldn't be null.");
+    return null;
+  }
+  Set<ProtocolProviderServiceSipImpl> currentListeners=this.getSipListeners();
+  if (currentListeners.size() == 0) {
+    logger.error("no listeners");
+    return null;
+  }
+  URI requestURI=request.getRequestURI();
+  if (requestURI.isSipURI()) {
+    String requestUser=((SipURI)requestURI).getUser();
+    List<ProtocolProviderServiceSipImpl> candidates=new ArrayList<ProtocolProviderServiceSipImpl>();
+    for (    ProtocolProviderServiceSipImpl listener : currentListeners) {
+      String ourUserID=(String)listener.getAccountID().getUserID();
+      logger.trace(ourUserID + " *** " + requestUser);
+      if (ourUserID.equals(requestUser)) {
+        logger.trace("suitable candidate found: " + listener.getAccountID());
+        candidates.add(listener);
+      }
+    }
+    if (candidates.size() == 1) {
+      logger.trace("(0) will dispatch to: " + candidates.get(0).getAccountID());
+      return candidates.get(0);
+    }
+    logger.warn("impossible to guess reliably which account this " + "request is addressed to but we'll still try");
+    if (candidates.size() > 1) {
+      for (      ProtocolProviderServiceSipImpl candidate : candidates) {
+        URI fromURI=((FromHeader)request.getHeader(FromHeader.NAME)).getAddress().getURI();
+        if (fromURI.isSipURI() == false)         continue;
+        SipURI ourURI=(SipURI)candidate.getOurSipAddress((SipURI)fromURI).getURI();
+        String ourUser=ourURI.getUser();
+        String ourHost=ourURI.getHost();
+        URI toURI=((ToHeader)request.getHeader(ToHeader.NAME)).getAddress().getURI();
+        if (toURI.isSipURI() == false)         continue;
+        String toUser=((SipURI)toURI).getUser();
+        String toHost=((SipURI)toURI).getHost();
+        if (toUser.equals(ourUser) && toHost.equals(ourHost)) {
+          logger.trace("(1) will dispatch to: " + candidate.getAccountID());
+          return candidate;
+        }
+      }
+      for (      ProtocolProviderServiceSipImpl candidate : candidates) {
+        URI fromURI=((FromHeader)request.getHeader(FromHeader.NAME)).getAddress().getURI();
+        if (fromURI.isSipURI() == false)         continue;
+        SipURI ourURI=(SipURI)candidate.getOurSipAddress((SipURI)fromURI).getURI();
+        String ourHost=ourURI.getHost();
+        URI toURI=((ToHeader)request.getHeader(ToHeader.NAME)).getAddress().getURI();
+        if (toURI.isSipURI() == false)         continue;
+        String toHost=((SipURI)toURI).getHost();
+        if (toHost.equals(ourHost)) {
+          logger.trace("(2) will dispatch to: " + candidate.getAccountID());
+          return candidate;
+        }
+      }
+      for (      ProtocolProviderServiceSipImpl candidate : candidates) {
+        URI fromURI=((FromHeader)request.getHeader(FromHeader.NAME)).getAddress().getURI();
+        if (fromURI.isSipURI() == false)         continue;
+        SipURI ourURI=(SipURI)candidate.getOurSipAddress((SipURI)fromURI).getURI();
+        String ourUser=ourURI.getUser();
+        URI toURI=((ToHeader)request.getHeader(ToHeader.NAME)).getAddress().getURI();
+        if (toURI.isSipURI() == false)         continue;
+        String toUser=((SipURI)toURI).getUser();
+        if (toUser.equals(ourUser)) {
+          logger.trace("(3) will dispatch to: " + candidate.getAccountID());
+          return candidate;
+        }
+      }
+      ProtocolProviderServiceSipImpl target=candidates.iterator().next();
+      logger.trace("(4) will dispatch to: " + target.getAccountID());
+      return target;
+    }
+    for (    ProtocolProviderServiceSipImpl listener : currentListeners) {
+      URI fromURI=((FromHeader)request.getHeader(FromHeader.NAME)).getAddress().getURI();
+      if (fromURI.isSipURI() == false)       continue;
+      SipURI ourURI=(SipURI)listener.getOurSipAddress((SipURI)fromURI).getURI();
+      String ourUser=ourURI.getUser();
+      String ourHost=ourURI.getHost();
+      URI toURI=((ToHeader)request.getHeader(ToHeader.NAME)).getAddress().getURI();
+      if (toURI.isSipURI() == false)       continue;
+      String toUser=((SipURI)toURI).getUser();
+      String toHost=((SipURI)toURI).getHost();
+      if (toUser.equals(ourUser) && toHost.equals(ourHost)) {
+        logger.trace("(5) will dispatch to: " + listener.getAccountID());
+        return listener;
+      }
+    }
+    for (    ProtocolProviderServiceSipImpl listener : currentListeners) {
+      URI fromURI=((FromHeader)request.getHeader(FromHeader.NAME)).getAddress().getURI();
+      if (fromURI.isSipURI() == false)       continue;
+      SipURI ourURI=(SipURI)listener.getOurSipAddress((SipURI)fromURI).getURI();
+      String ourHost=ourURI.getHost();
+      URI toURI=((ToHeader)request.getHeader(ToHeader.NAME)).getAddress().getURI();
+      if (toURI.isSipURI() == false)       continue;
+      String toHost=((SipURI)toURI).getHost();
+      if (toHost.equals(ourHost)) {
+        logger.trace("(6) will dispatch to: " + listener.getAccountID());
+        return listener;
+      }
+    }
+    for (    ProtocolProviderServiceSipImpl listener : currentListeners) {
+      URI fromURI=((FromHeader)request.getHeader(FromHeader.NAME)).getAddress().getURI();
+      if (fromURI.isSipURI() == false)       continue;
+      SipURI ourURI=(SipURI)listener.getOurSipAddress((SipURI)fromURI).getURI();
+      String ourUser=ourURI.getUser();
+      URI toURI=((ToHeader)request.getHeader(ToHeader.NAME)).getAddress().getURI();
+      if (toURI.isSipURI() == false)       continue;
+      String toUser=((SipURI)toURI).getUser();
+      if (toUser.equals(ourUser)) {
+        logger.trace("(7) will dispatch to: " + listener.getAccountID());
+        return listener;
+      }
+    }
+    ProtocolProviderServiceSipImpl target=currentListeners.iterator().next();
+    logger.trace("(8) will dispatch to: " + target.getAccountID());
+    return target;
+  }
+ else {
+    logger.error("Request-URI is not a SIP URI, dropping");
+  }
+  return null;
+}

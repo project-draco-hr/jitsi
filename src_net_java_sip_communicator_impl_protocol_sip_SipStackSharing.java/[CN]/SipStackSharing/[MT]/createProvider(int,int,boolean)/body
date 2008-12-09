@@ -1,0 +1,41 @@
+{
+  String context=(secure ? "TLS: " : "clear UDP/TCP: ");
+  if (retries < 0) {
+    logger.error(context + "couldn't find free ports to listen on.");
+    return;
+  }
+  ListeningPoint tlsLP=null;
+  ListeningPoint udpLP=null;
+  ListeningPoint tcpLP=null;
+  try {
+    if (secure) {
+      tlsLP=this.stack.createListeningPoint(NetworkUtils.IN_ADDR_ANY,preferredPort,ListeningPoint.TLS);
+      logger.trace("TLS secure ListeningPoint has been created.");
+      this.secureJainSipProvider=this.stack.createSipProvider(tlsLP);
+      this.secureJainSipProvider.addSipListener(this);
+    }
+ else {
+      udpLP=this.stack.createListeningPoint(NetworkUtils.IN_ADDR_ANY,preferredPort,ListeningPoint.UDP);
+      tcpLP=this.stack.createListeningPoint(NetworkUtils.IN_ADDR_ANY,preferredPort,ListeningPoint.TCP);
+      logger.trace("UDP and TCP clear ListeningPoints have " + "been created.");
+      this.clearJainSipProvider=this.stack.createSipProvider(udpLP);
+      this.clearJainSipProvider.addListeningPoint(tcpLP);
+      this.clearJainSipProvider.addSipListener(this);
+    }
+    logger.trace(context + "SipProvider has been created.");
+  }
+ catch (  InvalidArgumentException ex) {
+    logger.trace(java.util.Locale.getDefault().toString());
+    ex.printStackTrace();
+    if (tlsLP != null)     this.stack.deleteListeningPoint(tlsLP);
+    if (udpLP != null)     this.stack.deleteListeningPoint(udpLP);
+    if (tcpLP != null)     this.stack.deleteListeningPoint(tcpLP);
+    if (ex.getCause() instanceof java.io.IOException) {
+      logger.debug("Port " + preferredPort + " seems in use for either TCP or UDP.");
+      int currentlyTriedPort=NetworkUtils.getRandomPortNumber();
+      logger.debug("Retrying bind on port " + currentlyTriedPort);
+      this.createProvider(currentlyTriedPort,retries - 1,secure);
+    }
+ else     throw ex;
+  }
+}
