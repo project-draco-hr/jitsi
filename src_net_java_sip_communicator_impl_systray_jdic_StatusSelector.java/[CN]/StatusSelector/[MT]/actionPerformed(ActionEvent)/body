@@ -1,24 +1,22 @@
 {
-  JMenuItem menuItem=(JMenuItem)evt.getSource();
+  Object source=evt.getSource();
+  String menuItemText;
+  if (source instanceof AbstractButton)   menuItemText=((AbstractButton)source).getText();
+ else   menuItemText=((MenuItem)source).getLabel();
   Iterator statusSet=presence.getSupportedStatusSet();
   while (statusSet.hasNext()) {
-    PresenceStatus status=((PresenceStatus)statusSet.next());
-    if (status.getStatusName().equals(menuItem.getText())) {
-      if (this.provider.getRegistrationState() == RegistrationState.REGISTERED && !presence.getPresenceStatus().equals(status)) {
-        if (status.isOnline()) {
-          new PublishPresenceStatusThread(status).start();
-        }
- else {
-          new ProviderUnRegistration(this.provider).start();
-        }
+    PresenceStatus status=(PresenceStatus)statusSet.next();
+    if (status.getStatusName().equals(menuItemText)) {
+      RegistrationState registrationState=provider.getRegistrationState();
+      if (registrationState == RegistrationState.REGISTERED && !presence.getPresenceStatus().equals(status)) {
+        if (status.isOnline())         new PublishPresenceStatusThread(status).start();
+ else         new ProviderUnRegistration(this.provider).start();
       }
- else       if (this.provider.getRegistrationState() != RegistrationState.REGISTERED && this.provider.getRegistrationState() != RegistrationState.REGISTERING && this.provider.getRegistrationState() != RegistrationState.AUTHENTICATING && status.isOnline()) {
+ else       if (registrationState != RegistrationState.REGISTERED && registrationState != RegistrationState.REGISTERING && registrationState != RegistrationState.AUTHENTICATING && status.isOnline()) {
         new ProviderRegistration(provider).start();
       }
- else {
-        if (!status.isOnline() && !(this.provider.getRegistrationState() == RegistrationState.UNREGISTERING)) {
-          new ProviderUnRegistration(this.provider).start();
-        }
+ else       if (!status.isOnline() && !(registrationState == RegistrationState.UNREGISTERING)) {
+        new ProviderUnRegistration(this.provider).start();
       }
       parentSystray.saveStatusInformation(provider,status.getStatusName());
       break;

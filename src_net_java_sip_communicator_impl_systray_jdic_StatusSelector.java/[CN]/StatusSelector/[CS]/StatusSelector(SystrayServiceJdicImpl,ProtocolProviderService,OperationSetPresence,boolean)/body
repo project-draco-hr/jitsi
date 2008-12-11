@@ -1,0 +1,34 @@
+{
+  this.parentSystray=jdicSystray;
+  this.provider=provider;
+  this.presence=presence;
+{
+    String text=provider.getAccountID().getUserID();
+    if (swing) {
+      JMenu menu=new JMenu(text);
+      menu.setIcon(new ImageIcon(presence.getPresenceStatus().getStatusIcon()));
+      this.menu=menu;
+    }
+ else {
+      this.menu=new Menu(text);
+    }
+  }
+  Iterator statusIterator=this.presence.getSupportedStatusSet();
+  while (statusIterator.hasNext()) {
+    PresenceStatus status=(PresenceStatus)statusIterator.next();
+    String text=status.getStatusName();
+    if (menu instanceof Container) {
+      ImageIcon icon=new ImageIcon(status.getStatusIcon());
+      JMenuItem item=new JMenuItem(text,icon);
+      item.addActionListener(this);
+      ((Container)menu).add(item);
+    }
+ else {
+      MenuItem item=new MenuItem(text);
+      item.addActionListener(this);
+      ((Menu)menu).add(item);
+    }
+  }
+  addSeparator();
+  StatusSubMenu.addMenuItem(menu,new StatusMessageMenu(provider,swing).getMenu());
+}
