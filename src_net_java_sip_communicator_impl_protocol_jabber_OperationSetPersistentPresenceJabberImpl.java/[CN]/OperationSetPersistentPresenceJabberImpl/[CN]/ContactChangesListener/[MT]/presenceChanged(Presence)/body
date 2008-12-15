@@ -1,7 +1,7 @@
 {
   try {
     String userID=StringUtils.parseBareAddress(presence.getFrom());
-    String resource=StringUtils.parseResource(presence.getFrom());
+    logger.info("Received a status update for buddy=" + userID);
     TreeSet<Presence> userStats=statuses.get(userID);
     if (userStats == null) {
       userStats=new TreeSet<Presence>(new Comparator<Presence>(){
@@ -16,20 +16,20 @@
 );
       statuses.put(userID,userStats);
     }
-    logger.info("Received a status update for buddy=" + userID);
-    Presence toRemove=null;
-    Iterator<Presence> iter=userStats.iterator();
-    while (iter.hasNext()) {
-      Presence p=iter.next();
-      if (StringUtils.parseResource(p.getFrom()).equals(resource))       toRemove=p;
+ else {
+      String resource=StringUtils.parseResource(presence.getFrom());
+      for (Iterator<Presence> iter=userStats.iterator(); iter.hasNext(); ) {
+        Presence p=iter.next();
+        if (StringUtils.parseResource(p.getFrom()).equals(resource))         iter.remove();
+      }
     }
-    if (toRemove != null)     userStats.remove(toRemove);
     if (!jabberStatusToPresenceStatus(presence,parentProvider).equals(parentProvider.getJabberStatusEnum().getStatus(JabberStatusEnum.OFFLINE))) {
       userStats.add(presence);
     }
     Presence currentPresence;
     if (userStats.size() == 0) {
       currentPresence=presence;
+      statuses.remove(userID);
     }
  else {
       currentPresence=userStats.first();
