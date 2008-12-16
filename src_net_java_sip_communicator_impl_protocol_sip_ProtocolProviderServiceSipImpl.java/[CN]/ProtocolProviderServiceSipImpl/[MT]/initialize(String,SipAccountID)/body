@@ -1,7 +1,7 @@
 {
 synchronized (initializationLock) {
     this.accountID=accountID;
-    String protocolIconPath=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PROTOCOL_ICON_PATH);
+    String protocolIconPath=accountID.getAccountPropertyString(ProtocolProviderFactory.PROTOCOL_ICON_PATH);
     if (protocolIconPath == null)     protocolIconPath="resources/images/protocol/sip";
     this.protocolIcon=new ProtocolIconSipImpl(protocolIconPath);
     this.sipStatusEnum=new SipStatusEnum(protocolIconPath);
@@ -20,42 +20,10 @@ synchronized (initializationLock) {
       }
     }
     if (sipStackSharing == null)     sipStackSharing=new SipStackSharing();
-    String enablePresenceObj=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.IS_PRESENCE_ENABLED);
-    boolean enablePresence=true;
-    if (enablePresenceObj != null) {
-      enablePresence=Boolean.valueOf(enablePresenceObj).booleanValue();
-    }
-    String forceP2PObj=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.FORCE_P2P_MODE);
-    boolean forceP2P=true;
-    if (forceP2PObj != null) {
-      forceP2P=Boolean.valueOf(forceP2PObj).booleanValue();
-    }
-    int pollingValue=30;
-    try {
-      String pollingString=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.POLLING_PERIOD);
-      if (pollingString != null) {
-        pollingValue=Integer.parseInt(pollingString);
-      }
- else {
-        logger.warn("no polling value found, using default value" + " (" + pollingValue + ")");
-      }
-    }
- catch (    NumberFormatException e) {
-      logger.error("wrong polling value stored",e);
-    }
-    int subscriptionExpiration=3600;
-    try {
-      String subscriptionString=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.SUBSCRIPTION_EXPIRATION);
-      if (subscriptionString != null) {
-        subscriptionExpiration=Integer.parseInt(subscriptionString);
-      }
- else {
-        logger.warn("no expiration value found, using default value" + " (" + subscriptionExpiration + ")");
-      }
-    }
- catch (    NumberFormatException e) {
-      logger.error("wrong expiration value stored",e);
-    }
+    boolean enablePresence=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_PRESENCE_ENABLED,true);
+    boolean forceP2P=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.FORCE_P2P_MODE,true);
+    int pollingValue=accountID.getAccountPropertyInt(ProtocolProviderFactory.POLLING_PERIOD,30);
+    int subscriptionExpiration=accountID.getAccountPropertyInt(ProtocolProviderFactory.SUBSCRIPTION_EXPIRATION,3600);
     headerFactory=new HeaderFactoryImpl();
     addressFactory=new AddressFactoryImpl();
     messageFactory=new MessageFactoryImpl();
@@ -75,7 +43,7 @@ synchronized (initializationLock) {
     OperationSetDTMF opSetDTMF=new OperationSetDTMFSipImpl(this);
     this.supportedOperationSets.put(OperationSetDTMF.class.getName(),opSetDTMF);
     new ClientCapabilities(this);
-    ourDisplayName=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.DISPLAY_NAME);
+    ourDisplayName=accountID.getAccountPropertyString(ProtocolProviderFactory.DISPLAY_NAME);
     if (ourDisplayName == null || ourDisplayName.trim().length() == 0) {
       ourDisplayName=accountID.getUserID();
     }

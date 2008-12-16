@@ -1,7 +1,7 @@
 {
-  String registrarAddressStr=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_ADDRESS);
+  String registrarAddressStr=accountID.getAccountPropertyString(ProtocolProviderFactory.SERVER_ADDRESS);
   if (registrarAddressStr == null) {
-    String userID=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.USER_ID);
+    String userID=accountID.getAccountPropertyString(ProtocolProviderFactory.USER_ID);
     int index=userID.indexOf("@");
     if (index > -1)     registrarAddressStr=userID.substring(index + 1);
   }
@@ -12,19 +12,17 @@
   InetAddress registrarAddress=null;
   int registrarPort=ListeningPoint.PORT_5060;
   try {
-    String registrarTransport=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PREFERRED_TRANSPORT);
+    String registrarTransport=accountID.getAccountPropertyString(ProtocolProviderFactory.PREFERRED_TRANSPORT);
     if (registrarTransport == null)     registrarTransport=getDefaultTransport();
     InetSocketAddress registrarSocketAddress=resolveSipAddress(registrarAddressStr,registrarTransport);
     registrarAddress=registrarSocketAddress.getAddress();
     registrarPort=registrarSocketAddress.getPort();
-    accountID.putProperty(ProtocolProviderFactory.SERVER_ADDRESS_VALIDATED,Boolean.toString(true));
+    accountID.putAccountProperty(ProtocolProviderFactory.SERVER_ADDRESS_VALIDATED,Boolean.toString(true));
   }
  catch (  UnknownHostException ex) {
     logger.debug(registrarAddressStr + " appears to be an either invalid or inaccessible address: ",ex);
-    String serverValidatedString=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_ADDRESS_VALIDATED);
-    boolean isServerValidated=false;
-    if (serverValidatedString != null)     isServerValidated=new Boolean(serverValidatedString).booleanValue();
-    if (serverValidatedString == null || !isServerValidated) {
+    boolean isServerValidated=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.SERVER_ADDRESS_VALIDATED,false);
+    if (!isServerValidated) {
       throw new IllegalArgumentException(registrarAddressStr + " appears to be an either invalid or inaccessible address: " + ex.getMessage());
     }
   }
@@ -32,19 +30,11 @@
     fireRegistrationStateChanged(RegistrationState.UNREGISTERED,RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,"Invalid or inaccessible server address.");
     return;
   }
-  String registrarPortStr=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.SERVER_PORT);
-  if (registrarPortStr != null && registrarPortStr.length() > 0) {
-    try {
-      registrarPort=Integer.parseInt(registrarPortStr);
-    }
- catch (    NumberFormatException ex) {
-      logger.error(registrarPortStr + " is not a valid port value. Expected an integer",ex);
-    }
-    if (registrarPort > NetworkUtils.MAX_PORT_NUMBER) {
-      throw new IllegalArgumentException(registrarPort + " is larger than " + NetworkUtils.MAX_PORT_NUMBER+ " and does not therefore represent a valid port nubmer.");
-    }
+  registrarPort=accountID.getAccountPropertyInt(ProtocolProviderFactory.SERVER_PORT,registrarPort);
+  if (registrarPort > NetworkUtils.MAX_PORT_NUMBER) {
+    throw new IllegalArgumentException(registrarPort + " is larger than " + NetworkUtils.MAX_PORT_NUMBER+ " and does not therefore represent a valid port nubmer.");
   }
-  String registrarTransport=(String)accountID.getAccountProperties().get(ProtocolProviderFactory.PREFERRED_TRANSPORT);
+  String registrarTransport=accountID.getAccountPropertyString(ProtocolProviderFactory.PREFERRED_TRANSPORT);
   if (registrarTransport != null && registrarTransport.length() > 0) {
     if (!registrarTransport.equals(ListeningPoint.UDP) && !registrarTransport.equals(ListeningPoint.TCP) && !registrarTransport.equals(ListeningPoint.TLS)) {
       throw new IllegalArgumentException(registrarTransport + " is not a valid transport protocol. Transport must be " + "left blanc or set to TCP, UDP or TLS.");
@@ -53,21 +43,10 @@
  else {
     registrarTransport=ListeningPoint.UDP;
   }
-  int expires=SipRegistrarConnection.DEFAULT_REGISTRATION_EXPIRATION;
-  String expiresStr=SipActivator.getConfigurationService().getString(REGISTRATION_EXPIRATION);
-  if (expiresStr != null && expiresStr.length() > 0) {
-    try {
-      expires=Integer.parseInt(expiresStr);
-    }
- catch (    NumberFormatException ex) {
-      logger.error(expiresStr + " is not a valid expires  value. Expexted an integer",ex);
-    }
-  }
+  int expires=SipActivator.getConfigurationService().getInt(REGISTRATION_EXPIRATION,SipRegistrarConnection.DEFAULT_REGISTRATION_EXPIRATION);
   try {
     this.sipRegistrarConnection=new SipRegistrarConnection(registrarAddress,registrarPort,registrarTransport,expires,this);
-    String useRouteString=(String)accountID.getAccountProperties().get(REGISTERS_USE_ROUTE);
-    boolean useRoute=false;
-    if (useRouteString != null)     useRoute=new Boolean(useRouteString).booleanValue();
+    boolean useRoute=accountID.getAccountPropertyBoolean(REGISTERS_USE_ROUTE,false);
     this.sipRegistrarConnection.setRouteHeaderEnabled(useRoute);
   }
  catch (  ParseException ex) {
