@@ -1,0 +1,27 @@
+{
+  AntialiasingManager.activateAntialiasing(g);
+  Graphics2D g2=(Graphics2D)g;
+  int width=getWidth();
+  int height=getHeight();
+  boolean imageIsChanging=false;
+  if ((cache == null) || (cacheWidth != width) || (cacheHeight != height)) {
+    cache=g2.getDeviceConfiguration().createCompatibleImage(width,height);
+    cacheWidth=width;
+    cacheHeight=height;
+    Graphics2D cacheGraphics=cache.createGraphics();
+    try {
+      super.paintComponent(cacheGraphics);
+      AntialiasingManager.activateAntialiasing(cacheGraphics);
+      imageIsChanging=!cacheGraphics.drawImage(image,0,0,null);
+      cacheGraphics.setColor(new Color(150,150,150));
+      cacheGraphics.drawRoundRect(0,0,width - 1,height - 1,5,5);
+    }
+  finally {
+      cacheGraphics.dispose();
+    }
+  }
+  g2.drawImage(cache,0,0,null);
+  if (imageIsChanging) {
+    cache=null;
+  }
+}
