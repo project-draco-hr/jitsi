@@ -1,8 +1,21 @@
 {
-  if (!isLazy)   return getAvatar();
+  byte[] result=null;
+  if (!isLazy) {
+    Iterator<Contact> protoContacts=getContacts();
+    while (protoContacts.hasNext()) {
+      Contact contact=protoContacts.next();
+      result=queryProtoContactAvatar(contact);
+      if (result != null && result.length > 0) {
+        cacheAvatar(contact,result);
+        return result;
+      }
+    }
+  }
   if (cachedAvatar != null && cachedAvatar.length > 0) {
     return cachedAvatar;
   }
+  if (avatarFileCacheAlreadyQueried)   return null;
+  avatarFileCacheAlreadyQueried=true;
   Iterator<Contact> iter=this.getContacts();
   while (iter.hasNext()) {
     Contact protoContact=iter.next();
