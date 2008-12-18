@@ -4,11 +4,16 @@
   for (  ProtocolProviderServiceSipImpl service : services) {
     if (request.getRequestURI().isSipURI() && service.getOurSipAddress((SipURI)request.getRequestURI()).equals(address)) {
       String proxy=service.getOutboundProxyString();
-      if (proxy == null)       return null;
+      if (proxy == null) {
+        logger.debug("Returning a router for outbound proxy: " + service.getOutboundProxyString());
+        if (defaultRouter == null)         defaultRouter=new DefaultRouter(this.stack,null);
+        return defaultRouter;
+      }
  else       if (this.routers.containsKey(proxy))       return this.routers.get(proxy);
  else {
         Router router=new DefaultRouter(this.stack,service.getOutboundProxyString());
         this.routers.put(proxy,router);
+        logger.debug("Returning a router for outbound proxy: " + service.getOutboundProxyString());
         return router;
       }
     }
