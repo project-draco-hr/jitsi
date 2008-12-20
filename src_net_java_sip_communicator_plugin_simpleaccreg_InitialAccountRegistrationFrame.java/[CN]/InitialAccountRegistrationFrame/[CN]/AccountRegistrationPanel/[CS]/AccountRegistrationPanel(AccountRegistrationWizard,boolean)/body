@@ -1,6 +1,8 @@
 {
   super(new BorderLayout(5,5));
   this.wizard=accountWizard;
+  JLabel protocolLabel=new JLabel();
+  JPanel inputRegisterPanel=new JPanel(new BorderLayout());
   this.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
   this.setPreferredSize(new Dimension(230,150));
   this.setOpaque(false);
@@ -8,46 +10,31 @@
   this.labelsPanel.setOpaque(false);
   this.fieldsPanel.setOpaque(false);
   this.emptyPanel.setOpaque(false);
-  this.inputRegisterPanel.setOpaque(false);
+  inputRegisterPanel.setOpaque(false);
   this.iconDescriptionPanel.setOpaque(false);
   this.add(inputRegisterPanel,BorderLayout.CENTER);
-  this.inputRegisterPanel.add(inputPanel,BorderLayout.NORTH);
+  inputRegisterPanel.add(inputPanel,BorderLayout.NORTH);
   if (wizard.isWebSignupSupported()) {
-    if (isPreferredWizard) {
-      this.inputRegisterPanel.add(specialSignupLabel,BorderLayout.SOUTH);
+    String textKey=isPreferredWizard ? "plugin.simpleaccregwizz.SPECIAL_SIGNUP" : "plugin.simpleaccregwizz.SIGNUP";
+    JLabel signupLabel=new JLabel("<html><a href=''>" + Resources.getString(textKey) + "</a></html>",JLabel.RIGHT);
+    signupLabel.setFont(signupLabel.getFont().deriveFont(10f));
+    signupLabel.addMouseListener(new MouseAdapter(){
+      public void mousePressed(      MouseEvent e){
+        try {
+          wizard.webSignup();
+        }
+ catch (        UnsupportedOperationException ex) {
+          logger.error("The web sign up is not supported.",ex);
+        }
+      }
     }
- else {
-      this.inputRegisterPanel.add(signupLabel,BorderLayout.SOUTH);
-    }
+);
+    inputRegisterPanel.add(signupLabel,BorderLayout.SOUTH);
   }
   this.inputPanel.add(labelsPanel,BorderLayout.WEST);
   this.inputPanel.add(fieldsPanel,BorderLayout.CENTER);
   this.iconDescriptionPanel.add(protocolLabel,BorderLayout.NORTH);
-  this.signupLabel.setFont(signupLabel.getFont().deriveFont(10f));
-  this.signupLabel.addMouseListener(new MouseAdapter(){
-    public void mousePressed(    MouseEvent arg0){
-      try {
-        wizard.webSignup();
-      }
- catch (      UnsupportedOperationException e) {
-        logger.error("The web sign up is not supported.",e);
-      }
-    }
-  }
-);
-  this.specialSignupLabel.setFont(signupLabel.getFont().deriveFont(10f));
-  this.specialSignupLabel.addMouseListener(new MouseAdapter(){
-    public void mousePressed(    MouseEvent arg0){
-      try {
-        wizard.webSignup();
-      }
- catch (      UnsupportedOperationException e) {
-        logger.error("The web sign up is not supported.",e);
-      }
-    }
-  }
-);
-  this.protocolLabel.setFont(protocolLabel.getFont().deriveFont(Font.BOLD,14f));
+  protocolLabel.setFont(protocolLabel.getFont().deriveFont(Font.BOLD,14f));
   this.usernameExampleLabel.setForeground(Color.DARK_GRAY);
   this.usernameExampleLabel.setFont(usernameExampleLabel.getFont().deriveFont(8f));
   this.emptyPanel.setMaximumSize(new Dimension(40,25));
@@ -58,7 +45,7 @@
   this.fieldsPanel.add(usernameExampleLabel);
   this.fieldsPanel.add(passwordField);
   this.usernameExampleLabel.setText(wizard.getUserNameExample());
-  this.protocolLabel.setText(wizard.getProtocolName());
+  protocolLabel.setText(wizard.getProtocolName());
   Image image=null;
   try {
     image=ImageIO.read(new ByteArrayInputStream(wizard.getPageImage()));
