@@ -1,5 +1,5 @@
 {
-  Vector vect=new Vector();
+  List<File> vect=new Vector<File>();
   File histDir=null;
   try {
     String userSetDataDirectory=System.getProperty("HistoryServiceDirectory");
@@ -8,25 +8,19 @@
     findDatFiles(vect,histDir);
   }
  catch (  Exception e) {
-    log.error("Error opening directory",e);
+    logger.error("Error opening directory",e);
   }
   DBStructSerializer structParse=new DBStructSerializer(this);
-  int size=vect.size();
-  for (int i=0; i < size; i++) {
-    File f=(File)vect.get(i);
-synchronized (this.loadedFiles) {
-      if (!this.loadedFiles.contains(f)) {
+  for (  File f : vect) {
 synchronized (this.histories) {
-          try {
-            History hist=structParse.loadHistory(f);
-            if (!this.histories.containsKey(hist.getID())) {
-              this.histories.put(hist.getID(),hist);
-            }
-          }
- catch (          Exception e) {
-            log.error("Could not load history from file: " + f.getAbsolutePath(),e);
-          }
+      try {
+        History hist=structParse.loadHistory(f);
+        if (!this.histories.containsKey(hist.getID())) {
+          this.histories.put(hist.getID(),hist);
         }
+      }
+ catch (      Exception e) {
+        logger.error("Could not load history from file: " + f.getAbsolutePath(),e);
       }
     }
   }
