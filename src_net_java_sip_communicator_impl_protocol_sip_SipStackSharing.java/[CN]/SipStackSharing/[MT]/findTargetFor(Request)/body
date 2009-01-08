@@ -26,6 +26,14 @@
     }
     if (candidates.size() > 1) {
       for (      ProtocolProviderServiceSipImpl candidate : candidates) {
+        String hostValue=((SipURI)requestURI).getParameter(SipStackSharing.CONTACT_ADDRESS_CUSTOM_PARAM_NAME);
+        if (hostValue == null)         continue;
+        if (hostValue.equals(candidate.getContactAddressCustomParamValue())) {
+          logger.trace("Will dispatch to \"" + candidate.getAccountID() + "\" because "+ "\" the custom param was set");
+          return candidate;
+        }
+      }
+      for (      ProtocolProviderServiceSipImpl candidate : candidates) {
         URI fromURI=((FromHeader)request.getHeader(FromHeader.NAME)).getAddress().getURI();
         if (fromURI.isSipURI() == false)         continue;
         SipURI ourURI=(SipURI)candidate.getOurSipAddress((SipURI)fromURI).getURI();
@@ -44,7 +52,7 @@
       return target;
     }
     ProtocolProviderServiceSipImpl target=currentListeners.iterator().next();
-    logger.warn("Will randomly dispatch to \"" + target.getAccountID() + "\" because the username in the Request-URI "+ "is unknown or empty");
+    logger.info("Will randomly dispatch to \"" + target.getAccountID() + "\" because the username in the Request-URI "+ "is unknown or empty");
     logger.trace("\n" + request);
     return target;
   }
