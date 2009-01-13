@@ -13,6 +13,7 @@
   }
   if (lastReceivedSeq != -1 && inputBuffer.getSequenceNumber() - lastReceivedSeq > 1) {
     lastReceivedSeq=inputBuffer.getSequenceNumber();
+    logger.trace("DROP rtp data!");
     parser.reset();
     inputBuffer.setDiscard(true);
     outputBuffer.setDiscard(true);
@@ -46,8 +47,15 @@ synchronized (AVCODEC) {
     Pointer buffer=AVUTIL.av_malloc(numBytes);
     AVCODEC.avpicture_fill(frameRGB,buffer,AVCodecLibrary.PIX_FMT_RGB32,avcontext.width,avcontext.height);
     AVCODEC.img_convert(frameRGB,AVCodecLibrary.PIX_FMT_RGB32,avpicture,avcontext.pix_fmt,avcontext.width,avcontext.height);
-    int[] data=frameRGB.data0.getIntArray(0,avcontext.height * avcontext.width);
-    int[] outData=validateIntArraySize(outputBuffer,data.length);
+    int[] data=frameRGB.data0.getIntArray(0,numBytes / 4);
+    int[] outData;
+    Object outDataO=outputBuffer.getData();
+    if (outDataO instanceof int[] && ((int[])outDataO).length >= data.length) {
+      outData=(int[])outDataO;
+    }
+ else {
+      outData=new int[data.length];
+    }
     System.arraycopy(data,0,outData,0,data.length);
     outputBuffer.setOffset(0);
     outputBuffer.setLength(outData.length);
