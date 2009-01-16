@@ -2,8 +2,9 @@
   CallParticipant sourceParticipant=evt.getSourceCallParticipant();
   if (sourceParticipant.getCall() != call)   return;
   CallParticipantPanel participantPanel=getParticipantPanel(sourceParticipant);
-  participantPanel.setState(sourceParticipant.getState().getStateString());
   Object newState=evt.getNewValue();
+  String newStateString=sourceParticipant.getState().getStateString();
+  Icon newStateIcon=null;
   if (newState == CallParticipantState.ALERTING_REMOTE_SIDE) {
     NotificationManager.fireNotification(NotificationManager.OUTGOING_CALL);
   }
@@ -18,18 +19,15 @@
       participantPanel.startCallTimer();
     }
   }
- else   if (newState == CallParticipantState.CONNECTING) {
-  }
  else   if (newState == CallParticipantState.DISCONNECTED) {
   }
  else   if (newState == CallParticipantState.FAILED) {
   }
- else   if (newState == CallParticipantState.INCOMING_CALL) {
-  }
- else   if (newState == CallParticipantState.INITIATING_CALL) {
-  }
  else   if (CallParticipantState.isOnHold((CallParticipantState)newState)) {
+    newStateIcon=new ImageIcon(ImageLoader.getImage(ImageLoader.HOLD_STATUS_ICON));
   }
- else   if (newState == CallParticipantState.UNKNOWN) {
+ else   if (newState == CallParticipantState.MUTED) {
+    newStateIcon=new ImageIcon(ImageLoader.getImage(ImageLoader.MUTE_STATUS_ICON));
   }
+  participantPanel.setState(newStateString,newStateIcon);
 }
