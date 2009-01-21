@@ -13,6 +13,7 @@
   String subscriptionPeriod=accountID.getAccountPropertyString(ProtocolProviderFactory.SUBSCRIPTION_EXPIRATION);
   String keepAliveMethod=accountID.getAccountPropertyString("KEEP_ALIVE_METHOD");
   String keepAliveInterval=accountID.getAccountPropertyString("KEEP_ALIVE_INTERVAL");
+  this.isServerOverridden=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_SERVER_OVERRIDDEN,false);
   uinField.setEnabled(false);
   this.uinField.setText((serverAddress == null) ? accountID.getUserID() : (accountID.getUserID() + "@" + serverAddress));
   if (password != null) {
@@ -25,22 +26,13 @@
   proxyField.setText(proxyAddress);
   transportCombo.setSelectedItem(preferredTransport);
   proxyPortField.setText(proxyPort);
-  if (!(SIPAccountRegistration.DEFAULT_PORT.equals(serverPort) || SIPAccountRegistration.DEFAULT_TLS_PORT.equals(serverPort)) || !(SIPAccountRegistration.DEFAULT_PORT.equals(proxyPort) || SIPAccountRegistration.DEFAULT_TLS_PORT.equals(proxyPort)) || !transportCombo.getSelectedItem().equals(SIPAccountRegistration.DEFAULT_TRANSPORT)) {
-    overrideServerCheckBox.setSelected(true);
-    serverField.setEnabled(false);
-    serverPortField.setEnabled(true);
-    proxyField.setEnabled(true);
-    proxyPortField.setEnabled(true);
-    transportCombo.setEnabled(true);
-  }
   enablePresOpButton.setSelected(enablePresence);
   forceP2PPresOpButton.setSelected(forceP2P);
   enableDefaultEncryption.setSelected(enabledDefaultEncryption);
   pollPeriodField.setText(pollingPeriod);
   subscribeExpiresField.setText(subscriptionPeriod);
   if (!enablePresence) {
-    pollPeriodField.setEnabled(false);
-    subscribeExpiresField.setEnabled(false);
+    setPresenceOptionsEnabled(enablePresence);
   }
   keepAliveMethodBox.setSelectedItem(keepAliveMethod);
   keepAliveIntervalValue.setText(keepAliveInterval);

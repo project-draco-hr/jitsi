@@ -1,7 +1,18 @@
 {
   AccountRegistrationWizard wizard=this.wizardContainer.getCurrentWizard();
-  ProtocolProviderService protocolProvider=wizard.signin();
-  if (protocolProvider != null)   this.wizardContainer.saveAccountWizard(protocolProvider,wizard);
-  this.wizardContainer.unregisterWizardPages();
-  this.wizardContainer.removeWizzardIcon();
+  try {
+    ProtocolProviderService protocolProvider=wizard.signin();
+    if (protocolProvider != null)     this.wizardContainer.saveAccountWizard(protocolProvider,wizard);
+    this.wizardContainer.unregisterWizardPages();
+    this.wizardContainer.removeWizzardIcon();
+  }
+ catch (  OperationFailedException e) {
+    logger.debug("The sign in operation has failed.");
+    if (e.getErrorCode() == OperationFailedException.ILLEGAL_ARGUMENT) {
+      new ErrorDialog(GuiActivator.getUIService().getMainFrame(),GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.USERNAME_NULL"));
+    }
+ else     if (e.getErrorCode() == OperationFailedException.IDENTIFICATION_CONFLICT) {
+      new ErrorDialog(GuiActivator.getUIService().getMainFrame(),GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.USER_EXISTS_ERROR"));
+    }
+  }
 }

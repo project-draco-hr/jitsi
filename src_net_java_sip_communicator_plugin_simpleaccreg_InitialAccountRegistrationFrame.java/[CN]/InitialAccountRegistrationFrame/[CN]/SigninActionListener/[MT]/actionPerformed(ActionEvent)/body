@@ -5,8 +5,18 @@
     if (regIterator.hasNext())     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
     while (regIterator.hasNext()) {
       AccountRegistrationPanel regForm=regIterator.next();
-      if (regForm.isFilled()) {
-        regForm.signin();
+      try {
+        if (regForm.isFilled())         regForm.signin();
+      }
+ catch (      OperationFailedException e) {
+        logger.debug("The sign in operation has failed.");
+        PopupDialog popupDialog=SimpleAccountRegistrationActivator.getUIService().getPopupDialog();
+        if (e.getErrorCode() == OperationFailedException.ILLEGAL_ARGUMENT) {
+          popupDialog.showMessagePopupDialog(Resources.getString("service.gui.USERNAME_NULL"),Resources.getString("service.gui.ERROR"),PopupDialog.ERROR_MESSAGE);
+        }
+ else         if (e.getErrorCode() == OperationFailedException.IDENTIFICATION_CONFLICT) {
+          popupDialog.showMessagePopupDialog(Resources.getString("service.gui.USER_EXISTS_ERROR"),Resources.getString("service.gui.ERROR"),PopupDialog.ERROR_MESSAGE);
+        }
       }
     }
   }

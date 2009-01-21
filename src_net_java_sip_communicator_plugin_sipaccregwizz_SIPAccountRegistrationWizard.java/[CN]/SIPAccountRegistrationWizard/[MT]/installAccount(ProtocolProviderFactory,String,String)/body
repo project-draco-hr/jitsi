@@ -6,7 +6,10 @@
   String serverAddress=null;
   if (registration.getServerAddress() != null)   serverAddress=registration.getServerAddress();
  else   serverAddress=getServerFromUserName(userName);
-  if (serverAddress != null)   accountProperties.put(ProtocolProviderFactory.SERVER_ADDRESS,serverAddress);
+  if (serverAddress != null) {
+    accountProperties.put(ProtocolProviderFactory.SERVER_ADDRESS,serverAddress);
+    if (userName.indexOf(serverAddress) < 0)     accountProperties.put(ProtocolProviderFactory.IS_SERVER_OVERRIDDEN,Boolean.toString(true));
+  }
   accountProperties.put(ProtocolProviderFactory.SERVER_PORT,registration.getServerPort());
   String proxyAddress=null;
   if (registration.getProxy() != null)   proxyAddress=registration.getProxy();
@@ -32,11 +35,13 @@
     ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
     protocolProvider=(ProtocolProviderService)SIPAccRegWizzActivator.bundleContext.getService(serRef);
   }
- catch (  IllegalArgumentException exc) {
-    SIPAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("service.gui.ERROR"),PopupDialog.ERROR_MESSAGE);
+ catch (  IllegalStateException exc) {
+    logger.warn(exc.getMessage());
+    throw new OperationFailedException("Account already exists.",OperationFailedException.IDENTIFICATION_CONFLICT);
   }
-catch (  IllegalStateException exc) {
-    SIPAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("service.gui.ERROR"),PopupDialog.ERROR_MESSAGE);
+catch (  Exception exc) {
+    logger.warn(exc.getMessage());
+    throw new OperationFailedException("Failed to add account",OperationFailedException.GENERAL_ERROR);
   }
   return protocolProvider;
 }

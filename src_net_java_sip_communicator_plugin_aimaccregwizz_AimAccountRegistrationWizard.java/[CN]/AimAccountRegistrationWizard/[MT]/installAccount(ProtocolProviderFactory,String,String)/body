@@ -1,15 +1,13 @@
 {
-  Hashtable accountProperties=new Hashtable();
+  Hashtable<String,String> accountProperties=new Hashtable<String,String>();
   if (registration.isRememberPassword()) {
     accountProperties.put(ProtocolProviderFactory.PASSWORD,passwd);
   }
-  if (registration.getProxyType() != null) {
-    if (registration.getProxy() != null)     accountProperties.put(ProtocolProviderFactory.PROXY_ADDRESS,registration.getProxy());
-    if (registration.getProxyPort() != null)     accountProperties.put(ProtocolProviderFactory.PROXY_PORT,registration.getProxyPort());
-    if (registration.getProxyType() != null)     accountProperties.put(ProtocolProviderFactory.PROXY_TYPE,registration.getProxyType());
-    if (registration.getProxyUsername() != null)     accountProperties.put(ProtocolProviderFactory.PROXY_USERNAME,registration.getProxyUsername());
-    if (registration.getProxyPassword() != null)     accountProperties.put(ProtocolProviderFactory.PROXY_PASSWORD,registration.getProxyPassword());
-  }
+  if (registration.getProxy() != null && registration.getProxy() != "")   accountProperties.put(ProtocolProviderFactory.PROXY_ADDRESS,registration.getProxy());
+  if (registration.getProxyPort() != null && registration.getProxyPort() != "")   accountProperties.put(ProtocolProviderFactory.PROXY_PORT,registration.getProxyPort());
+  if (registration.getProxyType() != null && registration.getProxyType() != "")   accountProperties.put(ProtocolProviderFactory.PROXY_TYPE,registration.getProxyType());
+  if (registration.getProxyUsername() != null && registration.getProxyUsername() != "")   accountProperties.put(ProtocolProviderFactory.PROXY_USERNAME,registration.getProxyUsername());
+  if (registration.getProxyPassword() != null && registration.getProxyPassword() != "")   accountProperties.put(ProtocolProviderFactory.PROXY_PASSWORD,registration.getProxyPassword());
   if (isModification) {
     providerFactory.modifyAccount(protocolProvider,accountProperties);
     this.isModification=false;
@@ -20,11 +18,13 @@
     ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
     protocolProvider=(ProtocolProviderService)AimAccRegWizzActivator.bundleContext.getService(serRef);
   }
- catch (  IllegalArgumentException e) {
-    AimAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(e.getMessage(),Resources.getString("service.gui.ERROR"),PopupDialog.ERROR_MESSAGE);
+ catch (  IllegalStateException exc) {
+    logger.warn(exc.getMessage());
+    throw new OperationFailedException("Account already exists.",OperationFailedException.IDENTIFICATION_CONFLICT);
   }
-catch (  IllegalStateException e) {
-    AimAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(e.getMessage(),Resources.getString("service.gui.ERROR"),PopupDialog.ERROR_MESSAGE);
+catch (  Exception exc) {
+    logger.warn(exc.getMessage());
+    throw new OperationFailedException("Failed to add account",OperationFailedException.GENERAL_ERROR);
   }
   return protocolProvider;
 }

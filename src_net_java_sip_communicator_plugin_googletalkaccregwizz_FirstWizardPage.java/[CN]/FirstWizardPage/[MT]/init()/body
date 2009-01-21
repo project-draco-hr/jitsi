@@ -4,9 +4,20 @@
   this.valuesPanel.setOpaque(false);
   this.userIDPassPanel.setOpaque(false);
   this.emptyPanel.setOpaque(false);
-  this.userIDField.getDocument().addDocumentListener(this);
+  this.userIDField.getDocument().addDocumentListener(new DocumentListener(){
+    public void insertUpdate(    DocumentEvent evt){
+      setNextButtonAccordingToUserIDAndResource();
+      setServerFieldAccordingToUserID();
+    }
+    public void removeUpdate(    DocumentEvent evt){
+      setNextButtonAccordingToUserIDAndResource();
+      setServerFieldAccordingToUserID();
+    }
+    public void changedUpdate(    DocumentEvent evt){
+    }
+  }
+);
   this.rememberPassBox.setSelected(true);
-  this.existingAccountLabel.setForeground(Color.RED);
   this.userIDExampleLabel.setForeground(Color.GRAY);
   this.userIDExampleLabel.setFont(userIDExampleLabel.getFont().deriveFont(8));
   this.emptyPanel.setMaximumSize(new Dimension(40,35));
@@ -22,26 +33,6 @@
   userIDPassPanel.add(rememberPassBox,BorderLayout.SOUTH);
   userIDPassPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("plugin.jabberaccregwizz.USERNAME_AND_PASSWORD")));
   mainPanel.add(userIDPassPanel);
-  serverField.setEnabled(false);
-  portField.setEnabled(false);
-  resourceField.setEnabled(false);
-  priorityField.setEnabled(false);
-  enableAdvOpButton.addActionListener(new ActionListener(){
-    public void actionPerformed(    ActionEvent evt){
-      JCheckBox cb=(JCheckBox)evt.getSource();
-      if (!wizard.isModification())       serverField.setEnabled(cb.isSelected());
-      portField.setEnabled(cb.isSelected());
-      resourceField.setEnabled(cb.isSelected());
-      priorityField.setEnabled(cb.isSelected());
-      if (!cb.isSelected()) {
-        setServerFieldAccordingToUserID();
-        portField.setText(GoogleTalkAccountRegistration.DEFAULT_PORT);
-        resourceField.setText(GoogleTalkAccountRegistration.DEFAULT_RESOURCE);
-        priorityField.setText(GoogleTalkAccountRegistration.DEFAULT_PRIORITY);
-      }
-    }
-  }
-);
   portField.getDocument().addDocumentListener(new DocumentListener(){
     public void changedUpdate(    DocumentEvent evt){
     }
@@ -74,7 +65,6 @@
   valuesAdvOpPanel.add(priorityField);
   JPanel checkBoxesPanel=new TransparentPanel(new GridLayout(0,1,10,10));
   checkBoxesPanel.add(sendKeepAliveBox);
-  checkBoxesPanel.add(enableAdvOpButton);
   advancedOpPanel.add(checkBoxesPanel,BorderLayout.NORTH);
   advancedOpPanel.add(labelsAdvOpPanel,BorderLayout.WEST);
   advancedOpPanel.add(valuesAdvOpPanel,BorderLayout.CENTER);

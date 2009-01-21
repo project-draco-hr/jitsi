@@ -13,11 +13,13 @@
     ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
     protocolProvider=(ProtocolProviderService)MsnAccRegWizzActivator.bundleContext.getService(serRef);
   }
- catch (  IllegalArgumentException e) {
-    MsnAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(e.getMessage(),Resources.getString("service.gui.ERROR"),PopupDialog.ERROR_MESSAGE);
+ catch (  IllegalStateException exc) {
+    logger.warn(exc.getMessage());
+    throw new OperationFailedException("Account already exists.",OperationFailedException.IDENTIFICATION_CONFLICT);
   }
-catch (  IllegalStateException e) {
-    MsnAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(e.getMessage(),Resources.getString("service.gui.ERROR"),PopupDialog.ERROR_MESSAGE);
+catch (  Exception exc) {
+    logger.warn(exc.getMessage());
+    throw new OperationFailedException("Failed to add account",OperationFailedException.GENERAL_ERROR);
   }
   return protocolProvider;
 }

@@ -1,5 +1,5 @@
 {
-  Hashtable accountProperties=new Hashtable();
+  Hashtable<String,String> accountProperties=new Hashtable<String,String>();
   accountProperties.put(ProtocolProviderFactory.SERVER_ADDRESS,registration.getServer());
   if (password != null && !password.equals("")) {
     accountProperties.put(ProtocolProviderFactory.PASSWORD,registration.getPassword());
@@ -19,11 +19,13 @@
     ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
     protocolProvider=(ProtocolProviderService)IrcAccRegWizzActivator.bundleContext.getService(serRef);
   }
- catch (  IllegalArgumentException exc) {
-    IrcAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("service.gui.ERROR"),PopupDialog.ERROR_MESSAGE);
+ catch (  IllegalStateException exc) {
+    logger.warn(exc.getMessage());
+    throw new OperationFailedException("Account already exists.",OperationFailedException.IDENTIFICATION_CONFLICT);
   }
-catch (  IllegalStateException exc) {
-    IrcAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exc.getMessage(),Resources.getString("service.gui.ERROR"),PopupDialog.ERROR_MESSAGE);
+catch (  Exception exc) {
+    logger.warn(exc.getMessage());
+    throw new OperationFailedException("Failed to add account",OperationFailedException.GENERAL_ERROR);
   }
   return protocolProvider;
 }
