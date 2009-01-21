@@ -1,15 +1,68 @@
 {
-  ZrtpCodes.InfoCodes inf;
   int multiStreams=0;
+  HashMap<String,Object> state=new HashMap<String,Object>(5);
+  boolean fireEvent=false;
   Iterator<?> ii=subCode.iterator();
   Object msgCode=ii.next();
   if (sev == ZrtpCodes.MessageSeverity.Info) {
     if (msgCode instanceof ZrtpCodes.InfoCodes) {
-      inf=(ZrtpCodes.InfoCodes)msgCode;
-      if (dhSession && inf == ZrtpCodes.InfoCodes.InfoSecureStateOn) {
-        multiStreams=((CallSessionImpl)callSession).startZrtpMultiStreams();
+      ZrtpCodes.InfoCodes inf=(ZrtpCodes.InfoCodes)msgCode;
+      if (inf == ZrtpCodes.InfoCodes.InfoSecureStateOn) {
+        if (dhSession) {
+          multiStreams=((CallSessionImpl)callSession).startZrtpMultiStreams();
+          state.put(SecurityGUIEventZrtp.SAS,sasData);
+          if (sasVerification) {
+            state.put(SecurityGUIEventZrtp.SAS_VERIFY,Boolean.TRUE);
+          }
+ else {
+            state.put(SecurityGUIEventZrtp.SAS_VERIFY,Boolean.FALSE);
+          }
+        }
+        state.put(SecurityGUIEventZrtp.SESSION_TYPE,sessionType);
+        state.put(SecurityGUIEventZrtp.SECURITY_CHANGE,Boolean.TRUE);
+        state.put(SecurityGUIEventZrtp.CIPHER,cipherName);
+        fireEvent=true;
+      }
+      if (inf == ZrtpCodes.InfoCodes.InfoHelloReceived) {
+        state.put(SecurityGUIEventZrtp.SESSION_TYPE,SecurityGUIEventZrtp.MSG_INFO);
+        fireEvent=true;
       }
     }
+  }
+  if (sev == ZrtpCodes.MessageSeverity.Warning) {
+    if (msgCode instanceof ZrtpCodes.WarningCodes) {
+      ZrtpCodes.WarningCodes warn=(ZrtpCodes.WarningCodes)msgCode;
+      if (warn == ZrtpCodes.WarningCodes.WarningNoRSMatch) {
+        state.put(SecurityGUIEventZrtp.SESSION_TYPE,SecurityGUIEventZrtp.MSG_WARN);
+        state.put(SecurityGUIEventZrtp.MSG_TEXT,WARNING_NO_RS_MATCH);
+        fireEvent=true;
+      }
+      if (warn == ZrtpCodes.WarningCodes.WarningNoExpectedRSMatch) {
+        state.put(SecurityGUIEventZrtp.SESSION_TYPE,SecurityGUIEventZrtp.MSG_WARN);
+        state.put(SecurityGUIEventZrtp.MSG_TEXT,WARNING_NO_EXPECTED_RS_MATCH);
+        fireEvent=true;
+      }
+    }
+  }
+  if (sev == ZrtpCodes.MessageSeverity.Severe) {
+    String[] param=new String[1];
+    param[0]=msgCode.toString();
+    String msg=MediaActivator.getResources().getI18NString("impl.media.security.SEVERE_GENERIC_MSG",param);
+    state.put(SecurityGUIEventZrtp.SESSION_TYPE,SecurityGUIEventZrtp.MSG_SEVERE);
+    state.put(SecurityGUIEventZrtp.MSG_TEXT,msg);
+    fireEvent=true;
+  }
+  if (sev == ZrtpCodes.MessageSeverity.ZrtpError) {
+    String[] param=new String[1];
+    param[0]=msgCode.toString();
+    String msg=MediaActivator.getResources().getI18NString("impl.media.security.ZRTP_GENERIC_MSG",param);
+    state.put(SecurityGUIEventZrtp.SESSION_TYPE,SecurityGUIEventZrtp.MSG_ZRTP);
+    state.put(SecurityGUIEventZrtp.MSG_TEXT,msg);
+    fireEvent=true;
+  }
+  if (fireEvent) {
+    SecurityGUIEventZrtp evt=new SecurityGUIEventZrtp(participant,state);
+    fireStateChangedEvent(evt);
   }
   if (logger.isInfoEnabled()) {
     logger.info(sessionType + ": " + "ZRTP message: severity: "+ sev+ ", sub code: "+ msgCode+ ", DH session: "+ dhSession+ ", multi: "+ multiStreams);
