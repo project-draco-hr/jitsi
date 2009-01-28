@@ -1,19 +1,14 @@
 {
-  if (request instanceof SIPRequest) {
-    Object appData=((SIPRequest)request).getApplicationData();
-    if (appData instanceof SipApplicationData) {
-      Object service=((SipApplicationData)appData).get(SipApplicationData.APPDATA_KEY_SERVICE);
-      if (service instanceof ProtocolProviderServiceSipImpl) {
-        String proxy=((ProtocolProviderServiceSipImpl)service).getOutboundProxyString();
-        if (proxy == null)         return this.getDefaultRouter();
-        Router router=routerCache.get(proxy);
-        if (router == null) {
-          router=new DefaultRouter(stack,proxy);
-          routerCache.put(proxy,router);
-        }
-        return router;
-      }
+  Object service=SipApplicationData.getApplicationData(request,SipApplicationData.KEY_SERVICE);
+  if (service instanceof ProtocolProviderServiceSipImpl) {
+    String proxy=((ProtocolProviderServiceSipImpl)service).getOutboundProxyString();
+    if (proxy == null)     return this.getDefaultRouter();
+    Router router=routerCache.get(proxy);
+    if (router == null) {
+      router=new DefaultRouter(stack,proxy);
+      routerCache.put(proxy,router);
     }
+    return router;
   }
   ToHeader to=(ToHeader)request.getHeader(ToHeader.NAME);
   if (to.getTag() == null)   logger.error("unable to identify the service which created this " + "out-of-dialog request");
