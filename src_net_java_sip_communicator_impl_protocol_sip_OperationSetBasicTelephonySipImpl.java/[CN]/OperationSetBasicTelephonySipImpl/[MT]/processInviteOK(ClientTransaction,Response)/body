@@ -31,9 +31,11 @@
   }
  catch (  ParseException ex) {
     logErrorAndFailCallParticipant("Failed to create a content type header for the ACK request",ex,callParticipant);
+    return;
   }
 catch (  InvalidArgumentException ex) {
     logErrorAndFailCallParticipant("Failed ACK request, problem with the supplied cseq",ex,callParticipant);
+    return;
   }
 catch (  SipException ex) {
     logErrorAndFailCallParticipant("Failed to create ACK request!",ex,callParticipant);
@@ -65,11 +67,17 @@ catch (  SipException ex) {
     }
     callParticipant.setCallInfoURL(callSession.getCallInfoURL());
   }
- catch (  ParseException exc) {
-    logErrorAndFailCallParticipant("There was an error parsing the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")",exc,callParticipant);
-  }
-catch (  MediaException exc) {
-    logErrorAndFailCallParticipant("We failed to process the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")"+ ". Error was: "+ exc.getMessage(),exc,callParticipant);
+ catch (  Exception exc) {
+    logger.error("There was an error parsing the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")",exc);
+    try {
+      callParticipant.setState(CallParticipantState.CONNECTED);
+      hangupCallParticipant(callParticipant);
+    }
+ catch (    Exception e) {
+      logger.error(e);
+      callParticipant.setState(CallParticipantState.FAILED,e.getMessage());
+    }
+    return;
   }
   if (!CallParticipantState.isOnHold(callParticipant.getState()))   callParticipant.setState(CallParticipantState.CONNECTED);
 }

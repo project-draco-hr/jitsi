@@ -11,19 +11,19 @@
     throw new OperationFailedException("Failed to extract a transaction from the participant's " + "associated dialog!",OperationFailedException.INTERNAL_ERROR);
   }
   ServerTransaction serverTransaction=(ServerTransaction)transaction;
-  Response internalError=null;
+  Response errorResponse=null;
   try {
-    internalError=protocolProvider.getMessageFactory().createResponse(errorCode,callParticipant.getFirstTransaction().getRequest());
-    protocolProvider.attachToTag(internalError,dialog);
+    errorResponse=protocolProvider.getMessageFactory().createResponse(errorCode,callParticipant.getFirstTransaction().getRequest());
+    protocolProvider.attachToTag(errorResponse,dialog);
   }
  catch (  ParseException ex) {
     throwOperationFailedException("Failed to construct an OK response to an INVITE request",OperationFailedException.INTERNAL_ERROR,ex);
   }
   ContactHeader contactHeader=protocolProvider.getContactHeader(dialog.getRemoteTarget());
-  internalError.addHeader(contactHeader);
+  errorResponse.addHeader(contactHeader);
   try {
-    serverTransaction.sendResponse(internalError);
-    if (logger.isDebugEnabled())     logger.debug("sent response: " + internalError);
+    serverTransaction.sendResponse(errorResponse);
+    if (logger.isDebugEnabled())     logger.debug("sent response: " + errorResponse);
   }
  catch (  Exception ex) {
     throwOperationFailedException("Failed to send an OK response to an INVITE request",OperationFailedException.INTERNAL_ERROR,ex);
