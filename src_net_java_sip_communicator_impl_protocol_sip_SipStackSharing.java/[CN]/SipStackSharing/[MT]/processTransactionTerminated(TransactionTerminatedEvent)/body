@@ -1,13 +1,8 @@
 {
-  ProtocolProviderServiceSipImpl recipient;
-  if (event.isServerTransaction()) {
-    logger.trace("server transaction terminated");
-    recipient=findTargetFor(event.getServerTransaction().getRequest());
-    if (recipient != null)     recipient.processTransactionTerminated(event);
-  }
- else {
-    logger.trace("client transaction terminated");
-    recipient=findTargetFor(event.getClientTransaction());
-    if (recipient != null)     recipient.processTransactionTerminated(event);
-  }
+  Transaction transaction;
+  if (event.isServerTransaction())   transaction=event.getServerTransaction();
+ else   transaction=event.getClientTransaction();
+  ProtocolProviderServiceSipImpl recipient=getServiceData(transaction);
+  if (recipient == null)   logger.error("We received a transaction terminated which wasn't " + "marked, please report this to " + "dev@sip-communicator.dev.java.net");
+ else   recipient.processTransactionTerminated(event);
 }

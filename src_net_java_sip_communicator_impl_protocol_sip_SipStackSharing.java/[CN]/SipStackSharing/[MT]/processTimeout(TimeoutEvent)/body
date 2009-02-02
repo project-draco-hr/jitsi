@@ -1,12 +1,8 @@
 {
-  logger.trace(timeoutEvent);
-  ProtocolProviderServiceSipImpl recipient;
-  if (timeoutEvent.isServerTransaction()) {
-    recipient=findTargetFor(timeoutEvent.getServerTransaction().getRequest());
-    if (recipient != null)     recipient.processTimeout(timeoutEvent);
-  }
- else {
-    recipient=findTargetFor(timeoutEvent.getClientTransaction());
-    if (recipient != null)     recipient.processTimeout(timeoutEvent);
-  }
+  Transaction transaction;
+  if (event.isServerTransaction())   transaction=event.getServerTransaction();
+ else   transaction=event.getClientTransaction();
+  ProtocolProviderServiceSipImpl recipient=getServiceData(transaction);
+  if (recipient == null)   logger.error("We received a timeout which wasn't " + "marked, please report this to " + "dev@sip-communicator.dev.java.net");
+ else   recipient.processTimeout(event);
 }

@@ -1,11 +1,8 @@
 {
-  logger.trace(dialogTerminatedEvent);
-  Dialog dialog=dialogTerminatedEvent.getDialog();
-  Address address=dialog.getLocalParty();
-  if (dialog.getRemoteTarget().getURI() instanceof SipURI) {
-    SipURI remoteURI=(SipURI)dialog.getRemoteTarget().getURI();
-    ProtocolProviderServiceSipImpl pp=getListenerFor(address,remoteURI);
-    if (pp != null)     pp.processDialogTerminated(dialogTerminatedEvent);
+  ProtocolProviderServiceSipImpl recipient=(ProtocolProviderServiceSipImpl)SipApplicationData.getApplicationData(event.getDialog(),SipApplicationData.KEY_SERVICE);
+  if (recipient == null)   logger.error("Dialog wasn't marked, please report this to " + "dev@sip-communicator.dev.java.net");
+ else {
+    logger.trace("service was found with dialog data");
+    recipient.processDialogTerminated(event);
   }
-  logger.debug("Dialog terminated for req=" + dialogTerminatedEvent.getDialog());
 }
