@@ -1,17 +1,19 @@
 {
+  int seqNum=PacketManipulator.GetRTPSequenceNumber(pkt);
+  if (!checkReplay(seqNum)) {
+    return false;
+  }
   if (this.policy.getAuthType() == SRTPPolicy.HMACSHA1_AUTHENTICATION) {
     int tagLength=this.policy.getAuthTagLength();
     byte[] originalTag=pkt.readRegion(pkt.getLength() - tagLength,tagLength);
     pkt.shrink(tagLength);
-    byte[] calculatedTag=authenticatePacketHMCSHA1(pkt);
+    long guessedIndex=guessIndex(seqNum);
+    int guessedRoc=(int)(guessedIndex >> 16);
+    byte[] calculatedTag=authenticatePacketHMCSHA1(pkt,guessedRoc);
     for (int i=0; i < tagLength; i++) {
       if ((originalTag[i] & 0xff) == (calculatedTag[i] & 0xff))       continue;
  else       return false;
     }
-  }
-  int seqNum=PacketManipulator.GetRTPSequenceNumber(pkt);
-  if (!checkReplay(seqNum)) {
-    return false;
   }
   if (this.policy.getEncType() == SRTPPolicy.AESCM_ENCRYPTION) {
     processPacketAESCM(pkt);
