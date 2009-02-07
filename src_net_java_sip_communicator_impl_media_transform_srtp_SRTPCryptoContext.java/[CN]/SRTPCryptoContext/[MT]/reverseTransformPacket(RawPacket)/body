@@ -1,26 +1,29 @@
 {
-  int seqNum=PacketManipulator.GetRTPSequenceNumber(pkt);
-  if (!checkReplay(seqNum)) {
+  int seqNo=PacketManipulator.GetRTPSequenceNumber(pkt);
+  if (!seqNumSet) {
+    seqNumSet=true;
+    seqNum=seqNo;
+  }
+  long guessedIndex=guessIndex(seqNo);
+  if (!checkReplay(seqNo,guessedIndex)) {
     return false;
   }
-  if (this.policy.getAuthType() == SRTPPolicy.HMACSHA1_AUTHENTICATION) {
-    int tagLength=this.policy.getAuthTagLength();
-    byte[] originalTag=pkt.readRegion(pkt.getLength() - tagLength,tagLength);
+  if (policy.getAuthType() == SRTPPolicy.HMACSHA1_AUTHENTICATION) {
+    int tagLength=policy.getAuthTagLength();
+    pkt.readRegionToBuff(pkt.getLength() - tagLength,tagLength,tempStore);
     pkt.shrink(tagLength);
-    long guessedIndex=guessIndex(seqNum);
-    int guessedRoc=(int)(guessedIndex >> 16);
-    byte[] calculatedTag=authenticatePacketHMCSHA1(pkt,guessedRoc);
+    authenticatePacketHMCSHA1(pkt,guessedROC);
     for (int i=0; i < tagLength; i++) {
-      if ((originalTag[i] & 0xff) == (calculatedTag[i] & 0xff))       continue;
+      if ((tempStore[i] & 0xff) == (tagStore[i] & 0xff))       continue;
  else       return false;
     }
   }
-  if (this.policy.getEncType() == SRTPPolicy.AESCM_ENCRYPTION) {
+  if (policy.getEncType() == SRTPPolicy.AESCM_ENCRYPTION) {
     processPacketAESCM(pkt);
   }
- else   if (this.policy.getEncType() == SRTPPolicy.AESF8_ENCRYPTION) {
+ else   if (policy.getEncType() == SRTPPolicy.AESF8_ENCRYPTION) {
     processPacketAESF8(pkt);
   }
-  update(seqNum);
+  update(seqNo,guessedIndex);
   return true;
 }
