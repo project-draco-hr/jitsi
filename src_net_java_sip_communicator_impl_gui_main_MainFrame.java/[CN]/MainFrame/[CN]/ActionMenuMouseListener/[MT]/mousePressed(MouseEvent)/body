@@ -1,8 +1,28 @@
 {
-  ActionMenuGlassPane glassPane=new ActionMenuGlassPane();
-  glassPane.add(new ActionMenuPanel());
-  if ((rootPane != null) && isVisible())   rootPane.setGlassPane(glassPane);
-  glassPane.revalidate();
-  glassPane.setVisible(!glassPane.isVisible());
-  glassPane.repaint();
+  if (glassPane == null) {
+    if (rootPane != null) {
+      glassPane=new ActionMenuGlassPane();
+      glassPane.add(new ActionMenuPanel());
+      KeyboardFocusManager.getCurrentKeyboardFocusManager().addPropertyChangeListener(new java.beans.PropertyChangeListener(){
+        public void propertyChange(        java.beans.PropertyChangeEvent e){
+          String prop=e.getPropertyName();
+          if ("focusOwner".equals(prop)) {
+            if (!glassPane.isVisible())             return;
+            Object newValue=e.getNewValue();
+            if (newValue == rootPane) {
+              glassPane.setVisible(false);
+            }
+          }
+        }
+      }
+);
+      rootPane.setGlassPane(glassPane);
+      glassPane.setVisible(true);
+      glassPane.requestFocusInWindow();
+    }
+  }
+ else {
+    glassPane.setVisible(!glassPane.isVisible());
+    if (glassPane.isVisible())     glassPane.requestFocusInWindow();
+  }
 }
