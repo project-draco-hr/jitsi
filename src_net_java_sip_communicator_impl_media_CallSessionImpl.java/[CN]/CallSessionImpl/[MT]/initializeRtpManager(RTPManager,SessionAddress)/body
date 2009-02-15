@@ -5,21 +5,21 @@
       TransformConnector transConnector=TransformManager.createZRTPConnector(bindAddress,this);
       rtpManager.initialize(transConnector);
       this.transConnectors.put(rtpManager,transConnector);
-      SCCallback callback=new SCCallback(this);
+      SecurityEventManager securityEventManager=new SecurityEventManager(this);
       boolean zrtpAutoStart=false;
       if (rtpManager.equals(audioRtpManager)) {
         if (zrtpDHSession == null) {
           zrtpDHSession=transConnector;
           zrtpAutoStart=true;
-          callback.setDHSession(true);
+          securityEventManager.setDHSession(true);
         }
-        callback.setType(SecurityGUIEventZrtp.AUDIO);
+        securityEventManager.setSessionType(AUDIO_SESSION);
       }
  else       if (rtpManager.equals(videoRtpManager)) {
-        callback.setType(SecurityGUIEventZrtp.VIDEO);
+        securityEventManager.setSessionType(VIDEO_SESSION);
       }
       ZRTPTransformEngine engine=(ZRTPTransformEngine)transConnector.getEngine();
-      engine.setUserCallback(callback);
+      engine.setUserCallback(securityEventManager);
       if (this.getCall().isDefaultEncrypted()) {
         if (engine.initialize("GNUZRTP4J.zid",zrtpAutoStart)) {
           usingZRTP=true;
