@@ -11,16 +11,11 @@
  catch (  ParseException exc) {
     throw new IllegalArgumentException(contactIdentifier + " is not a valid string.",exc);
   }
-  if (this.presenceEnabled == false) {
-    contact=new ContactSipImpl(contactAddress,this.parentProvider);
-    ((ContactGroupSipImpl)parentGroup).addContact(contact);
-    fireSubscriptionEvent(contact,parentGroup,SubscriptionEvent.SUBSCRIPTION_CREATED);
-    fireSubscriptionEvent(contact,parentGroup,SubscriptionEvent.SUBSCRIPTION_RESOLVED);
-    return;
-  }
-  assertConnected();
   contact=new ContactSipImpl(contactAddress,this.parentProvider);
-  contact.setParentGroup((ContactGroupSipImpl)parentGroup);
+  ((ContactGroupSipImpl)parentGroup).addContact(contact);
+  fireSubscriptionEvent(contact,parentGroup,SubscriptionEvent.SUBSCRIPTION_CREATED);
+  if (this.presenceEnabled == false)   return;
+  assertConnected();
   Request subscription;
   try {
     subscription=createSubscription(contact,this.subscriptionDuration);

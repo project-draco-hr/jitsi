@@ -112,8 +112,8 @@ synchronized (this.waitedCallIds) {
           contact.setClientDialog(null);
         }
       }
- else       if (response.getStatusCode() == Response.REQUEST_TIMEOUT || response.getStatusCode() == Response.TEMPORARILY_UNAVAILABLE || response.getStatusCode() == Response.BUSY_HERE || response.getStatusCode() == Response.BUSY_EVERYWHERE || response.getStatusCode() == Response.DECLINE) {
-        logger.debug("error received from the network" + response);
+ else {
+        logger.debug("error received from the network:\n" + response);
         if (response.getStatusCode() == Response.TEMPORARILY_UNAVAILABLE) {
           changePresenceStatusForContact(contact,sipStatusEnum.getStatus(SipStatusEnum.OFFLINE));
         }
@@ -122,15 +122,7 @@ synchronized (this.waitedCallIds) {
         }
         this.subscribedContacts.remove(idheader.getCallId());
         contact.setClientDialog(null);
-        fireSubscriptionEvent(contact,contact.getParentContactGroup(),SubscriptionEvent.SUBSCRIPTION_FAILED,response.getStatusCode(),response.getReasonPhrase());
-      }
- else {
-        logger.debug("error received from the network" + response);
         contact.setResolvable(false);
-        changePresenceStatusForContact(contact,sipStatusEnum.getStatus(SipStatusEnum.UNKNOWN));
-        this.subscribedContacts.remove(idheader.getCallId());
-        contact.setClientDialog(null);
-        fireSubscriptionEvent(contact,contact.getParentContactGroup(),SubscriptionEvent.SUBSCRIPTION_FAILED,response.getStatusCode(),response.getReasonPhrase());
       }
     }
     processed=true;
