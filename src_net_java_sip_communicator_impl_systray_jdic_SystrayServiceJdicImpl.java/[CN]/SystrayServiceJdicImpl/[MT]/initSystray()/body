@@ -1,5 +1,4 @@
 {
-  popupTimer.scheduleAtFixedRate(new ShowPopupTask(),0,messageDelay);
   Object o=Toolkit.getDefaultToolkit().getDesktopProperty("awt.multiClickInterval");
   final int doubleClickSpeed=(o instanceof Integer ? ((Integer)o).intValue() : 500);
   menu=TrayMenuFactory.createTrayMenu(this,systray.isSwing());
@@ -39,8 +38,7 @@
     public void actionPerformed(    ActionEvent e){
       long currentTime=System.currentTimeMillis();
       UIService uiService=SystrayActivator.getUIService();
-      boolean isVisible;
-      isVisible=!uiService.isVisible();
+      boolean isVisible=!uiService.isVisible();
       if (isVisible) {
         setVisibleTime=currentTime;
       }
@@ -48,7 +46,6 @@
         return;
       }
       uiService.setVisible(isVisible);
-      ConfigurationService configService=SystrayActivator.getConfigurationService();
       configService.setProperty("net.java.sip.communicator.impl.systray.showApplication",Boolean.toString(isVisible));
     }
   }
@@ -71,7 +68,7 @@
           currentIcon=envelopeIcon;
         }
  else {
-          trayIcon.setIcon(logoIcon);
+          getTrayIcon().setIcon(logoIcon);
           currentIcon=logoIcon;
         }
       }
@@ -81,17 +78,37 @@
     }
 );
   }
-  trayIcon.addBalloonActionListener(new ActionListener(){
-    public void actionPerformed(    ActionEvent e){
-      UIService uiService=SystrayActivator.getUIService();
-      firePopupMessageEvent(e.getSource());
-      ExportedWindow chatWindow=uiService.getExportedWindow(ExportedWindow.CHAT_WINDOW);
-      if (chatWindow != null && chatWindow.isVisible()) {
-        chatWindow.bringToFront();
+  PopupMessageHandler pph=new PopupMessageHandlerTrayIconImpl(trayIcon);
+  popupHandlerSet.put(pph.getClass().getName(),pph);
+  SystrayActivator.bundleContext.registerService(PopupMessageHandler.class.getName(),pph,null);
+  try {
+    SystrayActivator.bundleContext.addServiceListener(new ServiceListenerImpl(),"(objectclass=" + PopupMessageHandler.class.getName() + ")");
+  }
+ catch (  Exception e) {
+    logger.warn(e);
+  }
+  ServiceReference[] handlerRefs=null;
+  try {
+    handlerRefs=SystrayActivator.bundleContext.getServiceReferences(PopupMessageHandler.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException ex) {
+    logger.error("Error while retrieving service refs",ex);
+  }
+  if (handlerRefs != null) {
+    for (int i=0; i < handlerRefs.length; i++) {
+      PopupMessageHandler handler=(PopupMessageHandler)SystrayActivator.bundleContext.getService(handlerRefs[i]);
+      String handlerName=handler.getClass().getName();
+      if (!popupHandlerSet.containsKey(handlerName)) {
+        popupHandlerSet.put(handlerName,handler);
+        logger.info("added the following popup handler : " + handler);
+        String configuredHandler=(String)configService.getProperty("systray.POPUP_HANDLER");
+        if (configuredHandler.equals(handler.getClass().getName()))         setActivePopupMessageHandler(handler);
       }
     }
   }
-);
+  if (activePopupHandler == null) {
+    setActivePopupMessageHandler(pph);
+  }
   systray.addTrayIcon(trayIcon);
   initialized=true;
 }
