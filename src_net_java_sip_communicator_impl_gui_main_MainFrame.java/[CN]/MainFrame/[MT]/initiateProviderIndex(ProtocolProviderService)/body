@@ -2,27 +2,20 @@
   ConfigurationService configService=GuiActivator.getConfigurationService();
   String prefix="net.java.sip.communicator.impl.gui.accounts";
   List<String> accounts=configService.getPropertyNamesByPrefix(prefix,true);
-  boolean savedAccount=false;
   for (  String accountRootPropName : accounts) {
     String accountUID=configService.getString(accountRootPropName);
     if (accountUID.equals(protocolProvider.getAccountID().getAccountUniqueID())) {
-      savedAccount=true;
       String index=configService.getString(accountRootPropName + ".accountIndex");
       if (index != null) {
         return Integer.parseInt(index);
       }
  else {
-        int accountIndex=createAccountIndex(protocolProvider,accountRootPropName);
-        return accountIndex;
+        return createAccountIndex(protocolProvider,accountRootPropName);
       }
     }
   }
-  if (!savedAccount) {
-    String accNodeName="acc" + Long.toString(System.currentTimeMillis());
-    String accountPackage="net.java.sip.communicator.impl.gui.accounts." + accNodeName;
-    configService.setProperty(accountPackage,protocolProvider.getAccountID().getAccountUniqueID());
-    int accountIndex=createAccountIndex(protocolProvider,accountPackage);
-    return accountIndex;
-  }
-  return -1;
+  String accNodeName="acc" + Long.toString(System.currentTimeMillis());
+  String accountPackage="net.java.sip.communicator.impl.gui.accounts." + accNodeName;
+  configService.setProperty(accountPackage,protocolProvider.getAccountID().getAccountUniqueID());
+  return createAccountIndex(protocolProvider,accountPackage);
 }
