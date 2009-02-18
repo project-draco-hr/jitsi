@@ -5,26 +5,22 @@
   if (offerMediaDescs != null && offerMediaDescs.size() > 0) {
     Vector<String> offeredVideoEncodings=new Vector<String>();
     Vector<String> offeredAudioEncodings=new Vector<String>();
-    Iterator<MediaDescription> offerDescsIter=offerMediaDescs.iterator();
-    while (offerDescsIter.hasNext()) {
-      MediaDescription desc=offerDescsIter.next();
+    for (    MediaDescription desc : offerMediaDescs) {
       Media media=desc.getMedia();
       String mediaType=media.getMediaType();
       if (mediaType.equalsIgnoreCase("video")) {
         offeredVideoEncodings=media.getMediaFormats(true);
-        continue;
       }
-      if (mediaType.equalsIgnoreCase("audio")) {
+ else       if (mediaType.equalsIgnoreCase("audio")) {
         offeredAudioEncodings=media.getMediaFormats(true);
-        continue;
       }
     }
     Hashtable<String,List<String>> encodings=new Hashtable<String,List<String>>(2);
     encodings.put("audio",offeredAudioEncodings);
     encodings.put("video",offeredVideoEncodings);
     encodings=intersectMediaEncodings(encodings);
-    List<String> intersectedAudioEncsList=(List<String>)encodings.get("audio");
-    List<String> intersectedVideoEncsList=(List<String>)encodings.get("video");
+    List<String> intersectedAudioEncsList=encodings.get("audio");
+    List<String> intersectedVideoEncsList=encodings.get("video");
     supportedAudioEncodings=intersectedAudioEncsList.toArray(new String[0]);
     supportedVideoEncodings=intersectedVideoEncsList.toArray(new String[0]);
   }
@@ -32,8 +28,8 @@
   if (supportedAudioEncodings.length > 0) {
     MediaDescription am=mediaServCallback.getSdpFactory().createMediaDescription("audio",publicAudioAddress.getPort(),1,"RTP/AVP",supportedAudioEncodings);
     String g723Str=String.valueOf(SdpConstants.G723);
-    for (int i=0; i < supportedAudioEncodings.length; i++) {
-      if (supportedAudioEncodings[i].equals(g723Str)) {
+    for (    String supportedAudioEncoding : supportedAudioEncodings) {
+      if (supportedAudioEncoding.equals(g723Str)) {
         am.setAttribute("rtpmap","4 G723/8000");
         am.setAttribute("fmtp","4 annexa=no;bitrate=6.3");
       }
@@ -57,8 +53,8 @@
   if (mediaServCallback.getDeviceConfiguration().isVideoCaptureSupported() && supportedVideoEncodings.length > 0) {
     MediaDescription vm=mediaServCallback.getSdpFactory().createMediaDescription("video",publicVideoAddress.getPort(),1,"RTP/AVP",supportedVideoEncodings);
     String h264Str=String.valueOf(Constants.H264_RTP_SDP);
-    for (int i=0; i < supportedVideoEncodings.length; i++) {
-      if (supportedVideoEncodings[i].equals(h264Str)) {
+    for (    String supportedVideoEncoding : supportedVideoEncodings) {
+      if (supportedVideoEncoding.equals(h264Str)) {
         vm.setAttribute("rtpmap",Constants.H264_RTP_SDP + " H264/90000");
         vm.setAttribute("fmtp",Constants.H264_RTP_SDP + " packetization-mode=1");
       }
