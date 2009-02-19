@@ -1,8 +1,9 @@
 {
   Constructor<?> constructor;
   try {
-    constructor=clazz.getConstructor(new Class<?>[]{Image.class,String.class,PopupMenu.class});
+    constructor=clazz.getConstructor(new Class<?>[]{Image.class,String.class});
     addActionListener=clazz.getMethod("addActionListener",new Class<?>[]{ActionListener.class});
+    addMouseListener=clazz.getMethod("addMouseListener",new Class<?>[]{MouseListener.class});
     messageTypeClass=Class.forName("java.awt.TrayIcon$MessageType");
     displayMessage=clazz.getMethod("displayMessage",new Class<?>[]{String.class,String.class,messageTypeClass});
     setIcon=clazz.getMethod("setImage",new Class<?>[]{Image.class});
@@ -15,7 +16,8 @@ catch (  NoSuchMethodException ex) {
     throw new UnsupportedOperationException(ex);
   }
   try {
-    impl=constructor.newInstance(new Object[]{image,tooltip,popup});
+    impl=constructor.newInstance(new Object[]{image,tooltip});
+    addMouseListener(new AWTMouseAdapter(popup));
   }
  catch (  IllegalAccessException ex) {
     throw new UnsupportedOperationException(ex);
