@@ -1,6 +1,4 @@
 {
-  Object o=Toolkit.getDefaultToolkit().getDesktopProperty("awt.multiClickInterval");
-  final int doubleClickSpeed=(o instanceof Integer ? ((Integer)o).intValue() : 500);
   menu=TrayMenuFactory.createTrayMenu(this,systray.isSwing());
   String osName=System.getProperty("os.name");
   if (osName.startsWith("Windows")) {
@@ -38,17 +36,13 @@
   }
   trayIcon.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
-      long currentTime=System.currentTimeMillis();
       UIService uiService=SystrayActivator.getUIService();
-      boolean isVisible=!uiService.isVisible();
-      if (isVisible) {
-        setVisibleTime=currentTime;
+      ExportedWindow win=uiService.getExportedWindow(ExportedWindow.MAIN_WINDOW);
+      if (!win.isVisible()) {
+        win.setVisible(true);
+        configService.setProperty("net.java.sip.communicator.impl.systray.showApplication",Boolean.toString(true));
       }
- else       if (currentTime < (setVisibleTime + doubleClickSpeed)) {
-        return;
-      }
-      uiService.setVisible(isVisible);
-      configService.setProperty("net.java.sip.communicator.impl.systray.showApplication",Boolean.toString(isVisible));
+      win.bringToFront();
     }
   }
 );
@@ -80,9 +74,12 @@
     }
 );
   }
-  PopupMessageHandler pph=new PopupMessageHandlerTrayIconImpl(trayIcon);
-  popupHandlerSet.put(pph.getClass().getName(),pph);
-  SystrayActivator.bundleContext.registerService(PopupMessageHandler.class.getName(),pph,null);
+  PopupMessageHandler pph=null;
+  if (!osName.startsWith("Mac OS X")) {
+    pph=new PopupMessageHandlerTrayIconImpl(trayIcon);
+    popupHandlerSet.put(pph.getClass().getName(),pph);
+    SystrayActivator.bundleContext.registerService(PopupMessageHandler.class.getName(),pph,null);
+  }
   try {
     SystrayActivator.bundleContext.addServiceListener(new ServiceListenerImpl(),"(objectclass=" + PopupMessageHandler.class.getName() + ")");
   }

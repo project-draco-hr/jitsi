@@ -1,7 +1,6 @@
 {
   final GraphicsConfiguration graphicsConf=GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
   final JWindow notificationWindow=new JWindow(graphicsConf);
-  notificationWindow.setPreferredSize(new Dimension(225,125));
   final Timer popupTimer=new Timer(10000,new ActionListener(){
     public void actionPerformed(    ActionEvent e){
       if (notificationWindow.isVisible())       new Thread(new PopupDiscarder(notificationWindow)).start();
@@ -17,13 +16,20 @@
       popupTimer.start();
     }
     @Override public void mouseClicked(    MouseEvent e){
-      firePopupMessageClicked(new SystrayPopupMessageEvent(e));
+      Container container=notificationWindow.getContentPane();
+      PopupNotificationPanel notif=(PopupNotificationPanel)container.getComponent(0);
+      firePopupMessageClicked(new SystrayPopupMessageEvent(e,notif.getTag()));
       notificationWindow.dispose();
     }
   }
 );
-  if (popupMessage.getComponent() != null)   notificationWindow.add(popupMessage.getComponent());
- else   notificationWindow.add(createPopup(popupMessage.getMessageTitle(),popupMessage.getMessage(),popupMessage.getIcon()));
+  if (popupMessage.getComponent() != null) {
+    notificationWindow.add(popupMessage.getComponent());
+  }
+ else {
+    notificationWindow.add(createPopup(popupMessage.getMessageTitle(),popupMessage.getMessage(),popupMessage.getTag()));
+    notificationWindow.setPreferredSize(new Dimension(225,120));
+  }
   notificationWindow.setAlwaysOnTop(true);
   notificationWindow.pack();
   new Thread(new PopupLauncher(notificationWindow,graphicsConf)).start();

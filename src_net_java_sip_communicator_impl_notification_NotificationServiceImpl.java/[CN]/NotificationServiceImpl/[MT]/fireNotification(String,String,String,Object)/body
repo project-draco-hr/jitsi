@@ -1,0 +1,23 @@
+{
+  EventNotification notification=(EventNotification)notificationsTable.get(eventType);
+  if (notification == null || !notification.isActive())   return;
+  Iterator actions=notification.getActions().values().iterator();
+  while (actions.hasNext()) {
+    Action action=(Action)actions.next();
+    String actionType=action.getActionType();
+    NotificationActionHandler handler=action.getActionHandler();
+    if ((handler == null) || !handler.isEnabled())     continue;
+    if (actionType.equals(NotificationService.ACTION_POPUP_MESSAGE)) {
+      ((PopupMessageNotificationHandler)handler).popupMessage(new PopupMessage(title,message,tag));
+    }
+ else     if (actionType.equals(NotificationService.ACTION_LOG_MESSAGE)) {
+      ((LogMessageNotificationHandler)handler).logMessage(message);
+    }
+ else     if (actionType.equals(NotificationService.ACTION_SOUND)) {
+      ((SoundNotificationHandler)handler).start();
+    }
+ else     if (actionType.equals(NotificationService.ACTION_COMMAND)) {
+      ((CommandNotificationHandler)handler).execute();
+    }
+  }
+}
