@@ -1,8 +1,17 @@
 {
-  Transaction transaction;
-  if (event.isServerTransaction())   transaction=event.getServerTransaction();
- else   transaction=event.getClientTransaction();
-  ProtocolProviderServiceSipImpl recipient=getServiceData(transaction);
-  if (recipient == null)   logger.error("We received a transaction terminated which wasn't " + "marked, please report this to " + "dev@sip-communicator.dev.java.net");
- else   recipient.processTransactionTerminated(event);
+  try {
+    Transaction transaction;
+    if (event.isServerTransaction())     transaction=event.getServerTransaction();
+ else     transaction=event.getClientTransaction();
+    ProtocolProviderServiceSipImpl recipient=getServiceData(transaction);
+    if (recipient == null) {
+      logger.error("We received a transaction terminated which wasn't" + " marked, please report this to" + " dev@sip-communicator.dev.java.net");
+    }
+ else {
+      recipient.processTransactionTerminated(event);
+    }
+  }
+ catch (  Throwable exc) {
+    this.logApplicationException(DialogTerminatedEvent.class,exc);
+  }
 }

@@ -1,27 +1,38 @@
 {
-  logger.trace("received request: " + event.getRequest().getMethod());
-  Request request=event.getRequest();
-  if (event.getServerTransaction() == null) {
-    try {
-      SipProvider source=(SipProvider)event.getSource();
-      ServerTransaction transaction=source.getNewServerTransaction(request);
-      event=new RequestEvent(source,transaction,transaction.getDialog(),request);
+  try {
+    logger.trace("received request: " + event.getRequest().getMethod());
+    Request request=event.getRequest();
+    if (event.getServerTransaction() == null) {
+      try {
+        SipProvider source=(SipProvider)event.getSource();
+        ServerTransaction transaction=source.getNewServerTransaction(request);
+        event=new RequestEvent(source,transaction,transaction.getDialog(),request);
+      }
+ catch (      SipException ex) {
+        logger.error("couldn't create transaction, please report " + "this to dev@sip-communicator.dev.java.net",ex);
+      }
     }
- catch (    SipException ex) {
-      logger.error("couldn't create transaction, please report " + "this to dev@sip-communicator.dev.java.net",ex);
-    }
-  }
-  ProtocolProviderServiceSipImpl service=getServiceData(event.getServerTransaction());
-  if (service != null) {
-    service.processRequest(event);
-  }
- else {
-    service=findTargetFor(request);
-    if (service == null)     logger.error("couldn't find a ProtocolProviderServiceSipImpl " + "to dispatch to");
- else {
-      if (event.getDialog() != null)       SipApplicationData.setApplicationData(event.getDialog(),SipApplicationData.KEY_SERVICE,service);
- else       SipApplicationData.setApplicationData(request,SipApplicationData.KEY_SERVICE,service);
+    ProtocolProviderServiceSipImpl service=getServiceData(event.getServerTransaction());
+    if (service != null) {
       service.processRequest(event);
     }
+ else {
+      service=findTargetFor(request);
+      if (service == null) {
+        logger.error("couldn't find a ProtocolProviderServiceSipImpl " + "to dispatch to");
+      }
+ else {
+        if (event.getDialog() != null) {
+          SipApplicationData.setApplicationData(event.getDialog(),SipApplicationData.KEY_SERVICE,service);
+        }
+ else {
+          SipApplicationData.setApplicationData(request,SipApplicationData.KEY_SERVICE,service);
+        }
+        service.processRequest(event);
+      }
+    }
+  }
+ catch (  Throwable exc) {
+    this.logApplicationException(DialogTerminatedEvent.class,exc);
   }
 }

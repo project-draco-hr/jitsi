@@ -1,8 +1,21 @@
 {
-  Transaction transaction;
-  if (event.isServerTransaction())   transaction=event.getServerTransaction();
- else   transaction=event.getClientTransaction();
-  ProtocolProviderServiceSipImpl recipient=getServiceData(transaction);
-  if (recipient == null)   logger.error("We received a timeout which wasn't " + "marked, please report this to " + "dev@sip-communicator.dev.java.net");
- else   recipient.processTimeout(event);
+  try {
+    Transaction transaction;
+    if (event.isServerTransaction()) {
+      transaction=event.getServerTransaction();
+    }
+ else {
+      transaction=event.getClientTransaction();
+    }
+    ProtocolProviderServiceSipImpl recipient=getServiceData(transaction);
+    if (recipient == null) {
+      logger.error("We received a timeout which wasn't " + "marked, please report this to " + "dev@sip-communicator.dev.java.net");
+    }
+ else {
+      recipient.processTimeout(event);
+    }
+  }
+ catch (  Throwable exc) {
+    this.logApplicationException(DialogTerminatedEvent.class,exc);
+  }
 }
