@@ -3,15 +3,21 @@
   if (notificationService == null)   return;
   NotificationActionHandler popupActionHandler=null;
   Chat chatPanel=null;
-  if (contact instanceof Contact)   chatPanel=GuiActivator.getUIService().getChat((Contact)contact);
- else   if (contact instanceof ChatRoom) {
-    if (((ChatRoom)contact).isSystem())     return;
-    chatPanel=GuiActivator.getUIService().getChat((ChatRoom)contact);
+  byte[] contactIcon=null;
+  if (chatContact instanceof Contact) {
+    Contact contact=(Contact)chatContact;
+    chatPanel=GuiActivator.getUIService().getChat(contact);
+    contactIcon=contact.getImage();
+  }
+ else   if (chatContact instanceof ChatRoom) {
+    ChatRoom chatRoom=(ChatRoom)chatContact;
+    if (chatRoom.isSystem())     return;
+    chatPanel=GuiActivator.getUIService().getChat(chatRoom);
   }
   if (eventType.equals(INCOMING_MESSAGE) && chatPanel.isChatFocused()) {
     popupActionHandler=notificationService.getEventNotificationActionHandler(eventType,NotificationService.ACTION_POPUP_MESSAGE);
     popupActionHandler.setEnabled(false);
   }
-  notificationService.fireNotification(eventType,messageTitle,message,contact);
+  notificationService.fireNotification(eventType,messageTitle,message,contactIcon,chatContact);
   if (popupActionHandler != null)   popupActionHandler.setEnabled(true);
 }
