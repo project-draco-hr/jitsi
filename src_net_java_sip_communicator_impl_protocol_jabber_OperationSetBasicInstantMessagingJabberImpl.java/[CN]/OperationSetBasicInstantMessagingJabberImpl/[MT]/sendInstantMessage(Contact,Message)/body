@@ -7,12 +7,15 @@
       }
     }
 ;
-    Chat chat=jabberProvider.getConnection().getChatManager().createChat(to.getAddress(),msgListener);
+    XMPPConnection jabberConnection=jabberProvider.getConnection();
+    Chat chat=jabberConnection.getChatManager().createChat(to.getAddress(),msgListener);
     org.jivesoftware.smack.packet.Message msg=new org.jivesoftware.smack.packet.Message();
     String content=message.getContent();
     if (message.getContentType().equals(HTML_MIME_TYPE)) {
       msg.setBody(Html2Text.extractText(content));
-      XHTMLManager.addBody(msg,OPEN_BODY_TAG + content + CLOSE_BODY_TAG);
+      if (XHTMLManager.isServiceEnabled(jabberConnection,chat.getParticipant())) {
+        XHTMLManager.addBody(msg,OPEN_BODY_TAG + content + CLOSE_BODY_TAG);
+      }
     }
  else {
       msg.setBody(content);
