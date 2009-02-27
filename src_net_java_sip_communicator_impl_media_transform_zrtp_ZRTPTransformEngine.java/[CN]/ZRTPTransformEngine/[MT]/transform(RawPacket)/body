@@ -1,10 +1,11 @@
 {
-  ZrtpRawPacket zPkt=new ZrtpRawPacket(pkt);
-  if (zPkt.isZrtpPacket()) {
+  byte[] buffer=pkt.getBuffer();
+  int offset=pkt.getOffset();
+  if ((buffer[offset] & 0x10) == 0x10) {
     return pkt;
   }
   if (enableZrtp && ownSSRC == 0) {
-    ownSSRC=zPkt.getSSRC();
+    ownSSRC=(int)(pkt.readUnsignedIntAsLong(8) & 0xffffffff);
   }
   sendPacketCount++;
   if (srtpOutTransformer == null) {

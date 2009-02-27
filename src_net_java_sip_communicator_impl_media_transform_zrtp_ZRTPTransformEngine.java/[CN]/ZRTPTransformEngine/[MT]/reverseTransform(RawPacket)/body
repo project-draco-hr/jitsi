@@ -1,6 +1,7 @@
 {
-  ZrtpRawPacket zPkt=new ZrtpRawPacket(pkt);
-  if (!zPkt.isZrtpPacket()) {
+  byte[] buffer=pkt.getBuffer();
+  int offset=pkt.getOffset();
+  if ((buffer[offset] & 0x10) != 0x10) {
     if (!started && enableZrtp && (multiStream || (sendPacketCount >= 1))) {
       startZrtp();
     }
@@ -14,6 +15,7 @@
     return pkt;
   }
   if (enableZrtp) {
+    ZrtpRawPacket zPkt=new ZrtpRawPacket(pkt);
     if (!zPkt.checkCrc()) {
       securityEventManager.showMessage(ZrtpCodes.MessageSeverity.Warning,EnumSet.of(ZrtpCodes.WarningCodes.WarningCRCmismatch));
       return null;
