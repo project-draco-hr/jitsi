@@ -1,21 +1,16 @@
 {
   TreeSet result=new TreeSet(new MessageEventComparator());
-  Hashtable readers=getHistoryReaders(contact);
+  Map<Contact,HistoryReader> readers=getHistoryReaders(contact);
   int recordsCount=countRecords(readers);
-  Iterator iter=readers.keySet().iterator();
-  while (iter.hasNext()) {
-    Contact item=(Contact)iter.next();
-    HistoryReader reader=(HistoryReader)readers.get(item);
+  for (  Map.Entry<Contact,HistoryReader> readerEntry : readers.entrySet()) {
+    Contact item=readerEntry.getKey();
+    HistoryReader reader=readerEntry.getValue();
     addHistorySearchProgressListeners(reader,recordsCount);
     Iterator recs=reader.findByKeyword(keyword,SEARCH_FIELD,caseSensitive);
     while (recs.hasNext()) {
       result.add(convertHistoryRecordToMessageEvent((HistoryRecord)recs.next(),item));
     }
   }
-  iter=readers.values().iterator();
-  while (iter.hasNext()) {
-    HistoryReader item=(HistoryReader)iter.next();
-    removeHistorySearchProgressListeners(item);
-  }
+  removeHistorySearchProgressListeners(readers);
   return result;
 }
