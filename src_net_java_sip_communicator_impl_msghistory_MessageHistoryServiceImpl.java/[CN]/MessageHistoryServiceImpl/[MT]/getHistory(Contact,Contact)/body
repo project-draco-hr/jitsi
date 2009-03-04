@@ -2,7 +2,19 @@
   History retVal=null;
   String localId=localContact == null ? "default" : localContact.getAddress();
   String remoteId=remoteContact == null ? "default" : remoteContact.getAddress();
-  HistoryID historyId=HistoryID.createFromRawID(new String[]{"messages",localId,remoteId});
+  String account=remoteContact.getProtocolProvider().getAccountID().getAccountUniqueID();
+  HistoryID historyId=HistoryID.createFromRawID(new String[]{"messages",localId,account,remoteId});
+  if (!this.historyService.isHistoryCreated(historyId)) {
+    HistoryID historyId_old=HistoryID.createFromRawID(new String[]{"messages",localId,remoteId});
+    if (this.historyService.isHistoryCreated(historyId_old)) {
+      try {
+        this.historyService.moveHistory(historyId_old,historyId);
+      }
+ catch (      IOException iOException) {
+        historyId=historyId_old;
+      }
+    }
+  }
   if (this.historyService.isHistoryExisting(historyId)) {
     retVal=this.historyService.getHistory(historyId);
   }
