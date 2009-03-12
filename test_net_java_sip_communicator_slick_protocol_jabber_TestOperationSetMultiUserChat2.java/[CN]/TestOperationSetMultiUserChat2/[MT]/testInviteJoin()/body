@@ -1,0 +1,28 @@
+{
+  String testRoomName=testRoomBaseName + roomID++;
+  ChatRoom opSet1Room=opSetMUC1.createChatRoom(testRoomName,null);
+  opSet1Room.join();
+  MUCEventCollector opSet1RoomCollector=new MUCEventCollector(opSet1Room,MUCEventCollector.EVENT_PRESENCE);
+  MUCEventCollector opSet2Collector=new MUCEventCollector(opSetMUC2,MUCEventCollector.EVENT_INVITE);
+  opSet1Room.invite(fixture.userID2,"testInviteAccept");
+  opSet2Collector.waitForEvent(10000);
+  assertEquals("the invitation has not been received",1,opSet2Collector.collectedEvents.size());
+  ChatRoomInvitationReceivedEvent invitationReceivedEvent=(ChatRoomInvitationReceivedEvent)opSet2Collector.collectedEvents.get(0);
+  ChatRoomInvitation invitation=invitationReceivedEvent.getInvitation();
+  assertEquals("The inviter is not the expected user",fixture.userID1,invitation.getInviter());
+  assertEquals("The invitation reason received differs from the one sent","testInviteAccept",invitation.getReason());
+  ChatRoom opSet2Room=invitation.getTargetChatRoom();
+  MUCEventCollector opSet2RoomCollector=new MUCEventCollector(opSet2Room,MUCEventCollector.EVENT_PRESENCE);
+  opSet2Room.join();
+  opSet2RoomCollector.waitForEvent(10000);
+  opSet1RoomCollector.waitForEvent(10000);
+  assertEquals("a room member has not been notified that someone " + "joined the room",1,opSet1RoomCollector.collectedEvents.size());
+  assertEquals("a room member has not been notified that someone " + "joined the room",1,opSet2RoomCollector.collectedEvents.size());
+  ChatRoomMemberPresenceChangeEvent memberEvent=(ChatRoomMemberPresenceChangeEvent)opSet1RoomCollector.collectedEvents.get(0);
+  assertEquals("user received an event of the wrong type ",ChatRoomMemberPresenceChangeEvent.MEMBER_JOINED,memberEvent.getEventType());
+  assertEquals("the user who joined is not the one who was invited",fixture.userID2,memberEvent.getChatRoomMember().getContactAddress());
+  assertEquals("there is not exactly two members in the room",2,opSet1Room.getMembersCount());
+  assertEquals("the same room reports different members count " + "from one side to other",opSet1Room.getMembersCount(),opSet2Room.getMembersCount());
+  assertTrue("user is not listed in the room with his nickname",nameIsOnMemberList(opSet2Room.getUserNickname(),opSet2Room.getMembers()));
+  assertTrue("user is not listed in the room with his nickname ,from " + "peer side",nameIsOnMemberList(opSet2Room.getUserNickname(),opSet1Room.getMembers()));
+}

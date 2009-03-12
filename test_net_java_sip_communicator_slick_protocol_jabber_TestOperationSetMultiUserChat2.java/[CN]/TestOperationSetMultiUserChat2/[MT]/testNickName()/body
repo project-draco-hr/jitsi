@@ -1,0 +1,24 @@
+{
+  String testRoomName=testRoomBaseName + roomID++;
+  ChatRoom opSet1Room=opSetMUC1.createChatRoom(testRoomName,null);
+  opSet1Room.join();
+  String user1FirstNick=opSet1Room.getUserNickname();
+  String user1SecondNick="user1nickchange";
+  ChatRoom opSet2Room=opSetMUC2.findRoom(testRoomName);
+  opSet2Room.join();
+  assertTrue("user nickname not found by peer ",nameIsOnMemberList(user1FirstNick,opSet2Room.getMembers()));
+  opSet1Room.setUserNickname(user1SecondNick);
+  assertEquals("failed to change user nickname",user1SecondNick,opSet1Room.getUserNickname());
+  assertTrue("user nickname not found on member list after modification",nameIsOnMemberList(user1SecondNick,opSet1Room.getMembers()));
+  assertTrue("user nickname not found on member list after modification " + "from, peer side",nameIsOnMemberList(user1SecondNick,opSet2Room.getMembers()));
+  assertFalse("both old and new nick are listed in a room after nick change",nameIsOnMemberList(user1FirstNick,opSet1Room.getMembers()));
+  assertFalse("both old and new nick are listed in a room after nick change, " + "from the peer side",nameIsOnMemberList(user1FirstNick,opSet2Room.getMembers()));
+  try {
+    opSet2Room.setUserNickname(user1SecondNick);
+  }
+ catch (  OperationFailedException ex) {
+  }
+  if (opSet1Room.getUserNickname().equals(opSet2Room.getUserNickname())) {
+    fail("different users are holding the same nick in the same room");
+  }
+}

@@ -1,0 +1,20 @@
+{
+  MUCEventCollector opSet1Collector=new MUCEventCollector(opSetMUC1,MUCEventCollector.EVENT_INVITE);
+  MUCEventCollector opSet2Collector=new MUCEventCollector(opSetMUC2,MUCEventCollector.EVENT_INVITE);
+  String testRoomName=testRoomBaseName + roomID++;
+  ChatRoom opSet1Room=opSetMUC1.createChatRoom(testRoomName,null);
+  opSet1Room.join();
+  opSet1Room.invite(fixture.userID2,"testInviteReject");
+  opSet2Collector.waitForEvent(10000);
+  assertEquals("The invitation sent from user1 to user2 has not been received ",1,opSet2Collector.collectedEvents.size());
+  ChatRoomInvitationReceivedEvent invitationReceivedEvent=(ChatRoomInvitationReceivedEvent)opSet2Collector.collectedEvents.get(0);
+  ChatRoomInvitation invitation=invitationReceivedEvent.getInvitation();
+  assertEquals("The inviter is not the expected user",fixture.userID1,invitation.getInviter());
+  assertEquals("The invitation reason received differs from the one sent","testInviteReject",invitation.getReason());
+  opSetMUC2.rejectInvitation(invitation,invitation.getReason());
+  opSet1Collector.waitForEvent(10000);
+  assertEquals("no response received from the invitation sent to user 2",1,opSet1Collector.collectedEvents.size());
+  ChatRoomInvitationRejectedEvent invitationRejectedEvent=(ChatRoomInvitationRejectedEvent)opSet1Collector.collectedEvents.get(0);
+  assertEquals("the invitation has been declined  by an unexpected user",fixture.userID2,invitationRejectedEvent.getInvitee());
+  assertEquals("the invitation is not declined for the expected reason","testInviteReject",invitationRejectedEvent.getReason());
+}

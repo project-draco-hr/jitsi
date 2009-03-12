@@ -1,0 +1,45 @@
+{
+  if (true)   throw new OperationNotSupportedException("not yet implemented");
+  String testRoomName=testRoomBaseName + roomID++;
+  ChatRoom opSet1Room=opSetMUC1.createChatRoom(testRoomName,null);
+  opSet1Room.join();
+  ChatRoom opSet2Room=opSetMUC2.findRoom(testRoomName);
+  opSet2Room.join();
+  String message1="lorem ipsum first";
+  Message opSet1Message=opSet1Room.createMessage(message1);
+  assertEquals("created message content differ from the one provided ",message1,opSet1Message.getContent());
+  MUCEventCollector opSet1RoomCollector=new MUCEventCollector(opSet1Room,MUCEventCollector.EVENT_MESSAGE);
+  MUCEventCollector opSet2RoomCollector=new MUCEventCollector(opSet2Room,MUCEventCollector.EVENT_MESSAGE);
+  opSet1Room.sendMessage(opSet1Message);
+  opSet1RoomCollector.waitForEvent(10000);
+  opSet2RoomCollector.waitForEvent(10000);
+  assertEquals("user1 didn't received the message",1,opSet1RoomCollector.collectedEvents.size());
+  assertEquals("user1 didn't received the message",1,opSet2RoomCollector.collectedEvents.size());
+  ChatRoomMessageReceivedEvent messageEvent=(ChatRoomMessageReceivedEvent)opSet2RoomCollector.collectedEvents.get(0);
+  assertSame("the message comes from another room instance",opSet2Room,messageEvent.getSourceChatRoom());
+  assertEquals("message type is not CONVERSATION_MESSAGE_RECEIVED",ChatRoomMessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED,messageEvent.getEventType());
+  ChatRoomMember member=messageEvent.getSourceChatRoomMember();
+  assertEquals("message comes from an unexpected user",opSet1Room.getUserNickname(),member.getName());
+  assertEquals("received message differ from sent message",message1,messageEvent.getMessage().getContent());
+  if (opSet1RoomCollector.collectedEvents.size() != 2) {
+    opSet1RoomCollector.waitForEvent(10000);
+  }
+  assertEquals("message sender missed either the message delivery " + "or the reception event",2,opSet1RoomCollector.collectedEvents.size());
+  ChatRoomMessageDeliveredEvent deliveryEvent;
+  ChatRoomMessageReceivedEvent receptionEvent;
+  if (opSet1RoomCollector.collectedEvents.get(0) instanceof ChatRoomMessageDeliveredEvent) {
+    deliveryEvent=(ChatRoomMessageDeliveredEvent)opSet1RoomCollector.collectedEvents.get(0);
+    receptionEvent=(ChatRoomMessageReceivedEvent)opSet1RoomCollector.collectedEvents.get(1);
+  }
+ else {
+    receptionEvent=(ChatRoomMessageReceivedEvent)opSet1RoomCollector.collectedEvents.get(0);
+    deliveryEvent=(ChatRoomMessageDeliveredEvent)opSet1RoomCollector.collectedEvents.get(1);
+  }
+  assertSame("the message comes from another room instance",opSet1Room,receptionEvent.getSourceChatRoom());
+  assertEquals("message type is not CONVERSATION_MESSAGE_RECEIVED",ChatRoomMessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED,messageEvent.getEventType());
+  member=receptionEvent.getSourceChatRoomMember();
+  assertEquals("message comes from an unexpected user",opSet1Room.getUserNickname(),member.getName());
+  assertEquals("received message differ from sent message",message1,receptionEvent.getMessage().getContent());
+  assertSame("delivery event and reception event source rooms differ",deliveryEvent.getSourceChatRoom(),receptionEvent.getSourceChatRoom());
+  assertSame("delivery event and reception event message content",deliveryEvent.getMessage().getContent(),receptionEvent.getMessage().getContent());
+}
