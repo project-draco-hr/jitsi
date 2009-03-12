@@ -3,29 +3,18 @@
   if (call == null)   return null;
   final OperationSetVideoTelephony telephony=(OperationSetVideoTelephony)call.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
   if (telephony == null)   return null;
-  final VideoListener videoListener=new VideoListener(){
-    public void videoAdded(    VideoEvent event){
-      handleVideoEvent(event);
-    }
-    public void videoRemoved(    VideoEvent event){
-      handleVideoEvent(event);
-    }
-  }
-;
+  final VideoTelephonyListener videoTelephonyListener=new VideoTelephonyListener();
   CallChangeListener callListener=new CallChangeListener(){
     private boolean videoListenerIsAdded;
     private void addVideoListener(){
-      telephony.addVideoListener(callParticipant,videoListener);
-      try {
-        telephony.createLocalVisualComponent(callParticipant,videoListener);
-      }
- catch (      OperationFailedException ex) {
-        logger.error("Failed to create local video/visual Component.",ex);
-      }
+      telephony.addVideoListener(callParticipant,videoTelephonyListener);
+      telephony.addPropertyChangeListener(call,videoTelephonyListener);
       videoListenerIsAdded=true;
 synchronized (videoContainers) {
         videoTelephony=telephony;
         handleVideoEvent(null);
+        boolean localVideoStreaming=videoTelephony.isLocalVideoStreaming(call);
+        handleLocalVideoStreamingChange(videoTelephonyListener,!localVideoStreaming,localVideoStreaming);
       }
     }
     public synchronized void callParticipantAdded(    CallParticipantEvent event){
@@ -51,10 +40,14 @@ synchronized (videoContainers) {
       }
     }
     private void removeVideoListener(){
-      telephony.removeVideoListener(callParticipant,videoListener);
-      if (localVideo != null)       telephony.disposeLocalVisualComponent(callParticipant,localVideo);
+      telephony.removeVideoListener(callParticipant,videoTelephonyListener);
+      telephony.removePropertyChangeListener(call,videoTelephonyListener);
       videoListenerIsAdded=false;
-synchronized (videoTelephony) {
+      if (localVideo != null) {
+        telephony.disposeLocalVisualComponent(callParticipant,localVideo);
+        localVideo=null;
+      }
+synchronized (videoContainers) {
         if (telephony.equals(videoTelephony))         videoTelephony=null;
       }
       exitFullScreen(fullScreenWindow);

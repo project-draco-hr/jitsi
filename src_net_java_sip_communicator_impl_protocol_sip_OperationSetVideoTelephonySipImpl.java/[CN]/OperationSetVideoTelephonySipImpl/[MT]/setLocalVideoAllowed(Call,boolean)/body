@@ -1,0 +1,22 @@
+{
+  CallSipImpl sipCall=(CallSipImpl)call;
+  CallSession callSession=sipCall.getMediaCallSession();
+  try {
+    callSession.setLocalVideoAllowed(allowed);
+  }
+ catch (  MediaException ex) {
+    throw new OperationFailedException("Failed to allow/disallow the streaming of local video.",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  Iterator<CallParticipant> participants=call.getCallParticipants();
+  while (participants.hasNext()) {
+    CallParticipantSipImpl participant=(CallParticipantSipImpl)participants.next();
+    String sdpOffer=null;
+    try {
+      sdpOffer=callSession.createSdpOffer(participant.getSdpDescription());
+    }
+ catch (    MediaException ex) {
+      throw new OperationFailedException("Failed to create re-invite offer for participant " + participant,OperationFailedException.INTERNAL_ERROR,ex);
+    }
+    basicTelephony.sendInviteRequest(participant,sdpOffer);
+  }
+}

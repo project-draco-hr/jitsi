@@ -1,25 +1,25 @@
 {
   if (avDataSource != null)   avDataSource.disconnect();
+  CaptureDeviceInfo audioDeviceInfo=deviceConfiguration.getAudioCaptureDevice();
   DataSource audioDataSource=null;
-  DataSource videoDataSource=null;
-  CaptureDeviceInfo audioDeviceInfo=null;
-  CaptureDeviceInfo videoDeviceInfo=null;
-  audioDeviceInfo=deviceConfiguration.getAudioCaptureDevice();
   muteAudioDataSource=null;
   if (audioDeviceInfo != null) {
     audioDataSource=createDataSource(audioDeviceInfo.getLocator());
     if (audioDataSource instanceof PushBufferDataSource)     audioDataSource=muteAudioDataSource=new MutePushBufferDataSource((PushBufferDataSource)audioDataSource);
   }
-  videoDeviceInfo=deviceConfiguration.getVideoCaptureDevice();
-  cloneableVideoDataSource=null;
-  if (videoDeviceInfo != null) {
-    videoDataSource=createDataSource(videoDeviceInfo.getLocator());
-    selectVideoSize(videoDataSource);
-    DataSource cloneableVideoDataSource=Manager.createCloneableDataSource(videoDataSource);
-    if (cloneableVideoDataSource != null) {
-      videoDataSource=cloneableVideoDataSource;
-      this.cloneableVideoDataSource=(SourceCloneable)cloneableVideoDataSource;
+  CaptureDeviceInfo videoDeviceInfo=localVideoAllowed ? deviceConfiguration.getVideoCaptureDevice() : null;
+  DataSource videoDataSource=null;
+  DataSource cloneableVideoDataSource=null;
+  try {
+    if (videoDeviceInfo != null) {
+      videoDataSource=createDataSource(videoDeviceInfo.getLocator());
+      selectVideoSize(videoDataSource);
+      cloneableVideoDataSource=Manager.createCloneableDataSource(videoDataSource);
+      if (cloneableVideoDataSource != null)       videoDataSource=cloneableVideoDataSource;
     }
+  }
+  finally {
+    setVideoDataSource((SourceCloneable)cloneableVideoDataSource);
   }
   if (audioDataSource != null && videoDataSource != null) {
     try {
