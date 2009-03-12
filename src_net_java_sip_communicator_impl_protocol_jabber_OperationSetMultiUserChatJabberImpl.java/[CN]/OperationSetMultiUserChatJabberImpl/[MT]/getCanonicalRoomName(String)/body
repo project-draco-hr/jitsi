@@ -1,6 +1,6 @@
 {
   if (roomName.indexOf('@') > 0)   return roomName;
-  Iterator serviceNamesIter=null;
+  Iterator<String> serviceNamesIter=null;
   try {
     serviceNamesIter=MultiUserChat.getServiceNames(getXmppConnection()).iterator();
   }
@@ -8,8 +8,6 @@
     logger.error("Failed to retrieve conference service name for user: " + jabberProvider.getAccountID().getUserID() + " on server: "+ jabberProvider.getAccountID().getService(),ex);
     throw new OperationFailedException("Failed to retrieve conference service name for user: " + jabberProvider.getAccountID().getUserID() + " on server: "+ jabberProvider.getAccountID().getService(),OperationFailedException.GENERAL_ERROR,ex);
   }
-  while (serviceNamesIter.hasNext()) {
-    return roomName + "@" + (String)serviceNamesIter.next()+ jabberProvider.getAccountID().getService();
-  }
+  if (serviceNamesIter.hasNext())   return roomName + "@" + serviceNamesIter.next();
   throw new OperationFailedException("Failed to retrieve MultiUserChat service names.",OperationFailedException.GENERAL_ERROR);
 }

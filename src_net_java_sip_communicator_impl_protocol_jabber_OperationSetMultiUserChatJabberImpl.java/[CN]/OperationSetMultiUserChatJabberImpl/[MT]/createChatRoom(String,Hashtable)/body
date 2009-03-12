@@ -1,4 +1,17 @@
 {
   assertSupportedAndConnected();
-  return findRoom(getCanonicalRoomName(roomName));
+  ChatRoom room=findRoom(roomName);
+  if (room == null) {
+    MultiUserChat muc=new MultiUserChat(getXmppConnection(),getCanonicalRoomName(roomName));
+    try {
+      muc.create(getXmppConnection().getUser());
+      muc.sendConfigurationForm(new Form(Form.TYPE_SUBMIT));
+    }
+ catch (    XMPPException ex) {
+      logger.error("Failed to create chat room.",ex);
+      throw new OperationFailedException("Failed to create chat room",ex.getXMPPError().getCode(),ex.getCause());
+    }
+    room=createLocalChatRoomInstance(muc);
+  }
+  return room;
 }

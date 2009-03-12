@@ -2,7 +2,12 @@
   ChatRoomJabberImpl chatRoom;
   try {
     chatRoom=(ChatRoomJabberImpl)findRoom(room);
-    fireInvitationEvent(chatRoom,inviter,reason,password.getBytes());
+    if (chatRoom == null) {
+      MultiUserChat muc=new MultiUserChat(conn,room);
+      chatRoom=new ChatRoomJabberImpl(muc,jabberProvider);
+    }
+    if (password != null)     fireInvitationEvent(chatRoom,inviter,reason,password.getBytes());
+ else     fireInvitationEvent(chatRoom,inviter,reason,null);
   }
  catch (  OperationFailedException e) {
     logger.error("Failed to find room with name: " + room,e);

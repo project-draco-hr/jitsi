@@ -1,18 +1,19 @@
 {
   assertSupportedAndConnected();
-  ChatRoom room=(ChatRoom)chatRoomCache.get(roomName);
-  if (room != null) {
-    return room;
-  }
- else {
-    MultiUserChat muc=new MultiUserChat(getXmppConnection(),roomName);
+  String canonicalRoomName=getCanonicalRoomName(roomName);
+  ChatRoom room=chatRoomCache.get(canonicalRoomName);
+  if (room == null) {
     try {
-      muc.create(getXmppConnection().getUser());
+      RoomInfo infos=MultiUserChat.getRoomInfo(getXmppConnection(),canonicalRoomName);
+      if (infos.getRoom().equals(canonicalRoomName)) {
+        MultiUserChat muc=new MultiUserChat(getXmppConnection(),canonicalRoomName);
+        room=new ChatRoomJabberImpl(muc,jabberProvider);
+        chatRoomCache.put(canonicalRoomName,room);
+      }
     }
  catch (    XMPPException ex) {
-      logger.error("Failed to create chat room.",ex);
-      throw new OperationFailedException("Failed to create chat room",ex.getXMPPError().getCode(),ex.getCause());
+      logger.debug("failed to find room " + canonicalRoomName + "\n",ex);
     }
-    return createLocalChatRoomInstance(muc);
   }
+  return room;
 }

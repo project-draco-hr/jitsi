@@ -1,7 +1,7 @@
 {
   assertSupportedAndConnected();
   List list=new LinkedList();
-  Iterator serviceNames=null;
+  Iterator<String> serviceNames=null;
   try {
     serviceNames=MultiUserChat.getServiceNames(getXmppConnection()).iterator();
   }
@@ -9,20 +9,17 @@
     throw new OperationFailedException("Failed to retrieve Jabber conference service names",OperationFailedException.GENERAL_ERROR,ex);
   }
   while (serviceNames.hasNext()) {
-    String serviceName=(String)serviceNames.next();
-    List roomsOnThisService=new LinkedList();
+    String serviceName=serviceNames.next();
+    List<HostedRoom> roomsOnThisService=new LinkedList();
     try {
       roomsOnThisService.addAll(MultiUserChat.getHostedRooms(getXmppConnection(),serviceName));
     }
  catch (    XMPPException ex) {
-      logger.error("Failed to retrieve rooms for serviceName=" + serviceName);
+      logger.error("Failed to retrieve rooms for serviceName=" + serviceName,ex);
       continue;
     }
-    Iterator serviceRoomsIter=roomsOnThisService.iterator();
-    while (serviceRoomsIter.hasNext()) {
-      HostedRoom hostedRoom=(HostedRoom)serviceRoomsIter.next();
-      list.add(hostedRoom.getJid());
-    }
+    Iterator<HostedRoom> serviceRoomsIter=roomsOnThisService.iterator();
+    while (serviceRoomsIter.hasNext())     list.add(serviceRoomsIter.next().getJid());
   }
   return list;
 }

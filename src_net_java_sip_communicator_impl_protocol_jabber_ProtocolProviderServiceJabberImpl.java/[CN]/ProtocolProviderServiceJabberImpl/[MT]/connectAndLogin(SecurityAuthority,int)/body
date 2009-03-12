@@ -45,7 +45,7 @@ synchronized (initializationLock) {
       }
       connection.addConnectionListener(new JabberConnectionListener());
       fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERING,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
-      if (accountResource == null || accountResource == "")       accountResource="sip-comm";
+      if (accountResource == null || accountResource.equals(""))       accountResource="sip-comm";
       connection.login(userID,password,accountResource);
       if (connection.isAuthenticated()) {
         this.reconnecting=false;
@@ -62,11 +62,9 @@ synchronized (initializationLock) {
   }
   if (getRegistrationState() == RegistrationState.REGISTERED) {
     discoveryManager=ServiceDiscoveryManager.getInstanceFor(connection);
-    discoveryManager.setIdentityName("sip-comm");
-    discoveryManager.setIdentityType("registered");
-    Iterator it=supportedFeatures.iterator();
-    while (it.hasNext()) {
-      discoveryManager.addFeature((String)it.next());
-    }
+    ServiceDiscoveryManager.setIdentityName("sip-comm");
+    ServiceDiscoveryManager.setIdentityType("registered");
+    Iterator<String> it=supportedFeatures.iterator();
+    while (it.hasNext())     discoveryManager.addFeature(it.next());
   }
 }
