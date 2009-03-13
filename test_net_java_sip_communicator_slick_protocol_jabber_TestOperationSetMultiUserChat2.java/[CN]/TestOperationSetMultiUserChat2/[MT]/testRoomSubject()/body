@@ -1,15 +1,25 @@
 {
-  if (true)   throw new OperationNotSupportedException("not yet implemented");
   String testRoomName=testRoomBaseName + roomID++;
+  String oldSubject;
+  String newSubjet="bingo";
   ChatRoom opSet1Room=opSetMUC1.createChatRoom(testRoomName,null);
   opSet1Room.join();
-  String subject1="one";
-  String subject2="two";
   ChatRoom opSet2Room=opSetMUC2.findRoom(testRoomName);
-  opSet1Room.setSubject(subject1);
-  assertEquals("failed to change room subject",subject1,opSet1Room.getSubject());
-  assertEquals("subject change not seen on peer side",subject1,opSet2Room.getSubject());
-  opSet1Room.setSubject(subject2);
-  assertEquals("failed to change room subject",subject2,opSet1Room.getSubject());
-  assertEquals("subject change not seem on peer side",subject2,opSet2Room.getSubject());
+  opSet2Room.join();
+  MUCEventCollector opSet2RoomCollector=new MUCEventCollector(opSet2Room,MUCEventCollector.EVENT_PROPERTY);
+  MUCEventCollector opSet1RoomCollector=new MUCEventCollector(opSet2Room,MUCEventCollector.EVENT_PROPERTY);
+  oldSubject=opSet1Room.getSubject();
+  opSet1Room.setSubject(newSubjet);
+  opSet1RoomCollector.waitForEvent(10000);
+  opSet2RoomCollector.waitForEvent(10000);
+  assertEquals("user1 didnt received an event for room subject change",1,opSet1RoomCollector.collectedEvents.size());
+  assertEquals("user2 didnt received an event for room subject change",1,opSet2RoomCollector.collectedEvents.size());
+  assertEquals("the room subject is not up to date ",newSubjet,opSet1Room.getSubject());
+  assertEquals("the room subject is not up to date " + "from peer side",newSubjet,opSet2Room.getSubject());
+  ChatRoomPropertyChangeEvent changeEvent=(ChatRoomPropertyChangeEvent)opSet1RoomCollector.collectedEvents.get(0);
+  assertEquals("the old subject provided by the change event " + "is not the good one",oldSubject,changeEvent.getOldValue());
+  assertEquals("the new subject provided by the change event " + "is not the good one",newSubjet,changeEvent.getNewValue());
+  ChatRoomPropertyChangeEvent peerEvent=(ChatRoomPropertyChangeEvent)opSet2RoomCollector.collectedEvents.get(0);
+  assertEquals("both sides didn't received similar change event ",changeEvent.getOldValue(),peerEvent.getOldValue());
+  assertEquals("both sides didn't received similar change event ",changeEvent.getNewValue(),peerEvent.getNewValue());
 }
