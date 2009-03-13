@@ -7,9 +7,14 @@
   ChatRoom opSet2Room=opSetMUC2.findRoom(testRoomName);
   opSet2Room.join();
   assertTrue("user nickname not found by peer ",nameIsOnMemberList(user1FirstNick,opSet2Room.getMembers()));
+  MUCEventCollector opSet2RoomCollector=new MUCEventCollector(opSet2Room,MUCEventCollector.EVENT_PROPERTY);
   opSet1Room.setUserNickname(user1SecondNick);
   assertEquals("failed to change user nickname",user1SecondNick,opSet1Room.getUserNickname());
   assertTrue("user nickname not found on member list after modification",nameIsOnMemberList(user1SecondNick,opSet1Room.getMembers()));
+  opSet2RoomCollector.waitForEvent(10000);
+  assertEquals("no event received since a member changed his nick",1,opSet2RoomCollector.collectedEvents.size());
+  ChatRoomMemberPropertyChangeEvent changeEvent=(ChatRoomMemberPropertyChangeEvent)opSet2RoomCollector.collectedEvents.get(0);
+  assertEquals("the change event doesnt comes from the expected member",fixture.userID1,changeEvent.getSourceChatRoomMember().getContactAddress());
   assertTrue("user nickname not found on member list after modification, " + "from peer side",nameIsOnMemberList(user1SecondNick,opSet2Room.getMembers()));
   assertFalse("both old and new nick are listed in a room after nick change",nameIsOnMemberList(user1FirstNick,opSet1Room.getMembers()));
   assertFalse("both old and new nick are listed in a room after nick change, " + "from the peer side",nameIsOnMemberList(user1FirstNick,opSet2Room.getMembers()));
