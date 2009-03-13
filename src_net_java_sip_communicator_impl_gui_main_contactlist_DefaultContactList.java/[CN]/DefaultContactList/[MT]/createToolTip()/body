@@ -2,7 +2,7 @@
   Point currentMouseLocation=MouseInfo.getPointerInfo().getLocation();
   SwingUtilities.convertPointFromScreen(currentMouseLocation,this);
   int index=this.locationToIndex(currentMouseLocation);
-  Object element=listModel.getElementAt(index);
+  Object element=getModel().getElementAt(index);
   ExtendedTooltip tip=new ExtendedTooltip();
   if (element instanceof MetaContact) {
     MetaContact metaContact=(MetaContact)element;
@@ -14,13 +14,18 @@
       Contact protocolContact=(Contact)i.next();
       Image protocolStatusIcon=ImageLoader.getBytesInImage(protocolContact.getPresenceStatus().getStatusIcon());
       String contactAddress=protocolContact.getAddress();
-      String statusMessage=protocolContact.getStatusMessage();
       tip.addLine(new ImageIcon(protocolStatusIcon),contactAddress);
     }
   }
  else   if (element instanceof MetaContactGroup) {
     MetaContactGroup metaGroup=(MetaContactGroup)element;
     tip.setTitle(metaGroup.getGroupName());
+  }
+ else   if (element instanceof ChatContact) {
+    ChatContact chatContact=(ChatContact)element;
+    ImageIcon avatarImage=chatContact.getAvatar();
+    if (avatarImage != null)     tip.setImage(avatarImage);
+    tip.setTitle(chatContact.getName());
   }
   tip.setComponent(this);
   return tip;
