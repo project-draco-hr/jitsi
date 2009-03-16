@@ -20,18 +20,8 @@
     logger.warn("Stopping streaming.");
     stopStreaming();
     mediaServCallback.getMediaControl(getCall()).stopProcessingMedia(this);
-    Iterator<Player> playersIter=players.iterator();
-    while (playersIter.hasNext()) {
-      Player player=playersIter.next();
-      player.stop();
-      Component visualComponent=getVisualComponent(player);
-      if (visualComponent != null) {
-        fireVideoEvent(VideoEvent.VIDEO_REMOVED,visualComponent,VideoEvent.REMOTE);
-      }
-      player.deallocate();
-      player.close();
-      playersIter.remove();
-    }
+    Player[] players=this.players.toArray(new Player[this.players.size()]);
+    for (    Player player : players)     disposePlayer(player);
     evt.getSourceCall().removeCallChangeListener(this);
     Component[] localVisualComponents=this.localVisualComponents.keySet().toArray(new Component[this.localVisualComponents.size()]);
     for (    Component localVisualComponent : localVisualComponents)     disposeLocalVisualComponent(localVisualComponent);

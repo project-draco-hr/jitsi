@@ -1,8 +1,15 @@
 {
   if (localVideoAllowed != allowed) {
     localVideoAllowed=allowed;
-    if (sourceProcessor != null)     sourceProcessor.stop();
+    if (sourceProcessor != null) {
+      sourceProcessor.stop();
+      if (sourceProcessor.getState() == Processor.Realized) {
+        DataSource dataOutput=sourceProcessor.getDataOutput();
+        if (dataOutput != null)         dataOutput.disconnect();
+      }
+      sourceProcessor.deallocate();
+      sourceProcessor.close();
+    }
     initCaptureDevices();
-    if (sourceProcessor.getState() != Processor.Started)     sourceProcessor.start();
   }
 }
