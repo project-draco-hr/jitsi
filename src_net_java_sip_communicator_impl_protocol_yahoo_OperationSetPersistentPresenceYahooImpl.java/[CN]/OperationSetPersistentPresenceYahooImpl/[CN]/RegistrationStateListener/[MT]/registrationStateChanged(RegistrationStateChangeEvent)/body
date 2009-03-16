@@ -1,10 +1,17 @@
 {
   logger.debug("The yahoo provider changed state from: " + evt.getOldState() + " to: "+ evt.getNewState());
-  if (evt.getNewState() == RegistrationState.REGISTERED) {
+  if (evt.getNewState() == RegistrationState.REGISTERING) {
+    earlyEventListener=new EarlyEventListener();
+    parentProvider.getYahooSession().addSessionListener(earlyEventListener);
+  }
+ else   if (evt.getNewState() == RegistrationState.REGISTERED) {
     parentProvider.getYahooSession().addSessionListener(new StatusChangedListener());
     ssContactList.setYahooSession(parentProvider.getYahooSession());
     initContactStatuses();
     addSubscriptionListener(statusUpdater);
+    if (earlyEventListener != null) {
+      parentProvider.getYahooSession().removeSessionListener(earlyEventListener);
+    }
   }
  else   if (evt.getNewState() == RegistrationState.UNREGISTERED || evt.getNewState() == RegistrationState.AUTHENTICATION_FAILED || evt.getNewState() == RegistrationState.CONNECTION_FAILED) {
     PresenceStatus oldStatus=currentStatus;
@@ -23,5 +30,7 @@
         fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldContactStatus,YahooStatusEnum.OFFLINE);
       }
     }
+    parentProvider.getYahooSession().removeSessionListener(earlyEventListener);
+    earlyEventListener=null;
   }
 }

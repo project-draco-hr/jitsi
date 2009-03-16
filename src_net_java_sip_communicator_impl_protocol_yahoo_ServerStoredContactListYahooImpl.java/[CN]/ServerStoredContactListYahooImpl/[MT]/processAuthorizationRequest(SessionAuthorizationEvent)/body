@@ -1,0 +1,38 @@
+{
+  if (handler == null)   return;
+  Contact srcContact=findContactById(ev.getFrom());
+  boolean isCurrentlyCreated=false;
+  if (srcContact == null) {
+    srcContact=createVolatileContact(ev.getFrom());
+    isCurrentlyCreated=true;
+  }
+  AuthorizationRequest authRequest=new AuthorizationRequest();
+  authRequest.setReason(ev.getMessage());
+  AuthorizationResponse authResponse=handler.processAuthorisationRequest(authRequest,srcContact);
+  if (authResponse.getResponseCode() == AuthorizationResponse.IGNORE) {
+    return;
+  }
+ else {
+    if (authResponse.getResponseCode() == AuthorizationResponse.REJECT) {
+      removeContact((ContactYahooImpl)srcContact);
+      try {
+        yahooSession.rejectFriendAuthorization(ev,ev.getFrom(),authResponse.getReason());
+      }
+ catch (      IOException ex) {
+        logger.error("cannot send auth deny",ex);
+      }
+    }
+  }
+  try {
+    yahooSession.acceptFriendAuthorization(ev,ev.getFrom());
+  }
+ catch (  IOException ex) {
+    logger.error("cannot send auth deny",ex);
+  }
+  if (isCurrentlyCreated)   try {
+    addContact(ev.getFrom());
+  }
+ catch (  OperationFailedException ex) {
+    logger.error("Cannot add friend",ex);
+  }
+}
