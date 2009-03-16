@@ -4,14 +4,22 @@
   ChatRoom room=chatRoomCache.get(canonicalRoomName);
   if (room == null) {
     try {
-      RoomInfo infos=MultiUserChat.getRoomInfo(getXmppConnection(),canonicalRoomName);
-      if (infos.getRoom().equals(canonicalRoomName)) {
+      Collection<HostedRoom> co=MultiUserChat.getHostedRooms(getXmppConnection(),canonicalRoomName);
+      for (      HostedRoom ho : co) {
+        if (ho.getJid().equals(canonicalRoomName)) {
+          MultiUserChat muc=new MultiUserChat(getXmppConnection(),canonicalRoomName);
+          room=new ChatRoomJabberImpl(muc,jabberProvider);
+          chatRoomCache.put(canonicalRoomName,room);
+          break;
+        }
+      }
+    }
+ catch (    XMPPException ex) {
+      if (!ex.getXMPPError().getCondition().equals(XMPPError.Condition.item_not_found.toString())) {
         MultiUserChat muc=new MultiUserChat(getXmppConnection(),canonicalRoomName);
         room=new ChatRoomJabberImpl(muc,jabberProvider);
         chatRoomCache.put(canonicalRoomName,room);
       }
-    }
- catch (    XMPPException ex) {
       logger.debug("failed to find room " + canonicalRoomName + "\n",ex);
     }
   }
