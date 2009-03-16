@@ -1,8 +1,30 @@
 {
-  if (true)   throw new OperationNotSupportedException("not yet implemented");
   String testRoomName=testRoomBaseName + roomID++;
   ChatRoom opSet1Room=opSetMUC1.createChatRoom(testRoomName,null);
   opSet1Room.join();
+  MUCEventCollector opSet1RoomCollector=new MUCEventCollector(opSet1Room,MUCEventCollector.EVENT_PRESENCE);
   ChatRoom opSet2Room=opSetMUC2.findRoom(testRoomName);
   opSet2Room.join();
+  opSet1RoomCollector.waitForEvent(10000);
+  assertTrue("user2 not on member list after join",nameIsOnMemberList(fixture.userID2,opSet1Room.getMembers()));
+  List<ChatRoomMember> members=opSet1Room.getMembers();
+  ChatRoomMember memberToBan=null;
+  for (  ChatRoomMember member : members)   if (member.getContactAddress().equals(fixture.userID2)) {
+    memberToBan=member;
+    break;
+  }
+  if (memberToBan == null)   throw new IllegalStateException("member to ban not found");
+  opSet1RoomCollector=new MUCEventCollector(opSet1Room,MUCEventCollector.EVENT_ROLE);
+  assertTrue("user2 not in a room he joined ",opSet2Room.isJoined());
+  opSet1Room.banParticipant(memberToBan,"testMemberBan");
+  opSet1RoomCollector.waitForEvent(10000);
+  assertEquals("user1 didnt received an event for user2 ban",1,opSet1RoomCollector.collectedEvents.size());
+  assertFalse("user2 still on member list after ban",nameIsOnMemberList(fixture.userID2,opSet1Room.getMembers()));
+  assertFalse("user2 still in a room after been banned",opSet2Room.isJoined());
+  try {
+    opSet2Room.join();
+  }
+ catch (  Exception ex) {
+  }
+  assertFalse("user2 just joined a room where he is banned",opSet2Room.isJoined());
 }
