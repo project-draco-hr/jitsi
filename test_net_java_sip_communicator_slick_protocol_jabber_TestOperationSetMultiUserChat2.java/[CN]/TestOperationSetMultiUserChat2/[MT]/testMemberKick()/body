@@ -16,14 +16,16 @@
   if (memberToKick == null)   throw new IllegalStateException("member to kick not found");
   opSet1RoomCollector=new MUCEventCollector(opSet1Room,MUCEventCollector.EVENT_PRESENCE);
   assertTrue("user2 not in a room he joined ",opSet2Room.isJoined());
+  MUCEventCollector opSet2RoomCollector=new MUCEventCollector(opSet2Room,MUCEventCollector.EVENT_PRESENCE);
   opSet1Room.kickParticipant(memberToKick,"testMemberKick");
+  opSet2RoomCollector.waitForEvent(2000);
+  assertFalse("user2 still in a room after been kicked",opSet2Room.isJoined());
   opSet1RoomCollector.waitForEvent(10000);
   assertEquals("user1 didnt received an event for user2 kick",1,opSet1RoomCollector.collectedEvents.size());
   ChatRoomMemberPresenceChangeEvent changeEvent=(ChatRoomMemberPresenceChangeEvent)opSet1RoomCollector.collectedEvents.get(0);
   assertEquals("the event received by user1 is not ",ChatRoomMemberPresenceChangeEvent.MEMBER_KICKED,changeEvent.getEventType());
   assertEquals("the kicked member is not the one expected",memberToKick.getContactAddress(),changeEvent.getChatRoomMember().getContactAddress());
-  assertFalse("user2 still on member list after ban",nameIsOnMemberList(fixture.userID2,opSet1Room.getMembers()));
-  assertFalse("user2 still in a room after been kicked",opSet2Room.isJoined());
+  assertFalse("user2 still on member list after kick",nameIsOnMemberList(fixture.userID2,opSet1Room.getMembers()));
   opSet2Room.join();
   assertTrue("user2 can't join after been kicked ",opSet2Room.isJoined());
   opSet1RoomCollector.waitForEvent(10000);

@@ -16,11 +16,13 @@
   if (memberToBan == null)   throw new IllegalStateException("member to ban not found");
   opSet1RoomCollector=new MUCEventCollector(opSet1Room,MUCEventCollector.EVENT_ROLE);
   assertTrue("user2 not in a room he joined ",opSet2Room.isJoined());
+  MUCEventCollector opSet2RoomCollector=new MUCEventCollector(opSet2Room,MUCEventCollector.EVENT_PRESENCE);
   opSet1Room.banParticipant(memberToBan,"testMemberBan");
+  opSet2RoomCollector.waitForEvent(2000);
+  assertFalse("user2 still in a room after been banned",opSet2Room.isJoined());
   opSet1RoomCollector.waitForEvent(10000);
   assertEquals("user1 didnt received an event for user2 ban",1,opSet1RoomCollector.collectedEvents.size());
   assertFalse("user2 still on member list after ban",nameIsOnMemberList(fixture.userID2,opSet1Room.getMembers()));
-  assertFalse("user2 still in a room after been banned",opSet2Room.isJoined());
   try {
     opSet2Room.join();
   }
