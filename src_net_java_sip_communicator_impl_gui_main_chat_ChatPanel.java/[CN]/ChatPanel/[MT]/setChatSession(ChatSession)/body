@@ -1,16 +1,39 @@
 {
   this.chatSession=chatSession;
+  if ((this.chatSession != null) && this.chatSession.isContactListSupported()) {
+    messagePane.remove(conversationPanel);
+    this.chatContactListPanel=new ChatRoomMemberListPanel(this);
+    Dimension chatContactPanelSize=new Dimension(150,100);
+    this.chatContactListPanel.setMinimumSize(chatContactPanelSize);
+    this.chatContactListPanel.setPreferredSize(chatContactPanelSize);
+    this.chatContactListPanel.setOpaque(false);
+    topSplitPane=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+    topSplitPane.setBorder(null);
+    topSplitPane.setOneTouchExpandable(true);
+    topSplitPane.setOpaque(false);
+    topSplitPane.setResizeWeight(1.0D);
+    topSplitPane.setLeftComponent(conversationPanel);
+    topSplitPane.setRightComponent(chatContactListPanel);
+    messagePane.setTopComponent(topSplitPane);
+  }
+ else {
+    if (topSplitPane != null) {
+      if (chatContactListPanel != null) {
+        topSplitPane.remove(chatContactListPanel);
+        chatContactListPanel=null;
+      }
+      this.messagePane.remove(topSplitPane);
+      topSplitPane=null;
+    }
+    this.messagePane.setTopComponent(conversationPanel);
+  }
   if (chatSession instanceof MetaContactChatSession) {
     if (subjectPanel != null) {
       this.remove(subjectPanel);
+      subjectPanel=null;
       this.revalidate();
       this.repaint();
     }
-    if (topSplitPane != null) {
-      if (chatContactListPanel != null)       topSplitPane.remove(chatContactListPanel);
-      this.messagePane.remove(topSplitPane);
-    }
-    this.messagePane.setTopComponent(conversationPanel);
     initChatTransportSelectorBox();
     if (!transportSelectorBox.getMenu().isEnabled()) {
       getChatConversationPanel().appendMessageToEnd("<h5>" + GuiActivator.getResources().getI18NString("service.gui.MSG_NOT_POSSIBLE") + "</h5>");
@@ -22,23 +45,11 @@
   }
  else   if (chatSession instanceof ConferenceChatSession) {
     removeChatTransportSelectorBox();
-    messagePane.remove(conversationPanel);
-    this.chatContactListPanel=new ChatRoomMemberListPanel(this);
-    this.chatContactListPanel.setPreferredSize(new Dimension(150,100));
-    this.chatContactListPanel.setMinimumSize(new Dimension(150,100));
-    this.chatContactListPanel.setOpaque(false);
-    this.topSplitPane=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-    this.topSplitPane.setBorder(null);
-    this.topSplitPane.setResizeWeight(1.0D);
-    this.topSplitPane.setOneTouchExpandable(true);
-    topSplitPane.setLeftComponent(conversationPanel);
-    this.messagePane.setTopComponent(topSplitPane);
-    topSplitPane.setRightComponent(chatContactListPanel);
-    topSplitPane.setOpaque(false);
+  }
+  if (chatContactListPanel != null) {
     Iterator<ChatContact> chatParticipants=chatSession.getParticipants();
     while (chatParticipants.hasNext()) {
-      ChatContact chatContact=chatParticipants.next();
-      chatContactListPanel.addContact(chatContact);
+      chatContactListPanel.addContact(chatParticipants.next());
     }
   }
   if (!chatSession.getCurrentChatTransport().allowsSmsMessage())   sendSmsCheckBox.setEnabled(false);

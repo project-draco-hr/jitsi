@@ -3,10 +3,9 @@
   if (!sourceChatRoom.equals(chatRoomWrapper.getChatRoom()))   return;
   String eventType=evt.getEventType();
   ChatRoomMember chatRoomMember=evt.getChatRoomMember();
-  ConferenceChatContact chatContact=null;
   String statusMessage=null;
   if (eventType.equals(ChatRoomMemberPresenceChangeEvent.MEMBER_JOINED)) {
-    chatContact=new ConferenceChatContact(chatRoomMember);
+    ConferenceChatContact chatContact=new ConferenceChatContact(chatRoomMember);
     chatParticipants.add(chatContact);
     sessionRenderer.addChatContact(chatContact);
     statusMessage=GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_USER_JOINED",new String[]{sourceChatRoom.getName()});
@@ -22,9 +21,7 @@
  else     if (eventType.equals(ChatRoomMemberPresenceChangeEvent.MEMBER_QUIT)) {
       statusMessage=GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_USER_QUIT",new String[]{sourceChatRoom.getName()});
     }
-    Iterator<ConferenceChatContact> chatContactsIter=chatParticipants.iterator();
-    while (chatContactsIter.hasNext()) {
-      chatContact=chatContactsIter.next();
+    for (    ChatContact chatContact : chatParticipants) {
       if (chatContact.getDescriptor().equals(chatRoomMember)) {
         sessionRenderer.updateChatContactStatus(chatContact,statusMessage);
         sessionRenderer.removeChatContact(chatContact);
