@@ -1,17 +1,14 @@
 {
   int index=-1;
   if (showOffline || containsOnlineContacts(group)) {
-    int currentIndex=0;
     MetaContactGroup parentGroup=this.contactList.findParentMetaContactGroup(group);
     if (parentGroup != null && !this.isGroupClosed(parentGroup)) {
-      currentIndex+=this.indexOf(parentGroup);
-      currentIndex+=countChildContacts(parentGroup);
-      currentIndex+=parentGroup.indexOf(group) + 1;
-      for (int i=0; i < parentGroup.indexOf(group); i++) {
-        MetaContactGroup subGroup=parentGroup.getMetaContactSubgroup(i);
-        currentIndex+=countContactsAndSubgroups(subGroup);
+      int indexOfGroupInParentGroup=parentGroup.indexOf(group);
+      index=this.indexOf(parentGroup) + countChildContacts(parentGroup) + (indexOfGroupInParentGroup + 1);
+      for (int i=0; i < indexOfGroupInParentGroup; i++) {
+        MetaContactGroup siblingGroup=parentGroup.getMetaContactSubgroup(i);
+        index+=countContactsAndSubgroups(siblingGroup);
       }
-      index=currentIndex;
     }
   }
   return index;

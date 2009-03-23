@@ -1,16 +1,14 @@
 {
   try {
-    Map copyContentToRefresh=null;
     while (refreshEnabled) {
+      Map<Object,String> copyContentToRefresh;
 synchronized (contentToRefresh) {
         if (contentToRefresh.isEmpty())         contentToRefresh.wait();
-        copyContentToRefresh=new Hashtable(contentToRefresh);
+        copyContentToRefresh=new Hashtable<Object,String>(contentToRefresh);
         contentToRefresh.clear();
       }
-      Iterator i=copyContentToRefresh.entrySet().iterator();
-      while (i.hasNext()) {
-        Map.Entry groupEntry=(Map.Entry)i.next();
-        String operation=(String)groupEntry.getValue();
+      for (      Map.Entry<Object,String> groupEntry : copyContentToRefresh.entrySet()) {
+        String operation=groupEntry.getValue();
         Object o=groupEntry.getKey();
         if (o instanceof MetaContactGroup) {
           MetaContactGroup group=(MetaContactGroup)o;

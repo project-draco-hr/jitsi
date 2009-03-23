@@ -1,45 +1,10 @@
 {
   ContactListEvent evt=new ContactListEvent(source,eventID,clickCount);
-  if (excContactListListeners.size() > 0) {
 synchronized (excContactListListeners) {
-      Iterator listeners=new Vector(this.excContactListListeners).iterator();
-      while (listeners.hasNext()) {
-        ContactListListener listener=(ContactListListener)listeners.next();
-switch (evt.getEventID()) {
-case ContactListEvent.CONTACT_SELECTED:
-          listener.contactClicked(evt);
-        break;
-case ContactListEvent.PROTOCOL_CONTACT_SELECTED:
-      listener.protocolContactClicked(evt);
-    break;
-case ContactListEvent.GROUP_SELECTED:
-  listener.groupSelected(evt);
-break;
-default :
-logger.error("Unknown event type " + evt.getEventID());
-}
-}
-}
-}
- else {
-synchronized (contactListListeners) {
-Iterator listeners=this.contactListListeners.iterator();
-while (listeners.hasNext()) {
-ContactListListener listener=(ContactListListener)listeners.next();
-switch (evt.getEventID()) {
-case ContactListEvent.CONTACT_SELECTED:
-listener.contactClicked(evt);
-break;
-case ContactListEvent.PROTOCOL_CONTACT_SELECTED:
-listener.protocolContactClicked(evt);
-break;
-case ContactListEvent.GROUP_SELECTED:
-listener.groupSelected(evt);
-break;
-default :
-logger.error("Unknown event type " + evt.getEventID());
-}
-}
-}
-}
+    if (excContactListListeners.size() > 0) {
+      fireContactListEvent(new Vector<ContactListListener>(excContactListListeners),evt);
+      return;
+    }
+  }
+  fireContactListEvent(contactListListeners,evt);
 }
