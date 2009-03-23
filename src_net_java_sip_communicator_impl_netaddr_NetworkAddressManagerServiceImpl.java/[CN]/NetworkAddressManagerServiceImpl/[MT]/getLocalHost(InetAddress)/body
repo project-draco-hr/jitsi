@@ -27,7 +27,27 @@
           }
         }
       }
- else       localHost=InetAddress.getLocalHost();
+ else {
+        localHost=InetAddress.getLocalHost();
+        if (!(localHost instanceof Inet4Address)) {
+          Enumeration<NetworkInterface> interfaces=NetworkInterface.getNetworkInterfaces();
+          while (interfaces.hasMoreElements()) {
+            NetworkInterface iface=interfaces.nextElement();
+            Enumeration<InetAddress> addresses=iface.getInetAddresses();
+            while (addresses.hasMoreElements()) {
+              InetAddress address=addresses.nextElement();
+              if (address instanceof Inet4Address) {
+                if (!address.isLoopbackAddress()) {
+                  if (logger.isTraceEnabled()) {
+                    logger.trace("will return ipv6 addr " + address);
+                  }
+                  return address;
+                }
+              }
+            }
+          }
+        }
+      }
     }
  catch (    Exception ex) {
       logger.warn("Failed to get localhost ",ex);
