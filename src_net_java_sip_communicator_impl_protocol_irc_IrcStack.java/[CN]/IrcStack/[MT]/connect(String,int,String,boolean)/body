@@ -1,13 +1,13 @@
 {
   this.setVerbose(false);
   this.setAutoNickChange(autoNickChange);
+  boolean onConnectInvoked;
   try {
 synchronized (this) {
-      onConnectInvoked=false;
-      if (serverPassword == null) {
-        this.connect(serverAddress,serverPort);
-      }
+      this.onConnectInvoked=false;
+      if (serverPassword == null)       this.connect(serverAddress,serverPort);
  else       this.connect(serverAddress,serverPort,serverPassword);
+      onConnectInvoked=this.onConnectInvoked;
     }
   }
  catch (  IOException e) {
@@ -20,8 +20,6 @@ catch (  IrcException e) {
     throw new OperationFailedException(e.getMessage(),OperationFailedException.GENERAL_ERROR);
   }
   if (onConnectInvoked) {
-    RegistrationState oldState=parentProvider.getCurrentRegistrationState();
     parentProvider.setCurrentRegistrationState(RegistrationState.REGISTERED);
-    parentProvider.fireRegistrationStateChanged(oldState,RegistrationState.REGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,null);
   }
 }
