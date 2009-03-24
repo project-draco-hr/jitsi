@@ -35,20 +35,19 @@
       }
     }
     byte onHold=this.onHold;
-    if (!mediaServCallback.getDeviceConfiguration().isAudioCaptureSupported()) {
-      onHold|=ON_HOLD_REMOTELY;
-    }
-    setAttributeOnHold(am,onHold);
-    TransformConnector transConnector=this.transConnectors.get(audioRtpManager);
-    if (transConnector != null) {
-      TransformEngine engine=transConnector.getEngine();
-      if (engine instanceof ZRTPTransformEngine) {
-        ZRTPTransformEngine ze=(ZRTPTransformEngine)engine;
-        String helloHash=ze.getHelloHash();
-        if (helloHash != null && helloHash.length() > 0)         am.setAttribute("zrtp-hash",ze.getHelloHash());
+    if (mediaServCallback.getDeviceConfiguration().isAudioCaptureSupported()) {
+      setAttributeOnHold(am,onHold);
+      TransformConnector transConnector=this.transConnectors.get(audioRtpManager);
+      if (transConnector != null) {
+        TransformEngine engine=transConnector.getEngine();
+        if (engine instanceof ZRTPTransformEngine) {
+          ZRTPTransformEngine ze=(ZRTPTransformEngine)engine;
+          String helloHash=ze.getHelloHash();
+          if (helloHash != null && helloHash.length() > 0)           am.setAttribute("zrtp-hash",ze.getHelloHash());
+        }
       }
+      mediaDescs.add(am);
     }
-    mediaDescs.add(am);
   }
   if (supportedVideoEncodings.length > 0) {
     MediaDescription vm=mediaServCallback.getSdpFactory().createMediaDescription("video",publicVideoAddress.getPort(),1,"RTP/AVP",supportedVideoEncodings);
