@@ -1,0 +1,22 @@
+{
+  ArrayList<AccountID> registeredAccounts=protoFactory.getRegisteredAccounts();
+  if (registeredAccounts.size() == 0) {
+    return null;
+  }
+  if (registeredAccounts.size() == 1) {
+    ServiceReference providerReference=protoFactory.getProviderForAccount(registeredAccounts.get(0));
+    ProtocolProviderService provider=(ProtocolProviderService)JabberActivator.bundleContext.getService(providerReference);
+    return provider;
+  }
+  ArrayList<ProviderComboBoxEntry> providers=new ArrayList<ProviderComboBoxEntry>();
+  for (  AccountID accountID : registeredAccounts) {
+    ServiceReference providerReference=protoFactory.getProviderForAccount(accountID);
+    ProtocolProviderService provider=(ProtocolProviderService)JabberActivator.bundleContext.getService(providerReference);
+    providers.add(new ProviderComboBoxEntry(provider));
+  }
+  Object result=JabberActivator.getUIService().getPopupDialog().showInputPopupDialog("Please select the account that you would like \n" + "to use to chat with " + uri,"Account Selection",PopupDialog.OK_CANCEL_OPTION,providers.toArray(),providers.get(0));
+  if (result == null) {
+    throw new OperationFailedException("Operation cancelled",OperationFailedException.OPERATION_CANCELED);
+  }
+  return ((ProviderComboBoxEntry)result).provider;
+}

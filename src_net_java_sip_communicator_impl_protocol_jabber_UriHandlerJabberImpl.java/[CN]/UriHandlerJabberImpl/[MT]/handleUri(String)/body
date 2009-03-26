@@ -1,0 +1,69 @@
+{
+synchronized (storedAccountsAreLoaded) {
+    if (!storedAccountsAreLoaded[0]) {
+      if (uris == null) {
+        uris=new LinkedList<String>();
+      }
+      uris.add(uri);
+      return;
+    }
+  }
+  ProtocolProviderService provider;
+  try {
+    provider=selectHandlingProvider(uri);
+  }
+ catch (  OperationFailedException exc) {
+    logger.trace("User canceled handling of uri " + uri);
+    return;
+  }
+  if (provider == null) {
+    showErrorMessage("You need to configure at least one XMPP account \n" + "to be able to call " + uri,null);
+    return;
+  }
+  if (!uri.contains("?")) {
+    OperationSetPersistentPresence presenceOpSet=(OperationSetPersistentPresence)provider.getOperationSet(OperationSetPersistentPresence.class);
+    String contactId=uri.replaceFirst(getProtocol() + ":","");
+    Pattern p=Pattern.compile(".+@.+\\.[a-z]+");
+    if (!p.matcher(contactId).matches()) {
+      showErrorMessage("Wrong contact id : " + uri,null);
+      return;
+    }
+    Contact contact=presenceOpSet.findContactByID(contactId);
+    if (contact == null) {
+      Object result=JabberActivator.getUIService().getPopupDialog().showConfirmPopupDialog("Do you want to add the contact : " + contactId + " ?","Add contact",PopupDialog.YES_NO_OPTION);
+      if (result.equals(PopupDialog.YES_OPTION)) {
+        ExportedWindow ex=JabberActivator.getUIService().getExportedWindow(ExportedWindow.ADD_CONTACT_WINDOW,new String[]{contactId});
+        ex.setVisible(true);
+      }
+      return;
+    }
+    JabberActivator.getUIService().getChat(contact).setChatVisible(true);
+  }
+ else {
+    String croom=uri.replaceFirst(getProtocol() + ":","");
+    int ix=croom.indexOf("?");
+    String param=croom.substring(ix + 1,croom.length());
+    croom=croom.substring(0,ix);
+    if (param.equalsIgnoreCase("join")) {
+      OperationSetMultiUserChat mchatOpSet=(OperationSetMultiUserChat)provider.getOperationSet(OperationSetMultiUserChat.class);
+      try {
+        ChatRoom room=mchatOpSet.findRoom(croom);
+        if (room != null) {
+          room.join();
+        }
+      }
+ catch (      OperationFailedException exc) {
+        if (exc.getErrorCode() == OperationFailedException.NETWORK_FAILURE && !networkFailReceived) {
+          networkFailReceived=true;
+          OperationSetPresence presenceOpSet=(OperationSetPresence)provider.getOperationSet(OperationSetPresence.class);
+          presenceOpSet.addProviderPresenceStatusListener(new ProviderStatusListener(uri,presenceOpSet));
+        }
+ else         showErrorMessage("Error joining to  " + croom,exc);
+      }
+catch (      OperationNotSupportedException exc) {
+        showErrorMessage("Join to " + croom + ", not supported!",exc);
+      }
+    }
+ else     showErrorMessage("Unknown param : " + param,null);
+  }
+}

@@ -46,7 +46,24 @@ synchronized (initializationLock) {
       connection.addConnectionListener(new JabberConnectionListener());
       fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERING,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
       if (accountResource == null || accountResource.equals(""))       accountResource="sip-comm";
-      connection.login(userID,password,accountResource);
+      SASLAuthentication.supportSASLMechanism("PLAIN",0);
+      try {
+        connection.login(userID,password,accountResource);
+      }
+ catch (      XMPPException e1) {
+        try {
+          try {
+            connection.disconnect();
+          }
+ catch (          Exception e) {
+          }
+          connection.connect();
+          connection.login(userID + "@" + serviceName,password,accountResource);
+        }
+ catch (        XMPPException e2) {
+          throw e1;
+        }
+      }
       if (connection.isAuthenticated()) {
         this.reconnecting=false;
         connection.getRoster().setSubscriptionMode(Roster.SubscriptionMode.manual);

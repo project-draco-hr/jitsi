@@ -4,32 +4,13 @@
   ChatRoom room=chatRoomCache.get(canonicalRoomName);
   if (room != null)   return room;
   try {
-    RoomInfo infos=MultiUserChat.getRoomInfo(getXmppConnection(),canonicalRoomName);
-    if (infos.getRoom().equals(canonicalRoomName)) {
-      MultiUserChat muc=new MultiUserChat(getXmppConnection(),canonicalRoomName);
-      room=new ChatRoomJabberImpl(muc,jabberProvider);
-      chatRoomCache.put(canonicalRoomName,room);
-      return room;
-    }
+    ServiceDiscoveryManager.getInstanceFor(getXmppConnection()).discoverInfo(canonicalRoomName);
+    MultiUserChat muc=new MultiUserChat(getXmppConnection(),canonicalRoomName);
+    room=new ChatRoomJabberImpl(muc,jabberProvider);
+    chatRoomCache.put(canonicalRoomName,room);
+    return room;
   }
- catch (  XMPPException xe) {
+ catch (  XMPPException e) {
     return null;
   }
-catch (  NullPointerException ne) {
-  }
-  try {
-    Collection<HostedRoom> co=MultiUserChat.getHostedRooms(getXmppConnection(),canonicalRoomName);
-  }
- catch (  XMPPException xe) {
-    if (xe.getXMPPError().getCondition().equals(XMPPError.Condition.item_not_found.toString())) {
-      return null;
-    }
- else {
-      MultiUserChat muc=new MultiUserChat(getXmppConnection(),canonicalRoomName);
-      room=new ChatRoomJabberImpl(muc,jabberProvider);
-      chatRoomCache.put(canonicalRoomName,room);
-      return room;
-    }
-  }
-  return null;
 }
