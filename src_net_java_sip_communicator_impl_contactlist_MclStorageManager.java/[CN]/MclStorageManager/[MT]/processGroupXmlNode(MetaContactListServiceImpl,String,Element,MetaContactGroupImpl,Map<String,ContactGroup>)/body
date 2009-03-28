@@ -2,12 +2,12 @@
   MetaContactGroupImpl currentMetaGroup;
   Map<String,ContactGroup> protoGroupsMap=new Hashtable<String,ContactGroup>();
   if (parentGroup == null) {
-    currentMetaGroup=mclServiceImpl.rootMetaGroup;
+    currentMetaGroup=mclServImpl.rootMetaGroup;
   }
  else {
     String groupMetaUID=XMLUtils.getAttribute(groupNode,GROUP_UID_ATTR_NAME);
     String groupDisplayName=XMLUtils.getAttribute(groupNode,GROUP_NAME_ATTR_NAME);
-    currentMetaGroup=mclServiceImpl.loadStoredMetaContactGroup(parentGroup,groupMetaUID,groupDisplayName);
+    currentMetaGroup=mclServImpl.loadStoredMetaContactGroup(parentGroup,groupMetaUID,groupDisplayName);
     Node protoGroupsNode=XMLUtils.findChild(groupNode,PROTO_GROUPS_NODE_NAME);
     NodeList protoGroups=protoGroupsNode.getChildNodes();
     for (int i=0; i < protoGroups.getLength(); i++) {
@@ -24,7 +24,7 @@
       }
       ContactGroup parentProtoGroup=null;
       if (parentProtoGroups != null && parentProtoGroups.size() > 0)       parentProtoGroup=parentProtoGroups.get(parentProtoGroupUID);
-      ContactGroup newProtoGroup=mclServiceImpl.loadStoredContactGroup(currentMetaGroup,protoGroupUID,parentProtoGroup,persistentData,accountID);
+      ContactGroup newProtoGroup=mclServImpl.loadStoredContactGroup(currentMetaGroup,protoGroupUID,parentProtoGroup,persistentData,accountID);
       protoGroupsMap.put(protoGroupUID,newProtoGroup);
     }
     if (protoGroupsMap.size() == 0)     return;
@@ -58,11 +58,11 @@
  catch (      Exception ex) {
         logger.error("Cannot load details for contact node " + currentMetaContactNode,ex);
       }
-      mclServiceImpl.loadStoredMetaContact(currentMetaGroup,uid,displayName,details,protoContacts,accountID);
+      mclServImpl.loadStoredMetaContact(currentMetaGroup,uid,displayName,details,protoContacts,accountID);
     }
  catch (    Throwable thr) {
       logger.warn("Failed to parse meta contact " + currentMetaContactNode + ". Will remove and continue with other contacts",thr);
-      if (currentMetaContactNode != null && currentMetaContactNode.getParentNode() != null) {
+      if (currentMetaContactNode.getParentNode() != null) {
         try {
           currentMetaContactNode.getParentNode().removeChild(currentMetaContactNode);
         }
@@ -79,11 +79,11 @@
     Node currentGroupNode=subgroups.item(i);
     if (currentGroupNode.getNodeType() != Node.ELEMENT_NODE || !currentGroupNode.getNodeName().equals(GROUP_NODE_NAME))     continue;
     try {
-      processGroupXmlNode(mclServiceImpl,accountID,(Element)currentGroupNode,currentMetaGroup,protoGroupsMap);
+      processGroupXmlNode(mclServImpl,accountID,(Element)currentGroupNode,currentMetaGroup,protoGroupsMap);
     }
  catch (    Throwable throwable) {
       logger.error("Failed to process group node " + currentGroupNode + ". Removing.",throwable);
-      if (currentGroupNode != null && currentGroupNode.getParentNode() != null) {
+      if (currentGroupNode.getParentNode() != null) {
         try {
           currentGroupNode.getParentNode().removeChild(currentGroupNode);
         }
