@@ -3,14 +3,12 @@ synchronized (ioLock) {
     if (plannedAnswer == in) {
       plannedAnswer=null;
     }
-    HashSet questions=new HashSet();
-    HashSet answers=new HashSet();
+    HashSet<DNSQuestion> questions=new HashSet<DNSQuestion>();
+    HashSet<DNSRecord> answers=new HashSet<DNSRecord>();
     if (state == DNSState.ANNOUNCED) {
       try {
-        long now=System.currentTimeMillis();
-        long expirationTime=now + 1;
         boolean isUnicast=(port != DNSConstants.MDNS_PORT);
-        for (Iterator iterator=in.questions.iterator(); iterator.hasNext(); ) {
+        for (Iterator<DNSEntry> iterator=in.questions.iterator(); iterator.hasNext(); ) {
           DNSEntry entry=(DNSEntry)iterator.next();
           if (entry instanceof DNSQuestion) {
             DNSQuestion q=(DNSQuestion)entry;
@@ -74,7 +72,7 @@ case DNSConstants.TYPE_PTR:
               }
             }
             if (q.name.equalsIgnoreCase("_services._mdns._udp.local.")) {
-              for (Iterator serviceTypeIterator=serviceTypes.values().iterator(); serviceTypeIterator.hasNext(); ) {
+              for (Iterator<String> serviceTypeIterator=serviceTypes.values().iterator(); serviceTypeIterator.hasNext(); ) {
                 answers.add(new DNSRecord.Pointer("_services._mdns._udp.local.",DNSConstants.TYPE_PTR,DNSConstants.CLASS_IN,DNSConstants.DNS_TTL,(String)serviceTypeIterator.next()));
               }
             }
@@ -119,11 +117,11 @@ DNSOutgoing out=null;
 if (isUnicast) {
   out=new DNSOutgoing(DNSConstants.FLAGS_QR_RESPONSE | DNSConstants.FLAGS_AA,false);
 }
-for (Iterator i=questions.iterator(); i.hasNext(); ) {
+for (Iterator<DNSQuestion> i=questions.iterator(); i.hasNext(); ) {
   out.addQuestion((DNSQuestion)i.next());
 }
-for (Iterator i=answers.iterator(); i.hasNext(); ) {
-  out=addAnswer(in,addr,port,out,(DNSRecord)i.next());
+for (Iterator<DNSRecord> i=answers.iterator(); i.hasNext(); ) {
+  out=addAnswer(in,addr,port,out,i.next());
 }
 send(out);
 }

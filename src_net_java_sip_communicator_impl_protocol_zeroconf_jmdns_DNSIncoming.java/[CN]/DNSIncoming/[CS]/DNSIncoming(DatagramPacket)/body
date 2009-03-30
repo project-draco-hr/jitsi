@@ -6,8 +6,8 @@
   this.data=packet.getData();
   this.len=packet.getLength();
   this.off=packet.getOffset();
-  this.questions=Collections.EMPTY_LIST;
-  this.answers=Collections.EMPTY_LIST;
+  this.questions=new LinkedList<DNSEntry>();
+  this.answers=new LinkedList<DNSRecord>();
   this.receivedTime=System.currentTimeMillis();
   try {
     id=readUnsignedShort();
@@ -17,7 +17,7 @@
     numAuthorities=readUnsignedShort();
     numAdditionals=readUnsignedShort();
     if (numQuestions > 0) {
-      questions=Collections.synchronizedList(new ArrayList(numQuestions));
+      questions=Collections.synchronizedList(new ArrayList<DNSEntry>(numQuestions));
       for (int i=0; i < numQuestions; i++) {
         DNSQuestion question=new DNSQuestion(readName(),readUnsignedShort(),readUnsignedShort());
         questions.add(question);
@@ -25,7 +25,7 @@
     }
     int n=numAnswers + numAuthorities + numAdditionals;
     if (n > 0) {
-      answers=Collections.synchronizedList(new ArrayList(n));
+      answers=Collections.synchronizedList(new ArrayList<DNSRecord>(n));
       for (int i=0; i < n; i++) {
         String domain=readName();
         int type=readUnsignedShort();
