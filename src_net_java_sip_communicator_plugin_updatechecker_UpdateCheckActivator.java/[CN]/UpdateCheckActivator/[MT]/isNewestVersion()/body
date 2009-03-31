@@ -1,5 +1,8 @@
 {
   try {
+    ServiceReference serviceReference=bundleContext.getServiceReference(net.java.sip.communicator.service.version.VersionService.class.getName());
+    VersionService verService=(VersionService)bundleContext.getService(serviceReference);
+    net.java.sip.communicator.service.version.Version ver=verService.getCurrentVersion();
     String configString=Resources.getConfigString("update_link");
     if (configString == null) {
       logger.debug("Updates are disabled. Faking latest version.");
@@ -10,7 +13,8 @@
     props.load(url.openStream());
     lastVersion=props.getProperty("last_version");
     downloadLink=props.getProperty("download_link");
-    return lastVersion.compareTo(currentVersionStr) <= 0;
+    changesLink=configString.substring(0,configString.lastIndexOf("/") + 1) + props.getProperty("changes_html");
+    return lastVersion.compareTo(ver.toString()) <= 0;
   }
  catch (  Exception e) {
     logger.warn("Cannot get and compare versions!");

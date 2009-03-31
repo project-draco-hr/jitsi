@@ -1,22 +1,4 @@
 {
-  try {
-    logger.logEntry();
-    UpdateCheckActivator.bundleContext=bundleContext;
-  }
-  finally {
-    logger.logExit();
-  }
-  String osName=System.getProperty("os.name");
-  if (osName.startsWith("Windows")) {
-    Hashtable<String,String> toolsMenuFilter=new Hashtable<String,String>();
-    toolsMenuFilter.put(Container.CONTAINER_ID,Container.CONTAINER_TOOLS_MENU.getID());
-    bundleContext.registerService(PluginComponent.class.getName(),new UpdateMenuButtonComponent(Container.CONTAINER_TOOLS_MENU),toolsMenuFilter);
-  }
-  if (isNewestVersion())   return;
-  if (osName.startsWith("Windows")) {
-    windowsUpdaterShow();
-    return;
-  }
   final JDialog dialog=new SIPCommDialog(){
     protected void close(    boolean isEscaped){
     }
@@ -30,9 +12,24 @@
   String dialogMsg=getResources().getI18NString("plugin.updatechecker.DIALOG_MESSAGE",new String[]{getResources().getSettingsString("service.gui.APPLICATION_NAME")});
   if (lastVersion != null)   dialogMsg+=getResources().getI18NString("plugin.updatechecker.DIALOG_MESSAGE_2",new String[]{getResources().getSettingsString("service.gui.APPLICATION_NAME"),lastVersion});
   contentMessage.setText(dialogMsg);
-  JPanel contentPane=new TransparentPanel(new BorderLayout(5,5));
-  contentPane.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
-  contentPane.add(contentMessage,BorderLayout.CENTER);
+  JPanel contentPane=new SIPCommFrame.MainContentPane();
+  contentMessage.setBorder(BorderFactory.createEmptyBorder(10,0,20,0));
+  contentPane.setBorder(BorderFactory.createEmptyBorder(0,10,0,10));
+  contentPane.add(contentMessage,BorderLayout.NORTH);
+  JScrollPane scrollChanges=new JScrollPane();
+  scrollChanges.setPreferredSize(new Dimension(400,200));
+  JEditorPane changesHtml=new JEditorPane();
+  changesHtml.setContentType("text/html");
+  changesHtml.setEditable(false);
+  changesHtml.setBorder(BorderFactory.createLoweredBevelBorder());
+  scrollChanges.setViewportView(changesHtml);
+  contentPane.add(scrollChanges,BorderLayout.CENTER);
+  try {
+    changesHtml.setPage(new URL(changesLink));
+  }
+ catch (  Exception e) {
+    logger.error("Cannot set changes Page",e);
+  }
   JPanel buttonPanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER,10,10));
   JButton closeButton=new JButton(getResources().getI18NString("plugin.updatechecker.BUTTON_CLOSE"));
   closeButton.addActionListener(new ActionListener(){
@@ -42,15 +39,15 @@
   }
 );
   if (downloadLink != null) {
-    JButton downloadButton=new JButton(getResources().getI18NString("plugin.updatechecker.BUTTON_DOWNLOAD"));
-    downloadButton.addActionListener(new ActionListener(){
+    JButton installButton=new JButton(getResources().getI18NString("plugin.updatechecker.BUTTON_INSTALL"));
+    installButton.addActionListener(new ActionListener(){
       public void actionPerformed(      ActionEvent e){
-        getBrowserLauncher().openURL(downloadLink);
         dialog.dispose();
+        windowsUpdate();
       }
     }
 );
-    buttonPanel.add(downloadButton);
+    buttonPanel.add(installButton);
   }
   buttonPanel.add(closeButton);
   contentPane.add(buttonPanel,BorderLayout.SOUTH);
