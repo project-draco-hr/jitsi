@@ -4,7 +4,27 @@
     final File temp=File.createTempFile("sc-install",".exe");
     tempF=temp;
     URL u=new URL(downloadLink);
-    URLConnection uc=u.openConnection();
+    HttpURLConnection uc=(HttpURLConnection)u.openConnection();
+    if (uc.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+      new Thread(new Runnable(){
+        public void run(){
+          ExportedWindow authWindow=getUIService().getExportedWindow(ExportedWindow.AUTHENTICATION_WINDOW);
+          UserCredentials cred=new UserCredentials();
+          authWindow.setParams(new Object[]{cred});
+          authWindow.setVisible(true);
+          userCredentials=cred;
+          if (cred.getUserName() == null) {
+            userCredentials=null;
+          }
+ else           windowsUpdate();
+        }
+      }
+).start();
+    }
+ else     if (uc.getResponseCode() == HttpURLConnection.HTTP_OK && userCredentials != null && userCredentials.getUserName() != null && userCredentials.isPasswordPersistent()) {
+      getConfigurationService().setProperty(UPDATE_USERNAME_CONFIG,userCredentials.getUserName());
+      getConfigurationService().setProperty(UPDATE_PASSWORD_CONFIG,new String(Base64.encode(userCredentials.getPasswordAsString().getBytes())));
+    }
     InputStream in=uc.getInputStream();
     final ProgressMonitorInputStream pin=new ProgressMonitorInputStream(null,u.toString(),in);
     ProgressMonitor pm=pin.getProgressMonitor();
@@ -21,7 +41,7 @@
           pin.close();
           out.flush();
           out.close();
-          if (getUIService().getPopupDialog().showConfirmPopupDialog(getResources().getI18NString("plugin.updatechecker.DIALOG_WARN"),getResources().getI18NString("plugin.updatechecker.DIALOG_TITLE"),PopupDialog.YES_NO_OPTION,PopupDialog.QUESTION_MESSAGE) == PopupDialog.CANCEL_OPTION) {
+          if (getUIService().getPopupDialog().showConfirmPopupDialog(getResources().getI18NString("plugin.updatechecker.DIALOG_WARN"),getResources().getI18NString("plugin.updatechecker.DIALOG_TITLE"),PopupDialog.YES_NO_OPTION,PopupDialog.QUESTION_MESSAGE) != PopupDialog.YES_OPTION) {
             return;
           }
           String workingDir=System.getProperty("user.dir");
@@ -41,7 +61,11 @@
     }
 ).start();
   }
- catch (  Exception e) {
+ catch (  FileNotFoundException e) {
+    getUIService().getPopupDialog().showMessagePopupDialog(getResources().getI18NString("plugin.updatechecker.DIALOG_MISSING_UPDATE"),getResources().getI18NString("plugin.updatechecker.DIALOG_NOUPDATE_TITLE"),PopupDialog.INFORMATION_MESSAGE);
+    tempF.delete();
+  }
+catch (  Exception e) {
     logger.info("Error starting update process!",e);
     tempF.delete();
   }

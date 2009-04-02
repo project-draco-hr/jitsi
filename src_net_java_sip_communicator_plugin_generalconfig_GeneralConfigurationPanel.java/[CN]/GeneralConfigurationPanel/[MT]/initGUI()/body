@@ -167,5 +167,44 @@
         }
       }
     }
+{
+      JPanel localeConfigPanel=new JPanel();
+      localeConfigPanel.setOpaque(false);
+      localeConfigPanel.setLayout(new BorderLayout(10,10));
+      localeConfigPanel.setAlignmentX(0.0f);
+      localeConfigPanel.setPreferredSize(new Dimension(380,22));
+      mainPanel.add(localeConfigPanel);
+      mainPanel.add(Box.createVerticalStrut(10));
+{
+        localeConfigPanel.add(new JLabel(Resources.getString("plugin.generalconfig.DEFAULT_LANGUAGE")),BorderLayout.WEST);
+      }
+{
+        localesConfigComboBox=new JComboBox();
+        localesConfigComboBox.setRenderer(new LocalesRenderer());
+        Iterator<Locale> iter=Resources.getResources().getAvailableLocales();
+        while (iter.hasNext()) {
+          Locale locale=iter.next();
+          localesConfigComboBox.addItem(locale);
+        }
+        localesConfigComboBox.setSelectedItem(ConfigurationManager.getCurrentLanguage());
+        Locale curr=ConfigurationManager.getCurrentLanguage();
+        iter=Resources.getResources().getAvailableLocales();
+        while (iter.hasNext()) {
+          Locale locale=iter.next();
+          if (locale.getLanguage().equals(curr.getLanguage())) {
+            localesConfigComboBox.setSelectedItem(locale);
+            break;
+          }
+        }
+        localesConfigComboBox.addActionListener(new ActionListener(){
+          public void actionPerformed(          ActionEvent e){
+            GeneralConfigPluginActivator.getUIService().getPopupDialog().showMessagePopupDialog(Resources.getString("plugin.generalconfig.DEFAULT_LANGUAGE_RESTART_WARN"));
+            ConfigurationManager.setLanguage((Locale)localesConfigComboBox.getSelectedItem());
+          }
+        }
+);
+        localeConfigPanel.add(localesConfigComboBox,BorderLayout.CENTER);
+      }
+    }
   }
 }
