@@ -180,26 +180,24 @@
       }
 {
         localesConfigComboBox=new JComboBox();
-        localesConfigComboBox.setRenderer(new LocalesRenderer());
         Iterator<Locale> iter=Resources.getResources().getAvailableLocales();
         while (iter.hasNext()) {
           Locale locale=iter.next();
-          localesConfigComboBox.addItem(locale);
+          localesConfigComboBox.addItem(locale.getDisplayLanguage());
         }
-        localesConfigComboBox.setSelectedItem(ConfigurationManager.getCurrentLanguage());
-        Locale curr=ConfigurationManager.getCurrentLanguage();
-        iter=Resources.getResources().getAvailableLocales();
-        while (iter.hasNext()) {
-          Locale locale=iter.next();
-          if (locale.getLanguage().equals(curr.getLanguage())) {
-            localesConfigComboBox.setSelectedItem(locale);
-            break;
-          }
-        }
+        localesConfigComboBox.setSelectedItem(ConfigurationManager.getCurrentLanguage().getDisplayLanguage());
         localesConfigComboBox.addActionListener(new ActionListener(){
           public void actionPerformed(          ActionEvent e){
             GeneralConfigPluginActivator.getUIService().getPopupDialog().showMessagePopupDialog(Resources.getString("plugin.generalconfig.DEFAULT_LANGUAGE_RESTART_WARN"));
-            ConfigurationManager.setLanguage((Locale)localesConfigComboBox.getSelectedItem());
+            String language=(String)localesConfigComboBox.getSelectedItem();
+            Iterator<Locale> iter=Resources.getResources().getAvailableLocales();
+            while (iter.hasNext()) {
+              Locale locale=iter.next();
+              if (locale.getDisplayLanguage().equals(language)) {
+                ConfigurationManager.setLanguage(locale);
+                break;
+              }
+            }
           }
         }
 );
