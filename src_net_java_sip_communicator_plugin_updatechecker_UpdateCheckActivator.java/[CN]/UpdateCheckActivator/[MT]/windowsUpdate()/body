@@ -4,26 +4,29 @@
     final File temp=File.createTempFile("sc-install",".exe");
     tempF=temp;
     URL u=new URL(downloadLink);
-    HttpURLConnection uc=(HttpURLConnection)u.openConnection();
-    if (uc.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
-      new Thread(new Runnable(){
-        public void run(){
-          ExportedWindow authWindow=getUIService().getExportedWindow(ExportedWindow.AUTHENTICATION_WINDOW);
-          UserCredentials cred=new UserCredentials();
-          authWindow.setParams(new Object[]{cred});
-          authWindow.setVisible(true);
-          userCredentials=cred;
-          if (cred.getUserName() == null) {
-            userCredentials=null;
+    URLConnection uc=u.openConnection();
+    if (uc instanceof HttpURLConnection) {
+      int responseCode=((HttpURLConnection)uc).getResponseCode();
+      if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+        new Thread(new Runnable(){
+          public void run(){
+            ExportedWindow authWindow=getUIService().getExportedWindow(ExportedWindow.AUTHENTICATION_WINDOW);
+            UserCredentials cred=new UserCredentials();
+            authWindow.setParams(new Object[]{cred});
+            authWindow.setVisible(true);
+            userCredentials=cred;
+            if (cred.getUserName() == null) {
+              userCredentials=null;
+            }
+ else             windowsUpdate();
           }
- else           windowsUpdate();
         }
-      }
 ).start();
-    }
- else     if (uc.getResponseCode() == HttpURLConnection.HTTP_OK && userCredentials != null && userCredentials.getUserName() != null && userCredentials.isPasswordPersistent()) {
-      getConfigurationService().setProperty(UPDATE_USERNAME_CONFIG,userCredentials.getUserName());
-      getConfigurationService().setProperty(UPDATE_PASSWORD_CONFIG,new String(Base64.encode(userCredentials.getPasswordAsString().getBytes())));
+      }
+ else       if (responseCode == HttpURLConnection.HTTP_OK && userCredentials != null && userCredentials.getUserName() != null && userCredentials.isPasswordPersistent()) {
+        getConfigurationService().setProperty(UPDATE_USERNAME_CONFIG,userCredentials.getUserName());
+        getConfigurationService().setProperty(UPDATE_PASSWORD_CONFIG,new String(Base64.encode(userCredentials.getPasswordAsString().getBytes())));
+      }
     }
     InputStream in=uc.getInputStream();
     final ProgressMonitorInputStream pin=new ProgressMonitorInputStream(null,u.toString(),in);
@@ -45,7 +48,9 @@
             return;
           }
           String workingDir=System.getProperty("user.dir");
-          new ProcessBuilder(new String[]{workingDir + File.separator + "updater.exe",temp.getCanonicalPath()}).start();
+          ProcessBuilder processBuilder=new ProcessBuilder(new String[]{workingDir + File.separator + "updater.exe",temp.getCanonicalPath()});
+          processBuilder.environment().put("SIP_COMMUNICATOR_AUTOUPDATE_INSTALLDIR",workingDir);
+          processBuilder.start();
           getUIService().beginShutdown();
         }
  catch (        Exception e) {
