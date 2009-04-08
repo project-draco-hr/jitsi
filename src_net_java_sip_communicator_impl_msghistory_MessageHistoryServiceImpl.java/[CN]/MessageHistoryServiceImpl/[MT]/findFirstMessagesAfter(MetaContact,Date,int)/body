@@ -6,7 +6,7 @@
     try {
       History history=this.getHistory(null,item);
       HistoryReader reader=history.getReader();
-      Iterator recs=reader.findFirstRecordsAfter(date,count);
+      Iterator recs=reader.findFirstRecordsAfter(date,count + 4);
       while (recs.hasNext()) {
         result.add(convertHistoryRecordToMessageEvent((HistoryRecord)recs.next(),item));
       }
@@ -15,8 +15,21 @@
       logger.error("Could not read history",e);
     }
   }
+  int startIx=0;
+  Iterator i=result.iterator();
+  boolean isRecordOK=false;
+  while (i.hasNext() && !isRecordOK) {
+    Object object=i.next();
+    if (object instanceof MessageDeliveredEvent) {
+      isRecordOK=(((MessageDeliveredEvent)object).getTimestamp() > date.getTime());
+    }
+ else     if (object instanceof MessageReceivedEvent) {
+      isRecordOK=(((MessageReceivedEvent)object).getTimestamp() > date.getTime());
+    }
+    if (!isRecordOK)     startIx++;
+  }
   LinkedList resultAsList=new LinkedList(result);
-  int toIndex=count;
+  int toIndex=startIx + count;
   if (toIndex > resultAsList.size())   toIndex=resultAsList.size();
-  return resultAsList.subList(0,toIndex);
+  return resultAsList.subList(startIx,toIndex);
 }
