@@ -1,8 +1,13 @@
 {
   logger.debug("let's subscribe " + contactIdentifier);
   ContactSipImpl contact=(ContactSipImpl)resolveContactID(contactIdentifier);
-  if (contact != null) {
+  if (contact != null && contact.isPersistent()) {
     throw new OperationFailedException("Contact " + contactIdentifier + " already exists.",OperationFailedException.SUBSCRIPTION_ALREADY_EXISTS);
+  }
+ else   if (!contact.isPersistent()) {
+    ContactGroupSipImpl oldParentGroup=(ContactGroupSipImpl)contact.getParentContactGroup();
+    oldParentGroup.removeContact(contact);
+    fireSubscriptionEvent(contact,oldParentGroup,SubscriptionEvent.SUBSCRIPTION_REMOVED);
   }
   Address contactAddress;
   try {
