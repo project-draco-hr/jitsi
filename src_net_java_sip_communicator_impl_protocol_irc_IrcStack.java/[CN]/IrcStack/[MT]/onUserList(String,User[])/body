@@ -2,23 +2,15 @@
   if (logger.isDebugEnabled())   logger.debug("NAMES on " + channel);
   ChatRoomIrcImpl chatRoom=ircMUCOpSet.getChatRoom(channel);
   chatRoom.clearChatRoomMemberList();
-  for (int i=0; i < users.length; i++) {
-    User user=users[i];
+  for (  User user : users) {
+    String userPrefix=user.getPrefix();
     ChatRoomMemberRole newMemberRole;
-    if (user.getPrefix().equalsIgnoreCase("@")) {
-      newMemberRole=ChatRoomMemberRole.ADMINISTRATOR;
-    }
- else     if (user.getPrefix().equalsIgnoreCase("%")) {
-      newMemberRole=ChatRoomMemberRole.MODERATOR;
-    }
- else     if (user.getPrefix().equalsIgnoreCase("+")) {
-      newMemberRole=ChatRoomMemberRole.MEMBER;
-    }
- else {
-      newMemberRole=ChatRoomMemberRole.GUEST;
-    }
+    if ("@".equalsIgnoreCase(userPrefix))     newMemberRole=ChatRoomMemberRole.ADMINISTRATOR;
+ else     if ("%".equalsIgnoreCase(userPrefix))     newMemberRole=ChatRoomMemberRole.MODERATOR;
+ else     if ("+".equalsIgnoreCase(userPrefix))     newMemberRole=ChatRoomMemberRole.MEMBER;
+ else     newMemberRole=ChatRoomMemberRole.GUEST;
     ChatRoomMemberIrcImpl newMember=new ChatRoomMemberIrcImpl(parentProvider,chatRoom,user.getNick(),null,null,newMemberRole);
     chatRoom.addChatRoomMember(user.getNick(),newMember);
-    chatRoom.fireMemberPresenceEvent(newMember,null,ChatRoomMemberPresenceChangeEvent.MEMBER_JOINED,null);
+    chatRoom.fireMemberPresenceEvent(newMember,null,ChatRoomMemberPresenceChangeEvent.MEMBER_JOINED,ChatRoomMemberPresenceChangeEvent.REASON_USER_LIST);
   }
 }
