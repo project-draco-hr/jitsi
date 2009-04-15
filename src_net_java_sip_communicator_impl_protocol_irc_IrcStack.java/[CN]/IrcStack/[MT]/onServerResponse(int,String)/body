@@ -71,7 +71,7 @@
     int end=response.indexOf(':');
     String serverInfo=response.substring(end + 1);
     if (userInfoTable.containsKey(userNickName)) {
-      ((UserInfo)userInfoTable.get(userNickName)).setServerInfo(serverInfo);
+      userInfoTable.get(userNickName).setServerInfo(serverInfo);
     }
   }
  else   if (code == RPL_WHOISOPERATOR) {
@@ -79,7 +79,7 @@
     tokenizer.nextToken();
     String userNickName=tokenizer.nextToken();
     if (userInfoTable.containsKey(userNickName)) {
-      ((UserInfo)userInfoTable.get(userNickName)).setIrcOp(true);
+      userInfoTable.get(userNickName).setIrcOp(true);
     }
   }
  else   if (code == RPL_WHOISIDLE) {
@@ -88,7 +88,7 @@
     String userNickName=tokenizer.nextToken();
     long idle=Long.parseLong(tokenizer.nextToken());
     if (userInfoTable.containsKey(userNickName)) {
-      ((UserInfo)userInfoTable.get(userNickName)).setIdle(idle);
+      userInfoTable.get(userNickName).setIdle(idle);
     }
   }
  else   if (code == RPL_WHOISCHANNELS) {
@@ -96,11 +96,11 @@
     tokenizer.nextToken();
     String userNickName=tokenizer.nextToken();
     if (userInfoTable.containsKey(userNickName)) {
-      ((UserInfo)userInfoTable.get(userNickName)).clearJoinedChatRoom();
+      userInfoTable.get(userNickName).clearJoinedChatRoom();
       while (tokenizer.hasMoreTokens()) {
         String channel=tokenizer.nextToken();
         if (channel.startsWith(":"))         channel=channel.substring(1);
-        ((UserInfo)userInfoTable.get(userNickName)).addJoinedChatRoom(channel);
+        userInfoTable.get(userNickName).addJoinedChatRoom(channel);
       }
     }
   }
@@ -109,16 +109,16 @@
     tokenizer.nextToken();
     String userNickName=tokenizer.nextToken();
     if (userInfoTable.containsKey(userNickName)) {
-      UserInfo userInfo=(UserInfo)userInfoTable.get(userNickName);
+      UserInfo userInfo=userInfoTable.get(userNickName);
       this.onWhoIs(userInfo);
     }
   }
  else   if (code == RPL_ENDOFMOTD) {
     this.isInitialized=true;
-    ArrayList joinCacheCopy=new ArrayList(joinCache);
+    ChatRoom[] joinCacheCopy=joinCache.toArray(new ChatRoom[joinCache.size()]);
     joinCache.clear();
-    for (int i=0; i < joinCacheCopy.size(); i++) {
-      this.join((ChatRoom)joinCacheCopy.get(i));
+    for (    ChatRoom joinCacheElement : joinCacheCopy) {
+      this.join(joinCacheElement);
     }
   }
  else   if (code != RPL_LISTSTART && code != RPL_LIST && code != RPL_LISTEND && code != RPL_ENDOFNAMES) {
