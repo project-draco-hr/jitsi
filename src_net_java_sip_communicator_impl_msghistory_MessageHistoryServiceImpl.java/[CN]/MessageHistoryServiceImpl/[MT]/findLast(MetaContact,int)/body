@@ -1,21 +1,21 @@
 {
-  TreeSet result=new TreeSet(new MessageEventComparator());
-  Iterator iter=contact.getContacts();
+  TreeSet<EventObject> result=new TreeSet<EventObject>(new MessageEventComparator<EventObject>());
+  Iterator<Contact> iter=contact.getContacts();
   while (iter.hasNext()) {
-    Contact item=(Contact)iter.next();
+    Contact item=iter.next();
     try {
       History history=this.getHistory(null,item);
       HistoryReader reader=history.getReader();
-      Iterator recs=reader.findLast(count);
+      Iterator<HistoryRecord> recs=reader.findLast(count);
       while (recs.hasNext()) {
-        result.add(convertHistoryRecordToMessageEvent((HistoryRecord)recs.next(),item));
+        result.add(convertHistoryRecordToMessageEvent(recs.next(),item));
       }
     }
  catch (    IOException e) {
       logger.error("Could not read history",e);
     }
   }
-  LinkedList resultAsList=new LinkedList(result);
+  LinkedList<EventObject> resultAsList=new LinkedList<EventObject>(result);
   int startIndex=resultAsList.size() - count;
   if (startIndex < 0)   startIndex=0;
   return resultAsList.subList(startIndex,resultAsList.size());
