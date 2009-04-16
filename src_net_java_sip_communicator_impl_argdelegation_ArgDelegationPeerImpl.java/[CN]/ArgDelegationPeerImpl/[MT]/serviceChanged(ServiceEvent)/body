@@ -1,17 +1,19 @@
 {
+  BundleContext bc=event.getServiceReference().getBundle().getBundleContext();
+  if (bc == null)   return;
+  Object service=bc.getService(event.getServiceReference());
+  if (!(service instanceof UriHandler))   return;
+  UriHandler uriHandler=(UriHandler)service;
 synchronized (uriHandlers) {
-    BundleContext bc=event.getServiceReference().getBundle().getBundleContext();
-    Object service=bc.getService(event.getServiceReference());
-    if (!(service instanceof UriHandler)) {
-      return;
-    }
-    if (event.getType() == ServiceEvent.MODIFIED || event.getType() == ServiceEvent.REGISTERED) {
-      UriHandler uriHandler=(UriHandler)bc.getService(event.getServiceReference());
+switch (event.getType()) {
+case ServiceEvent.MODIFIED:
+case ServiceEvent.REGISTERED:
       uriHandlers.put(uriHandler.getProtocol(),uriHandler);
-    }
- else     if (event.getType() == ServiceEvent.UNREGISTERING) {
-      UriHandler uriHandler=(UriHandler)bc.getService(event.getServiceReference());
-      if (uriHandlers.get(uriHandler.getProtocol()) == uriHandler)       uriHandlers.remove(uriHandler.getProtocol());
-    }
-  }
+    break;
+case ServiceEvent.UNREGISTERING:
+  String protocol=uriHandler.getProtocol();
+if (uriHandlers.get(protocol) == uriHandler) uriHandlers.remove(protocol);
+break;
+}
+}
 }

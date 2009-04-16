@@ -6,7 +6,10 @@
     return;
   }
   String scheme=uriArg.substring(0,colonIndex);
-  UriHandler handler=uriHandlers.get(scheme);
+  UriHandler handler;
+synchronized (uriHandlers) {
+    handler=uriHandlers.get(scheme);
+  }
   if (handler == null) {
     logger.trace("Couldn't open " + uriArg + "No handler found for protocol"+ scheme);
     ArgDelegationActivator.getUIService().getPopupDialog().showMessagePopupDialog("\"" + scheme + "\" URIs are currently not supported.","Error handling URI",PopupDialog.ERROR_MESSAGE);
@@ -16,6 +19,7 @@
     handler.handleUri(uriArg);
   }
  catch (  Throwable thr) {
+    if (thr instanceof ThreadDeath)     throw (ThreadDeath)thr;
     ArgDelegationActivator.getUIService().getPopupDialog().showMessagePopupDialog("Error handling " + uriArg,"Error handling URI",PopupDialog.ERROR_MESSAGE);
     logger.error("Failed to handle \"" + uriArg + "\"",thr);
   }
