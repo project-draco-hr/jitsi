@@ -42,7 +42,7 @@
         lag=ilag;
       }
     }
-    enh_period[ilbc_constants.ENH_NBLOCKS_EXTRA + ioffset - 1]=(float)lag;
+    enh_period[ilbc_constants.ENH_NBLOCKS_EXTRA + ioffset - 1]=lag;
     inPtr=lag - 1;
     enh_bufPtr1=plc_blockl - 1;
     if (lag > plc_blockl) {
@@ -68,21 +68,21 @@
       ftmp2+=enh_buf[ilbc_constants.ENH_BUFL - 1 - this.ULP_inst.blockl- i] * enh_buf[ilbc_constants.ENH_BUFL - 1 - this.ULP_inst.blockl- i];
       ftmp1+=plc_pred[i] * plc_pred[i];
     }
-    ftmp1=(float)(float)Math.sqrt(ftmp1 / (float)plc_blockl);
-    ftmp2=(float)(float)Math.sqrt(ftmp2 / (float)plc_blockl);
-    if (ftmp1 > (float)2.0f * ftmp2 && ftmp1 > 0.0) {
+    ftmp1=(float)Math.sqrt(ftmp1 / plc_blockl);
+    ftmp2=(float)Math.sqrt(ftmp2 / plc_blockl);
+    if (ftmp1 > 2.0f * ftmp2 && ftmp1 > 0.0) {
       for (i=0; i < plc_blockl - 10; i++) {
-        plc_pred[i]*=(float)2.0f * ftmp2 / ftmp1;
+        plc_pred[i]*=2.0f * ftmp2 / ftmp1;
       }
       for (i=plc_blockl - 10; i < plc_blockl; i++) {
-        plc_pred[i]*=(float)(i - plc_blockl + 10) * ((float)1.0f - (float)2.0 * ftmp2 / ftmp1) / (float)(10) + (float)2.0f * ftmp2 / ftmp1;
+        plc_pred[i]*=(i - plc_blockl + 10) * (1.0f - (float)2.0 * ftmp2 / ftmp1) / (10) + 2.0f * ftmp2 / ftmp1;
       }
     }
     enh_bufPtr1=ilbc_constants.ENH_BUFL - 1 - this.ULP_inst.blockl;
     for (i=0; i < plc_blockl; i++) {
       ftmp1=(float)(i + 1) / (float)(plc_blockl + 1);
       enh_buf[enh_bufPtr1]*=ftmp1;
-      enh_buf[enh_bufPtr1]+=((float)1.0f - ftmp1) * plc_pred[plc_blockl - 1 - i];
+      enh_buf[enh_bufPtr1]+=(1.0f - ftmp1) * plc_pred[plc_blockl - 1 - i];
       enh_bufPtr1--;
     }
   }

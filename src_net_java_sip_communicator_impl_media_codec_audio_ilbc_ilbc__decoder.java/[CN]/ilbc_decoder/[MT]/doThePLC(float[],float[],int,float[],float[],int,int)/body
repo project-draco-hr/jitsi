@@ -42,12 +42,12 @@
       max_per=this.per;
     }
     use_gain=1.0f;
-    if (this.consPLICount * this.ULP_inst.blockl > 320)     use_gain=(float)0.9;
- else     if (this.consPLICount * this.ULP_inst.blockl > 2 * 320)     use_gain=(float)0.7;
- else     if (this.consPLICount * this.ULP_inst.blockl > 3 * 320)     use_gain=(float)0.5;
- else     if (this.consPLICount * this.ULP_inst.blockl > 4 * 320)     use_gain=(float)0.0f;
-    ftmp=(float)(float)Math.sqrt(max_per);
-    if (ftmp > (float)0.7)     pitchfact=(float)1.0f;
+    if (this.consPLICount * this.ULP_inst.blockl > 320)     use_gain=0.9f;
+ else     if (this.consPLICount * this.ULP_inst.blockl > 2 * 320)     use_gain=0.7f;
+ else     if (this.consPLICount * this.ULP_inst.blockl > 3 * 320)     use_gain=0.5f;
+ else     if (this.consPLICount * this.ULP_inst.blockl > 4 * 320)     use_gain=0.0f;
+    ftmp=(float)Math.sqrt(max_per);
+    if (ftmp > 0.7f)     pitchfact=1.0f;
  else     if (ftmp > (float)0.4)     pitchfact=(ftmp - (float)0.4) / ((float)0.7 - (float)0.4);
  else     pitchfact=0.0f;
     use_lag=lag;
@@ -72,12 +72,12 @@
  else {
         PLCresidual[i]=PLCresidual[pick];
       }
-      if (i < 80)       PLCresidual[i]=use_gain * (pitchfact * PLCresidual[i] + ((float)1.0f - pitchfact) * randvec[i]);
- else       if (i < 160)       PLCresidual[i]=(float)0.95 * use_gain * (pitchfact * PLCresidual[i] + ((float)1.0f - pitchfact) * randvec[i]);
- else       PLCresidual[i]=(float)0.9 * use_gain * (pitchfact * PLCresidual[i] + ((float)1.0f - pitchfact) * randvec[i]);
+      if (i < 80)       PLCresidual[i]=use_gain * (pitchfact * PLCresidual[i] + (1.0f - pitchfact) * randvec[i]);
+ else       if (i < 160)       PLCresidual[i]=(float)0.95 * use_gain * (pitchfact * PLCresidual[i] + (1.0f - pitchfact) * randvec[i]);
+ else       PLCresidual[i]=(float)0.9 * use_gain * (pitchfact * PLCresidual[i] + (1.0f - pitchfact) * randvec[i]);
       energy+=PLCresidual[i] * PLCresidual[i];
     }
-    if ((float)Math.sqrt(energy / (float)this.ULP_inst.blockl) < 30.0f) {
+    if ((float)Math.sqrt(energy / this.ULP_inst.blockl) < 30.0f) {
       gain=0.0f;
       for (i=0; i < this.ULP_inst.blockl; i++) {
         PLCresidual[i]=randvec[i];
