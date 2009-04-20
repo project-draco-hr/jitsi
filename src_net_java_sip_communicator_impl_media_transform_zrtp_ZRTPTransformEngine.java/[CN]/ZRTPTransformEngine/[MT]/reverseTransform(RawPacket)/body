@@ -9,7 +9,7 @@
       return pkt;
     }
     pkt=srtpInTransformer.reverseTransform(pkt);
-    if (pkt != null && zrtpEngine != null && !zrtpEngine.inState(ZrtpStateClass.ZrtpStates.SecureState)) {
+    if (pkt != null && started && zrtpEngine.inState(ZrtpStateClass.ZrtpStates.WaitConfAck)) {
       zrtpEngine.conf2AckSecure();
     }
     return pkt;
@@ -22,6 +22,9 @@
     }
     if (!zPkt.hasMagic() || zrtpEngine == null) {
       return null;
+    }
+    if (!started && (multiStream || (sendPacketCount >= 1))) {
+      startZrtp();
     }
     byte[] extHeader=zPkt.getMessagePart();
     zrtpEngine.processZrtpMessage(extHeader,zPkt.getSSRC());
