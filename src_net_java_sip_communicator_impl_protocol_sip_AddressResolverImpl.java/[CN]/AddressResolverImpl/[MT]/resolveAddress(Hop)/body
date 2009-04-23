@@ -1,29 +1,30 @@
 {
   try {
-    InetSocketAddress host=null;
     String transport=inputAddress.getTransport();
     if (transport == null)     transport=ListeningPoint.UDP;
+    InetSocketAddress host;
     if (transport.equalsIgnoreCase(ListeningPoint.TLS)) {
       host=NetworkUtils.getSRVRecord("sips",ListeningPoint.TCP,inputAddress.getHost());
     }
  else {
       host=NetworkUtils.getSRVRecord("sip",transport,inputAddress.getHost());
     }
-    if (logger.isTraceEnabled())     logger.trace("Returning hop as follows" + " host= " + host.getHostName() + " port= "+ host.getPort()+ " transport= "+ transport);
-    return new HopImpl(host.getHostName(),host.getPort(),transport);
-  }
- catch (  Exception ex) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Domain " + inputAddress + " could not be resolved "+ ex.getMessage());
-      logger.trace("Printing SRV resolution stack trace",ex);
+    if (host != null) {
+      if (logger.isTraceEnabled())       logger.trace("Returning hop as follows" + " host= " + host.getHostName() + " port= "+ host.getPort()+ " transport= "+ transport);
+      return new HopImpl(host.getHostName(),host.getPort(),transport);
     }
   }
-  Hop returnHop=null;
+ catch (  Exception ex) {
+    if (logger.isDebugEnabled())     logger.debug("Domain " + inputAddress + " could not be resolved "+ ex.getMessage());
+    if (logger.isTraceEnabled())     logger.trace("Printing SRV resolution stack trace",ex);
+  }
+  Hop returnHop;
   if (inputAddress.getPort() != -1) {
     returnHop=inputAddress;
   }
  else {
-    returnHop=new HopImpl(inputAddress.getHost(),MessageProcessor.getDefaultPort(inputAddress.getTransport()),inputAddress.getTransport());
+    String transport=inputAddress.getTransport();
+    returnHop=new HopImpl(inputAddress.getHost(),MessageProcessor.getDefaultPort(transport),transport);
   }
   if (logger.isDebugEnabled())   logger.debug("Returning hop: " + returnHop);
   return returnHop;
