@@ -1,13 +1,13 @@
 {
   ContactGroupIcqImpl theAwaitingAuthorizationGroup=findContactGroup(awaitingAuthorizationGroupName);
   if (theAwaitingAuthorizationGroup == null) {
-    List emptyBuddies=new LinkedList();
+    List<Buddy> emptyBuddies=new LinkedList<Buddy>();
     theAwaitingAuthorizationGroup=new ContactGroupIcqImpl(new VolatileGroup(awaitingAuthorizationGroupName),emptyBuddies,this,false);
     this.rootGroup.addSubGroup(theAwaitingAuthorizationGroup);
     fireGroupEvent(theAwaitingAuthorizationGroup,ServerStoredGroupEvent.GROUP_CREATED_EVENT);
   }
   ContactGroupIcqImpl oldParentGroup=null;
-  ContactIcqImpl newContact=findContactByScreenName(buddy.getScreenname().getFormatted());
+  ContactIcqImpl newContact=findContactByJoustSimBuddy(buddy);
   if (newContact != null)   oldParentGroup=(ContactGroupIcqImpl)newContact.getParentContactGroup();
   boolean fireResolvedEvent=false;
   if (newContact == null) {
@@ -26,7 +26,7 @@
   int index=theAwaitingAuthorizationGroup.findContactIndex(newContact);
   buddy.addBuddyListener(jsimBuddyListener);
   if (oldParentGroup == null) {
-    fireContactAdded(theAwaitingAuthorizationGroup,newContact,index);
+    fireContactAdded(theAwaitingAuthorizationGroup,newContact);
   }
  else   if (oldParentGroup != theAwaitingAuthorizationGroup) {
     fireContactMoved(oldParentGroup,theAwaitingAuthorizationGroup,newContact,index);
