@@ -1,24 +1,20 @@
 {
-  NetworkAddressManagerService netAddressManager=MediaActivator.getNetworkAddressManagerService();
-  InetAddress inAddrLocal=netAddressManager.getLocalHost(intendedDestination);
-  String bindRetriesStr=MediaActivator.getConfigurationService().getString(MediaService.BIND_RETRIES_PROPERTY_NAME);
-  int bindRetries=MediaService.BIND_RETRIES_DEFAULT_VALUE;
-  try {
-    if (bindRetriesStr != null && bindRetriesStr.length() > 0)     bindRetries=Integer.parseInt(bindRetriesStr);
+  InetAddress inAddrLocal=MediaActivator.getNetworkAddressManagerService().getLocalHost(intendedDestination);
+  int bindRetries=MediaActivator.getConfigurationService().getInt(MediaService.BIND_RETRIES_PROPERTY_NAME,MediaService.BIND_RETRIES_DEFAULT_VALUE);
+  if (audioSessionAddress == null) {
+    audioSessionAddress=new SessionAddress(inAddrLocal,minPortNumber);
+    audioPublicAddress=allocatePort(intendedDestination,audioSessionAddress,bindRetries);
+    minPortNumber=audioSessionAddress.getDataPort() + 2;
   }
- catch (  NumberFormatException ex) {
-    logger.warn(bindRetriesStr + " is not a valid value for number of bind retries.",ex);
-  }
-  audioSessionAddress=new SessionAddress(inAddrLocal,minPortNumber);
-  audioPublicAddress=allocatePort(intendedDestination,audioSessionAddress,bindRetries);
   if (logger.isDebugEnabled()) {
     logger.debug("AudioSessionAddress=" + audioSessionAddress);
     logger.debug("AudioPublicAddress=" + audioPublicAddress);
   }
-  minPortNumber=audioSessionAddress.getDataPort() + 2;
-  videoSessionAddress=new SessionAddress(inAddrLocal,minPortNumber);
-  videoPublicAddress=allocatePort(intendedDestination,videoSessionAddress,bindRetries);
-  minPortNumber=videoSessionAddress.getDataPort() + 2;
+  if (videoSessionAddress == null) {
+    videoSessionAddress=new SessionAddress(inAddrLocal,minPortNumber);
+    videoPublicAddress=allocatePort(intendedDestination,videoSessionAddress,bindRetries);
+    minPortNumber=videoSessionAddress.getDataPort() + 2;
+  }
   if (minPortNumber > maxPortNumber - 2)   initializePortNumbers();
   initializeRtpManager(audioRtpManager,audioSessionAddress);
   initializeRtpManager(videoRtpManager,videoSessionAddress);

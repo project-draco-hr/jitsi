@@ -10,7 +10,8 @@
   }
   for (  ReceiveStream stream : receiveStreams) {
     try {
-      stream.getDataSource().stop();
+      DataSource streamDataSource=stream.getDataSource();
+      if (streamDataSource != null)       streamDataSource.stop();
     }
  catch (    IOException ex) {
       logger.warn("Failed to stop stream.",ex);
@@ -20,7 +21,7 @@
   if (selectedKeyProviderAlgorithm != null && selectedKeyProviderAlgorithm.getProviderType() == KeyProviderAlgorithm.ProviderType.ZRTP_PROVIDER) {
     TransformConnector transConnector=this.transConnectors.get(rtpManager);
     if (transConnector != null) {
-      if (usingZRTP) {
+      if (dispose && usingZRTP) {
         ZRTPTransformEngine engine=(ZRTPTransformEngine)transConnector.getEngine();
         engine.stopZrtp();
         engine.cleanup();
@@ -32,9 +33,11 @@
     rtpManager.removeTargets("Session ended.");
   }
   printFlowStatistics(rtpManager);
-  rtpManager.removeReceiveStreamListener(this);
-  rtpManager.removeSendStreamListener(this);
-  rtpManager.removeSessionListener(this);
-  rtpManager.dispose();
+  if (dispose) {
+    rtpManager.removeReceiveStreamListener(this);
+    rtpManager.removeSendStreamListener(this);
+    rtpManager.removeSessionListener(this);
+    rtpManager.dispose();
+  }
   return stoppedAtLeastOneStream;
 }

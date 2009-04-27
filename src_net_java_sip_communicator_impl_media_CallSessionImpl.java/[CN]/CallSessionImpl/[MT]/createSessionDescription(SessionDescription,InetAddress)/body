@@ -4,7 +4,6 @@
     SessionDescription sessDescr=sdpFactory.createSessionDescription();
     Version v=sdpFactory.createVersion(0);
     sessDescr.setVersion(v);
-    NetworkAddressManagerService netAddressManager=MediaActivator.getNetworkAddressManagerService();
     if (offer != null) {
       Connection c=offer.getConnection();
       if (c != null) {
@@ -33,22 +32,15 @@ catch (        UnknownHostException ex) {
       }
     }
     boolean allocateMediaPorts=false;
-    boolean startStreaming=false;
     if ((audioSessionAddress == null) || (videoSessionAddress == null)) {
       allocateMediaPorts=true;
     }
- else {
-      if ((intendedDestination != null) && !intendedDestination.equals(lastIntendedDestination)) {
-        startStreaming=stopStreaming();
-        audioRtpManager=RTPManager.newInstance();
-        videoRtpManager=RTPManager.newInstance();
-        allocateMediaPorts=true;
-      }
+ else     if ((intendedDestination != null) && !intendedDestination.equals(lastIntendedDestination)) {
+      stopStreaming(false);
     }
     if (allocateMediaPorts) {
       allocateMediaPorts(intendedDestination);
       lastIntendedDestination=intendedDestination;
-      if (startStreaming)       startStreaming();
     }
     InetAddress publicIpAddress=audioPublicAddress.getAddress();
     String addrType=publicIpAddress instanceof Inet6Address ? Connection.IP6 : Connection.IP4;
@@ -61,17 +53,14 @@ catch (        UnknownHostException ex) {
     Vector<TimeDescription> timeDescs=new Vector<TimeDescription>();
     timeDescs.add(t);
     sessDescr.setTimeDescriptions(timeDescs);
-    Vector<MediaDescription> offeredMediaDescriptions=null;
-    if (offer != null)     offeredMediaDescriptions=offer.getMediaDescriptions(false);
+    Vector<MediaDescription> offeredMediaDescriptions=(offer == null) ? null : offer.getMediaDescriptions(false);
     logger.debug("Will create media descs with: audio public address=" + audioPublicAddress + " and video public address="+ videoPublicAddress);
     Vector<MediaDescription> mediaDescs=createMediaDescriptions(offeredMediaDescriptions,audioPublicAddress,videoPublicAddress);
     sessDescr.setMediaDescriptions(mediaDescs);
-    if (logger.isTraceEnabled()) {
-      logger.trace("Generated SDP - " + sessDescr.toString());
-    }
+    if (logger.isTraceEnabled())     logger.trace("Generated SDP - " + sessDescr.toString());
     return sessDescr;
   }
  catch (  SdpException exc) {
-    throw new MediaException("An SDP exception occurred while generating local " + "sdp description",MediaException.INTERNAL_ERROR,exc);
+    throw new MediaException("An SDP exception occurred while generating local " + "SDP description",MediaException.INTERNAL_ERROR,exc);
   }
 }

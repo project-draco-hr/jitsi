@@ -1,12 +1,23 @@
 {
-  CallParticipantSipImpl callParticipant=activeCallsRepository.findCallParticipant(serverTransaction.getDialog());
-  if (callParticipant == null) {
+  CallParticipantSipImpl participant=activeCallsRepository.findCallParticipant(serverTransaction.getDialog());
+  if (participant == null) {
     logger.debug("didn't find an ack's call, returning");
     return;
   }
-  ContentLengthHeader cl=ackRequest.getContentLength();
-  if (cl != null && cl.getContentLength() > 0) {
-    callParticipant.setSdpDescription(new String(ackRequest.getRawContent()));
+  ContentLengthHeader contentLength=ackRequest.getContentLength();
+  if ((contentLength != null) && (contentLength.getContentLength() > 0)) {
+    participant.setSdpDescription(new String(ackRequest.getRawContent()));
   }
-  if (!CallParticipantState.isOnHold(callParticipant.getState()))   callParticipant.setState(CallParticipantState.CONNECTED);
+  CallParticipantState participantState=participant.getState();
+  if (!CallParticipantState.isOnHold(participantState)) {
+    if (CallParticipantState.CONNECTED.equals(participantState)) {
+      try {
+        ((CallSipImpl)participant.getCall()).getMediaCallSession().startStreamingAndProcessingMedia();
+      }
+ catch (      MediaException ex) {
+        logger.error("Failed to start the streaming" + " and the processing of the media",ex);
+      }
+    }
+ else     participant.setState(CallParticipantState.CONNECTED);
+  }
 }
