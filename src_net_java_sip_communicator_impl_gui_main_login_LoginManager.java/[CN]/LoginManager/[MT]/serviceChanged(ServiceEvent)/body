@@ -1,15 +1,18 @@
 {
-  if (event.getServiceReference().getBundle().getState() == Bundle.STOPPING) {
+  ServiceReference serviceRef=event.getServiceReference();
+  if (serviceRef.getBundle().getState() == Bundle.STOPPING) {
     return;
   }
-  Object service=GuiActivator.bundleContext.getService(event.getServiceReference());
+  Object service=GuiActivator.bundleContext.getService(serviceRef);
   if (!(service instanceof ProtocolProviderService)) {
     return;
   }
-  if (event.getType() == ServiceEvent.REGISTERED) {
+switch (event.getType()) {
+case ServiceEvent.REGISTERED:
     this.handleProviderAdded((ProtocolProviderService)service);
-  }
- else   if (event.getType() == ServiceEvent.UNREGISTERING) {
-    this.handleProviderRemoved((ProtocolProviderService)service);
-  }
+  break;
+case ServiceEvent.UNREGISTERING:
+this.handleProviderRemoved((ProtocolProviderService)service);
+break;
+}
 }
