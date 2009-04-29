@@ -1,0 +1,32 @@
+{
+  String startPlainTextTag;
+  String endPlainTextTag;
+  if (contentType == null || contentType.equals(TEXT_CONTENT_TYPE) || "".equals(contentType)) {
+    startPlainTextTag="<PLAINTEXT>";
+    endPlainTextTag="</PLAINTEXT>";
+  }
+ else {
+    startPlainTextTag="";
+    endPlainTextTag="";
+  }
+  Collection<Smiley> smileys=ImageLoader.getDefaultSmileysPack();
+  StringBuffer regexp=new StringBuffer();
+  regexp.append("(?<!(alt='|alt=\"))(");
+  for (  Smiley smiley : smileys) {
+    for (    String smileyString : smiley.getSmileyStrings()) {
+      regexp.append(GuiUtils.replaceSpecialRegExpChars(smileyString)).append("|");
+    }
+  }
+  regexp=regexp.deleteCharAt(regexp.length() - 1);
+  regexp.append(')');
+  Pattern p=Pattern.compile(regexp.toString());
+  Matcher m=p.matcher(message);
+  StringBuffer msgBuffer=new StringBuffer();
+  while (m.find()) {
+    String matchGroup=m.group().trim();
+    String replacement=endPlainTextTag + "<IMG SRC=\"" + ImageLoader.getSmiley(matchGroup).getImagePath()+ "\" ALT=\""+ matchGroup+ "\"></IMG>"+ startPlainTextTag;
+    m.appendReplacement(msgBuffer,GuiUtils.replaceSpecialRegExpChars(replacement));
+  }
+  m.appendTail(msgBuffer);
+  return msgBuffer.toString();
+}
