@@ -1,0 +1,17 @@
+{
+  Buffer buffer=new Buffer();
+  try {
+    read(buffer);
+  }
+ catch (  IOException ex) {
+    throw new UndeclaredThrowableException(ex);
+  }
+  int[][] inputSamples=(int[][])buffer.getData();
+  int maxInputSampleCount=buffer.getLength();
+  if ((inputSamples == null) || (inputSamples.length == 0) || (maxInputSampleCount <= 0))   return;
+  AudioMixingPushBufferStream[] outputStreams;
+synchronized (this.outputStreams) {
+    outputStreams=this.outputStreams.toArray(new AudioMixingPushBufferStream[this.outputStreams.size()]);
+  }
+  for (  AudioMixingPushBufferStream outputStream : outputStreams)   setInputSamples(outputStream,inputSamples,maxInputSampleCount);
+}

@@ -1,0 +1,32 @@
+{
+  int[][] inputSamples=this.inputSamples;
+  int maxInputSampleCount=this.maxInputSampleCount;
+  this.inputSamples=null;
+  this.maxInputSampleCount=0;
+  if ((inputSamples == null) || (inputSamples.length == 0) || (maxInputSampleCount <= 0))   return;
+  AudioFormat outputFormat=getFormat();
+  int[] outputSamples=mix(inputSamples,outputFormat,maxInputSampleCount);
+  Class<?> outputDataType=outputFormat.getDataType();
+  if (Format.byteArray.equals(outputDataType)) {
+    byte[] outputData;
+switch (outputFormat.getSampleSizeInBits()) {
+case 16:
+      outputData=new byte[outputSamples.length * 2];
+    for (int i=0; i < outputSamples.length; i++)     writeShort(outputSamples[i],outputData,i * 2);
+  break;
+case 32:
+outputData=new byte[outputSamples.length * 4];
+for (int i=0; i < outputSamples.length; i++) writeInt(outputSamples[i],outputData,i * 4);
+break;
+case 8:
+case 24:
+default :
+throw new UnsupportedOperationException("AudioMixingPushBufferStream.read(Buffer)");
+}
+buffer.setData(outputData);
+buffer.setFormat(outputFormat);
+buffer.setLength(outputData.length);
+buffer.setOffset(0);
+}
+ else throw new UnsupportedOperationException("AudioMixingPushBufferStream.read(Buffer)");
+}

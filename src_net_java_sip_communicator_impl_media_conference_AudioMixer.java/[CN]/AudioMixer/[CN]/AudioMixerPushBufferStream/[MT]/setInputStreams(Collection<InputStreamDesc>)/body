@@ -1,0 +1,18 @@
+{
+  InputStreamDesc[] oldValue=this.inputStreams;
+  InputStreamDesc[] newValue=inputStreams.toArray(new InputStreamDesc[inputStreams.size()]);
+  boolean valueIsChanged=!Arrays.equals(oldValue,newValue);
+  if (valueIsChanged)   setTransferHandler(oldValue,null);
+  this.inputStreams=newValue;
+  if (valueIsChanged) {
+    boolean skippedForTransferHandler=false;
+    for (    InputStreamDesc inputStreamDesc : newValue) {
+      SourceStream inputStream=inputStreamDesc.getInputStream();
+      if (inputStream instanceof PushBufferStream) {
+        if (!skippedForTransferHandler)         skippedForTransferHandler=true;
+ else         if (!(inputStream instanceof CachingPushBufferStream))         inputStreamDesc.setInputStream(new CachingPushBufferStream((PushBufferStream)inputStream));
+      }
+    }
+    setTransferHandler(newValue,transferHandler);
+  }
+}

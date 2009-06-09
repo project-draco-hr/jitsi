@@ -1,0 +1,18 @@
+{
+  int inputStreamCount=(inputStreams == null) ? 0 : inputStreams.length;
+  if (inputStreamCount <= 0)   return;
+  AudioFormat outputFormat=getFormat();
+  int[][] inputSamples=new int[inputStreamCount][];
+  int maxInputSampleCount;
+  try {
+    maxInputSampleCount=readInputPushBufferStreams(outputFormat,inputSamples);
+  }
+ catch (  UnsupportedFormatException ufex) {
+    IOException ioex=new IOException();
+    ioex.initCause(ufex);
+    throw ioex;
+  }
+  maxInputSampleCount=Math.max(maxInputSampleCount,readInputPullBufferStreams(outputFormat,maxInputSampleCount,inputSamples));
+  buffer.setData(inputSamples);
+  buffer.setLength(maxInputSampleCount);
+}

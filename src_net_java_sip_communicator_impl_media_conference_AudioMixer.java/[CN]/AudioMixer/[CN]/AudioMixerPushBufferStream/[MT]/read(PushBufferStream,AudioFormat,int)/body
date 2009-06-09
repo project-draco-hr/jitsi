@@ -1,0 +1,74 @@
+{
+  Buffer buffer=new Buffer();
+  if (sampleCount != 0) {
+    AudioFormat inputFormat=(AudioFormat)inputStream.getFormat();
+    Class<?> inputDataType=inputFormat.getDataType();
+    if (Format.byteArray.equals(inputDataType)) {
+      buffer.setData(new byte[sampleCount * (inputFormat.getSampleSizeInBits() / 8)]);
+      buffer.setLength(0);
+      buffer.setOffset(0);
+    }
+ else     throw new UnsupportedFormatException("!Format.getDataType().equals(byte[].class)",inputFormat);
+  }
+  inputStream.read(buffer);
+  int inputLength=buffer.getLength();
+  if (inputLength <= 0)   return null;
+  AudioFormat inputFormat=(AudioFormat)buffer.getFormat();
+  if (inputFormat.getSigned() != AudioFormat.SIGNED)   throw new UnsupportedFormatException("AudioFormat.getSigned()",inputFormat);
+  if (inputFormat.getChannels() != outputFormat.getChannels())   throw new UnsupportedFormatException("AudioFormat.getChannels()",inputFormat);
+  Object inputData=buffer.getData();
+  if (inputData instanceof byte[]) {
+    byte[] inputSamples=(byte[])inputData;
+    int[] outputSamples;
+    int outputSampleSizeInBits=outputFormat.getSampleSizeInBits();
+switch (inputFormat.getSampleSizeInBits()) {
+case 16:
+      outputSamples=new int[inputSamples.length / 2];
+    for (int i=0; i < outputSamples.length; i++) {
+      int sample=readShort(inputSamples,i * 2);
+switch (outputSampleSizeInBits) {
+case 16:
+        break;
+case 32:
+      sample=Math.round(sample * INT_TO_SHORT_RATIO);
+    break;
+case 8:
+case 24:
+default :
+  throw new UnsupportedFormatException("AudioFormat.getSampleSizeInBits()",outputFormat);
+}
+outputSamples[i]=sample;
+}
+return outputSamples;
+case 32:
+outputSamples=new int[inputSamples.length / 4];
+for (int i=0; i < outputSamples.length; i++) {
+int sample=readInt(inputSamples,i * 4);
+switch (outputSampleSizeInBits) {
+case 16:
+sample=Math.round(sample * SHORT_TO_INT_RATIO);
+break;
+case 32:
+break;
+case 8:
+case 24:
+default :
+throw new UnsupportedFormatException("AudioFormat.getSampleSizeInBits()",outputFormat);
+}
+outputSamples[i]=sample;
+}
+return outputSamples;
+case 8:
+case 24:
+default :
+throw new UnsupportedFormatException("AudioFormat.getSampleSizeInBits()",inputFormat);
+}
+}
+ else if (inputData instanceof short[]) {
+throw new UnsupportedFormatException("Format.getDataType().equals(short[].class)",inputFormat);
+}
+ else if (inputData instanceof int[]) {
+throw new UnsupportedFormatException("Format.getDataType().equals(int[].class)",inputFormat);
+}
+return null;
+}

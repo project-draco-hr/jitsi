@@ -1,0 +1,27 @@
+{
+  Object outputData=output.getData();
+  if (outputData != null) {
+    Object inputData=input.getData();
+    if (inputData == null) {
+      output.setFormat(input.getFormat());
+      output.setLength(0);
+      return;
+    }
+    Class<?> dataType=outputData.getClass();
+    if (inputData.getClass().equals(dataType) && dataType.equals(byte[].class)) {
+      byte[] outputBytes=(byte[])outputData;
+      int outputLength=Math.min(input.getLength(),outputBytes.length);
+      System.arraycopy((byte[])inputData,input.getOffset(),outputBytes,output.getOffset(),outputLength);
+      output.setData(outputBytes);
+      output.setFormat(input.getFormat());
+      output.setLength(outputLength);
+      input.setLength(input.getLength() - outputLength);
+      input.setOffset(input.getOffset() + outputLength);
+      return;
+    }
+  }
+  output.copy(input);
+  int outputLength=output.getLength();
+  input.setLength(input.getLength() - outputLength);
+  input.setOffset(input.getOffset() + outputLength);
+}
