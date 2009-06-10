@@ -9,20 +9,18 @@
     }
   }
   if (!isValidStatus)   throw new IllegalArgumentException(status + " is not a valid Jabber status");
-  Presence presence=null;
   if (status.equals(jabberStatusEnum.getStatus(JabberStatusEnum.OFFLINE))) {
-    presence=new Presence(Presence.Type.unavailable);
     parentProvider.unregister();
   }
  else {
-    presence=new Presence(Presence.Type.available);
+    Presence presence=new Presence(Presence.Type.available);
     presence.setMode(presenceStatusToJabberMode(status));
     presence.setPriority(resourcePriority);
     presence.setStatus(statusMessage);
     presence.addExtension(new Version());
     parentProvider.getConnection().sendPacket(presence);
   }
-  fireProviderPresenceStatusChangeEvent(currentStatus,status);
+  fireProviderStatusChangeEvent(currentStatus,status);
   if (!getCurrentStatusMessage().equals(statusMessage)) {
     String oldStatusMessage=getCurrentStatusMessage();
     currentStatusMessage=statusMessage;
