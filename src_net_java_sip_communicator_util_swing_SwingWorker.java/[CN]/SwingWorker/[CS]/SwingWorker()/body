@@ -1,0 +1,31 @@
+{
+  final Runnable doFinished=new Runnable(){
+    public void run(){
+      finished();
+    }
+  }
+;
+  Runnable doConstruct=new Runnable(){
+    public void run(){
+      try {
+        setValue(construct());
+      }
+ catch (      final Exception exception) {
+        SwingUtilities.invokeLater(new Runnable(){
+          public void run(){
+            catchException(exception);
+          }
+        }
+);
+      }
+ finally {
+        threadVar.clear();
+      }
+      SwingUtilities.invokeLater(doFinished);
+    }
+  }
+;
+  Thread t=new Thread(doConstruct);
+  t.setUncaughtExceptionHandler(new SwingUncaughtExceptionHandler());
+  threadVar=new ThreadVar(t);
+}

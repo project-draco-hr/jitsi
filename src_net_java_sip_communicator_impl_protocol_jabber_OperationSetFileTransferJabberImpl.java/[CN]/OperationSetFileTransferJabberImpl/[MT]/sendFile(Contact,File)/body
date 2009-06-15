@@ -1,0 +1,16 @@
+{
+  AbstractFileTransfer outgoingTransfer=null;
+  try {
+    assertConnected();
+    Roster roster=jabberProvider.getConnection().getRoster();
+    Presence presence=roster.getPresence(toContact.getAddress());
+    OutgoingFileTransfer transfer=manager.createOutgoingFileTransfer(presence.getFrom());
+    outgoingTransfer=new OutgoingFileTransferJabberImpl(transfer);
+    transfer.sendFile(file,"Sending file.");
+    new FileTransferProgressThread(transfer,outgoingTransfer).start();
+  }
+ catch (  XMPPException e) {
+    logger.error("Failed to send file.",e);
+  }
+  return outgoingTransfer;
+}

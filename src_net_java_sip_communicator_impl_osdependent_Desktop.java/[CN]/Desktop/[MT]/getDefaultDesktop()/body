@@ -1,0 +1,23 @@
+{
+  if (defaultDesktop != null)   return defaultDesktop;
+  Class<?> awtDesktopClass=null;
+  try {
+    awtDesktopClass=Class.forName("java.awt.Desktop");
+  }
+ catch (  ClassNotFoundException ex) {
+  }
+  DesktopPeer peer=null;
+  if (awtDesktopClass != null)   try {
+    peer=new AWTDesktopPeer(awtDesktopClass);
+  }
+ catch (  Exception ex) {
+    logger.error("Failed to initialize the java.awt.SystemTray implementation.",ex);
+  }
+  if (peer == null)   try {
+    peer=new JdicDesktopPeer();
+  }
+ catch (  Exception ex) {
+    logger.error("Failed to initialize the org.jdesktop.jdic.tray implementation.",ex);
+  }
+  return (defaultDesktop=new Desktop(peer));
+}

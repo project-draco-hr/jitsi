@@ -1,5 +1,22 @@
 {
-  loadHistoryPeriod();
-  Collection<EventObject> historyList=chatSession.getHistory(ConfigurationManager.getChatHistorySize());
-  processHistory(historyList,escapedMessageID);
+  SwingWorker historyWorker=new SwingWorker(){
+    private Collection<EventObject> historyList;
+    public Object construct() throws Exception {
+      loadHistoryPeriod();
+      historyList=chatSession.getHistory(ConfigurationManager.getChatHistorySize());
+      return historyList;
+    }
+    /** 
+ * Called on the event dispatching thread (not on the worker thread)
+ * after the <code>construct</code> method has returned.
+ */
+    public void finished(){
+      if (historyList != null && historyList.size() > 0) {
+        processHistory(historyList,escapedMessageID);
+      }
+      addIncomingEvents();
+    }
+  }
+;
+  historyWorker.start();
 }

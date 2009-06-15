@@ -4,24 +4,28 @@
     String processedMessage="";
     while (i.hasNext()) {
       Object o=i.next();
+      ChatMessage chatMessage=null;
       if (o instanceof MessageDeliveredEvent) {
         MessageDeliveredEvent evt=(MessageDeliveredEvent)o;
         ProtocolProviderService protocolProvider=evt.getDestinationContact().getProtocolProvider();
-        processedMessage=chatConvPanel.processMessage(GuiActivator.getUIService().getMainFrame().getAccount(protocolProvider),evt.getTimestamp(),Constants.OUTGOING_MESSAGE,evt.getSourceMessage().getContent(),evt.getSourceMessage().getContentType(),searchKeyword);
+        chatMessage=new ChatMessage(GuiActivator.getUIService().getMainFrame().getAccount(protocolProvider),evt.getTimestamp(),Constants.OUTGOING_MESSAGE,evt.getSourceMessage().getContent(),evt.getSourceMessage().getContentType());
       }
  else       if (o instanceof MessageReceivedEvent) {
         MessageReceivedEvent evt=(MessageReceivedEvent)o;
-        processedMessage=chatConvPanel.processMessage(evt.getSourceContact().getDisplayName(),evt.getTimestamp(),Constants.INCOMING_MESSAGE,evt.getSourceMessage().getContent(),evt.getSourceMessage().getContentType(),searchKeyword);
+        chatMessage=new ChatMessage(evt.getSourceContact().getDisplayName(),evt.getTimestamp(),Constants.INCOMING_MESSAGE,evt.getSourceMessage().getContent(),evt.getSourceMessage().getContentType());
       }
  else       if (o instanceof ChatRoomMessageReceivedEvent) {
         ChatRoomMessageReceivedEvent evt=(ChatRoomMessageReceivedEvent)o;
-        processedMessage=chatConvPanel.processMessage(evt.getSourceChatRoomMember().getName(),evt.getTimestamp(),Constants.INCOMING_MESSAGE,evt.getMessage().getContent(),evt.getMessage().getContentType(),searchKeyword);
+        chatMessage=new ChatMessage(evt.getSourceChatRoomMember().getName(),evt.getTimestamp(),Constants.INCOMING_MESSAGE,evt.getMessage().getContent(),evt.getMessage().getContentType());
       }
  else       if (o instanceof ChatRoomMessageDeliveredEvent) {
         ChatRoomMessageDeliveredEvent evt=(ChatRoomMessageDeliveredEvent)o;
-        processedMessage=chatConvPanel.processMessage(evt.getSourceChatRoom().getParentProvider().getAccountID().getUserID(),evt.getTimestamp(),Constants.INCOMING_MESSAGE,evt.getMessage().getContent(),evt.getMessage().getContentType(),searchKeyword);
+        chatMessage=new ChatMessage(evt.getSourceChatRoom().getParentProvider().getAccountID().getUserID(),evt.getTimestamp(),Constants.INCOMING_MESSAGE,evt.getMessage().getContent(),evt.getMessage().getContentType());
       }
-      chatConvPanel.appendMessageToEnd(processedMessage);
+      if (chatMessage != null) {
+        processedMessage=chatConvPanel.processMessage(chatMessage,searchKeyword);
+        chatConvPanel.appendMessageToEnd(processedMessage);
+      }
     }
   }
   this.chatConvPanel.setDefaultContent();

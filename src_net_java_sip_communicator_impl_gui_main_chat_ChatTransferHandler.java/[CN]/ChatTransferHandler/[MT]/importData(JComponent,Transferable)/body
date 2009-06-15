@@ -1,0 +1,43 @@
+{
+  if (t.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+    try {
+      Object o=t.getTransferData(DataFlavor.javaFileListFlavor);
+      if (o instanceof java.util.Collection) {
+        Collection<File> files=(Collection<File>)o;
+        for (        File file : files) {
+          chatPanel.sendFile(file);
+        }
+        return true;
+      }
+    }
+ catch (    UnsupportedFlavorException e) {
+      logger.debug("Failed to drop files.",e);
+    }
+catch (    IOException e) {
+      logger.debug("Failed to drop files.",e);
+    }
+  }
+ else   if (t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+    InputContext inputContext=comp.getInputContext();
+    if (inputContext != null) {
+      inputContext.endComposition();
+    }
+    try {
+      BufferedReader reader=new BufferedReader(DataFlavor.stringFlavor.getReaderForText(t));
+      StringBuffer buffToPaste=new StringBuffer();
+      String line=reader.readLine();
+      while (line != null) {
+        buffToPaste.append(line);
+        line=reader.readLine();
+        if (line != null)         buffToPaste.append("\n");
+      }
+      ((JTextComponent)comp).replaceSelection(buffToPaste.toString());
+      return true;
+    }
+ catch (    UnsupportedFlavorException ufe) {
+    }
+catch (    IOException ioe) {
+    }
+  }
+  return false;
+}
