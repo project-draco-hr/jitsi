@@ -1,13 +1,15 @@
 {
-  String defaultLocation=getSystemProperty("user.home") + File.separatorChar + "Downloads";
-  File downloadDir=new File(defaultLocation);
-  if (!downloadDir.exists()) {
-    if (!downloadDir.mkdirs()) {
-      String message="Could not create the download directory : " + downloadDir.getAbsolutePath();
-      logger.debug(message);
-      throw new IOException(message);
-    }
-    logger.debug("Download directory created : " + downloadDir.getAbsolutePath());
+  File downloadDir;
+  String osName=System.getProperty("os.name");
+  String osVersion=System.getProperty("os.version");
+  String majorVersionString=osVersion.substring(0,osVersion.indexOf("."));
+  if (osName.startsWith("Windows") && Integer.parseInt(majorVersionString) <= 5) {
+    FileSystemView fsv=FileSystemView.getFileSystemView();
+    downloadDir=fsv.getHomeDirectory();
+  }
+ else {
+    String defaultLocation=getSystemProperty("user.home") + File.separatorChar + "Downloads";
+    downloadDir=new File(defaultLocation);
   }
   return downloadDir;
 }

@@ -1,12 +1,25 @@
 {
   File downloadFile=null;
   File downloadDir=null;
+  String incomingFileName=fileTransferRequest.getFileName();
   try {
     downloadDir=GuiActivator.getFileAccessService().getDefaultDownloadDirectory();
+    if (!downloadDir.exists()) {
+      if (!downloadDir.mkdirs()) {
+        logger.error("Could not create the download directory : " + downloadDir.getAbsolutePath());
+      }
+      logger.debug("Download directory created : " + downloadDir.getAbsolutePath());
+    }
   }
  catch (  IOException e) {
-    logger.debug("Unable to find download directory.");
+    logger.debug("Unable to find download directory.",e);
   }
-  if (downloadDir != null)   downloadFile=new File(downloadDir,fileTransferRequest.getFileName());
+  downloadFile=new File(downloadDir,incomingFileName);
+  int index=0;
+  while (downloadFile.exists()) {
+    String newFileName=incomingFileName.substring(0,incomingFileName.lastIndexOf(".")) + "-" + ++index+ incomingFileName.substring(incomingFileName.lastIndexOf("."));
+    downloadFile=new File(downloadDir,newFileName);
+  }
+  fileLabel.setText(downloadFile.getName());
   return downloadFile;
 }
