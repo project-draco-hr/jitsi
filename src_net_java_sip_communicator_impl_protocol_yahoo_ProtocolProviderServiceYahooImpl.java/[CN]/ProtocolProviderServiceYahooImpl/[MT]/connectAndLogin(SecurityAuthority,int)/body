@@ -29,8 +29,18 @@ synchronized (initializationLock) {
       }
     }
  catch (    LoginRefusedException ex) {
-      fireRegistrationStateChanged(getRegistrationState(),RegistrationState.AUTHENTICATION_FAILED,RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED,null);
-      reregister(SecurityAuthority.WRONG_PASSWORD);
+      if (ex.getStatus() == StatusConstants.STATUS_BADUSERNAME) {
+        fireRegistrationStateChanged(getRegistrationState(),RegistrationState.AUTHENTICATION_FAILED,RegistrationStateChangeEvent.REASON_NON_EXISTING_USER_ID,null);
+        reregister(SecurityAuthority.WRONG_USERNAME);
+      }
+ else       if (ex.getStatus() == StatusConstants.STATUS_BAD) {
+        YahooActivator.getProtocolProviderFactory().storePassword(getAccountID(),null);
+        fireRegistrationStateChanged(getRegistrationState(),RegistrationState.AUTHENTICATION_FAILED,RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED,null);
+        reregister(SecurityAuthority.WRONG_PASSWORD);
+      }
+ else       if (ex.getStatus() == StatusConstants.STATUS_LOCKED) {
+        fireRegistrationStateChanged(getRegistrationState(),RegistrationState.AUTHENTICATION_FAILED,RegistrationStateChangeEvent.REASON_RECONNECTION_RATE_LIMIT_EXCEEDED,null);
+      }
     }
 catch (    IOException ex) {
       fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
