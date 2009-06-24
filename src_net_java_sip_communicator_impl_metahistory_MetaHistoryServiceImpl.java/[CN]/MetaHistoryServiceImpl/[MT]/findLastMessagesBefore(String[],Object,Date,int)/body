@@ -1,0 +1,28 @@
+{
+  TreeSet result=new TreeSet(new RecordsComparator());
+  for (int i=0; i < services.length; i++) {
+    String name=services[i];
+    Object serv=getService(name);
+    if (serv instanceof MessageHistoryService) {
+      MessageHistoryService mhs=(MessageHistoryService)serv;
+      if (descriptor instanceof MetaContact) {
+        result.addAll(mhs.findLastMessagesBefore((MetaContact)descriptor,date,count));
+      }
+ else       if (descriptor instanceof ChatRoom) {
+        result.addAll(mhs.findLastMessagesBefore((ChatRoom)descriptor,date,count));
+      }
+    }
+ else     if (serv instanceof FileHistoryService && descriptor instanceof MetaContact) {
+      result.addAll(((FileHistoryService)serv).findLastRecordsBefore((MetaContact)descriptor,date,count));
+    }
+ else     if (serv instanceof CallHistoryService) {
+      Collection col=((CallHistoryService)serv).findByEndDate(date);
+      if (col.size() > count) {
+        List l=new LinkedList(col);
+        result.addAll(l.subList(l.size() - count,l.size()));
+      }
+ else       result.addAll(col);
+    }
+  }
+  return result;
+}
