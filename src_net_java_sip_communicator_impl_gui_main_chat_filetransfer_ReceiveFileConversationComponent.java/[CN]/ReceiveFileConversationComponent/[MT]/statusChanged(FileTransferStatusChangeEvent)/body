@@ -1,5 +1,6 @@
 {
   int status=event.getNewStatus();
+  FileTransfer fileTransfer=event.getFileTransfer();
   String fromContactName=fileTransferRequest.getSender().getDisplayName();
   if (status == FileTransferStatusChangeEvent.PREPARING) {
     progressBar.setVisible(false);
@@ -18,24 +19,12 @@
     }
   }
  else   if (status == FileTransferStatusChangeEvent.COMPLETED) {
-    if (downloadFile != null) {
-      imageLabel.setFile(downloadFile);
-      setFileIcon(downloadFile);
-    }
+    this.setCompletedDownloadFile(fileTransfer.getFile());
     progressBar.setVisible(false);
     cancelButton.setVisible(false);
     openFileButton.setVisible(true);
     openFolderButton.setVisible(true);
     titleLabel.setText(resources.getI18NString("service.gui.FILE_RECEIVE_COMPLETED",new String[]{fromContactName}));
-    imageLabel.setToolTipText(resources.getI18NString("service.gui.OPEN_FILE_FROM_IMAGE"));
-    imageLabel.addMouseListener(new MouseAdapter(){
-      public void mouseClicked(      MouseEvent e){
-        if (e.getClickCount() > 1) {
-          openFile(downloadFile);
-        }
-      }
-    }
-);
   }
  else   if (status == FileTransferStatusChangeEvent.CANCELED) {
     progressBar.setVisible(false);

@@ -1,0 +1,42 @@
+{
+  Iterator<Object> iterator=historyList.iterator();
+  String messageType;
+  while (iterator.hasNext()) {
+    Object o=iterator.next();
+    String historyString="";
+    if (o instanceof MessageDeliveredEvent) {
+      MessageDeliveredEvent evt=(MessageDeliveredEvent)o;
+      ProtocolProviderService protocolProvider=evt.getDestinationContact().getProtocolProvider();
+      if (isGreyHistoryStyleDisabled(protocolProvider))       messageType=Constants.OUTGOING_MESSAGE;
+ else       messageType=Constants.HISTORY_OUTGOING_MESSAGE;
+      historyString=processHistoryMessage(GuiActivator.getUIService().getMainFrame().getAccount(protocolProvider),evt.getTimestamp(),messageType,evt.getSourceMessage().getContent(),evt.getSourceMessage().getContentType());
+    }
+ else     if (o instanceof MessageReceivedEvent) {
+      MessageReceivedEvent evt=(MessageReceivedEvent)o;
+      ProtocolProviderService protocolProvider=evt.getSourceContact().getProtocolProvider();
+      if (!evt.getSourceMessage().getMessageUID().equals(escapedMessageID)) {
+        if (isGreyHistoryStyleDisabled(protocolProvider))         messageType=Constants.INCOMING_MESSAGE;
+ else         messageType=Constants.HISTORY_INCOMING_MESSAGE;
+        historyString=processHistoryMessage(evt.getSourceContact().getDisplayName(),evt.getTimestamp(),messageType,evt.getSourceMessage().getContent(),evt.getSourceMessage().getContentType());
+      }
+    }
+ else     if (o instanceof ChatRoomMessageDeliveredEvent) {
+      ChatRoomMessageDeliveredEvent evt=(ChatRoomMessageDeliveredEvent)o;
+      ProtocolProviderService protocolProvider=evt.getSourceChatRoom().getParentProvider();
+      historyString=processHistoryMessage(GuiActivator.getUIService().getMainFrame().getAccount(protocolProvider),evt.getTimestamp(),Constants.HISTORY_OUTGOING_MESSAGE,evt.getMessage().getContent(),evt.getMessage().getContentType());
+    }
+ else     if (o instanceof ChatRoomMessageReceivedEvent) {
+      ChatRoomMessageReceivedEvent evt=(ChatRoomMessageReceivedEvent)o;
+      if (!evt.getMessage().getMessageUID().equals(escapedMessageID)) {
+        historyString=processHistoryMessage(evt.getSourceChatRoomMember().getName(),evt.getTimestamp(),Constants.HISTORY_INCOMING_MESSAGE,evt.getMessage().getContent(),evt.getMessage().getContentType());
+      }
+    }
+ else     if (o instanceof FileRecord) {
+      FileRecord fileRecord=(FileRecord)o;
+      FileHistoryConversationComponent component=new FileHistoryConversationComponent(fileRecord);
+      conversationPanel.addComponent(component);
+    }
+    if (historyString != null)     conversationPanel.appendMessageToEnd(historyString);
+  }
+  getChatWindow().getMainToolBar().changeHistoryButtonsState(this);
+}

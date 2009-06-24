@@ -1,14 +1,14 @@
 {
-  Collection<EventObject> msgList=null;
+  Collection<Object> msgList=null;
   if (historyContact instanceof MetaContact) {
-    msgList=msgHistory.findByEndDate((MetaContact)historyContact,new Date(System.currentTimeMillis()));
+    msgList=history.findByEndDate(historyFilter,(MetaContact)historyContact,new Date(System.currentTimeMillis()));
   }
  else   if (historyContact instanceof ChatRoomWrapper) {
     ChatRoomWrapper chatRoomWrapper=(ChatRoomWrapper)historyContact;
     if (chatRoomWrapper.getChatRoom() == null)     return;
-    msgList=msgHistory.findByEndDate(chatRoomWrapper.getChatRoom(),new Date(System.currentTimeMillis()));
+    msgList=history.findByEndDate(historyFilter,chatRoomWrapper.getChatRoom(),new Date(System.currentTimeMillis()));
   }
-  if (msgList != null)   for (  EventObject o : msgList) {
+  if (msgList != null)   for (  Object o : msgList) {
     long date=0;
     if (o instanceof MessageDeliveredEvent) {
       MessageDeliveredEvent evt=(MessageDeliveredEvent)o;
@@ -25,6 +25,10 @@
  else     if (o instanceof ChatRoomMessageDeliveredEvent) {
       ChatRoomMessageDeliveredEvent evt=(ChatRoomMessageDeliveredEvent)o;
       date=evt.getTimestamp();
+    }
+ else     if (o instanceof FileRecord) {
+      FileRecord fileRecord=(FileRecord)o;
+      date=fileRecord.getDate();
     }
     boolean containsDate=false;
     long milisecondsPerDay=24 * 60 * 60* 1000;
