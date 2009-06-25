@@ -1,0 +1,40 @@
+{
+  Iterator<String> fileIterator=this.historyImpl.getFileList();
+  while (fileIterator.hasNext()) {
+    String filename=fileIterator.next();
+    Document doc=this.historyImpl.getDocumentForFile(filename);
+    if (doc == null)     continue;
+    NodeList nodes=doc.getElementsByTagName("record");
+    boolean changed=false;
+    Node node;
+    for (int i=0; i < nodes.getLength(); i++) {
+      node=nodes.item(i);
+      Element idNode=XMLUtils.findChild((Element)node,idProperty);
+      if (idNode == null)       continue;
+      Node nestedNode=idNode.getFirstChild();
+      if (nestedNode == null)       continue;
+      String nodeValue=nestedNode.getNodeValue();
+      if (!nodeValue.equals(idValue))       continue;
+      Element changedNode=XMLUtils.findChild((Element)node,property);
+      if (changedNode != null) {
+        Node changedNestedNode=changedNode.getFirstChild();
+        changedNestedNode.setNodeValue(newValue);
+      }
+ else {
+        Element propertyElement=this.currentDoc.createElement(property);
+        Text value=this.currentDoc.createTextNode(newValue.replaceAll("\0"," "));
+        propertyElement.appendChild(value);
+        node.appendChild(propertyElement);
+      }
+      changed=true;
+      break;
+    }
+    if (changed) {
+synchronized (this.docWriteLock) {
+        if (historyImpl.getHistoryServiceImpl().isCacheEnabled())         this.historyImpl.writeFile(filename);
+ else         this.historyImpl.writeFile(filename,doc);
+      }
+      break;
+    }
+  }
+}
