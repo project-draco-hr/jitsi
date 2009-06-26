@@ -1,24 +1,32 @@
 {
+  MessageProgressWrapper listenWrapper=new MessageProgressWrapper(progressListeners,services.length);
   TreeSet result=new TreeSet(new RecordsComparator());
   for (int i=0; i < services.length; i++) {
     String name=services[i];
     Object serv=getService(name);
     if (serv instanceof MessageHistoryService) {
       MessageHistoryService mhs=(MessageHistoryService)serv;
+      listenWrapper.setIx(i);
+      mhs.addSearchProgressListener(listenWrapper);
       if (descriptor instanceof MetaContact) {
         result.addAll(mhs.findByStartDate((MetaContact)descriptor,startDate));
       }
  else       if (descriptor instanceof ChatRoom) {
         result.addAll(mhs.findByStartDate((ChatRoom)descriptor,startDate));
       }
+      mhs.removeSearchProgressListener(listenWrapper);
     }
  else     if (serv instanceof FileHistoryService && descriptor instanceof MetaContact) {
       result.addAll(((FileHistoryService)serv).findByStartDate((MetaContact)descriptor,startDate));
     }
  else     if (serv instanceof CallHistoryService) {
       CallHistoryService chs=(CallHistoryService)serv;
+      listenWrapper.setIx(i);
+      chs.addSearchProgressListener(listenWrapper);
       result.addAll(chs.findByStartDate(startDate));
+      chs.removeSearchProgressListener(listenWrapper);
     }
   }
+  listenWrapper.fireLastProgress(startDate,null,null);
   return result;
 }

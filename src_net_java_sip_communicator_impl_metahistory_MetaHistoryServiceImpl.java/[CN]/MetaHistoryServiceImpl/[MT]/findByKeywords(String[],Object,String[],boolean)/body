@@ -1,28 +1,37 @@
 {
+  MessageProgressWrapper listenWrapper=new MessageProgressWrapper(progressListeners,services.length);
   TreeSet result=new TreeSet(new RecordsComparator());
   for (int i=0; i < services.length; i++) {
     String name=services[i];
     Object serv=getService(name);
     if (serv instanceof MessageHistoryService) {
       MessageHistoryService mhs=(MessageHistoryService)serv;
+      listenWrapper.setIx(i);
+      mhs.addSearchProgressListener(listenWrapper);
       if (descriptor instanceof MetaContact) {
         result.addAll(mhs.findByKeywords((MetaContact)descriptor,keywords,caseSensitive));
       }
  else       if (descriptor instanceof ChatRoom) {
         result.addAll(mhs.findByKeywords((ChatRoom)descriptor,keywords,caseSensitive));
       }
+      mhs.removeSearchProgressListener(listenWrapper);
     }
  else     if (serv instanceof FileHistoryService && descriptor instanceof MetaContact) {
       result.addAll(((FileHistoryService)serv).findByKeywords((MetaContact)descriptor,keywords,caseSensitive));
     }
  else     if (serv instanceof CallHistoryService) {
-      Collection<CallRecord> cs=((CallHistoryService)serv).findByEndDate(new Date());
+      CallHistoryService chs=(CallHistoryService)serv;
+      listenWrapper.setIx(i);
+      chs.addSearchProgressListener(listenWrapper);
+      Collection<CallRecord> cs=chs.findByEndDate(new Date());
       Iterator<CallRecord> iter=cs.iterator();
       while (iter.hasNext()) {
         CallRecord callRecord=iter.next();
         if (matchAnyCallParticipant(callRecord.getParticipantRecords(),keywords,caseSensitive))         result.add(callRecord);
       }
+      chs.removeSearchProgressListener(listenWrapper);
     }
   }
+  listenWrapper.fireLastProgress(null,null,keywords);
   return result;
 }
