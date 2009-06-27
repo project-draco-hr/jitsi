@@ -1,0 +1,28 @@
+{
+  float FLT_MIN_G729=Ld8k.FLT_MIN_G729;
+  int i, j;
+  int p, p1;
+  float max, t0;
+  int p_max=0;
+  max=FLT_MIN_G729;
+  for (i=lagmax; i >= lagmin; i--) {
+    p=signal_offset;
+    p1=signal_offset - i;
+    t0=0.0f;
+    for (j=0; j < l_frame; j++, p++, p1++) {
+      t0+=signal[p] * signal[p1];
+    }
+    if (t0 >= max) {
+      max=t0;
+      p_max=i;
+    }
+  }
+  t0=0.01f;
+  p=signal_offset - p_max;
+  for (i=0; i < l_frame; i++, p++) {
+    t0+=signal[p] * signal[p];
+  }
+  t0=inv_sqrt(t0);
+  cor_max.value=max * t0;
+  return (p_max);
+}

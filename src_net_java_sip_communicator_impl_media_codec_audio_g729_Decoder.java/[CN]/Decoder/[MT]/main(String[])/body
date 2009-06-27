@@ -1,0 +1,54 @@
+{
+  OutputStream f_syn;
+  InputStream f_serial;
+  short[] serial=new short[SERIAL_SIZE];
+  short[] sp16=new short[L_FRAME];
+  int frame;
+  System.out.printf("\n");
+  System.out.printf("**************    G.729  8 KBIT/S SPEECH DECODER    ************\n");
+  System.out.printf("\n");
+  System.out.printf("----------------- Floating point C simulation ----------------\n");
+  System.out.printf("\n");
+  System.out.printf("------------ Version 1.01 (Release 2, November 2006) --------\n");
+  System.out.printf("\n");
+  if (args.length != 2) {
+    System.out.printf("Usage :Decoder bitstream_file  outputspeech_file\n");
+    System.out.printf("\n");
+    System.out.printf("Format for bitstream_file:\n");
+    System.out.printf("  One (2-byte) synchronization word \n");
+    System.out.printf("  One (2-byte) size word,\n");
+    System.out.printf("  80 words (2-byte) containing 80 bits.\n");
+    System.out.printf("\n");
+    System.out.printf("Format for outputspeech_file:\n");
+    System.out.printf("  Synthesis is written to a binary file of 16 bits data.\n");
+    System.exit(1);
+  }
+  try {
+    f_serial=new FileInputStream(args[0]);
+  }
+ catch (  IOException ex) {
+    System.out.printf("Decoder - Error opening file  %s !!\n",args[0]);
+    System.exit(0);
+    throw ex;
+  }
+  try {
+    f_syn=new FileOutputStream(args[1]);
+  }
+ catch (  IOException ex) {
+    System.out.printf("Decoder - Error opening file  %s !!\n",args[1]);
+    System.exit(0);
+    throw ex;
+  }
+  System.out.printf("Input bitstream file  :   %s\n",args[0]);
+  System.out.printf("Synthesis speech file :   %s\n",args[1]);
+  Decoder decoder=new Decoder();
+  frame=0;
+  while (Util.fread(serial,SERIAL_SIZE,f_serial) == SERIAL_SIZE) {
+    frame++;
+    System.out.printf(" Frame: %d\r",frame);
+    decoder.process(serial,sp16);
+    Util.fwrite(sp16,L_FRAME,f_syn);
+  }
+  f_syn.close();
+  f_serial.close();
+}

@@ -1,0 +1,57 @@
+{
+  int vo;
+  int ltpdel, phase;
+  float num_gltp, den_gltp;
+  float num2_gltp, den2_gltp;
+  float gain_plt;
+  float[] y_up=new float[SIZ_Y_UP];
+  float[] ptr_y_up;
+  int ptr_y_up_offset;
+  int off_yup;
+  IntReference _ltpdel=new IntReference();
+  IntReference _phase=new IntReference();
+  FloatReference _num_gltp=new FloatReference();
+  FloatReference _den_gltp=new FloatReference();
+  IntReference _off_yup=new IntReference();
+  search_del(t0,ptr_sig_in,ptr_sig_in_offset,_ltpdel,_phase,_num_gltp,_den_gltp,y_up,_off_yup);
+  ltpdel=_ltpdel.value;
+  phase=_phase.value;
+  num_gltp=_num_gltp.value;
+  den_gltp=_den_gltp.value;
+  off_yup=_off_yup.value;
+  vo=ltpdel;
+  if (num_gltp == 0.f) {
+    Util.copy(ptr_sig_in,ptr_sig_in_offset,ptr_sig_pst0,ptr_sig_pst0_offset,L_SUBFR);
+  }
+ else {
+    if (phase == 0) {
+      ptr_y_up=ptr_sig_in;
+      ptr_y_up_offset=ptr_sig_in_offset - ltpdel;
+    }
+ else {
+      FloatReference _num2_gltp=new FloatReference();
+      FloatReference _den2_gltp=new FloatReference();
+      compute_ltp_l(ptr_sig_in,ptr_sig_in_offset,ltpdel,phase,ptr_sig_pst0,ptr_sig_pst0_offset,_num2_gltp,_den2_gltp);
+      num2_gltp=_num2_gltp.value;
+      den2_gltp=_den2_gltp.value;
+      if (select_ltp(num_gltp,den_gltp,num2_gltp,den2_gltp) == 1) {
+        ptr_y_up=y_up;
+        ptr_y_up_offset=((phase - 1) * L_SUBFRP1 + off_yup);
+      }
+ else {
+        num_gltp=num2_gltp;
+        den_gltp=den2_gltp;
+        ptr_y_up=ptr_sig_pst0;
+        ptr_y_up_offset=ptr_sig_pst0_offset;
+      }
+    }
+    if (num_gltp > den_gltp) {
+      gain_plt=MIN_GPLT;
+    }
+ else {
+      gain_plt=den_gltp / (den_gltp + GAMMA_G * num_gltp);
+    }
+    filt_plt(ptr_sig_in,ptr_sig_in_offset,ptr_y_up,ptr_y_up_offset,ptr_sig_pst0,ptr_sig_pst0_offset,gain_plt);
+  }
+  return vo;
+}

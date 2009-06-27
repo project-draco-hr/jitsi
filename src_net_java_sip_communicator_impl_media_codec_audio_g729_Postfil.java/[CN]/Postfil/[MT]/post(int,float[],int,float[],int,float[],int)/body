@@ -1,0 +1,19 @@
+{
+  int vo;
+  float[] apond1=new float[MP1];
+  float[] sig_ltp=new float[L_SUBFRP1];
+  int sig_ltp_ptr;
+  float parcor0;
+  Lpcfunc.weight_az(coeff,coeff_offset,GAMMA1_PST,M,apond1);
+  Lpcfunc.weight_az(coeff,coeff_offset,GAMMA2_PST,M,apond2);
+  Filter.residu(apond2,0,signal_ptr,signal_ptr_offset,res2,res2_ptr,L_SUBFR);
+  sig_ltp_ptr=1;
+  vo=pst_ltp(t0,res2,res2_ptr,sig_ltp,sig_ltp_ptr);
+  sig_ltp[0]=ptr_mem_stp[ptr_mem_stp_offset];
+  parcor0=calc_st_filt(apond2,apond1,sig_ltp,sig_ltp_ptr);
+  Filter.syn_filt(apond1,0,sig_ltp,sig_ltp_ptr,sig_ltp,sig_ltp_ptr,L_SUBFR,mem_stp,0,1);
+  filt_mu(sig_ltp,sig_out,sig_out_offset,parcor0);
+  gain_prec=scale_st(signal_ptr,signal_ptr_offset,sig_out,sig_out_offset,gain_prec);
+  Util.copy(res2,L_SUBFR,res2,MEM_RES2);
+  return vo;
+}
