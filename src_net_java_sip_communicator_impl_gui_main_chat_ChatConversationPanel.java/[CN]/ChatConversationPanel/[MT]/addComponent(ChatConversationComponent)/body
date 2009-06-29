@@ -1,11 +1,15 @@
 {
   Style style=document.getStyleSheet().addStyle(StyleConstants.ComponentElementName,document.getStyleSheet().getStyle("body"));
   style.addAttribute(AbstractDocument.ElementNameAttribute,StyleConstants.ComponentElementName);
-  style.addAttribute(StyleConstants.ComponentAttribute,component);
+  TransparentPanel wrapPanel=new TransparentPanel(new BorderLayout());
+  wrapPanel.add(component,BorderLayout.NORTH);
+  style.addAttribute(StyleConstants.ComponentAttribute,wrapPanel);
   style.addAttribute("identifier","messageHeader");
   style.addAttribute("date",component.getDate().getTime());
   try {
     document.insertString(document.getLength(),"ignored text",style);
+    String processedMessage=this.processBrTags(" \n ",TEXT_CONTENT_TYPE);
+    this.appendMessageToEnd(processedMessage);
   }
  catch (  BadLocationException e) {
     logger.error("Insert in the HTMLDocument failed.",e);
