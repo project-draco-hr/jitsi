@@ -1,0 +1,30 @@
+{
+  final Date requestDate=new Date();
+  final String id=generateID();
+  fireFileTransferRequest(new FileTransferRequestEvent(new IncomingFileTransferRequest(){
+    public String getID(){
+      return id;
+    }
+    public String getFileName(){
+      return file.getName();
+    }
+    public String getFileDescription(){
+      return file.toString();
+    }
+    public long getFileSize(){
+      return file.length();
+    }
+    public Contact getSender(){
+      return from;
+    }
+    public FileTransfer acceptFile(    File file){
+      MockFileTransferImpl fileTrans=new MockFileTransferImpl(from,file,id,FileTransfer.IN);
+      fireFileTransferCreated(new FileTransferCreatedEvent(fileTrans,requestDate));
+      changeFileTransferStatus(fileTrans,FileTransferStatusChangeEvent.PREPARING);
+      return fileTrans;
+    }
+    public void rejectFile(){
+    }
+  }
+,requestDate));
+}

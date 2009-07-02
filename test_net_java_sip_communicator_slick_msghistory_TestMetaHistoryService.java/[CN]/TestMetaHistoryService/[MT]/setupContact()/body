@@ -1,0 +1,32 @@
+{
+  System.setProperty("HistoryServiceDirectory","test-filehistory");
+  mockProvider=new MockProvider("FileHistoryMockUser");
+  Map<String,OperationSet> supportedOperationSets=mockProvider.getSupportedOperationSets();
+  mockPresOpSet=(MockPersistentPresenceOperationSet)supportedOperationSets.get(OperationSetPersistentPresence.class.getName());
+  mockBTelphonyOpSet=(MockOperationSetBasicTelephony)mockProvider.getOperationSet(OperationSetBasicTelephony.class);
+  mockBImOpSet=(MockBasicInstantMessaging)supportedOperationSets.get(OperationSetBasicInstantMessaging.class.getName());
+  mockFTOpSet=(MockOperationSetFileTransfer)supportedOperationSets.get(OperationSetFileTransfer.class.getName());
+  metaHistoryServiceRef=MetaHistoryServiceLick.bc.getServiceReference(MetaHistoryService.class.getName());
+  metaHistoryService=(MetaHistoryService)MetaHistoryServiceLick.bc.getService(metaHistoryServiceRef);
+  MockContactGroup root=(MockContactGroup)mockPresOpSet.getServerStoredContactListRoot();
+  testContact=new MockContact(TEST_CONTACT_NAME_1,mockProvider);
+  root.addContact(testContact);
+  metaCLref=MetaHistoryServiceLick.bc.getServiceReference(MetaContactListService.class.getName());
+  metaClService=(MetaContactListService)MetaHistoryServiceLick.bc.getService(metaCLref);
+  System.setProperty(MetaContactListService.PROVIDER_MASK_PROPERTY,"1");
+  Hashtable mockProvProperties=new Hashtable();
+  mockProvProperties.put(ProtocolProviderFactory.PROTOCOL,mockProvider.getProtocolName());
+  mockProvProperties.put(MetaContactListService.PROVIDER_MASK_PROPERTY,"1");
+  mockPrServiceRegistration=MetaHistoryServiceLick.bc.registerService(ProtocolProviderService.class.getName(),mockProvider,mockProvProperties);
+  logger.debug("Registered a mock protocol provider! ");
+  testMetaContact=metaClService.getRoot().getMetaContact(mockProvider,TEST_CONTACT_NAME_1);
+  metaClService.addNewContactToMetaContact(mockProvider,testMetaContact,TEST_CONTACT_NAME_2);
+  messagesToSend=new Message[]{mockBImOpSet.createMessage("test message word1-" + Math.random()),mockBImOpSet.createMessage("test message word2-" + Math.random()),mockBImOpSet.createMessage("test message word3-" + Math.random()),mockBImOpSet.createMessage("test message word4 participant_address_4 t4 -" + Math.random()),mockBImOpSet.createMessage("test message word5-" + Math.random()),mockBImOpSet.createMessage("test message word6 participant_address_1 t1 -" + Math.random())};
+  participantAddresses.add("participant_address_1");
+  participantAddresses.add("participant_address_2");
+  participantAddresses.add("participant_address_3");
+  participantAddresses.add("participant_address_4");
+  participantAddresses.add("participant_address_5");
+  participantAddresses.add("participant_address_6");
+  files=new File[]{new File("t1.txt"),new File("t2.txt"),new File("t3.txt"),new File("t4.txt"),new File("t5.txt"),new File("t6.txt")};
+}

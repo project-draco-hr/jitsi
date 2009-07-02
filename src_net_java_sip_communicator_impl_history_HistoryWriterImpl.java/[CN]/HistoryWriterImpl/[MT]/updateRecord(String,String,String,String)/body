@@ -1,7 +1,8 @@
 {
   Iterator<String> fileIterator=this.historyImpl.getFileList();
+  String filename=null;
   while (fileIterator.hasNext()) {
-    String filename=fileIterator.next();
+    filename=fileIterator.next();
     Document doc=this.historyImpl.getDocumentForFile(filename);
     if (doc == null)     continue;
     NodeList nodes=doc.getElementsByTagName("record");
@@ -31,8 +32,10 @@
     }
     if (changed) {
 synchronized (this.docWriteLock) {
-        if (historyImpl.getHistoryServiceImpl().isCacheEnabled())         this.historyImpl.writeFile(filename);
- else         this.historyImpl.writeFile(filename,doc);
+        this.historyImpl.writeFile(filename,doc);
+      }
+      if (filename.equals(this.currentFile)) {
+        this.currentDoc=doc;
       }
       break;
     }

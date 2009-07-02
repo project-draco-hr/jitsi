@@ -1,0 +1,38 @@
+{
+  logger.info("write records ");
+  assertNotNull("No metacontact",testMetaContact);
+  FileTransfer ft=mockFTOpSet.sendFile(testContact,files[0]);
+  mockFTOpSet.changeFileTransferStatus(ft,FileTransferStatusChangeEvent.CANCELED);
+  TransferListener tl=new TransferListener(files[1].getName(),true,true);
+  mockFTOpSet.addFileTransferListener(tl);
+  mockFTOpSet.receiveFile(files[1],testContact);
+  mockFTOpSet.removeFileTransferListener(tl);
+  generateCall((String)participantAddresses.get(0));
+  generateCall((String)participantAddresses.get(1));
+  mockBImOpSet.deliverMessage(TEST_CONTACT_NAME_1,messagesToSend[0]);
+  mockBImOpSet.deliverMessage(TEST_CONTACT_NAME_2,messagesToSend[1]);
+  controlDate1=new Date();
+  waitSeconds(200);
+  generateCall((String)participantAddresses.get(2));
+  generateCall((String)participantAddresses.get(3));
+  mockBImOpSet.deliverMessage(TEST_CONTACT_NAME_1,messagesToSend[2]);
+  mockBImOpSet.deliverMessage(TEST_CONTACT_NAME_2,messagesToSend[3]);
+  ft=mockFTOpSet.sendFile(testContact,files[2]);
+  mockFTOpSet.changeFileTransferStatus(ft,FileTransferStatusChangeEvent.COMPLETED);
+  tl=new TransferListener(files[3].getName(),false,false);
+  mockFTOpSet.addFileTransferListener(tl);
+  mockFTOpSet.receiveFile(files[3],testContact);
+  mockFTOpSet.removeFileTransferListener(tl);
+  controlDate2=new Date();
+  waitSeconds(200);
+  generateCall((String)participantAddresses.get(4));
+  generateCall((String)participantAddresses.get(5));
+  ft=mockFTOpSet.sendFile(testContact,files[4]);
+  mockFTOpSet.changeFileTransferStatus(ft,FileTransferStatusChangeEvent.REFUSED);
+  tl=new TransferListener(files[5].getName(),true,true);
+  mockFTOpSet.addFileTransferListener(tl);
+  mockFTOpSet.receiveFile(files[5],testContact);
+  mockFTOpSet.removeFileTransferListener(tl);
+  mockBImOpSet.deliverMessage(TEST_CONTACT_NAME_1,messagesToSend[4]);
+  mockBImOpSet.deliverMessage(TEST_CONTACT_NAME_2,messagesToSend[5]);
+}
