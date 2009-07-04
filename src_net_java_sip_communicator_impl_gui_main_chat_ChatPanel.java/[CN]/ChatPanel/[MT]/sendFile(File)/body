@@ -1,6 +1,16 @@
 {
   final ChatTransport fileTransferTransport=findFileTransferChatTransport();
+  if (fileTransferTransport == null) {
+    logger.error("Failed to send file.");
+    this.addErrorMessage(chatSession.getChatName(),GuiActivator.getResources().getI18NString("service.gui.FILE_SEND_FAILED",new String[]{file.getName()}),GuiActivator.getResources().getI18NString("service.gui.FILE_TRANSFER_NOT_SUPPORTED"));
+    return;
+  }
   final SendFileConversationComponent fileComponent=new SendFileConversationComponent(this,fileTransferTransport.getDisplayName(),file);
-  getChatConversationPanel().addComponent(fileComponent);
+  if (ConfigurationManager.isHistoryShown() && !isHistoryLoaded) {
+synchronized (incomingEventBuffer) {
+      incomingEventBuffer.add(fileComponent);
+    }
+  }
+ else   getChatConversationPanel().addComponent(fileComponent);
   this.sendFile(file,fileComponent);
 }
