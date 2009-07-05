@@ -6,6 +6,10 @@
  catch (  SipException ex) {
     throwOperationFailedException("Failed to create " + method + " request.",OperationFailedException.INTERNAL_ERROR,ex);
   }
+  ArrayList<ViaHeader> viaHeaders=protocolProvider.getLocalViaHeaders(dialog.getRemoteParty());
+  request.setHeader(viaHeaders.get(0));
+  UserAgentHeader userAgentHeader=protocolProvider.getSipCommUserAgentHeader();
+  if (userAgentHeader != null)   request.addHeader(userAgentHeader);
   AuthorizationHeader authorization=protocolProvider.getSipSecurityManager().getCachedAuthorizationHeader(((CallIdHeader)request.getHeader(CallIdHeader.NAME)).getCallId());
   if (authorization != null) {
     request.setHeader(authorization);
