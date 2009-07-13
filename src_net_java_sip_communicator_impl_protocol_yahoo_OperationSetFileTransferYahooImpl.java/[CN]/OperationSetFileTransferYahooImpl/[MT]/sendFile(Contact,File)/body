@@ -1,0 +1,18 @@
+{
+  try {
+    assertConnected();
+    ArrayList<String> filesToSend=new ArrayList<String>();
+    filesToSend.add(file.getCanonicalPath());
+    Date sentDate=new Date();
+    String id=yahooProvider.getYahooSession().sendFiles(filesToSend,toContact.getAddress());
+    FileTransferImpl ft=new FileTransferImpl(yahooProvider,id,toContact,file,FileTransfer.OUT);
+    FileTransferCreatedEvent event=new FileTransferCreatedEvent(ft,sentDate);
+    fireFileTransferCreated(event);
+    ft.fireStatusChangeEvent(FileTransferStatusChangeEvent.PREPARING);
+    return ft;
+  }
+ catch (  IOException e) {
+    logger.error("Cannot send fileTransfer",e);
+    return null;
+  }
+}

@@ -1,0 +1,13 @@
+{
+  OperationSetPersistentPresenceYahooImpl opSetPersPresence=(OperationSetPersistentPresenceYahooImpl)yahooProvider.getOperationSet(OperationSetPersistentPresence.class);
+  Contact sender=opSetPersPresence.findContactByID(ev.getFrom());
+  if (sender == null)   return;
+  Date recvDate=new Date();
+  for (int i=0; i < ev.getFileNames().size(); i++) {
+    String fileName=ev.getFileNames().get(i);
+    String fileSize=ev.getFileSizes().get(i);
+    IncomingFileTransferRequest req=new IncomingFileTransferRequestYahooImpl(yahooProvider,this,sender,recvDate,fileName,fileSize,ev.getId());
+    activeFileTransfers.put(ev.getId(),req);
+    fireFileTransferRequest(new FileTransferRequestEvent(req,recvDate));
+  }
+}

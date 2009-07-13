@@ -1,0 +1,27 @@
+{
+  if (ev.getId() == null)   return;
+  Object ftObj=activeFileTransfers.get(ev.getId());
+  if (ftObj == null) {
+    logger.warn("File Transfer or request not found. " + ev.getId() + "/ "+ ev.getState());
+    return;
+  }
+  int newState=ev.getState();
+  if (ftObj instanceof IncomingFileTransferRequest) {
+    if (newState == SessionFileTransferEvent.REFUSED) {
+      IncomingFileTransferRequestYahooImpl req=(IncomingFileTransferRequestYahooImpl)ftObj;
+      fireFileTransferRequestRejected(new FileTransferRequestEvent(req,req.getDate()));
+      return;
+    }
+  }
+  if (!(ftObj instanceof FileTransferImpl)) {
+    logger.warn("File Transfer not found." + ftObj);
+    return;
+  }
+  FileTransferImpl ft=(FileTransferImpl)ftObj;
+  if (newState == SessionFileTransferEvent.IN_PROGRESS) {
+    if (ev.getProgress() == 0)     ft.fireStatusChangeEvent(FileTransferStatusChangeEvent.IN_PROGRESS);
+    ft.setTransferedBytes(ev.getProgress());
+    ft.fireProgressChangeEvent((int)ev.getProgress());
+  }
+ else   ft.fireStatusChangeEvent(getStateMapping(newState));
+}
