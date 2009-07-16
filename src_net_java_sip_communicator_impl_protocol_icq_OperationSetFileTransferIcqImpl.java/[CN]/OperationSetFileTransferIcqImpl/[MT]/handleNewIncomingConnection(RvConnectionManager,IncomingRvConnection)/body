@@ -1,0 +1,25 @@
+{
+  if (transfer instanceof IncomingFileTransfer) {
+    logger.trace("Incoming Icq file transfer request " + transfer.getClass());
+    if (!(transfer instanceof IncomingFileTransfer)) {
+      logger.warn("Wrong file transfer.");
+      return;
+    }
+    OperationSetPersistentPresenceIcqImpl opSetPersPresence=(OperationSetPersistentPresenceIcqImpl)icqProvider.getOperationSet(OperationSetPersistentPresence.class);
+    Contact sender=opSetPersPresence.findContactByID(transfer.getBuddyScreenname().getFormatted());
+    IncomingFileTransfer incomingFileTransfer=(IncomingFileTransfer)transfer;
+    final Date newDate=new Date();
+    final IncomingFileTransferRequest req=new IncomingFileTransferRequestIcqImpl(icqProvider,this,incomingFileTransfer,sender,newDate);
+    transfer.addEventListener(new RvConnectionEventListener(){
+      public void handleEventWithStateChange(      RvConnection transfer,      RvConnectionState state,      RvConnectionEvent event){
+        if (state == FileTransferState.FAILED && event instanceof BuddyCancelledEvent) {
+          fireFileTransferRequestCanceled(new FileTransferRequestEvent(OperationSetFileTransferIcqImpl.this,req,newDate));
+        }
+      }
+      public void handleEvent(      RvConnection arg0,      RvConnectionEvent arg1){
+      }
+    }
+);
+    fireFileTransferRequest(new FileTransferRequestEvent(this,req,newDate));
+  }
+}

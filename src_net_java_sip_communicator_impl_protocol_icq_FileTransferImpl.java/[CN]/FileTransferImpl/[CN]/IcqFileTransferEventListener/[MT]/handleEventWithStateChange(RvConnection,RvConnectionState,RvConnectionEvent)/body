@@ -1,0 +1,63 @@
+{
+  if (state == FileTransferState.CONNECTING) {
+    if (transfer instanceof IncomingFileTransferImpl) {
+      ((IncomingFileTransferImpl)transfer).getStateController().addControllerListener(new ControllerListener(){
+        public void handleControllerSucceeded(        StateController controller,        SuccessfulStateInfo info){
+        }
+        public void handleControllerFailed(        StateController controller,        FailedStateInfo info){
+          if (info instanceof FailureEventInfo && ((FailureEventInfo)info).getEvent() instanceof ConnectionTimedOutEvent) {
+            FileTransferImpl.this.fireStatusChangeEvent(FileTransferStatusChangeEvent.CANCELED);
+            fileTransfer.close();
+          }
+        }
+      }
+);
+    }
+ else     if (transfer instanceof OutgoingFileTransferImpl) {
+      ((OutgoingFileTransferImpl)transfer).getStateController().addControllerListener(new ControllerListener(){
+        public void handleControllerSucceeded(        StateController controller,        SuccessfulStateInfo info){
+        }
+        public void handleControllerFailed(        StateController controller,        FailedStateInfo info){
+          if (info instanceof FailureEventInfo && ((FailureEventInfo)info).getEvent() instanceof ConnectionTimedOutEvent) {
+            FileTransferImpl.this.fireStatusChangeEvent(FileTransferStatusChangeEvent.CANCELED);
+            fileTransfer.close();
+          }
+        }
+      }
+);
+    }
+  }
+ else   if (state == FileTransferState.FINISHED) {
+    fireStatusChangeEvent(FileTransferStatusChangeEvent.COMPLETED);
+  }
+ else   if (state == FileTransferState.FAILED) {
+    if (event instanceof LocallyCancelledEvent) {
+      fireStatusChangeEvent(FileTransferStatusChangeEvent.CANCELED);
+    }
+ else     if (event instanceof BuddyCancelledEvent) {
+      fireStatusChangeEvent(FileTransferStatusChangeEvent.REFUSED);
+    }
+ else     fireStatusChangeEvent(FileTransferStatusChangeEvent.FAILED);
+  }
+ else   if (state == FileTransferState.TRANSFERRING) {
+    if (event instanceof TransferringFileEvent) {
+      fireStatusChangeEvent(FileTransferStatusChangeEvent.IN_PROGRESS);
+      final ProgressStatusProvider psp=((TransferringFileEvent)event).getProgressProvider();
+      new Thread("Transfer for " + transfer.getBuddyScreenname()){
+        public void run(){
+          while (transfer.isOpen()) {
+            long transfered=psp.getPosition();
+            setTransferedBytes(transfered);
+            fireProgressChangeEvent(System.currentTimeMillis(),(int)transfered);
+            try {
+              Thread.sleep(100);
+            }
+ catch (            InterruptedException e) {
+            }
+          }
+        }
+      }
+.start();
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  assertConnected();
+  AimConnection aimConnection=icqProvider.getAimConnection();
+  OutgoingFileTransfer outgoingFileTransfer=aimConnection.getIcbmService().getRvConnectionManager().createOutgoingFileTransfer(new Screenname(toContact.getAddress()));
+  String id=String.valueOf(outgoingFileTransfer.getRvSessionInfo().getRvSession().getRvSessionId());
+  FileTransferImpl outFileTransfer=new FileTransferImpl(outgoingFileTransfer,id,toContact,file,FileTransfer.OUT);
+  try {
+    outgoingFileTransfer.setSingleFile(new File(file.getPath()));
+  }
+ catch (  IOException e) {
+    logger.debug("Error sending file",e);
+    return null;
+  }
+  FileTransferCreatedEvent event=new FileTransferCreatedEvent(outFileTransfer,new Date());
+  fireFileTransferCreated(event);
+  outgoingFileTransfer.sendRequest(new InvitationMessage(""));
+  outFileTransfer.fireStatusChangeEvent(FileTransferStatusChangeEvent.PREPARING);
+  return outFileTransfer;
+}

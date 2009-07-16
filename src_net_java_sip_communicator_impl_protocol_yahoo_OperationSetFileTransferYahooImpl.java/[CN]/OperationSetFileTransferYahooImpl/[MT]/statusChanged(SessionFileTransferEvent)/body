@@ -6,10 +6,13 @@
     return;
   }
   int newState=ev.getState();
+  if (newState == SessionFileTransferEvent.CANCEL || newState == SessionFileTransferEvent.FAILED || newState == SessionFileTransferEvent.RECEIVED || newState == SessionFileTransferEvent.REFUSED || newState == SessionFileTransferEvent.SENT) {
+    activeFileTransfers.remove(ev.getId());
+  }
   if (ftObj instanceof IncomingFileTransferRequest) {
     if (newState == SessionFileTransferEvent.REFUSED) {
       IncomingFileTransferRequestYahooImpl req=(IncomingFileTransferRequestYahooImpl)ftObj;
-      fireFileTransferRequestRejected(new FileTransferRequestEvent(this,req,req.getDate()));
+      fireFileTransferRequestCanceled(new FileTransferRequestEvent(this,req,req.getDate()));
       return;
     }
   }
