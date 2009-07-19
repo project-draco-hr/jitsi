@@ -1,10 +1,10 @@
 {
+  if (!started && enableZrtp) {
+    startZrtp();
+  }
   byte[] buffer=pkt.getBuffer();
   int offset=pkt.getOffset();
   if ((buffer[offset] & 0x10) != 0x10) {
-    if (!started && enableZrtp && (multiStream || (sendPacketCount >= 1))) {
-      startZrtp();
-    }
     if (srtpInTransformer == null) {
       return pkt;
     }
@@ -22,9 +22,6 @@
     }
     if (!zPkt.hasMagic() || zrtpEngine == null) {
       return null;
-    }
-    if (!started && (multiStream || (sendPacketCount >= 1))) {
-      startZrtp();
     }
     byte[] extHeader=zPkt.getMessagePart();
     zrtpEngine.processZrtpMessage(extHeader,zPkt.getSSRC());
