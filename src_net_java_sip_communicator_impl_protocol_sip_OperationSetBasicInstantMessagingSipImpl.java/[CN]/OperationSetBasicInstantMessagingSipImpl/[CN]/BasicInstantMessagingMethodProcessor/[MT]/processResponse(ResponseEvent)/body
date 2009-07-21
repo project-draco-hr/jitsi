@@ -1,10 +1,6 @@
 {
 synchronized (messageProcessors) {
-    Iterator iter=messageProcessors.iterator();
-    while (iter.hasNext()) {
-      SipMessageProcessor listener=(SipMessageProcessor)iter.next();
-      if (!listener.processResponse(responseEvent,sentMsg))       return true;
-    }
+    for (    SipMessageProcessor listener : messageProcessors)     if (!listener.processResponse(responseEvent,sentMsg))     return true;
   }
   Request req=responseEvent.getClientTransaction().getRequest();
   int status=responseEvent.getResponse().getStatusCode();
@@ -29,7 +25,7 @@ synchronized (messageProcessors) {
     return false;
   }
   String key=((CallIdHeader)req.getHeader(CallIdHeader.NAME)).getCallId();
-  Message newMessage=(Message)sentMsg.get(key);
+  Message newMessage=sentMsg.get(key);
   if (newMessage == null) {
     logger.error("Couldn't find the message sent");
     MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(createMessage(content),to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
