@@ -1,0 +1,25 @@
+{
+  Map<String,String> accountProperties=new Hashtable<String,String>();
+  if (registration.isRememberPassword()) {
+    accountProperties.put(ProtocolProviderFactory.PASSWORD,registration.getPassword());
+  }
+  if (isModification) {
+    providerFactory.uninstallAccount(protocolProvider.getAccountID());
+    this.protocolProvider=null;
+    this.isModification=false;
+  }
+  Throwable exception=null;
+  try {
+    AccountID accountID=providerFactory.installAccount(user,accountProperties);
+    ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
+    protocolProvider=(ProtocolProviderService)FacebookAccRegWizzActivator.bundleContext.getService(serRef);
+  }
+ catch (  IllegalArgumentException exc) {
+    exception=exc;
+  }
+catch (  IllegalStateException exc) {
+    exception=exc;
+  }
+  if (exception != null)   FacebookAccRegWizzActivator.getUIService().getPopupDialog().showMessagePopupDialog(exception.getMessage(),Resources.getString("service.gui.ERROR"),PopupDialog.ERROR_MESSAGE);
+  return protocolProvider;
+}

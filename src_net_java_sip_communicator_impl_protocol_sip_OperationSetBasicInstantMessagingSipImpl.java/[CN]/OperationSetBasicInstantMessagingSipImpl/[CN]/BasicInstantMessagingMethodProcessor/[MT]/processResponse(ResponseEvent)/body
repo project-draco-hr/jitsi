@@ -20,21 +20,19 @@ synchronized (messageProcessors) {
   Contact to=opSetPersPresence.resolveContactID(toHeader.getAddress().getURI().toString());
   if (to == null) {
     logger.error("Error received a response from an unknown contact : " + toHeader.getAddress().getURI().toString() + " : "+ responseEvent.getResponse().getStatusCode()+ " "+ responseEvent.getResponse().getReasonPhrase());
-    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(createMessage(content),to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
-    fireMessageEvent(evt);
+    fireMessageDeliveryFailed(createMessage(content),to,MessageDeliveryFailedEvent.INTERNAL_ERROR);
     return false;
   }
   String key=((CallIdHeader)req.getHeader(CallIdHeader.NAME)).getCallId();
   Message newMessage=sentMsg.get(key);
   if (newMessage == null) {
     logger.error("Couldn't find the message sent");
-    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(createMessage(content),to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
-    fireMessageEvent(evt);
+    fireMessageDeliveryFailed(createMessage(content),to,MessageDeliveryFailedEvent.INTERNAL_ERROR);
     return true;
   }
   if (status >= 400 && status != 401 && status != 407) {
     logger.info(responseEvent.getResponse().getStatusCode() + " " + responseEvent.getResponse().getReasonPhrase());
-    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date(),responseEvent.getResponse().getStatusCode() + " " + responseEvent.getResponse().getReasonPhrase());
+    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,System.currentTimeMillis(),responseEvent.getResponse().getStatusCode() + " " + responseEvent.getResponse().getReasonPhrase());
     fireMessageEvent(evt);
     sentMsg.remove(key);
   }
@@ -47,7 +45,7 @@ synchronized (messageProcessors) {
     }
  catch (    OperationFailedException ex) {
       logger.error("can't solve the challenge",ex);
-      MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date(),ex.getMessage());
+      MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,System.currentTimeMillis(),ex.getMessage());
       fireMessageEvent(evt);
       sentMsg.remove(key);
     }

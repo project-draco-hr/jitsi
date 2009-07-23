@@ -1,0 +1,28 @@
+{
+  logger.trace("getImage()");
+  if (image != null)   return image;
+  updateContactInfo();
+  if (contactMetaInfo == null)   return getDefaultAvatar();
+  logger.trace("fetch the avatar from the server");
+  ByteArrayOutputStream byteArrayOS=new ByteArrayOutputStream();
+  try {
+    URL url=new URL(contactMetaInfo.thumbSrc);
+    BufferedImage newAvatar=ImageIO.read(url);
+    javax.imageio.ImageIO.write(newAvatar,"PNG",byteArrayOS);
+  }
+ catch (  IOException e) {
+    logger.warn("IOException occured when loading avatar",e);
+    return getDefaultAvatar();
+  }
+ finally {
+    try {
+      byteArrayOS.close();
+    }
+ catch (    IOException e) {
+      e.printStackTrace();
+    }
+  }
+  image=byteArrayOS.toByteArray();
+  if (image == null)   return getDefaultAvatar();
+  return image;
+}

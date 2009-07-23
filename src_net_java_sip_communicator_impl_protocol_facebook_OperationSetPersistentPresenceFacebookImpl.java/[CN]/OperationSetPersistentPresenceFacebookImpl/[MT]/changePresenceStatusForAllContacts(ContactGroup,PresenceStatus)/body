@@ -1,0 +1,17 @@
+{
+  Iterator<Contact> childContacts=parent.contacts();
+  while (childContacts.hasNext()) {
+    ContactFacebookImpl contact=(ContactFacebookImpl)childContacts.next();
+    if (findProviderForFacebookUserID(contact.getAddress()) != null) {
+      continue;
+    }
+    PresenceStatus oldStatus=contact.getPresenceStatus();
+    contact.setPresenceStatus(newStatus);
+    fireContactPresenceStatusChangeEvent(contact,parent,oldStatus);
+  }
+  Iterator<ContactGroup> subgroups=parent.subgroups();
+  while (subgroups.hasNext()) {
+    ContactGroup subgroup=(ContactGroup)subgroups.next();
+    changePresenceStatusForAllContacts(subgroup,newStatus);
+  }
+}

@@ -1,0 +1,14 @@
+{
+  ContactFacebookImpl contact=new ContactFacebookImpl(contactIdentifier,parentProvider);
+  ((ContactGroupFacebookImpl)parent).addContact(contact);
+  fireSubscriptionEvent(contact,parent,SubscriptionEvent.SUBSCRIPTION_CREATED);
+  ProtocolProviderServiceFacebookImpl fbProvider=findProviderForFacebookUserID(contactIdentifier);
+  if (fbProvider != null) {
+    OperationSetPersistentPresence opSetPresence=(OperationSetPersistentPresence)fbProvider.getOperationSet(OperationSetPersistentPresence.class);
+    changePresenceStatusForContact(contact,(FacebookStatusEnum)opSetPresence.getPresenceStatus());
+  }
+ else {
+    changePresenceStatusForContact(contact,getPresenceStatus());
+  }
+  fireContactPresenceStatusChangeEvent(contact,parent,FacebookStatusEnum.OFFLINE);
+}

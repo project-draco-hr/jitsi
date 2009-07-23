@@ -3,8 +3,7 @@
   assertConnected();
   if (to.getPresenceStatus().equals(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE)) && !offlineMessageSupported) {
     logger.debug("trying to send a message to an offline contact");
-    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.OFFLINE_MESSAGES_NOT_SUPPORTED,new Date());
-    fireMessageEvent(evt);
+    fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.OFFLINE_MESSAGES_NOT_SUPPORTED);
     return;
   }
   Request mes;
@@ -13,8 +12,7 @@
   }
  catch (  OperationFailedException ex) {
     logger.error("Failed to create the message.",ex);
-    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
-    fireMessageEvent(evt);
+    fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR);
     return;
   }
   try {
@@ -22,14 +20,12 @@
   }
  catch (  TransactionUnavailableException ex) {
     logger.error("Failed to create messageTransaction.\n" + "This is most probably a network connection error.",ex);
-    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,new Date());
-    fireMessageEvent(evt);
+    fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.NETWORK_FAILURE);
     return;
   }
 catch (  SipException ex) {
     logger.error("Failed to send the message.",ex);
-    MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR,new Date());
-    fireMessageEvent(evt);
+    fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR);
     return;
   }
 }
