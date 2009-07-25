@@ -1,21 +1,15 @@
 {
-  seq=getSeq();
+  int latestSeq=getSeq();
+  logger.trace("My seq:" + seq + " | Latest/current seq:"+ latestSeq);
+  if (seq < 0)   seq=latestSeq;
+ else   if (seq > latestSeq)   seq=latestSeq;
   while (isClientRunning) {
-    int currentSeq=getSeq();
-    logger.trace("My seq:" + seq + " | Current seq:"+ currentSeq+ '\n');
-    if (seq > currentSeq)     seq=currentSeq;
-    while (seq <= currentSeq) {
-      String msgResponseBody=facebookGetMethod(getMessageRequestingUrl(seq));
-      logger.trace("=========msgResponseBody begin=========");
-      logger.trace(msgResponseBody);
-      logger.trace("+++++++++msgResponseBody end+++++++++");
-      try {
-        FacebookResponseParser.messageRequestResultParser(FacebookAdapter.this,msgResponseBody);
-      }
- catch (      JSONException e) {
-        logger.warn(e.getMessage());
-      }
-      seq++;
-    }
+    String msgResponseBody=facebookGetMethod(getMessageRequestingUrl(seq));
+    logger.trace("=========msgResponseBody begin=========");
+    logger.trace(msgResponseBody);
+    logger.trace("+++++++++msgResponseBody end+++++++++");
+    latestSeq=FacebookResponseParser.messageRequestResultParser(FacebookAdapter.this,msgResponseBody,seq);
+    if (latestSeq > seq)     seq++;
+ else     if (latestSeq < seq)     seq=latestSeq;
   }
 }
