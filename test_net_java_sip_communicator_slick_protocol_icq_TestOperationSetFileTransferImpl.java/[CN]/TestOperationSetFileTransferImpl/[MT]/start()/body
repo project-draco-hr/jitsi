@@ -1,0 +1,125 @@
+{
+  if (fixture != null)   return;
+  fixture=new IcqSlickFixture();
+  final Object registrationLock=new Object();
+  fixture.setUp();
+  fixture.testerAgent.unregister();
+  Map<String,OperationSet> supportedOperationSets1=fixture.provider.getSupportedOperationSets();
+  if (supportedOperationSets1 == null || supportedOperationSets1.size() < 1)   throw new NullPointerException("No OperationSet implementations are supported by " + "this implementation. ");
+  opSetPresence1=(OperationSetPresence)supportedOperationSets1.get(OperationSetPresence.class.getName());
+  if (opSetPresence1 == null) {
+    throw new NullPointerException("An implementation of the service must provide an " + "implementation of at least one of the PresenceOperationSets");
+  }
+  opSetFT1=(OperationSetFileTransfer)supportedOperationSets1.get(OperationSetFileTransfer.class.getName());
+  if (opSetFT1 == null) {
+    throw new NullPointerException("An implementation of the service must provide an " + "implementation of at least one of the FileTransferOperationSets");
+  }
+  ServiceReference[] serRefs=null;
+  String osgiFilter="(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.ICQ+ ")";
+  try {
+    serRefs=IcqSlickFixture.bc.getServiceReferences(ProtocolProviderFactory.class.getName(),osgiFilter);
+  }
+ catch (  InvalidSyntaxException ex) {
+    fail(osgiFilter + " is not a valid osgi filter");
+  }
+  assertTrue("Failed to find a provider factory service for protocol ICQ",(serRefs != null) && (serRefs.length > 0));
+  BundleContext bc=IcqSlickFixture.bc;
+  providerFactory=(ProtocolProviderFactory)bc.getService(serRefs[0]);
+  String USER_ID=fixture.testerAgent.getIcqUIN();
+  final String PASSWORD=System.getProperty(IcqProtocolProviderSlick.TESTED_IMPL_PWD_PROP_NAME,null);
+  Hashtable<String,String> props=new Hashtable<String,String>();
+  props.put("USER_ID",USER_ID);
+  props.put("PASSWORD",PASSWORD);
+  try {
+    providerFactory.installAccount(USER_ID,props);
+  }
+ catch (  Exception e) {
+  }
+  String secondProviderID=fixture.testerAgent.getIcqUIN();
+  ServiceReference[] icqProviderRefs=bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.ICQ+ ")"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ secondProviderID+ ")"+ ")");
+  assertNotNull("No Protocol Provider was found for ICQ UIN:" + secondProviderID,icqProviderRefs);
+  assertTrue("No Protocol Provider was found for ICQ UIN:" + secondProviderID,icqProviderRefs.length > 0);
+  ProtocolProviderService provider2=(ProtocolProviderService)bc.getService(icqProviderRefs[0]);
+  secondProviderAccount=provider2.getAccountID();
+  Map<String,OperationSet> supportedOperationSets2=provider2.getSupportedOperationSets();
+  if (supportedOperationSets2 == null || supportedOperationSets2.size() < 1)   throw new NullPointerException("No OperationSet implementations are supported by " + "this implementation. ");
+  opSetPresence2=(OperationSetPresence)supportedOperationSets2.get(OperationSetPresence.class.getName());
+  if (opSetPresence2 == null) {
+    throw new NullPointerException("An implementation of the service must provide an " + "implementation of at least one of the PresenceOperationSets");
+  }
+  opSetFT2=(OperationSetFileTransfer)supportedOperationSets2.get(OperationSetFileTransfer.class.getName());
+  if (opSetFT2 == null) {
+    throw new NullPointerException("An implementation of the service must provide an " + "implementation of at least one of the FileTransferOperationSets");
+  }
+  provider2.addRegistrationStateChangeListener(new RegistrationStateChangeListener(){
+    public void registrationStateChanged(    RegistrationStateChangeEvent evt){
+      if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
+        try {
+synchronized (registrationLock) {
+            registrationLock.notifyAll();
+          }
+        }
+ catch (        Exception e) {
+          logger.error("Error creating contactlist",e);
+        }
+      }
+    }
+  }
+);
+  provider2.register(new SecurityAuthority(){
+    public UserCredentials obtainCredentials(    String realm,    UserCredentials defaultValues,    int reasonCode){
+      return obtainCredentials(realm,defaultValues);
+    }
+    public UserCredentials obtainCredentials(    String realm,    UserCredentials defaultValues){
+      defaultValues.setPassword(PASSWORD.toCharArray());
+      return defaultValues;
+    }
+    public void setUserNameEditable(    boolean isUserNameEditable){
+    }
+    public boolean isUserNameEditable(){
+      return false;
+    }
+  }
+);
+synchronized (registrationLock) {
+    logger.info("Waiting 1!");
+    registrationLock.wait(60000);
+    logger.info("Stop waiting!");
+  }
+  fixture.provider.addRegistrationStateChangeListener(new RegistrationStateChangeListener(){
+    public void registrationStateChanged(    RegistrationStateChangeEvent evt){
+      if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
+        try {
+          prepareContactList();
+synchronized (registrationLock) {
+            registrationLock.notifyAll();
+          }
+        }
+ catch (        Exception e) {
+          logger.error("Error creating contactlist",e);
+        }
+      }
+    }
+  }
+);
+  fixture.provider.register(new SecurityAuthority(){
+    public UserCredentials obtainCredentials(    String realm,    UserCredentials defaultValues,    int reasonCode){
+      return obtainCredentials(realm,defaultValues);
+    }
+    public UserCredentials obtainCredentials(    String realm,    UserCredentials defaultValues){
+      defaultValues.setPassword(System.getProperty(IcqProtocolProviderSlick.TESTED_IMPL_PWD_PROP_NAME,null).toCharArray());
+      return defaultValues;
+    }
+    public void setUserNameEditable(    boolean isUserNameEditable){
+    }
+    public boolean isUserNameEditable(){
+      return false;
+    }
+  }
+);
+synchronized (registrationLock) {
+    logger.info("Waiting 2!");
+    registrationLock.wait(60000);
+    logger.info("Stop waiting!");
+  }
+}
