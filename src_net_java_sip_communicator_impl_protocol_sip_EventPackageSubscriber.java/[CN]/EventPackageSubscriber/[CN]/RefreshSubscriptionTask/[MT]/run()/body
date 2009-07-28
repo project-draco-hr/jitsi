@@ -1,0 +1,21 @@
+{
+  Dialog dialog=subscription.getDialog();
+  if (dialog == null) {
+    logger.warn("null dialog associated with " + subscription + ", can't refresh the subscription");
+    return;
+  }
+  ClientTransaction transac=null;
+  try {
+    transac=createSubscription(subscription,dialog,subscriptionDuration);
+  }
+ catch (  OperationFailedException e) {
+    logger.error("Failed to create subscriptionTransaction.",e);
+    return;
+  }
+  try {
+    dialog.sendRequest(transac);
+  }
+ catch (  SipException e) {
+    logger.error("Can't send the request",e);
+  }
+}

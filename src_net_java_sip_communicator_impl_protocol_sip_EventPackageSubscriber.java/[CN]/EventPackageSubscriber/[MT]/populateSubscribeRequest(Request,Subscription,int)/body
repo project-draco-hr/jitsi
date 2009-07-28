@@ -1,0 +1,39 @@
+{
+  HeaderFactory headerFactory=protocolProvider.getHeaderFactory();
+  EventHeader evHeader;
+  try {
+    evHeader=headerFactory.createEventHeader(eventPackage);
+    String eventId=subscription.getEventId();
+    if (eventId != null)     evHeader.setEventId(eventId);
+  }
+ catch (  ParseException e) {
+    logger.error("An unexpected error occurred while" + "constructing the EventHeader",e);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the EventHeader",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  req.setHeader(evHeader);
+  ContactHeader contactHeader=protocolProvider.getContactHeader(subscription.getToAddress());
+  req.setHeader(contactHeader);
+  AcceptHeader accept;
+  try {
+    accept=headerFactory.createAcceptHeader("application",contentSubType);
+  }
+ catch (  ParseException e) {
+    logger.error("wrong accept header",e);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the AcceptHeader",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  req.setHeader(accept);
+  ExpiresHeader expHeader;
+  try {
+    expHeader=headerFactory.createExpiresHeader(expires);
+  }
+ catch (  InvalidArgumentException e) {
+    logger.error("Invalid expires value: " + expires,e);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the ExpiresHeader",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  req.setHeader(expHeader);
+  CallIdHeader callIdHeader=(CallIdHeader)req.getHeader(CallIdHeader.NAME);
+  AuthorizationHeader authorization=protocolProvider.getSipSecurityManager().getCachedAuthorizationHeader(callIdHeader.getCallId());
+  if (authorization != null)   req.addHeader(authorization);
+  UserAgentHeader userAgentHeader=protocolProvider.getSipCommUserAgentHeader();
+  if (userAgentHeader != null)   req.addHeader(userAgentHeader);
+}

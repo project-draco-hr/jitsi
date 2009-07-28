@@ -1,0 +1,40 @@
+{
+  if (presenceState == null || contacts == null || curStatus == null) {
+    return null;
+  }
+  for (  Object[] tab : contacts) {
+    Contact contact=(Contact)tab[0];
+    float priority=((Float)tab[1]).floatValue();
+    int pos=0;
+    boolean skip=false;
+    for (int i=0; i < curStatus.size(); i++) {
+      Object tab2[]=curStatus.get(i);
+      Contact curContact=(Contact)tab2[0];
+      float curPriority=((Float)tab2[1]).floatValue();
+      if (pos == 0 && curPriority <= priority) {
+        pos=i;
+      }
+      if (curContact.equals(contact)) {
+        if (curPriority > priority) {
+          skip=true;
+          break;
+        }
+ else         if (curPriority < priority) {
+          curStatus.remove(i);
+        }
+ else {
+          PresenceStatus curPresence=(PresenceStatus)tab2[2];
+          if (curPresence.getStatus() >= presenceState.getStatus()) {
+            skip=true;
+            break;
+          }
+          curStatus.remove(i);
+        }
+        i--;
+      }
+    }
+    if (skip)     continue;
+    curStatus.add(pos,new Object[]{contact,new Float(priority),presenceState});
+  }
+  return curStatus;
+}

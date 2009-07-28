@@ -1,124 +1,14 @@
 {
   if (this.presenceEnabled == false)   return false;
-  ServerTransaction serverTransaction=requestEvent.getServerTransaction();
-  SipProvider jainSipProvider=(SipProvider)requestEvent.getSource();
   Request request=requestEvent.getRequest();
-  if (serverTransaction == null) {
-    try {
-      serverTransaction=SipStackSharing.getOrCreateServerTransaction(requestEvent);
-    }
- catch (    TransactionAlreadyExistsException ex) {
-      logger.error("Failed to create a new server" + "transaction for an incoming request\n" + "(Next message contains the request)",ex);
-      return false;
-    }
-catch (    TransactionUnavailableException ex) {
-      logger.error("Failed to create a new server" + "transaction for an incoming request\n" + "(Next message contains the request)",ex);
-      return false;
-    }
-  }
   EventHeader eventHeader=(EventHeader)request.getHeader(EventHeader.NAME);
   if (eventHeader == null || !eventHeader.getEventType().equalsIgnoreCase("presence")) {
     return false;
   }
+  ServerTransaction serverTransaction=EventPackageSubscriber.getOrCreateServerTransaction(requestEvent);
+  if (serverTransaction == null)   return false;
   boolean processed=false;
-  if (request.getMethod().equals(Request.NOTIFY)) {
-    Response response=null;
-    logger.debug("notify received");
-    SubscriptionStateHeader sstateHeader=(SubscriptionStateHeader)request.getHeader(SubscriptionStateHeader.NAME);
-    if (sstateHeader == null) {
-      logger.error("no subscription state in this request");
-      return false;
-    }
-    CallIdHeader idheader=(CallIdHeader)request.getHeader(CallIdHeader.NAME);
-    ContactSipImpl contact=(ContactSipImpl)this.subscribedContacts.get(idheader.getCallId());
-    if (contact != null && !sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED) && !contact.isResolved()) {
-      logger.debug("contact still pending while NOTIFY received");
-    }
-    if (contact == null && !sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED)) {
-      logger.debug("contact not found for callid : " + idheader.getCallId());
-synchronized (this.waitedCallIds) {
-        this.waitedCallIds.remove(idheader.getCallId());
-      }
-      try {
-        response=this.parentProvider.getMessageFactory().createResponse(Response.CALL_OR_TRANSACTION_DOES_NOT_EXIST,request);
-      }
- catch (      ParseException e) {
-        logger.error("failed to create the 481 response",e);
-        return false;
-      }
-      try {
-        serverTransaction.sendResponse(response);
-      }
- catch (      SipException e) {
-        logger.error("failed to send the response",e);
-      }
-catch (      InvalidArgumentException e) {
-        logger.error("invalid argument provided while trying" + " to send the response",e);
-      }
-      return true;
-    }
-    ContentTypeHeader ctheader=(ContentTypeHeader)request.getHeader(ContentTypeHeader.NAME);
-    if (ctheader != null && !ctheader.getContentSubType().equalsIgnoreCase(PIDF_XML)) {
-      try {
-        response=this.parentProvider.getMessageFactory().createResponse(Response.UNSUPPORTED_MEDIA_TYPE,request);
-      }
- catch (      ParseException e) {
-        logger.error("failed to create the OK response",e);
-        return false;
-      }
-      AcceptHeader acceptHeader=null;
-      try {
-        acceptHeader=this.parentProvider.getHeaderFactory().createAcceptHeader("application",PIDF_XML);
-      }
- catch (      ParseException e) {
-        logger.error("failed to create the accept header",e);
-        return false;
-      }
-      response.setHeader(acceptHeader);
-      try {
-        serverTransaction.sendResponse(response);
-      }
- catch (      SipException e) {
-        logger.error("failed to send the response",e);
-      }
-catch (      InvalidArgumentException e) {
-        logger.error("invalid argument provided while trying" + " to send the response",e);
-      }
-    }
-    if (sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED)) {
-      if (contact != null) {
-        terminateSubscription(contact);
-        this.subscribedContacts.remove(serverTransaction.getDialog().getCallId().getCallId());
-        if (sstateHeader.getReasonCode().equals(SubscriptionStateHeader.DEACTIVATED)) {
-          forcePollContact(contact);
-        }
-      }
-synchronized (this.waitedCallIds) {
-        this.waitedCallIds.remove(idheader.getCallId());
-      }
-    }
-    try {
-      response=this.parentProvider.getMessageFactory().createResponse(Response.OK,request);
-    }
- catch (    ParseException e) {
-      logger.error("failed to create the OK response",e);
-      return false;
-    }
-    try {
-      serverTransaction.sendResponse(response);
-    }
- catch (    SipException e) {
-      logger.error("failed to send the response",e);
-    }
-catch (    InvalidArgumentException e) {
-      logger.error("invalid argument provided while trying" + " to send the response",e);
-    }
-    if (request.getRawContent() != null && !sstateHeader.getState().equalsIgnoreCase(SubscriptionStateHeader.TERMINATED)) {
-      setPidfPresenceStatus(new String(request.getRawContent()));
-    }
-    processed=true;
-  }
- else   if (request.getMethod().equals(Request.SUBSCRIBE)) {
+  if (request.getMethod().equals(Request.SUBSCRIBE)) {
     FromHeader from=(FromHeader)request.getHeader(FromHeader.NAME);
     if (this.useDistantPA) {
       this.useDistantPA=false;
@@ -173,7 +63,7 @@ catch (    InvalidArgumentException e) {
       contact.getTimeoutTask().cancel();
       WatcherTimeoutTask timeout=new WatcherTimeoutTask(contact);
       contact.setTimeoutTask(timeout);
-      getTimer().schedule(timeout,expires * 1000);
+      timer.schedule(timeout,expires * 1000);
       Response response=null;
       try {
         response=this.parentProvider.getMessageFactory().createResponse(Response.OK,request);
@@ -319,7 +209,7 @@ synchronized (this.ourWatchers) {
     }
     WatcherTimeoutTask timeout=new WatcherTimeoutTask(contact);
     contact.setTimeoutTask(timeout);
-    getTimer().schedule(timeout,expires * 1000);
+    timer.schedule(timeout,expires * 1000);
     processed=true;
   }
  else   if (request.getMethod().equals(Request.PUBLISH)) {

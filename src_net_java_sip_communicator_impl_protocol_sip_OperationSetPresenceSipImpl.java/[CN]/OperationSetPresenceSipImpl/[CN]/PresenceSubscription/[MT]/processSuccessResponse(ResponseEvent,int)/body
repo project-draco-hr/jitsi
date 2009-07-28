@@ -1,0 +1,20 @@
+{
+switch (statusCode) {
+case Response.OK:
+case Response.ACCEPTED:
+    try {
+      if (!contact.isResolved()) {
+        if (resolveContactID(contact.getAddress()) == null) {
+          ContactGroup parentGroup=contact.getParentContactGroup();
+          ((ContactGroupSipImpl)parentGroup).addContact(contact);
+          fireSubscriptionEvent(contact,parentGroup,SubscriptionEvent.SUBSCRIPTION_CREATED);
+        }
+        finalizeSubscription(contact);
+      }
+    }
+ catch (    NullPointerException e) {
+      logger.debug("failed to finalize the subscription of the contact",e);
+    }
+  break;
+}
+}

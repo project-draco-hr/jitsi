@@ -1,32 +1,9 @@
 {
   if (this.presenceEnabled == false || !contact.isResolvable())   return;
-  if (contact.getClientDialog() != null)   return;
-  Request subscription;
   try {
-    subscription=createSubscription(contact,this.subscriptionDuration);
+    subscriber.poll(new PresenceSubscription(contact));
   }
  catch (  OperationFailedException ex) {
-    logger.error("Failed to create the subcription",ex);
-    return;
-  }
-  ClientTransaction subscribeTransaction;
-  SipProvider jainSipProvider=this.parentProvider.getDefaultJainSipProvider();
-  try {
-    subscribeTransaction=jainSipProvider.getNewClientTransaction(subscription);
-  }
- catch (  TransactionUnavailableException ex) {
-    logger.error("Failed to create subscriptionTransaction.\n" + "This is most probably a network" + " connection error.",ex);
-    return;
-  }
-  CallIdHeader idheader=(CallIdHeader)subscription.getHeader(CallIdHeader.NAME);
-  this.subscribedContacts.put(idheader.getCallId(),contact);
-  logger.debug("added a contact at :" + idheader.getCallId());
-  try {
-    subscribeTransaction.sendRequest();
-  }
- catch (  SipException ex) {
-    logger.error("Failed to send the message.",ex);
-    this.subscribedContacts.remove(idheader.getCallId());
-    return;
+    logger.error("Failed to create and send the subcription",ex);
   }
 }

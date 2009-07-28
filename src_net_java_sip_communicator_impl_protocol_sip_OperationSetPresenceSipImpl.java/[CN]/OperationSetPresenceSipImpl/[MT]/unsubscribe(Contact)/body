@@ -1,34 +1,7 @@
 {
-  if (!(contact instanceof ContactSipImpl)) {
-    throw new IllegalArgumentException("the contact is not a SIP" + " contact");
-  }
+  if (!(contact instanceof ContactSipImpl))   throw new IllegalArgumentException("the contact is not a SIP contact");
   ContactSipImpl sipcontact=(ContactSipImpl)contact;
-  Dialog dialog=sipcontact.getClientDialog();
-  if (dialog != null && this.presenceEnabled) {
-    if (this.subscribedContacts.get(dialog.getCallId().getCallId()) == null) {
-      throw new IllegalArgumentException("trying to unregister a " + "not registered contact");
-    }
-    if (sipcontact.isResolvable()) {
-      assertConnected();
-      ClientTransaction transac=null;
-      try {
-        transac=createSubscription(0,dialog);
-      }
- catch (      OperationFailedException e) {
-        logger.debug("failed to create the unsubscription",e);
-        throw e;
-      }
-      this.subscribedContacts.remove(dialog.getCallId().getCallId());
-      try {
-        dialog.sendRequest(transac);
-      }
- catch (      Exception e) {
-        logger.debug("Can't send the request");
-        throw new OperationFailedException("Failed to send the subscription message",OperationFailedException.NETWORK_FAILURE);
-      }
-    }
-  }
-  terminateSubscription(sipcontact);
+  unsubscribe(sipcontact,true);
   ((ContactGroupSipImpl)sipcontact.getParentContactGroup()).removeContact(sipcontact);
   fireSubscriptionEvent(sipcontact,sipcontact.getParentContactGroup(),SubscriptionEvent.SUBSCRIPTION_REMOVED);
 }

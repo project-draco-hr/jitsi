@@ -1,0 +1,48 @@
+{
+  Address toAddress=subscription.getToAddress();
+  HeaderFactory headerFactory=protocolProvider.getHeaderFactory();
+  CallIdHeader callIdHeader=protocolProvider.getDefaultJainSipProvider().getNewCallId();
+  CSeqHeader cSeqHeader;
+  try {
+    cSeqHeader=headerFactory.createCSeqHeader(1l,Request.SUBSCRIBE);
+  }
+ catch (  InvalidArgumentException ex) {
+    logger.error("An unexpected error occurred while" + "constructing the CSeqHeader",ex);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the CSeqHeader",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+catch (  ParseException ex) {
+    logger.error("An unexpected error occurred while" + "constructing the CSeqHeader",ex);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the CSeqHeader",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  String localTag=ProtocolProviderServiceSipImpl.generateLocalTag();
+  FromHeader fromHeader;
+  ToHeader toHeader;
+  try {
+    fromHeader=headerFactory.createFromHeader(protocolProvider.getOurSipAddress(toAddress),localTag);
+    toHeader=headerFactory.createToHeader(toAddress,null);
+  }
+ catch (  ParseException ex) {
+    logger.error("An unexpected error occurred while" + "constructing the FromHeader or ToHeader",ex);
+    throw new OperationFailedException("An unexpected error occurred while" + "constructing the FromHeader or ToHeader",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ArrayList<ViaHeader> viaHeaders=protocolProvider.getLocalViaHeaders(toAddress);
+  MaxForwardsHeader maxForwards=protocolProvider.getMaxForwardsHeader();
+  Request req;
+  try {
+    req=protocolProvider.getMessageFactory().createRequest(toHeader.getAddress().getURI(),Request.SUBSCRIBE,callIdHeader,cSeqHeader,fromHeader,toHeader,viaHeaders,maxForwards);
+  }
+ catch (  ParseException ex) {
+    logger.error("Failed to create message Request!",ex);
+    throw new OperationFailedException("Failed to create message Request!",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  populateSubscribeRequest(req,subscription,expires);
+  ClientTransaction subscribeTransaction;
+  try {
+    subscribeTransaction=protocolProvider.getDefaultJainSipProvider().getNewClientTransaction(req);
+  }
+ catch (  TransactionUnavailableException ex) {
+    logger.error("Failed to create subscribe transaction.\n" + "This is most probably a network connection error.",ex);
+    throw new OperationFailedException("Failed to create the subscription transaction",OperationFailedException.NETWORK_FAILURE);
+  }
+  return subscribeTransaction;
+}

@@ -1,0 +1,25 @@
+{
+  Subscription subscription=getSubscription(toAddress,eventId);
+  if (subscription == null)   if (assertSubscribed)   throw new IllegalArgumentException("trying to unregister a not registered contact");
+ else   return;
+  Dialog dialog=subscription.getDialog();
+  if (dialog != null) {
+    String callId=dialog.getCallId().getCallId();
+    ClientTransaction subscribeTransaction;
+    try {
+      subscribeTransaction=createSubscription(subscription,dialog,0);
+    }
+ catch (    OperationFailedException e) {
+      logger.debug("failed to create the unsubscription",e);
+      throw e;
+    }
+    removeSubscription(callId,subscription);
+    try {
+      dialog.sendRequest(subscribeTransaction);
+    }
+ catch (    SipException e) {
+      logger.debug("Can't send the request",e);
+      throw new OperationFailedException("Failed to send the subscription message",OperationFailedException.NETWORK_FAILURE,e);
+    }
+  }
+}

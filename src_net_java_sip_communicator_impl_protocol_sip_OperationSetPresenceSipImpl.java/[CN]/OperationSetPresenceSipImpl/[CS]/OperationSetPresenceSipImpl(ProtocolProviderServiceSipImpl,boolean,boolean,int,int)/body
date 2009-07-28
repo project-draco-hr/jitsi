@@ -1,20 +1,17 @@
 {
   super(provider);
   this.contactListRoot=new ContactGroupSipImpl("RootGroup",provider);
-  this.parentProvider.addRegistrationStateChangeListener(new RegistrationListener());
+  this.parentProvider.addRegistrationStateChangeListener(this);
+  this.presenceEnabled=presenceEnabled;
+  this.subscriptionDuration=(subscriptionExpiration > 0) ? subscriptionExpiration : PRESENCE_DEFAULT_EXPIRE;
+  this.subscriber=this.presenceEnabled ? new EventPackageSubscriber(this.parentProvider,"presence",this.subscriptionDuration,PIDF_XML,this.timer,REFRESH_MARGIN) : null;
   this.parentProvider.registerMethodProcessor(Request.SUBSCRIBE,this);
   this.parentProvider.registerMethodProcessor(Request.NOTIFY,this);
   this.parentProvider.registerMethodProcessor(Request.PUBLISH,this);
   this.parentProvider.registerEvent("presence");
-  logger.debug("presence initialized with :" + isPresenceEnabled + ", "+ forceP2PMode+ ", "+ pollingPeriod+ ", "+ subscriptionExpiration+ " for "+ provider.getOurDisplayName());
-  if (pollingPeriod > 0) {
-    this.pollingTaskPeriod=pollingPeriod * 1000;
-  }
+  logger.debug("presence initialized with :" + presenceEnabled + ", "+ forceP2PMode+ ", "+ pollingPeriod+ ", "+ subscriptionExpiration+ " for "+ this.parentProvider.getOurDisplayName());
+  this.pollingTaskPeriod=(pollingPeriod > 0) ? (pollingPeriod * 1000) : 30000;
   this.useDistantPA=!forceP2PMode;
-  if (subscriptionDuration > 0) {
-    this.subscriptionDuration=subscriptionExpiration;
-  }
-  this.presenceEnabled=isPresenceEnabled;
   this.sipStatusEnum=parentProvider.getSipStatusEnum();
   this.presenceStatus=sipStatusEnum.getStatus(SipStatusEnum.OFFLINE);
 }

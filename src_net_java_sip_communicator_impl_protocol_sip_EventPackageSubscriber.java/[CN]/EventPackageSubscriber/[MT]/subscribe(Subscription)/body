@@ -1,0 +1,21 @@
+{
+  ClientTransaction subscribeTransaction;
+  try {
+    subscribeTransaction=createSubscription(subscription,subscriptionDuration);
+  }
+ catch (  OperationFailedException ex) {
+    logger.error("Failed to create the subcription",ex);
+    throw new OperationFailedException("Failed to create the subscription",OperationFailedException.INTERNAL_ERROR);
+  }
+  CallIdHeader callIdHeader=(CallIdHeader)subscribeTransaction.getRequest().getHeader(CallIdHeader.NAME);
+  String callId=callIdHeader.getCallId();
+  addSubscription(callId,subscription);
+  try {
+    subscribeTransaction.sendRequest();
+  }
+ catch (  SipException ex) {
+    removeSubscription(callId,subscription);
+    logger.error("Failed to send the subscription.",ex);
+    throw new OperationFailedException("Failed to send the subscription",OperationFailedException.NETWORK_FAILURE);
+  }
+}

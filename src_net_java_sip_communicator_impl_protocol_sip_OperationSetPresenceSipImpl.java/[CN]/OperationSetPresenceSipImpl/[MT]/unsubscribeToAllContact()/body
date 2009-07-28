@@ -1,38 +1,18 @@
 {
   logger.debug("trying to unsubscribe to every contact");
-  Iterator groupsIter=getServerStoredContactListRoot().subgroups();
+  Iterator<ContactGroup> groupsIter=getServerStoredContactListRoot().subgroups();
   while (groupsIter.hasNext()) {
-    ContactGroupSipImpl group=(ContactGroupSipImpl)groupsIter.next();
-    Iterator contactsIter=group.contacts();
+    ContactGroup group=groupsIter.next();
+    Iterator<Contact> contactsIter=group.contacts();
     while (contactsIter.hasNext()) {
       ContactSipImpl contact=(ContactSipImpl)contactsIter.next();
-      if (contact.getClientDialog() != null && contact.isResolved()) {
-        Dialog dialog=contact.getClientDialog();
-        ClientTransaction transac=null;
-        try {
-          transac=createSubscription(0,dialog);
-        }
- catch (        OperationFailedException e) {
-          logger.error("Failed to create subscriptionTransaction.",e);
-          return;
-        }
-        this.subscribedContacts.remove(dialog.getCallId().getCallId());
-synchronized (this.waitedCallIds) {
-          this.waitedCallIds.add(dialog.getCallId().getCallId());
-        }
-        try {
-          dialog.sendRequest(transac);
-        }
- catch (        Exception e) {
-          logger.error("Can't send the request",e);
-          return;
-        }
-        logger.debug("unsubscribed to " + contact);
+      try {
+        unsubscribe(contact,false);
       }
- else {
-        logger.debug("contact " + contact + " doesn't insteress us");
+ catch (      OperationFailedException ex) {
+        logger.error("Failed to unsubscribe to contact " + contact,ex);
+        return;
       }
-      terminateSubscription(contact);
     }
   }
 }

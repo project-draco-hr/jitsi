@@ -12,122 +12,7 @@
   String method=cseq.getMethod();
   SipProvider sourceProvider=(SipProvider)responseEvent.getSource();
   boolean processed=false;
-  if (method.equals(Request.SUBSCRIBE)) {
-    CallIdHeader idheader=(CallIdHeader)response.getHeader(CallIdHeader.NAME);
-    ContactSipImpl contact=(ContactSipImpl)this.subscribedContacts.get(idheader.getCallId());
-    ExpiresHeader expHeader=response.getExpires();
-    if ((expHeader != null && expHeader.getExpires() == 0) || contact == null) {
-      if (response.getStatusCode() == Response.UNAUTHORIZED || response.getStatusCode() == Response.PROXY_AUTHENTICATION_REQUIRED) {
-        try {
-          processAuthenticationChallenge(clientTransaction,response,sourceProvider);
-          processed=true;
-        }
- catch (        OperationFailedException e) {
-          logger.error("can't handle the challenge",e);
-        }
-      }
- else       if (response.getStatusCode() != Response.OK && response.getStatusCode() != Response.ACCEPTED) {
-synchronized (this.waitedCallIds) {
-          this.waitedCallIds.remove(idheader.getCallId());
-        }
-        processed=true;
-      }
-      return processed;
-    }
-    if (response.getStatusCode() >= Response.OK && response.getStatusCode() < Response.MULTIPLE_CHOICES) {
-      if (response.getStatusCode() == Response.OK || response.getStatusCode() == Response.ACCEPTED) {
-        if (expHeader == null) {
-          logger.error("no Expires header in this response");
-          return false;
-        }
-        if (contact.getResfreshTask() != null) {
-          contact.getResfreshTask().cancel();
-        }
-        RefreshSubscriptionTask refresh=new RefreshSubscriptionTask(contact);
-        contact.setResfreshTask(refresh);
-        int refreshDelay=expHeader.getExpires();
-        if (refreshDelay >= REFRESH_MARGIN)         refreshDelay-=REFRESH_MARGIN;
-        getTimer().schedule(refresh,refreshDelay * 1000);
-        contact.setClientDialog(clientTransaction.getDialog());
-        try {
-          if (!contact.isResolved()) {
-            if (resolveContactID(contact.getAddress()) == null) {
-              ContactGroup parentGroup=contact.getParentContactGroup();
-              ((ContactGroupSipImpl)parentGroup).addContact(contact);
-              fireSubscriptionEvent(contact,parentGroup,SubscriptionEvent.SUBSCRIPTION_CREATED);
-            }
-            finalizeSubscription(contact,clientTransaction.getDialog());
-          }
-        }
- catch (        NullPointerException e) {
-          logger.debug("failed to finalize the subscription of the" + "contact",e);
-          return false;
-        }
-      }
-    }
- else     if (response.getStatusCode() >= Response.MULTIPLE_CHOICES && response.getStatusCode() < Response.BAD_REQUEST) {
-      logger.info("Response to Subscribe of contact: " + contact + " - "+ response.getReasonPhrase());
-    }
- else     if (response.getStatusCode() >= Response.BAD_REQUEST) {
-      if (response.getStatusCode() == Response.INTERVAL_TOO_BRIEF) {
-        MinExpiresHeader min=(MinExpiresHeader)response.getHeader(MinExpiresHeader.NAME);
-        if (min == null) {
-          logger.error("no minimal expires value in this 423 " + "response");
-          return false;
-        }
-        Request request=responseEvent.getClientTransaction().getRequest();
-        ExpiresHeader exp=request.getExpires();
-        try {
-          exp.setExpires(min.getExpires());
-        }
- catch (        InvalidArgumentException e) {
-          logger.error("can't set the new expires value",e);
-          return false;
-        }
-        ClientTransaction transac=null;
-        try {
-          transac=this.parentProvider.getDefaultJainSipProvider().getNewClientTransaction(request);
-        }
- catch (        TransactionUnavailableException e) {
-          logger.error("can't create the client transaction",e);
-          return false;
-        }
-        try {
-          transac.sendRequest();
-        }
- catch (        SipException e) {
-          logger.error("can't send the new request",e);
-          return false;
-        }
-        return true;
-      }
- else       if (response.getStatusCode() == Response.UNAUTHORIZED || response.getStatusCode() == Response.PROXY_AUTHENTICATION_REQUIRED) {
-        try {
-          processAuthenticationChallenge(clientTransaction,response,sourceProvider);
-        }
- catch (        OperationFailedException e) {
-          logger.error("can't handle the challenge",e);
-          changePresenceStatusForContact(contact,sipStatusEnum.getStatus(SipStatusEnum.UNKNOWN));
-          this.subscribedContacts.remove(idheader.getCallId());
-          contact.setClientDialog(null);
-        }
-      }
- else {
-        logger.debug("error received from the network:\n" + response);
-        if (response.getStatusCode() == Response.TEMPORARILY_UNAVAILABLE) {
-          changePresenceStatusForContact(contact,sipStatusEnum.getStatus(SipStatusEnum.OFFLINE));
-        }
- else {
-          changePresenceStatusForContact(contact,sipStatusEnum.getStatus(SipStatusEnum.UNKNOWN));
-        }
-        this.subscribedContacts.remove(idheader.getCallId());
-        contact.setClientDialog(null);
-        contact.setResolvable(false);
-      }
-    }
-    processed=true;
-  }
- else   if (method.equals(Request.NOTIFY)) {
+  if (method.equals(Request.NOTIFY)) {
     Request notifyRequest=clientTransaction.getRequest();
     if (notifyRequest != null) {
       EventHeader eventHeader=(EventHeader)notifyRequest.getHeader(EventHeader.NAME);
@@ -205,7 +90,7 @@ synchronized (this.waitedCallIds) {
       this.republishTask=new RePublishTask();
       int republishDelay=expires.getExpires();
       if (republishDelay >= REFRESH_MARGIN)       republishDelay-=REFRESH_MARGIN;
-      getTimer().schedule(this.republishTask,republishDelay * 1000);
+      timer.schedule(this.republishTask,republishDelay * 1000);
     }
  else     if (response.getStatusCode() == Response.UNAUTHORIZED || response.getStatusCode() == Response.PROXY_AUTHENTICATION_REQUIRED) {
       try {

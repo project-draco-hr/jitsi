@@ -1,0 +1,94 @@
+{
+  Request request=requestEvent.getRequest();
+  EventHeader eventHeader=(EventHeader)request.getHeader(EventHeader.NAME);
+  if ((eventHeader == null) || !eventPackage.equalsIgnoreCase(eventHeader.getEventType())) {
+    return false;
+  }
+  if (!Request.NOTIFY.equals(request.getMethod()))   return false;
+  logger.debug("notify received");
+  SubscriptionStateHeader sstateHeader=(SubscriptionStateHeader)request.getHeader(SubscriptionStateHeader.NAME);
+  if (sstateHeader == null) {
+    logger.error("no subscription state in this request");
+    return false;
+  }
+  String sstate=sstateHeader.getState();
+  ServerTransaction serverTransaction=getOrCreateServerTransaction(requestEvent);
+  CallIdHeader callIdHeader=(CallIdHeader)request.getHeader(CallIdHeader.NAME);
+  String callId=callIdHeader.getCallId();
+  Subscription subscription=getSubscription(callId);
+  if ((subscription == null) && !SubscriptionStateHeader.TERMINATED.equalsIgnoreCase(sstate)) {
+    logger.debug("subscription not found for callId " + callId);
+    Response response;
+    try {
+      response=protocolProvider.getMessageFactory().createResponse(Response.CALL_OR_TRANSACTION_DOES_NOT_EXIST,request);
+    }
+ catch (    ParseException e) {
+      logger.error("failed to create the 481 response",e);
+      return false;
+    }
+    try {
+      serverTransaction.sendResponse(response);
+    }
+ catch (    SipException e) {
+      logger.error("failed to send the response",e);
+    }
+catch (    InvalidArgumentException e) {
+      logger.error("invalid argument provided while trying to send the response",e);
+    }
+    return true;
+  }
+  ContentTypeHeader ctheader=(ContentTypeHeader)request.getHeader(ContentTypeHeader.NAME);
+  if ((ctheader != null) && !ctheader.getContentSubType().equalsIgnoreCase(contentSubType)) {
+    Response response;
+    try {
+      response=protocolProvider.getMessageFactory().createResponse(Response.UNSUPPORTED_MEDIA_TYPE,request);
+    }
+ catch (    ParseException e) {
+      logger.error("failed to create the OK response",e);
+      return false;
+    }
+    AcceptHeader acceptHeader;
+    try {
+      acceptHeader=protocolProvider.getHeaderFactory().createAcceptHeader("application",contentSubType);
+    }
+ catch (    ParseException e) {
+      logger.error("failed to create the accept header",e);
+      return false;
+    }
+    response.setHeader(acceptHeader);
+    try {
+      serverTransaction.sendResponse(response);
+    }
+ catch (    SipException e) {
+      logger.error("failed to send the response",e);
+    }
+catch (    InvalidArgumentException e) {
+      logger.error("invalid argument provided while trying" + " to send the response",e);
+    }
+  }
+  if (SubscriptionStateHeader.TERMINATED.equalsIgnoreCase(sstate)) {
+    if (subscription != null) {
+      removeSubscription(callId,subscription);
+      subscription.processTerminatedRequest(requestEvent,sstateHeader.getReasonCode());
+    }
+  }
+  Response response;
+  try {
+    response=protocolProvider.getMessageFactory().createResponse(Response.OK,request);
+  }
+ catch (  ParseException e) {
+    logger.error("failed to create the OK response",e);
+    return false;
+  }
+  try {
+    serverTransaction.sendResponse(response);
+  }
+ catch (  SipException e) {
+    logger.error("failed to send the response",e);
+  }
+catch (  InvalidArgumentException e) {
+    logger.error("invalid argument provided while trying to send the response",e);
+  }
+  if (subscription != null)   subscription.processActiveRequest(requestEvent,request.getRawContent());
+  return true;
+}
