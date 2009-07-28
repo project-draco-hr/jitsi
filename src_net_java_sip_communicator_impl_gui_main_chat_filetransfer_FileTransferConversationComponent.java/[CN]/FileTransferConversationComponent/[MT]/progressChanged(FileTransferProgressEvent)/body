@@ -4,18 +4,18 @@
   long progressTimestamp=event.getTimestamp();
   ByteFormat format=new ByteFormat();
   String bytesString=format.format(transferredBytes);
-  if ((progressTimestamp - lastSpeedTimestamp) >= 5000) {
+  if ((progressTimestamp - lastSpeedTimestamp) >= SPEED_CALCULATE_DELAY) {
     lastProgressSpeed=Math.round(calculateProgressSpeed(transferredBytes));
     this.lastSpeedTimestamp=progressTimestamp;
     this.lastTransferredBytes=transferredBytes;
   }
-  if ((progressTimestamp - lastEstimatedTimeTimestamp) >= 5000 && lastProgressSpeed > 0) {
-    lastEstimatedTime=Math.round(calculateEstimatedTransferTime(lastProgressSpeed,event.getFileTransfer().getFile().length() - transferredBytes));
+  if ((progressTimestamp - lastEstimatedTimeTimestamp) >= SPEED_CALCULATE_DELAY && lastProgressSpeed > 0) {
+    lastEstimatedTime=Math.round(calculateEstimatedTransferTime(lastProgressSpeed,transferredFileSize - transferredBytes));
     lastEstimatedTimeTimestamp=progressTimestamp;
   }
   progressBar.setString(getProgressLabel(bytesString));
   if (lastProgressSpeed > 0) {
-    progressSpeedLabel.setText(resources.getI18NString("service.gui.SPEED") + format.format(lastProgressSpeed));
+    progressSpeedLabel.setText(resources.getI18NString("service.gui.SPEED") + format.format(lastProgressSpeed) + "/sec");
     progressSpeedLabel.setVisible(true);
   }
   if (lastEstimatedTime > 0) {

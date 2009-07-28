@@ -1,0 +1,23 @@
+{
+  if (!(packet instanceof StreamInitiation))   return;
+  logger.debug("Incoming Jabber file transfer request.");
+  StreamInitiation streamInitiation=(StreamInitiation)packet;
+  FileTransferRequest jabberRequest=new FileTransferRequest(manager,streamInitiation);
+  IncomingFileTransferRequestJabberImpl incomingFileTransferRequest=new IncomingFileTransferRequestJabberImpl(jabberProvider,OperationSetFileTransferJabberImpl.this,jabberRequest);
+  org.jivesoftware.smackx.packet.StreamInitiation.File file=streamInitiation.getFile();
+  boolean isThumbnailedFile=false;
+  if (file instanceof FileElement) {
+    ThumbnailElement thumbnailElement=((FileElement)file).getThumbnailElement();
+    if (thumbnailElement != null) {
+      isThumbnailedFile=true;
+      incomingFileTransferRequest.createThumbnailListeners(thumbnailElement.getCid());
+      ThumbnailIQ thumbnailRequest=new ThumbnailIQ(streamInitiation.getTo(),streamInitiation.getFrom(),thumbnailElement.getCid(),IQ.Type.GET);
+      logger.debug("Sending thumbnail request:" + thumbnailRequest.toXML());
+      jabberProvider.getConnection().sendPacket(thumbnailRequest);
+    }
+  }
+  if (!isThumbnailedFile) {
+    FileTransferRequestEvent fileTransferRequestEvent=new FileTransferRequestEvent(OperationSetFileTransferJabberImpl.this,incomingFileTransferRequest,new Date());
+    fireFileTransferRequest(fileTransferRequestEvent);
+  }
+}

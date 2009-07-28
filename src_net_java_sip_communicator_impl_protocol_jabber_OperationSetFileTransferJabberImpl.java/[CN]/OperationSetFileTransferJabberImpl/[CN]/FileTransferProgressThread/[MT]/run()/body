@@ -1,24 +1,35 @@
 {
   int status;
   long progress;
+  String statusReason="";
   while (true) {
     try {
       Thread.sleep(10);
       status=parseJabberStatus(jabberTransfer.getStatus());
       progress=fileTransfer.getTransferedBytes();
       if (status == FileTransferStatusChangeEvent.FAILED || status == FileTransferStatusChangeEvent.COMPLETED || status == FileTransferStatusChangeEvent.CANCELED || status == FileTransferStatusChangeEvent.REFUSED) {
+        if (fileTransfer instanceof OutgoingFileTransferJabberImpl) {
+          ((OutgoingFileTransferJabberImpl)fileTransfer).removeThumbnailRequestListener();
+        }
         break;
       }
-      fileTransfer.fireStatusChangeEvent(status);
+      fileTransfer.fireStatusChangeEvent(status,"Status changed");
       fileTransfer.fireProgressChangeEvent(System.currentTimeMillis(),progress);
     }
  catch (    InterruptedException e) {
       logger.debug("Unable to sleep thread.",e);
     }
   }
+  if (jabberTransfer.getError() != null) {
+    logger.error("An error occured while transfering file: " + jabberTransfer.getError().getMessage());
+  }
+  if (jabberTransfer.getException() != null) {
+    logger.error("An exception occured while transfering file: ",jabberTransfer.getException());
+    statusReason=jabberTransfer.getException().getMessage();
+  }
   if (initialFileSize > 0 && status == FileTransferStatusChangeEvent.COMPLETED && fileTransfer.getTransferedBytes() < initialFileSize) {
     status=FileTransferStatusChangeEvent.CANCELED;
   }
-  fileTransfer.fireStatusChangeEvent(status);
+  fileTransfer.fireStatusChangeEvent(status,statusReason);
   fileTransfer.fireProgressChangeEvent(System.currentTimeMillis(),progress);
 }

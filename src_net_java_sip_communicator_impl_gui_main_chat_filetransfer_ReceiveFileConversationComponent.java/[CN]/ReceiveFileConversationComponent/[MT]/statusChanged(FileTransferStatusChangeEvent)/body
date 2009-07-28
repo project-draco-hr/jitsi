@@ -1,7 +1,10 @@
 {
-  int status=event.getNewStatus();
   FileTransfer fileTransfer=event.getFileTransfer();
+  int status=event.getNewStatus();
   String fromContactName=fileTransferRequest.getSender().getDisplayName();
+  if (status == FileTransferStatusChangeEvent.COMPLETED || status == FileTransferStatusChangeEvent.CANCELED || status == FileTransferStatusChangeEvent.FAILED || status == FileTransferStatusChangeEvent.REFUSED) {
+    fileTransfer.removeStatusListener(this);
+  }
   if (status == FileTransferStatusChangeEvent.PREPARING) {
     hideProgressRelatedComponents();
     titleLabel.setText(dateString + resources.getI18NString("service.gui.FILE_TRANSFER_PREPARING",new String[]{fromContactName}));
@@ -19,7 +22,7 @@
     }
   }
  else   if (status == FileTransferStatusChangeEvent.COMPLETED) {
-    this.setCompletedDownloadFile(fileTransfer.getFile());
+    this.setCompletedDownloadFile(downloadFile);
     hideProgressRelatedComponents();
     cancelButton.setVisible(false);
     openFileButton.setVisible(true);

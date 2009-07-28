@@ -1,0 +1,68 @@
+{
+  boolean done=false;
+  String id=parser.getAttributeValue("","id");
+  String mimeType=parser.getAttributeValue("","mime-type");
+  StreamInitiation initiation=new StreamInitiation();
+  String name=null;
+  String size=null;
+  String hash=null;
+  String date=null;
+  String desc=null;
+  ThumbnailElement thumbnail=null;
+  boolean isRanged=false;
+  DataForm form=null;
+  DataFormProvider dataFormProvider=new DataFormProvider();
+  int eventType;
+  String elementName;
+  String namespace;
+  while (!done) {
+    eventType=parser.next();
+    elementName=parser.getName();
+    namespace=parser.getNamespace();
+    if (eventType == XmlPullParser.START_TAG) {
+      if (elementName.equals("file")) {
+        name=parser.getAttributeValue("","name");
+        size=parser.getAttributeValue("","size");
+        hash=parser.getAttributeValue("","hash");
+        date=parser.getAttributeValue("","date");
+      }
+ else       if (elementName.equals("desc")) {
+        desc=parser.nextText();
+      }
+ else       if (elementName.equals("range")) {
+        isRanged=true;
+      }
+ else       if (elementName.equals("x") && namespace.equals("jabber:x:data")) {
+        form=(DataForm)dataFormProvider.parseExtension(parser);
+      }
+ else       if (elementName.equals("thumbnail")) {
+        thumbnail=new ThumbnailElement(parser.getText());
+      }
+    }
+ else     if (eventType == XmlPullParser.END_TAG) {
+      if (elementName.equals("si"))       done=true;
+ else       if (elementName.equals("file")) {
+        long fileSize=0;
+        if (size != null && size.trim().length() != 0) {
+          try {
+            fileSize=Long.parseLong(size);
+          }
+ catch (          NumberFormatException e) {
+            e.printStackTrace();
+          }
+        }
+        FileElement file=new FileElement(name,fileSize);
+        file.setHash(hash);
+        if (date != null)         file.setDate(DelayInformation.UTC_FORMAT.parse(date));
+        if (thumbnail != null)         file.setThumbnailElement(thumbnail);
+        file.setDesc(desc);
+        file.setRanged(isRanged);
+        initiation.setFile(file);
+      }
+    }
+  }
+  initiation.setSesssionID(id);
+  initiation.setMimeType(mimeType);
+  initiation.setFeatureNegotiationForm(form);
+  return initiation;
+}

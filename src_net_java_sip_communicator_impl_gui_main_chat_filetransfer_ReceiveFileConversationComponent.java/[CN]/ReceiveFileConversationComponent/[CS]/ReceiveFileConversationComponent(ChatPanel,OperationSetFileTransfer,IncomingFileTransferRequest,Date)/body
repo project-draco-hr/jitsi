@@ -5,6 +5,14 @@
   this.date=date;
   this.dateString=getDateString(date);
   fileTransferOpSet.addFileTransferListener(this);
+  byte[] thumbnail=request.getThumbnail();
+  if (thumbnail != null && thumbnail.length > 0) {
+    ImageIcon thumbnailIcon=new ImageIcon(thumbnail);
+    if (thumbnailIcon.getIconWidth() > IMAGE_WIDTH || thumbnailIcon.getIconHeight() > IMAGE_HEIGHT) {
+      thumbnailIcon=ImageUtils.getScaledRoundedIcon(thumbnail,IMAGE_WIDTH,IMAGE_WIDTH);
+    }
+    imageLabel.setIcon(thumbnailIcon);
+  }
   titleLabel.setText(dateString + resources.getI18NString("service.gui.FILE_TRANSFER_REQUEST_RECIEVED",new String[]{fileTransferRequest.getSender().getDisplayName()}));
   String fileName=getFileLabel(request.getFileName(),request.getFileSize());
   fileLabel.setText(fileName);
@@ -16,7 +24,7 @@
       rejectButton.setVisible(false);
       cancelButton.setVisible(true);
       progressBar.setVisible(true);
-      File downloadFile=createFile(fileTransferRequest);
+      downloadFile=createFile(fileTransferRequest);
       new AcceptFile(downloadFile).start();
     }
   }

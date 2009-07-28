@@ -1,5 +1,14 @@
 {
   if (!allowsFileTransfer())   return null;
   OperationSetFileTransfer ftOpSet=(OperationSetFileTransfer)contact.getProtocolProvider().getOperationSet(OperationSetFileTransfer.class);
+  if (FileUtils.isImage(file.getName())) {
+    OperationSetThumbnailedFileFactory tfOpSet=(OperationSetThumbnailedFileFactory)contact.getProtocolProvider().getOperationSet(OperationSetThumbnailedFileFactory.class);
+    if (tfOpSet != null) {
+      byte[] thumbnail=getFileThumbnail(file);
+      if (thumbnail != null && thumbnail.length > 0) {
+        file=tfOpSet.createFileWithThumbnail(file,THUMBNAIL_WIDTH,THUMBNAIL_HEIGHT,"image/png",thumbnail);
+      }
+    }
+  }
   return ftOpSet.sendFile(contact,file);
 }

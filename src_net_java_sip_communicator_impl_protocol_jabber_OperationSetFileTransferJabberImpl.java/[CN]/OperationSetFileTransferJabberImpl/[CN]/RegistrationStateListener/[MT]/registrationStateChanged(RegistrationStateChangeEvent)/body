@@ -2,14 +2,21 @@
   logger.debug("The provider changed state from: " + evt.getOldState() + " to: "+ evt.getNewState());
   if (evt.getNewState() == RegistrationState.REGISTERED) {
     manager=new FileTransferManager(jabberProvider.getConnection());
-    jabberFileTransferListener=new JabberFileTransferListener();
-    manager.addFileTransferListener(jabberFileTransferListener);
+    fileTransferRequestListener=new FileTransferRequestListener();
+    ProviderManager.getInstance().addIQProvider(FileElement.ELEMENT_NAME,FileElement.NAMESPACE,new FileElement());
+    ProviderManager.getInstance().addIQProvider(ThumbnailIQ.ELEMENT_NAME,ThumbnailIQ.NAMESPACE,new ThumbnailIQ());
+    jabberProvider.getConnection().addPacketListener(fileTransferRequestListener,new AndFilter(new PacketTypeFilter(StreamInitiation.class),new IQTypeFilter(IQ.Type.SET)));
   }
  else   if (evt.getNewState() == RegistrationState.UNREGISTERED) {
-    if (jabberFileTransferListener != null && manager != null) {
-      manager.removeFileTransferListener(jabberFileTransferListener);
-      manager=null;
-      jabberFileTransferListener=null;
+    if (fileTransferRequestListener != null && jabberProvider.getConnection() != null) {
+      jabberProvider.getConnection().removePacketListener(fileTransferRequestListener);
     }
+    ProviderManager providerManager=ProviderManager.getInstance();
+    if (providerManager != null) {
+      ProviderManager.getInstance().removeIQProvider(FileElement.ELEMENT_NAME,FileElement.NAMESPACE);
+      ProviderManager.getInstance().removeIQProvider(ThumbnailIQ.ELEMENT_NAME,ThumbnailIQ.NAMESPACE);
+    }
+    fileTransferRequestListener=null;
+    manager=null;
   }
 }
