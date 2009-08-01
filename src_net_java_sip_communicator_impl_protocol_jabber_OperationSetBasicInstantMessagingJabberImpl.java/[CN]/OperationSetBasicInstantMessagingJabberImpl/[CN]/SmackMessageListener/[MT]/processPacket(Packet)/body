@@ -33,7 +33,14 @@
       }
     }
     MessageDeliveryFailedEvent ev=new MessageDeliveryFailedEvent(newMessage,sourceContact,errorResultCode);
-    fireMessageEvent(ev);
+    OperationSetInstantMessageTransformJabberImpl messageTransform=(OperationSetInstantMessageTransformJabberImpl)jabberProvider.getOperationSet(OperationSetInstantMessageTransform.class);
+    for (    Map.Entry<Integer,Vector<TransformLayer>> entry : messageTransform.transformLayers.entrySet()) {
+      for (Iterator<TransformLayer> iterator=entry.getValue().iterator(); iterator.hasNext(); ) {
+        TransformLayer transformLayer=(TransformLayer)iterator.next();
+        if (ev != null)         ev=transformLayer.messageDeliveryFailed(ev);
+      }
+    }
+    if (ev != null)     fireMessageEvent(ev);
     return;
   }
   if (sourceContact == null) {
@@ -41,5 +48,12 @@
     sourceContact=opSetPersPresence.createVolatileContact(fromUserID);
   }
   MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(newMessage,sourceContact,System.currentTimeMillis());
-  fireMessageEvent(msgReceivedEvt);
+  OperationSetInstantMessageTransformJabberImpl messageTransform=(OperationSetInstantMessageTransformJabberImpl)jabberProvider.getOperationSet(OperationSetInstantMessageTransform.class);
+  for (  Map.Entry<Integer,Vector<TransformLayer>> entry : messageTransform.transformLayers.entrySet()) {
+    for (Iterator<TransformLayer> iterator=entry.getValue().iterator(); iterator.hasNext(); ) {
+      TransformLayer transformLayer=(TransformLayer)iterator.next();
+      if (msgReceivedEvt != null)       msgReceivedEvt=transformLayer.messageReceived(msgReceivedEvt);
+    }
+  }
+  if (msgReceivedEvt != null)   fireMessageEvent(msgReceivedEvt);
 }
