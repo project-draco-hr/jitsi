@@ -1,26 +1,11 @@
 {
   if (!started)   throw new IllegalStateException("Service is stopped or has not been started");
-  if (propertiesDocument == null)   propertiesDocument=createPropertiesDocument();
-  Node root=propertiesDocument.getFirstChild();
-  Node currentNode=null;
-  NodeList children=root.getChildNodes();
-  for (int i=0; i < children.getLength(); i++) {
-    currentNode=children.item(i);
-    if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
-      StringBuffer propertyNameBuff=new StringBuffer();
-      propertyNameBuff.append(currentNode.getNodeName());
-      updateNode(currentNode,propertyNameBuff,properties);
-    }
-  }
-  Map<String,Object> newlyAddedProperties=cloneProperties();
-  for (  String propName : fileExtractedProperties.keySet())   newlyAddedProperties.remove(propName);
-  this.processNewProperties(propertiesDocument,newlyAddedProperties);
   File config=getConfigurationFile();
   FailSafeTransaction trans=this.faService.createFailSafeTransaction(config);
   try {
     trans.beginTransaction();
     OutputStream stream=new FileOutputStream(config);
-    XMLUtils.indentedWriteXML(propertiesDocument,stream);
+    store.storeConfiguration(stream);
     stream.close();
     trans.commit();
   }

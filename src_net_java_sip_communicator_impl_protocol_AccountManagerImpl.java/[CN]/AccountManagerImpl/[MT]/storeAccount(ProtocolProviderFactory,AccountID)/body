@@ -11,17 +11,19 @@
       accountNodeName=configurationService.getString(storedAccount);
     }
   }
+  Map<String,Object> configurationProperties=new HashMap<String,Object>();
   if (accountNodeName == null) {
     accountNodeName="acc" + Long.toString(System.currentTimeMillis());
-    configurationService.setProperty(factoryPackage + "." + accountNodeName,accountNodeName);
-    configurationService.setProperty(factoryPackage + "." + accountNodeName+ "."+ ProtocolProviderFactory.ACCOUNT_UID,accountID.getAccountUniqueID());
+    configurationProperties.put(factoryPackage + "." + accountNodeName,accountNodeName);
+    configurationProperties.put(factoryPackage + "." + accountNodeName+ "."+ ProtocolProviderFactory.ACCOUNT_UID,accountID.getAccountUniqueID());
   }
   Map<String,String> accountProperties=accountID.getAccountProperties();
   for (  Map.Entry<String,String> entry : accountProperties.entrySet()) {
     String property=entry.getKey();
     String value=entry.getValue();
     if (property.equals(ProtocolProviderFactory.PASSWORD))     value=new String(Base64.encode(value.getBytes()));
-    configurationService.setProperty(factoryPackage + "." + accountNodeName+ "."+ property,value);
+    configurationProperties.put(factoryPackage + "." + accountNodeName+ "."+ property,value);
   }
+  if (configurationProperties.size() > 0)   configurationService.setProperties(configurationProperties);
   logger.debug("Stored account for id " + accountID.getAccountUniqueID() + " for package "+ factoryPackage);
 }

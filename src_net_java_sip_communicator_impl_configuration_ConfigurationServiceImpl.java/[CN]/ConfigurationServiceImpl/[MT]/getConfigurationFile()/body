@@ -1,4 +1,36 @@
 {
-  if (configurationFile == null)   configurationFile=createConfigurationFile();
-  return configurationFile;
+  if (this.configurationFile == null) {
+    File configurationFile=getConfigurationFile("xml",false);
+    if (configurationFile == null) {
+      this.configurationFile=getConfigurationFile("xml",true);
+      if (!(this.store instanceof XMLConfigurationStore))       this.store=new XMLConfigurationStore();
+    }
+ else     if (configurationFile.exists()) {
+      String name=configurationFile.getName();
+      int extensionBeginIndex=name.lastIndexOf('.');
+      String extension=(extensionBeginIndex > -1) ? name.substring(extensionBeginIndex) : null;
+      if (".properties".equalsIgnoreCase(extension)) {
+        this.configurationFile=configurationFile;
+        if (!(this.store instanceof PropertyConfigurationStore))         this.store=new PropertyConfigurationStore();
+      }
+ else {
+        File newConfigurationFile=new File(configurationFile.getParentFile(),((extensionBeginIndex > -1) ? name.substring(0,extensionBeginIndex) : name) + ".properties");
+        if (newConfigurationFile.exists()) {
+          this.configurationFile=newConfigurationFile;
+          if (!(this.store instanceof PropertyConfigurationStore))           this.store=new PropertyConfigurationStore();
+        }
+ else {
+          this.configurationFile=configurationFile;
+          if (!(this.store instanceof XMLConfigurationStore))           this.store=new XMLConfigurationStore();
+        }
+      }
+    }
+ else {
+      this.configurationFile=getConfigurationFile("properties",true);
+      if (!(this.store instanceof PropertyConfigurationStore))       this.store=new PropertyConfigurationStore();
+    }
+    getScHomeDirLocation();
+    getScHomeDirName();
+  }
+  return this.configurationFile;
 }
