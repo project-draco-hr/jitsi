@@ -5,7 +5,7 @@
       this.configurationFile=getConfigurationFile("xml",true);
       if (!(this.store instanceof XMLConfigurationStore))       this.store=new XMLConfigurationStore();
     }
- else     if (configurationFile.exists()) {
+ else {
       String name=configurationFile.getName();
       int extensionBeginIndex=name.lastIndexOf('.');
       String extension=(extensionBeginIndex > -1) ? name.substring(extensionBeginIndex) : null;
@@ -19,15 +19,15 @@
           this.configurationFile=newConfigurationFile;
           if (!(this.store instanceof PropertyConfigurationStore))           this.store=new PropertyConfigurationStore();
         }
+ else         if (!configurationFile.exists() && (getSystemProperty(PNAME_CONFIGURATION_FILE_NAME) == null)) {
+          this.configurationFile=getConfigurationFile("properties",true);
+          if (!(this.store instanceof PropertyConfigurationStore))           this.store=new PropertyConfigurationStore();
+        }
  else {
-          this.configurationFile=configurationFile;
+          this.configurationFile=configurationFile.exists() ? configurationFile : getConfigurationFile("xml",true);
           if (!(this.store instanceof XMLConfigurationStore))           this.store=new XMLConfigurationStore();
         }
       }
-    }
- else {
-      this.configurationFile=getConfigurationFile("properties",true);
-      if (!(this.store instanceof PropertyConfigurationStore))       this.store=new PropertyConfigurationStore();
     }
     getScHomeDirLocation();
     getScHomeDirName();
