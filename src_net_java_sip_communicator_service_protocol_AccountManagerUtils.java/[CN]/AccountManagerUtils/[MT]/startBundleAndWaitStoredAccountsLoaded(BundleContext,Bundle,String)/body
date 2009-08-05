@@ -3,14 +3,31 @@
   final boolean[] storedAccountsAreLoaded=new boolean[1];
   AccountManagerListener listener=new AccountManagerListener(){
     public void handleAccountManagerEvent(    AccountManagerEvent event){
-      if (AccountManagerEvent.STORED_ACCOUNTS_LOADED == event.getType()) {
-        ProtocolProviderFactory factory=event.getFactory();
-        if ((factory == null) || protocolNameToWait.equals(factory.getProtocolName())) {
-synchronized (storedAccountsAreLoaded) {
-            storedAccountsAreLoaded[0]=true;
-            storedAccountsAreLoaded.notify();
-          }
+      if (AccountManagerEvent.STORED_ACCOUNTS_LOADED != event.getType())       return;
+      ProtocolProviderFactory factory=event.getFactory();
+      if ((factory != null) && !protocolNameToWait.equals(factory.getProtocolName()))       return;
+      if (factory != null) {
+        BundleContext bundleContext=bundleToStart.getBundleContext();
+        if (bundleContext == null)         return;
+        ServiceReference[] factoryRefs;
+        try {
+          factoryRefs=bundleContext.getServiceReferences(ProtocolProviderFactory.class.getName(),"(" + ProtocolProviderFactory.PROTOCOL + "="+ protocolNameToWait+ ")");
         }
+ catch (        InvalidSyntaxException isex) {
+          factoryRefs=null;
+        }
+        if (factoryRefs != null) {
+          boolean factoryIsRegistered=false;
+          for (          ServiceReference factoryRef : factoryRefs)           if (factory == bundleContext.getService(factoryRef)) {
+            factoryIsRegistered=true;
+            break;
+          }
+          if (!factoryIsRegistered)           return;
+        }
+      }
+synchronized (storedAccountsAreLoaded) {
+        storedAccountsAreLoaded[0]=true;
+        storedAccountsAreLoaded.notify();
       }
     }
   }
