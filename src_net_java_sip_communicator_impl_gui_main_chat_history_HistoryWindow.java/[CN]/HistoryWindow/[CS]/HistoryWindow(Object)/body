@@ -12,18 +12,22 @@
   this.initPanels();
   this.initDates();
   this.pack();
-  this.addWindowListener(new HistoryWindowAdapter());
   if (historyContact instanceof MetaContact) {
     MetaContact metaContact=(MetaContact)historyContact;
     this.setTitle(GuiActivator.getResources().getI18NString("service.gui.HISTORY_CONTACT",new String[]{metaContact.getDisplayName()}));
     Iterator<Contact> protoContacts=metaContact.getContacts();
+    basicInstantMessagings=new ArrayList<OperationSetBasicInstantMessaging>();
     while (protoContacts.hasNext()) {
       Contact protoContact=protoContacts.next();
-      ((OperationSetBasicInstantMessaging)protoContact.getProtocolProvider().getOperationSet(OperationSetBasicInstantMessaging.class)).addMessageListener(this);
+      OperationSetBasicInstantMessaging basicInstantMessaging=(OperationSetBasicInstantMessaging)protoContact.getProtocolProvider().getOperationSet(OperationSetBasicInstantMessaging.class);
+      if (basicInstantMessaging != null) {
+        basicInstantMessaging.addMessageListener(this);
+        basicInstantMessagings.add(basicInstantMessaging);
+      }
     }
   }
  else   if (historyContact instanceof ChatRoomWrapper) {
-    ChatRoomWrapper chatRoomWrapper=(ChatRoomWrapper)historyContact;
-    chatRoomWrapper.getChatRoom().addMessageListener(this);
+    chatRoom=((ChatRoomWrapper)historyContact).getChatRoom();
+    chatRoom.addMessageListener(this);
   }
 }
