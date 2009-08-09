@@ -1,16 +1,16 @@
 {
-  logger.trace("Waiting for a CallParticipantEvent with newState=" + awaitedState + " for participant "+ this.listenedCallParticipant);
+  logger.trace("Waiting for a CallPeerEvent with newState=" + awaitedState + " for peer "+ this.listenedCallPeer);
 synchronized (this) {
-    if (exitIfAlreadyInState && listenedCallParticipant.getState().equals(awaitedState)) {
-      logger.trace("Src participant is already in the awaited " + "state." + collectedEvents);
-      listenedCallParticipant.removeCallPeerListener(this);
+    if (exitIfAlreadyInState && listenedCallPeer.getState().equals(awaitedState)) {
+      logger.trace("Src peer is already in the awaited " + "state." + collectedEvents);
+      listenedCallPeer.removeCallPeerListener(this);
       return;
     }
     if (collectedEvents.size() > 0) {
       CallPeerChangeEvent lastEvent=(CallPeerChangeEvent)collectedEvents.get(collectedEvents.size() - 1);
       if (lastEvent.getNewValue().equals(awaitedState)) {
         logger.trace("Event already received. " + collectedEvents);
-        listenedCallParticipant.removeCallPeerListener(this);
+        listenedCallPeer.removeCallPeerListener(this);
         return;
       }
     }
@@ -18,7 +18,7 @@ synchronized (this) {
       wait(waitFor);
       if (collectedEvents.size() > 0)       logger.trace("Received a CallParticpantStateEvent.");
  else       logger.trace("No CallParticpantStateEvent received for " + waitFor + "ms.");
-      listenedCallParticipant.removeCallPeerListener(this);
+      listenedCallPeer.removeCallPeerListener(this);
     }
  catch (    InterruptedException ex) {
       logger.debug("Interrupted while waiting for a " + "CallParticpantEvent",ex);
