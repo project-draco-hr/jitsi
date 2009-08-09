@@ -1,7 +1,7 @@
 {
   Request info=null;
   try {
-    info=callParticipant.getDialog().createRequest(Request.INFO);
+    info=callPeer.getDialog().createRequest(Request.INFO);
   }
  catch (  SipException ex) {
     logger.error("Failed to create info request!",ex);
@@ -20,18 +20,18 @@
   }
   ClientTransaction clientTransaction=null;
   try {
-    clientTransaction=callParticipant.getJainSipProvider().getNewClientTransaction(info);
+    clientTransaction=callPeer.getJainSipProvider().getNewClientTransaction(info);
   }
  catch (  TransactionUnavailableException ex) {
     logger.error("Failed to construct a client transaction from the INFO request",ex);
     throw new OperationFailedException("Failed to construct a client transaction from the INFO request",OperationFailedException.INTERNAL_ERROR,ex);
   }
   try {
-    if (callParticipant.getDialog().getState() == DialogState.TERMINATED) {
+    if (callPeer.getDialog().getState() == DialogState.TERMINATED) {
       logger.warn("Trying to send a dtmf tone inside a " + "TERMINATED dialog.");
       return;
     }
-    callParticipant.getDialog().sendRequest(clientTransaction);
+    callPeer.getDialog().sendRequest(clientTransaction);
     logger.debug("sent request:\n" + info);
   }
  catch (  SipException ex) {
