@@ -1,0 +1,20 @@
+{
+  CallRecord callRecord=findCallRecord(callPeer.getCall());
+  if (callRecord == null)   return;
+  callPeer.addCallPeerListener(new CallPeerAdapter(){
+    public void peerStateChanged(    CallPeerChangeEvent evt){
+      if (evt.getNewValue().equals(CallPeerState.DISCONNECTED))       return;
+ else {
+        CallPeerRecordImpl peerRecord=findPeerRecord(evt.getSourceCallPeer());
+        if (peerRecord == null)         return;
+        CallPeerState newState=(CallPeerState)evt.getNewValue();
+        if (newState.equals(CallPeerState.CONNECTED) && !CallPeerState.isOnHold((CallPeerState)evt.getOldValue()))         peerRecord.setStartTime(new Date());
+        peerRecord.setState(newState);
+      }
+    }
+  }
+);
+  Date startDate=new Date();
+  CallPeerRecordImpl newRec=new CallPeerRecordImpl(callPeer.getAddress(),startDate,startDate);
+  callRecord.getPeerRecords().add(newRec);
+}
