@@ -3,7 +3,15 @@
   ListeningPoint srcListeningPoint=getListeningPoint(intendedDestination.getTransportParam());
   try {
     InetAddress localAddress=SipActivator.getNetworkAddressManagerService().getLocalHost(getIntendedDestination(intendedDestination));
-    ViaHeader viaHeader=headerFactory.createViaHeader(localAddress.getHostAddress(),srcListeningPoint.getPort(),srcListeningPoint.getTransport(),null);
+    int localPort=srcListeningPoint.getPort();
+    String transport=srcListeningPoint.getTransport();
+    if (ListeningPoint.TCP.equalsIgnoreCase(transport)) {
+      int dstPort=intendedDestination.getPort();
+      if (dstPort == -1)       dstPort=5060;
+      InetSocketAddress localSockAddr=sipStackSharing.obtainLocalAddress(NetworkUtils.getInetAddress(intendedDestination.getHost()),dstPort,localAddress);
+      localPort=localSockAddr.getPort();
+    }
+    ViaHeader viaHeader=headerFactory.createViaHeader(localAddress.getHostAddress(),localPort,transport,null);
     viaHeaders.add(viaHeader);
     logger.debug("generated via headers:" + viaHeader);
     return viaHeaders;
@@ -13,6 +21,10 @@
     throw new OperationFailedException("A ParseException occurred while creating Via Headers!",OperationFailedException.INTERNAL_ERROR,ex);
   }
 catch (  InvalidArgumentException ex) {
+    logger.error("Unable to create a via header for port " + sipStackSharing.getLP(ListeningPoint.UDP).getPort(),ex);
+    throw new OperationFailedException("Unable to create a via header for port " + sipStackSharing.getLP(ListeningPoint.UDP).getPort(),OperationFailedException.INTERNAL_ERROR,ex);
+  }
+catch (  java.io.IOException ex) {
     logger.error("Unable to create a via header for port " + sipStackSharing.getLP(ListeningPoint.UDP).getPort(),ex);
     throw new OperationFailedException("Unable to create a via header for port " + sipStackSharing.getLP(ListeningPoint.UDP).getPort(),OperationFailedException.INTERNAL_ERROR,ex);
   }
