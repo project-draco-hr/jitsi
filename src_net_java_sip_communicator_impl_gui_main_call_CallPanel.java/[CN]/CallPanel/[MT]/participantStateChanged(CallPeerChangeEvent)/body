@@ -1,0 +1,33 @@
+{
+  CallPeer sourceParticipant=evt.getSourceCallParticipant();
+  if (sourceParticipant.getCall() != call)   return;
+  CallParticipantPanel participantPanel=getParticipantPanel(sourceParticipant);
+  Object newState=evt.getNewValue();
+  String newStateString=sourceParticipant.getState().getStateString();
+  Icon newStateIcon=null;
+  if (newState == CallParticipantState.ALERTING_REMOTE_SIDE) {
+    NotificationManager.fireNotification(NotificationManager.OUTGOING_CALL);
+  }
+ else   if (newState == CallParticipantState.BUSY) {
+    NotificationManager.stopSound(NotificationManager.OUTGOING_CALL);
+    NotificationManager.fireNotification(NotificationManager.BUSY_CALL);
+  }
+ else   if (newState == CallParticipantState.CONNECTED) {
+    if (!CallParticipantState.isOnHold((CallParticipantState)evt.getOldValue())) {
+      NotificationManager.stopSound(NotificationManager.OUTGOING_CALL);
+      NotificationManager.stopSound(NotificationManager.INCOMING_CALL);
+      participantPanel.startCallTimer();
+    }
+  }
+ else   if (newState == CallParticipantState.DISCONNECTED) {
+  }
+ else   if (newState == CallParticipantState.FAILED) {
+  }
+ else   if (CallParticipantState.isOnHold((CallParticipantState)newState)) {
+    newStateIcon=new ImageIcon(ImageLoader.getImage(ImageLoader.HOLD_STATUS_ICON));
+    if ((newState.equals(CallParticipantState.ON_HOLD_LOCALLY) || newState.equals(CallParticipantState.ON_HOLD_MUTUALLY)) && !callDialog.isHoldButtonSelected()) {
+      callDialog.setHoldButtonSelected(true);
+    }
+  }
+  participantPanel.setState(newStateString,newStateIcon);
+}
