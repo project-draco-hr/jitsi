@@ -1,5 +1,5 @@
 {
-  final Call call=callParticipant.getCall();
+  final Call call=callPeer.getCall();
   if (call == null)   return null;
   final OperationSetVideoTelephony telephony=(OperationSetVideoTelephony)call.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
   if (telephony == null)   return null;
@@ -7,7 +7,7 @@
   CallChangeListener callListener=new CallChangeListener(){
     private boolean videoListenerIsAdded;
     private void addVideoListener(){
-      telephony.addVideoListener(callParticipant,videoTelephonyListener);
+      telephony.addVideoListener(callPeer,videoTelephonyListener);
       telephony.addPropertyChangeListener(call,videoTelephonyListener);
       videoListenerIsAdded=true;
 synchronized (videoContainers) {
@@ -17,14 +17,14 @@ synchronized (videoContainers) {
       }
     }
     public synchronized void callPeerAdded(    CallPeerEvent event){
-      if (callParticipant.equals(event.getSourceCallPeer()) && !videoListenerIsAdded) {
-        Call call=callParticipant.getCall();
+      if (callPeer.equals(event.getSourceCallPeer()) && !videoListenerIsAdded) {
+        Call call=callPeer.getCall();
         if ((call != null) && CallState.CALL_IN_PROGRESS.equals(call.getCallState()))         addVideoListener();
       }
     }
     public synchronized void callPeerRemoved(    CallPeerEvent event){
-      if (callParticipant.equals(event.getSourceCallPeer()) && videoListenerIsAdded) {
-        Call call=callParticipant.getCall();
+      if (callPeer.equals(event.getSourceCallPeer()) && videoListenerIsAdded) {
+        Call call=callPeer.getCall();
         if (call != null)         removeVideoListener();
       }
     }
@@ -39,11 +39,11 @@ synchronized (videoContainers) {
       }
     }
     private void removeVideoListener(){
-      telephony.removeVideoListener(callParticipant,videoTelephonyListener);
+      telephony.removeVideoListener(callPeer,videoTelephonyListener);
       telephony.removePropertyChangeListener(call,videoTelephonyListener);
       videoListenerIsAdded=false;
       if (localVideo != null) {
-        telephony.disposeLocalVisualComponent(callParticipant,localVideo);
+        telephony.disposeLocalVisualComponent(callPeer,localVideo);
         localVideo=null;
       }
 synchronized (videoContainers) {
