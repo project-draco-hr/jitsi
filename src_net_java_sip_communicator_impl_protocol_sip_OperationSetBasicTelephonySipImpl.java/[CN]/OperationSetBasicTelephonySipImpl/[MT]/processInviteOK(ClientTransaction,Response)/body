@@ -41,7 +41,7 @@ catch (  SipException ex) {
     logErrorAndFailCallParticipant("Failed to create ACK request!",ex,callParticipant);
     return;
   }
-  if (!CallParticipantState.CONNECTING_WITH_EARLY_MEDIA.equals(callParticipant.getState()))   callParticipant.setSdpDescription(new String(ok.getRawContent()));
+  if (!CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(callParticipant.getState()))   callParticipant.setSdpDescription(new String(ok.getRawContent()));
   CallSession callSession=((CallSipImpl)callParticipant.getCall()).getMediaCallSession();
   try {
     try {
@@ -62,8 +62,8 @@ catch (  SipException ex) {
         return;
       }
     }
-    CallParticipantState callParticipantState=callParticipant.getState();
-    if (!CallParticipantState.CONNECTING_WITH_EARLY_MEDIA.equals(callParticipantState)) {
+    CallPeerState callParticipantState=callParticipant.getState();
+    if (!CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(callParticipantState)) {
       callSession.processSdpAnswer(callParticipant,callParticipant.getSdpDescription());
     }
     callParticipant.setCallInfoURL(callSession.getCallInfoURL());
@@ -71,14 +71,14 @@ catch (  SipException ex) {
  catch (  Exception exc) {
     logger.error("There was an error parsing the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")",exc);
     try {
-      callParticipant.setState(CallParticipantState.CONNECTED);
+      callParticipant.setState(CallPeerState.CONNECTED);
       hangupCallParticipant(callParticipant);
     }
  catch (    Exception e) {
       logger.error(e);
-      callParticipant.setState(CallParticipantState.FAILED,e.getMessage());
+      callParticipant.setState(CallPeerState.FAILED,e.getMessage());
     }
     return;
   }
-  if (!CallParticipantState.isOnHold(callParticipant.getState()))   callParticipant.setState(CallParticipantState.CONNECTED);
+  if (!CallPeerState.isOnHold(callParticipant.getState()))   callParticipant.setState(CallPeerState.CONNECTED);
 }

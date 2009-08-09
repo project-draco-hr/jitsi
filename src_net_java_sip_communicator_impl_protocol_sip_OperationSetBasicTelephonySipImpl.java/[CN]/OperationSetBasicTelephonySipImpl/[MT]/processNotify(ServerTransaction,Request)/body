@@ -21,7 +21,7 @@
  catch (  ParseException ex) {
     String message="Failed to create OK response to refer NOTIFY request.";
     logger.error(message,ex);
-    participant.setState(CallParticipantState.DISCONNECTED,message);
+    participant.setState(CallPeerState.DISCONNECTED,message);
     return false;
   }
   try {
@@ -30,13 +30,13 @@
  catch (  Exception ex) {
     String message="Failed to send OK response to refer NOTIFY request.";
     logger.error(message,ex);
-    participant.setState(CallParticipantState.DISCONNECTED,message);
+    participant.setState(CallPeerState.DISCONNECTED,message);
     return false;
   }
   if (SubscriptionStateHeader.TERMINATED.equals(ssHeader.getState()) && !DialogUtils.removeSubscriptionThenIsDialogAlive(dialog,"refer")) {
-    participant.setState(CallParticipantState.DISCONNECTED);
+    participant.setState(CallPeerState.DISCONNECTED);
   }
-  if (!CallParticipantState.DISCONNECTED.equals(participant.getState()) && !DialogUtils.isByeProcessed(dialog)) {
+  if (!CallPeerState.DISCONNECTED.equals(participant.getState()) && !DialogUtils.isByeProcessed(dialog)) {
     boolean dialogIsAlive;
     try {
       dialogIsAlive=sayBye(participant);
@@ -46,7 +46,7 @@
       dialogIsAlive=false;
     }
     if (!dialogIsAlive) {
-      participant.setState(CallParticipantState.DISCONNECTED);
+      participant.setState(CallPeerState.DISCONNECTED);
     }
   }
   return true;

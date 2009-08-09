@@ -20,14 +20,14 @@
   assertEquals("callAtP2.getCallParticipantsCount()",1,callAtP2.getCallParticipantsCount());
   CallPeer participantAtP1=(CallPeer)callAtP1.getCallParticipants().next();
   CallPeer participantAtP2=(CallPeer)callAtP2.getCallParticipants().next();
-  CallParticipantStateEventCollector stateCollectorForPp1=new CallParticipantStateEventCollector(participantAtP1,CallParticipantState.ALERTING_REMOTE_SIDE);
-  CallParticipantStateEventCollector stateCollectorForPp2=new CallParticipantStateEventCollector(participantAtP2,CallParticipantState.INCOMING_CALL);
+  CallParticipantStateEventCollector stateCollectorForPp1=new CallParticipantStateEventCollector(participantAtP1,CallPeerState.ALERTING_REMOTE_SIDE);
+  CallParticipantStateEventCollector stateCollectorForPp2=new CallParticipantStateEventCollector(participantAtP2,CallPeerState.INCOMING_CALL);
   stateCollectorForPp1.waitForEvent(10000,true);
   stateCollectorForPp2.waitForEvent(10000,true);
   assertSame("participantAtP1.getCall",participantAtP1.getCall(),callAtP1);
   assertSame("participantAtP2.getCall",participantAtP2.getCall(),callAtP2);
-  assertEquals("The participant at provider one was not in the " + "right state.",CallParticipantState.ALERTING_REMOTE_SIDE,participantAtP1.getState());
-  assertEquals("The participant at provider two was not in the " + "right state.",CallParticipantState.INCOMING_CALL,participantAtP2.getState());
+  assertEquals("The participant at provider one was not in the " + "right state.",CallPeerState.ALERTING_REMOTE_SIDE,participantAtP1.getState());
+  assertEquals("The participant at provider two was not in the " + "right state.",CallPeerState.INCOMING_CALL,participantAtP2.getState());
   if (Boolean.getBoolean("accounts.sip.PRESERVE_PARTICIPANT_INFO")) {
     String expectedParticipant1Address=fixture.provider2.getAccountID().getAccountAddress();
     String expectedParticipant1DisplayName=System.getProperty(SipProtocolProviderServiceLick.ACCOUNT_2_PREFIX + ProtocolProviderFactory.DISPLAY_NAME);
@@ -38,8 +38,8 @@
     assertTrue("Provider 1 did not advertise their " + "accountID.getAccoutAddress() address.",expectedParticipant2Address.indexOf(participantAtP2.getAddress()) != -1 || participantAtP2.getAddress().indexOf(expectedParticipant2Address) != -1);
     assertEquals("Provider 1 did not properly advertise their " + "display name.",expectedParticipant2DisplayName,participantAtP2.getDisplayName());
   }
-  stateCollectorForPp1=new CallParticipantStateEventCollector(participantAtP1,CallParticipantState.DISCONNECTED);
-  stateCollectorForPp2=new CallParticipantStateEventCollector(participantAtP2,CallParticipantState.DISCONNECTED);
+  stateCollectorForPp1=new CallParticipantStateEventCollector(participantAtP1,CallPeerState.DISCONNECTED);
+  stateCollectorForPp2=new CallParticipantStateEventCollector(participantAtP2,CallPeerState.DISCONNECTED);
   call1Listener=new CallEventCollector(basicTelephonyP1);
   call2Listener=new CallEventCollector(basicTelephonyP2);
   CallStateEventCollector call1StateCollector=new CallStateEventCollector(callAtP1,CallState.CALL_ENDED);
@@ -51,11 +51,11 @@
   stateCollectorForPp2.waitForEvent(10000);
   call1StateCollector.waitForEvent(10000);
   call2StateCollector.waitForEvent(10000);
-  assertEquals("The participant at provider one was not in the " + "right state.",CallParticipantState.DISCONNECTED,participantAtP1.getState());
+  assertEquals("The participant at provider one was not in the " + "right state.",CallPeerState.DISCONNECTED,participantAtP1.getState());
   assertEquals("The basic telephony operation set did not distribute " + "an event to notify us that a call has been ended.",1,call1Listener.collectedEvents.size());
   CallEvent collectedEvent=(CallEvent)call1Listener.collectedEvents.get(0);
   assertEquals("The basic telephony operation set did not distribute " + "an event to notify us that a call has been ended.",CallEvent.CALL_ENDED,collectedEvent.getEventID());
-  assertEquals("The participant at provider one was not in the " + "right state.",CallParticipantState.DISCONNECTED,participantAtP2.getState());
+  assertEquals("The participant at provider one was not in the " + "right state.",CallPeerState.DISCONNECTED,participantAtP2.getState());
   assertEquals("The basic telephony operation set did not distribute " + "an event to notify us that a call has been ended.",1,call2Listener.collectedEvents.size());
   collectedEvent=(CallEvent)call2Listener.collectedEvents.get(0);
   assertEquals("The basic telephony operation set did not distribute " + "an event to notify us that a call has been ended.",CallEvent.CALL_ENDED,collectedEvent.getEventID());

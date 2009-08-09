@@ -1,32 +1,32 @@
 {
-  if (participant.getState().equals(CallParticipantState.DISCONNECTED) || participant.getState().equals(CallParticipantState.FAILED)) {
+  if (participant.getState().equals(CallPeerState.DISCONNECTED) || participant.getState().equals(CallPeerState.FAILED)) {
     logger.debug("Ignoring a request to hangup a call participant " + "that is already DISCONNECTED");
     return;
   }
   CallPeerSipImpl callParticipant=(CallPeerSipImpl)participant;
-  CallParticipantState participantState=callParticipant.getState();
-  if (participantState.equals(CallParticipantState.CONNECTED) || CallParticipantState.isOnHold(participantState)) {
+  CallPeerState participantState=callParticipant.getState();
+  if (participantState.equals(CallPeerState.CONNECTED) || CallPeerState.isOnHold(participantState)) {
     sayBye(callParticipant);
-    callParticipant.setState(CallParticipantState.DISCONNECTED);
+    callParticipant.setState(CallPeerState.DISCONNECTED);
   }
- else   if (callParticipant.getState().equals(CallParticipantState.CONNECTING) || callParticipant.getState().equals(CallParticipantState.CONNECTING_WITH_EARLY_MEDIA) || callParticipant.getState().equals(CallParticipantState.ALERTING_REMOTE_SIDE)) {
+ else   if (callParticipant.getState().equals(CallPeerState.CONNECTING) || callParticipant.getState().equals(CallPeerState.CONNECTING_WITH_EARLY_MEDIA) || callParticipant.getState().equals(CallPeerState.ALERTING_REMOTE_SIDE)) {
     if (callParticipant.getFirstTransaction() != null) {
       sayCancel(callParticipant);
     }
-    callParticipant.setState(CallParticipantState.DISCONNECTED);
+    callParticipant.setState(CallPeerState.DISCONNECTED);
   }
- else   if (participantState.equals(CallParticipantState.INCOMING_CALL)) {
-    callParticipant.setState(CallParticipantState.DISCONNECTED);
+ else   if (participantState.equals(CallPeerState.INCOMING_CALL)) {
+    callParticipant.setState(CallPeerState.DISCONNECTED);
     sayBusyHere(callParticipant);
   }
- else   if (participantState.equals(CallParticipantState.BUSY)) {
-    callParticipant.setState(CallParticipantState.DISCONNECTED);
+ else   if (participantState.equals(CallPeerState.BUSY)) {
+    callParticipant.setState(CallPeerState.DISCONNECTED);
   }
- else   if (participantState.equals(CallParticipantState.FAILED)) {
-    callParticipant.setState(CallParticipantState.DISCONNECTED);
+ else   if (participantState.equals(CallPeerState.FAILED)) {
+    callParticipant.setState(CallPeerState.DISCONNECTED);
   }
  else {
-    callParticipant.setState(CallParticipantState.DISCONNECTED);
+    callParticipant.setState(CallPeerState.DISCONNECTED);
     logger.error("Could not determine call participant state!");
   }
 }
