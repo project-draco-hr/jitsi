@@ -31,11 +31,11 @@
  catch (  TransactionUnavailableException ex) {
     throwOperationFailedException("Failed to create inviteTransaction.\n" + "This is most probably a network connection error.",OperationFailedException.INTERNAL_ERROR,ex);
   }
-  CallPeerSipImpl callParticipant=createCallParticipantFor(inviteTransaction,jainSipProvider);
+  CallPeerSipImpl callPeer=createCallPeerFor(inviteTransaction,jainSipProvider);
   try {
-    CallSession callSession=SipActivator.getMediaService().createCallSession(callParticipant.getCall());
-    ((CallSipImpl)callParticipant.getCall()).setMediaCallSession(callSession);
-    callSession.setSessionCreatorCallback(callParticipant);
+    CallSession callSession=SipActivator.getMediaService().createCallSession(callPeer.getCall());
+    ((CallSipImpl)callPeer.getCall()).setMediaCallSession(callSession);
+    callSession.setSessionCreatorCallback(callPeer);
     javax.sip.address.URI calleeURI=calleeAddress.getURI();
     if (calleeURI.isSipURI()) {
       String host=((SipURI)calleeURI).getHost();
@@ -60,5 +60,5 @@ catch (  MediaException ex) {
  catch (  SipException ex) {
     throwOperationFailedException("An error occurred while sending invite request",OperationFailedException.NETWORK_FAILURE,ex);
   }
-  return (CallSipImpl)callParticipant.getCall();
+  return (CallSipImpl)callPeer.getCall();
 }

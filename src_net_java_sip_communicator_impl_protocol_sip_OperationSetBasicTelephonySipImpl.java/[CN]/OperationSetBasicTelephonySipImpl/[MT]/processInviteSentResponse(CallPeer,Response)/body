@@ -1,27 +1,27 @@
 {
-  CallSession callSession=((CallSipImpl)participant.getCall()).getMediaCallSession();
-  CallPeerSipImpl sipParticipant=(CallPeerSipImpl)participant;
+  CallSession callSession=((CallSipImpl)peer.getCall()).getMediaCallSession();
+  CallPeerSipImpl sipPeer=(CallPeerSipImpl)peer;
   int mediaFlags=0;
   try {
-    mediaFlags=callSession.getSdpOfferMediaFlags(sipParticipant.getSdpDescription());
+    mediaFlags=callSession.getSdpOfferMediaFlags(sipPeer.getSdpDescription());
   }
  catch (  MediaException ex) {
     throwOperationFailedException("Failed to create SDP answer to put-on/off-hold request.",OperationFailedException.INTERNAL_ERROR,ex);
   }
   boolean on=((mediaFlags & CallSession.ON_HOLD_REMOTELY) != 0);
   callSession.putOnHold(on,false);
-  CallPeerState state=sipParticipant.getState();
+  CallPeerState state=sipPeer.getState();
   if (CallPeerState.ON_HOLD_LOCALLY.equals(state)) {
-    if (on)     sipParticipant.setState(CallPeerState.ON_HOLD_MUTUALLY);
+    if (on)     sipPeer.setState(CallPeerState.ON_HOLD_MUTUALLY);
   }
  else   if (CallPeerState.ON_HOLD_MUTUALLY.equals(state)) {
-    if (!on)     sipParticipant.setState(CallPeerState.ON_HOLD_LOCALLY);
+    if (!on)     sipPeer.setState(CallPeerState.ON_HOLD_LOCALLY);
   }
  else   if (CallPeerState.ON_HOLD_REMOTELY.equals(state)) {
-    if (!on)     sipParticipant.setState(CallPeerState.CONNECTED);
+    if (!on)     sipPeer.setState(CallPeerState.CONNECTED);
   }
  else   if (on) {
-    sipParticipant.setState(CallPeerState.ON_HOLD_REMOTELY);
+    sipPeer.setState(CallPeerState.ON_HOLD_REMOTELY);
   }
   callSession.setReceiveStreaming(mediaFlags);
 }

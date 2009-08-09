@@ -1,23 +1,23 @@
 {
-  CallPeerSipImpl callParticipant=(CallPeerSipImpl)participant;
-  Transaction transaction=callParticipant.getFirstTransaction();
-  Dialog dialog=callParticipant.getDialog();
+  CallPeerSipImpl callPeer=(CallPeerSipImpl)peer;
+  Transaction transaction=callPeer.getFirstTransaction();
+  Dialog dialog=callPeer.getDialog();
   if (transaction == null || !dialog.isServer()) {
-    callParticipant.setState(CallPeerState.DISCONNECTED);
+    callPeer.setState(CallPeerState.DISCONNECTED);
     throw new OperationFailedException("Failed to extract a ServerTransaction " + "from the call's associated dialog!",OperationFailedException.INTERNAL_ERROR);
   }
-  CallPeerState participantState=participant.getState();
-  if (participantState.equals(CallPeerState.CONNECTED) || CallPeerState.isOnHold(participantState)) {
-    logger.info("Ignoring user request to answer a CallParticipant " + "that is already connected. CP:" + participant);
+  CallPeerState peerState=peer.getState();
+  if (peerState.equals(CallPeerState.CONNECTED) || CallPeerState.isOnHold(peerState)) {
+    logger.info("Ignoring user request to answer a CallPeer " + "that is already connected. CP:" + peer);
     return;
   }
   ServerTransaction serverTransaction=(ServerTransaction)transaction;
   Response ok=null;
   try {
-    ok=createOKResponse(callParticipant.getFirstTransaction().getRequest(),dialog);
+    ok=createOKResponse(callPeer.getFirstTransaction().getRequest(),dialog);
   }
  catch (  ParseException ex) {
-    callParticipant.setState(CallPeerState.DISCONNECTED);
+    callPeer.setState(CallPeerState.DISCONNECTED);
     throwOperationFailedException("Failed to construct an OK response to an INVITE request",OperationFailedException.INTERNAL_ERROR,ex);
   }
   ContentTypeHeader contentTypeHeader=null;
@@ -25,18 +25,18 @@
     contentTypeHeader=protocolProvider.getHeaderFactory().createContentTypeHeader("application","sdp");
   }
  catch (  ParseException ex) {
-    callParticipant.setState(CallPeerState.DISCONNECTED);
+    callPeer.setState(CallPeerState.DISCONNECTED);
     throwOperationFailedException("Failed to create a content type header for the OK response",OperationFailedException.INTERNAL_ERROR,ex);
   }
   try {
-    CallSession callSession=SipActivator.getMediaService().createCallSession(callParticipant.getCall());
-    ((CallSipImpl)callParticipant.getCall()).setMediaCallSession(callSession);
-    callSession.setSessionCreatorCallback(callParticipant);
-    String sdpOffer=callParticipant.getSdpDescription();
+    CallSession callSession=SipActivator.getMediaService().createCallSession(callPeer.getCall());
+    ((CallSipImpl)callPeer.getCall()).setMediaCallSession(callSession);
+    callSession.setSessionCreatorCallback(callPeer);
+    String sdpOffer=callPeer.getSdpDescription();
     String sdp;
     if ((sdpOffer != null) && (sdpOffer.length() > 0)) {
-      sdp=callSession.processSdpOffer(callParticipant,sdpOffer);
-      callParticipant.setCallInfoURL(callSession.getCallInfoURL());
+      sdp=callSession.processSdpOffer(callPeer,sdpOffer);
+      callPeer.setCallInfoURL(callSession.getCallInfoURL());
     }
  else {
       sdp=callSession.createSdpOffer();
@@ -45,11 +45,11 @@
   }
  catch (  MediaException ex) {
     logger.error("Failed to create an SDP description for an OK response " + "to an INVITE request!",ex);
-    this.sayError((CallPeerSipImpl)participant,Response.NOT_ACCEPTABLE_HERE);
+    this.sayError((CallPeerSipImpl)peer,Response.NOT_ACCEPTABLE_HERE);
   }
 catch (  ParseException ex) {
     logger.error("Failed to parse sdp data while creating invite request!",ex);
-    this.sayError((CallPeerSipImpl)participant,Response.NOT_ACCEPTABLE_HERE);
+    this.sayError((CallPeerSipImpl)peer,Response.NOT_ACCEPTABLE_HERE);
   }
   ContactHeader contactHeader=protocolProvider.getContactHeader(dialog.getRemoteTarget());
   ok.addHeader(contactHeader);
@@ -58,7 +58,7 @@ catch (  ParseException ex) {
     if (logger.isDebugEnabled())     logger.debug("sent response\n" + ok);
   }
  catch (  Exception ex) {
-    callParticipant.setState(CallPeerState.DISCONNECTED);
+    callPeer.setState(CallPeerState.DISCONNECTED);
     throwOperationFailedException("Failed to send an OK response to an INVITE request",OperationFailedException.NETWORK_FAILURE,ex);
   }
 }

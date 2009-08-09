@@ -1,6 +1,6 @@
 {
-  CallPeerSipImpl callParticipant=activeCallsRepository.findCallParticipant(serverTransaction.getDialog());
-  if (callParticipant == null) {
+  CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(serverTransaction.getDialog());
+  if (callPeer == null) {
     logger.debug("received a stray CANCEL req. ignoring");
     return;
   }
@@ -10,24 +10,24 @@
     logger.debug("sent an ok response to a CANCEL request:\n" + ok);
   }
  catch (  ParseException ex) {
-    logErrorAndFailCallParticipant("Failed to create an OK Response to an CANCEL request.",ex,callParticipant);
+    logErrorAndFailCallPeer("Failed to create an OK Response to an CANCEL request.",ex,callPeer);
     return;
   }
 catch (  Exception ex) {
-    logErrorAndFailCallParticipant("Failed to send an OK Response to an CANCEL request.",ex,callParticipant);
+    logErrorAndFailCallPeer("Failed to send an OK Response to an CANCEL request.",ex,callPeer);
     return;
   }
   try {
-    Transaction tran=callParticipant.getFirstTransaction();
+    Transaction tran=callPeer.getFirstTransaction();
     if (!(tran instanceof ServerTransaction)) {
       logger.error("Received a misplaced CANCEL request!");
       return;
     }
     ServerTransaction inviteTran=(ServerTransaction)tran;
-    Request invite=callParticipant.getFirstTransaction().getRequest();
+    Request invite=callPeer.getFirstTransaction().getRequest();
     Response requestTerminated=protocolProvider.getMessageFactory().createResponse(Response.REQUEST_TERMINATED,invite);
     requestTerminated.setHeader(protocolProvider.getSipCommUserAgentHeader());
-    protocolProvider.attachToTag(requestTerminated,callParticipant.getDialog());
+    protocolProvider.attachToTag(requestTerminated,callPeer.getDialog());
     inviteTran.sendResponse(requestTerminated);
     if (logger.isDebugEnabled())     logger.debug("sent request terminated response:\n" + requestTerminated);
   }
@@ -37,5 +37,5 @@ catch (  Exception ex) {
 catch (  Exception ex) {
     logger.error("Failed to send an REQUEST_TERMINATED Response to " + "an INVITE request.",ex);
   }
-  callParticipant.setState(CallPeerState.DISCONNECTED);
+  callPeer.setState(CallPeerState.DISCONNECTED);
 }

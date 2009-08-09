@@ -1,7 +1,7 @@
 {
   Dialog dialog=serverTransaction.getDialog();
-  CallPeerSipImpl callParticipant=activeCallsRepository.findCallParticipant(dialog);
-  if (callParticipant == null) {
+  CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(dialog);
+  if (callPeer == null) {
     logger.debug("Received a stray bye request.");
     return;
   }
@@ -29,9 +29,9 @@
     logger.error("Failed to determine whether the dialog should stay alive.",ex);
   }
   if (dialogIsAlive) {
-    ((CallSipImpl)callParticipant.getCall()).getMediaCallSession().stopStreaming();
+    ((CallSipImpl)callPeer.getCall()).getMediaCallSession().stopStreaming();
   }
  else {
-    callParticipant.setState(CallPeerState.DISCONNECTED);
+    callPeer.setState(CallPeerState.DISCONNECTED);
   }
 }

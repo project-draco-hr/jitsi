@@ -1,54 +1,54 @@
 {
   Dialog dialog=serverTransaction.getDialog();
-  CallPeerSipImpl callParticipant=activeCallsRepository.findCallParticipant(dialog);
+  CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(dialog);
   int statusCode;
-  CallPeerSipImpl callParticipantToReplace=null;
-  if (callParticipant == null) {
+  CallPeerSipImpl callPeerToReplace=null;
+  if (callPeer == null) {
     ReplacesHeader replacesHeader=(ReplacesHeader)invite.getHeader(ReplacesHeader.NAME);
     if (replacesHeader == null) {
       statusCode=Response.RINGING;
     }
  else {
-      List<CallPeerSipImpl> callParticipantsToReplace=activeCallsRepository.findCallParticipants(replacesHeader.getCallId(),replacesHeader.getToTag(),replacesHeader.getFromTag());
-      if (callParticipantsToReplace.size() == 1) {
+      List<CallPeerSipImpl> callPeersToReplace=activeCallsRepository.findCallPeers(replacesHeader.getCallId(),replacesHeader.getToTag(),replacesHeader.getFromTag());
+      if (callPeersToReplace.size() == 1) {
         statusCode=Response.OK;
-        callParticipantToReplace=callParticipantsToReplace.get(0);
+        callPeerToReplace=callPeersToReplace.get(0);
       }
  else {
         statusCode=Response.CALL_OR_TRANSACTION_DOES_NOT_EXIST;
       }
     }
-    logger.trace("Creating call participant.");
-    callParticipant=createCallParticipantFor(serverTransaction,sourceProvider);
-    logger.trace("call participant created = " + callParticipant);
+    logger.trace("Creating call peer.");
+    callPeer=createCallPeerFor(serverTransaction,sourceProvider);
+    logger.trace("call peer created = " + callPeer);
   }
  else {
     statusCode=Response.OK;
   }
   ContentLengthHeader cl=invite.getContentLength();
   if (cl != null && cl.getContentLength() > 0) {
-    callParticipant.setSdpDescription(new String(invite.getRawContent()));
+    callPeer.setSdpDescription(new String(invite.getRawContent()));
   }
   if (!isInviteProperlyAddressed(dialog)) {
-    callParticipant.setState(CallPeerState.FAILED,"A call was received here while it appeared " + "destined to someone else. The call was rejected.");
+    callPeer.setState(CallPeerState.FAILED,"A call was received here while it appeared " + "destined to someone else. The call was rejected.");
     statusCode=Response.NOT_FOUND;
   }
-  if ((statusCode == Response.OK) && (callParticipantToReplace != null)) {
+  if ((statusCode == Response.OK) && (callPeerToReplace != null)) {
     boolean sayBye=false;
     try {
-      answerCallPeer(callParticipant);
+      answerCallPeer(callPeer);
       sayBye=true;
     }
  catch (    OperationFailedException ex) {
-      logger.error("Failed to auto-answer the referred call participant " + callParticipant,ex);
+      logger.error("Failed to auto-answer the referred call peer " + callPeer,ex);
     }
     if (sayBye) {
       try {
-        hangupCallPeer(callParticipantToReplace);
+        hangupCallPeer(callPeerToReplace);
       }
  catch (      OperationFailedException ex) {
-        logger.error("Failed to hangup the referer " + callParticipantToReplace,ex);
-        callParticipantToReplace.setState(CallPeerState.FAILED,"Internal Error: " + ex);
+        logger.error("Failed to hangup the referer " + callPeerToReplace,ex);
+        callPeerToReplace.setState(CallPeerState.FAILED,"Internal Error: " + ex);
       }
     }
     return;
@@ -80,11 +80,11 @@ Address callerAddress=((FromHeader)response.getHeader(FromHeader.NAME)).getAddre
 response.addHeader(protocolProvider.getContactHeader(callerAddress));
 if (statusCode == Response.OK) {
 try {
-processInviteSendingResponse(callParticipant,response);
+processInviteSendingResponse(callPeer,response);
 }
  catch (OperationFailedException ex) {
 logger.error("Error while trying to send response " + response,ex);
-callParticipant.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
+callPeer.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
 return;
 }
 }
@@ -92,7 +92,7 @@ return;
 }
  catch (ParseException ex) {
 logger.error("Error while trying to send a response",ex);
-callParticipant.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
+callPeer.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
 return;
 }
 try {
@@ -102,12 +102,12 @@ logger.debug("sent a " + statusCodeString + " response: "+ response);
 }
  catch (Exception ex) {
 logger.error("Error while trying to send a request",ex);
-callParticipant.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
+callPeer.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
 return;
 }
 if (statusCode == Response.OK) {
 try {
-processInviteSentResponse(callParticipant,response);
+processInviteSentResponse(callPeer,response);
 }
  catch (OperationFailedException ex) {
 logger.error("Error after sending response " + response,ex);

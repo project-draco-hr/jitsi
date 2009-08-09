@@ -1,7 +1,7 @@
 {
-  CallPeerSipImpl callParticipant=activeCallsRepository.findCallParticipant(clientTransaction.getDialog());
-  if (callParticipant == null) {
-    logger.debug("Received an authorization challenge for no " + "participant. authorizing anyway.");
+  CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(clientTransaction.getDialog());
+  if (callPeer == null) {
+    logger.debug("Received an authorization challenge for no " + "peer. authorizing anyway.");
   }
   try {
     logger.debug("Authenticating an INVITE request.");
@@ -10,15 +10,15 @@
       logger.trace("No password supplied or error occured!");
       return;
     }
-    if (callParticipant != null) {
-      callParticipant.setDialog(retryTran.getDialog());
-      callParticipant.setFirstTransaction(retryTran);
-      callParticipant.setJainSipProvider(jainSipProvider);
+    if (callPeer != null) {
+      callPeer.setDialog(retryTran.getDialog());
+      callPeer.setFirstTransaction(retryTran);
+      callPeer.setJainSipProvider(jainSipProvider);
     }
     retryTran.sendRequest();
   }
  catch (  Exception exc) {
-    logErrorAndFailCallParticipant("We failed to authenticate an INVITE request.",exc,callParticipant);
+    logErrorAndFailCallPeer("We failed to authenticate an INVITE request.",exc,callPeer);
     return;
   }
 }

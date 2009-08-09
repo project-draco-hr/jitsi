@@ -1,23 +1,23 @@
 {
   Dialog dialog=clientTransaction.getDialog();
-  CallPeerSipImpl callParticipant=activeCallsRepository.findCallParticipant(dialog);
-  if (callParticipant == null) {
+  CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(dialog);
+  if (callPeer == null) {
     CallIdHeader call=(CallIdHeader)ok.getHeader(CallIdHeader.NAME);
     String callid=call.getCallId();
     Iterator<CallSipImpl> activeCallsIter=activeCallsRepository.getActiveCalls();
     while (activeCallsIter.hasNext()) {
       CallSipImpl activeCall=activeCallsIter.next();
-      Iterator<CallPeer> callParticipantsIter=activeCall.getCallPeers();
-      while (callParticipantsIter.hasNext()) {
-        CallPeerSipImpl cp=(CallPeerSipImpl)callParticipantsIter.next();
+      Iterator<CallPeer> callPeersIter=activeCall.getCallPeers();
+      while (callPeersIter.hasNext()) {
+        CallPeerSipImpl cp=(CallPeerSipImpl)callPeersIter.next();
         Dialog callPartDialog=cp.getDialog();
         if (callPartDialog != null && callPartDialog.getCallId() != null && cp.getFirstTransaction() != null && cp.getDialog().getCallId().getCallId().equals(callid) && clientTransaction.getBranchId().equals(cp.getFirstTransaction().getBranchId())) {
-          callParticipant=cp;
+          callPeer=cp;
           cp.setDialog(dialog);
         }
       }
     }
-    if (callParticipant == null) {
+    if (callPeer == null) {
       logger.debug("Received a stray ok response.");
       return;
     }
@@ -30,27 +30,27 @@
     contentTypeHeader=protocolProvider.getHeaderFactory().createContentTypeHeader("application","sdp");
   }
  catch (  ParseException ex) {
-    logErrorAndFailCallParticipant("Failed to create a content type header for the ACK request",ex,callParticipant);
+    logErrorAndFailCallPeer("Failed to create a content type header for the ACK request",ex,callPeer);
     return;
   }
 catch (  InvalidArgumentException ex) {
-    logErrorAndFailCallParticipant("Failed ACK request, problem with the supplied cseq",ex,callParticipant);
+    logErrorAndFailCallPeer("Failed ACK request, problem with the supplied cseq",ex,callPeer);
     return;
   }
 catch (  SipException ex) {
-    logErrorAndFailCallParticipant("Failed to create ACK request!",ex,callParticipant);
+    logErrorAndFailCallPeer("Failed to create ACK request!",ex,callPeer);
     return;
   }
-  if (!CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(callParticipant.getState()))   callParticipant.setSdpDescription(new String(ok.getRawContent()));
-  CallSession callSession=((CallSipImpl)callParticipant.getCall()).getMediaCallSession();
+  if (!CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(callPeer.getState()))   callPeer.setSdpDescription(new String(ok.getRawContent()));
+  CallSession callSession=((CallSipImpl)callPeer.getCall()).getMediaCallSession();
   try {
     try {
       if (callSession == null) {
-        callSession=SipActivator.getMediaService().createCallSession(callParticipant.getCall());
-        callSession.setSessionCreatorCallback(callParticipant);
-        String sdp=callSession.processSdpOffer(callParticipant,callParticipant.getSdpDescription());
+        callSession=SipActivator.getMediaService().createCallSession(callPeer.getCall());
+        callSession.setSessionCreatorCallback(callPeer);
+        String sdp=callSession.processSdpOffer(callPeer,callPeer.getSdpDescription());
         ack.setContent(sdp,contentTypeHeader);
-        callParticipant.setCallInfoURL(callSession.getCallInfoURL());
+        callPeer.setCallInfoURL(callSession.getCallInfoURL());
       }
     }
   finally {
@@ -58,27 +58,27 @@ catch (  SipException ex) {
         clientTransaction.getDialog().sendAck(ack);
       }
  catch (      SipException ex) {
-        logErrorAndFailCallParticipant("Failed to acknowledge call!",ex,callParticipant);
+        logErrorAndFailCallPeer("Failed to acknowledge call!",ex,callPeer);
         return;
       }
     }
-    CallPeerState callParticipantState=callParticipant.getState();
-    if (!CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(callParticipantState)) {
-      callSession.processSdpAnswer(callParticipant,callParticipant.getSdpDescription());
+    CallPeerState callPeerState=callPeer.getState();
+    if (!CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(callPeerState)) {
+      callSession.processSdpAnswer(callPeer,callPeer.getSdpDescription());
     }
-    callParticipant.setCallInfoURL(callSession.getCallInfoURL());
+    callPeer.setCallInfoURL(callSession.getCallInfoURL());
   }
  catch (  Exception exc) {
-    logger.error("There was an error parsing the SDP description of " + callParticipant.getDisplayName() + "("+ callParticipant.getAddress()+ ")",exc);
+    logger.error("There was an error parsing the SDP description of " + callPeer.getDisplayName() + "("+ callPeer.getAddress()+ ")",exc);
     try {
-      callParticipant.setState(CallPeerState.CONNECTED);
-      hangupCallPeer(callParticipant);
+      callPeer.setState(CallPeerState.CONNECTED);
+      hangupCallPeer(callPeer);
     }
  catch (    Exception e) {
       logger.error(e);
-      callParticipant.setState(CallPeerState.FAILED,e.getMessage());
+      callPeer.setState(CallPeerState.FAILED,e.getMessage());
     }
     return;
   }
-  if (!CallPeerState.isOnHold(callParticipant.getState()))   callParticipant.setState(CallPeerState.CONNECTED);
+  if (!CallPeerState.isOnHold(callPeer.getState()))   callPeer.setState(CallPeerState.CONNECTED);
 }

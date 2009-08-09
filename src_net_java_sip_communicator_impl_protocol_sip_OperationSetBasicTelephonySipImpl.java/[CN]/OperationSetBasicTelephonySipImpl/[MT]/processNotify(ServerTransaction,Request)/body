@@ -9,8 +9,8 @@
     return false;
   }
   Dialog dialog=serverTransaction.getDialog();
-  CallPeerSipImpl participant=activeCallsRepository.findCallParticipant(dialog);
-  if (participant == null) {
+  CallPeerSipImpl peer=activeCallsRepository.findCallPeer(dialog);
+  if (peer == null) {
     logger.debug("Received a stray refer NOTIFY request.");
     return false;
   }
@@ -21,7 +21,7 @@
  catch (  ParseException ex) {
     String message="Failed to create OK response to refer NOTIFY request.";
     logger.error(message,ex);
-    participant.setState(CallPeerState.DISCONNECTED,message);
+    peer.setState(CallPeerState.DISCONNECTED,message);
     return false;
   }
   try {
@@ -30,23 +30,23 @@
  catch (  Exception ex) {
     String message="Failed to send OK response to refer NOTIFY request.";
     logger.error(message,ex);
-    participant.setState(CallPeerState.DISCONNECTED,message);
+    peer.setState(CallPeerState.DISCONNECTED,message);
     return false;
   }
   if (SubscriptionStateHeader.TERMINATED.equals(ssHeader.getState()) && !DialogUtils.removeSubscriptionThenIsDialogAlive(dialog,"refer")) {
-    participant.setState(CallPeerState.DISCONNECTED);
+    peer.setState(CallPeerState.DISCONNECTED);
   }
-  if (!CallPeerState.DISCONNECTED.equals(participant.getState()) && !DialogUtils.isByeProcessed(dialog)) {
+  if (!CallPeerState.DISCONNECTED.equals(peer.getState()) && !DialogUtils.isByeProcessed(dialog)) {
     boolean dialogIsAlive;
     try {
-      dialogIsAlive=sayBye(participant);
+      dialogIsAlive=sayBye(peer);
     }
  catch (    OperationFailedException ex) {
       logger.error("Failed to send BYE in response to refer NOTIFY request.",ex);
       dialogIsAlive=false;
     }
     if (!dialogIsAlive) {
-      participant.setState(CallPeerState.DISCONNECTED);
+      peer.setState(CallPeerState.DISCONNECTED);
     }
   }
   return true;
