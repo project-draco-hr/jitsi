@@ -1,8 +1,11 @@
 {
-  try {
-    notifyGrowlOf("Message Received",sipIconPath,popupMessage.getMessageTitle(),popupMessage.getMessage());
+  long timestamp=System.currentTimeMillis();
+synchronized (shownPopups) {
+    shownPopups.put(timestamp,popupMessage);
   }
- catch (  Exception ex) {
-    logger.error("Could not notify the received message to Growl",ex);
-  }
+  String messageBody=popupMessage.getMessage();
+  String messageTitle=popupMessage.getMessageTitle();
+  messageBody=messageBody.replaceAll("</?\\w++[^>]*+>","");
+  messageTitle=messageTitle.replaceAll("</?\\w++[^>]*+>","");
+  growl.notifyGrowlOf(messageTitle,messageBody,"Default",popupMessage.getIcon(),timestamp);
 }

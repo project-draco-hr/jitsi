@@ -1,12 +1,15 @@
 {
-  String version=System.getProperty("java.version");
-  char minor=version.charAt(2);
-  if (minor > '5') {
-    logger.info("Growl Notification Plugin cannot be started " + "on JDK version " + version);
+  logger.info("Growl Notification ...[Starting]");
+  bundleContext=bc;
+  getConfigurationService();
+  handler=new GrowlNotificationServiceImpl();
+  if (handler.isGrowlInstalled()) {
+    handler.start(bc);
+    bc.registerService(PopupMessageHandler.class.getName(),handler,null);
   }
  else {
-    bundleContext=bc;
-    new GrowlNotificationServiceImpl().start(bc);
-    logger.info("Growl Notification Plugin ...[Started]");
+    logger.info("Growl Notification ...[Aborted]");
+    return;
   }
+  logger.info("Growl Notification ...[Started]");
 }

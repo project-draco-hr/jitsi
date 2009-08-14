@@ -1,19 +1,10 @@
 {
   logger.debug("Starting the Growl Notification implementation.");
-  try {
-    Constructor<Growl> constructor=Growl.class.getConstructor(new Class[]{String.class,String.class});
-    notifier=constructor.newInstance(new Object[]{"SIP Communicator",sipIconPath});
-    setAllowedNotifMethod=Growl.class.getMethod("setAllowedNotifications",new Class[]{String[].class});
-    setDefaultNotifMethod=Growl.class.getMethod("setDefaultNotifications",new Class[]{String[].class});
-    notifyMethod=Growl.class.getMethod("notifyGrowlOf",new Class[]{String.class,String.class,String.class,String.class});
-    setAllowedNotifications(allNotif);
-    setDefaultNotifications(defaultNotif);
-    notifier.register();
-    notifyGrowlOf("SIP Communicator Started",sipIconPath,"Welcome to SIP Communicator","http://www.sip-communicator.org");
+  if (Growl.isGrowlRunning()) {
+    String[] dict={"Default","Welcome message"};
+    byte[] sipIcon=GrowlNotificationActivator.getResources().getImageInBytes("service.gui.SIP_COMMUNICATOR_LOGO_45x45");
+    growl=new Growl("SIP Communicator","net.sip-communicator",sipIcon,dict,dict);
+    growl.addClickedNotificationsListener(this);
+    growl.notifyGrowlOf("SIP Communicator","http://www.sip-communicator.org/","Welcome message",null,null);
   }
- catch (  Exception ex) {
-    logger.error("Could not send the message to Growl",ex);
-    throw ex;
-  }
-  bc.registerService(PopupMessageHandler.class.getName(),this,null);
 }
