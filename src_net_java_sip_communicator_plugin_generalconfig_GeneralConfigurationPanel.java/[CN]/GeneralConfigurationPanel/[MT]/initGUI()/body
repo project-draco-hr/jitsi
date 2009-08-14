@@ -152,18 +152,30 @@
         }
 {
           notifConfigComboBox=new JComboBox();
-          String currentConfig=ConfigurationManager.getPopupHandlerConfig();
+          String configuredHandler=(String)GeneralConfigPluginActivator.getConfigurationService().getProperty("systray.POPUP_HANDLER");
           for (          ServiceReference ref : handlerRefs) {
             PopupMessageHandler handler=(PopupMessageHandler)bc.getService(ref);
             notifConfigComboBox.addItem(handler);
-            String handlerName=handler.getClass().getName();
-            if (handlerName.equals(currentConfig))             notifConfigComboBox.setSelectedItem(handler);
+            if (configuredHandler != null && configuredHandler.equals(handler.getClass().getName())) {
+              notifConfigComboBox.setSelectedItem(handler);
+            }
+          }
+          String auto="Auto";
+          notifConfigComboBox.addItem(auto);
+          if (configuredHandler == null) {
+            notifConfigComboBox.setSelectedItem(auto);
           }
           notifConfigComboBox.addItemListener(new ItemListener(){
             public void itemStateChanged(            ItemEvent evt){
-              PopupMessageHandler handler=(PopupMessageHandler)notifConfigComboBox.getSelectedItem();
-              ConfigurationManager.setPopupHandlerConfig(handler.getClass().getName());
-              GeneralConfigPluginActivator.getSystrayService().setActivePopupMessageHandler(handler);
+              if (notifConfigComboBox.getSelectedItem() instanceof String) {
+                ConfigurationManager.setPopupHandlerConfig(null);
+                GeneralConfigPluginActivator.getSystrayService().selectBestPopupMessageHandler();
+              }
+ else {
+                PopupMessageHandler handler=(PopupMessageHandler)notifConfigComboBox.getSelectedItem();
+                ConfigurationManager.setPopupHandlerConfig(handler.getClass().getName());
+                GeneralConfigPluginActivator.getSystrayService().setActivePopupMessageHandler(handler);
+              }
             }
           }
 );
