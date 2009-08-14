@@ -8,14 +8,20 @@
       }
  else       logger.warn("the following popup handler has not " + "been added since it is already known : " + handler);
       String configuredHandler=(String)configService.getProperty("systray.POPUP_HANDLER");
-      if (configuredHandler.equals(handler.getClass().getName()))       setActivePopupMessageHandler(handler);
+      if (configuredHandler == null && (handler.getPreferenceIndex() > activePopupHandler.getPreferenceIndex())) {
+        setActivePopupMessageHandler(handler);
+      }
+      if (configuredHandler != null && configuredHandler.equals(handler.getClass().getName())) {
+        setActivePopupMessageHandler(handler);
+      }
     }
  else     if (serviceEvent.getType() == ServiceEvent.UNREGISTERING) {
+      logger.info("removing the following popup handler : " + handler);
       popupHandlerSet.remove(handler.getClass().getName());
       if (activePopupHandler == handler) {
         activePopupHandler.removePopupMessageListener(popupMessageListener);
         activePopupHandler=null;
-        if (!popupHandlerSet.isEmpty())         setActivePopupMessageHandler(popupHandlerSet.get(popupHandlerSet.keys().nextElement()));
+        selectBestPopupMessageHandler();
       }
     }
   }
