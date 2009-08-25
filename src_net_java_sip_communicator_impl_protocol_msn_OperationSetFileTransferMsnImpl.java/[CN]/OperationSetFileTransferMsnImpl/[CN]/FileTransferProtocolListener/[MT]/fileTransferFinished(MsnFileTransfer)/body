@@ -1,0 +1,15 @@
+{
+  Object ftObj=activeFileTransfers.get(ft.getID());
+  if (ftObj == null)   return;
+  if (ftObj instanceof FileTransferImpl) {
+    FileTransferImpl fileTransfer=(FileTransferImpl)ftObj;
+    if (ft.getState() == MsnFileTransferState.COMPLETED)     fileTransfer.fireStatusChangeEvent(FileTransferStatusChangeEvent.COMPLETED);
+ else     if (ft.getState() == MsnFileTransferState.CANCELED)     fileTransfer.fireStatusChangeEvent(FileTransferStatusChangeEvent.CANCELED);
+ else     if (ft.getState() == MsnFileTransferState.REFUSED)     fileTransfer.fireStatusChangeEvent(FileTransferStatusChangeEvent.REFUSED);
+  }
+ else   if (ftObj instanceof IncomingFileTransferRequest) {
+    IncomingFileTransferRequestMsnImpl inReq=(IncomingFileTransferRequestMsnImpl)ftObj;
+    if (!inReq.isRejected() && ft.getState() == MsnFileTransferState.CANCELED)     fireFileTransferRequestCanceled(new FileTransferRequestEvent(OperationSetFileTransferMsnImpl.this,inReq,inReq.getDate()));
+  }
+  activeFileTransfers.remove(ft.getID());
+}

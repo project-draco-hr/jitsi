@@ -1,0 +1,11 @@
+{
+  assertConnected();
+  if (!(toContact instanceof ContactMsnImpl))   throw new IllegalArgumentException("The specified contact is not an msn contact." + toContact);
+  MsnFileTransfer ft=msnProvider.getMessenger().getFileTransferManager().sendFile(((ContactMsnImpl)toContact).getSourceContact().getEmail(),file);
+  if (ft == null)   new IllegalStateException("A problem occured sending file, contact not found or offline");
+  FileTransferImpl outFileTransfer=new FileTransferImpl(ft,toContact,file,FileTransfer.OUT);
+  FileTransferCreatedEvent event=new FileTransferCreatedEvent(outFileTransfer,new Date());
+  fireFileTransferCreated(event);
+  outFileTransfer.fireStatusChangeEvent(FileTransferStatusChangeEvent.PREPARING);
+  return outFileTransfer;
+}
