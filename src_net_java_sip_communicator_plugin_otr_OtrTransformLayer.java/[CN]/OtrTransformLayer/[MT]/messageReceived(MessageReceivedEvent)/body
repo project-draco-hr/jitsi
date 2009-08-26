@@ -1,16 +1,10 @@
 {
   Contact contact=evt.getSourceContact();
-  addContact(contact);
-  String user=contact.getAddress();
-  ProtocolProviderService protoProvider=contact.getProtocolProvider();
-  String account=protoProvider.getAccountID().toString();
-  String protocol=protoProvider.getProtocolName();
-  Message msg=evt.getSourceMessage();
-  String msgContent=msg.getContent();
-  OperationSetBasicInstantMessaging imOpSet=(OperationSetBasicInstantMessaging)contact.getProtocolProvider().getOperationSet(OperationSetBasicInstantMessaging.class);
-  String processedMessageContent=us.handleReceivingMessage(user,account,protocol,msgContent);
+  String msgContent=evt.getSourceMessage().getContent();
+  String processedMessageContent=OtrActivator.scOtrEngine.transformReceiving(contact,msgContent);
   if (processedMessageContent == null || processedMessageContent.length() < 1)   return null;
   if (processedMessageContent.equals(msgContent))   return evt;
+  OperationSetBasicInstantMessaging imOpSet=(OperationSetBasicInstantMessaging)contact.getProtocolProvider().getOperationSet(OperationSetBasicInstantMessaging.class);
   Message processedMessage=imOpSet.createMessage(processedMessageContent);
   MessageReceivedEvent processedEvent=new MessageReceivedEvent(processedMessage,contact,evt.getTimestamp());
   return processedEvent;

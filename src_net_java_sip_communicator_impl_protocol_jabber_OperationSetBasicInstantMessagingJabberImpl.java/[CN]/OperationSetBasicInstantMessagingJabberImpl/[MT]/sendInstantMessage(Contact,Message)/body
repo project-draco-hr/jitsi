@@ -11,13 +11,7 @@
     Chat chat=jabberConnection.getChatManager().createChat(to.getAddress(),msgListener);
     org.jivesoftware.smack.packet.Message msg=new org.jivesoftware.smack.packet.Message();
     MessageDeliveredEvent msgDeliveryPendingEvt=new MessageDeliveredEvent(message,to,System.currentTimeMillis());
-    OperationSetInstantMessageTransformJabberImpl messageTransform=(OperationSetInstantMessageTransformJabberImpl)jabberProvider.getOperationSet(OperationSetInstantMessageTransform.class);
-    for (    Map.Entry<Integer,Vector<TransformLayer>> entry : messageTransform.transformLayers.entrySet()) {
-      for (Iterator<TransformLayer> iterator=entry.getValue().iterator(); iterator.hasNext(); ) {
-        TransformLayer transformLayer=(TransformLayer)iterator.next();
-        if (msgDeliveryPendingEvt != null)         msgDeliveryPendingEvt=transformLayer.messageDeliveryPending(msgDeliveryPendingEvt);
-      }
-    }
+    msgDeliveryPendingEvt=messageDeliveryPendingTransform(msgDeliveryPendingEvt);
     if (msgDeliveryPendingEvt == null)     return;
     String content=msgDeliveryPendingEvt.getSourceMessage().getContent();
     if (message.getContentType().equals(HTML_MIME_TYPE)) {
@@ -33,12 +27,6 @@
     MessageEventManager.addNotificationsRequests(msg,true,false,false,true);
     chat.sendMessage(msg);
     MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(message,to,System.currentTimeMillis());
-    for (    Map.Entry<Integer,Vector<TransformLayer>> entry : messageTransform.transformLayers.entrySet()) {
-      for (Iterator<TransformLayer> iterator=entry.getValue().iterator(); iterator.hasNext(); ) {
-        TransformLayer transformLayer=(TransformLayer)iterator.next();
-        if (msgDeliveredEvt != null)         msgDeliveredEvt=transformLayer.messageDelivered(msgDeliveredEvt);
-      }
-    }
     if (msgDeliveredEvt != null)     fireMessageEvent(msgDeliveredEvt);
   }
  catch (  XMPPException ex) {

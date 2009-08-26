@@ -4,16 +4,30 @@ synchronized (this.messageListeners) {
     listeners=new ArrayList<MessageListener>(this.messageListeners);
   }
   logger.debug("Dispatching Message Listeners=" + listeners.size() + " evt="+ evt);
+  MessageEventType eventType=MessageEventType.None;
+  if (evt instanceof MessageDeliveredEvent) {
+    eventType=MessageEventType.MessageDelivered;
+  }
+ else   if (evt instanceof MessageReceivedEvent) {
+    eventType=MessageEventType.MessageReceived;
+  }
+ else   if (evt instanceof MessageDeliveryFailedEvent) {
+    eventType=MessageEventType.MessageDeliveryFailed;
+  }
+  evt=messageTransform(evt,eventType);
+  if (evt == null)   return;
   for (Iterator<MessageListener> listenerIter=listeners.iterator(); listenerIter.hasNext(); ) {
     MessageListener listener=listenerIter.next();
-    if (evt instanceof MessageDeliveredEvent) {
+switch (eventType) {
+case MessageDelivered:
       listener.messageDelivered((MessageDeliveredEvent)evt);
-    }
- else     if (evt instanceof MessageReceivedEvent) {
-      listener.messageReceived((MessageReceivedEvent)evt);
-    }
- else     if (evt instanceof MessageDeliveryFailedEvent) {
-      listener.messageDeliveryFailed((MessageDeliveryFailedEvent)evt);
-    }
-  }
+    break;
+case MessageDeliveryFailed:
+  listener.messageDeliveryFailed((MessageDeliveryFailedEvent)evt);
+break;
+case MessageReceived:
+listener.messageReceived((MessageReceivedEvent)evt);
+break;
+}
+}
 }

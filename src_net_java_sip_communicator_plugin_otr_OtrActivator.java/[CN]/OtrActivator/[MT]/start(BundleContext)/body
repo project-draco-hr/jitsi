@@ -1,22 +1,6 @@
 {
-  this.bundleContext=bc;
-  bc.addServiceListener(this);
-  ServiceReference[] protocolProviderRefs=null;
-  try {
-    protocolProviderRefs=bc.getServiceReferences(ProtocolProviderService.class.getName(),null);
-  }
- catch (  InvalidSyntaxException ex) {
-    logger.error("Error while retrieving service refs",ex);
-    return;
-  }
-  if (protocolProviderRefs != null) {
-    logger.debug("Found " + protocolProviderRefs.length + " already installed providers.");
-    for (int i=0; i < protocolProviderRefs.length; i++) {
-      ProtocolProviderService provider=(ProtocolProviderService)bc.getService(protocolProviderRefs[i]);
-      this.handleProviderAdded(provider);
-    }
-  }
-  Hashtable<String,String> containerFilter=new Hashtable<String,String>();
-  containerFilter.put(Container.CONTAINER_ID,Container.CONTAINER_CONTACT_RIGHT_BUTTON_MENU.getID());
-  bundleContext.registerService(PluginComponent.class.getName(),new OtrMenu(ResourceManagementServiceUtils.getService(bc)),containerFilter);
+  bundleContext=bc;
+  if (!initServices())   return;
+  if (!registerTransformLayer())   return;
+  registerUI();
 }

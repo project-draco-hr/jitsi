@@ -2,21 +2,9 @@
   assertConnected();
   if (!(to instanceof ContactMsnImpl))   throw new IllegalArgumentException("The specified contact is not an MSN contact." + to);
   MessageDeliveredEvent msgDeliveryPendingEvt=new MessageDeliveredEvent(message,to,System.currentTimeMillis());
-  OperationSetInstantMessageTransformMsnImpl messageTransform=(OperationSetInstantMessageTransformMsnImpl)msnProvider.getOperationSet(OperationSetInstantMessageTransform.class);
-  for (  Map.Entry<Integer,Vector<TransformLayer>> entry : messageTransform.transformLayers.entrySet()) {
-    for (Iterator<TransformLayer> iterator=entry.getValue().iterator(); iterator.hasNext(); ) {
-      TransformLayer transformLayer=(TransformLayer)iterator.next();
-      if (msgDeliveryPendingEvt != null)       msgDeliveryPendingEvt=transformLayer.messageDeliveryPending(msgDeliveryPendingEvt);
-    }
-  }
+  msgDeliveryPendingEvt=messageDeliveryPendingTransform(msgDeliveryPendingEvt);
   if (msgDeliveryPendingEvt == null)   return;
   msnProvider.getMessenger().sendText(((ContactMsnImpl)to).getSourceContact().getEmail(),msgDeliveryPendingEvt.getSourceMessage().getContent());
   MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(message,to,System.currentTimeMillis());
-  for (  Map.Entry<Integer,Vector<TransformLayer>> entry : messageTransform.transformLayers.entrySet()) {
-    for (Iterator<TransformLayer> iterator=entry.getValue().iterator(); iterator.hasNext(); ) {
-      TransformLayer transformLayer=(TransformLayer)iterator.next();
-      if (msgDeliveredEvt != null)       msgDeliveredEvt=transformLayer.messageDelivered(msgDeliveredEvt);
-    }
-  }
   if (msgDeliveredEvt != null)   fireMessageEvent(msgDeliveredEvt);
 }
