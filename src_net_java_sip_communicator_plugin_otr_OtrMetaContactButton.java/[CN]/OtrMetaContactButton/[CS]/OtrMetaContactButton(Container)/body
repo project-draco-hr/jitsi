@@ -1,0 +1,37 @@
+{
+  super(null,null);
+  this.setEnabled(false);
+  this.setPreferredSize(new Dimension(25,25));
+  this.container=container;
+  OtrActivator.scOtrEngine.addListener(new ScOtrEngineListener(){
+    public void sessionStatusChanged(    Contact contact){
+      if (contact.equals(OtrMetaContactButton.this.contact)) {
+        setStatus(OtrActivator.scOtrEngine.getSessionStatus(contact));
+      }
+    }
+    public void contactPolicyChanged(    Contact contact){
+      if (contact.equals(OtrMetaContactButton.this.contact)) {
+        setPolicy(OtrActivator.scOtrEngine.getContactPolicy(contact));
+      }
+    }
+    public void globalPolicyChanged(){
+      if (OtrMetaContactButton.this.contact != null)       setPolicy(OtrActivator.scOtrEngine.getContactPolicy(contact));
+    }
+  }
+);
+  this.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      if (contact == null)       return;
+switch (OtrActivator.scOtrEngine.getSessionStatus(contact)) {
+case ENCRYPTED:
+        OtrActivator.scOtrEngine.endSession(contact);
+      break;
+case FINISHED:
+case PLAINTEXT:
+    OtrActivator.scOtrEngine.startSession(contact);
+  break;
+}
+}
+}
+);
+}

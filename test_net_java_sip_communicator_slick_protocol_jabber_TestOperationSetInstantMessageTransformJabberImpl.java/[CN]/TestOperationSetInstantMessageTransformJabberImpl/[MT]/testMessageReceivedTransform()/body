@@ -1,0 +1,17 @@
+{
+  String body="This is an IM coming from the tester agent" + " on " + new Date().toString();
+  String expectedReceivedBody="__RECEIVED____DELIVERY_PENDING__" + body;
+  ImEventCollector receiversEventCollector=new ImEventCollector();
+  opSetBasicIM1.addMessageListener(receiversEventCollector);
+  Contact contact1=opSetPresence2.findContactByID(fixture.userID1);
+  logger.debug("Will send message \"" + body + "\" to: \""+ contact1+ "\". We expect to get back: \""+ expectedReceivedBody+ "\"");
+  opSetBasicIM2.sendInstantMessage(contact1,opSetBasicIM2.createMessage(body));
+  receiversEventCollector.waitForEvent(timeout);
+  opSetBasicIM1.removeMessageListener(receiversEventCollector);
+  assertTrue("No events delivered upon a received message",receiversEventCollector.collectedEvents.size() > 0);
+  assertTrue("Received evt was not an instance of " + MessageReceivedEvent.class.getName(),receiversEventCollector.collectedEvents.get(0) instanceof MessageReceivedEvent);
+  MessageReceivedEvent evt=(MessageReceivedEvent)receiversEventCollector.collectedEvents.get(0);
+  assertEquals("message sender ",evt.getSourceContact().getAddress(),fixture.userID2);
+  logger.debug("We got back: \"" + evt.getSourceMessage().getContent() + "\"");
+  assertEquals("message body",expectedReceivedBody,evt.getSourceMessage().getContent());
+}
