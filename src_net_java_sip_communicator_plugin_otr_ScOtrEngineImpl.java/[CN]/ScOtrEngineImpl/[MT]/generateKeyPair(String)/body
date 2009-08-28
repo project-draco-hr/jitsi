@@ -7,26 +7,10 @@
     e.printStackTrace();
     return;
   }
-  String idPubKey;
-  try {
-    idPubKey="net.java.sip.comunicator.plugin.otr." + URLEncoder.encode(accountID,"UTF-8") + ".publicKey";
-  }
- catch (  UnsupportedEncodingException e1) {
-    e1.printStackTrace();
-    return;
-  }
   PublicKey pubKey=keyPair.getPublic();
   X509EncodedKeySpec x509EncodedKeySpec=new X509EncodedKeySpec(pubKey.getEncoded());
-  OtrActivator.configService.setProperty(idPubKey,new String(Base64.encode(x509EncodedKeySpec.getEncoded())));
-  String idPrivKey;
-  try {
-    idPrivKey="net.java.sip.comunicator.plugin.otr." + URLEncoder.encode(accountID,"UTF-8") + ".privateKey";
-  }
- catch (  UnsupportedEncodingException e1) {
-    e1.printStackTrace();
-    return;
-  }
+  this.configurator.setProperty(accountID + ".publicKey",x509EncodedKeySpec.getEncoded());
   PrivateKey privKey=keyPair.getPrivate();
   PKCS8EncodedKeySpec pkcs8EncodedKeySpec=new PKCS8EncodedKeySpec(privKey.getEncoded());
-  OtrActivator.configService.setProperty(idPrivKey,new String(Base64.encode(pkcs8EncodedKeySpec.getEncoded())));
+  this.configurator.setProperty(accountID + ".privateKey",pkcs8EncodedKeySpec.getEncoded());
 }
