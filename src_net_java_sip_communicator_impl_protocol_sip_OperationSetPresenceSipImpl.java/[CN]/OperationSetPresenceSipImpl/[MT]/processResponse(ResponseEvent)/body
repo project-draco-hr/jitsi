@@ -1,68 +1,15 @@
 {
-  if (this.presenceEnabled == false) {
-    return false;
-  }
+  if (this.presenceEnabled == false)   return false;
   ClientTransaction clientTransaction=responseEvent.getClientTransaction();
   Response response=responseEvent.getResponse();
-  CSeqHeader cseq=((CSeqHeader)response.getHeader(CSeqHeader.NAME));
+  CSeqHeader cseq=(CSeqHeader)response.getHeader(CSeqHeader.NAME);
   if (cseq == null) {
     logger.error("An incoming response did not contain a CSeq header");
     return false;
   }
   String method=cseq.getMethod();
-  SipProvider sourceProvider=(SipProvider)responseEvent.getSource();
   boolean processed=false;
-  if (method.equals(Request.NOTIFY)) {
-    Request notifyRequest=clientTransaction.getRequest();
-    if (notifyRequest != null) {
-      EventHeader eventHeader=(EventHeader)notifyRequest.getHeader(EventHeader.NAME);
-      if ((eventHeader == null) || !"presence".equalsIgnoreCase(eventHeader.getEventType())) {
-        return false;
-      }
-    }
-    if (response.getStatusCode() != Response.UNAUTHORIZED && response.getStatusCode() != Response.PROXY_AUTHENTICATION_REQUIRED) {
-synchronized (this.waitedCallIds) {
-        this.waitedCallIds.remove(((CallIdHeader)response.getHeader(CallIdHeader.NAME)).getCallId());
-      }
-    }
-    if (response.getStatusCode() == Response.OK) {
-    }
- else     if (response.getStatusCode() == Response.UNAUTHORIZED || response.getStatusCode() == Response.PROXY_AUTHENTICATION_REQUIRED) {
-      try {
-        processAuthenticationChallenge(clientTransaction,response,sourceProvider);
-      }
- catch (      OperationFailedException e) {
-        logger.error("can't handle the challenge",e);
-        String contactAddress=((FromHeader)response.getHeader(FromHeader.NAME)).getAddress().getURI().toString();
-        Contact watcher=getWatcher(contactAddress);
-        if (watcher != null) {
-synchronized (watcher) {
-            if (((ContactSipImpl)watcher).getServerDialog().equals(clientTransaction.getDialog())) {
-synchronized (this.ourWatchers) {
-                this.ourWatchers.remove(watcher);
-              }
-            }
-          }
-        }
-      }
-    }
- else {
-      logger.debug("error received from the network" + response);
-      String contactAddress=((FromHeader)response.getHeader(FromHeader.NAME)).getAddress().getURI().toString();
-      Contact watcher=getWatcher(contactAddress);
-      if (watcher != null) {
-synchronized (watcher) {
-          if (((ContactSipImpl)watcher).getServerDialog().equals(clientTransaction.getDialog())) {
-synchronized (this.ourWatchers) {
-              this.ourWatchers.remove(watcher);
-            }
-          }
-        }
-      }
-    }
-    processed=true;
-  }
- else   if (method.equals(Request.PUBLISH)) {
+  if (method.equals(Request.PUBLISH)) {
     if (response.getStatusCode() != Response.UNAUTHORIZED && response.getStatusCode() != Response.PROXY_AUTHENTICATION_REQUIRED && response.getStatusCode() != Response.INTERVAL_TOO_BRIEF) {
 synchronized (this.waitedCallIds) {
         this.waitedCallIds.remove(((CallIdHeader)response.getHeader(CallIdHeader.NAME)).getCallId());
@@ -84,9 +31,7 @@ synchronized (this.waitedCallIds) {
         this.distantPAET=null;
         return true;
       }
-      if (this.republishTask != null) {
-        this.republishTask.cancel();
-      }
+      if (this.republishTask != null)       this.republishTask.cancel();
       this.republishTask=new RePublishTask();
       int republishDelay=expires.getExpires();
       if (republishDelay >= REFRESH_MARGIN)       republishDelay-=REFRESH_MARGIN;
@@ -94,7 +39,7 @@ synchronized (this.waitedCallIds) {
     }
  else     if (response.getStatusCode() == Response.UNAUTHORIZED || response.getStatusCode() == Response.PROXY_AUTHENTICATION_REQUIRED) {
       try {
-        processAuthenticationChallenge(clientTransaction,response,sourceProvider);
+        processAuthenticationChallenge(clientTransaction,response,(SipProvider)responseEvent.getSource());
       }
  catch (      OperationFailedException e) {
         logger.error("can't handle the challenge",e);
@@ -160,14 +105,9 @@ synchronized (this.waitedCallIds) {
  else {
       logger.debug("error received from the network" + response);
       this.distantPAET=null;
-      if (this.useDistantPA == false) {
-        return true;
-      }
-      logger.debug("we enter into the peer to peer mode as the " + "distant PA mode fails");
-      this.useDistantPA=false;
-      if (this.republishTask != null) {
-        this.republishTask.cancel();
-        this.republishTask=null;
+      if (this.useDistantPA) {
+        logger.debug("we enter into the peer-to-peer mode" + " as the distant PA mode fails");
+        setUseDistantPA(false);
       }
     }
     processed=true;

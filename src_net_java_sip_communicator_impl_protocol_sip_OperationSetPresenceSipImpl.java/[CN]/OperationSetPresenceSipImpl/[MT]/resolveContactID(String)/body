@@ -1,23 +1,18 @@
 {
-  Contact res=this.findContactByID(contactID);
+  ContactSipImpl res=findContactByID(contactID);
   if (res == null) {
-    if (contactID.startsWith("sip:")) {
-      res=this.findContactByID(contactID.substring(4));
-    }
+    if (contactID.startsWith("sip:"))     res=findContactByID(contactID.substring(4));
     if (res == null) {
-      if (contactID.indexOf('@') > -1) {
-        res=this.findContactByID(contactID.substring(0,contactID.indexOf('@')));
-        if (res == null) {
-          if (contactID.startsWith("sip:")) {
-            res=this.findContactByID(contactID.substring(4,contactID.indexOf('@')));
-          }
-        }
+      int domainBeginIndex=contactID.indexOf('@');
+      if (domainBeginIndex > -1) {
+        res=findContactByID(contactID.substring(0,domainBeginIndex));
+        if ((res == null) && contactID.startsWith("sip:"))         res=findContactByID(contactID.substring(4,domainBeginIndex));
       }
-    }
-    if (res == null) {
-      int ix=contactID.indexOf(":",4);
-      if (ix == -1)       ix=contactID.indexOf(";",4);
-      if (ix > 0)       res=this.findContactByID(contactID.substring(4,contactID.indexOf(":",4)));
+      if (res == null) {
+        int domainEndIndex=contactID.indexOf(":",4);
+        if (domainEndIndex < 0)         domainEndIndex=contactID.indexOf(";",4);
+        if (domainEndIndex > -1)         res=findContactByID(contactID.substring(4,domainEndIndex));
+      }
     }
   }
   return res;

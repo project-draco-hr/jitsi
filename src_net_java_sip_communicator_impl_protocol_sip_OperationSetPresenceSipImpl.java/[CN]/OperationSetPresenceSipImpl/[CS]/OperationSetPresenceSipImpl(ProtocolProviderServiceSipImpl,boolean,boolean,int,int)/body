@@ -4,7 +4,19 @@
   this.parentProvider.addRegistrationStateChangeListener(this);
   this.presenceEnabled=presenceEnabled;
   this.subscriptionDuration=(subscriptionExpiration > 0) ? subscriptionExpiration : PRESENCE_DEFAULT_EXPIRE;
-  this.subscriber=this.presenceEnabled ? new EventPackageSubscriber(this.parentProvider,"presence",this.subscriptionDuration,PIDF_XML,this.timer,REFRESH_MARGIN) : null;
+  if (this.presenceEnabled) {
+    this.subscriber=new EventPackageSubscriber(this.parentProvider,"presence",this.subscriptionDuration,PIDF_XML,this.timer,REFRESH_MARGIN);
+    this.notifier=new EventPackageNotifier(this.parentProvider,"presence",PRESENCE_DEFAULT_EXPIRE,PIDF_XML,this.timer){
+      protected Subscription createSubscription(      Address fromAddress,      String eventId){
+        return new PresenceNotifierSubscription(fromAddress,eventId);
+      }
+    }
+;
+  }
+ else {
+    this.subscriber=null;
+    this.notifier=null;
+  }
   this.parentProvider.registerMethodProcessor(Request.SUBSCRIBE,this);
   this.parentProvider.registerMethodProcessor(Request.NOTIFY,this);
   this.parentProvider.registerMethodProcessor(Request.PUBLISH,this);

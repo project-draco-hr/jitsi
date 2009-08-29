@@ -6,9 +6,7 @@
   if (this.presenceEnabled == false) {
     return;
   }
-  if (!status.equals(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE))) {
-    assertConnected();
-  }
+  if (!status.equals(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE)))   assertConnected();
   if (this.useDistantPA) {
     Request req=null;
     if (status.equals(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE))) {
@@ -37,46 +35,19 @@ synchronized (this.waitedCallIds) {
     }
   }
  else {
-synchronized (this.ourWatchers) {
-      Iterator<ContactSipImpl> iter=this.ourWatchers.iterator();
-      while (iter.hasNext()) {
-        ContactSipImpl contact=(ContactSipImpl)iter.next();
-        ContactSipImpl me=getLocalContactForDst(contact);
-        if (!contact.isResolved()) {
-          continue;
-        }
-        ClientTransaction transac=null;
-        try {
-          if (status.equals(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE))) {
-            transac=createNotify(contact,getPidfPresenceStatus(me),SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.PROBATION);
-synchronized (this.waitedCallIds) {
-              this.waitedCallIds.add(transac.getDialog().getCallId().getCallId());
-            }
-          }
- else {
-            transac=createNotify(contact,getPidfPresenceStatus(me),SubscriptionStateHeader.ACTIVE,null);
-          }
-        }
- catch (        OperationFailedException e) {
-          logger.error("failed to create the new notify",e);
-          return;
-        }
-        try {
-          contact.getServerDialog().sendRequest(transac);
-        }
- catch (        Exception e) {
-          logger.error("Can't send the request",e);
-          return;
-        }
-      }
-      if (status.equals(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE))) {
-        this.ourWatchers.removeAllElements();
-      }
+    String subscriptionState;
+    String reason;
+    if (status.equals(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE))) {
+      subscriptionState=SubscriptionStateHeader.TERMINATED;
+      reason=SubscriptionStateHeader.PROBATION;
     }
+ else {
+      subscriptionState=SubscriptionStateHeader.ACTIVE;
+      reason=null;
+    }
+    notifier.notifyAll(subscriptionState,reason);
   }
-  if (status.equals(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE))) {
-    unsubscribeToAllContact();
-  }
+  if (status.equals(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE)))   unsubscribeToAllContact();
   this.fireProviderStatusChangeEvent(oldStatus);
   this.fireProviderMsgStatusChangeEvent(oldMessage);
 }

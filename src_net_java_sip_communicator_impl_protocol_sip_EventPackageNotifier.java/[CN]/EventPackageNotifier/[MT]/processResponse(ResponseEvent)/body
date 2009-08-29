@@ -1,0 +1,36 @@
+{
+  Response response=responseEvent.getResponse();
+  CSeqHeader cseqHeader=(CSeqHeader)response.getHeader(CSeqHeader.NAME);
+  if (cseqHeader == null) {
+    logger.error("An incoming response did not contain a CSeq header");
+    return false;
+  }
+  if (!Request.NOTIFY.equals(cseqHeader.getMethod()))   return false;
+  ClientTransaction clientTransaction=responseEvent.getClientTransaction();
+  Request notifyRequest=clientTransaction.getRequest();
+  String eventId=null;
+  if (notifyRequest != null) {
+    EventHeader eventHeader=(EventHeader)notifyRequest.getHeader(EventHeader.NAME);
+    if ((eventHeader == null) || !eventPackage.equalsIgnoreCase(eventHeader.getEventType()))     return false;
+    eventId=eventHeader.getEventId();
+  }
+switch (response.getStatusCode()) {
+case Response.OK:
+    break;
+case Response.UNAUTHORIZED:
+case Response.PROXY_AUTHENTICATION_REQUIRED:
+  try {
+    processAuthenticationChallenge(clientTransaction,response,(SipProvider)responseEvent.getSource());
+  }
+ catch (  OperationFailedException e) {
+    logger.error("can't handle the challenge",e);
+    removeSubscription(response,eventId,clientTransaction);
+  }
+break;
+default :
+logger.debug("error received from the network" + response);
+removeSubscription(response,eventId,clientTransaction);
+break;
+}
+return true;
+}

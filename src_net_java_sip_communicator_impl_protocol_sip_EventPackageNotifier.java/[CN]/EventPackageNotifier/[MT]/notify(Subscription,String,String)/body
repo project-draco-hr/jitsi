@@ -1,0 +1,12 @@
+{
+  Dialog dialog=subscription.getDialog();
+  ClientTransaction transac=createNotify(dialog,subscription,subscriptionState,reason);
+  try {
+    dialog.sendRequest(transac);
+  }
+ catch (  SipException sex) {
+    logger.error("Failed to send NOTIFY request.",sex);
+    throw new OperationFailedException("Failed to send NOTIFY request.",OperationFailedException.NETWORK_FAILURE,sex);
+  }
+  if (SubscriptionState.TERMINATED.equals(subscriptionState))   removeSubscription(subscription);
+}

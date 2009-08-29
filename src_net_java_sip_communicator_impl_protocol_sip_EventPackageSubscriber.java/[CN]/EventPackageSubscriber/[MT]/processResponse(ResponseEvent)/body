@@ -1,6 +1,6 @@
 {
   Response response=responseEvent.getResponse();
-  CSeqHeader cseqHeader=((CSeqHeader)response.getHeader(CSeqHeader.NAME));
+  CSeqHeader cseqHeader=(CSeqHeader)response.getHeader(CSeqHeader.NAME);
   if (cseqHeader == null) {
     logger.error("An incoming response did not contain a CSeq header");
     return false;
@@ -33,8 +33,8 @@
         logger.error("no Expires header in this response");
         return false;
       }
-      RefreshSubscriptionTask refreshTask=new RefreshSubscriptionTask(subscription);
-      subscription.setRefreshTask(refreshTask);
+      SubscriptionRefreshTask refreshTask=new SubscriptionRefreshTask(subscription);
+      subscription.setTimerTask(refreshTask);
       int refreshDelay=expHeader.getExpires();
       if (refreshDelay >= refreshMargin)       refreshDelay-=refreshMargin;
       timer.schedule(refreshTask,refreshDelay * 1000);
@@ -43,7 +43,7 @@
     }
   }
  else   if ((statusCode >= Response.MULTIPLE_CHOICES) && (statusCode < Response.BAD_REQUEST)) {
-    logger.info("Response to subscribe to " + subscription.getToAddress() + ": "+ response.getReasonPhrase());
+    logger.info("Response to subscribe to " + subscription.getAddress() + ": "+ response.getReasonPhrase());
   }
  else   if (statusCode >= Response.BAD_REQUEST) {
     if (statusCode == Response.INTERVAL_TOO_BRIEF) {

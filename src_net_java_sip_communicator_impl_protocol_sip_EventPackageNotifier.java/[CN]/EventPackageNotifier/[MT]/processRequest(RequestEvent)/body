@@ -1,0 +1,185 @@
+{
+  Request request=requestEvent.getRequest();
+  EventHeader eventHeader=(EventHeader)request.getHeader(EventHeader.NAME);
+  if ((eventHeader == null) || !eventPackage.equalsIgnoreCase(eventHeader.getEventType())) {
+    return false;
+  }
+  if (!Request.SUBSCRIBE.equals(request.getMethod()))   return false;
+  ServerTransaction serverTransaction=getOrCreateServerTransaction(requestEvent);
+  if (serverTransaction == null)   return false;
+  ExpiresHeader expHeader=request.getExpires();
+  int expires=(expHeader == null) ? subscriptionDuration : expHeader.getExpires();
+  if ((expires < SUBSCRIBE_MIN_EXPIRE) && (expires > 0)) {
+    Response response;
+    try {
+      response=protocolProvider.getMessageFactory().createResponse(Response.INTERVAL_TOO_BRIEF,request);
+    }
+ catch (    Exception e) {
+      logger.error("Error while creating the response 423",e);
+      return false;
+    }
+    MinExpiresHeader min;
+    try {
+      min=protocolProvider.getHeaderFactory().createMinExpiresHeader(SUBSCRIBE_MIN_EXPIRE);
+    }
+ catch (    InvalidArgumentException e) {
+      logger.error("can't create the min expires header",e);
+      return false;
+    }
+    response.setHeader(min);
+    try {
+      serverTransaction.sendResponse(response);
+    }
+ catch (    Exception e) {
+      logger.error("Error while sending the response 423",e);
+      return false;
+    }
+    return true;
+  }
+  FromHeader fromHeader=(FromHeader)request.getHeader(FromHeader.NAME);
+  Address fromAddress=fromHeader.getAddress();
+  String eventId=eventHeader.getEventId();
+  Subscription subscription=getSubscription(fromAddress,eventId);
+  if ((subscription != null) && (expires != 0)) {
+    Dialog dialog=subscription.getDialog();
+    if (dialog.equals(serverTransaction.getDialog())) {
+      SubscriptionTimeoutTask timeout=new SubscriptionTimeoutTask(subscription);
+      subscription.setTimerTask(timeout);
+      timer.schedule(timeout,expires * 1000);
+      Response response;
+      try {
+        response=protocolProvider.getMessageFactory().createResponse(Response.OK,request);
+      }
+ catch (      Exception e) {
+        logger.error("Error while creating the response 200",e);
+        return false;
+      }
+      try {
+        expHeader=protocolProvider.getHeaderFactory().createExpiresHeader(expires);
+      }
+ catch (      InvalidArgumentException e) {
+        logger.error("Can't create the expires header");
+        return false;
+      }
+      response.setHeader(expHeader);
+      try {
+        serverTransaction.sendResponse(response);
+      }
+ catch (      Exception e) {
+        logger.error("Error while sending the response 200",e);
+        return false;
+      }
+      return true;
+    }
+ else {
+      logger.debug("refreshing subscription " + subscription + ", we will remove the first subscription");
+      ClientTransaction transac=null;
+      try {
+        transac=createNotify(dialog,subscription,SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.REJECTED);
+      }
+ catch (      OperationFailedException e) {
+        logger.error("failed to create the new notify",e);
+        return false;
+      }
+      removeSubscription(subscription);
+      try {
+        dialog.sendRequest(transac);
+      }
+ catch (      Exception e) {
+        logger.error("Can't send the request",e);
+        return false;
+      }
+    }
+  }
+  if (subscription == null)   subscription=createSubscription(fromAddress,eventId);
+  Dialog dialog;
+synchronized (subscription) {
+    subscription.setDialog(serverTransaction.getDialog());
+    dialog=subscription.getDialog();
+  }
+  if (expires == 0) {
+    removeSubscription(subscription);
+    Response response;
+    try {
+      response=protocolProvider.getMessageFactory().createResponse(Response.OK,request);
+    }
+ catch (    Exception e) {
+      logger.error("Error while creating the response 200",e);
+      return false;
+    }
+    try {
+      expHeader=protocolProvider.getHeaderFactory().createExpiresHeader(0);
+    }
+ catch (    InvalidArgumentException e) {
+      logger.error("Can't create the expires header",e);
+      return false;
+    }
+    response.setHeader(expHeader);
+    try {
+      serverTransaction.sendResponse(response);
+    }
+ catch (    Exception e) {
+      logger.error("Error while sending the response 200",e);
+      return false;
+    }
+    ClientTransaction transac=null;
+    try {
+      transac=createNotify(dialog,subscription,SubscriptionStateHeader.TERMINATED,SubscriptionStateHeader.TIMEOUT);
+    }
+ catch (    OperationFailedException e) {
+      logger.error("failed to create the new notify",e);
+      return false;
+    }
+    try {
+      dialog.sendRequest(transac);
+    }
+ catch (    Exception e) {
+      logger.error("Can't send the request",e);
+      return false;
+    }
+    return true;
+  }
+  Response response;
+  try {
+    response=protocolProvider.getMessageFactory().createResponse(Response.OK,request);
+  }
+ catch (  Exception e) {
+    logger.error("Error while creating the response 200",e);
+    return false;
+  }
+  try {
+    expHeader=protocolProvider.getHeaderFactory().createExpiresHeader(expires);
+  }
+ catch (  InvalidArgumentException e) {
+    logger.error("Can't create the expires header",e);
+    return false;
+  }
+  response.setHeader(expHeader);
+  try {
+    serverTransaction.sendResponse(response);
+  }
+ catch (  Exception e) {
+    logger.error("Error while sending the response 200",e);
+    return false;
+  }
+  addSubscription(subscription);
+  ClientTransaction transac;
+  try {
+    transac=createNotify(dialog,subscription,SubscriptionStateHeader.ACTIVE,null);
+  }
+ catch (  OperationFailedException e) {
+    logger.error("failed to create the new notify",e);
+    return false;
+  }
+  try {
+    dialog.sendRequest(transac);
+  }
+ catch (  Exception e) {
+    logger.error("Can't send the request",e);
+    return false;
+  }
+  SubscriptionTimeoutTask timeout=new SubscriptionTimeoutTask(subscription);
+  subscription.setTimerTask(timeout);
+  timer.schedule(timeout,expires * 1000);
+  return true;
+}

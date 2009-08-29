@@ -1,0 +1,75 @@
+{
+  Request req;
+  try {
+    req=dialog.createRequest(Request.NOTIFY);
+  }
+ catch (  SipException e) {
+    logger.error("Can't create the NOTIFY message",e);
+    throw new OperationFailedException("Can't create the NOTIFY message",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  Address toAddress=dialog.getRemoteTarget();
+  if (toAddress == null)   toAddress=dialog.getRemoteParty();
+  ArrayList<ViaHeader> viaHeaders;
+  MaxForwardsHeader maxForwards;
+  try {
+    viaHeaders=protocolProvider.getLocalViaHeaders(toAddress);
+    maxForwards=protocolProvider.getMaxForwardsHeader();
+  }
+ catch (  OperationFailedException e) {
+    logger.error("Can't retrive the via headers or the max forwards header",e);
+    throw new OperationFailedException("Can't retrive the via headers or the max forwards header",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  EventHeader evHeader;
+  try {
+    evHeader=protocolProvider.getHeaderFactory().createEventHeader(eventPackage);
+  }
+ catch (  ParseException e) {
+    logger.error("Can't create the Event header",e);
+    throw new OperationFailedException("Can't create the Event header",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  ContactHeader contactHeader=protocolProvider.getContactHeader(toAddress);
+  SubscriptionStateHeader sStateHeader;
+  try {
+    sStateHeader=protocolProvider.getHeaderFactory().createSubscriptionStateHeader(subscriptionState);
+    if ((reason != null) && (reason.trim().length() != 0))     sStateHeader.setReasonCode(reason);
+  }
+ catch (  ParseException e) {
+    logger.error("can't create the Subscription-State header",e);
+    throw new OperationFailedException("Can't create the Subscription-State header",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  ContentTypeHeader cTypeHeader;
+  try {
+    cTypeHeader=protocolProvider.getHeaderFactory().createContentTypeHeader("application",contentSubType);
+  }
+ catch (  ParseException e) {
+    logger.error("can't create the Content-Type header",e);
+    throw new OperationFailedException("Can't create the Content-Type header",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  req.setHeader(maxForwards);
+  req.setHeader(evHeader);
+  req.setHeader(sStateHeader);
+  req.setHeader(contactHeader);
+  CallIdHeader callIdHeader=(CallIdHeader)req.getHeader(CallIdHeader.NAME);
+  String callId=callIdHeader.getCallId();
+  AuthorizationHeader authorization=protocolProvider.getSipSecurityManager().getCachedAuthorizationHeader(callId);
+  if (authorization != null)   req.addHeader(authorization);
+  ClientTransaction transac;
+  try {
+    transac=protocolProvider.getDefaultJainSipProvider().getNewClientTransaction(req);
+  }
+ catch (  TransactionUnavailableException ex) {
+    logger.error("Failed to create subscriptionTransaction." + " This is most probably a network connection error.",ex);
+    throw new OperationFailedException("Failed to create subscriptionTransaction.",OperationFailedException.NETWORK_FAILURE,ex);
+  }
+  req.setHeader((Header)viaHeaders.get(0));
+  try {
+    req.setContent(content,cTypeHeader);
+  }
+ catch (  ParseException e) {
+    logger.error("Failed to add the presence document",e);
+    throw new OperationFailedException("Can't add the presence document to the request",OperationFailedException.INTERNAL_ERROR,e);
+  }
+  UserAgentHeader userAgentHeader=protocolProvider.getSipCommUserAgentHeader();
+  if (userAgentHeader != null)   req.addHeader(userAgentHeader);
+  return transac;
+}
