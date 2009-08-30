@@ -2,16 +2,17 @@
   logger.trace("Running status retreiver for AwaitingAuthorizationContacts");
   ContactGroupIcqImpl theAwaitingAuthorizationGroup=ssContactList.findContactGroup(ServerStoredContactListIcqImpl.awaitingAuthorizationGroupName);
   if (theAwaitingAuthorizationGroup == null)   return;
-  Iterator iter=theAwaitingAuthorizationGroup.contacts();
+  Iterator<Contact> iter=theAwaitingAuthorizationGroup.contacts();
   while (iter.hasNext()) {
     ContactIcqImpl sourceContact=(ContactIcqImpl)iter.next();
-    PresenceStatus newStatus=queryContactStatus(sourceContact.getAddress());
+    String sourceContactAddress=sourceContact.getAddress();
+    PresenceStatus newStatus=queryContactStatus(sourceContactAddress);
     PresenceStatus oldStatus=sourceContact.getPresenceStatus();
     if (newStatus.equals(oldStatus))     continue;
     sourceContact.updatePresenceStatus(newStatus);
     fireContactPresenceStatusChangeEvent(sourceContact,theAwaitingAuthorizationGroup,oldStatus,newStatus);
-    if (!newStatus.equals(IcqStatusEnum.OFFLINE) && !buddiesSeenAvailable.contains(sourceContact.getAddress())) {
-      buddiesSeenAvailable.add(sourceContact.getAddress());
+    if (!newStatus.equals(IcqStatusEnum.OFFLINE) && !buddiesSeenAvailable.contains(sourceContactAddress)) {
+      buddiesSeenAvailable.add(sourceContactAddress);
       try {
         AuthorizationRequest req=new AuthorizationRequest();
         req.setReason("I'm resending my request. Please authorize me!");

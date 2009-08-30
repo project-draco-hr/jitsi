@@ -2,12 +2,12 @@
   assertConnected();
   if (!(to instanceof ContactIcqImpl))   throw new IllegalArgumentException("The specified contact is not a Icq contact." + to);
   ImConversation imConversation=icqProvider.getAimConnection().getIcbmService().getImConversation(new Screenname(to.getAddress()));
-  String messageContent=null;
+  String messageContent;
   if (message.getContentType().equals(HTML_MIME_TYPE) && !message.getContent().startsWith(defaultHtmlStartTag)) {
     messageContent=defaultHtmlStartTag + message.getContent() + defaultHtmlEndTag;
   }
  else   messageContent=message.getContent();
-  MessageDeliveredEvent msgDeliveryPendingEvt=new MessageDeliveredEvent(message,to,System.currentTimeMillis());
+  MessageDeliveredEvent msgDeliveryPendingEvt=new MessageDeliveredEvent(message,to);
   msgDeliveryPendingEvt=this.messageDeliveryPendingTransform(msgDeliveryPendingEvt);
   if (msgDeliveryPendingEvt == null)   return;
   String transformedContent=msgDeliveryPendingEvt.getSourceMessage().getContent();
@@ -15,6 +15,6 @@
     imConversation.sendMessage(new SimpleMessage(transformedContent));
   }
  else   imConversation.sendMessage(new SimpleMessage(transformedContent),true);
-  MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(message,to,System.currentTimeMillis());
+  MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(message,to);
   if (msgDeliveredEvt != null)   fireMessageEvent(msgDeliveredEvt);
 }
