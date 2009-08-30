@@ -4,29 +4,31 @@
   mainPanel.setLayout(new BoxLayout(mainPanel,BoxLayout.Y_AXIS));
   mainPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
   mainPanel.setPreferredSize(new Dimension(400,300));
-  JTextArea generalInformation=new JTextArea();
-  generalInformation.setBackground(new java.awt.Color(212,208,200));
-  generalInformation.setColumns(20);
-  generalInformation.setEditable(false);
-  generalInformation.setLineWrap(true);
-  generalInformation.setWrapStyleWord(true);
+  JTextArea generalInformation=new CustomTextArea();
   generalInformation.setText(OtrActivator.resourceService.getI18NString("plugin.otr.authbuddydialog.AUTHENTICATION_INFO"));
   mainPanel.add(generalInformation);
-  txtLocalFingerprint=new JTextArea();
-  txtLocalFingerprint.setBackground(new java.awt.Color(212,208,200));
-  txtLocalFingerprint.setColumns(20);
-  txtLocalFingerprint.setEditable(false);
-  txtLocalFingerprint.setLineWrap(true);
-  generalInformation.setWrapStyleWord(true);
+  txtLocalFingerprint=new CustomTextArea();
   mainPanel.add(txtLocalFingerprint);
-  txtRemoteFingerprint=new JTextArea();
-  txtRemoteFingerprint.setBackground(new java.awt.Color(212,208,200));
-  txtRemoteFingerprint.setColumns(20);
-  txtRemoteFingerprint.setEditable(false);
-  txtRemoteFingerprint.setLineWrap(true);
-  generalInformation.setWrapStyleWord(true);
+  txtRemoteFingerprint=new CustomTextArea();
   mainPanel.add(txtRemoteFingerprint);
-  JPanel buttonPanel=new JPanel(new FlowLayout(FlowLayout.RIGHT));
+  JPanel pnlAction=new JPanel(new GridBagLayout());
+  pnlAction.setBorder(BorderFactory.createEtchedBorder());
+  mainPanel.add(pnlAction);
+  GridBagConstraints c=new GridBagConstraints();
+  c.fill=GridBagConstraints.HORIZONTAL;
+  c.insets=new Insets(5,5,5,5);
+  c.weightx=0.0;
+  cbAction=new JComboBox();
+  ActionComboBoxItem iHave=new ActionComboBoxItem(ActionComboBoxItemIndex.I_HAVE);
+  ActionComboBoxItem iHaveNot=new ActionComboBoxItem(ActionComboBoxItemIndex.I_HAVE_NOT);
+  cbAction.addItem(iHave);
+  cbAction.addItem(iHaveNot);
+  cbAction.setSelectedItem(OtrActivator.scOtrEngine.isContactVerified(contact) ? iHave : iHaveNot);
+  pnlAction.add(cbAction,c);
+  txtAction=new CustomTextArea();
+  c.weightx=1.0;
+  pnlAction.add(txtAction,c);
+  JPanel buttonPanel=new JPanel(new GridBagLayout());
   JButton helpButton=new JButton(OtrActivator.resourceService.getI18NString("plugin.otr.authbuddydialog.HELP"));
   helpButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent arg0){
@@ -34,7 +36,11 @@
     }
   }
 );
-  buttonPanel.add(helpButton);
+  c.weightx=0.0;
+  buttonPanel.add(helpButton,c);
+  c.weightx=1.0;
+  buttonPanel.add(new JLabel(),c);
+  c.weightx=0.0;
   JButton cancelButton=new JButton(OtrActivator.resourceService.getI18NString("plugin.otr.authbuddydialog.CANCEL"));
   cancelButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
@@ -42,17 +48,25 @@
     }
   }
 );
-  buttonPanel.add(cancelButton);
+  buttonPanel.add(cancelButton,c);
   JButton authenticateButton=new JButton(OtrActivator.resourceService.getI18NString("plugin.otr.authbuddydialog.AUTHENTICATE_BUDDY"));
   authenticateButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
-      OtrActivator.scOtrEngine.verifyContactFingerprint(contact);
-      dispose();
-    }
-  }
+      ActionComboBoxItem actionItem=(ActionComboBoxItem)cbAction.getSelectedItem();
+switch (actionItem.action) {
+case I_HAVE:
+        OtrActivator.scOtrEngine.verifyContactFingerprint(contact);
+      break;
+case I_HAVE_NOT:
+    OtrActivator.scOtrEngine.forgetContactFingerprint(contact);
+  break;
+}
+dispose();
+}
+}
 );
-  buttonPanel.add(authenticateButton);
-  mainPanel.add(buttonPanel);
-  this.getContentPane().add(mainPanel);
-  this.pack();
+buttonPanel.add(authenticateButton,c);
+mainPanel.add(buttonPanel);
+this.getContentPane().add(mainPanel);
+this.pack();
 }
