@@ -1,0 +1,28 @@
+{
+  logger.trace("entriesUpdated  " + addresses);
+  for (  String contactID : addresses) {
+    RosterEntry entry=roster.getEntry(contactID);
+    for (    RosterGroup gr : entry.getGroups()) {
+      if (findContactGroup(gr.getName()) == null) {
+        ContactGroupJabberImpl group=findContactGroupByNameCopy(gr.getName());
+        if (group != null) {
+          group.setSourceGroup(gr);
+          fireGroupEvent(group,ServerStoredGroupEvent.GROUP_RENAMED_EVENT);
+        }
+ else {
+        }
+      }
+ else {
+        ContactJabberImpl contact=findContactById(contactID);
+        ContactGroup contactGroup=contact.getParentContactGroup();
+        if (!gr.getName().equals(contactGroup.getGroupName())) {
+          if (contactGroup instanceof ContactGroupJabberImpl)           ((ContactGroupJabberImpl)contactGroup).removeContact(contact);
+ else           if (contactGroup instanceof RootContactGroupJabberImpl)           ((RootContactGroupJabberImpl)contactGroup).removeContact(contact);
+          ContactGroupJabberImpl newParentGroup=findContactGroup(gr.getName());
+          newParentGroup.addContact(contact);
+          fireContactMoved(contactGroup,newParentGroup,contact);
+        }
+      }
+    }
+  }
+}

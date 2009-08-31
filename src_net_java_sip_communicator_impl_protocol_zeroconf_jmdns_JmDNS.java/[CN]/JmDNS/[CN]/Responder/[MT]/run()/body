@@ -9,7 +9,7 @@ synchronized (ioLock) {
       try {
         boolean isUnicast=(port != DNSConstants.MDNS_PORT);
         for (Iterator<DNSEntry> iterator=in.questions.iterator(); iterator.hasNext(); ) {
-          DNSEntry entry=(DNSEntry)iterator.next();
+          DNSEntry entry=iterator.next();
           if (entry instanceof DNSQuestion) {
             DNSQuestion q=(DNSQuestion)entry;
             if (isUnicast) {
@@ -53,8 +53,8 @@ case DNSConstants.TYPE_AAAA:
             }
 case DNSConstants.TYPE_PTR:
 {
-            for (Iterator serviceIterator=services.values().iterator(); serviceIterator.hasNext(); ) {
-              ServiceInfo info=(ServiceInfo)serviceIterator.next();
+            for (Iterator<ServiceInfo> serviceIterator=services.values().iterator(); serviceIterator.hasNext(); ) {
+              ServiceInfo info=serviceIterator.next();
               if (info.getState() == DNSState.ANNOUNCED) {
                 if (q.name.equalsIgnoreCase(info.type)) {
                   DNSRecord answer=localHost.getDNS4AddressRecord();
@@ -73,7 +73,7 @@ case DNSConstants.TYPE_PTR:
             }
             if (q.name.equalsIgnoreCase("_services._mdns._udp.local.")) {
               for (Iterator<String> serviceTypeIterator=serviceTypes.values().iterator(); serviceTypeIterator.hasNext(); ) {
-                answers.add(new DNSRecord.Pointer("_services._mdns._udp.local.",DNSConstants.TYPE_PTR,DNSConstants.CLASS_IN,DNSConstants.DNS_TTL,(String)serviceTypeIterator.next()));
+                answers.add(new DNSRecord.Pointer("_services._mdns._udp.local.",DNSConstants.TYPE_PTR,DNSConstants.CLASS_IN,DNSConstants.DNS_TTL,serviceTypeIterator.next()));
               }
             }
             break;
@@ -82,7 +82,7 @@ case DNSConstants.TYPE_SRV:
 case DNSConstants.TYPE_ANY:
 case DNSConstants.TYPE_TXT:
 {
-          ServiceInfo info=(ServiceInfo)services.get(q.name.toLowerCase());
+          ServiceInfo info=services.get(q.name.toLowerCase());
           if (info != null && info.getState() == DNSState.ANNOUNCED) {
             DNSRecord answer=localHost.getDNS4AddressRecord();
             if (answer != null) {
@@ -105,8 +105,7 @@ default :
   }
 }
 }
-for (Iterator i=in.answers.iterator(); i.hasNext(); ) {
-DNSRecord knownAnswer=(DNSRecord)i.next();
+for (DNSRecord knownAnswer : in.answers) {
 if (knownAnswer.ttl > DNSConstants.DNS_TTL / 2 && answers.remove(knownAnswer)) {
   logger.debug("JmDNS Responder Known Answer Removed");
 }
@@ -118,7 +117,7 @@ if (isUnicast) {
   out=new DNSOutgoing(DNSConstants.FLAGS_QR_RESPONSE | DNSConstants.FLAGS_AA,false);
 }
 for (Iterator<DNSQuestion> i=questions.iterator(); i.hasNext(); ) {
-  out.addQuestion((DNSQuestion)i.next());
+  out.addQuestion(i.next());
 }
 for (Iterator<DNSRecord> i=answers.iterator(); i.hasNext(); ) {
   out=addAnswer(in,addr,port,out,i.next());

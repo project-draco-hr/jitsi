@@ -1,0 +1,24 @@
+{
+  logger.trace("entriesAdded " + addresses);
+  for (  String id : addresses) {
+    RosterEntry entry=roster.getEntry(id);
+    ContactJabberImpl contact=findContactById(entry.getUser());
+    if (contact != null) {
+      contact.setResolved(entry);
+      continue;
+    }
+    contact=new ContactJabberImpl(roster.getEntry(id),ServerStoredContactListJabberImpl.this,true,true);
+    boolean isUnfiledEntry=true;
+    for (    RosterGroup group : entry.getGroups()) {
+      ContactGroupJabberImpl parentGroup=findContactGroup(group.getName());
+      if (parentGroup != null)       parentGroup.addContact(contact);
+      isUnfiledEntry=false;
+    }
+    ContactGroup parentGroup=findContactGroup(contact);
+    if (parentGroup != null && !isUnfiledEntry)     fireContactAdded(findContactGroup(contact),contact);
+    if (parentGroup == null && isUnfiledEntry) {
+      rootGroup.addContact(contact);
+      fireContactAdded(rootGroup,contact);
+    }
+  }
+}

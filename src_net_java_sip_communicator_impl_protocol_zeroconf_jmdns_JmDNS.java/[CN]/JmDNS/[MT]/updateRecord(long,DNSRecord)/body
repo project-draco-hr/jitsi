@@ -3,16 +3,13 @@
 synchronized (this) {
     listenerList=new ArrayList<DNSListener>(listeners);
   }
-  for (Iterator<DNSListener> iterator=listenerList.iterator(); iterator.hasNext(); ) {
-    DNSListener listener=(DNSListener)iterator.next();
-    listener.updateRecord(this,now,rec);
-  }
+  for (  DNSListener listener : listenerList)   listener.updateRecord(this,now,rec);
   if (rec.type == DNSConstants.TYPE_PTR || rec.type == DNSConstants.TYPE_SRV) {
-    List serviceListenerList=null;
+    List<ServiceListener> serviceListenerList=null;
 synchronized (this) {
-      serviceListenerList=(List)serviceListeners.get(rec.name.toLowerCase());
+      serviceListenerList=serviceListeners.get(rec.name.toLowerCase());
       if (serviceListenerList != null) {
-        serviceListenerList=new ArrayList(serviceListenerList);
+        serviceListenerList=new ArrayList<ServiceListener>(serviceListenerList);
       }
     }
     if (serviceListenerList != null) {
@@ -21,14 +18,14 @@ synchronized (this) {
       String name=((DNSRecord.Pointer)rec).getAlias();
       if (!expired) {
         ServiceEvent event=new ServiceEvent(this,type,toUnqualifiedName(type,name),null);
-        for (Iterator iterator=serviceListenerList.iterator(); iterator.hasNext(); ) {
-          ((ServiceListener)iterator.next()).serviceAdded(event);
+        for (Iterator<ServiceListener> iterator=serviceListenerList.iterator(); iterator.hasNext(); ) {
+          iterator.next().serviceAdded(event);
         }
       }
  else {
         ServiceEvent event=new ServiceEvent(this,type,toUnqualifiedName(type,name),null);
-        for (Iterator iterator=serviceListenerList.iterator(); iterator.hasNext(); ) {
-          ((ServiceListener)iterator.next()).serviceRemoved(event);
+        for (Iterator<ServiceListener> iterator=serviceListenerList.iterator(); iterator.hasNext(); ) {
+          iterator.next().serviceRemoved(event);
         }
       }
     }

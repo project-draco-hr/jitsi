@@ -5,12 +5,11 @@
   }
   ServerStoredGroupEvent evt=new ServerStoredGroupEvent(group,eventID,parentOperationSet.getServerStoredContactListRoot(),jabberProvider,parentOperationSet);
   logger.trace("Will dispatch the following grp event: " + evt);
-  Iterator<ServerStoredGroupListener> listeners=null;
+  Iterable<ServerStoredGroupListener> listeners;
 synchronized (serverStoredGroupListeners) {
-    listeners=new ArrayList<ServerStoredGroupListener>(serverStoredGroupListeners).iterator();
+    listeners=new ArrayList<ServerStoredGroupListener>(serverStoredGroupListeners);
   }
-  while (listeners.hasNext()) {
-    ServerStoredGroupListener listener=(ServerStoredGroupListener)listeners.next();
+  for (  ServerStoredGroupListener listener : listeners) {
     if (eventID == ServerStoredGroupEvent.GROUP_REMOVED_EVENT)     listener.groupRemoved(evt);
  else     if (eventID == ServerStoredGroupEvent.GROUP_RENAMED_EVENT)     listener.groupNameChanged(evt);
  else     if (eventID == ServerStoredGroupEvent.GROUP_CREATED_EVENT)     listener.groupCreated(evt);
