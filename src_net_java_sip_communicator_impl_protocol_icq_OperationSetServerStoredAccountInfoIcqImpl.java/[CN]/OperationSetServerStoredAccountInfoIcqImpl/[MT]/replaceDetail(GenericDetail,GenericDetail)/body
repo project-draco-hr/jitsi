@@ -3,10 +3,10 @@
   if (!newDetailValue.getClass().equals(currentDetailValue.getClass()))   throw new ClassCastException("New value to be replaced is not as the current one");
   if (currentDetailValue.equals(newDetailValue))   return true;
   boolean isFound=false;
-  Vector alreadySetDetails=new Vector();
-  Iterator iter=infoRetreiver.getDetails(uin,currentDetailValue.getClass());
+  List<GenericDetail> alreadySetDetails=new Vector<GenericDetail>();
+  Iterator<GenericDetail> iter=infoRetreiver.getDetails(uin,currentDetailValue.getClass());
   while (iter.hasNext()) {
-    GenericDetail item=(GenericDetail)iter.next();
+    GenericDetail item=iter.next();
     if (item.equals(currentDetailValue)) {
       isFound=true;
       alreadySetDetails.add(newDetailValue);
@@ -16,7 +16,7 @@
   if (!isFound)   return false;
   SuccessResponseListener responseListener=new SuccessResponseListener();
   MetaFullInfoSetCmd cmd=new MetaFullInfoSetCmd(Integer.parseInt(uin),reqID++);
-  int typeOfDetail=((int[])supportedTypes.get(newDetailValue.getClass()))[1];
+  int typeOfDetail=supportedTypes.get(newDetailValue.getClass())[1];
   try {
 switch (typeOfDetail) {
 case 0x01A4:
@@ -70,9 +70,9 @@ case 0x0186:
 int[] langs=new int[3];
 Arrays.fill(langs,-1);
 int count=0;
-Iterator i=getDetails(SpokenLanguageDetail.class);
+Iterator<GenericDetail> i=getDetails(SpokenLanguageDetail.class);
 while (i.hasNext()) {
-Object item=i.next();
+GenericDetail item=i.next();
 if (item.equals(currentDetailValue)) langs[count++]=getLanguageCode(((SpokenLanguageDetail)newDetailValue).getLocale());
  else langs[count++]=getLanguageCode(((SpokenLanguageDetail)item).getLocale());
 }
@@ -128,7 +128,7 @@ cmd.setNotes(((StringDetail)newDetailValue).getString());
 break;
 case 0x01EA:
 List<InterestDetail> interests=new ArrayList<InterestDetail>();
-Iterator intIter=getDetails(InterestDetail.class);
+Iterator<GenericDetail> intIter=getDetails(InterestDetail.class);
 while (intIter.hasNext()) {
 InterestDetail item=(InterestDetail)intIter.next();
 if (item.equals(currentDetailValue)) interests.add((InterestDetail)newDetailValue);

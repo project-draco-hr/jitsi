@@ -1,8 +1,8 @@
 {
   assertConnected();
   if (!isDetailClassSupported(detail.getClass()))   throw new IllegalArgumentException("implementation does not support such details " + detail.getClass());
-  Vector alreadySetDetails=new Vector();
-  Iterator iter=getDetails(detail.getClass());
+  List<GenericDetail> alreadySetDetails=new Vector<GenericDetail>();
+  Iterator<GenericDetail> iter=getDetails(detail.getClass());
   while (iter.hasNext()) {
     alreadySetDetails.add(iter.next());
   }
@@ -10,7 +10,7 @@
   alreadySetDetails.add(detail);
   SuccessResponseListener responseListener=new SuccessResponseListener();
   MetaFullInfoSetCmd cmd=new MetaFullInfoSetCmd(Integer.parseInt(uin),reqID++);
-  int typeOfDetail=((int[])supportedTypes.get(detail.getClass()))[1];
+  int typeOfDetail=supportedTypes.get(detail.getClass())[1];
   try {
 switch (typeOfDetail) {
 case 0x01A4:
@@ -64,9 +64,9 @@ case 0x0186:
 int[] langs=new int[3];
 Arrays.fill(langs,-1);
 int count=0;
-Iterator i=getDetails(SpokenLanguageDetail.class);
+Iterator<GenericDetail> i=getDetails(SpokenLanguageDetail.class);
 while (i.hasNext()) {
-Object item=i.next();
+GenericDetail item=i.next();
 langs[count++]=getLanguageCode(((SpokenLanguageDetail)item).getLocale());
 }
 langs[count]=getLanguageCode(((SpokenLanguageDetail)detail).getLocale());
@@ -122,7 +122,7 @@ cmd.setNotes(((StringDetail)detail).getString());
 break;
 case 0x01EA:
 List<InterestDetail> interests=new ArrayList<InterestDetail>();
-Iterator intIter=getDetails(InterestDetail.class);
+Iterator<GenericDetail> intIter=getDetails(InterestDetail.class);
 while (intIter.hasNext()) {
 InterestDetail item=(InterestDetail)intIter.next();
 interests.add(item);
