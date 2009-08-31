@@ -10,24 +10,24 @@
   assertTrue("Failed to find a provider factory service for protocol Gibberish",serRefs != null && serRefs.length > 0);
   ProtocolProviderFactory gibberishProviderFactory=(ProtocolProviderFactory)GibberishSlickFixture.bc.getService(serRefs[0]);
   assertTrue("There was an account registered with the account mananger " + "before we've installed any",gibberishProviderFactory.getRegisteredAccounts().size() == 0);
-  Hashtable gibberishAccount1Properties=getAccountProperties(GibberishProtocolProviderServiceLick.ACCOUNT_1_PREFIX);
-  Hashtable gibberishAccount2Properties=getAccountProperties(GibberishProtocolProviderServiceLick.ACCOUNT_2_PREFIX);
+  Hashtable<String,String> gibberishAccount1Properties=getAccountProperties(GibberishProtocolProviderServiceLick.ACCOUNT_1_PREFIX);
+  Hashtable<String,String> gibberishAccount2Properties=getAccountProperties(GibberishProtocolProviderServiceLick.ACCOUNT_2_PREFIX);
   try {
     gibberishProviderFactory.installAccount(null,gibberishAccount1Properties);
     fail("installing an account with a null account id must result " + "in a NullPointerException");
   }
  catch (  NullPointerException exc) {
   }
-  gibberishProviderFactory.installAccount((String)gibberishAccount1Properties.get(ProtocolProviderFactory.USER_ID),gibberishAccount1Properties);
-  gibberishProviderFactory.installAccount((String)gibberishAccount2Properties.get(ProtocolProviderFactory.USER_ID),gibberishAccount2Properties);
+  gibberishProviderFactory.installAccount(gibberishAccount1Properties.get(ProtocolProviderFactory.USER_ID),gibberishAccount1Properties);
+  gibberishProviderFactory.installAccount(gibberishAccount2Properties.get(ProtocolProviderFactory.USER_ID),gibberishAccount2Properties);
   try {
-    gibberishProviderFactory.installAccount((String)gibberishAccount1Properties.get(ProtocolProviderFactory.USER_ID),gibberishAccount1Properties);
+    gibberishProviderFactory.installAccount(gibberishAccount1Properties.get(ProtocolProviderFactory.USER_ID),gibberishAccount1Properties);
     fail("An IllegalStateException must be thrown when trying to " + "install a duplicate account");
   }
  catch (  IllegalStateException exc) {
   }
   assertTrue("The newly installed account was not in the acc man's " + "registered accounts!",gibberishProviderFactory.getRegisteredAccounts().size() == 2);
-  osgiFilter="(&(" + ProtocolProviderFactory.PROTOCOL + "=Gibberish)"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ (String)gibberishAccount1Properties.get(ProtocolProviderFactory.USER_ID)+ "))";
+  osgiFilter="(&(" + ProtocolProviderFactory.PROTOCOL + "=Gibberish)"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ gibberishAccount1Properties.get(ProtocolProviderFactory.USER_ID)+ "))";
   try {
     serRefs=GibberishSlickFixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),osgiFilter);
   }

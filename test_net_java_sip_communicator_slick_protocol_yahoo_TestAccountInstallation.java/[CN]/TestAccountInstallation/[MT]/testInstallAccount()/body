@@ -10,24 +10,24 @@
   assertTrue("Failed to find a provider factory service for protocol Yahoo",serRefs != null && serRefs.length > 0);
   ProtocolProviderFactory yahooProviderFactory=(ProtocolProviderFactory)YahooSlickFixture.bc.getService(serRefs[0]);
   assertTrue("There was an account registered with the account mananger " + "before we've installed any",yahooProviderFactory.getRegisteredAccounts().size() == 0);
-  Hashtable yahooAccount1Properties=getAccountProperties(YahooProtocolProviderServiceLick.ACCOUNT_1_PREFIX);
-  Hashtable yahooAccount2Properties=getAccountProperties(YahooProtocolProviderServiceLick.ACCOUNT_2_PREFIX);
+  Hashtable<String,String> yahooAccount1Properties=getAccountProperties(YahooProtocolProviderServiceLick.ACCOUNT_1_PREFIX);
+  Hashtable<String,String> yahooAccount2Properties=getAccountProperties(YahooProtocolProviderServiceLick.ACCOUNT_2_PREFIX);
   try {
     yahooProviderFactory.installAccount(null,yahooAccount1Properties);
     fail("installing an account with a null account id must result " + "in a NullPointerException");
   }
  catch (  NullPointerException exc) {
   }
-  yahooProviderFactory.installAccount((String)yahooAccount1Properties.get(ProtocolProviderFactory.USER_ID),yahooAccount1Properties);
-  yahooProviderFactory.installAccount((String)yahooAccount2Properties.get(ProtocolProviderFactory.USER_ID),yahooAccount2Properties);
+  yahooProviderFactory.installAccount(yahooAccount1Properties.get(ProtocolProviderFactory.USER_ID),yahooAccount1Properties);
+  yahooProviderFactory.installAccount(yahooAccount2Properties.get(ProtocolProviderFactory.USER_ID),yahooAccount2Properties);
   try {
-    yahooProviderFactory.installAccount((String)yahooAccount1Properties.get(ProtocolProviderFactory.USER_ID),yahooAccount1Properties);
+    yahooProviderFactory.installAccount(yahooAccount1Properties.get(ProtocolProviderFactory.USER_ID),yahooAccount1Properties);
     fail("An IllegalStateException must be thrown when trying to " + "install a duplicate account");
   }
  catch (  IllegalStateException exc) {
   }
   assertTrue("The newly installed account was not in the acc man's " + "registered accounts!",yahooProviderFactory.getRegisteredAccounts().size() == 2);
-  osgiFilter="(&(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.YAHOO+ ")"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ (String)yahooAccount1Properties.get(ProtocolProviderFactory.USER_ID)+ "))";
+  osgiFilter="(&(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.YAHOO+ ")"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ yahooAccount1Properties.get(ProtocolProviderFactory.USER_ID)+ "))";
   try {
     serRefs=YahooSlickFixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),osgiFilter);
   }

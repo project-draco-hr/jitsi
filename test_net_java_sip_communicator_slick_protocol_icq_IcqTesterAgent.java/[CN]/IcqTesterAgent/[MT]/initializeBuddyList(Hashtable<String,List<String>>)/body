@@ -1,16 +1,16 @@
 {
   logger.debug("Will Create the following contact list:\n" + listContents);
-  MutableBuddyList joustSimBuddyList=(MutableBuddyList)conn.getSsiService().getBuddyList();
-  List groups=joustSimBuddyList.getGroups();
-  Iterator groupsIter=groups.iterator();
+  MutableBuddyList joustSimBuddyList=conn.getSsiService().getBuddyList();
+  List<? extends Group> groups=joustSimBuddyList.getGroups();
+  Iterator<? extends Group> groupsIter=groups.iterator();
   while (groupsIter.hasNext()) {
-    Group group=(Group)groupsIter.next();
+    Group group=groupsIter.next();
     joustSimBuddyList.deleteGroupAndBuddies(group);
   }
-  Enumeration newGroupsEnum=listContents.keys();
+  Enumeration<String> newGroupsEnum=listContents.keys();
   LayoutEventCollector evtCollector=new LayoutEventCollector();
   while (newGroupsEnum.hasMoreElements()) {
-    String groupName=(String)newGroupsEnum.nextElement();
+    String groupName=newGroupsEnum.nextElement();
     logger.debug("Will add group " + groupName);
     evtCollector.addedGroups.removeAllElements();
     joustSimBuddyList.addLayoutListener(evtCollector);
@@ -19,9 +19,9 @@
     joustSimBuddyList.removeLayoutListener(evtCollector);
     MutableGroup newlyCreatedGroup=null;
     if (evtCollector.addedGroups.size() == 0 || (newlyCreatedGroup=(MutableGroup)evtCollector.addedGroups.get(0)) == null)     throw new NullPointerException("Couldn't create group " + groupName);
-    Iterator contactsToAddToThisGroup=((List)listContents.get(groupName)).iterator();
+    Iterator<String> contactsToAddToThisGroup=listContents.get(groupName).iterator();
     while (contactsToAddToThisGroup.hasNext()) {
-      String screenname=(String)contactsToAddToThisGroup.next();
+      String screenname=contactsToAddToThisGroup.next();
       evtCollector.addedBuddies.removeAllElements();
       joustSimBuddyList.addLayoutListener(evtCollector);
       logger.debug("Will add buddy " + screenname);

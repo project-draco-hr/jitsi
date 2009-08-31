@@ -9,7 +9,7 @@ synchronized (o) {
   if (contactList == null || contactList.trim().length() < 6)   throw new IllegalArgumentException("The " + GibberishProtocolProviderServiceLick.CONTACT_LIST_PROPERTY_NAME + " property did not contain a contact list.");
   StringTokenizer tokenizer=new StringTokenizer(contactList," \n\t");
   logger.debug("tokens contained by the CL tokenized=" + tokenizer.countTokens());
-  Hashtable contactListToCreate=new Hashtable();
+  Hashtable<String,List<String>> contactListToCreate=new Hashtable<String,List<String>>();
   while (tokenizer.hasMoreTokens()) {
     String groupUinToken=tokenizer.nextToken();
     int dotIndex=groupUinToken.indexOf(".");
@@ -21,22 +21,22 @@ synchronized (o) {
     if (groupName.trim().length() < 1 || uin.trim().length() < 4) {
       throw new IllegalArgumentException(groupName + " or " + uin+ " are not a valid group name or Gibberish user id.");
     }
-    List uinInThisGroup=(List)contactListToCreate.get(groupName);
+    List<String> uinInThisGroup=contactListToCreate.get(groupName);
     if (uinInThisGroup == null) {
-      uinInThisGroup=new ArrayList();
+      uinInThisGroup=new ArrayList<String>();
       contactListToCreate.put(groupName,uinInThisGroup);
     }
     uinInThisGroup.add(uin);
   }
-  Enumeration newGroupsEnum=contactListToCreate.keys();
+  Enumeration<String> newGroupsEnum=contactListToCreate.keys();
   while (newGroupsEnum.hasMoreElements()) {
-    String groupName=(String)newGroupsEnum.nextElement();
+    String groupName=newGroupsEnum.nextElement();
     logger.debug("Will add group " + groupName);
     opSetPersPresence1.createServerStoredContactGroup(opSetPersPresence1.getServerStoredContactListRoot(),groupName);
     ContactGroup newlyCreatedGroup=opSetPersPresence1.getServerStoredContactListRoot().getGroup(groupName);
-    Iterator contactsToAddToThisGroup=((List)contactListToCreate.get(groupName)).iterator();
+    Iterator<String> contactsToAddToThisGroup=contactListToCreate.get(groupName).iterator();
     while (contactsToAddToThisGroup.hasNext()) {
-      String id=(String)contactsToAddToThisGroup.next();
+      String id=contactsToAddToThisGroup.next();
       logger.debug("Will add buddy " + id);
       opSetPersPresence1.subscribe(newlyCreatedGroup,id);
     }
