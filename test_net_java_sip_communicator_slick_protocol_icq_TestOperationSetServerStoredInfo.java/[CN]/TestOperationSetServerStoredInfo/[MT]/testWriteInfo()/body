@@ -3,7 +3,7 @@
   ServerStoredDetails.LastNameDetail lastNameDetail=null;
   ServerStoredDetails.PhoneNumberDetail phoneNumberDetail=null;
   ServerStoredDetails.CountryDetail homeCountryDetail=null;
-  Iterator iter=opSetServerStoredAccountInfo.getDetails(ServerStoredDetails.LastNameDetail.class);
+  Iterator<GenericDetail> iter=opSetServerStoredAccountInfo.getDetails(ServerStoredDetails.LastNameDetail.class);
   if (iter.hasNext())   lastNameDetail=(ServerStoredDetails.LastNameDetail)iter.next();
   iter=opSetServerStoredAccountInfo.getDetails(ServerStoredDetails.PhoneNumberDetail.class);
   if (iter.hasNext())   phoneNumberDetail=(ServerStoredDetails.PhoneNumberDetail)iter.next();
@@ -72,14 +72,14 @@ catch (  ClassCastException ex) {
     throw new RuntimeException("Error setting detail! ",ex);
   }
   logger.trace("Proceeding to Testing values!");
-  Hashtable userInfo=fixture.testerAgent.getUserInfo(fixture.ourUserID);
+  Hashtable<String,Object> userInfo=fixture.testerAgent.getUserInfo(fixture.ourUserID);
   assertEquals("The LastName we set is not set or not read properly",newLastName,userInfo.get(FullUserInfoCmd.LAST_NAME));
   assertEquals("The PhoneNumber we set is not set or not read properly",newPhoneNumber,userInfo.get(FullUserInfoCmd.PHONE_NUMBER));
-  ArrayList languageCodes=(ArrayList)userInfo.get(FullUserInfoCmd.SPEAK_LANG);
-  ArrayList languages=new ArrayList();
-  iter=languageCodes.iterator();
-  while (iter.hasNext()) {
-    languages.add(spokenLanguages[((Integer)iter.next()).intValue()]);
+  List<?> languageCodes=(ArrayList<?>)userInfo.get(FullUserInfoCmd.SPEAK_LANG);
+  ArrayList<Locale> languages=new ArrayList<Locale>();
+  Iterator<?> languageCodeIter=languageCodes.iterator();
+  while (languageCodeIter.hasNext()) {
+    languages.add(spokenLanguages[((Integer)languageCodeIter.next()).intValue()]);
   }
   assertEquals("The Country we set is not set or not read properly",new Integer(newCountryCode),userInfo.get(FullUserInfoCmd.HOME_COUNTRY));
 }

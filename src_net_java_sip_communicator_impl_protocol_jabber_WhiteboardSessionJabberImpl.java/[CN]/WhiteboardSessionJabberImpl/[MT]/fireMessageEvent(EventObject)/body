@@ -1,11 +1,10 @@
 {
   logger.debug("Dispatching a WhiteboardMessageEvent event to " + messageListeners.size() + " listeners. event is: "+ evt.toString());
-  Iterator listeners=null;
+  Iterable<WhiteboardObjectListener> listeners;
 synchronized (messageListeners) {
-    listeners=new ArrayList(messageListeners).iterator();
+    listeners=new ArrayList<WhiteboardObjectListener>(messageListeners);
   }
-  while (listeners.hasNext()) {
-    WhiteboardObjectListener listener=(WhiteboardObjectListener)listeners.next();
+  for (  WhiteboardObjectListener listener : listeners) {
     if (evt instanceof WhiteboardObjectDeliveredEvent) {
       listener.whiteboardObjectDelivered((WhiteboardObjectDeliveredEvent)evt);
     }
@@ -19,7 +18,7 @@ synchronized (messageListeners) {
       listener.whiteboardObjectDeleted((WhiteboardObjectDeletedEvent)evt);
       int i=0;
       while (i < whiteboardObjects.size()) {
-        WhiteboardObjectJabberImpl wbObj=whiteboardObjects.get(i);
+        WhiteboardObjectJabberImpl wbObj=(WhiteboardObjectJabberImpl)whiteboardObjects.get(i);
         if (wbObj.getID().equals(wbObjID))         whiteboardObjects.remove(i);
  else         i++;
       }

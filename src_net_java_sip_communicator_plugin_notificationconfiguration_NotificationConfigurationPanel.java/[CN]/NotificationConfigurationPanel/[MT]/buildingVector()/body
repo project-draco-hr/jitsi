@@ -2,32 +2,24 @@
   Iterator<String> it=notificationService.getRegisteredEvents();
   NotificationsTableEntry tmpNTE=null;
   String event=null;
-  Map actionsMap=null;
   dataVector.removeAllElements();
   while (it.hasNext()) {
     event=it.next();
     tmpNTE=new NotificationsTableEntry(notificationService.isActive(event),false,"",false,false,"",event,false);
-    actionsMap=notificationService.getEventNotifications(event);
+    Map<String,NotificationActionHandler> actionsMap=notificationService.getEventNotifications(event);
     if (actionsMap != null) {
-      Set entry=actionsMap.entrySet();
-      Iterator itEntry=entry.iterator();
-      while (itEntry.hasNext()) {
-        Map.Entry mEntry=(Map.Entry)itEntry.next();
-        String actionType=(String)mEntry.getKey();
-        NotificationActionHandler handler=null;
-        boolean isActionEnabled=false;
-        if (mEntry.getValue() instanceof NotificationActionHandler) {
-          handler=(NotificationActionHandler)mEntry.getValue();
-          isActionEnabled=handler.isEnabled();
-        }
-        if (actionType.equals(notificationService.ACTION_POPUP_MESSAGE)) {
+      for (      Map.Entry<String,NotificationActionHandler> mEntry : actionsMap.entrySet()) {
+        String actionType=mEntry.getKey();
+        NotificationActionHandler handler=mEntry.getValue();
+        boolean isActionEnabled=(handler == null) ? false : handler.isEnabled();
+        if (actionType.equals(NotificationService.ACTION_POPUP_MESSAGE)) {
           tmpNTE.setPopup(isActionEnabled);
         }
- else         if (actionType.equals(notificationService.ACTION_SOUND) && handler != null) {
+ else         if (actionType.equals(NotificationService.ACTION_SOUND) && handler != null) {
           tmpNTE.setSound(isActionEnabled);
           tmpNTE.setSoundFile(((SoundNotificationHandler)handler).getDescriptor());
         }
- else         if (actionType.equals(notificationService.ACTION_COMMAND) && handler != null) {
+ else         if (actionType.equals(NotificationService.ACTION_COMMAND) && handler != null) {
           tmpNTE.setProgram(isActionEnabled);
           tmpNTE.setProgramFile(((CommandNotificationHandler)handler).getDescriptor());
         }
