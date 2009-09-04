@@ -7,27 +7,24 @@
   mailboxIQ.setTotalMatched(Integer.parseInt(parser.getAttributeValue("","total-matched")));
   mailboxIQ.setTotalEstimate("1".equals(parser.getAttributeValue("","total-estimate")));
   mailboxIQ.setUrl(parser.getAttributeValue("","url"));
-  boolean done=false;
-  while (!done) {
-    int eventType=parser.next();
+  int eventType=parser.next();
+  while (eventType != XmlPullParser.END_TAG) {
     if (eventType == XmlPullParser.START_TAG) {
       String name=parser.getName();
       if (MailThreadInfo.ELEMENT_NAME.equals(name)) {
-      }
-    }
- else     if (eventType == XmlPullParser.END_TAG) {
-      if (parser.getName().equals("field")) {
-        done=true;
+        MailThreadInfo thread=MailThreadInfo.parse(parser);
+        mailboxIQ.addThread(thread);
       }
     }
  else {
       if (logger.isTraceEnabled()) {
         logger.trace("xml parser returned eventType=" + eventType);
-        logger.trace("parser=" + parser);
+        logger.trace("parser=" + parser.getText());
       }
     }
+    eventType=parser.next();
   }
-  int eventType=1;
+  eventType=1;
   String name=null;
   if (eventType == XmlPullParser.START_TAG) {
     if ("mail-thread-info".equals(name)) {
@@ -38,7 +35,6 @@
           name=parser.getName();
           if ("sender".equals(name)) {
             if ("1".equals(parser.getAttributeValue("","originator"))) {
-              mailboxIQ.setSender(parser.getAttributeValue("","address"));
             }
           }
         }
@@ -46,7 +42,6 @@
           name=parser.getName();
           if ("subject".equals(name)) {
             name=parser.nextText();
-            mailboxIQ.setSubject(name);
           }
         }
       }

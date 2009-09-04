@@ -1,0 +1,28 @@
+{
+  MailThreadInfo info=new MailThreadInfo();
+  info.setTid(parser.getAttributeValue("","tid"));
+  info.setParticipation(Integer.parseInt(parser.getAttributeValue("","participation")));
+  info.setMessageCount(Integer.parseInt(parser.getAttributeValue("","messages")));
+  info.setDate(Long.parseLong(parser.getAttributeValue("","date")));
+  info.setURL(parser.getAttributeValue("","url"));
+  int eventType=parser.next();
+  while (eventType != XmlPullParser.END_TAG) {
+    if (eventType == XmlPullParser.START_TAG) {
+      String name=parser.getName();
+      if (SENDERS_ELEMENT_NAME.equals(name)) {
+        info.parseSenders(parser);
+      }
+ else       if (LABELS_ELEMENT_NAME.equals(name)) {
+        info.setLabels(parser.nextText());
+      }
+ else       if (SUBJECT_ELEMENT_NAME.equals(name)) {
+        info.setSubject(parser.nextText());
+      }
+ else       if (SNIPPET_ELEMENT_NAME.equals(name)) {
+        info.setSnippet(parser.nextText());
+      }
+    }
+    eventType=parser.next();
+  }
+  return info;
+}
