@@ -1,0 +1,19 @@
+{
+  try {
+    DiscoverInfo di=ServiceDiscoveryManager.getInstanceFor(jabberProvider.getConnection()).discoverInfo(jabberProvider.getAccountID().getAccountAddress());
+    if (di.containsFeature("http://jabber.org/protocol/disco#info")) {
+      ProviderManager providerManager=ProviderManager.getInstance();
+      providerManager.addIQProvider("mailbox","google:mail:notify",new MailboxProvider());
+      providerManager.addIQProvider("new-mail","google:mail:notify",new NewMailNotificationProvider());
+      jabberProvider.getConnection().addPacketListener(new MailNotificationListener(),new PacketTypeFilter(IQ.class));
+      jabberProvider.getConnection().addPacketListener(new NewMailNotificationListener(),new PacketTypeFilter(IQ.class));
+      if (opSetPersPresence.getCurrentStatusMessage().equals(JabberStatusEnum.OFFLINE))       return;
+      QueryNotify mailnotification=new QueryNotify(lastResultTime);
+      logger.trace("send mailNotification for acc: " + jabberProvider.getAccountID().getAccountUniqueID());
+      jabberProvider.getConnection().sendPacket(mailnotification);
+    }
+  }
+ catch (  XMPPException ex) {
+    logger.warn("could not retrieve info for " + jabberProvider.getAccountID().getAccountAddress(),ex);
+  }
+}
