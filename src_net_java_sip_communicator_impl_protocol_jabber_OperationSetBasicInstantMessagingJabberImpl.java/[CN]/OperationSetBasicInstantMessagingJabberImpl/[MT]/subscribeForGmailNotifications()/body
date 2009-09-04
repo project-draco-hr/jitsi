@@ -1,2 +1,20 @@
 {
+  try {
+    boolean notificationsAreSupported=ServiceDiscoveryManager.getInstanceFor(jabberProvider.getConnection()).includesFeature(NewMailNotification.NAMESPACE);
+    if (!notificationsAreSupported)     return;
+    ProviderManager providerManager=ProviderManager.getInstance();
+    providerManager.addIQProvider(Mailbox.ELEMENT_NAME,Mailbox.NAMESPACE,new MailboxProvider());
+    providerManager.addIQProvider(NewMailNotification.ELEMENT_NAME,NewMailNotification.NAMESPACE,new NewMailNotificationProvider());
+    jabberProvider.getConnection().addPacketListener(new MailNotificationListener(),new PacketTypeFilter(IQ.class));
+    jabberProvider.getConnection().addPacketListener(new NewMailNotificationListener(),new PacketTypeFilter(IQ.class));
+    if (opSetPersPresence.getCurrentStatusMessage().equals(JabberStatusEnum.OFFLINE)) {
+      return;
+    }
+    QueryNotify mailnotification=new QueryNotify(lastResultTime);
+    logger.trace("sending mailNotification for acc: " + jabberProvider.getAccountID().getAccountUniqueID());
+    jabberProvider.getConnection().sendPacket(mailnotification);
+  }
+ catch (  XMPPException ex) {
+    logger.warn("could not retrieve info for " + jabberProvider.getAccountID().getAccountAddress(),ex);
+  }
 }
