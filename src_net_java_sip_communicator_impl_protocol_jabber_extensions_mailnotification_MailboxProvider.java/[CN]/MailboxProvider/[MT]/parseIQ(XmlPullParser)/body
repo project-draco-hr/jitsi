@@ -1,0 +1,37 @@
+{
+  logger.debug("Mailbox.getChildElementXML usage");
+  Mailbox iq=new Mailbox();
+  iq.setFrom(parser.getAttributeValue("","from"));
+  iq.setTo(parser.getAttributeValue("","to"));
+  iq.setPacketID(parser.getAttributeValue("","id"));
+  iq.setResultTime(Long.parseLong(parser.getAttributeValue("","result-time")));
+  iq.setTotalMatched(Integer.parseInt(parser.getAttributeValue("","total-matched")));
+  iq.setTotalEstimate("1".equals(parser.getAttributeValue("","total-estimate")));
+  iq.setUrl(parser.getAttributeValue("","url"));
+  int eventType=parser.next();
+  String name=parser.getName();
+  if (eventType == XmlPullParser.START_TAG) {
+    if ("mail-thread-info".equals(name)) {
+      iq.setDate(Long.parseLong(parser.getAttributeValue("","date")));
+      for (int i=0; i < 10; i++) {
+        eventType=parser.next();
+        if (eventType == XmlPullParser.START_TAG) {
+          name=parser.getName();
+          if ("sender".equals(name)) {
+            if ("1".equals(parser.getAttributeValue("","originator"))) {
+              iq.setSender(parser.getAttributeValue("","address"));
+            }
+          }
+        }
+        if (eventType == XmlPullParser.START_TAG) {
+          name=parser.getName();
+          if ("subject".equals(name)) {
+            name=parser.nextText();
+            iq.setSubject(name);
+          }
+        }
+      }
+    }
+  }
+  return iq;
+}
