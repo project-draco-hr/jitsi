@@ -1,4 +1,21 @@
 {
-  unregisterTransformLayer();
-  unregisterUI();
+  bundleContext.removeServiceListener(this);
+  ServiceReference[] protocolProviderRefs=null;
+  try {
+    protocolProviderRefs=bundleContext.getServiceReferences(ProtocolProviderService.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException ex) {
+    logger.error("Error while retrieving service refs",ex);
+    return;
+  }
+  if (protocolProviderRefs != null && protocolProviderRefs.length > 0) {
+    for (int i=0; i < protocolProviderRefs.length; i++) {
+      ProtocolProviderService provider=(ProtocolProviderService)bundleContext.getService(protocolProviderRefs[i]);
+      this.handleProviderRemoved(provider);
+    }
+  }
+  if (this.regButtonBarButton != null)   this.regButtonBarButton.unregister();
+  if (this.regConfigurationForm != null)   this.regConfigurationForm.unregister();
+  if (this.regMenuBarMenu != null)   this.regMenuBarMenu.unregister();
+  if (this.regRightClickMenu != null)   this.regRightClickMenu.unregister();
 }

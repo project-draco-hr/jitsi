@@ -1,6 +1,38 @@
 {
   bundleContext=bc;
-  if (!initServices())   return;
-  if (!registerTransformLayer())   return;
-  registerUI();
+  scOtrEngine=new ScOtrEngineImpl();
+  otrTransformLayer=new OtrTransformLayer();
+  ServiceReference refResourceService=OtrActivator.bundleContext.getServiceReference(ResourceManagementService.class.getName());
+  if (refResourceService == null)   return;
+  resourceService=(ResourceManagementService)OtrActivator.bundleContext.getService(refResourceService);
+  ServiceReference refConfigService=OtrActivator.bundleContext.getServiceReference(ConfigurationService.class.getName());
+  if (refConfigService == null)   return;
+  configService=(ConfigurationService)OtrActivator.bundleContext.getService(refConfigService);
+  ServiceReference refUIService=OtrActivator.bundleContext.getServiceReference(UIService.class.getName());
+  if (refUIService == null)   return;
+  uiService=(UIService)OtrActivator.bundleContext.getService(refUIService);
+  bundleContext.addServiceListener(this);
+  ServiceReference[] protocolProviderRefs=null;
+  try {
+    protocolProviderRefs=bundleContext.getServiceReferences(ProtocolProviderService.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException ex) {
+    logger.error("Error while retrieving service refs",ex);
+    return;
+  }
+  if (protocolProviderRefs != null && protocolProviderRefs.length > 0) {
+    logger.debug("Found " + protocolProviderRefs.length + " already installed providers.");
+    for (int i=0; i < protocolProviderRefs.length; i++) {
+      ProtocolProviderService provider=(ProtocolProviderService)bundleContext.getService(protocolProviderRefs[i]);
+      this.handleProviderAdded(provider);
+    }
+  }
+  Hashtable<String,String> containerFilter=new Hashtable<String,String>();
+  containerFilter.put(Container.CONTAINER_ID,Container.CONTAINER_CONTACT_RIGHT_BUTTON_MENU.getID());
+  bundleContext.registerService(PluginComponent.class.getName(),new OtrMetaContactMenu(Container.CONTAINER_CONTACT_RIGHT_BUTTON_MENU),containerFilter);
+  containerFilter.put(Container.CONTAINER_ID,Container.CONTAINER_CHAT_MENU_BAR.getID());
+  bundleContext.registerService(PluginComponent.class.getName(),new OtrMetaContactMenu(Container.CONTAINER_CHAT_MENU_BAR),containerFilter);
+  containerFilter.put(Container.CONTAINER_ID,Container.CONTAINER_CHAT_TOOL_BAR.getID());
+  bundleContext.registerService(PluginComponent.class.getName(),new OtrMetaContactButton(Container.CONTAINER_CHAT_TOOL_BAR),containerFilter);
+  bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm("net.java.sip.communicator.plugin.otr.OtrConfigurationPanel",getClass().getClassLoader(),"plugin.otr.configform.ICON","plugin.otr.configform.TITLE",30),null);
 }
