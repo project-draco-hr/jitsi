@@ -1,0 +1,36 @@
+{
+  MailboxIQ mailboxIQ=new MailboxIQ();
+  mailboxIQ.setFrom(parser.getAttributeValue("","from"));
+  mailboxIQ.setTo(parser.getAttributeValue("","to"));
+  mailboxIQ.setPacketID(parser.getAttributeValue("","id"));
+  mailboxIQ.setResultTime(Long.parseLong(parser.getAttributeValue("","result-time")));
+  mailboxIQ.setTotalMatched(Integer.parseInt(parser.getAttributeValue("","total-matched")));
+  mailboxIQ.setTotalEstimate("1".equals(parser.getAttributeValue("","total-estimate")));
+  mailboxIQ.setUrl(parser.getAttributeValue("","url"));
+  int eventType=parser.next();
+  String name=parser.getName();
+  if (eventType == XmlPullParser.START_TAG) {
+    if ("mail-thread-info".equals(name)) {
+      mailboxIQ.setDate(Long.parseLong(parser.getAttributeValue("","date")));
+      for (int i=0; i < 10; i++) {
+        eventType=parser.next();
+        if (eventType == XmlPullParser.START_TAG) {
+          name=parser.getName();
+          if ("sender".equals(name)) {
+            if ("1".equals(parser.getAttributeValue("","originator"))) {
+              mailboxIQ.setSender(parser.getAttributeValue("","address"));
+            }
+          }
+        }
+        if (eventType == XmlPullParser.START_TAG) {
+          name=parser.getName();
+          if ("subject".equals(name)) {
+            name=parser.nextText();
+            mailboxIQ.setSubject(name);
+          }
+        }
+      }
+    }
+  }
+  return mailboxIQ;
+}
