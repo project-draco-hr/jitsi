@@ -1,0 +1,10 @@
+{
+  if (packet != null && !(packet instanceof MailboxIQ))   return;
+  MailboxIQ mailbox=(MailboxIQ)packet;
+  String fromUserID=StringUtils.parseBareAddress(mailbox.getSender());
+  Contact sourceContact=opSetPersPresence.createVolatileContact(fromUserID);
+  String newMail=JabberActivator.getResources().getI18NString("service.gui.NEW_MAIL",new String[]{mailbox.getSender(),"&lt;" + mailbox.getSender() + "&gt",mailbox.getSubject(),"&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"" + mailbox.getUrl() + "\">"+ mailbox.getUrl()+ "</a>"});
+  Message newMailMessage=new MessageJabberImpl(newMail,HTML_MIME_TYPE,DEFAULT_MIME_ENCODING,null);
+  MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(newMailMessage,sourceContact,System.currentTimeMillis(),MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
+  fireMessageEvent(msgReceivedEvt);
+}
