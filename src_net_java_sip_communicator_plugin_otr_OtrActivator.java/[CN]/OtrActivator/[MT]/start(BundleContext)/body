@@ -2,9 +2,8 @@
   bundleContext=bc;
   scOtrEngine=new ScOtrEngineImpl();
   otrTransformLayer=new OtrTransformLayer();
-  ServiceReference refResourceService=OtrActivator.bundleContext.getServiceReference(ResourceManagementService.class.getName());
-  if (refResourceService == null)   return;
-  resourceService=(ResourceManagementService)OtrActivator.bundleContext.getService(refResourceService);
+  resourceService=ResourceManagementServiceUtils.getService(OtrActivator.bundleContext);
+  if (resourceService == null)   return;
   ServiceReference refConfigService=OtrActivator.bundleContext.getServiceReference(ConfigurationService.class.getName());
   if (refConfigService == null)   return;
   configService=(ConfigurationService)OtrActivator.bundleContext.getService(refConfigService);
@@ -22,8 +21,8 @@
   }
   if (protocolProviderRefs != null && protocolProviderRefs.length > 0) {
     logger.debug("Found " + protocolProviderRefs.length + " already installed providers.");
-    for (int i=0; i < protocolProviderRefs.length; i++) {
-      ProtocolProviderService provider=(ProtocolProviderService)bundleContext.getService(protocolProviderRefs[i]);
+    for (    ServiceReference protocolProviderRef : protocolProviderRefs) {
+      ProtocolProviderService provider=(ProtocolProviderService)bundleContext.getService(protocolProviderRef);
       this.handleProviderAdded(provider);
     }
   }
