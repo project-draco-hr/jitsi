@@ -1,0 +1,30 @@
+{
+  StringBuffer participantNames=new StringBuffer();
+  boolean firstNamesOnly=getSenderCount() > 1;
+  int unreadSenderCount=getUnreadSenderCount();
+  int maximumSndrsAllowed=3;
+  int remainingSndrsAllowed=maximumSndrsAllowed;
+  int maximumUnreadAllowed=Math.min(remainingSndrsAllowed,unreadSenderCount);
+  int maximumReadAllowed=remainingSndrsAllowed - maximumUnreadAllowed;
+  Iterator<MailThreadInfo.Sender> senders=senders();
+  while (senders.hasNext()) {
+    if (remainingSndrsAllowed == 0)     break;
+    MailThreadInfo.Sender sender=senders.next();
+    String name=firstNamesOnly ? sender.getFirstName() : sender.name;
+    if (!sender.unread && maximumReadAllowed == 0)     continue;
+    if (remainingSndrsAllowed < maximumSndrsAllowed) {
+      participantNames.append(", ");
+    }
+    remainingSndrsAllowed--;
+    if (sender.unread) {
+      participantNames.append("<b>").append(name).append("</b>");
+      maximumUnreadAllowed--;
+    }
+ else {
+      participantNames.append(name);
+      maximumReadAllowed--;
+    }
+  }
+  participantNames.append(" (").append(getMessageCount()).append(")");
+  return participantNames.toString();
+}
