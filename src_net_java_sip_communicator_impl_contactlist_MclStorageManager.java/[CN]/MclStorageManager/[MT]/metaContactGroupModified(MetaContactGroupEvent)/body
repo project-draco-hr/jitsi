@@ -1,26 +1,27 @@
 {
-  Element mcGroupNode=findMetaContactGroupNode(evt.getSourceMetaContactGroup().getMetaUID());
+  MetaContactGroup mcGroup=evt.getSourceMetaContactGroup();
+  Element mcGroupNode=findMetaContactGroupNode(mcGroup.getMetaUID());
   if (mcGroupNode == null) {
-    logger.error("Failed to find meta contact group: " + evt.getSourceMetaContactGroup());
-    if (logger.isTraceEnabled())     logger.trace("The above error occurred with the following " + "stack trace: ",new Exception());
+    logger.error("Failed to find meta contact group: " + mcGroup);
+    if (logger.isTraceEnabled())     logger.trace("The above error occurred with the following stack trace: ",new Exception());
     return;
   }
 switch (evt.getEventID()) {
 case MetaContactGroupEvent.CONTACT_GROUP_REMOVED_FROM_META_GROUP:
 case MetaContactGroupEvent.CONTACT_GROUP_ADDED_TO_META_GROUP:
-    Element parentNode=(Element)mcGroupNode.getParentNode();
+    Node parentNode=mcGroupNode.getParentNode();
   parentNode.removeChild(mcGroupNode);
-Element newGroupElement=createMetaContactGroupNode(evt.getSourceMetaContactGroup());
+Element newGroupElement=createMetaContactGroupNode(mcGroup);
 parentNode.appendChild(newGroupElement);
 try {
 scheduleContactListStorage();
 }
  catch (IOException ex) {
-logger.error("Writing CL failed after adding contact " + evt.getSourceMetaContactGroup(),ex);
+logger.error("Writing CL failed after adding contact " + mcGroup,ex);
 }
 break;
 case MetaContactGroupEvent.META_CONTACT_GROUP_RENAMED:
-mcGroupNode.setAttribute(GROUP_NAME_ATTR_NAME,evt.getSourceMetaContactGroup().getGroupName());
+mcGroupNode.setAttribute(GROUP_NAME_ATTR_NAME,mcGroup.getGroupName());
 break;
 case MetaContactGroupEvent.CONTACT_GROUP_RENAMED_IN_META_GROUP:
 break;
@@ -29,6 +30,6 @@ try {
 scheduleContactListStorage();
 }
  catch (IOException ex) {
-logger.error("Writing CL failed after removing proto group " + evt.getSourceProtoGroup().getGroupName(),ex);
+logger.error("Writing CL failed after removing proto group " + mcGroup.getGroupName(),ex);
 }
 }
