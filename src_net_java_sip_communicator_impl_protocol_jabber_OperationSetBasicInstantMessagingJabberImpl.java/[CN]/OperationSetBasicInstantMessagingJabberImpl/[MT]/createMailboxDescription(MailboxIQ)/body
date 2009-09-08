@@ -1,5 +1,8 @@
 {
-  String newMailHeader="You have " + mailboxIQ.getTotalMatched() + " new "+ (mailboxIQ.getTotalMatched() > 1 ? "messages" : "message")+ " in your "+ jabberProvider.getAccountID().getService()+ " <a href='"+ mailboxIQ.getUrl()+ "'>inbox</a>.<br/>";
+  int threadCount=mailboxIQ.getThreadCount();
+  String resourceHeaderKey=threadCount > 1 ? "service.gui.NEW_GMAIL_MANY_HEADER" : "service.gui.NEW_GMAIL_HEADER";
+  String resourceFooterKey=threadCount > 1 ? "service.gui.NEW_GMAIL_MANY_FOOTER" : "service.gui.NEW_GMAIL_FOOTER";
+  String newMailHeader=JabberActivator.getResources().getI18NString(resourceHeaderKey,new String[]{jabberProvider.getAccountID().getService(),mailboxIQ.getUrl(),Integer.toString(threadCount)});
   StringBuffer message=new StringBuffer(newMailHeader);
   message.append("<table width=100% cellpadding=2 cellspacing=0 ");
   message.append("border=0 bgcolor=#e8eef7>");
@@ -15,10 +18,10 @@
   for (int i=0; i < maxThreads && threads.hasNext(); i++) {
     message.append(threads.next().createHtmlDescription());
   }
-  message.append("</table><br/><br/>");
-  int threadCount=mailboxIQ.getThreadCount();
+  message.append("</table><br/>");
   if (threadCount > maxThreads) {
-    message.append(threadCount - maxThreads + " more unread messages in your " + " <a href='" + mailboxIQ.getUrl() + "'>inbox</a>.<br/>");
+    String messageFooter=JabberActivator.getResources().getI18NString(resourceFooterKey,new String[]{mailboxIQ.getUrl(),Integer.toString(threadCount - maxThreads)});
+    message.append(messageFooter);
   }
   return message.toString();
 }
