@@ -5,16 +5,9 @@
     try {
       if (MouseInfo.getPointerInfo() != null) {
         PointerInfo info=MouseInfo.getPointerInfo();
-        Point currentPosition=null;
-        if (info != null) {
-          currentPosition=info.getLocation();
-        }
- else {
-          currentPosition=new Point(0,0);
-        }
+        Point currentPosition=(info != null) ? info.getLocation() : new Point(0,0);
         if (!isNear(lastPosition,currentPosition)) {
-          ProtocolProviderService[] pps=AutoAwayActivator.getProtocolProviders();
-          for (          ProtocolProviderService protocolProviderService : pps) {
+          for (          ProtocolProviderService protocolProviderService : AutoAwayActivator.getProtocolProviders()) {
             if (lastStates.get(protocolProviderService) != null) {
               PresenceStatus lastState=lastStates.get(protocolProviderService);
               OperationSetPresence presence=(OperationSetPresence)protocolProviderService.getOperationSet(OperationSetPresence.class);
@@ -33,19 +26,16 @@ catch (              OperationFailedException e) {
           timer=getTimer() * 1000 * 60;
         }
  else {
-          ProtocolProviderService[] pps=AutoAwayActivator.getProtocolProviders();
-          for (          ProtocolProviderService protocolProviderService : pps) {
+          for (          ProtocolProviderService protocolProviderService : AutoAwayActivator.getProtocolProviders()) {
             OperationSetPresence presence=(OperationSetPresence)protocolProviderService.getOperationSet(OperationSetPresence.class);
             PresenceStatus status=presence.getPresenceStatus();
             if (status.getStatus() < PresenceStatus.AVAILABLE_THRESHOLD) {
               continue;
             }
-            lastStates.put(protocolProviderService,presence.getPresenceStatus());
+            lastStates.put(protocolProviderService,status);
             PresenceStatus newStatus=findAwayStatus(presence);
             try {
-              if (newStatus != null) {
-                presence.publishPresenceStatus(newStatus,newStatus.getStatusName());
-              }
+              if (newStatus != null)               presence.publishPresenceStatus(newStatus,newStatus.getStatusName());
             }
  catch (            IllegalArgumentException e) {
             }

@@ -1,4 +1,17 @@
 {
+synchronized (ProtocolProviderFactoryRssImpl.class) {
+    if (!customSSLTrustManagerIsInstalled) {
+      System.setProperty("http.agent",System.getProperty("sip-communicator.application.name") + "/" + System.getProperty("sip-communicator.version"));
+      logger.debug("User-Agent set to " + System.getProperty("http.agent"));
+      try {
+        installCustomSSLTrustManager();
+        customSSLTrustManagerIsInstalled=true;
+      }
+ catch (      java.security.GeneralSecurityException gsex) {
+        logger.error(gsex);
+      }
+    }
+  }
   ProtocolProviderServiceRssImpl service=new ProtocolProviderServiceRssImpl();
   service.initialize(userID,accountID);
   return service;
