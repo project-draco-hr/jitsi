@@ -31,26 +31,19 @@
     public void chatChanged(    ChatPanel panel){
       if (panel == null)       return;
       MetaContact contact=GuiActivator.getUIService().getChatContact(panel);
-      for (      Component c : getComponents()) {
-        if (!(c instanceof PluginComponent))         continue;
-        ((PluginComponent)c).setCurrentContact(contact);
-      }
-      if (panel.chatSession != null) {
-        panel.chatSession.addChatTransportChangeListener(new ChatSessionChangeListener(){
-          public void currentChatTransportChanged(          ChatSession chatSession){
-            if (chatSession == null)             return;
-            ChatTransport currentTransport=chatSession.getCurrentChatTransport();
-            if (currentTransport.getDescriptor() instanceof Contact) {
-              Contact contact=(Contact)currentTransport.getDescriptor();
-              for (              Component c : getComponents()) {
-                if (!(c instanceof PluginComponent))                 continue;
-                ((PluginComponent)c).setCurrentContact(contact);
-              }
-            }
+      for (      PluginComponent c : pluginComponents)       c.setCurrentContact(contact);
+      if (panel.chatSession != null)       panel.chatSession.addChatTransportChangeListener(new ChatSessionChangeListener(){
+        public void currentChatTransportChanged(        ChatSession chatSession){
+          if (chatSession == null)           return;
+          ChatTransport currentTransport=chatSession.getCurrentChatTransport();
+          Object currentDescriptor=currentTransport.getDescriptor();
+          if (currentDescriptor instanceof Contact) {
+            Contact contact=(Contact)currentDescriptor;
+            for (            PluginComponent c : pluginComponents)             c.setCurrentContact(contact);
           }
         }
-);
       }
+);
     }
   }
 );
