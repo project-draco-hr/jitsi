@@ -9,16 +9,15 @@
   contentPane.add(pluginPanelWest,BorderLayout.WEST);
   this.mainPanel.add(pluginPanelSouth,BorderLayout.SOUTH);
   ServiceReference[] serRefs=null;
-  String osgiFilter="(|(" + Container.CONTAINER_ID + "="+ Container.CONTAINER_MAIN_WINDOW.getID()+ ")"+ "("+ Container.CONTAINER_ID+ "="+ Container.CONTAINER_STATUS_BAR.getID()+ "))";
   try {
-    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponent.class.getName(),osgiFilter);
+    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponent.class.getName(),"(|(" + Container.CONTAINER_ID + "="+ Container.CONTAINER_MAIN_WINDOW.getID()+ ")("+ Container.CONTAINER_ID+ "="+ Container.CONTAINER_STATUS_BAR.getID()+ "))");
   }
  catch (  InvalidSyntaxException exc) {
     logger.error("Could not obtain plugin reference.",exc);
   }
   if (serRefs != null) {
-    for (int i=0; i < serRefs.length; i++) {
-      PluginComponent c=(PluginComponent)GuiActivator.bundleContext.getService(serRefs[i]);
+    for (    ServiceReference serRef : serRefs) {
+      PluginComponent c=(PluginComponent)GuiActivator.bundleContext.getService(serRef);
       if (c.isNativeComponent())       nativePluginsTable.put(c,new JPanel());
  else {
         String pluginConstraints=c.getConstraints();
