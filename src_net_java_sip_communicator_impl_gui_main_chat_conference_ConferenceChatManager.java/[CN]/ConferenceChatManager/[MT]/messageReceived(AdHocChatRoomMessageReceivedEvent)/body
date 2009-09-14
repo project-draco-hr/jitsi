@@ -1,0 +1,31 @@
+{
+  AdHocChatRoom sourceChatRoom=(AdHocChatRoom)evt.getSource();
+  Contact sourceParticipant=evt.getSourceChatRoomParticipant();
+  String messageType=null;
+switch (evt.getEventType()) {
+case AdHocChatRoomMessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED:
+    messageType=Chat.INCOMING_MESSAGE;
+  break;
+case AdHocChatRoomMessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED:
+messageType=Chat.SYSTEM_MESSAGE;
+break;
+case AdHocChatRoomMessageReceivedEvent.ACTION_MESSAGE_RECEIVED:
+messageType=Chat.ACTION_MESSAGE;
+break;
+}
+logger.info("MESSAGE RECEIVED from contact: " + sourceParticipant.getAddress());
+Message message=evt.getMessage();
+ChatPanel chatPanel=null;
+ChatWindowManager chatWindowManager=GuiActivator.getUIService().getChatWindowManager();
+chatPanel=chatWindowManager.getAdHocMultiChat(sourceChatRoom,message.getMessageUID());
+String messageContent=message.getContent();
+chatPanel.addMessage(sourceParticipant.getDisplayName(),evt.getTimestamp(),messageType,messageContent,message.getContentType());
+chatWindowManager.openChat(chatPanel,false);
+boolean fireChatNotification;
+String nickname=sourceChatRoom.getName();
+fireChatNotification=(nickname == null) || messageContent.toLowerCase().contains(nickname.toLowerCase());
+if (fireChatNotification) {
+String title=GuiActivator.getResources().getI18NString("service.gui.MSG_RECEIVED",new String[]{sourceParticipant.getDisplayName()});
+NotificationManager.fireChatNotification(sourceChatRoom,NotificationManager.INCOMING_MESSAGE,title,messageContent);
+}
+}

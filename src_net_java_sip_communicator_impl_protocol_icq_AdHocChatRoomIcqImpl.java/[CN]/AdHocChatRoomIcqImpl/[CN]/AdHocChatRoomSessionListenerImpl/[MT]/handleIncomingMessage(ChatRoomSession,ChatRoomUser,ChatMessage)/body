@@ -1,0 +1,14 @@
+{
+  logger.debug("Incoming multi user chat message received: " + chatMessage.getMessage());
+  String msgBody=chatMessage.getMessage();
+  String msgContent;
+  if (msgBody.startsWith(defaultHtmlStartTag)) {
+    msgContent=msgBody.substring(msgBody.indexOf(defaultHtmlStartTag) + defaultHtmlStartTag.length(),msgBody.indexOf(defaultHtmlEndTag));
+  }
+ else   msgContent=msgBody;
+  Message newMessage=createMessage(msgContent.getBytes(),HTML_MIME_TYPE,OperationSetBasicInstantMessagingIcqImpl.DEFAULT_MIME_ENCODING,null);
+  String participantUID=chatRoomUser.getScreenname().getFormatted();
+  if (participantUID.equals(nickName))   return;
+  AdHocChatRoomMessageReceivedEvent msgReceivedEvent=new AdHocChatRoomMessageReceivedEvent(chatRoom,participants.get(participantUID),System.currentTimeMillis(),newMessage,AdHocChatRoomMessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED);
+  fireMessageEvent(msgReceivedEvent);
+}

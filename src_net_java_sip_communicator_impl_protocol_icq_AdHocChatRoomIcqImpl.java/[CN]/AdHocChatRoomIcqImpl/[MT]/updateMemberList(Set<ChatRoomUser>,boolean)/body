@@ -1,0 +1,18 @@
+{
+  Iterator<ChatRoomUser> it=chatRoomUserSet.iterator();
+  while (it.hasNext()) {
+    ChatRoomUser user=it.next();
+    String uid=user.getScreenname().getFormatted();
+    if (!removeMember && !participants.containsKey(uid) && !uid.equals(provider.getAccountID().getUserID())) {
+      OperationSetPersistentPresenceIcqImpl presenceOpSet=(OperationSetPersistentPresenceIcqImpl)getParentProvider().getOperationSet(OperationSetPersistentPresence.class);
+      Contact participant=presenceOpSet.getServerStoredContactList().findContactByScreenName(uid);
+      participants.put(uid,participant);
+      fireParticipantPresenceEvent(participant,AdHocChatRoomParticipantPresenceChangeEvent.CONTACT_JOINED,null);
+    }
+    if (removeMember && participants.containsKey(uid)) {
+      Contact participant=participants.get(uid);
+      participants.remove(uid);
+      fireParticipantPresenceEvent(participant,AdHocChatRoomParticipantPresenceChangeEvent.CONTACT_LEFT,null);
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+synchronized (syncChat) {
+    AdHocChatRoomList chatRoomList=GuiActivator.getUIService().getConferenceChatManager().getAdHocChatRoomList();
+    AdHocChatRoomWrapper chatRoomWrapper=chatRoomList.findChatRoomWrapperFromAdHocChatRoom(chatRoom);
+    if (chatRoomWrapper == null) {
+      AdHocChatRoomProviderWrapper parentProvider=chatRoomList.findServerWrapperFromProvider(chatRoom.getParentProvider());
+      chatRoomWrapper=new AdHocChatRoomWrapper(parentProvider,chatRoom);
+      chatRoomList.addAdHocChatRoom(chatRoomWrapper);
+    }
+    ChatSession chatSession=findChatSessionForDescriptor(chatRoomWrapper);
+    if (chatSession != null) {
+      return getChat(chatSession);
+    }
+    return createChat(chatRoomWrapper,escapedMessageID);
+  }
+}

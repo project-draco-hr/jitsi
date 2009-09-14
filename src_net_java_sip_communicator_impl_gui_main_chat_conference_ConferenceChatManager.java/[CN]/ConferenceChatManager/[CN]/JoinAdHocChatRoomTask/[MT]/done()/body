@@ -1,0 +1,24 @@
+{
+  String returnCode=null;
+  try {
+    returnCode=get();
+  }
+ catch (  InterruptedException ignore) {
+  }
+catch (  ExecutionException ignore) {
+  }
+  ConfigurationManager.updateChatRoomStatus(adHocChatRoomWrapper.getParentProvider().getProtocolProvider(),adHocChatRoomWrapper.getAdHocChatRoomID(),Constants.ONLINE_STATUS);
+  String errorMessage=null;
+  if (PROVIDER_NOT_REGISTERED.equals(returnCode)) {
+    errorMessage=GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_NOT_CONNECTED",new String[]{adHocChatRoomWrapper.getAdHocChatRoomName()});
+  }
+ else   if (SUBSCRIPTION_ALREADY_EXISTS.equals(returnCode)) {
+    errorMessage=GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_ALREADY_JOINED",new String[]{adHocChatRoomWrapper.getAdHocChatRoomName()});
+  }
+ else {
+    errorMessage=GuiActivator.getResources().getI18NString("service.gui.FAILED_TO_JOIN_CHAT_ROOM",new String[]{adHocChatRoomWrapper.getAdHocChatRoomName()});
+  }
+  if (!SUCCESS.equals(returnCode) && !AUTHENTICATION_FAILED.equals(returnCode)) {
+    new ErrorDialog(GuiActivator.getUIService().getMainFrame(),GuiActivator.getResources().getI18NString("service.gui.ERROR"),errorMessage).showDialog();
+  }
+}

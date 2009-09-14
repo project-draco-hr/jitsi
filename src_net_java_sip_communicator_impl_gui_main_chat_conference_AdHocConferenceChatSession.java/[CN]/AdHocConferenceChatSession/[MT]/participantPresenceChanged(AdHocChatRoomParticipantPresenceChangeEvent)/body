@@ -1,0 +1,31 @@
+{
+  AdHocChatRoom sourceChatRoom=evt.getAdHocChatRoom();
+  if (!sourceChatRoom.equals(chatRoomWrapper.getAdHocChatRoom()))   return;
+  String eventType=evt.getEventType();
+  Contact participant=evt.getParticipant();
+  String statusMessage=null;
+  if (eventType.equals(AdHocChatRoomParticipantPresenceChangeEvent.CONTACT_JOINED)) {
+    AdHocConferenceChatContact chatContact=new AdHocConferenceChatContact(participant);
+    chatParticipants.add(chatContact);
+    sessionRenderer.addChatContact(chatContact);
+    if (!evt.isReasonUserList()) {
+      statusMessage=GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_USER_JOINED",new String[]{sourceChatRoom.getName()});
+      sessionRenderer.updateChatContactStatus(chatContact,statusMessage);
+    }
+  }
+ else   if (eventType.equals(AdHocChatRoomParticipantPresenceChangeEvent.CONTACT_LEFT) || eventType.equals(AdHocChatRoomParticipantPresenceChangeEvent.CONTACT_QUIT)) {
+    if (eventType.equals(AdHocChatRoomParticipantPresenceChangeEvent.CONTACT_LEFT)) {
+      statusMessage=GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_USER_LEFT",new String[]{sourceChatRoom.getName()});
+    }
+ else     if (eventType.equals(AdHocChatRoomParticipantPresenceChangeEvent.CONTACT_QUIT)) {
+      statusMessage=GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_USER_QUIT",new String[]{sourceChatRoom.getName()});
+    }
+    for (    ChatContact chatContact : chatParticipants) {
+      if (chatContact.getDescriptor().equals(participant)) {
+        sessionRenderer.updateChatContactStatus(chatContact,statusMessage);
+        sessionRenderer.removeChatContact(chatContact);
+        break;
+      }
+    }
+  }
+}

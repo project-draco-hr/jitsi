@@ -1,0 +1,21 @@
+{
+  logger.debug(contact.getDisplayName() + " has left the Switchboard");
+  Object attachment=switchboard.getAttachment();
+  try {
+    AdHocChatRoomMsnImpl adHocChatRoom=null;
+    if (attachment == null)     adHocChatRoom=(AdHocChatRoomMsnImpl)findRoom(switchboard);
+    if (attachment != null && userCreatedAdHocChatRoomList.containsKey(attachment))     adHocChatRoom=(AdHocChatRoomMsnImpl)userCreatedAdHocChatRoomList.get(attachment);
+    if (adHocChatRoom == null)     return;
+    String participantId=contact.getId();
+    Contact participant=adHocChatRoom.getAdHocChatRoomParticipant(participantId);
+    if (participant != null) {
+      adHocChatRoom.removeParticipant(participantId);
+    }
+  }
+ catch (  OperationFailedException e) {
+    logger.debug("Could not find a chat room corresponding" + "to the given switchboard.",e);
+  }
+catch (  OperationNotSupportedException e) {
+    logger.debug("Could not find a chat room corresponding" + "to the given switchboard.",e);
+  }
+}

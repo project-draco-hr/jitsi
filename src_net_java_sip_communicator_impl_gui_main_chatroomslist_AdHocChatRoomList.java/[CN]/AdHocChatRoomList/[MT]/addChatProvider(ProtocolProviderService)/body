@@ -1,0 +1,19 @@
+{
+  AdHocChatRoomProviderWrapper chatRoomProvider=new AdHocChatRoomProviderWrapper(pps);
+  providersList.add(chatRoomProvider);
+  ConfigurationService configService=GuiActivator.getConfigurationService();
+  String prefix="net.java.sip.communicator.impl.gui.accounts";
+  List<String> accounts=configService.getPropertyNamesByPrefix(prefix,true);
+  for (  String accountRootPropName : accounts) {
+    String accountUID=configService.getString(accountRootPropName);
+    if (accountUID.equals(pps.getAccountID().getAccountUniqueID())) {
+      List<String> chatRooms=configService.getPropertyNamesByPrefix(accountRootPropName + ".chatRooms",true);
+      for (      String chatRoomPropName : chatRooms) {
+        String chatRoomID=configService.getString(chatRoomPropName);
+        String chatRoomName=configService.getString(chatRoomPropName + ".chatRoomName");
+        AdHocChatRoomWrapper chatRoomWrapper=new AdHocChatRoomWrapper(chatRoomProvider,chatRoomID,chatRoomName);
+        chatRoomProvider.addAdHocChatRoom(chatRoomWrapper);
+      }
+    }
+  }
+}

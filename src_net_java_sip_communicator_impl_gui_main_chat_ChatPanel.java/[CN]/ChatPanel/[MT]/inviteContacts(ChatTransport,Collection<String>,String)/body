@@ -1,12 +1,18 @@
 {
-  ChatSession conferenceChatSession;
+  ChatSession conferenceChatSession=null;
   if (chatSession instanceof MetaContactChatSession) {
     String newChatName=inviteChatTransport.getDisplayName();
     chatContacts.add(inviteChatTransport.getName());
     ConferenceChatManager conferenceChatManager=GuiActivator.getUIService().getConferenceChatManager();
-    ChatRoomWrapper chatRoomWrapper=conferenceChatManager.createChatRoom(newChatName,inviteChatTransport.getProtocolProvider());
-    conferenceChatSession=new ConferenceChatSession(this,chatRoomWrapper);
-    this.setChatSession(conferenceChatSession);
+    if (inviteChatTransport.getProtocolProvider().getOperationSet(OperationSetMultiUserChat.class) != null) {
+      ChatRoomWrapper chatRoomWrapper=conferenceChatManager.createChatRoom(newChatName,inviteChatTransport.getProtocolProvider(),chatContacts);
+      conferenceChatSession=new ConferenceChatSession(this,chatRoomWrapper);
+    }
+ else     if (inviteChatTransport.getProtocolProvider().getOperationSet(OperationSetAdHocMultiUserChat.class) != null) {
+      AdHocChatRoomWrapper chatRoomWrapper=conferenceChatManager.createAdHocChatRoom(newChatName,inviteChatTransport.getProtocolProvider(),chatContacts);
+      conferenceChatSession=new AdHocConferenceChatSession(this,chatRoomWrapper);
+    }
+    if (conferenceChatSession != null)     this.setChatSession(conferenceChatSession);
   }
  else {
     conferenceChatSession=chatSession;

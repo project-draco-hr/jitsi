@@ -8,13 +8,24 @@
   }
   ProtocolProviderService protocolProvider=(ProtocolProviderService)service;
   Object multiUserChatOpSet=protocolProvider.getOperationSet(OperationSetMultiUserChat.class);
-  if (multiUserChatOpSet == null) {
+  Object multiUserChatAdHocOpSet=protocolProvider.getOperationSet(OperationSetAdHocMultiUserChat.class);
+  if (multiUserChatOpSet == null && multiUserChatAdHocOpSet != null) {
+    if (event.getType() == ServiceEvent.REGISTERED) {
+      adHocChatRoomList.addChatProvider(protocolProvider);
+    }
+ else     if (event.getType() == ServiceEvent.UNREGISTERING) {
+      adHocChatRoomList.removeChatProvider(protocolProvider);
+    }
+  }
+ else   if (multiUserChatAdHocOpSet == null && multiUserChatOpSet != null) {
+    if (event.getType() == ServiceEvent.REGISTERED) {
+      chatRoomList.addChatProvider(protocolProvider);
+    }
+ else     if (event.getType() == ServiceEvent.UNREGISTERING) {
+      chatRoomList.removeChatProvider(protocolProvider);
+    }
+  }
+ else {
     return;
-  }
-  if (event.getType() == ServiceEvent.REGISTERED) {
-    chatRoomList.addChatProvider(protocolProvider);
-  }
- else   if (event.getType() == ServiceEvent.UNREGISTERING) {
-    chatRoomList.removeChatProvider(protocolProvider);
   }
 }

@@ -1,0 +1,26 @@
+{
+  logger.debug("Conference Message Received: " + ev.toString());
+  try {
+    String formattedMessage=ev.getMessage();
+    logger.debug("original message received : " + formattedMessage);
+    if (formattedMessage.startsWith("\u001b")) {
+      formattedMessage=opSetBasic.processLinks(messageDecoder.decodeToHTML(formattedMessage));
+    }
+ else {
+      formattedMessage=opSetBasic.processLinks(formattedMessage);
+    }
+    formattedMessage=formattedMessage.replaceAll("(<font) (.*) size=\"0\">","$1 $2 size=\"10\">");
+    formattedMessage=formattedMessage.replaceAll("(<font) (.*) size=\"(\\d+)\">","$1 $2 style=\"font-size: $3px;\">");
+    logger.debug("formatted Message : " + formattedMessage);
+    Message newMessage=createMessage(formattedMessage.getBytes(),OperationSetBasicInstantMessaging.HTML_MIME_TYPE,OperationSetBasicInstantMessaging.DEFAULT_MIME_ENCODING,null);
+    AdHocChatRoomYahooImpl chatRoom=(AdHocChatRoomYahooImpl)findRoom(ev.getRoom().getName());
+    if (chatRoom != null) {
+      Contact member=chatRoom.findParticipantForAddress(ev.getFrom());
+      AdHocChatRoomMessageReceivedEvent msgReceivedEvent=new AdHocChatRoomMessageReceivedEvent(chatRoom,member,System.currentTimeMillis(),newMessage,AdHocChatRoomMessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED);
+      chatRoom.fireMessageEvent(msgReceivedEvent);
+    }
+  }
+ catch (  Exception e) {
+    logger.debug("Error while receiving a multi user chat message: " + e);
+  }
+}
