@@ -1,5 +1,6 @@
 {
-  if ((message.getFromAddr() == null) || (message.getFromAddr().indexOf('@') < 0)) {
+  String messageFromAddr=message.getFromAddr();
+  if ((messageFromAddr == null) || (messageFromAddr.indexOf('@') < 0)) {
     return;
   }
   String subject=message.getSubject();
@@ -9,10 +10,10 @@
  catch (  Exception exception) {
     exception.printStackTrace();
   }
-  Message newMailMessage=new MessageMsnImpl(MessageFormat.format(MsnActivator.getResources().getI18NString("service.gui.NEW_MAIL"),new Object[]{message.getFrom(),message.getFromAddr(),subject}),DEFAULT_MIME_TYPE,DEFAULT_MIME_ENCODING,subject);
+  Message newMailMessage=new MessageMsnImpl(MessageFormat.format(MsnActivator.getResources().getI18NString("service.gui.NEW_MAIL"),new Object[]{message.getFrom(),messageFromAddr,subject}),DEFAULT_MIME_TYPE,DEFAULT_MIME_ENCODING,subject);
   Contact sourceContact=opSetPersPresence.findContactByID(message.getFromAddr());
   if (sourceContact == null) {
-    logger.debug("received a new mail from an unknown contact: " + message.getFrom() + " &lt;"+ message.getFromAddr()+ "&gt;");
+    logger.debug("received a new mail from an unknown contact: " + message.getFrom() + " &lt;"+ messageFromAddr+ "&gt;");
     sourceContact=opSetPersPresence.createVolatileContact(contact);
   }
   MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(newMailMessage,sourceContact,System.currentTimeMillis(),MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
