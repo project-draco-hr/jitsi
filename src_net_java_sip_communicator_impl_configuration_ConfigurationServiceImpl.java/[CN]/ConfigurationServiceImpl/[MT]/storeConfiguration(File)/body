@@ -1,16 +1,22 @@
 {
   if (!started)   throw new IllegalStateException("Service is stopped or has not been started");
-  File config=getConfigurationFile();
-  FailSafeTransaction trans=this.faService.createFailSafeTransaction(config);
+  FailSafeTransaction trans=this.faService.createFailSafeTransaction(file);
+  Throwable exception=null;
   try {
     trans.beginTransaction();
-    OutputStream stream=new FileOutputStream(config);
+    OutputStream stream=new FileOutputStream(file);
     store.storeConfiguration(stream);
     stream.close();
     trans.commit();
   }
- catch (  Exception e) {
-    logger.error("can't write data in the configuration file",e);
+ catch (  IllegalStateException isex) {
+    exception=isex;
+  }
+catch (  IOException ioex) {
+    exception=ioex;
+  }
+  if (exception != null) {
+    logger.error("can't write data in the configuration file",exception);
     trans.rollback();
   }
 }
