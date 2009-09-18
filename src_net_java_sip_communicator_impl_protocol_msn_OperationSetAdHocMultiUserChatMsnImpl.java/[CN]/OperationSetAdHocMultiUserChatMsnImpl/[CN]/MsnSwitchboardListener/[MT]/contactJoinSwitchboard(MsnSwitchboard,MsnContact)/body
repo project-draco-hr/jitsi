@@ -1,13 +1,14 @@
 {
   if (!isGroupChatMessage(switchboard))   return;
-  Object attachment=switchboard.getAttachment();
   try {
-    AdHocChatRoomMsnImpl chatRoom=null;
-    if (attachment == null)     chatRoom=(AdHocChatRoomMsnImpl)findRoom(switchboard);
-    if (attachment != null && userCreatedAdHocChatRoomList.containsKey(attachment))     chatRoom=(AdHocChatRoomMsnImpl)userCreatedAdHocChatRoomList.get(attachment);
-    if (chatRoom == null)     return;
-    Contact msnContact=new ContactMsnImpl(contact,new ServerStoredContactListMsnImpl(new OperationSetPersistentPresenceMsnImpl(provider),provider),true,true);
-    chatRoom.addAdHocChatRoomParticipant(contact.getId(),msnContact);
+    AdHocChatRoomMsnImpl chatRoom=getLocalAdHocChatRoomInstance(switchboard);
+    if (chatRoom == null) {
+      chatRoom=createLocalAdHocChatRoomInstance(switchboard);
+    }
+    OperationSetPersistentPresenceMsnImpl presenceOpSet=(OperationSetPersistentPresenceMsnImpl)provider.getOperationSet(OperationSetPersistentPresence.class);
+    ContactMsnImpl contact=presenceOpSet.getServerStoredContactList().findContactById(msnContact.getEmail().getEmailAddress());
+    if (contact == null)     contact=new ContactMsnImpl(msnContact,presenceOpSet.getServerStoredContactList(),false,false);
+    chatRoom.addAdHocChatRoomParticipant(msnContact.getId(),contact);
   }
  catch (  Exception e) {
     logger.error("Failed to join switchboard.",e);

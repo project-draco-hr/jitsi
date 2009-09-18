@@ -2,26 +2,11 @@
   if (!isGroupChatMessage(switchboard))   return;
   Message newMessage=createMessage(message.getContent());
   logger.debug("Group chat message received.");
-  Object attachment=switchboard.getAttachment();
-  try {
-    AdHocChatRoomMsnImpl chatRoom=null;
-    if (attachment == null) {
-      chatRoom=(AdHocChatRoomMsnImpl)findRoom(switchboard);
-    }
-    if (attachment != null && userCreatedAdHocChatRoomList.containsKey(attachment)) {
-      chatRoom=(AdHocChatRoomMsnImpl)userCreatedAdHocChatRoomList.get(attachment);
-    }
-    if (chatRoom == null) {
-      return;
-    }
-    Contact participant=chatRoom.getAdHocChatRoomParticipant(contact.getId());
-    AdHocChatRoomMessageReceivedEvent msgReceivedEvent=new AdHocChatRoomMessageReceivedEvent(chatRoom,participant,System.currentTimeMillis(),newMessage,AdHocChatRoomMessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED);
-    chatRoom.fireMessageEvent(msgReceivedEvent);
+  AdHocChatRoomMsnImpl chatRoom=getLocalAdHocChatRoomInstance(switchboard);
+  if (chatRoom == null) {
+    chatRoom=createLocalAdHocChatRoomInstance(switchboard);
   }
- catch (  OperationFailedException e) {
-    logger.error("Failed to find room with name: ",e);
-  }
-catch (  OperationNotSupportedException e) {
-    logger.error("Failed to find room with name: ",e);
-  }
+  Contact participant=chatRoom.getAdHocChatRoomParticipant(contact.getId());
+  AdHocChatRoomMessageReceivedEvent msgReceivedEvent=new AdHocChatRoomMessageReceivedEvent(chatRoom,participant,System.currentTimeMillis(),newMessage,AdHocChatRoomMessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED);
+  chatRoom.fireMessageEvent(msgReceivedEvent);
 }
