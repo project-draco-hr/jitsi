@@ -9,14 +9,22 @@
   }
   this.statusMessage=statusMessage;
   this.fireProviderStatusChangeEvent(oldPresenceStatus);
-  if (this.presenceStatus == FacebookStatusEnum.OFFLINE) {
-    parentProvider.getAdapter().pause();
-    changePresenceStatusForAllContactsWithoutFiringEvent(getServerStoredContactListRoot(),getPresenceStatus());
+  try {
+    if (this.presenceStatus == FacebookStatusEnum.OFFLINE) {
+      parentProvider.getAdapter().shutdown();
+      changePresenceStatusForAllContactsWithoutFiringEvent(getServerStoredContactListRoot(),getPresenceStatus());
+    }
+ else     if (this.presenceStatus == FacebookStatusEnum.ONLINE) {
+      if (oldPresenceStatus == FacebookStatusEnum.INVISIBLE)       parentProvider.getAdapter().getSession().setVisibility(true);
+    }
+ else     if (this.presenceStatus == FacebookStatusEnum.INVISIBLE) {
+      parentProvider.getAdapter().getSession().setVisibility(false);
+    }
   }
- else   if (this.presenceStatus == FacebookStatusEnum.ONLINE) {
-    if (oldPresenceStatus == FacebookStatusEnum.INVISIBLE)     parentProvider.getAdapter().setVisibility(true);
+ catch (  IOException e) {
+    throw new OperationFailedException("unable to change facebook visibility",-1,e);
   }
- else   if (this.presenceStatus == FacebookStatusEnum.INVISIBLE) {
-    parentProvider.getAdapter().setVisibility(false);
+catch (  BrokenFacebookProtocolException e) {
+    throw new OperationFailedException("unable to change facebook visibility",-1,e);
   }
 }

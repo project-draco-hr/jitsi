@@ -3,25 +3,20 @@
   Thread sender=new Thread(new Runnable(){
     public void run(){
       MessageDeliveryFailedEvent errorEvent=null;
-      try {
-        errorEvent=OperationSetBasicInstantMessagingFacebookImpl.this.parentProvider.getAdapter().postFacebookChatMessage(message,to);
-        if (errorEvent == null) {
-          fireMessageDelivered(message,to);
-          return;
-        }
-        if (errorEvent.getErrorCode() == FacebookErrorCode.kError_Async_NotLoggedIn || errorEvent.getErrorCode() == FacebookErrorCode.kError_Async_LoginChanged) {
-          try {
-            parentProvider.unregister(RegistrationStateChangeEvent.REASON_MULTIPLE_LOGINS);
-          }
- catch (          OperationFailedException e1) {
-            logger.error("Unable to unregister the protocol provider: " + this + " due to the following exception: "+ e1);
-          }
-          fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.PROVIDER_NOT_REGISTERED);
-          return;
-        }
+      errorEvent=OperationSetBasicInstantMessagingFacebookImpl.this.parentProvider.getAdapter().postFacebookChatMessage(message,to);
+      if (errorEvent == null) {
+        fireMessageDelivered(message,to);
+        return;
       }
- catch (      JSONException e) {
-        logger.warn(e.getMessage());
+      if (errorEvent.getErrorCode() == FacebookErrorException.kError_Async_NotLoggedIn || errorEvent.getErrorCode() == FacebookErrorException.kError_Async_LoginChanged) {
+        try {
+          parentProvider.unregister(RegistrationStateChangeEvent.REASON_MULTIPLE_LOGINS);
+        }
+ catch (        OperationFailedException e1) {
+          logger.error("Unable to unregister the protocol provider: " + this + " due to the following exception: "+ e1);
+        }
+        fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.PROVIDER_NOT_REGISTERED);
+        return;
       }
       try {
         Thread.sleep(1000);
@@ -30,7 +25,7 @@
           fireMessageDelivered(message,to);
           return;
         }
-        if (errorEvent.getErrorCode() == FacebookErrorCode.kError_Async_NotLoggedIn || errorEvent.getErrorCode() == FacebookErrorCode.kError_Async_LoginChanged) {
+        if (errorEvent.getErrorCode() == FacebookErrorException.kError_Async_NotLoggedIn || errorEvent.getErrorCode() == FacebookErrorException.kError_Async_LoginChanged) {
           try {
             parentProvider.unregister(RegistrationStateChangeEvent.REASON_MULTIPLE_LOGINS);
           }
@@ -39,10 +34,7 @@
           }
         }
       }
- catch (      JSONException e) {
-        logger.warn(e.getMessage());
-      }
-catch (      InterruptedException e) {
+ catch (      InterruptedException e) {
         logger.warn(e.getMessage());
       }
       fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.UNKNOWN_ERROR);

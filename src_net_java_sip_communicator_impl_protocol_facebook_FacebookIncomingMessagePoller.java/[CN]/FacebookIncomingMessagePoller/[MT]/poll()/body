@@ -1,0 +1,57 @@
+{
+  try {
+    if (this.seq == -1) {
+      this.seq=getNewestSeq();
+    }
+    logger.debug("polling seq " + this.seq);
+    HttpGet get=new HttpGet(this.getMessagePollUrl());
+    HttpResponse response=this.session.getHttpClient().execute(get);
+    if (response.getStatusLine().getStatusCode() != 200) {
+      response.getEntity().consumeContent();
+      throw new BrokenFacebookProtocolException("unable to poll messages. http code " + response.getStatusLine().getStatusCode());
+    }
+    String body=EntityUtils.toString(response.getEntity());
+    FacebookJsonResponse jsonResponse=new FacebookJsonResponse(this.session,body);
+    JSONObject json=jsonResponse.getJson();
+    if (json.has("t")) {
+      String t=json.getString("t");
+      if (t.equals("msg")) {
+        JSONArray ms=(JSONArray)json.get("ms");
+        for (int i=0; i < ms.length(); i++) {
+          JSONObject msg=ms.getJSONObject(i);
+          if (msg.get("type").equals("typ")) {
+            for (            FacebookSessionListener l : this.listeners) {
+              l.onIncomingTypingNotification(msg.getString("from"),msg.getInt("st"));
+            }
+          }
+ else           if (msg.get("type").equals("msg")) {
+            FacebookMessage fm=new FacebookMessage(msg);
+            this.lastReceiveTime=fm.getTime();
+            this.notifyListeners(fm);
+          }
+ else {
+            logger.debug("neither notification nor message " + msg);
+          }
+        }
+        this.seq++;
+      }
+ else       if (t.equals("refresh")) {
+        logger.debug("refreshing...");
+        this.pollHistory();
+        if (json.has("seq")) {
+          this.seq=json.getInt("seq");
+        }
+ else {
+          Integer newSeq=this.getNewestSeq();
+          if (newSeq != null) {
+            this.seq=newSeq;
+          }
+        }
+        this.session.reconnect();
+      }
+    }
+  }
+ catch (  JSONException e) {
+    throw new BrokenFacebookProtocolException(e);
+  }
+}

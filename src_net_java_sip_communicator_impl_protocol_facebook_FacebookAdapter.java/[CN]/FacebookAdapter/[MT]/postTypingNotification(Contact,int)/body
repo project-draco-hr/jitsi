@@ -1,22 +1,17 @@
 {
-  if (notifiedContact.getAddress().equals(this.uid))   return;
-  int facebookTypingState=0;
-switch (typingState) {
-case OperationSetTypingNotifications.STATE_TYPING:
-    facebookTypingState=1;
-  break;
-default :
-facebookTypingState=0;
-break;
-}
-logger.trace("====== PostTypingNotification begin======");
-logger.trace("PostTypingNotification(): to:" + notifiedContact.getAddress());
-logger.trace("PostTypingNotification(): typing state:" + facebookTypingState);
-List<NameValuePair> nvps=new ArrayList<NameValuePair>();
-nvps.add(new BasicNameValuePair("typ",facebookTypingState + ""));
-nvps.add(new BasicNameValuePair("to",notifiedContact.getAddress()));
-nvps.add(new BasicNameValuePair("post_form_id",post_form_id));
-logger.info("@executeMethod PostMessage() ing... : posting TypingNotification to " + notifiedContact.getAddress());
-facebookPostMethod(hostUrl,"/ajax/chat/typ.php",nvps);
-logger.trace("+++++++++ PostTypingNotification end +++++++++");
+  TypingNotificationRecord record=typingNotificationRecord.get(notifiedContact.getAddress());
+  if (record == null) {
+    record=new TypingNotificationRecord(-1l,-1);
+synchronized (typingNotificationRecord) {
+      typingNotificationRecord.put(notifiedContact.getAddress(),record);
+    }
+  }
+  if (record.getTime() < System.currentTimeMillis() - 1000) {
+    FacebookOutgoingTypingNotification msg=new FacebookOutgoingTypingNotification(session);
+    msg.setAddress(notifiedContact.getAddress());
+    msg.setTypingState(typingState);
+    msg.send();
+    record.setTime(System.currentTimeMillis());
+    record.setType(typingState);
+  }
 }

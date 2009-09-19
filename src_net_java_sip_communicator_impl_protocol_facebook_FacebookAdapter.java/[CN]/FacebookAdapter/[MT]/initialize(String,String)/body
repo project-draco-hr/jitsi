@@ -1,64 +1,13 @@
 {
-  logger.trace("initialize() [begin]");
-  isClientRunning=true;
-  boolean[] doParseHomePageIsSuccessful=new boolean[1];
-  int loginErrorCode=connectAndLogin(email,pass,doParseHomePageIsSuccessful);
-  if (loginErrorCode == FacebookErrorCode.Error_Global_NoError) {
-    int hpParsingErrorCode=doParseHomePageIsSuccessful[0] ? FacebookErrorCode.Error_Global_NoError : doParseHomePage();
-    if (hpParsingErrorCode == FacebookErrorCode.Error_Global_NoError) {
-      msgRequester=new Thread(new Runnable(){
-        public void run(){
-          logger.info("Keep requesting...");
-          while (isClientRunning) {
-            try {
-              keepRequesting();
-            }
- catch (            Exception e) {
-              logger.warn(e.getMessage());
-            }
-          }
-        }
-      }
-);
-      msgRequester.start();
-      buddyListRequester=new Thread(new Runnable(){
-        public void run(){
-          logger.info("Keep requesting buddylist...");
-          while (isClientRunning) {
-            try {
-              int errorCode=getBuddyList();
-              if (errorCode == FacebookErrorCode.kError_Async_NotLoggedIn) {
-                initialize(email,pass);
-              }
-            }
- catch (            Exception e) {
-              logger.warn(e.getMessage());
-            }
-            try {
-              Thread.sleep(60 * 1000);
-            }
- catch (            InterruptedException e) {
-              logger.warn(e.getMessage());
-            }
-          }
-        }
-      }
-);
-      buddyListRequester.start();
-      logger.trace("initialize() [END]");
-      return FacebookErrorCode.Error_Global_NoError;
-    }
- else {
-      logger.trace("initialize() [Home Page Parsing Error]");
-      return hpParsingErrorCode;
-    }
+  if (this.session != null && this.session.isLoggedIn())   return true;
+  logger.info("initializing facebook adapter. account");
+  try {
+    this.session=new FacebookSession();
+    boolean loggedIn=session.login(email,password);
+    if (loggedIn)     session.addListener(this);
+    return loggedIn;
   }
- else   if (loginErrorCode == FacebookErrorCode.kError_Login_GenericError) {
-    logger.error("Not logged in, please check your input or the internet connection!");
+ catch (  Exception e) {
+    throw new OperationFailedException("unable to initialize adapter",FacebookErrorException.kError_Login_GenericError,e);
   }
- else {
-    logger.error("Not logged in, please check your internet connection!");
-  }
-  logger.trace("initialize() [Login Error]");
-  return loginErrorCode;
 }

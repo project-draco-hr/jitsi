@@ -1,17 +1,22 @@
 {
-  if (to.getAddress().equals(this.uid))   return null;
-  logger.trace("====== PostMessage begin======");
-  logger.trace("PostMessage(): to:" + to.getAddress());
-  logger.trace("PostMessage(): msg:" + msg.getContent());
-  List<NameValuePair> nvps=new ArrayList<NameValuePair>();
-  nvps.add(new BasicNameValuePair("post_form_id",post_form_id));
-  nvps.add(new BasicNameValuePair("rand_id",msg.getMessageUID()));
-  nvps.add(new BasicNameValuePair("message",(msg.getContent() == null) ? "" : msg.getContent()));
-  nvps.add(new BasicNameValuePair("subject",(msg.getSubject() == null) ? "" : msg.getSubject()));
-  nvps.add(new BasicNameValuePair("ids[0]",to.getAddress()));
-  nvps.add(new BasicNameValuePair("action","compose"));
-  logger.info("@executeMethod PostMessage() ing... : posting message to " + to.getAddress());
-  String responseStr=facebookPostMethod(hostUrl,"/inbox/ajax/ajax.php",nvps);
-  logger.trace("+++++++++ PostMessage end +++++++++");
-  return FacebookResponseParser.messagePostingResultParser(msg,to,responseStr);
+  FacebookOutgoingMailboxMessage msg=new FacebookOutgoingMailboxMessage(session);
+  msg.setAddress(to.getAddress());
+  msg.setContent(message.getContent());
+  msg.setSubject(message.getSubject());
+  msg.setUid(message.getMessageUID());
+  try {
+    msg.send();
+    return null;
+  }
+ catch (  BrokenFacebookProtocolException e) {
+    logger.error(e);
+    return new MessageDeliveryFailedEvent(message,to,-1,System.currentTimeMillis(),e.getMessage());
+  }
+catch (  IOException e) {
+    logger.warn(e);
+    return new MessageDeliveryFailedEvent(message,to,-1,System.currentTimeMillis(),e.getMessage());
+  }
+catch (  FacebookErrorException e) {
+    return new MessageDeliveryFailedEvent(message,to,e.getCode());
+  }
 }

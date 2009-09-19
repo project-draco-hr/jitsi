@@ -15,8 +15,11 @@
     }
   }
   RegistrationState oldState=currentRegistrationState;
-  int initErrorCode=facebookAdapter.initialize(getAccountID().getUserID(),password);
-  if (initErrorCode == FacebookErrorCode.Error_Global_NoError) {
+  int initErrorCode=FacebookErrorException.Error_Global_NoError;
+  if (!facebookAdapter.initialize(getAccountID().getUserID(),password)) {
+    initErrorCode=FacebookErrorException.kError_Login_GenericError;
+  }
+  if (initErrorCode == FacebookErrorException.Error_Global_NoError) {
     currentRegistrationState=RegistrationState.REGISTERED;
     fireRegistrationStateChanged(oldState,currentRegistrationState,RegistrationStateChangeEvent.REASON_USER_REQUEST,null);
   }

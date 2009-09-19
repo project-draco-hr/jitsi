@@ -1,0 +1,20 @@
+{
+  HttpParams params=new BasicHttpParams();
+  params.setParameter("http.socket.timeout",300000);
+  HttpProtocolParams.setVersion(params,HttpVersion.HTTP_1_1);
+  HttpProtocolParams.setContentCharset(params,"UTF-8");
+  HttpProtocolParams.setUseExpectContinue(params,true);
+  HttpProtocolParams.setHttpElementCharset(params,"UTF-8");
+  HttpProtocolParams.setUserAgent(params,"Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9) Gecko/2008052906 Firefox/3.0");
+  SchemeRegistry supportedSchemes=new SchemeRegistry();
+  SocketFactory sf=PlainSocketFactory.getSocketFactory();
+  supportedSchemes.register(new Scheme("http",sf,80));
+  sf=SSLSocketFactory.getSocketFactory();
+  supportedSchemes.register(new Scheme("https",sf,443));
+  ClientConnectionManager connManager=new ThreadSafeClientConnManager(params,supportedSchemes);
+  DefaultHttpClient httpClient=new DefaultHttpClient(connManager,params);
+  httpClient.getParams().setParameter(ClientPNames.COOKIE_POLICY,CookiePolicy.BROWSER_COMPATIBILITY);
+  httpClient.setRedirectHandler(new DefaultRedirectHandler());
+  httpClient.setCookieStore(new BasicCookieStore());
+  return httpClient;
+}

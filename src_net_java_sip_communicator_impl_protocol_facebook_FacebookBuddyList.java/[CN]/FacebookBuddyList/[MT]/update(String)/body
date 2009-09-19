@@ -1,0 +1,46 @@
+{
+synchronized (session) {
+    if (!session.isLoggedIn()) {
+      return;
+    }
+  }
+  JSONObject jsonBuddyList=parseBody(body);
+  try {
+    JSONObject userInfos=(JSONObject)jsonBuddyList.get("userInfos");
+    if (userInfos != null) {
+      Iterator<String> it=userInfos.keys();
+      while (it.hasNext()) {
+        String key=it.next();
+        JSONObject jsonUser=(JSONObject)userInfos.get(key);
+        if (jsonUser == null) {
+          throw new BrokenFacebookProtocolException("unable to get user info. " + userInfos);
+        }
+        FacebookUser buddy=new FacebookUser(key,jsonUser);
+        if (buddy.uid.equals(this.session.getUid())) {
+          this.me=buddy;
+        }
+ else {
+          this.cache.put(key,buddy);
+        }
+      }
+    }
+    JSONObject nowAvailableList=jsonBuddyList.getJSONObject("nowAvailableList");
+    if (nowAvailableList == null) {
+      throw new BrokenFacebookProtocolException("Unable to read Facebook now available list");
+    }
+    for (    FacebookUser user : this.cache.values()) {
+      if (nowAvailableList.has(user.uid)) {
+        user.isOnline=true;
+        user.lastSeen=Calendar.getInstance().getTimeInMillis();
+        user.isIdle=nowAvailableList.getJSONObject(user.uid).getBoolean("i");
+      }
+ else {
+        user.isOnline=false;
+      }
+    }
+    for (    FacebookSessionListener l : this.listeners)     l.onBuddyListUpdated();
+  }
+ catch (  JSONException e) {
+    throw new BrokenFacebookProtocolException(e);
+  }
+}

@@ -1,0 +1,14 @@
+{
+  Map<String,OperationSet> supportedOperationSets=this.getParentProvider().getSupportedOperationSets();
+  if (supportedOperationSets == null || supportedOperationSets.size() < 1) {
+    throw new NullPointerException("No OperationSet implementations are supported by " + "this implementation. ");
+  }
+  OperationSetPersistentPresenceFacebookImpl operationSetPresence=(OperationSetPersistentPresenceFacebookImpl)supportedOperationSets.get(OperationSetPresence.class.getName());
+  for (  FacebookUser user : this.session.getBuddyList().getBuddies()) {
+    PresenceStatus newStatus;
+    if (user.isOnline && user.isIdle)     newStatus=FacebookStatusEnum.IDLE;
+ else     if (user.isOnline)     newStatus=FacebookStatusEnum.ONLINE;
+ else     newStatus=FacebookStatusEnum.OFFLINE;
+    operationSetPresence.setPresenceStatusForContact(user.uid,newStatus);
+  }
+}
