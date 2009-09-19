@@ -3,21 +3,16 @@
   if (accountMenu == null)   return;
   if (accountMenu instanceof PresenceStatusMenu) {
     PresenceStatusMenu presenceStatusMenu=(PresenceStatusMenu)accountMenu;
-    if (!protocolProvider.isRegistered())     presenceStatusMenu.updateStatus(presenceStatusMenu.getOfflineStatus());
+    PresenceStatus presenceStatus;
+    if (!protocolProvider.isRegistered())     presenceStatus=presenceStatusMenu.getOfflineStatus();
  else {
-      if (presenceStatusMenu.getLastSelectedStatus() != null) {
-        presenceStatusMenu.updateStatus(presenceStatusMenu.getLastSelectedStatus());
-      }
- else {
-        PresenceStatus lastStatus=getLastPresenceStatus(protocolProvider);
-        if (lastStatus == null) {
-          presenceStatusMenu.updateStatus(presenceStatusMenu.getOnlineStatus());
-        }
- else {
-          presenceStatusMenu.updateStatus(lastStatus);
-        }
+      presenceStatus=presenceStatusMenu.getLastSelectedStatus();
+      if (presenceStatus == null) {
+        presenceStatus=getLastPresenceStatus(protocolProvider);
+        if (presenceStatus == null)         presenceStatus=presenceStatusMenu.getOnlineStatus();
       }
     }
+    presenceStatusMenu.updateStatus(presenceStatus);
   }
  else {
     ((SimpleStatusMenu)accountMenu).updateStatus();

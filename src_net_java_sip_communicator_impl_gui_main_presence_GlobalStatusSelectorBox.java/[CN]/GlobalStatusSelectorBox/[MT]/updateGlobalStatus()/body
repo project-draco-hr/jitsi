@@ -1,27 +1,18 @@
 {
   int status=0;
   Iterator<ProtocolProviderService> pProviders=mainFrame.getProtocolProviders();
-  boolean isProtocolHidden;
   while (pProviders.hasNext()) {
     ProtocolProviderService protocolProvider=pProviders.next();
-    isProtocolHidden=protocolProvider.getAccountID().getAccountProperty(ProtocolProviderFactory.IS_PROTOCOL_HIDDEN) != null;
+    boolean isProtocolHidden=protocolProvider.getAccountID().getAccountProperty(ProtocolProviderFactory.IS_PROTOCOL_HIDDEN) != null;
     if (isProtocolHidden)     continue;
+    if (!protocolProvider.isRegistered())     continue;
     OperationSetPresence presence=(OperationSetPresence)protocolProvider.getOperationSet(OperationSetPresence.class);
-    if (presence == null) {
-      if (protocolProvider.isRegistered() && status < PresenceStatus.AVAILABLE_THRESHOLD) {
-        status=PresenceStatus.AVAILABLE_THRESHOLD;
-      }
-    }
- else {
-      if (protocolProvider.isRegistered() && status < presence.getPresenceStatus().getStatus()) {
-        status=presence.getPresenceStatus().getStatus();
-      }
-    }
+    int presenceStatus=(presence == null) ? PresenceStatus.AVAILABLE_THRESHOLD : presence.getPresenceStatus().getStatus();
+    if (status < presenceStatus)     status=presenceStatus;
   }
   JMenuItem item=getItemFromStatus(status);
-  SelectedObject selectedObject=new SelectedObject(item.getText(),item.getIcon(),item);
-  STATUS_STRING_WIDTH=SwingUtilities.computeStringWidth(this.getFontMetrics(this.getFont()),item.getText());
-  setSelected(selectedObject);
+  setSelected(new SelectedObject(item.getText(),item.getIcon(),item));
+  computeTextWidth();
   this.revalidate();
   setSystrayIcon(status);
 }
