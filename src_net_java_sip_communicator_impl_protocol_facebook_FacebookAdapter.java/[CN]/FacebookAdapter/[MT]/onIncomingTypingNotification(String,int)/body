@@ -1,12 +1,7 @@
 {
   if (!buddyUid.equals(this.session.getUid())) {
-    Map<String,OperationSet> supportedOperationSets=getParentProvider().getSupportedOperationSets();
-    if (supportedOperationSets == null || supportedOperationSets.size() < 1)     throw new NullPointerException("No OperationSet implementations are supported by " + "this implementation. ");
-    OperationSetPersistentPresenceFacebookImpl operationSetPP=(OperationSetPersistentPresenceFacebookImpl)supportedOperationSets.get(OperationSetPersistentPresence.class.getName());
-    Contact fromContact=operationSetPP.findContactByID(buddyUid);
-    if (fromContact == null) {
-      fromContact=operationSetPP.createVolatileContact(buddyUid);
-    }
+    Contact fromContact=persistentPresence.findContactByID(buddyUid);
+    if (fromContact == null)     fromContact=persistentPresence.createVolatileContact(buddyUid);
     int typingState=OperationSetTypingNotifications.STATE_UNKNOWN;
 switch (state) {
 case 1:
@@ -18,7 +13,6 @@ break;
 default :
 typingState=OperationSetTypingNotifications.STATE_UNKNOWN;
 }
-OperationSetTypingNotificationsFacebookImpl operationSetTN=(OperationSetTypingNotificationsFacebookImpl)supportedOperationSets.get(OperationSetTypingNotifications.class.getName());
-operationSetTN.receivedTypingNotification(fromContact,typingState);
+typingNotifications.receivedTypingNotification(fromContact,typingState);
 }
 }
