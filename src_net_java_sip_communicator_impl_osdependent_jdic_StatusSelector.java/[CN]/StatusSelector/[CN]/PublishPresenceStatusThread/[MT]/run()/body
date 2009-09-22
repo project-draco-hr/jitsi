@@ -9,14 +9,20 @@ catch (  IllegalStateException e1) {
     logger.error("Error - changing status",e1);
   }
 catch (  OperationFailedException e1) {
-    if (e1.getErrorCode() == OperationFailedException.GENERAL_ERROR) {
-      logger.error("General error occured while " + "publishing presence status.",e1);
-    }
- else     if (e1.getErrorCode() == OperationFailedException.NETWORK_FAILURE) {
-      logger.error("Network failure occured while " + "publishing presence status.",e1);
-    }
- else     if (e1.getErrorCode() == OperationFailedException.PROVIDER_NOT_REGISTERED) {
-      logger.error("Protocol provider must be" + "registered in order to change status.",e1);
-    }
-  }
+    String msg;
+switch (e1.getErrorCode()) {
+case OperationFailedException.GENERAL_ERROR:
+      msg="General error occured while " + "publishing presence status.";
+    break;
+case OperationFailedException.NETWORK_FAILURE:
+  msg="Network failure occured while " + "publishing presence status.";
+break;
+case OperationFailedException.PROVIDER_NOT_REGISTERED:
+msg="Protocol provider must be" + "registered in order to change status.";
+break;
+default :
+return;
+}
+logger.error(msg,e1);
+}
 }
