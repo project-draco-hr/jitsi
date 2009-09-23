@@ -1,0 +1,48 @@
+{
+  super(GuiActivator.getResources().getI18NString("service.gui.INVITE_CONTACT_TO_CALL"));
+  JLabel accountSelectorLabel=new JLabel(GuiActivator.getResources().getI18NString("service.gui.CALL_VIA"));
+  TransparentPanel accountSelectorPanel=new TransparentPanel(new BorderLayout());
+  accountSelectorPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+  accountSelectorPanel.add(accountSelectorLabel,BorderLayout.WEST);
+  accountSelectorPanel.add(accountSelectorBox,BorderLayout.CENTER);
+  this.getContentPane().add(accountSelectorPanel,BorderLayout.NORTH);
+  this.accountSelectorBox.setRenderer(new DefaultListCellRenderer(){
+    public Component getListCellRendererComponent(    JList list,    Object value,    int index,    boolean isSelected,    boolean cellHasFocus){
+      ProtocolProviderService protocolProvider=(ProtocolProviderService)value;
+      if (protocolProvider != null) {
+        this.setText(protocolProvider.getAccountID().getDisplayName());
+        this.setIcon(ImageLoader.getAccountStatusImage(protocolProvider));
+      }
+      return this;
+    }
+  }
+);
+  this.accountSelectorBox.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      if (lastSelectedAccount == null || !lastSelectedAccount.equals(accountSelectorBox.getSelectedItem())) {
+        lastSelectedAccount=accountSelectorBox.getSelectedItem();
+        initContactListData((ProtocolProviderService)accountSelectorBox.getSelectedItem());
+      }
+    }
+  }
+);
+  this.initAccountListData();
+  this.initContactListData((ProtocolProviderService)accountSelectorBox.getSelectedItem());
+  this.addInviteButtonListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      if (getSelectedMetaContacts().hasMoreElements()) {
+        inviteContacts();
+        dispose();
+      }
+ else {
+      }
+    }
+  }
+);
+  this.addCancelButtonListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      dispose();
+    }
+  }
+);
+}

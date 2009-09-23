@@ -1,6 +1,16 @@
 {
-  this.setTitle(GuiActivator.getResources().getI18NString("service.gui.CALL"));
-  this.callPanel=new CallPanel(this,call,GuiCallPeerRecord.INCOMING_CALL);
+  this.call=call;
+  this.setCallTitle(null);
+  this.isLastConference=isConference();
+  if (isLastConference) {
+    this.callPanel=new ConferenceCallPanel(this,call);
+  }
+ else {
+    CallPeer callPeer=null;
+    if (call.getCallPeers().hasNext())     callPeer=call.getCallPeers().next();
+    if (callPeer != null)     this.callPanel=new OneToOneCallPanel(this,call,callPeer);
+  }
+  call.addCallChangeListener(this);
   this.setPreferredSize(new Dimension(500,400));
   TransparentPanel buttonsPanel=new TransparentPanel(new BorderLayout(5,5));
   TransparentPanel settingsPanel=new TransparentPanel();
@@ -13,7 +23,6 @@
   dialButton.setToolTipText(GuiActivator.getResources().getI18NString("service.gui.DIALPAD"));
   dialButton.addActionListener(this);
   dialButton.addMouseListener(this);
-  Container contentPane=getContentPane();
   contentPane.add(callPanel,BorderLayout.CENTER);
   contentPane.add(buttonsPanel,BorderLayout.SOUTH);
   hangupButton.setName(HANGUP_BUTTON);
@@ -22,8 +31,10 @@
   settingsPanel.add(dialButton);
   settingsPanel.add(holdButton);
   settingsPanel.add(muteButton);
-  settingsPanel.add(videoButton);
+  if (!isLastConference)   settingsPanel.add(videoButton);
   buttonsPanel.add(settingsPanel,BorderLayout.WEST);
   buttonsPanel.add(hangupButton,BorderLayout.EAST);
   buttonsPanel.setBorder(new ExtendedEtchedBorder(EtchedBorder.LOWERED,1,0,0,0));
+  this.timer=new Timer(1000,new CallTimerListener());
+  this.timer.setRepeats(true);
 }

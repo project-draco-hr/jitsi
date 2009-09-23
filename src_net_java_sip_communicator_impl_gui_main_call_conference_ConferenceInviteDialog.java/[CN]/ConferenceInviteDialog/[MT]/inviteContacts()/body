@@ -1,0 +1,19 @@
+{
+  ProtocolProviderService selectedProvider=(ProtocolProviderService)accountSelectorBox.getSelectedItem();
+  java.util.List<String> selectedContactAddresses=new ArrayList<String>();
+  Enumeration<MetaContact> selectedContacts=getSelectedMetaContacts();
+  while (selectedContacts.hasMoreElements()) {
+    MetaContact metaContact=selectedContacts.nextElement();
+    Iterator<Contact> contactsIter=metaContact.getContactsForProvider(selectedProvider);
+    if (contactsIter.hasNext()) {
+      Contact inviteContact=contactsIter.next();
+      selectedContactAddresses.add(inviteContact.getAddress());
+    }
+  }
+  String[] contactAddressStrings=null;
+  if (selectedContactAddresses.size() > 0) {
+    contactAddressStrings=new String[selectedContactAddresses.size()];
+    contactAddressStrings=selectedContactAddresses.toArray(contactAddressStrings);
+  }
+  CallManager.createConferenceCall(selectedProvider,contactAddressStrings);
+}

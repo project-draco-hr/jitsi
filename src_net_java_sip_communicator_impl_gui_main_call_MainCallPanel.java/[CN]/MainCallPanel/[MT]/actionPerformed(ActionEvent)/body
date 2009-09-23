@@ -4,17 +4,21 @@
   if (buttonName.equals(CALL_BUTTON)) {
     if (isCallMetaContact) {
       Object[] selectedContacts=mainFrame.getContactListPanel().getContactList().getSelectedValues();
-      java.util.List<Contact> telephonyContacts=new Vector<Contact>();
+      java.util.List<String> telephonyContacts=new Vector<String>();
       for (      Object o : selectedContacts) {
         if (o instanceof MetaContact) {
           Contact contact=((MetaContact)o).getDefaultContact(OperationSetBasicTelephony.class);
-          if (contact != null)           telephonyContacts.add(contact);
+          if (contact != null)           telephonyContacts.add(contact.getAddress());
  else {
             new ErrorDialog(this.mainFrame,GuiActivator.getResources().getI18NString("service.gui.WARNING"),GuiActivator.getResources().getI18NString("service.gui.CONTACT_NOT_SUPPORTING_TELEPHONY",new String[]{((MetaContact)o).getDisplayName()})).showDialog();
           }
         }
       }
-      if (telephonyContacts.size() > 0)       CallManager.createCall(protocolProvider,telephonyContacts);
+      if (telephonyContacts.size() > 0) {
+        String[] contactAddressStrings=new String[telephonyContacts.size()];
+        contactAddressStrings=telephonyContacts.toArray(contactAddressStrings);
+        CallManager.createConferenceCall(protocolProvider,contactAddressStrings);
+      }
     }
  else     if (!phoneNumberCombo.isComboFieldEmpty()) {
       String stringContact=phoneNumberCombo.getEditor().getItem().toString();
