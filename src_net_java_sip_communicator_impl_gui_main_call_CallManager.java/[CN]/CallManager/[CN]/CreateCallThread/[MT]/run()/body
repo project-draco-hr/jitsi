@@ -1,16 +1,19 @@
 {
   OperationSetBasicTelephony telephonyOpSet=(OperationSetBasicTelephony)protocolProvider.getOperationSet(OperationSetBasicTelephony.class);
   if (telephonyOpSet == null)   return;
+  Throwable exception=null;
   try {
     if (contact != null)     telephonyOpSet.createCall(contact);
  else     if (stringContact != null)     telephonyOpSet.createCall(stringContact);
   }
  catch (  OperationFailedException e) {
-    logger.error("The call could not be created: " + e);
-    new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),e.getMessage(),ErrorDialog.ERROR).showDialog();
+    exception=e;
   }
 catch (  ParseException e) {
-    logger.error("The call could not be created: " + e);
-    new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),e.getMessage(),ErrorDialog.ERROR).showDialog();
+    exception=e;
+  }
+  if (exception != null) {
+    logger.error("The call could not be created: " + exception);
+    new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),exception.getMessage(),ErrorDialog.ERROR).showDialog();
   }
 }
