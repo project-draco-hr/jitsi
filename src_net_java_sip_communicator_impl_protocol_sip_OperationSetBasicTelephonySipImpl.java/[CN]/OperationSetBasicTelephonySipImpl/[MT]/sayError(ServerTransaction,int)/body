@@ -1,0 +1,22 @@
+{
+  Request request=serverTransaction.getRequest();
+  Response errorResponse=null;
+  try {
+    errorResponse=protocolProvider.getMessageFactory().createResponse(errorCode,request);
+  }
+ catch (  ParseException ex) {
+    ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to construct an OK response to an INVITE request",OperationFailedException.INTERNAL_ERROR,ex,logger);
+  }
+  FromHeader from=(FromHeader)request.getHeader(FromHeader.NAME);
+  if (from != null) {
+    ContactHeader contactHeader=protocolProvider.getContactHeader(from.getAddress());
+    errorResponse.addHeader(contactHeader);
+  }
+  try {
+    serverTransaction.sendResponse(errorResponse);
+    if (logger.isDebugEnabled())     logger.debug("sent response: " + errorResponse);
+  }
+ catch (  Exception ex) {
+    ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to send an OK response to an INVITE request",OperationFailedException.INTERNAL_ERROR,ex,logger);
+  }
+}

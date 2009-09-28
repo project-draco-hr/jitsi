@@ -1,0 +1,24 @@
+{
+  Request invite=serverTransaction.getRequest();
+  Dialog dialog=serverTransaction.getDialog();
+  CallSipImpl callSipImpl=activeCallsRepository.findCall(dialog);
+  if (callSipImpl == null) {
+    ReplacesHeader replacesHeader=(ReplacesHeader)invite.getHeader(ReplacesHeader.NAME);
+    if (replacesHeader == null) {
+      callSipImpl=new CallSipImpl(protocolProvider);
+      callSipImpl.processInvite(sourceProvider,serverTransaction);
+    }
+ else {
+      callSipImpl=activeCallsRepository.findCall(replacesHeader.getCallId(),replacesHeader.getToTag(),replacesHeader.getFromTag());
+      if (callSipImpl != null) {
+        callSipImpl.processReplacingInvite(sourceProvider,serverTransaction);
+      }
+ else {
+        this.sayErrorSilently(serverTransaction,Response.CALL_OR_TRANSACTION_DOES_NOT_EXIST);
+      }
+    }
+  }
+ else {
+    callSipImpl.processReInvite();
+  }
+}
