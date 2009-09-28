@@ -9,28 +9,23 @@
     }
     callPeer.setDialog(dialog);
   }
-  Request ack=null;
   try {
     CSeqHeader cseq=((CSeqHeader)ok.getHeader(CSeqHeader.NAME));
-    ack=clientTransaction.getDialog().createAck(cseq.getSeqNumber());
+    Request ack=clientTransaction.getDialog().createAck(cseq.getSeqNumber());
+    clientTransaction.getDialog().sendAck(ack);
   }
  catch (  InvalidArgumentException ex) {
-    logErrorAndFailCallPeer("Failed ACK request, problem with the supplied cseq",ex,callPeer);
+    logAndFailCallPeer("Error creating an ACK (CSeq?)",ex,callPeer);
     return;
   }
 catch (  SipException ex) {
-    logErrorAndFailCallPeer("Failed to create ACK request!",ex,callPeer);
+    logAndFailCallPeer("Failed to create ACK request!",ex,callPeer);
     return;
   }
-  if (!CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(callPeer.getState()))   callPeer.setSdpDescription(new String(ok.getRawContent()));
+  if (!CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(callPeer.getState())) {
+    callPeer.setSdpDescription(new String(ok.getRawContent()));
+  }
   CallSession callSession=callPeer.getCall().getMediaCallSession();
-  try {
-    clientTransaction.getDialog().sendAck(ack);
-  }
- catch (  SipException ex) {
-    logErrorAndFailCallPeer("Failed to acknowledge call!",ex,callPeer);
-    return;
-  }
   try {
     CallPeerState callPeerState=callPeer.getState();
     if (!CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(callPeerState)) {
