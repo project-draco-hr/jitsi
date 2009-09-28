@@ -2,25 +2,12 @@
   Dialog dialog=clientTransaction.getDialog();
   CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(dialog);
   if (callPeer == null) {
-    CallIdHeader call=(CallIdHeader)ok.getHeader(CallIdHeader.NAME);
-    String callid=call.getCallId();
-    Iterator<CallSipImpl> activeCallsIter=activeCallsRepository.getActiveCalls();
-    while (activeCallsIter.hasNext()) {
-      CallSipImpl activeCall=activeCallsIter.next();
-      Iterator<CallPeer> callPeersIter=activeCall.getCallPeers();
-      while (callPeersIter.hasNext()) {
-        CallPeerSipImpl cp=(CallPeerSipImpl)callPeersIter.next();
-        Dialog callPartDialog=cp.getDialog();
-        if (callPartDialog != null && callPartDialog.getCallId() != null && cp.getFirstTransaction() != null && cp.getDialog().getCallId().getCallId().equals(callid) && clientTransaction.getBranchId().equals(cp.getFirstTransaction().getBranchId())) {
-          callPeer=cp;
-          cp.setDialog(dialog);
-        }
-      }
-    }
+    callPeer=activeCallsRepository.findCallPeer(clientTransaction.getBranchId(),ok.getHeader(CallIdHeader.NAME));
     if (callPeer == null) {
       logger.debug("Received a stray ok response.");
       return;
     }
+    callPeer.setDialog(dialog);
   }
   Request ack=null;
   ContentTypeHeader contentTypeHeader=null;
