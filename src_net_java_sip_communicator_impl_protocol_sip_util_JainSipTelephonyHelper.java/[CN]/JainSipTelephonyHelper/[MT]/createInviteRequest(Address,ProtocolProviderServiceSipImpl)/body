@@ -11,7 +11,7 @@
 catch (  ParseException exc) {
     throwOperationFailedException("An unexpected erro occurred while" + "constructing the CSeqHeadder",OperationFailedException.INTERNAL_ERROR,exc);
   }
-  Header replacesHeader=stripReplacesHeader(toAddress);
+  Header replacesHeader=stripReplacesHeader(toAddress,protocolProvider);
   String localTag=ProtocolProviderServiceSipImpl.generateLocalTag();
   FromHeader fromHeader=null;
   ToHeader toHeader=null;
@@ -24,7 +24,13 @@ catch (  ParseException exc) {
   }
   ArrayList<ViaHeader> viaHeaders=protocolProvider.getLocalViaHeaders(toAddress);
   MaxForwardsHeader maxForwards=protocolProvider.getMaxForwardsHeader();
-  ContactHeader contactHeader=protocolProvider.getContactHeader(toHeader.getAddress());
+  ContactHeader contactHeader=null;
+  try {
+    contactHeader=protocolProvider.getContactHeader(toHeader.getAddress());
+  }
+ catch (  IllegalArgumentException exc) {
+    throw new OperationFailedException(exc.getMessage(),OperationFailedException.ILLEGAL_ARGUMENT,exc);
+  }
   Request invite=null;
   try {
     invite=protocolProvider.getMessageFactory().createRequest(toHeader.getAddress().getURI(),Request.INVITE,callIdHeader,cSeqHeader,fromHeader,toHeader,viaHeaders,maxForwards);
