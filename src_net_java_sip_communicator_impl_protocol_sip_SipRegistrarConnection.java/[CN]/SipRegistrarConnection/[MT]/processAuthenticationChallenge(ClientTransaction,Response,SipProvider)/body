@@ -1,7 +1,13 @@
 {
   try {
     logger.debug("Authenticating a Register request.");
-    ClientTransaction retryTran=sipProvider.getSipSecurityManager().handleChallenge(response,clientTransaction,jainSipProvider);
+    ClientTransaction retryTran;
+    if (response.getStatusCode() == Response.UNAUTHORIZED || response.getStatusCode() == Response.PROXY_AUTHENTICATION_REQUIRED) {
+      retryTran=sipProvider.getSipSecurityManager().handleChallenge(response,clientTransaction,jainSipProvider);
+    }
+ else {
+      retryTran=sipProvider.getSipSecurityManager().handleForbiddenResponse(response,clientTransaction,jainSipProvider);
+    }
     if (retryTran == null) {
       logger.trace("No password supplied or error occured!");
       unregister(false);
