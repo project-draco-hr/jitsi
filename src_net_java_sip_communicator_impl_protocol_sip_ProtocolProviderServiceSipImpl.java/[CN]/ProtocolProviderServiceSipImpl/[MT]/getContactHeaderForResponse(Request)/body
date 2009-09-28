@@ -1,2 +1,18 @@
 {
+  ViaHeader via=(ViaHeader)request.getHeader(ViaHeader.NAME);
+  SipURI intendedDestinationURI;
+  String transport=via.getTransport();
+  String host=via.getHost();
+  int port=via.getPort();
+  try {
+    intendedDestinationURI=addressFactory.createSipURI(null,host);
+    intendedDestinationURI.setPort(port);
+    if (transport != null)     intendedDestinationURI.setTransportParam(transport);
+  }
+ catch (  ParseException e) {
+    logger.debug(via + " does not seem to be a valid header.");
+    FromHeader from=(FromHeader)request.getHeader(From.NAME);
+    intendedDestinationURI=(SipURI)from.getAddress().getURI();
+  }
+  return getContactHeader(intendedDestinationURI);
 }
