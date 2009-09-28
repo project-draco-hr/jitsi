@@ -9,13 +9,6 @@
  catch (  IllegalArgumentException exc) {
     throw new OperationFailedException(exc.getMessage(),OperationFailedException.ILLEGAL_ARGUMENT,exc);
   }
-  ContentTypeHeader contentTypeHeader=null;
-  try {
-    contentTypeHeader=protocolProvider.getHeaderFactory().createContentTypeHeader("application","sdp");
-  }
- catch (  ParseException ex) {
-    throwOperationFailedException("Failed to create a content type header for the INVITE request",OperationFailedException.INTERNAL_ERROR,ex);
-  }
   CallIdHeader call=(CallIdHeader)invite.getHeader(CallIdHeader.NAME);
   String callid=call.getCallId();
   AuthorizationHeader authorization=protocolProvider.getSipSecurityManager().getCachedAuthorizationHeader(callid);
@@ -38,6 +31,7 @@
     callSession.setSessionCreatorCallback(callPeer);
     javax.sip.address.URI calleeURI=calleeAddress.getURI();
     if (calleeURI.isSipURI()) {
+      ContentTypeHeader contentTypeHeader=protocolProvider.getHeaderFactory().createContentTypeHeader("application","sdp");
       String host=((SipURI)calleeURI).getHost();
       InetAddress intendedDestination=protocolProvider.resolveSipAddress(host).getAddress();
       invite.setContent(callSession.createSdpOffer(intendedDestination),contentTypeHeader);
