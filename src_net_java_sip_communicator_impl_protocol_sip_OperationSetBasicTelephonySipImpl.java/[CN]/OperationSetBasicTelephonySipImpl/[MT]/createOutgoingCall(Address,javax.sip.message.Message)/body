@@ -1,44 +1,8 @@
 {
   assertRegistered();
-  Request invite=messageFactory.createInviteRequest(calleeAddress);
-  messageFactory.preAuthenticateRequest(invite);
-  ClientTransaction inviteTransaction=null;
-  SipProvider jainSipProvider=protocolProvider.getDefaultJainSipProvider();
-  try {
-    inviteTransaction=jainSipProvider.getNewClientTransaction(invite);
-  }
- catch (  TransactionUnavailableException ex) {
-    throwOperationFailedException("Failed to create inviteTransaction.\n" + "This is most probably a network connection error.",OperationFailedException.INTERNAL_ERROR,ex);
-  }
-  CallPeerSipImpl callPeer=createCallPeerFor(inviteTransaction,jainSipProvider);
-  try {
-    CallSession callSession=SipActivator.getMediaService().createCallSession(callPeer.getCall());
-    ((CallSipImpl)callPeer.getCall()).setMediaCallSession(callSession);
-    callSession.setSessionCreatorCallback(callPeer);
-    javax.sip.address.URI calleeURI=calleeAddress.getURI();
-    if (calleeURI.isSipURI()) {
-      ContentTypeHeader contentTypeHeader=protocolProvider.getHeaderFactory().createContentTypeHeader("application","sdp");
-      String host=((SipURI)calleeURI).getHost();
-      InetAddress intendedDestination=protocolProvider.resolveSipAddress(host).getAddress();
-      invite.setContent(callSession.createSdpOffer(intendedDestination),contentTypeHeader);
-    }
-  }
- catch (  UnknownHostException ex) {
-    logger.warn("Failed to obtain an InetAddress." + ex.getMessage(),ex);
-    throw new OperationFailedException("Failed to obtain an InetAddress for " + ex.getMessage(),OperationFailedException.NETWORK_FAILURE,ex);
-  }
-catch (  ParseException ex) {
-    throwOperationFailedException("Failed to parse sdp data while creating invite request!",OperationFailedException.INTERNAL_ERROR,ex);
-  }
-catch (  MediaException ex) {
-    throwOperationFailedException("Could not access media devices!",OperationFailedException.INTERNAL_ERROR,ex);
-  }
-  try {
-    inviteTransaction.sendRequest();
-    if (logger.isDebugEnabled())     logger.debug("sent request:\n" + invite);
-  }
- catch (  SipException ex) {
-    throwOperationFailedException("An error occurred while sending invite request",OperationFailedException.NETWORK_FAILURE,ex);
-  }
-  return (CallSipImpl)callPeer.getCall();
+  CallSipImpl call=new CallSipImpl(protocolProvider);
+  activeCallsRepository.addCall(call);
+  call.invite(calleeAddress,cause);
+  fireCallEvent(CallEvent.CALL_INITIATED,call);
+  return call;
 }
