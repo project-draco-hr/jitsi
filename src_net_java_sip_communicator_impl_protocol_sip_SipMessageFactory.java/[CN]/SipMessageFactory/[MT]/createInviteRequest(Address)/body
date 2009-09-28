@@ -6,13 +6,13 @@
     cSeqHeader=headerFactory.createCSeqHeader(1l,Request.INVITE);
   }
  catch (  InvalidArgumentException ex) {
-    ProtocolProviderServiceSipImpl.throwOperationFailedException("An unexpected erro occurred while" + "constructing the CSeqHeadder",OperationFailedException.INTERNAL_ERROR,ex,logger);
+    ProtocolProviderServiceSipImpl.throwOperationFailedException("Error occurred while constructing the CSeqHeadder",OperationFailedException.INTERNAL_ERROR,ex,logger);
   }
 catch (  ParseException exc) {
-    ProtocolProviderServiceSipImpl.throwOperationFailedException("An unexpected erro occurred while" + "constructing the CSeqHeadder",OperationFailedException.INTERNAL_ERROR,exc,logger);
+    ProtocolProviderServiceSipImpl.throwOperationFailedException("Error while constructing a CSeqHeadder",OperationFailedException.INTERNAL_ERROR,exc,logger);
   }
   Header replacesHeader=stripReplacesHeader(toAddress);
-  String localTag=ProtocolProviderServiceSipImpl.generateLocalTag();
+  String localTag=SipMessageFactory.generateLocalTag();
   FromHeader fromHeader=null;
   ToHeader toHeader=null;
   try {
@@ -24,13 +24,6 @@ catch (  ParseException exc) {
   }
   ArrayList<ViaHeader> viaHeaders=protocolProvider.getLocalViaHeaders(toAddress);
   MaxForwardsHeader maxForwards=protocolProvider.getMaxForwardsHeader();
-  ContactHeader contactHeader=null;
-  try {
-    contactHeader=protocolProvider.getContactHeader(toHeader.getAddress());
-  }
- catch (  IllegalArgumentException exc) {
-    throw new OperationFailedException(exc.getMessage(),OperationFailedException.ILLEGAL_ARGUMENT,exc);
-  }
   Request invite=null;
   try {
     invite=protocolProvider.getMessageFactory().createRequest(toHeader.getAddress().getURI(),Request.INVITE,callIdHeader,cSeqHeader,fromHeader,toHeader,viaHeaders,maxForwards);
@@ -38,7 +31,6 @@ catch (  ParseException exc) {
  catch (  ParseException ex) {
     ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to create invite Request!",OperationFailedException.INTERNAL_ERROR,ex,logger);
   }
-  invite.setHeader(contactHeader);
   if (replacesHeader != null) {
     invite.setHeader(replacesHeader);
   }

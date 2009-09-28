@@ -14,7 +14,7 @@
   ServerTransaction serverTransaction=(ServerTransaction)transaction;
   Response ok=null;
   try {
-    ok=createOKResponse(callPeer.getFirstTransaction().getRequest(),dialog);
+    ok=messageFactory.createResponse(Response.OK,serverTransaction.getRequest());
   }
  catch (  ParseException ex) {
     callPeer.setState(CallPeerState.DISCONNECTED);
@@ -51,8 +51,6 @@ catch (  ParseException ex) {
     logger.error("Failed to parse sdp data while creating invite request!",ex);
     this.sayError(serverTransaction,Response.NOT_ACCEPTABLE_HERE);
   }
-  ContactHeader contactHeader=protocolProvider.getContactHeader(dialog.getRemoteTarget());
-  ok.setHeader(contactHeader);
   try {
     serverTransaction.sendResponse(ok);
     if (logger.isDebugEnabled())     logger.debug("sent response\n" + ok);

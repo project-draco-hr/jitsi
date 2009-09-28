@@ -5,8 +5,14 @@
     if (event.getServerTransaction() == null) {
       try {
         if (request.getHeader(MaxForwardsHeader.NAME) == null) {
-          logger.trace("Ignoring request without Max-Forwards header: " + event);
-          return;
+          if (Request.INVITE.equals(request.getMethod())) {
+            MaxForwardsHeader maxForwards=SipFactory.getInstance().createHeaderFactory().createMaxForwardsHeader(70);
+            request.setHeader(maxForwards);
+          }
+ else {
+            logger.trace("Ignoring request without Max-Forwards header: " + event);
+            return;
+          }
         }
         SipProvider source=(SipProvider)event.getSource();
         ServerTransaction transaction=source.getNewServerTransaction(request);

@@ -16,7 +16,8 @@
   }
   Response ok;
   try {
-    ok=createOKResponse(notifyRequest,dialog);
+    ok=messageFactory.createResponse(Response.OK,notifyRequest);
+    serverTransaction.sendResponse(ok);
   }
  catch (  ParseException ex) {
     String message="Failed to create OK response to refer NOTIFY request.";
@@ -24,10 +25,7 @@
     peer.setState(CallPeerState.DISCONNECTED,message);
     return false;
   }
-  try {
-    serverTransaction.sendResponse(ok);
-  }
- catch (  Exception ex) {
+catch (  Exception ex) {
     String message="Failed to send OK response to refer NOTIFY request.";
     logger.error(message,ex);
     peer.setState(CallPeerState.DISCONNECTED,message);
@@ -39,7 +37,7 @@
   if (!CallPeerState.DISCONNECTED.equals(peer.getState()) && !DialogUtils.isByeProcessed(dialog)) {
     boolean dialogIsAlive;
     try {
-      dialogIsAlive=sayBye(peer);
+      dialogIsAlive=peer.getCall().sayBye(peer);
     }
  catch (    OperationFailedException ex) {
       logger.error("Failed to send BYE in response to refer NOTIFY request.",ex);
