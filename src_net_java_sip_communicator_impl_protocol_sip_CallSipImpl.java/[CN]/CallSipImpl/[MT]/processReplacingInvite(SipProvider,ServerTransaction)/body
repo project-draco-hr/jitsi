@@ -1,3 +1,23 @@
 {
   Request request=serverTransaction.getRequest();
+  if ((statusCode == Response.OK) && (callPeerToReplace != null)) {
+    boolean sayBye=false;
+    try {
+      answerCallPeer(callPeer);
+      sayBye=true;
+    }
+ catch (    OperationFailedException ex) {
+      logger.error("Failed to auto-answer the referred call peer " + callPeer,ex);
+    }
+    if (sayBye) {
+      try {
+        hangupCallPeer(callPeerToReplace);
+      }
+ catch (      OperationFailedException ex) {
+        logger.error("Failed to hangup the referer " + callPeerToReplace,ex);
+        callPeerToReplace.setState(CallPeerState.FAILED,"Internal Error: " + ex);
+      }
+    }
+    return;
+  }
 }

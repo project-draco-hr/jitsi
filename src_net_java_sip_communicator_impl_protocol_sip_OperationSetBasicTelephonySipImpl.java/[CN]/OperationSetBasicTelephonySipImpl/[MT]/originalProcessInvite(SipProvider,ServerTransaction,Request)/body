@@ -9,13 +9,6 @@
       statusCode=Response.RINGING;
     }
  else {
-      callPeerToReplace=activeCallsRepository.findCallPeer(replacesHeader.getCallId(),replacesHeader.getToTag(),replacesHeader.getFromTag());
-      if (callPeerToReplace != null) {
-        statusCode=Response.OK;
-      }
- else {
-        statusCode=Response.CALL_OR_TRANSACTION_DOES_NOT_EXIST;
-      }
     }
     logger.trace("Creating call peer.");
     callPeer=createCallPeerFor(serverTransaction,sourceProvider);
@@ -28,88 +21,45 @@
   if (cl != null && cl.getContentLength() > 0) {
     callPeer.setSdpDescription(new String(invite.getRawContent()));
   }
-  if (!isInviteProperlyAddressed(invite)) {
-    callPeer.setState(CallPeerState.FAILED,"A call was received here while it appeared " + "destined to someone else. The call was rejected.");
-    statusCode=Response.NOT_FOUND;
-  }
-  if ((statusCode == Response.OK) && (callPeerToReplace != null)) {
-    boolean sayBye=false;
-    try {
-      answerCallPeer(callPeer);
-      sayBye=true;
-    }
- catch (    OperationFailedException ex) {
-      logger.error("Failed to auto-answer the referred call peer " + callPeer,ex);
-    }
-    if (sayBye) {
+  Response response=null;
+  try {
+    response=protocolProvider.getMessageFactory().createResponse(statusCode,invite);
+    protocolProvider.attachToTag(response,dialog);
+    ((ToHeader)response.getHeader(ToHeader.NAME)).getAddress().setDisplayName(protocolProvider.getOurDisplayName());
+    Address callerAddress=((FromHeader)response.getHeader(FromHeader.NAME)).getAddress();
+    response.setHeader(protocolProvider.getContactHeader(callerAddress));
+    if (statusCode == Response.OK) {
       try {
-        hangupCallPeer(callPeerToReplace);
+        processInviteSendingResponse(callPeer,response);
       }
  catch (      OperationFailedException ex) {
-        logger.error("Failed to hangup the referer " + callPeerToReplace,ex);
-        callPeerToReplace.setState(CallPeerState.FAILED,"Internal Error: " + ex);
+        logger.error("Error while trying to send response " + response,ex);
+        callPeer.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
+        return;
       }
     }
+  }
+ catch (  ParseException ex) {
+    logger.error("Error while trying to send a response",ex);
+    callPeer.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
     return;
   }
-  String statusCodeString;
-switch (statusCode) {
-case Response.RINGING:
-    statusCodeString="RINGING";
-  break;
-case Response.NOT_FOUND:
-statusCodeString="NOT_FOUND";
-break;
-case Response.CALL_OR_TRANSACTION_DOES_NOT_EXIST:
-statusCodeString="CALL_OR_TRANSACTION_DOES_NOT_EXIST";
-break;
-default :
-statusCodeString="OK";
-break;
-}
-Response response=null;
-logger.debug("Invite seems ok, we'll say " + statusCodeString + ".");
-try {
-response=protocolProvider.getMessageFactory().createResponse(statusCode,invite);
-protocolProvider.attachToTag(response,dialog);
-response.setHeader(protocolProvider.getSipCommUserAgentHeader());
-if (statusCode != Response.NOT_FOUND) {
-((ToHeader)response.getHeader(ToHeader.NAME)).getAddress().setDisplayName(protocolProvider.getOurDisplayName());
-Address callerAddress=((FromHeader)response.getHeader(FromHeader.NAME)).getAddress();
-response.setHeader(protocolProvider.getContactHeader(callerAddress));
-if (statusCode == Response.OK) {
-try {
-processInviteSendingResponse(callPeer,response);
-}
- catch (OperationFailedException ex) {
-logger.error("Error while trying to send response " + response,ex);
-callPeer.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
-return;
-}
-}
-}
-}
- catch (ParseException ex) {
-logger.error("Error while trying to send a response",ex);
-callPeer.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
-return;
-}
-try {
-logger.trace("will send " + statusCodeString + " response: ");
-serverTransaction.sendResponse(response);
-logger.debug("sent a " + statusCodeString + " response: "+ response);
-}
- catch (Exception ex) {
-logger.error("Error while trying to send a request",ex);
-callPeer.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
-return;
-}
-if (statusCode == Response.OK) {
-try {
-processInviteSentResponse(callPeer,response);
-}
- catch (OperationFailedException ex) {
-logger.error("Error after sending response " + response,ex);
-}
-}
+  try {
+    logger.trace("will send " + statusCodeString + " response: ");
+    serverTransaction.sendResponse(response);
+    logger.debug("sent a " + statusCodeString + " response: "+ response);
+  }
+ catch (  Exception ex) {
+    logger.error("Error while trying to send a request",ex);
+    callPeer.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
+    return;
+  }
+  if (statusCode == Response.OK) {
+    try {
+      processInviteSentResponse(callPeer,response);
+    }
+ catch (    OperationFailedException ex) {
+      logger.error("Error after sending response " + response,ex);
+    }
+  }
 }

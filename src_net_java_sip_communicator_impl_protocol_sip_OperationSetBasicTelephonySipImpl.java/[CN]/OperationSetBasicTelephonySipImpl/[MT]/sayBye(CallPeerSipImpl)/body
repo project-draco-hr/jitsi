@@ -1,16 +1,6 @@
 {
   Dialog dialog=callPeer.getDialog();
-  Request bye=null;
-  try {
-    bye=dialog.createRequest(Request.BYE);
-    SipURI destination=(SipURI)bye.getRequestURI();
-    ArrayList<ViaHeader> viaHeaders=protocolProvider.getLocalViaHeaders(destination);
-    bye.setHeader(viaHeaders.get(0));
-    bye.addHeader(protocolProvider.getSipCommUserAgentHeader());
-  }
- catch (  SipException ex) {
-    ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to create bye request!",OperationFailedException.INTERNAL_ERROR,ex,logger);
-  }
+  Request bye=messageFactory.createRequest(dialog,Request.BYE);
   sendRequest(callPeer.getJainSipProvider(),bye,dialog);
   try {
     return DialogUtils.processByeThenIsDialogAlive(dialog);
