@@ -7,11 +7,8 @@
  catch (  ParseException ex) {
     ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to construct an OK response to an INVITE request",OperationFailedException.INTERNAL_ERROR,ex,logger);
   }
-  FromHeader from=(FromHeader)request.getHeader(FromHeader.NAME);
-  if (from != null) {
-    ContactHeader contactHeader=protocolProvider.getContactHeader(from.getAddress());
-    errorResponse.addHeader(contactHeader);
-  }
+  ContactHeader contactHeader=protocolProvider.getContactHeaderForResponse(request);
+  errorResponse.setHeader(contactHeader);
   try {
     serverTransaction.sendResponse(errorResponse);
     if (logger.isDebugEnabled())     logger.debug("sent response: " + errorResponse);
