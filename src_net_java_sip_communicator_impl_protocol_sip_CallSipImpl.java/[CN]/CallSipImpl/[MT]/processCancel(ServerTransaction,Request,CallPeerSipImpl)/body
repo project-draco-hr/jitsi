@@ -1,0 +1,34 @@
+{
+  try {
+    Response ok=messageFactory.createResponse(Response.OK,cancelRequest);
+    serverTransaction.sendResponse(ok);
+    logger.debug("sent an ok response to a CANCEL request:\n" + ok);
+  }
+ catch (  ParseException ex) {
+    CallSipImpl.logAndFailCallPeer("Failed to create an OK Response to an CANCEL request.",ex,callPeer);
+    return;
+  }
+catch (  Exception ex) {
+    CallSipImpl.logAndFailCallPeer("Failed to send an OK Response to an CANCEL request.",ex,callPeer);
+    return;
+  }
+  try {
+    Transaction tran=callPeer.getFirstTransaction();
+    if (!(tran instanceof ServerTransaction)) {
+      logger.error("Received a misplaced CANCEL request!");
+      return;
+    }
+    ServerTransaction inviteTran=(ServerTransaction)tran;
+    Request invite=callPeer.getFirstTransaction().getRequest();
+    Response requestTerminated=messageFactory.createResponse(Response.REQUEST_TERMINATED,invite);
+    inviteTran.sendResponse(requestTerminated);
+    if (logger.isDebugEnabled())     logger.debug("sent request terminated response:\n" + requestTerminated);
+  }
+ catch (  ParseException ex) {
+    logger.error("Failed to create a REQUEST_TERMINATED Response to " + "an INVITE request.",ex);
+  }
+catch (  Exception ex) {
+    logger.error("Failed to send an REQUEST_TERMINATED Response to " + "an INVITE request.",ex);
+  }
+  callPeer.setState(CallPeerState.DISCONNECTED);
+}
