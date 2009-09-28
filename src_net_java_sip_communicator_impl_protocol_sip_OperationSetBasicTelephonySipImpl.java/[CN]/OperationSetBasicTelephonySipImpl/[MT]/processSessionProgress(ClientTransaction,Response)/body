@@ -1,36 +1,9 @@
 {
-  Dialog dialog=clientTransaction.getDialog();
+  Dialog dialog=tran.getDialog();
   CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(dialog);
   if (callPeer.getState() == CallPeerState.CONNECTING_WITH_EARLY_MEDIA) {
     logger.warn("Ignoring invite 183 since call peer is " + "already exchanging early media.");
     return;
   }
-  if (sessionProgress.getContentLength().getContentLength() == 0) {
-    logger.warn("Ignoring a 183 with no content");
-    return;
-  }
-  ContentTypeHeader contentTypeHeader=(ContentTypeHeader)sessionProgress.getHeader(ContentTypeHeader.NAME);
-  if (!contentTypeHeader.getContentType().equalsIgnoreCase("application") || !contentTypeHeader.getContentSubType().equalsIgnoreCase("sdp")) {
-    logger.warn("Ignoring invite 183 since call peer is " + "already exchanging early media.");
-    return;
-  }
-  callPeer.setSdpDescription(new String(sessionProgress.getRawContent()));
-  CallSession callSession=((CallSipImpl)callPeer.getCall()).getMediaCallSession();
-  if (callSession == null) {
-    logger.warn("Could not find call session.");
-    return;
-  }
-  try {
-    callSession.processSdpAnswer(callPeer,new String(sessionProgress.getRawContent()));
-  }
- catch (  ParseException exc) {
-    logAndFailCallPeer("There was an error parsing the SDP description of " + callPeer.getDisplayName() + "("+ callPeer.getAddress()+ ")",exc,callPeer);
-    return;
-  }
-catch (  MediaException exc) {
-    logAndFailCallPeer("We failed to process the SDP description of " + callPeer.getDisplayName() + "("+ callPeer.getAddress()+ ")"+ ". Error was: "+ exc.getMessage(),exc,callPeer);
-    return;
-  }
-  callPeer.setCallInfoURL(callSession.getCallInfoURL());
-  callPeer.setState(CallPeerState.CONNECTING_WITH_EARLY_MEDIA);
+  callPeer.getCall().processSessionProgress(tran,response,callPeer);
 }

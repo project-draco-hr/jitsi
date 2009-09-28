@@ -1,0 +1,37 @@
+{
+  try {
+    getProtocolProvider().sendAck(clientTransaction);
+  }
+ catch (  InvalidArgumentException ex) {
+    CallSipImpl.logAndFailCallPeer("Error creating an ACK (CSeq?)",ex,callPeer);
+    return;
+  }
+catch (  SipException ex) {
+    CallSipImpl.logAndFailCallPeer("Failed to create ACK request!",ex,callPeer);
+    return;
+  }
+  if (!CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(callPeer.getState())) {
+    callPeer.setSdpDescription(new String(ok.getRawContent()));
+  }
+  CallSession callSession=callPeer.getCall().getMediaCallSession();
+  try {
+    CallPeerState callPeerState=callPeer.getState();
+    if (!CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(callPeerState)) {
+      callSession.processSdpAnswer(callPeer,callPeer.getSdpDescription());
+    }
+    callPeer.setCallInfoURL(callSession.getCallInfoURL());
+  }
+ catch (  Exception exc) {
+    logger.error("There was an error parsing the SDP description of " + callPeer.getDisplayName() + "("+ callPeer.getAddress()+ ")",exc);
+    try {
+      callPeer.setState(CallPeerState.CONNECTED);
+      hangupCallPeer(callPeer);
+    }
+ catch (    Exception e) {
+      logger.error(e);
+      callPeer.setState(CallPeerState.FAILED,e.getMessage());
+    }
+    return;
+  }
+  if (!CallPeerState.isOnHold(callPeer.getState()))   callPeer.setState(CallPeerState.CONNECTED);
+}

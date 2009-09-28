@@ -1,0 +1,30 @@
+{
+  if (response.getContentLength().getContentLength() == 0) {
+    logger.debug("Ignoring a 183 with no content");
+    return;
+  }
+  ContentTypeHeader contentTypeHeader=(ContentTypeHeader)response.getHeader(ContentTypeHeader.NAME);
+  if (!contentTypeHeader.getContentType().equalsIgnoreCase("application") || !contentTypeHeader.getContentSubType().equalsIgnoreCase("sdp")) {
+    logger.warn("Ignoring invite 183 since call peer is " + "already exchanging early media.");
+    return;
+  }
+  peer.setSdpDescription(new String(response.getRawContent()));
+  CallSession callSession=peer.getCall().getMediaCallSession();
+  if (callSession == null) {
+    logger.warn("Could not find call session.");
+    return;
+  }
+  try {
+    callSession.processSdpAnswer(peer,peer.getSdpDescription());
+  }
+ catch (  ParseException exc) {
+    CallSipImpl.logAndFailCallPeer("There was an error parsing the SDP description of " + peer.getDisplayName() + "("+ peer.getAddress()+ ")",exc,peer);
+    return;
+  }
+catch (  MediaException exc) {
+    CallSipImpl.logAndFailCallPeer("We failed to process the SDP description of " + peer.getDisplayName() + "("+ peer.getAddress()+ ")"+ ". Error was: "+ exc.getMessage(),exc,peer);
+    return;
+  }
+  peer.setCallInfoURL(callSession.getCallInfoURL());
+  peer.setState(CallPeerState.CONNECTING_WITH_EARLY_MEDIA);
+}
