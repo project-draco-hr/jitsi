@@ -1,7 +1,7 @@
 {
   Dialog dialog=serverTransaction.getDialog();
   CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(dialog);
-  int statusCode;
+  int statusCode=0;
   CallPeerSipImpl callPeerToReplace=null;
   if (callPeer == null) {
     ReplacesHeader replacesHeader=(ReplacesHeader)invite.getHeader(ReplacesHeader.NAME);
@@ -24,13 +24,11 @@
   Response response=null;
   try {
     response=protocolProvider.getMessageFactory().createResponse(statusCode,invite);
-    protocolProvider.attachToTag(response,dialog);
     ((ToHeader)response.getHeader(ToHeader.NAME)).getAddress().setDisplayName(protocolProvider.getOurDisplayName());
-    Address callerAddress=((FromHeader)response.getHeader(FromHeader.NAME)).getAddress();
-    response.setHeader(protocolProvider.getContactHeader(callerAddress));
+    response.setHeader(protocolProvider.getContactHeaderForResponse(invite));
     if (statusCode == Response.OK) {
       try {
-        processInviteSendingResponse(callPeer,response);
+        attachSDP(callPeer,response);
       }
  catch (      OperationFailedException ex) {
         logger.error("Error while trying to send response " + response,ex);
@@ -45,9 +43,9 @@
     return;
   }
   try {
-    logger.trace("will send " + statusCodeString + " response: ");
+    logger.trace("will send " + statusCode + " response: ");
     serverTransaction.sendResponse(response);
-    logger.debug("sent a " + statusCodeString + " response: "+ response);
+    logger.debug("sent a " + statusCode + " response: "+ response);
   }
  catch (  Exception ex) {
     logger.error("Error while trying to send a request",ex);
@@ -56,7 +54,7 @@
   }
   if (statusCode == Response.OK) {
     try {
-      processInviteSentResponse(callPeer,response);
+      setMediaFlagsForPeer(callPeer,response);
     }
  catch (    OperationFailedException ex) {
       logger.error("Error after sending response " + response,ex);

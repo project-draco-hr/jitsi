@@ -1,5 +1,47 @@
 {
-  Request request=serverTransaction.getRequest();
+  Request invite=serverTransaction.getRequest();
   CallPeerSipImpl peer=createCallPeerFor(serverTransaction,jainSipProvider);
+  ContentLengthHeader cl=invite.getContentLength();
+  if (cl != null && cl.getContentLength() > 0) {
+    peer.setSdpDescription(new String(invite.getRawContent()));
+  }
+  Response response=null;
+  try {
+    response=this.messageFactory.createResponse(Response.RINGING,invite);
+    response.setHeader(getProtocolProvider().getContactHeaderForResponse(invite));
+    if (statusCode == Response.OK) {
+      try {
+        attachSDP(callPeer,response);
+      }
+ catch (      OperationFailedException ex) {
+        logger.error("Error while trying to send response " + response,ex);
+        callPeer.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
+        return;
+      }
+    }
+  }
+ catch (  ParseException ex) {
+    logger.error("Error while trying to send a response",ex);
+    callPeer.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
+    return;
+  }
+  try {
+    logger.trace("will send " + statusCode + " response: ");
+    serverTransaction.sendResponse(response);
+    logger.debug("sent a " + statusCode + " response: "+ response);
+  }
+ catch (  Exception ex) {
+    logger.error("Error while trying to send a request",ex);
+    callPeer.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
+    return;
+  }
+  if (statusCode == Response.OK) {
+    try {
+      setMediaFlagsForPeer(callPeer,response);
+    }
+ catch (    OperationFailedException ex) {
+      logger.error("Error after sending response " + response,ex);
+    }
+  }
   return peer;
 }

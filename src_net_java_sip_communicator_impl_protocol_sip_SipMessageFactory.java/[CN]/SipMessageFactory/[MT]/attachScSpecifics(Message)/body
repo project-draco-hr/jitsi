@@ -1,5 +1,14 @@
 {
   SipApplicationData.setApplicationData(message,SipApplicationData.KEY_SERVICE,this.protocolProvider);
+  if (message instanceof Response) {
+    FromHeader from=(FromHeader)message.getHeader(From.NAME);
+    String fromTag=(from == null) ? null : from.getTag();
+    Response response=(Response)message;
+    if (fromTag != null && fromTag.trim().length() > 0 && response.getStatusCode() > 100 && response.getStatusCode() < 300) {
+      protocolProvider.attachToTag(response,null);
+    }
+  }
+  attachContactHeader(message);
   UserAgentHeader userAgentHeader=protocolProvider.getSipCommUserAgentHeader();
   if (userAgentHeader != null) {
     message.setHeader(userAgentHeader);
