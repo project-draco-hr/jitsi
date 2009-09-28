@@ -10,17 +10,11 @@
     callPeer.setDialog(dialog);
   }
   Request ack=null;
-  ContentTypeHeader contentTypeHeader=null;
   try {
     CSeqHeader cseq=((CSeqHeader)ok.getHeader(CSeqHeader.NAME));
     ack=clientTransaction.getDialog().createAck(cseq.getSeqNumber());
-    contentTypeHeader=protocolProvider.getHeaderFactory().createContentTypeHeader("application","sdp");
   }
- catch (  ParseException ex) {
-    logErrorAndFailCallPeer("Failed to create a content type header for the ACK request",ex,callPeer);
-    return;
-  }
-catch (  InvalidArgumentException ex) {
+ catch (  InvalidArgumentException ex) {
     logErrorAndFailCallPeer("Failed ACK request, problem with the supplied cseq",ex,callPeer);
     return;
   }
@@ -29,26 +23,15 @@ catch (  SipException ex) {
     return;
   }
   if (!CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(callPeer.getState()))   callPeer.setSdpDescription(new String(ok.getRawContent()));
-  CallSession callSession=((CallSipImpl)callPeer.getCall()).getMediaCallSession();
+  CallSession callSession=callPeer.getCall().getMediaCallSession();
   try {
-    try {
-      if (callSession == null) {
-        callSession=SipActivator.getMediaService().createCallSession(callPeer.getCall());
-        callSession.setSessionCreatorCallback(callPeer);
-        String sdp=callSession.processSdpOffer(callPeer,callPeer.getSdpDescription());
-        ack.setContent(sdp,contentTypeHeader);
-        callPeer.setCallInfoURL(callSession.getCallInfoURL());
-      }
-    }
-  finally {
-      try {
-        clientTransaction.getDialog().sendAck(ack);
-      }
- catch (      SipException ex) {
-        logErrorAndFailCallPeer("Failed to acknowledge call!",ex,callPeer);
-        return;
-      }
-    }
+    clientTransaction.getDialog().sendAck(ack);
+  }
+ catch (  SipException ex) {
+    logErrorAndFailCallPeer("Failed to acknowledge call!",ex,callPeer);
+    return;
+  }
+  try {
     CallPeerState callPeerState=callPeer.getState();
     if (!CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(callPeerState)) {
       callSession.processSdpAnswer(callPeer,callPeer.getSdpDescription());
