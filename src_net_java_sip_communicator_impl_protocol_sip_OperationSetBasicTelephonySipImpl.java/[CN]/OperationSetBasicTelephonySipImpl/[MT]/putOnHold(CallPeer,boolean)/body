@@ -1,24 +1,4 @@
 {
   CallPeerSipImpl sipPeer=(CallPeerSipImpl)peer;
-  CallSession callSession=sipPeer.getMediaCallSession();
-  try {
-    sendInviteRequest(sipPeer,callSession.createSdpDescriptionForHold(sipPeer.getSdpDescription(),on));
-  }
- catch (  MediaException ex) {
-    ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to create SDP offer to hold.",OperationFailedException.INTERNAL_ERROR,ex,logger);
-  }
-  callSession.putOnHold(on,true);
-  CallPeerState state=sipPeer.getState();
-  if (CallPeerState.ON_HOLD_LOCALLY.equals(state)) {
-    if (!on)     sipPeer.setState(CallPeerState.CONNECTED);
-  }
- else   if (CallPeerState.ON_HOLD_MUTUALLY.equals(state)) {
-    if (!on)     sipPeer.setState(CallPeerState.ON_HOLD_REMOTELY);
-  }
- else   if (CallPeerState.ON_HOLD_REMOTELY.equals(state)) {
-    if (on)     sipPeer.setState(CallPeerState.ON_HOLD_MUTUALLY);
-  }
- else   if (on) {
-    sipPeer.setState(CallPeerState.ON_HOLD_LOCALLY);
-  }
+  sipPeer.putOnHold(on);
 }

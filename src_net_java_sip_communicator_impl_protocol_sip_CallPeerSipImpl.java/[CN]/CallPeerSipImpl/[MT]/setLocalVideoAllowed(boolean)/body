@@ -1,0 +1,18 @@
+{
+  CallSession callSession=getMediaCallSession();
+  if (callSession.isLocalVideoAllowed() == allowed)   return;
+  try {
+    callSession.setLocalVideoAllowed(allowed);
+  }
+ catch (  MediaException ex) {
+    throw new OperationFailedException("Failed to allow/disallow the streaming of local video.",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  String sdpOffer=null;
+  try {
+    sdpOffer=callSession.createSdpOffer(getSdpDescription());
+  }
+ catch (  MediaException ex) {
+    throw new OperationFailedException("Failed to create re-invite offer for peer " + this,OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  sendReInvite(sdpOffer);
+}

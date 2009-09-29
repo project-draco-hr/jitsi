@@ -1,0 +1,23 @@
+{
+  CallSession callSession=getMediaCallSession();
+  try {
+    sendReInvite(callSession.createSdpDescriptionForHold(getSdpDescription(),on));
+  }
+ catch (  MediaException ex) {
+    ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to create SDP offer to hold.",OperationFailedException.INTERNAL_ERROR,ex,logger);
+  }
+  callSession.putOnHold(on,true);
+  CallPeerState state=getState();
+  if (CallPeerState.ON_HOLD_LOCALLY.equals(state)) {
+    if (!on)     setState(CallPeerState.CONNECTED);
+  }
+ else   if (CallPeerState.ON_HOLD_MUTUALLY.equals(state)) {
+    if (!on)     setState(CallPeerState.ON_HOLD_REMOTELY);
+  }
+ else   if (CallPeerState.ON_HOLD_REMOTELY.equals(state)) {
+    if (on)     setState(CallPeerState.ON_HOLD_MUTUALLY);
+  }
+ else   if (on) {
+    setState(CallPeerState.ON_HOLD_LOCALLY);
+  }
+}
