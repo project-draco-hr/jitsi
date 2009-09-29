@@ -1,0 +1,18 @@
+{
+  ContentLengthHeader contentLength=ack.getContentLength();
+  if ((contentLength != null) && (contentLength.getContentLength() > 0)) {
+    setSdpDescription(new String(ack.getRawContent()));
+  }
+  CallPeerState peerState=getState();
+  if (!CallPeerState.isOnHold(peerState)) {
+    if (CallPeerState.CONNECTED.equals(peerState)) {
+      try {
+        getMediaCallSession().startStreamingAndProcessingMedia();
+      }
+ catch (      MediaException ex) {
+        logger.error("Failed to start the streaming" + " and the processing of the media",ex);
+      }
+    }
+ else     setState(CallPeerState.CONNECTED);
+  }
+}

@@ -1,17 +1,17 @@
 {
   Request invite=serverTransaction.getRequest();
   Dialog dialog=serverTransaction.getDialog();
-  CallSipImpl callSipImpl=activeCallsRepository.findCall(dialog);
-  if (callSipImpl == null) {
+  CallPeerSipImpl existingPeer=activeCallsRepository.findCallPeer(dialog);
+  if (existingPeer == null) {
     ReplacesHeader replacesHeader=(ReplacesHeader)invite.getHeader(ReplacesHeader.NAME);
     if (replacesHeader == null) {
-      callSipImpl=new CallSipImpl(protocolProvider,this);
-      callSipImpl.processInvite(sourceProvider,serverTransaction);
+      CallSipImpl call=new CallSipImpl(this);
+      call.processInvite(sourceProvider,serverTransaction);
     }
  else {
-      CallPeerSipImpl callPeerToReplace=activeCallsRepository.findCallPeer(replacesHeader.getCallId(),replacesHeader.getToTag(),replacesHeader.getFromTag());
-      if (callPeerToReplace != null) {
-        callPeerToReplace.getCall().processReplacingInvite(sourceProvider,serverTransaction,callPeerToReplace);
+      existingPeer=activeCallsRepository.findCallPeer(replacesHeader.getCallId(),replacesHeader.getToTag(),replacesHeader.getFromTag());
+      if (existingPeer != null) {
+        existingPeer.getCall().processReplacingInvite(sourceProvider,serverTransaction,existingPeer);
       }
  else {
         protocolProvider.sayErrorSilently(serverTransaction,Response.CALL_OR_TRANSACTION_DOES_NOT_EXIST);
@@ -19,6 +19,6 @@
     }
   }
  else {
-    callSipImpl.processReInvite(sourceProvider,serverTransaction);
+    existingPeer.processReInvite(serverTransaction);
   }
 }

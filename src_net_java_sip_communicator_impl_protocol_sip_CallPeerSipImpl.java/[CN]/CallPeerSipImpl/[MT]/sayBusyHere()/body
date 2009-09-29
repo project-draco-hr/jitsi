@@ -1,0 +1,22 @@
+{
+  if (!(getLatestInviteTransaction() instanceof ServerTransaction)) {
+    logger.error("Cannot send BUSY_HERE in a client transaction");
+    throw new OperationFailedException("Cannot send BUSY_HERE in a client transaction",OperationFailedException.INTERNAL_ERROR);
+  }
+  Request request=getLatestInviteTransaction().getRequest();
+  Response busyHere=null;
+  try {
+    busyHere=messageFactory.createResponse(Response.BUSY_HERE,request);
+  }
+ catch (  ParseException ex) {
+    ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to create the BUSY_HERE response!",OperationFailedException.INTERNAL_ERROR,ex,logger);
+  }
+  ServerTransaction serverTransaction=(ServerTransaction)getLatestInviteTransaction();
+  try {
+    serverTransaction.sendResponse(busyHere);
+    logger.debug("sent response:\n" + busyHere);
+  }
+ catch (  Exception ex) {
+    ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to send the BUSY_HERE response",OperationFailedException.NETWORK_FAILURE,ex,logger);
+  }
+}

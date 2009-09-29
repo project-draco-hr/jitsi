@@ -4,20 +4,5 @@
     logger.debug("didn't find an ack's call, returning");
     return;
   }
-  ContentLengthHeader contentLength=ackRequest.getContentLength();
-  if ((contentLength != null) && (contentLength.getContentLength() > 0)) {
-    peer.setSdpDescription(new String(ackRequest.getRawContent()));
-  }
-  CallPeerState peerState=peer.getState();
-  if (!CallPeerState.isOnHold(peerState)) {
-    if (CallPeerState.CONNECTED.equals(peerState)) {
-      try {
-        ((CallSipImpl)peer.getCall()).getMediaCallSession().startStreamingAndProcessingMedia();
-      }
- catch (      MediaException ex) {
-        logger.error("Failed to start the streaming" + " and the processing of the media",ex);
-      }
-    }
- else     peer.setState(CallPeerState.CONNECTED);
-  }
+  peer.processAck(serverTransaction,ackRequest);
 }

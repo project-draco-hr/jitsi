@@ -1,0 +1,28 @@
+{
+  Request invite=serverTransaction.getRequest();
+  setLatestInviteTransaction(serverTransaction);
+  ContentLengthHeader cl=invite.getContentLength();
+  if (cl != null && cl.getContentLength() > 0) {
+    setSdpDescription(new String(invite.getRawContent()));
+  }
+  Response response=null;
+  try {
+    response=messageFactory.createResponse(Response.OK,invite);
+    attachSdpAnswer(response);
+    logger.trace("will send an OK response: ");
+    serverTransaction.sendResponse(response);
+    logger.debug("sent a an OK response: " + response);
+  }
+ catch (  Exception ex) {
+    logger.error("Error while trying to send a response",ex);
+    setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
+    getProtocolProvider().sayErrorSilently(serverTransaction,Response.SERVER_INTERNAL_ERROR);
+    return;
+  }
+  try {
+    updateMediaFlags();
+  }
+ catch (  OperationFailedException ex) {
+    logger.error("Error after sending response " + response,ex);
+  }
+}
