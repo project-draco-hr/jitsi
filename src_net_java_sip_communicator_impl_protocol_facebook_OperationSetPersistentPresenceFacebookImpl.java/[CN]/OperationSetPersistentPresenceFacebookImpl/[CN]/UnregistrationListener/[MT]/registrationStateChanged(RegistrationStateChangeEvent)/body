@@ -1,10 +1,16 @@
 {
-  if (!evt.getNewState().equals(RegistrationState.UNREGISTERED) && !evt.getNewState().equals(RegistrationState.AUTHENTICATION_FAILED) && !evt.getNewState().equals(RegistrationState.CONNECTION_FAILED)) {
-    return;
+  RegistrationState newState=evt.getNewState();
+  if (RegistrationState.UNREGISTERED.equals(newState)) {
+    if (!FacebookStatusEnum.OFFLINE.equals(presenceStatus)) {
+      PresenceStatus oldValue=presenceStatus;
+      presenceStatus=FacebookStatusEnum.OFFLINE;
+      fireProviderStatusChangeEvent(oldValue,presenceStatus);
+    }
   }
+ else   if (!newState.equals(RegistrationState.AUTHENTICATION_FAILED) && !newState.equals(RegistrationState.CONNECTION_FAILED))   return;
   Iterator<ContactGroup> groupsIter=getServerStoredContactListRoot().subgroups();
   while (groupsIter.hasNext()) {
-    ContactGroupFacebookImpl group=(ContactGroupFacebookImpl)groupsIter.next();
+    ContactGroup group=groupsIter.next();
     Iterator<Contact> contactsIter=group.contacts();
     while (contactsIter.hasNext()) {
       ContactFacebookImpl contact=(ContactFacebookImpl)contactsIter.next();
