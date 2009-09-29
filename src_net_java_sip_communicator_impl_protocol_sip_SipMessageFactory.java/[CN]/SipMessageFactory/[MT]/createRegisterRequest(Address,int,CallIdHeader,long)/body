@@ -1,0 +1,28 @@
+{
+  FromHeader fromHeader=protocolProvider.getHeaderFactory().createFromHeader(addressOfRecord,SipMessageFactory.generateLocalTag());
+  CSeqHeader cSeqHeader=protocolProvider.getHeaderFactory().createCSeqHeader(cSeqValue,Request.REGISTER);
+  ToHeader toHeader=protocolProvider.getHeaderFactory().createToHeader(addressOfRecord,null);
+  MaxForwardsHeader maxForwardsHeader=protocolProvider.getMaxForwardsHeader();
+  String domain=((SipURI)toHeader.getAddress().getURI()).getHost();
+  SipURI requestURI=protocolProvider.getAddressFactory().createSipURI(null,domain);
+  ArrayList<ViaHeader> viaHeaders=protocolProvider.getLocalViaHeaders(requestURI);
+  Request request=createRequest(requestURI,Request.REGISTER,callIdHeader,cSeqHeader,fromHeader,toHeader,viaHeaders,maxForwardsHeader);
+  ExpiresHeader expHeader=null;
+  for (int retry=0; retry < 2; retry++) {
+    try {
+      expHeader=protocolProvider.getHeaderFactory().createExpiresHeader(registrationsExpiration);
+    }
+ catch (    InvalidArgumentException ex) {
+      if (retry == 0) {
+        registrationsExpiration=3600;
+        continue;
+      }
+      throw new IllegalArgumentException("Invalid registrations expiration parameter - " + registrationsExpiration,ex);
+    }
+  }
+  request.addHeader(expHeader);
+  ContactHeader contactHeader=(ContactHeader)request.getHeader(ContactHeader.NAME);
+  contactHeader.setExpires(registrationsExpiration);
+  request.setHeader(contactHeader);
+  return request;
+}

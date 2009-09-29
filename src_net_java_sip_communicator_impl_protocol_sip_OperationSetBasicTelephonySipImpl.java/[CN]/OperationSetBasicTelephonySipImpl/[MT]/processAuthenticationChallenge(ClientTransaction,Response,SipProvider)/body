@@ -1,8 +1,5 @@
 {
   CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(clientTransaction.getDialog());
-  if (callPeer == null) {
-    logger.debug("Received an authorization challenge for no " + "peer. authorizing anyway.");
-  }
   try {
     logger.debug("Authenticating an INVITE request.");
     ClientTransaction retryTran=protocolProvider.getSipSecurityManager().handleChallenge(response,clientTransaction,jainSipProvider);
@@ -11,14 +8,13 @@
       return;
     }
     if (callPeer != null) {
-      callPeer.setDialog(retryTran.getDialog());
-      callPeer.setLatestInviteTransaction(retryTran);
-      callPeer.setJainSipProvider(jainSipProvider);
+      callPeer.handleAuthenticationChallenge(retryTran);
     }
     retryTran.sendRequest();
   }
  catch (  Exception exc) {
-    CallSipImpl.logAndFailCallPeer("Failed to authenticate.",exc,callPeer);
-    return;
+    if (callPeer != null) {
+      callPeer.logAndFail("Failed to authenticate.",exc);
+    }
   }
 }

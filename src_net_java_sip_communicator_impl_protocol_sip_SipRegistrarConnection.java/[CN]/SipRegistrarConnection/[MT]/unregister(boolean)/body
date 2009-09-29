@@ -11,29 +11,18 @@
   }
   setRegistrationState(RegistrationState.UNREGISTERING,RegistrationStateChangeEvent.REASON_USER_REQUEST,"");
   if (!sendUnregister)   return;
-  Request unregisterRequest=(Request)registerRequest.clone();
+  Request unregisterRequest;
   try {
-    unregisterRequest.getExpires().setExpires(0);
-    CSeqHeader cSeqHeader=(CSeqHeader)unregisterRequest.getHeader(CSeqHeader.NAME);
-    cSeqHeader.setSeqNumber(getNextCSeqValue());
-    ViaHeader via=(ViaHeader)unregisterRequest.getHeader(ViaHeader.NAME);
-    if (via != null)     via.removeParameter("branch");
+    unregisterRequest=sipProvider.getMessageFactory().createUnRegisterRequest(registerRequest,getNextCSeqValue());
   }
  catch (  InvalidArgumentException ex) {
-    logger.error("Unable to set Expires Header",ex);
+    logger.error("Unable to create an unREGISTER request.",ex);
     setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,"Unable to set Expires Header");
     throw new OperationFailedException("Unable to set Expires Header",OperationFailedException.INTERNAL_ERROR,ex);
   }
-  ContactHeader contact=(ContactHeader)unregisterRequest.getHeader(ContactHeader.NAME);
-  try {
-    contact.setExpires(0);
-  }
- catch (  InvalidArgumentException exc) {
-    logger.error("Failed to add an expires param (" + registrationsExpiration + ") to a contact header."+ "will ignore error",exc);
-  }
   ClientTransaction unregisterTransaction=null;
   try {
-    unregisterTransaction=this.getJainSipProvider().getNewClientTransaction(unregisterRequest);
+    unregisterTransaction=getJainSipProvider().getNewClientTransaction(unregisterRequest);
   }
  catch (  TransactionUnavailableException ex) {
     logger.error("Unable to create a unregister transaction",ex);
@@ -41,10 +30,6 @@
     throw new OperationFailedException("Unable to create a unregister transaction",OperationFailedException.INTERNAL_ERROR,ex);
   }
   try {
-    CallIdHeader call=(CallIdHeader)unregisterRequest.getHeader(CallIdHeader.NAME);
-    String callid=call.getCallId();
-    AuthorizationHeader authorization=sipProvider.getSipSecurityManager().getCachedAuthorizationHeader(callid);
-    if (authorization != null)     unregisterRequest.addHeader(authorization);
     callIdHeader=null;
     unregisterTransaction.sendRequest();
     logger.info("sent request:\n" + unregisterRequest);
