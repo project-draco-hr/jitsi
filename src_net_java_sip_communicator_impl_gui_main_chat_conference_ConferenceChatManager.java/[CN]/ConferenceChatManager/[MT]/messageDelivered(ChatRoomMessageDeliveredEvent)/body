@@ -1,20 +1,21 @@
 {
   ChatRoom sourceChatRoom=(ChatRoom)evt.getSource();
   logger.trace("MESSAGE DELIVERED to chat room: " + sourceChatRoom.getName());
-  Message msg=evt.getMessage();
-  ChatPanel chatPanel=null;
-  ChatWindowManager chatWindowManager=GuiActivator.getUIService().getChatWindowManager();
-  if (chatWindowManager.isChatOpenedFor(sourceChatRoom)) {
-    chatPanel=chatWindowManager.getMultiChat(sourceChatRoom);
-  }
-  String messageType=null;
-  if (evt.getEventType() == ChatRoomMessageDeliveredEvent.CONVERSATION_MESSAGE_DELIVERED) {
-    messageType=Chat.OUTGOING_MESSAGE;
-  }
- else   if (evt.getEventType() == ChatRoomMessageDeliveredEvent.ACTION_MESSAGE_DELIVERED) {
-    messageType=Chat.ACTION_MESSAGE;
-  }
+  ChatPanel chatPanel=GuiActivator.getUIService().getChatWindowManager().getMultiChat(sourceChatRoom,false);
   if (chatPanel != null) {
-    chatPanel.addMessage(sourceChatRoom.getParentProvider().getAccountID().getUserID(),evt.getTimestamp(),messageType,msg.getContent(),msg.getContentType());
-  }
+    String messageType;
+switch (evt.getEventType()) {
+case ChatRoomMessageDeliveredEvent.CONVERSATION_MESSAGE_DELIVERED:
+      messageType=Chat.OUTGOING_MESSAGE;
+    break;
+case ChatRoomMessageDeliveredEvent.ACTION_MESSAGE_DELIVERED:
+  messageType=Chat.ACTION_MESSAGE;
+break;
+default :
+messageType=null;
+break;
+}
+Message msg=evt.getMessage();
+chatPanel.addMessage(sourceChatRoom.getParentProvider().getAccountID().getUserID(),evt.getTimestamp(),messageType,msg.getContent(),msg.getContentType());
+}
 }

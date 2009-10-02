@@ -1,23 +1,23 @@
 {
   AdHocChatRoom sourceChatRoom=(AdHocChatRoom)evt.getSource();
   logger.info("MESSAGE DELIVERED to ad-hoc chat room: " + sourceChatRoom.getName());
-  Message msg=evt.getMessage();
-  ChatPanel chatPanel=null;
-  ChatWindowManager chatWindowManager=GuiActivator.getUIService().getChatWindowManager();
-  if (chatWindowManager.isChatOpenedFor(sourceChatRoom)) {
-    chatPanel=chatWindowManager.getAdHocMultiChat(sourceChatRoom);
-  }
-  String messageType=null;
-  if (evt.getEventType() == AdHocChatRoomMessageDeliveredEvent.CONVERSATION_MESSAGE_DELIVERED) {
-    messageType=Chat.OUTGOING_MESSAGE;
-  }
- else   if (evt.getEventType() == AdHocChatRoomMessageDeliveredEvent.ACTION_MESSAGE_DELIVERED) {
-    messageType=Chat.ACTION_MESSAGE;
-  }
+  ChatPanel chatPanel=GuiActivator.getUIService().getChatWindowManager().getMultiChat(sourceChatRoom,false);
   if (chatPanel != null) {
-    chatPanel.addMessage(sourceChatRoom.getParentProvider().getAccountID().getUserID(),evt.getTimestamp(),messageType,msg.getContent(),msg.getContentType());
-  }
+    String messageType;
+switch (evt.getEventType()) {
+case AdHocChatRoomMessageDeliveredEvent.CONVERSATION_MESSAGE_DELIVERED:
+      messageType=Chat.OUTGOING_MESSAGE;
+    break;
+case AdHocChatRoomMessageDeliveredEvent.ACTION_MESSAGE_DELIVERED:
+  messageType=Chat.ACTION_MESSAGE;
+break;
+default :
+messageType=null;
+}
+Message msg=evt.getMessage();
+chatPanel.addMessage(sourceChatRoom.getParentProvider().getAccountID().getUserID(),evt.getTimestamp(),messageType,msg.getContent(),msg.getContentType());
+}
  else {
-    logger.error("chat panel is null, message NOT DELIVERED !");
-  }
+logger.error("chat panel is null, message NOT DELIVERED !");
+}
 }

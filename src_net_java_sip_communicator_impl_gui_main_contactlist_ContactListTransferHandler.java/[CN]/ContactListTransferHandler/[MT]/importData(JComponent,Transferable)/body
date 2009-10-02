@@ -1,24 +1,25 @@
 {
   if (t.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+    Object o=null;
     try {
-      Object o=t.getTransferData(DataFlavor.javaFileListFlavor);
-      ChatPanel chatPanel=getChatPanel();
-      if (chatPanel != null) {
-        if (o instanceof java.util.Collection) {
-          Collection<File> files=(Collection<File>)o;
-          for (          File file : files) {
-            if (chatPanel != null)             chatPanel.sendFile(file);
-            GuiActivator.getUIService().getChatWindowManager().openChat(chatPanel,false);
-          }
-          return true;
-        }
-      }
+      o=t.getTransferData(DataFlavor.javaFileListFlavor);
     }
  catch (    UnsupportedFlavorException e) {
       logger.debug("Failed to drop files.",e);
     }
 catch (    IOException e) {
       logger.debug("Failed to drop files.",e);
+    }
+    if (o instanceof Collection) {
+      ChatPanel chatPanel=getChatPanel();
+      if (chatPanel != null) {
+        Collection<File> files=(Collection<File>)o;
+        for (        File file : files) {
+          chatPanel.sendFile(file);
+          GuiActivator.getUIService().getChatWindowManager().openChat(chatPanel,false);
+        }
+        return true;
+      }
     }
   }
   return false;
