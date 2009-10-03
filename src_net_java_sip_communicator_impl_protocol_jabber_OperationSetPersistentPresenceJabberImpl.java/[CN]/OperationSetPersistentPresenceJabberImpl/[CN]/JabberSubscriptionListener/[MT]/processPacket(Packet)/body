@@ -1,6 +1,8 @@
 {
   Presence presence=(Presence)packet;
-  if (presence != null && presence.getType() == Presence.Type.subscribe) {
+  if (presence == null)   return;
+  Presence.Type presenceType=presence.getType();
+  if (presenceType == Presence.Type.subscribe) {
     logger.trace(presence.getFrom() + " wants to add you to its contact list");
     String fromID=presence.getFrom();
     ContactJabberImpl srcContact=ssContactList.findContactById(fromID);
@@ -20,7 +22,7 @@
       parentProvider.getConnection().sendPacket(responsePacket);
     }
   }
- else   if (presence != null && presence.getType() == Presence.Type.unsubscribed) {
+ else   if (presenceType == Presence.Type.unsubscribed) {
     logger.trace(presence.getFrom() + " does not allow your subscription");
     ContactJabberImpl contact=ssContactList.findContactById(presence.getFrom());
     if (contact != null) {
@@ -29,7 +31,7 @@
       ssContactList.removeContact(contact);
     }
   }
- else   if (presence != null && presence.getType() == Presence.Type.subscribed) {
+ else   if (presenceType == Presence.Type.subscribed) {
     ContactJabberImpl contact=ssContactList.findContactById(presence.getFrom());
     AuthorizationResponse response=new AuthorizationResponse(AuthorizationResponse.ACCEPT,"");
     handler.processAuthorizationResponse(response,contact);
