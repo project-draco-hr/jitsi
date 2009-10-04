@@ -1,29 +1,21 @@
 {
   AdHocChatRoom sourceAdHocChatRoom=evt.getAdHocChatRoom();
   AdHocChatRoomWrapper adHocChatRoomWrapper=adHocChatRoomList.findChatRoomWrapperFromAdHocChatRoom(sourceAdHocChatRoom);
-  if (evt.getEventType().equals(LocalUserAdHocChatRoomPresenceChangeEvent.LOCAL_USER_JOINED)) {
+  String eventType=evt.getEventType();
+  if (LocalUserAdHocChatRoomPresenceChangeEvent.LOCAL_USER_JOINED.equals(eventType)) {
     if (adHocChatRoomWrapper != null) {
       this.fireAdHocChatRoomListChangedEvent(adHocChatRoomWrapper,AdHocChatRoomListChangeEvent.AD_HOC_CHAT_ROOM_CHANGED);
       ChatWindowManager chatWindowManager=GuiActivator.getUIService().getChatWindowManager();
-      ChatPanel chatPanel=chatWindowManager.getMultiChat(adHocChatRoomWrapper);
-      if (chatWindowManager.isChatOpenedFor(adHocChatRoomWrapper)) {
-        ((AdHocConferenceChatSession)chatPanel.getChatSession()).loadChatRoom(sourceAdHocChatRoom);
-      }
- else {
-        chatWindowManager.openChat(chatPanel,true);
-      }
+      ChatPanel chatPanel=chatWindowManager.getMultiChat(adHocChatRoomWrapper,true);
+      if (chatPanel.isShown())       ((AdHocConferenceChatSession)chatPanel.getChatSession()).loadChatRoom(sourceAdHocChatRoom);
+ else       chatWindowManager.openChat(chatPanel,true);
     }
     sourceAdHocChatRoom.addMessageListener(this);
   }
  else   if (evt.getEventType().equals(LocalUserAdHocChatRoomPresenceChangeEvent.LOCAL_USER_JOIN_FAILED)) {
     new ErrorDialog(GuiActivator.getUIService().getMainFrame(),GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.FAILED_TO_JOIN_CHAT_ROOM",new String[]{sourceAdHocChatRoom.getName()}) + evt.getReason()).showDialog();
   }
- else   if (evt.getEventType().equals(LocalUserAdHocChatRoomPresenceChangeEvent.LOCAL_USER_LEFT)) {
-    this.closeAdHocChatRoom(adHocChatRoomWrapper);
-    fireAdHocChatRoomListChangedEvent(adHocChatRoomWrapper,AdHocChatRoomListChangeEvent.AD_HOC_CHAT_ROOM_CHANGED);
-    sourceAdHocChatRoom.removeMessageListener(this);
-  }
- else   if (evt.getEventType().equals(LocalUserAdHocChatRoomPresenceChangeEvent.LOCAL_USER_DROPPED)) {
+ else   if (LocalUserAdHocChatRoomPresenceChangeEvent.LOCAL_USER_LEFT.equals(eventType) || LocalUserAdHocChatRoomPresenceChangeEvent.LOCAL_USER_DROPPED.equals(eventType)) {
     this.closeAdHocChatRoom(adHocChatRoomWrapper);
     fireAdHocChatRoomListChangedEvent(adHocChatRoomWrapper,AdHocChatRoomListChangeEvent.AD_HOC_CHAT_ROOM_CHANGED);
     sourceAdHocChatRoom.removeMessageListener(this);

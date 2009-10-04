@@ -1,13 +1,20 @@
 {
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        closeChat(chatPanel);
+      }
+    }
+);
+    return;
+  }
 synchronized (syncChat) {
     if (containsChat(chatPanel)) {
       ChatWindow chatWindow=chatPanel.getChatWindow();
       if (!chatPanel.isWriteAreaEmpty()) {
         SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(GuiActivator.getResources().getI18NString("service.gui.NON_EMPTY_CHAT_WINDOW_CLOSE"));
         int answer=JOptionPane.showConfirmDialog(chatWindow,msgText,GuiActivator.getResources().getI18NString("service.gui.WARNING"),JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
-        if (answer == JOptionPane.OK_OPTION) {
-          closeChatPanel(chatPanel);
-        }
+        if (answer == JOptionPane.OK_OPTION)         closeChatPanel(chatPanel);
       }
  else       if (System.currentTimeMillis() - chatWindow.getLastIncomingMsgTimestamp(chatPanel) < 2 * 1000) {
         SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(GuiActivator.getResources().getI18NString("service.gui.CLOSE_CHAT_AFTER_NEW_MESSAGE"));

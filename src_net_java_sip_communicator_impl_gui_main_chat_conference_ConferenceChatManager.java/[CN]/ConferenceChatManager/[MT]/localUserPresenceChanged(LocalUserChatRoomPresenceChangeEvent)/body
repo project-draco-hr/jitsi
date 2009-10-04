@@ -1,17 +1,14 @@
 {
   ChatRoom sourceChatRoom=evt.getChatRoom();
   ChatRoomWrapper chatRoomWrapper=chatRoomList.findChatRoomWrapperFromChatRoom(sourceChatRoom);
-  if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED)) {
+  String eventType=evt.getEventType();
+  if (LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED.equals(eventType)) {
     if (chatRoomWrapper != null) {
       this.fireChatRoomListChangedEvent(chatRoomWrapper,ChatRoomListChangeEvent.CHAT_ROOM_CHANGED);
       ChatWindowManager chatWindowManager=GuiActivator.getUIService().getChatWindowManager();
-      ChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper);
-      if (chatWindowManager.isChatOpenedFor(chatRoomWrapper)) {
-        ((ConferenceChatSession)chatPanel.getChatSession()).loadChatRoom(sourceChatRoom);
-      }
- else {
-        chatWindowManager.openChat(chatPanel,true);
-      }
+      ChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper,true);
+      if (chatPanel.isShown())       ((ConferenceChatSession)chatPanel.getChatSession()).loadChatRoom(sourceChatRoom);
+ else       chatWindowManager.openChat(chatPanel,true);
     }
     if (sourceChatRoom.isSystem()) {
       ChatRoomProviderWrapper serverWrapper=chatRoomList.findServerWrapperFromProvider(sourceChatRoom.getParentProvider());
@@ -19,20 +16,10 @@
     }
     sourceChatRoom.addMessageListener(this);
   }
- else   if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOIN_FAILED)) {
+ else   if (LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOIN_FAILED.equals(eventType)) {
     new ErrorDialog(GuiActivator.getUIService().getMainFrame(),GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.FAILED_TO_JOIN_CHAT_ROOM",new String[]{sourceChatRoom.getName()}) + evt.getReason()).showDialog();
   }
- else   if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT)) {
-    this.closeChatRoom(chatRoomWrapper);
-    fireChatRoomListChangedEvent(chatRoomWrapper,ChatRoomListChangeEvent.CHAT_ROOM_CHANGED);
-    sourceChatRoom.removeMessageListener(this);
-  }
- else   if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_KICKED)) {
-    this.closeChatRoom(chatRoomWrapper);
-    fireChatRoomListChangedEvent(chatRoomWrapper,ChatRoomListChangeEvent.CHAT_ROOM_CHANGED);
-    sourceChatRoom.removeMessageListener(this);
-  }
- else   if (evt.getEventType().equals(LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_DROPPED)) {
+ else   if (LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT.equals(eventType) || LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_KICKED.equals(eventType) || LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_DROPPED.equals(eventType)) {
     this.closeChatRoom(chatRoomWrapper);
     fireChatRoomListChangedEvent(chatRoomWrapper,ChatRoomListChangeEvent.CHAT_ROOM_CHANGED);
     sourceChatRoom.removeMessageListener(this);
