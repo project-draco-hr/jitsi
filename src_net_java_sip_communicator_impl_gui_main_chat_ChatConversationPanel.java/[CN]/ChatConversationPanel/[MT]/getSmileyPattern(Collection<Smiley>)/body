@@ -1,0 +1,30 @@
+{
+synchronized (smileyStrings) {
+    boolean smileyStringsIsEqual;
+    if (smileyPattern == null)     smileyStringsIsEqual=false;
+ else {
+      smileyStringsIsEqual=true;
+      int smileyStringIndex=0;
+      int smileyStringCount=smileyStrings.size();
+      smileyLoop:       for (      Smiley smiley : smileys)       for (      String smileyString : smiley.getSmileyStrings())       if ((smileyStringIndex < smileyStringCount) && smileyString.equals(smileyStrings.get(smileyStringIndex)))       smileyStringIndex++;
+ else {
+        smileyStringsIsEqual=false;
+        break smileyLoop;
+      }
+      if (smileyStringsIsEqual && (smileyStringIndex != smileyStringCount))       smileyStringsIsEqual=false;
+    }
+    if (!smileyStringsIsEqual) {
+      smileyStrings.clear();
+      StringBuffer regex=new StringBuffer();
+      regex.append("(?<!(alt='|alt=\"))(");
+      for (      Smiley smiley : smileys)       for (      String smileyString : smiley.getSmileyStrings()) {
+        smileyStrings.add(smileyString);
+        regex.append(GuiUtils.replaceSpecialRegExpChars(smileyString)).append("|");
+      }
+      regex=regex.deleteCharAt(regex.length() - 1);
+      regex.append(')');
+      smileyPattern=Pattern.compile(regex.toString());
+    }
+    return smileyPattern;
+  }
+}
