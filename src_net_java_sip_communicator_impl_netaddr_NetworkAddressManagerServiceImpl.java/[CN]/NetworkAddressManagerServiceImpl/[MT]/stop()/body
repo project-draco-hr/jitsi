@@ -1,15 +1,18 @@
 {
   try {
-    try {
-      detector.shutDown();
+    if (detector != null) {
+      try {
+        detector.shutDown();
+      }
+ catch (      Exception ex) {
+        logger.debug("Failed to properly shutdown a stun detector: " + ex.getMessage());
+      }
+      detector=null;
     }
- catch (    Exception ex) {
-      logger.debug("Failed to properly shutdown a stun detector: " + ex.getMessage());
-    }
-    detector=null;
     useStun=false;
-    NetaddrActivator.getConfigurationService().removeVetoableChangeListener(PROP_STUN_SERVER_ADDRESS,this);
-    NetaddrActivator.getConfigurationService().removeVetoableChangeListener(PROP_STUN_SERVER_PORT,this);
+    ConfigurationService configurationService=NetaddrActivator.getConfigurationService();
+    configurationService.removeVetoableChangeListener(PROP_STUN_SERVER_ADDRESS,this);
+    configurationService.removeVetoableChangeListener(PROP_STUN_SERVER_PORT,this);
   }
   finally {
     logger.logExit();
