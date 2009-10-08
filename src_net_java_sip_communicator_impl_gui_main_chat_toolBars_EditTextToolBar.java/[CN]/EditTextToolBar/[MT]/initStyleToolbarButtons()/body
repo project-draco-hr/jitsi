@@ -1,9 +1,29 @@
 {
-  this.boldButton=initStyleToggleButton(ImageLoader.getImage(ImageLoader.TEXT_BOLD_BUTTON),boldAction,StyleConstants.Bold);
-  this.add(boldButton);
-  this.italicButton=initStyleToggleButton(ImageLoader.getImage(ImageLoader.TEXT_ITALIC_BUTTON),italicAction,StyleConstants.Italic);
-  this.add(italicButton);
-  this.underlineButton=initStyleToggleButton(ImageLoader.getImage(ImageLoader.TEXT_UNDERLINED_BUTTON),underlineAction,StyleConstants.Underline);
-  this.add(underlineButton);
+  this.boldButton=initStyleToggleButton(ImageLoader.getImage(ImageLoader.TEXT_BOLD_BUTTON),new HTMLEditorKit.BoldAction(),StyleConstants.Bold);
+  this.italicButton=initStyleToggleButton(ImageLoader.getImage(ImageLoader.TEXT_ITALIC_BUTTON),new HTMLEditorKit.ItalicAction(),StyleConstants.Italic);
+  this.underlineButton=initStyleToggleButton(ImageLoader.getImage(ImageLoader.TEXT_UNDERLINED_BUTTON),new HTMLEditorKit.UnderlineAction(),StyleConstants.Underline);
+  final Object[] styleConstants=new Object[]{StyleConstants.Bold,StyleConstants.Italic,StyleConstants.Underline};
+  final JToggleButton[] buttons=new JToggleButton[]{boldButton,italicButton,underlineButton};
+  chatEditorPane.addCaretListener(new CaretListener(){
+    public void caretUpdate(    CaretEvent e){
+      selectStyleToggleButtons(styleConstants,buttons);
+    }
+  }
+);
+  chatEditorPane.addKeyListener(new KeyAdapter(){
+    public void keyTyped(    KeyEvent e){
+      if (chatEditorPane.getText().length() > 0) {
+        AttributeSet attributes=((HTMLEditorKit)chatEditorPane.getEditorKit()).getInputAttributes();
+        for (int i=0; i < buttons.length; i++)         buttons[i].setSelected(attributes.containsAttribute(styleConstants[i],true));
+      }
+    }
+  }
+);
+  chatEditorPane.addMouseListener(new MouseAdapter(){
+    public void mouseClicked(    MouseEvent e){
+      selectStyleToggleButtons(styleConstants,buttons);
+    }
+  }
+);
   this.addBindings();
 }
