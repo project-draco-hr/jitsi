@@ -1,11 +1,19 @@
 {
-  byte[] barr=new byte[bufferToProcess.remaining()];
-  bufferToProcess.get(barr);
-  buffer.setTimeStamp(System.nanoTime());
-  buffer.setData(barr);
-  buffer.setSequenceNumber(seqNo);
-  buffer.setLength(barr.length);
-  buffer.setFlags(0);
-  buffer.setHeader(null);
-  seqNo++;
+  if (!this.started)   return;
+  try {
+    int canread=(int)PortAudio.Pa_GetStreamReadAvailable(getStream());
+    if (canread < 1)     canread=512;
+    byte[] bytebuff=new byte[canread * sampleSize];
+    PortAudio.Pa_ReadStream(getStream(),bytebuff,canread);
+    buffer.setTimeStamp(System.nanoTime());
+    buffer.setData(bytebuff);
+    buffer.setSequenceNumber(seqNo);
+    buffer.setLength(bytebuff.length);
+    buffer.setFlags(0);
+    buffer.setHeader(null);
+    seqNo++;
+  }
+ catch (  PortAudioException e) {
+    logger.error("",e);
+  }
 }

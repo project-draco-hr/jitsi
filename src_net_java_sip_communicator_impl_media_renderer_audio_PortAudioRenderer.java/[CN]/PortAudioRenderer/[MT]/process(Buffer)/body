@@ -1,11 +1,13 @@
 {
-  try {
+synchronized (bufferSync) {
     byte[] buff=new byte[inputBuffer.getLength()];
     System.arraycopy((byte[])inputBuffer.getData(),inputBuffer.getOffset(),buff,0,buff.length);
-    PortAudio.Pa_WriteStream(stream,buff,buff.length / 2);
+    buffer=buff;
+    bufferSync.notifyAll();
   }
- catch (  PortAudioException e) {
-    logger.error("Error write to device!",e);
+  if (writerThread == null) {
+    writerThread=new WriterThread();
+    writerThread.start();
   }
   return BUFFER_PROCESSED_OK;
 }

@@ -1,0 +1,39 @@
+{
+  try {
+    while (true) {
+      if (portAudioStream == 0) {
+        long streamParameters=PortAudio.PaStreamParameters_new(PortAudioStream.getDeviceIndexFromLocator(audioNotifier.getDeviceConfiguration().getAudioNotifyDevice().getLocator()),2,PortAudio.SAMPLE_FORMAT_INT16);
+        portAudioStream=PortAudio.Pa_OpenStream(0,streamParameters,48000,PortAudio.FRAMES_PER_BUFFER_UNSPECIFIED,PortAudio.STREAM_FLAGS_NO_FLAG,null);
+        PortAudio.Pa_StartStream(portAudioStream);
+      }
+      AudioInputStream audioStream=AudioSystem.getAudioInputStream(url);
+      if (!started) {
+        PortAudio.Pa_CloseStream(portAudioStream);
+        return;
+      }
+      int read=0;
+      while ((read=audioStream.read(buffer)) != -1) {
+        PortAudio.Pa_WriteStream(portAudioStream,buffer,buffer.length / audioStream.getFormat().getFrameSize());
+      }
+      if (!isLooping()) {
+        PortAudio.Pa_CloseStream(portAudioStream);
+        break;
+      }
+ else {
+        Thread.sleep(getLoopInterval());
+      }
+    }
+  }
+ catch (  PortAudioException e) {
+    logger.error("Cannot open portaudio device for notifications",e);
+  }
+catch (  IOException e) {
+    logger.error("Error reading from audio resource",e);
+  }
+catch (  InterruptedException e) {
+    logger.error("Cannot wait the interval between plays",e);
+  }
+catch (  UnsupportedAudioFileException e) {
+    logger.error("Unknown file format",e);
+  }
+}

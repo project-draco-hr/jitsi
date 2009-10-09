@@ -1,0 +1,61 @@
+{
+  ConfigurationService config=MediaActivator.getConfigurationService();
+  audioSystem=name;
+  if (name.equals(AUDIO_SYSTEM_NONE)) {
+    setAudioCaptureDevice(null);
+    setAudioNotifyDevice(null);
+    setAudioPlaybackDevice(null);
+  }
+ else   if (name.equals(AUDIO_SYSTEM_JAVASOUND)) {
+    setAudioNotifyDevice(null);
+    setAudioPlaybackDevice(null);
+    if (captureDevice != null)     setAudioCaptureDevice(captureDevice);
+ else {
+      CaptureDeviceInfo[] audioCaptureDevices=getAvailableAudioCaptureDevices();
+      for (      CaptureDeviceInfo captureDeviceInfo : audioCaptureDevices) {
+        if (captureDeviceInfo.getLocator().getProtocol().equals("javasound")) {
+          setAudioCaptureDevice(captureDeviceInfo);
+          break;
+        }
+      }
+    }
+    if (audioCaptureDevice != null) {
+      removePortAudioRenderer();
+      initJavaSoundRenderer();
+    }
+  }
+ else   if (name.equals(AUDIO_SYSTEM_PORTAUDIO)) {
+    setAudioCaptureDevice(null);
+    setAudioNotifyDevice(null);
+    setAudioPlaybackDevice(null);
+    if (captureDevice != null) {
+      setAudioCaptureDevice(captureDevice);
+      String audioDevName=config.getString(PROP_AUDIO_NOTIFY_DEVICE);
+      if (audioDevName != null) {
+        for (        CaptureDeviceInfo captureDeviceInfo : PortAudioAuto.playbackDevices) {
+          if (audioDevName.equals(captureDeviceInfo.getName())) {
+            this.audioNotifyDevice=captureDeviceInfo;
+            break;
+          }
+        }
+      }
+      audioDevName=config.getString(PROP_AUDIO_PLAYBACK_DEVICE);
+      if (audioDevName != null) {
+        for (        CaptureDeviceInfo captureDeviceInfo : PortAudioAuto.playbackDevices) {
+          if (audioDevName.equals(captureDeviceInfo.getName())) {
+            this.audioPlaybackDevice=captureDeviceInfo;
+            setDeviceToRenderer(audioPlaybackDevice);
+            removeJavaSoundRenderer();
+            break;
+          }
+        }
+      }
+    }
+    return;
+  }
+ else {
+    logger.error("Unknown audio system! Name:" + name);
+    audioSystem=null;
+  }
+  config.setProperty(PROP_AUDIO_DEVICE_IS_DISABLED,audioCaptureDevice == null);
+}

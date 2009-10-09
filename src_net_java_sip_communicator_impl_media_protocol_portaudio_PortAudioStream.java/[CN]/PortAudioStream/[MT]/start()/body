@@ -1,16 +1,11 @@
 {
-  if (this.stream != 0)   throw new IllegalStateException("stream");
-  long stream=createStream();
-  try {
-    PortAudio.Pa_StartStream(stream);
-    this.stream=stream;
-  }
- catch (  PortAudioException startException) {
+synchronized (this) {
+    this.started=true;
     try {
-      PortAudio.Pa_CloseStream(stream);
+      PortAudio.Pa_StartStream(getStream());
     }
- catch (    PortAudioException closeException) {
+ catch (    PortAudioException paex) {
+      paex.printStackTrace();
     }
-    throw startException;
   }
 }
