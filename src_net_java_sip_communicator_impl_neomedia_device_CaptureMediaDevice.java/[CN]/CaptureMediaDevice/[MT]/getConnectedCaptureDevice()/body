@@ -1,0 +1,25 @@
+{
+  DataSource captureDevice=getCaptureDevice();
+  if ((captureDevice != null) && !captureDeviceIsConnected) {
+    Throwable exception=null;
+    try {
+      captureDevice.connect();
+    }
+ catch (    IOException ioe) {
+      exception=ioe;
+    }
+catch (    NullPointerException npe) {
+      exception=npe;
+    }
+    if (exception == null) {
+      captureDeviceIsConnected=true;
+      String osName=System.getProperty("os.name");
+      if ((osName == null) || !osName.toLowerCase().contains("linux")) {
+        Control bufferControl=(Control)captureDevice.getControl("javax.media.control.BufferControl");
+        if (bufferControl != null)         ((BufferControl)bufferControl).setBufferLength(60);
+      }
+    }
+ else     captureDevice=null;
+  }
+  return captureDevice;
+}

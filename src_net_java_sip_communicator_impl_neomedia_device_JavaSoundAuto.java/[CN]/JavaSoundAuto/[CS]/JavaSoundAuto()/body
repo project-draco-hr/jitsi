@@ -1,0 +1,35 @@
+{
+  boolean supported=false;
+  try {
+    Class<?> cls=Class.forName(detectClass);
+    JavaSoundDetector detect=(JavaSoundDetector)cls.newInstance();
+    supported=detect.isSupported();
+  }
+ catch (  Throwable thr) {
+    supported=false;
+    logger.error("Failed detecting java sound audio",thr);
+  }
+  logger.info("JavaSound Capture Supported = " + supported);
+  if (supported) {
+    Vector<CaptureDeviceInfo> devices=(Vector)CaptureDeviceManager.getDeviceList(null).clone();
+    String name;
+    Enumeration<CaptureDeviceInfo> enumeration=devices.elements();
+    while (enumeration.hasMoreElements()) {
+      CaptureDeviceInfo cdi=enumeration.nextElement();
+      name=cdi.getName();
+      if (name.startsWith("JavaSound"))       CaptureDeviceManager.removeDevice(cdi);
+    }
+    CaptureDeviceInfo[] cdi=com.sun.media.protocol.javasound.JavaSoundSourceStream.listCaptureDeviceInfo();
+    if (cdi != null) {
+      for (int i=0; i < cdi.length; i++)       CaptureDeviceManager.addDevice(cdi[i]);
+      try {
+        CaptureDeviceManager.commit();
+        logger.info("JavaSoundAuto: Committed ok");
+      }
+ catch (      java.io.IOException ioe) {
+        logger.error("JavaSoundAuto: error committing cdm");
+      }
+    }
+    DeviceConfiguration.addAudioSystem(DeviceConfiguration.AUDIO_SYSTEM_JAVASOUND);
+  }
+}

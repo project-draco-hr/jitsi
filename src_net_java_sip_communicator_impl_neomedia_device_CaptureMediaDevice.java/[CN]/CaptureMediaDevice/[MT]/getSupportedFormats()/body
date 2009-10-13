@@ -1,3 +1,21 @@
 {
-  return (captureDevice == null) ? getSupportedFormats(captureDeviceInfo) : getSupportedFormats(captureDevice);
+  Processor processor=getProcessor();
+  Set<Format> supportedFormats=new HashSet<Format>();
+  if (processor != null) {
+    MediaType mediaType=getMediaType();
+    for (    TrackControl trackControl : processor.getTrackControls()) {
+      if (!trackControl.isEnabled())       continue;
+      for (      Format supportedFormat : trackControl.getSupportedFormats()) switch (mediaType) {
+case AUDIO:
+        if (supportedFormat instanceof AudioFormat)         supportedFormats.add(supportedFormat);
+      break;
+case VIDEO:
+    if (supportedFormat instanceof VideoFormat)     supportedFormats.add(supportedFormat);
+  break;
+}
+}
+}
+List<MediaFormat> supportedMediaFormats=new ArrayList<MediaFormat>(supportedFormats.size());
+for (Format format : supportedFormats) supportedMediaFormats.add(MediaFormatImpl.createInstance(format));
+return supportedMediaFormats;
 }

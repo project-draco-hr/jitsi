@@ -1,0 +1,27 @@
+{
+  if (encodings != null)   return encodings;
+  String[] availableEncodings;
+switch (type) {
+case AUDIO:
+    availableEncodings=encodingConfiguration.getAvailableAudioEncodings();
+  break;
+case VIDEO:
+availableEncodings=encodingConfiguration.getAvailableVideoEncodings();
+break;
+default :
+throw new IllegalStateException("type");
+}
+final int encodingCount=availableEncodings.length;
+if (encodingCount < 1) encodings=NO_ENCODINGS;
+ else {
+encodings=new String[encodingCount];
+System.arraycopy(availableEncodings,0,encodings,0,encodingCount);
+Arrays.sort(encodings,0,encodingCount,new Comparator<String>(){
+public int compare(String encoding0,String encoding1){
+return encodingConfiguration.getPriority(encoding1) - encodingConfiguration.getPriority(encoding0);
+}
+}
+);
+}
+return encodings;
+}

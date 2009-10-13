@@ -1,0 +1,43 @@
+{
+  if (direction == null)   throw new IllegalArgumentException("direction");
+  if (rtpManager == null)   return;
+  if ((MediaDirection.SENDRECV.equals(direction) || MediaDirection.SENDONLY.equals(direction)) && (MediaDirection.SENDRECV.equals(startedDirection) || MediaDirection.SENDONLY.equals(startedDirection))) {
+    @SuppressWarnings("unchecked") Iterable<SendStream> sendStreams=rtpManager.getSendStreams();
+    if (sendStreams != null)     for (    SendStream sendStream : sendStreams)     try {
+      sendStream.getDataSource().stop();
+      sendStream.stop();
+      try {
+        sendStream.close();
+      }
+ catch (      NullPointerException npe) {
+        logger.error("Failed to close stream " + sendStream,npe);
+      }
+    }
+ catch (    IOException ioe) {
+      logger.warn("Failed to stop stream " + sendStream,ioe);
+    }
+    getDevice().stop(MediaDirection.SENDONLY);
+    if (MediaDirection.SENDRECV.equals(startedDirection))     startedDirection=MediaDirection.RECVONLY;
+ else     if (MediaDirection.SENDONLY.equals(startedDirection))     startedDirection=null;
+  }
+  if ((MediaDirection.SENDRECV.equals(direction) || MediaDirection.RECVONLY.equals(direction)) && (MediaDirection.SENDRECV.equals(startedDirection) || MediaDirection.RECVONLY.equals(startedDirection))) {
+    Iterable<ReceiveStream> receiveStreams;
+    try {
+      receiveStreams=rtpManager.getReceiveStreams();
+    }
+ catch (    Exception e) {
+      logger.trace("Failed to retrieve receive streams",e);
+      receiveStreams=null;
+    }
+    if (receiveStreams != null)     for (    ReceiveStream receiveStream : receiveStreams)     try {
+      DataSource receiveStreamDataSource=receiveStream.getDataSource();
+      if (receiveStreamDataSource != null)       receiveStreamDataSource.stop();
+    }
+ catch (    IOException ioe) {
+      logger.warn("Failed to stop stream " + receiveStream,ioe);
+    }
+    getDevice().stop(MediaDirection.RECVONLY);
+    if (MediaDirection.SENDRECV.equals(startedDirection))     startedDirection=MediaDirection.SENDONLY;
+ else     if (MediaDirection.RECVONLY.equals(startedDirection))     startedDirection=null;
+  }
+}

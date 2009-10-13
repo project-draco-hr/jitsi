@@ -1,0 +1,27 @@
+{
+  if (rtpManager == null) {
+    rtpManager=RTPManager.newInstance();
+    registerCustomCodecFormats(rtpManager);
+    rtpManager.addReceiveStreamListener(this);
+    rtpManager.addSendStreamListener(this);
+    rtpManager.addSessionListener(this);
+    BufferControl bc=(BufferControl)rtpManager.getControl(BufferControl.class.getName());
+    if (bc != null) {
+      String buffStr=NeomediaActivator.getConfigurationService().getString(PROPERTY_NAME_RECEIVE_BUFFER_LENGTH);
+      long buff=100;
+      try {
+        if ((buffStr != null) && (buffStr.length() > 0))         buff=Long.parseLong(buffStr);
+      }
+ catch (      NumberFormatException nfe) {
+        logger.warn(buffStr + " is not a valid receive buffer/long value",nfe);
+      }
+      buff=bc.setBufferLength(buff);
+      logger.trace("set receiver buffer len to " + buff);
+      bc.setEnabledThreshold(true);
+      bc.setMinimumThreshold(100);
+    }
+    rtpManager.initialize(rtpConnector);
+    createSendStreams();
+  }
+  return rtpManager;
+}

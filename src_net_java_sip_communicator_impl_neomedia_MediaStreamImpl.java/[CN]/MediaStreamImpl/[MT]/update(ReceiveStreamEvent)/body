@@ -1,0 +1,26 @@
+{
+  if (event instanceof NewReceiveStreamEvent) {
+    ReceiveStream receiveStream=event.getReceiveStream();
+    if (receiveStream != null) {
+      DataSource receiveStreamDataSource=receiveStream.getDataSource();
+      if (receiveStreamDataSource != null) {
+        Player player=null;
+        Throwable exception=null;
+        try {
+          player=Manager.createPlayer(receiveStreamDataSource);
+        }
+ catch (        IOException ioe) {
+          exception=ioe;
+        }
+catch (        NoPlayerException npe) {
+          exception=npe;
+        }
+        if (exception != null)         logger.error("Failed to create player for new receive stream " + receiveStream,exception);
+ else {
+          player.addControllerListener(this);
+          player.realize();
+        }
+      }
+    }
+  }
+}

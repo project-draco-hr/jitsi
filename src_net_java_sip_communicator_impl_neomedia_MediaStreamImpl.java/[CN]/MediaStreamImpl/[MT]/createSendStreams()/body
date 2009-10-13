@@ -1,0 +1,37 @@
+{
+  RTPManager rtpManager=getRTPManager();
+  DataSource dataSource=getDevice().getDataSource();
+  int streamCount;
+  if (dataSource instanceof PushBufferDataSource) {
+    PushBufferStream[] streams=((PushBufferDataSource)dataSource).getStreams();
+    streamCount=(streams == null) ? 0 : streams.length;
+  }
+ else   if (dataSource instanceof PushDataSource) {
+    PushSourceStream[] streams=((PushDataSource)dataSource).getStreams();
+    streamCount=(streams == null) ? 0 : streams.length;
+  }
+ else   if (dataSource instanceof PullBufferDataSource) {
+    PullBufferStream[] streams=((PullBufferDataSource)dataSource).getStreams();
+    streamCount=(streams == null) ? 0 : streams.length;
+  }
+ else   if (dataSource instanceof PullDataSource) {
+    PullSourceStream[] streams=((PullDataSource)dataSource).getStreams();
+    streamCount=(streams == null) ? 0 : streams.length;
+  }
+ else   streamCount=1;
+  for (int streamIndex=0; streamIndex < streamCount; streamIndex++) {
+    Throwable exception=null;
+    try {
+      rtpManager.createSendStream(dataSource,streamIndex);
+    }
+ catch (    IOException ioe) {
+      exception=ioe;
+    }
+catch (    UnsupportedFormatException ufe) {
+      exception=ufe;
+    }
+    if (exception != null) {
+      logger.error("Failed to create send stream for data source " + dataSource + " and stream index "+ streamIndex,exception);
+    }
+  }
+}
