@@ -1,0 +1,34 @@
+{
+  setEncodingPreference(Constants.H264_RTP_SDP,1100);
+  setEncodingPreference(SdpConstants.H263,1000);
+  setEncodingPreference(SdpConstants.JPEG,950);
+  setEncodingPreference(SdpConstants.H261,800);
+  setEncodingPreference(SdpConstants.PCMU,650);
+  setEncodingPreference(SdpConstants.PCMA,600);
+  setEncodingPreference(97,500);
+  setEncodingPreference(SdpConstants.GSM,450);
+  setEncodingPreference(110,350);
+  setEncodingPreference(SdpConstants.DVI4_8000,300);
+  setEncodingPreference(SdpConstants.DVI4_16000,250);
+  setEncodingPreference(SdpConstants.G723,150);
+  setEncodingPreference(SdpConstants.G728,100);
+  if (G729)   setEncodingPreference(SdpConstants.G729,50);
+  ConfigurationService confService=NeomediaActivator.getConfigurationService();
+  List<String> sdpPreferences=confService.getPropertyNamesByPrefix(PROP_SDP_PREFERENCE,false);
+  for (  String pName : sdpPreferences) {
+    String prefStr=confService.getString(pName);
+    String fmtName=pName.substring(pName.lastIndexOf('.') + 1).replaceAll("sdp","");
+    int preference=-1;
+    int fmt=-1;
+    try {
+      preference=Integer.parseInt(prefStr);
+      fmt=Integer.parseInt(fmtName);
+    }
+ catch (    NumberFormatException exc) {
+      logger.warn("Failed to parse format (" + fmtName + ") or preference("+ prefStr+ ").",exc);
+      continue;
+    }
+    setEncodingPreference(fmt,preference);
+  }
+  updateSupportedEncodings();
+}
