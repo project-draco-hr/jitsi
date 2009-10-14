@@ -3,17 +3,17 @@
   int scaledImageWidth=scaledImage.getIconWidth();
   int scaledImageHeight=scaledImage.getIconHeight();
   if (scaledImageHeight <= 0 || scaledImageWidth <= 0)   return null;
-  BufferedImage destImage=new BufferedImage(scaledImageWidth,scaledImageHeight,BufferedImage.TYPE_INT_ARGB);
-  Graphics2D g=destImage.createGraphics();
+  RoundRectangle2D roundRect=new RoundRectangle2D.Double(0,0,scaledImageWidth,scaledImageHeight,10,10);
+  int type=BufferedImage.TYPE_INT_ARGB_PRE;
+  BufferedImage dstImage=new BufferedImage(scaledImageWidth,scaledImageHeight,type);
+  Graphics2D g=dstImage.createGraphics();
   try {
-    AntialiasingManager.activateAntialiasing(g);
-    g.setColor(Color.WHITE);
-    g.fillRoundRect(0,0,scaledImageWidth,scaledImageHeight,10,10);
-    g.setComposite(AlphaComposite.SrcIn);
+    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+    g.setClip(roundRect);
     g.drawImage(scaledImage.getImage(),0,0,null);
   }
   finally {
     g.dispose();
   }
-  return destImage;
+  return dstImage;
 }
