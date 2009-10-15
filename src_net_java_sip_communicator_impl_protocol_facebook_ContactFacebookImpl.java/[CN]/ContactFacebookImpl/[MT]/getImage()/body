@@ -2,26 +2,24 @@
   logger.trace("getImage()");
   if (image != null)   return image;
   updateContactInfo();
-  if (contactMetaInfo == null)   return getDefaultAvatar();
+  if (contactMetaInfo == null)   return null;
   logger.trace("fetch the avatar from the server");
   ByteArrayOutputStream byteArrayOS=new ByteArrayOutputStream();
   try {
     BufferedImage newAvatar=ImageIO.read(new URL(contactMetaInfo.thumbSrc));
     javax.imageio.ImageIO.write(newAvatar,"PNG",byteArrayOS);
+    image=byteArrayOS.toByteArray();
   }
  catch (  IOException e) {
     logger.warn("IOException occured when loading avatar",e);
-    return getDefaultAvatar();
   }
  finally {
     try {
       byteArrayOS.close();
     }
- catch (    IOException e) {
-      e.printStackTrace();
+ catch (    IOException ioe) {
+      logger.warn("Failed to close avatar ByteArrayOutputStream",ioe);
     }
   }
-  image=byteArrayOS.toByteArray();
-  if (image == null)   return getDefaultAvatar();
   return image;
 }
