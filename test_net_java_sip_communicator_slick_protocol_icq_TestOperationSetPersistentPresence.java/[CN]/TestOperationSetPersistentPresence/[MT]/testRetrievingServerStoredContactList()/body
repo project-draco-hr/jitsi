@@ -2,18 +2,18 @@
   ContactGroup rootGroup=opSetPersPresence.getServerStoredContactListRoot();
   logger.debug("=========== Server Stored Contact List =================");
   logger.debug("rootGroup=" + rootGroup.getGroupName() + " rootGroup.childContacts="+ rootGroup.countContacts()+ "rootGroup.childGroups="+ rootGroup.countSubgroups()+ "Printing rootGroupContents=\n"+ rootGroup.toString());
-  Hashtable expectedContactList=fixture.preInstalledBuddyList;
+  Hashtable<String,List<String>> expectedContactList=fixture.preInstalledBuddyList;
   logger.debug("============== Expected Contact List ===================");
   logger.debug(expectedContactList);
-  Iterator groups=rootGroup.subgroups();
+  Iterator<ContactGroup> groups=rootGroup.subgroups();
   while (groups.hasNext()) {
-    ContactGroup group=(ContactGroup)groups.next();
-    List expectedContactsInGroup=(List)expectedContactList.get(group.getGroupName());
+    ContactGroup group=groups.next();
+    List<String> expectedContactsInGroup=expectedContactList.get(group.getGroupName());
     if (group.isPersistent()) {
       assertNotNull("Group " + group.getGroupName() + " was returned by "+ "the server but was not in the expected contact list.",expectedContactsInGroup);
-      Iterator contactsIter=group.contacts();
+      Iterator<Contact> contactsIter=group.contacts();
       while (contactsIter.hasNext()) {
-        String contactID=((Contact)contactsIter.next()).getAddress();
+        String contactID=contactsIter.next().getAddress();
         expectedContactsInGroup.remove(contactID);
       }
       if (expectedContactsInGroup.size() == 0)       expectedContactList.remove(group.getGroupName());
