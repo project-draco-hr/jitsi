@@ -1,7 +1,7 @@
 {
   String startPlainTextTag;
   String endPlainTextTag;
-  if (contentType != null && contentType.equals(HTML_CONTENT_TYPE)) {
+  if (HTML_CONTENT_TYPE.equals(contentType)) {
     startPlainTextTag="";
     endPlainTextTag="";
   }
@@ -9,16 +9,20 @@
     startPlainTextTag=START_PLAINTEXT_TAG;
     endPlainTextTag=END_PLAINTEXT_TAG;
   }
-  Pattern p=Pattern.compile(keyword,Pattern.CASE_INSENSITIVE);
-  Matcher m=p.matcher(message);
+  Matcher m=Pattern.compile(keyword,Pattern.CASE_INSENSITIVE).matcher(message);
   StringBuffer msgBuffer=new StringBuffer();
-  boolean matchSuccessfull=false;
+  int prevEnd=0;
   while (m.find()) {
-    if (!matchSuccessfull)     matchSuccessfull=true;
-    String matchGroup=m.group().trim();
-    String replacement=endPlainTextTag + "<h7>" + matchGroup+ "</h7>"+ startPlainTextTag;
-    m.appendReplacement(msgBuffer,GuiUtils.replaceSpecialRegExpChars(replacement));
+    msgBuffer.append(message.substring(prevEnd,m.start()));
+    prevEnd=m.end();
+    String keywordMatch=m.group().trim();
+    msgBuffer.append(endPlainTextTag);
+    msgBuffer.append("<h7>");
+    msgBuffer.append(keywordMatch);
+    msgBuffer.append("</h7>");
+    msgBuffer.append(startPlainTextTag);
   }
-  m.appendTail(msgBuffer);
+  if (prevEnd == 0)   return message;
+  msgBuffer.append(message.substring(prevEnd));
   return msgBuffer.toString();
 }

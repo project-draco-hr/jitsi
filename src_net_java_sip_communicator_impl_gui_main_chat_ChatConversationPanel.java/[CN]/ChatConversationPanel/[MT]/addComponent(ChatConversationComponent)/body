@@ -1,16 +1,19 @@
 {
-  Style style=document.getStyleSheet().addStyle(StyleConstants.ComponentElementName,document.getStyleSheet().getStyle("body"));
-  style.addAttribute(AbstractDocument.ElementNameAttribute,StyleConstants.ComponentElementName);
-  TransparentPanel wrapPanel=new TransparentPanel(new BorderLayout());
-  wrapPanel.add(component,BorderLayout.NORTH);
-  style.addAttribute(StyleConstants.ComponentAttribute,wrapPanel);
-  style.addAttribute("identifier","messageHeader");
-  style.addAttribute("date",component.getDate().getTime());
-  try {
-    document.insertString(document.getLength(),"ignored text",style);
+synchronized (scrollToBottomRunnable) {
+    StyleSheet styleSheet=document.getStyleSheet();
+    Style style=styleSheet.addStyle(StyleConstants.ComponentElementName,styleSheet.getStyle("body"));
+    style.addAttribute(AbstractDocument.ElementNameAttribute,StyleConstants.ComponentElementName);
+    TransparentPanel wrapPanel=new TransparentPanel(new BorderLayout());
+    wrapPanel.add(component,BorderLayout.NORTH);
+    style.addAttribute(StyleConstants.ComponentAttribute,wrapPanel);
+    style.addAttribute("identifier","messageHeader");
+    style.addAttribute("date",component.getDate().getTime());
+    scrollToBottomIsPending=true;
+    try {
+      document.insertString(document.getLength(),"ignored text",style);
+    }
+ catch (    BadLocationException e) {
+      logger.error("Insert in the HTMLDocument failed.",e);
+    }
   }
- catch (  BadLocationException e) {
-    logger.error("Insert in the HTMLDocument failed.",e);
-  }
-  this.scrollToBottom();
 }
