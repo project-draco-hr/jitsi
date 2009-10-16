@@ -1,0 +1,17 @@
+{
+  ServiceReference[] serviceReferences;
+  String clazz=URLStreamHandlerService.class.getName();
+  String propertyName=URLConstants.URL_HANDLER_PROTOCOL;
+  String propertyValue="reference";
+  try {
+    serviceReferences=bundleContext.getServiceReferences(clazz,"(" + propertyName + "="+ propertyValue+ ")");
+  }
+ catch (  InvalidSyntaxException ise) {
+    logger.warn("Failed to determine whether there are registered " + "URLStreamHandlerService implementations for the " + "\"reference\" protocol",ise);
+    serviceReferences=null;
+  }
+  if ((serviceReferences != null) && (serviceReferences.length > 0))   return;
+  Dictionary<String,String> properties=new Hashtable<String,String>();
+  properties.put(propertyName,propertyValue);
+  bundleContext.registerService(clazz,new ReferenceURLStreamHandlerService(),properties);
+}
