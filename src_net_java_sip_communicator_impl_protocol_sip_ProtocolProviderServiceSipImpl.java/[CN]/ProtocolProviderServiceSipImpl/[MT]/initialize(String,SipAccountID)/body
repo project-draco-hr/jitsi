@@ -28,21 +28,20 @@ synchronized (initializationLock) {
     addressFactory=new AddressFactoryImpl();
     initRegistrarConnection(accountID);
     OperationSetBasicTelephonySipImpl opSetBasicTelephonySipImpl=new OperationSetBasicTelephonySipImpl(this);
-    this.supportedOperationSets.put(OperationSetBasicTelephony.class.getName(),opSetBasicTelephonySipImpl);
-    this.supportedOperationSets.put(OperationSetAdvancedTelephony.class.getName(),opSetBasicTelephonySipImpl);
-    this.supportedOperationSets.put(OperationSetSecureTelephony.class.getName(),opSetBasicTelephonySipImpl);
+    addSupportedOperationSet(OperationSetBasicTelephony.class,opSetBasicTelephonySipImpl);
+    addSupportedOperationSet(OperationSetAdvancedTelephony.class,opSetBasicTelephonySipImpl);
+    addSupportedOperationSet(OperationSetSecureTelephony.class,opSetBasicTelephonySipImpl);
     OperationSetPersistentPresence opSetPersPresence=new OperationSetPresenceSipImpl(this,enablePresence,forceP2P,pollingValue,subscriptionExpiration);
-    this.supportedOperationSets.put(OperationSetPersistentPresence.class.getName(),opSetPersPresence);
-    this.supportedOperationSets.put(OperationSetPresence.class.getName(),opSetPersPresence);
+    addSupportedOperationSet(OperationSetPersistentPresence.class,opSetPersPresence);
+    addSupportedOperationSet(OperationSetPresence.class,opSetPersPresence);
     if (enablePresence) {
       OperationSetBasicInstantMessagingSipImpl opSetBasicIM=new OperationSetBasicInstantMessagingSipImpl(this);
-      this.supportedOperationSets.put(OperationSetBasicInstantMessaging.class.getName(),opSetBasicIM);
-      OperationSetTypingNotificationsSipImpl opSetTyping=new OperationSetTypingNotificationsSipImpl(this,opSetBasicIM);
-      this.supportedOperationSets.put(OperationSetTypingNotifications.class.getName(),opSetTyping);
+      addSupportedOperationSet(OperationSetBasicInstantMessaging.class,opSetBasicIM);
+      addSupportedOperationSet(OperationSetTypingNotifications.class,new OperationSetTypingNotificationsSipImpl(this,opSetBasicIM));
     }
-    supportedOperationSets.put(OperationSetVideoTelephony.class.getName(),new OperationSetVideoTelephonySipImpl(opSetBasicTelephonySipImpl));
-    supportedOperationSets.put(OperationSetDTMF.class.getName(),new OperationSetDTMFSipImpl(this));
-    supportedOperationSets.put(OperationSetTelephonyConferencing.class.getName(),new OperationSetTelephonyConferencingSipImpl(this));
+    addSupportedOperationSet(OperationSetVideoTelephony.class,new OperationSetVideoTelephonySipImpl(opSetBasicTelephonySipImpl));
+    addSupportedOperationSet(OperationSetDTMF.class,new OperationSetDTMFSipImpl(this));
+    addSupportedOperationSet(OperationSetTelephonyConferencing.class,new OperationSetTelephonyConferencingSipImpl(this));
     new ClientCapabilities(this);
     ourDisplayName=accountID.getAccountPropertyString(ProtocolProviderFactory.DISPLAY_NAME);
     if (ourDisplayName == null || ourDisplayName.trim().length() == 0) {
