@@ -1,9 +1,11 @@
 {
 synchronized (initializationLock) {
-    String password=MsnActivator.getProtocolProviderFactory().loadPassword(getAccountID());
+    ProtocolProviderFactory protocolProviderFactory=MsnActivator.getProtocolProviderFactory();
+    AccountID accountID=getAccountID();
+    String password=protocolProviderFactory.loadPassword(accountID);
     if (password == null) {
       UserCredentials credentials=new UserCredentials();
-      credentials.setUserName(getAccountID().getUserID());
+      credentials.setUserName(accountID.getUserID());
       credentials=authority.obtainCredentials(ProtocolNames.MSN,credentials,reasonCode);
       if (credentials == null) {
         fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"");
@@ -15,11 +17,10 @@ synchronized (initializationLock) {
         return;
       }
       password=new String(pass);
-      if (credentials.isPasswordPersistent()) {
-        MsnActivator.getProtocolProviderFactory().storePassword(getAccountID(),password);
-      }
+      if (credentials.isPasswordPersistent())       protocolProviderFactory.storePassword(accountID,password);
     }
-    messenger=MsnMessengerFactory.createMsnMessenger(getAccountID().getUserID(),password);
+    messenger=MsnMessengerFactory.createMsnMessenger(accountID.getUserID(),password);
+    logoutReceived=false;
     messenger.addMessengerListener(new MsnConnectionListener());
     persistentPresence.setMessenger(messenger);
     typingNotifications.setMessenger(messenger);
