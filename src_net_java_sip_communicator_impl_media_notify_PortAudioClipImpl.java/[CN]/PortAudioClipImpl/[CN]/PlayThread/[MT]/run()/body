@@ -2,13 +2,14 @@
   try {
     while (true) {
       AudioInputStream audioStream=AudioSystem.getAudioInputStream(url);
+      AudioFormat audioStreamFormat=audioStream.getFormat();
       if (portAudioStream == 0) {
         int deviceIndex=PortAudioStream.getDeviceIndexFromLocator(audioNotifier.getDeviceConfiguration().getAudioNotifyDevice().getLocator());
         long devInfo=PortAudio.Pa_GetDeviceInfo(deviceIndex);
         int maxOutChannels=PortAudio.PaDeviceInfo_getMaxOutputChannels(devInfo);
-        int outChannels=audioStream.getFormat().getChannels();
+        int outChannels=audioStreamFormat.getChannels();
         if (outChannels > maxOutChannels)         outChannels=maxOutChannels;
-        double sampleRate=audioStream.getFormat().getSampleRate();
+        double sampleRate=audioStreamFormat.getSampleRate();
         long streamParameters=PortAudio.PaStreamParameters_new(deviceIndex,outChannels,PortAudio.SAMPLE_FORMAT_INT16);
         if (!PortAudio.Pa_IsFormatSupported(0,streamParameters,sampleRate))         sampleRate=PortAudio.PaDeviceInfo_getDefaultSampleRate(devInfo);
         portAudioStream=PortAudio.Pa_OpenStream(0,streamParameters,sampleRate,PortAudio.FRAMES_PER_BUFFER_UNSPECIFIED,PortAudio.STREAM_FLAGS_NO_FLAG,null);
@@ -18,9 +19,8 @@
         PortAudio.Pa_CloseStream(portAudioStream);
         return;
       }
-      int read=0;
-      while ((read=audioStream.read(buffer)) != -1) {
-        PortAudio.Pa_WriteStream(portAudioStream,buffer,buffer.length / audioStream.getFormat().getFrameSize());
+      while (audioStream.read(buffer) != -1) {
+        PortAudio.Pa_WriteStream(portAudioStream,buffer,buffer.length / audioStreamFormat.getFrameSize());
       }
       if (!isLooping()) {
         PortAudio.Pa_CloseStream(portAudioStream);
