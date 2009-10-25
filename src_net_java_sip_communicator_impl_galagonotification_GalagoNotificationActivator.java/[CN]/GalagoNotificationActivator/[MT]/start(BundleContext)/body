@@ -1,0 +1,23 @@
+{
+  long dbusConnection=GalagoNotification.dbus_bus_get_session();
+  if (dbusConnection != 0) {
+    String[] capabilities=GalagoNotification.getCapabilities(dbusConnection);
+    if (capabilities != null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("org.freedesktop.Notifications.GetCapabilities:");
+        for (        String capability : capabilities)         logger.debug("\t" + capability);
+      }
+      boolean bodyIsImplemented=false;
+      for (      String capability : capabilities)       if ("body".equals(capability)) {
+        bodyIsImplemented=true;
+        break;
+      }
+      if (bodyIsImplemented) {
+        GalagoNotificationActivator.bundleContext=bundleContext;
+        GalagoNotificationActivator.dbusConnection=dbusConnection;
+        bundleContext.registerService(PopupMessageHandler.class.getName(),new GalagoPopupMessageHandler(),null);
+      }
+ else       GalagoNotification.dbus_connection_unref(dbusConnection);
+    }
+  }
+}
