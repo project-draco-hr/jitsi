@@ -1,20 +1,29 @@
 {
-  ConferenceCallPeerPanel remotePeerPanel=new ConferenceCallPeerPanel(callDialog,peer);
+  CallPeerRenderer peerRenderer;
+  if (peer.isConferenceFocus()) {
+    peerRenderer=new ConferenceFocusPanel(callDialog,peer);
+    peer.addConferenceMembersSoundLevelListener((ConferenceFocusPanel)peerRenderer);
+    peer.addCallPeerConferenceListener((ConferenceFocusPanel)peerRenderer);
+  }
+ else {
+    peerRenderer=new ConferencePeerPanel(callDialog,peer);
+    peer.addStreamSoundLevelListener((ConferencePeerPanel)peerRenderer);
+  }
+  callPeerPanels.put(peer,peerRenderer);
   constraints.fill=GridBagConstraints.BOTH;
   constraints.gridx=0;
   constraints.gridy=mainPanel.getComponentCount() + 1;
   constraints.weightx=1;
   constraints.weighty=0;
   constraints.insets=new Insets(0,0,10,10);
-  mainPanel.add(remotePeerPanel,constraints);
-  for (  ConferenceMember member : peer.getConferenceMembers()) {
-    remotePeerPanel.addConferenceMemberPanel(member);
-  }
+  mainPanel.add((Component)peerRenderer,constraints);
   if (isVisible()) {
     this.revalidate();
     this.repaint();
   }
-  peer.addCallPeerListener(remotePeerPanel);
-  peer.addPropertyChangeListener(remotePeerPanel);
-  peer.addCallPeerSecurityListener(remotePeerPanel);
+  CallPeerAdapter callPeerAdapter=new CallPeerAdapter(peer,peerRenderer);
+  peerRenderer.setCallPeerAdapter(callPeerAdapter);
+  peer.addCallPeerListener(callPeerAdapter);
+  peer.addPropertyChangeListener(callPeerAdapter);
+  peer.addCallPeerSecurityListener(callPeerAdapter);
 }

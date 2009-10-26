@@ -1,0 +1,34 @@
+{
+  CallPeer sourcePeer=evt.getSourceCallPeer();
+  if (!sourcePeer.equals(callPeer))   return;
+  CallPeerState newState=(CallPeerState)evt.getNewValue();
+  CallPeerState oldState=(CallPeerState)evt.getOldValue();
+  String newStateString=sourcePeer.getState().getStateString();
+  if (newState == CallPeerState.ALERTING_REMOTE_SIDE) {
+    NotificationManager.fireNotification(NotificationManager.OUTGOING_CALL);
+  }
+ else   if (newState == CallPeerState.BUSY) {
+    NotificationManager.stopSound(NotificationManager.OUTGOING_CALL);
+    NotificationManager.fireNotification(NotificationManager.BUSY_CALL);
+  }
+ else   if (newState == CallPeerState.CONNECTED) {
+    if (!CallPeerState.isOnHold(oldState)) {
+      NotificationManager.stopSound(NotificationManager.OUTGOING_CALL);
+      NotificationManager.stopSound(NotificationManager.INCOMING_CALL);
+      if (!renderer.getCallDialog().isCallTimerStarted())       renderer.getCallDialog().startCallTimer();
+    }
+ else {
+      renderer.setOnHold(false);
+      renderer.getCallDialog().updateHoldButtonState();
+    }
+  }
+ else   if (newState == CallPeerState.DISCONNECTED) {
+  }
+ else   if (newState == CallPeerState.FAILED) {
+  }
+ else   if (CallPeerState.isOnHold(newState)) {
+    renderer.setOnHold(true);
+    renderer.getCallDialog().updateHoldButtonState();
+  }
+  renderer.setPeerState(newStateString);
+}
