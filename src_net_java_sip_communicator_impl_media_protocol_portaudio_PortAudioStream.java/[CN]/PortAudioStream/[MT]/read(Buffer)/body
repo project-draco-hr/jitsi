@@ -1,15 +1,16 @@
 {
   if (stream == 0)   return;
   try {
-    int readAvailableFrames=(int)PortAudio.Pa_GetStreamReadAvailable(stream);
-    if (readAvailableFrames < 1)     readAvailableFrames=512;
     byte[] bytebuff=null;
+    int readAvailableFrames;
     if (USE_FRAMES_PER_BUFFER_WORKAROUND) {
       Format bufferFormat=buffer.getFormat();
       if ((bufferFormat != null) && Format.byteArray.equals(bufferFormat.getDataType()))       bytebuff=(byte[])buffer.getData();
     }
     int bytebuffLength;
     if (bytebuff == null) {
+      readAvailableFrames=(int)PortAudio.Pa_GetStreamReadAvailable(stream);
+      if (readAvailableFrames < 1)       readAvailableFrames=512;
       bytebuff=new byte[readAvailableFrames * frameSize];
       bytebuffLength=bytebuff.length;
     }
