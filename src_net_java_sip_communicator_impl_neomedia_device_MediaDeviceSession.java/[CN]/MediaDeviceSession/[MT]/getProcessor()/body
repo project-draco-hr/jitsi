@@ -1,0 +1,33 @@
+{
+  if (processor == null) {
+    DataSource captureDevice=getConnectedCaptureDevice();
+    if (captureDevice != null) {
+      Processor processor=null;
+      Throwable exception=null;
+      try {
+        processor=Manager.createProcessor(captureDevice);
+      }
+ catch (      IOException ioe) {
+        exception=ioe;
+      }
+catch (      NoProcessorException npe) {
+        exception=npe;
+      }
+      if (exception != null)       logger.error("Failed to create Processor for " + captureDevice,exception);
+ else       if (waitForState(processor,Processor.Configured)) {
+        try {
+          exception=null;
+          processor.setContentDescriptor(new ContentDescriptor(ContentDescriptor.RAW_RTP));
+        }
+ catch (        NotConfiguredError nce) {
+          exception=nce;
+          processor=null;
+        }
+        if (exception != null)         logger.error("Failed to set ContentDescriptor to Processor.",exception);
+ else         this.processor=processor;
+      }
+ else       processor=null;
+    }
+  }
+  return processor;
+}

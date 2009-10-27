@@ -1,0 +1,38 @@
+{
+  MediaType mediaType=getMediaType();
+  if (!mediaType.equals(format.getMediaType()))   throw new IllegalArgumentException("format");
+  MediaFormatImpl<? extends Format> mediaFormatImpl=(MediaFormatImpl<? extends Format>)format;
+  Processor processor=getProcessor();
+  if (processor != null) {
+    if ((processor.getState() < Processor.Configured) && !waitForState(processor,Processor.Configured)) {
+      return;
+    }
+    for (    TrackControl trackControl : processor.getTrackControls()) {
+      if (!trackControl.isEnabled())       continue;
+      Format[] supportedFormats=trackControl.getSupportedFormats();
+      if ((supportedFormats == null) || (supportedFormats.length < 1)) {
+        trackControl.setEnabled(false);
+        continue;
+      }
+      Format supportedFormat=null;
+switch (mediaType) {
+case AUDIO:
+        if (supportedFormats[0] instanceof AudioFormat) {
+          if (FMJConditionals.FORCE_AUDIO_FORMAT != null)           trackControl.setFormat(FMJConditionals.FORCE_AUDIO_FORMAT);
+ else {
+            supportedFormat=findFirstMatchingFormat(supportedFormats,mediaFormatImpl.getFormat());
+          }
+        }
+      break;
+case VIDEO:
+    if (supportedFormats[0] instanceof VideoFormat) {
+      supportedFormat=findFirstMatchingFormat(supportedFormats,mediaFormatImpl.getFormat());
+      if (supportedFormat != null)       supportedFormat=assertSize((VideoFormat)supportedFormat);
+    }
+  break;
+}
+if (supportedFormat == null) trackControl.setEnabled(false);
+ else trackControl.setFormat(supportedFormat);
+}
+}
+}
