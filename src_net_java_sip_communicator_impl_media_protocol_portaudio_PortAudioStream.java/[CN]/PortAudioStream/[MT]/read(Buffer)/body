@@ -1,19 +1,34 @@
 {
   if (stream == 0)   return;
   try {
-    int canread=(int)PortAudio.Pa_GetStreamReadAvailable(stream);
-    if (canread < 1)     canread=512;
-    byte[] bytebuff=new byte[canread * frameSize];
-    PortAudio.Pa_ReadStream(stream,bytebuff,canread);
+    int readAvailableFrames=(int)PortAudio.Pa_GetStreamReadAvailable(stream);
+    if (readAvailableFrames < 1)     readAvailableFrames=512;
+    byte[] bytebuff=null;
+    if (USE_FRAMES_PER_BUFFER_WORKAROUND) {
+      Format bufferFormat=buffer.getFormat();
+      if ((bufferFormat != null) && Format.byteArray.equals(bufferFormat.getDataType()))       bytebuff=(byte[])buffer.getData();
+    }
+    int bytebuffLength;
+    if (bytebuff == null) {
+      bytebuff=new byte[readAvailableFrames * frameSize];
+      bytebuffLength=bytebuff.length;
+    }
+ else {
+      readAvailableFrames=bytebuff.length / frameSize;
+      bytebuffLength=readAvailableFrames * frameSize;
+    }
+    PortAudio.Pa_ReadStream(stream,bytebuff,readAvailableFrames);
     buffer.setTimeStamp(System.nanoTime());
     buffer.setData(bytebuff);
     buffer.setSequenceNumber(seqNo);
-    buffer.setLength(bytebuff.length);
+    buffer.setLength(bytebuffLength);
     buffer.setFlags(0);
     buffer.setHeader(null);
     seqNo++;
   }
- catch (  PortAudioException e) {
-    logger.error("",e);
+ catch (  PortAudioException pae) {
+    IOException ioe=new IOException();
+    ioe.initCause(pae);
+    throw ioe;
   }
 }
