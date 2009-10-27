@@ -2,21 +2,8 @@
   if (direction == null)   throw new IllegalArgumentException("direction");
   if (rtpManager == null)   return;
   if ((MediaDirection.SENDRECV.equals(direction) || MediaDirection.SENDONLY.equals(direction)) && (MediaDirection.SENDRECV.equals(startedDirection) || MediaDirection.SENDONLY.equals(startedDirection))) {
-    Iterable<SendStream> sendStreams=rtpManager.getSendStreams();
-    if (sendStreams != null)     for (    SendStream sendStream : sendStreams)     try {
-      sendStream.getDataSource().stop();
-      sendStream.stop();
-      try {
-        sendStream.close();
-      }
- catch (      NullPointerException npe) {
-        logger.error("Failed to close stream " + sendStream,npe);
-      }
-    }
- catch (    IOException ioe) {
-      logger.warn("Failed to stop stream " + sendStream,ioe);
-    }
-    getDevice().stop(MediaDirection.SENDONLY);
+    stopSendStreams(false);
+    if (deviceSession != null)     deviceSession.stop(MediaDirection.SENDONLY);
     if (MediaDirection.SENDRECV.equals(startedDirection))     startedDirection=MediaDirection.RECVONLY;
  else     if (MediaDirection.SENDONLY.equals(startedDirection))     startedDirection=null;
   }
@@ -36,7 +23,7 @@
  catch (    IOException ioe) {
       logger.warn("Failed to stop stream " + receiveStream,ioe);
     }
-    getDevice().stop(MediaDirection.RECVONLY);
+    if (deviceSession != null)     deviceSession.stop(MediaDirection.RECVONLY);
     if (MediaDirection.SENDRECV.equals(startedDirection))     startedDirection=MediaDirection.SENDONLY;
  else     if (MediaDirection.RECVONLY.equals(startedDirection))     startedDirection=null;
   }

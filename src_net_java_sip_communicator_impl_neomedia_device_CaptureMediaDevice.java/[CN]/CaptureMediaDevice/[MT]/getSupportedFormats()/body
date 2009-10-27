@@ -1,21 +1,22 @@
 {
-  Processor processor=getProcessor();
-  Set<Format> supportedFormats=new HashSet<Format>();
-  if (processor != null) {
-    MediaType mediaType=getMediaType();
-    for (    TrackControl trackControl : processor.getTrackControls()) {
-      if (!trackControl.isEnabled())       continue;
-      for (      Format supportedFormat : trackControl.getSupportedFormats()) switch (mediaType) {
+  MediaType mediaType=getMediaType();
+  EncodingConfiguration encodingConfiguration=NeomediaActivator.getMediaServiceImpl().getEncodingConfiguration();
+  String[] supportedEncodings;
+switch (mediaType) {
 case AUDIO:
-        if (supportedFormat instanceof AudioFormat)         supportedFormats.add(supportedFormat);
-      break;
-case VIDEO:
-    if (supportedFormat instanceof VideoFormat)     supportedFormats.add(supportedFormat);
+    supportedEncodings=encodingConfiguration.getSupportedAudioEncodings();
   break;
+case VIDEO:
+supportedEncodings=encodingConfiguration.getSupportedVideoEncodings();
+break;
+default :
+supportedEncodings=null;
+break;
 }
+List<MediaFormat> supportedFormats=new ArrayList<MediaFormat>();
+if (supportedEncodings != null) for (String supportedPayloadType : supportedEncodings) {
+MediaFormat[] supportedFormatsForPayloadType=MediaUtils.rtpPayloadTypeToMediaFormats(supportedPayloadType);
+for (MediaFormat supportedFormatForPayloadType : supportedFormatsForPayloadType) supportedFormats.add(supportedFormatForPayloadType);
 }
-}
-List<MediaFormat> supportedMediaFormats=new ArrayList<MediaFormat>(supportedFormats.size());
-for (Format format : supportedFormats) supportedMediaFormats.add(MediaFormatImpl.createInstance(format));
-return supportedMediaFormats;
+return supportedFormats;
 }

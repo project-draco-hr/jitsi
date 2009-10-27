@@ -1,3 +1,16 @@
 {
-  this.device=(CaptureMediaDevice)device;
+  AbstractMediaDevice abstractMediaDevice=(AbstractMediaDevice)device;
+  if ((deviceSession == null) || (deviceSession.getDevice() != device)) {
+    MediaDeviceSession oldValue=deviceSession;
+    if (deviceSession != null) {
+      deviceSession.close();
+      deviceSession=null;
+    }
+    deviceSession=abstractMediaDevice.createSession();
+    MediaDeviceSession newValue=deviceSession;
+    deviceSessionChanged(oldValue,newValue);
+    if (deviceSession != null) synchronized (receiveStreams) {
+      for (      ReceiveStream receiveStream : receiveStreams)       deviceSession.addReceiveStream(receiveStream);
+    }
+  }
 }

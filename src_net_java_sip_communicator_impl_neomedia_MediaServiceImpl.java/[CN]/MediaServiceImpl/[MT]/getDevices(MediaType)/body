@@ -1,33 +1,50 @@
 {
   CaptureDeviceInfo[] captureDeviceInfos;
+  List<CaptureMediaDevice> devices;
 switch (mediaType) {
 case AUDIO:
     captureDeviceInfos=getDeviceConfiguration().getAvailableAudioCaptureDevices();
-  break;
+  devices=audioDevices;
+break;
 case VIDEO:
 captureDeviceInfos=getDeviceConfiguration().getAvailableVideoCaptureDevices();
+devices=videoDevices;
 break;
 default :
 captureDeviceInfos=null;
+devices=null;
 break;
 }
-List<MediaDevice> captureDevices;
-if ((captureDeviceInfos == null) || (captureDeviceInfos.length == 0)) captureDevices=EMPTY_DEVICES;
- else {
-captureDevices=new ArrayList<MediaDevice>(captureDeviceInfos.length);
+synchronized (devices) {
+if ((captureDeviceInfos == null) || (captureDeviceInfos.length == 0)) {
+devices.clear();
+return EMPTY_DEVICES;
+}
+Iterator<CaptureMediaDevice> deviceIter=devices.iterator();
+while (deviceIter.hasNext()) {
+CaptureDeviceInfo captureDeviceInfo=deviceIter.next().getCaptureDeviceInfo();
+boolean deviceIsFound=false;
+for (int i=0; i < captureDeviceInfos.length; i++) if (captureDeviceInfo.equals(captureDeviceInfos[i])) {
+deviceIsFound=true;
+captureDeviceInfos[i]=null;
+break;
+}
+if (!deviceIsFound) deviceIter.remove();
+}
 for (CaptureDeviceInfo captureDeviceInfo : captureDeviceInfos) {
-MediaDevice captureDevice;
+if (captureDeviceInfo == null) continue;
+CaptureMediaDevice device;
 switch (mediaType) {
 case AUDIO:
-captureDevice=new AudioCaptureMediaDevice(captureDeviceInfo);
+device=new AudioCaptureMediaDevice(captureDeviceInfo);
 break;
 case VIDEO:
 default :
-captureDevice=new CaptureMediaDevice(captureDeviceInfo,mediaType);
+device=new CaptureMediaDevice(captureDeviceInfo,mediaType);
 break;
 }
-captureDevices.add(captureDevice);
+devices.add(device);
 }
+return new ArrayList<MediaDevice>(devices);
 }
-return captureDevices;
 }
