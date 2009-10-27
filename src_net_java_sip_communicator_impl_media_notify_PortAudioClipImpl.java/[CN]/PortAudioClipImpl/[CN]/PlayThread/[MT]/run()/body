@@ -4,13 +4,13 @@
       AudioInputStream audioStream=AudioSystem.getAudioInputStream(url);
       AudioFormat audioStreamFormat=audioStream.getFormat();
       if (portAudioStream == 0) {
-        int deviceIndex=PortAudioStream.getDeviceIndexFromLocator(audioNotifier.getDeviceConfiguration().getAudioNotifyDevice().getLocator());
+        int deviceIndex=PortAudioUtils.getDeviceIndexFromLocator(audioNotifier.getDeviceConfiguration().getAudioNotifyDevice().getLocator());
         long devInfo=PortAudio.Pa_GetDeviceInfo(deviceIndex);
         int maxOutChannels=PortAudio.PaDeviceInfo_getMaxOutputChannels(devInfo);
         int outChannels=audioStreamFormat.getChannels();
         if (outChannels > maxOutChannels)         outChannels=maxOutChannels;
         double sampleRate=audioStreamFormat.getSampleRate();
-        long streamParameters=PortAudio.PaStreamParameters_new(deviceIndex,outChannels,PortAudio.SAMPLE_FORMAT_INT16);
+        long streamParameters=PortAudio.PaStreamParameters_new(deviceIndex,outChannels,PortAudioUtils.getPortAudioSampleFormat(audioStreamFormat.getSampleSizeInBits()));
         if (!PortAudio.Pa_IsFormatSupported(0,streamParameters,sampleRate))         sampleRate=PortAudio.PaDeviceInfo_getDefaultSampleRate(devInfo);
         portAudioStream=PortAudio.Pa_OpenStream(0,streamParameters,sampleRate,PortAudio.FRAMES_PER_BUFFER_UNSPECIFIED,PortAudio.STREAM_FLAGS_NO_FLAG,null);
         PortAudio.Pa_StartStream(portAudioStream);
