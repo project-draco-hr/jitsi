@@ -8,14 +8,19 @@
         for (        String capability : capabilities)         logger.debug("\t" + capability);
       }
       boolean bodyIsImplemented=false;
+      boolean iconStaticIsImplemented=false;
       for (      String capability : capabilities)       if ("body".equals(capability)) {
         bodyIsImplemented=true;
-        break;
+        if (iconStaticIsImplemented)         break;
+      }
+ else       if ("icon-static".equals(capability)) {
+        iconStaticIsImplemented=true;
+        if (bodyIsImplemented)         break;
       }
       if (bodyIsImplemented) {
         GalagoNotificationActivator.bundleContext=bundleContext;
         GalagoNotificationActivator.dbusConnection=dbusConnection;
-        bundleContext.registerService(PopupMessageHandler.class.getName(),new GalagoPopupMessageHandler(),null);
+        bundleContext.registerService(PopupMessageHandler.class.getName(),new GalagoPopupMessageHandler(iconStaticIsImplemented),null);
       }
  else       GalagoNotification.dbus_connection_unref(dbusConnection);
     }
