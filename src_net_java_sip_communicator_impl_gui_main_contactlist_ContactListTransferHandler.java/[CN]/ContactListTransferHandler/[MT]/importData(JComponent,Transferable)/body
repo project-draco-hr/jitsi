@@ -22,5 +22,38 @@ catch (    IOException e) {
       }
     }
   }
+ else   if (t.isDataFlavorSupported(metaContactDataFlavor)) {
+    Object o=null;
+    try {
+      o=t.getTransferData(metaContactDataFlavor);
+    }
+ catch (    UnsupportedFlavorException e) {
+      if (logger.isDebugEnabled())       logger.debug("Failed to drop meta contact.",e);
+    }
+catch (    IOException e) {
+      if (logger.isDebugEnabled())       logger.debug("Failed to drop meta contact.",e);
+    }
+    if (o instanceof MetaContact && comp instanceof ContactList) {
+      MetaContact transferredContact=(MetaContact)o;
+      ContactList list=(ContactList)comp;
+      Object dest=list.getSelectedValue();
+      if (transferredContact != null) {
+        if (dest instanceof MetaContact) {
+          MetaContact destContact=(MetaContact)dest;
+          if (transferredContact != destContact) {
+            list.moveMetaContactToMetaContact(transferredContact,destContact);
+          }
+          return true;
+        }
+ else         if (dest instanceof MetaContactGroup) {
+          MetaContactGroup destGroup=(MetaContactGroup)dest;
+          if (transferredContact.getParentMetaContactGroup() != destGroup) {
+            list.moveMetaContactToGroup(transferredContact,destGroup);
+          }
+          return true;
+        }
+      }
+    }
+  }
   return false;
 }

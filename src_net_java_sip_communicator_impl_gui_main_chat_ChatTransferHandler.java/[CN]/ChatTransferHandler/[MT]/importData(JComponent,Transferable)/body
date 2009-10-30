@@ -17,6 +17,32 @@ catch (    IOException e) {
       logger.debug("Failed to drop files.",e);
     }
   }
+ else   if (t.isDataFlavorSupported(metaContactDataFlavor)) {
+    Object o=null;
+    try {
+      o=t.getTransferData(metaContactDataFlavor);
+    }
+ catch (    UnsupportedFlavorException e) {
+      logger.debug("Failed to drop meta contact.",e);
+    }
+catch (    IOException e) {
+      logger.debug("Failed to drop meta contact.",e);
+    }
+    if (o instanceof MetaContact) {
+      MetaContact metaContact=(MetaContact)o;
+      ChatTransport currentChatTransport=chatPanel.getChatSession().getCurrentChatTransport();
+      Iterator<Contact> contacts=metaContact.getContactsForProvider(currentChatTransport.getProtocolProvider());
+      String contact=null;
+      if (contacts.hasNext())       contact=contacts.next().getAddress();
+      if (contact != null) {
+        ArrayList inviteList=new ArrayList();
+        inviteList.add(contact);
+        chatPanel.inviteContacts(currentChatTransport,inviteList,null);
+        return true;
+      }
+ else       new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.CONTACT_NOT_SUPPORTING_CHAT_CONF",new String[]{contact})).showDialog();
+    }
+  }
  else   if (t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
     InputContext inputContext=comp.getInputContext();
     if (inputContext != null) {
@@ -35,8 +61,10 @@ catch (    IOException e) {
       return true;
     }
  catch (    UnsupportedFlavorException ufe) {
+      logger.debug("Failed to drop string.",ufe);
     }
 catch (    IOException ioe) {
+      logger.debug("Failed to drop string.",ioe);
     }
   }
   return false;

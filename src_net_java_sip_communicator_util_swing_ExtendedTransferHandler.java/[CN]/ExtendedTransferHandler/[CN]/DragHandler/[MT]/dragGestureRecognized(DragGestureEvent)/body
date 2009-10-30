@@ -1,0 +1,34 @@
+{
+  JComponent c=(JComponent)dge.getComponent();
+  ExtendedTransferHandler th=(ExtendedTransferHandler)c.getTransferHandler();
+  Transferable t=th.createTransferable(c);
+  if (t != null) {
+    scrolls=c.getAutoscrolls();
+    c.setAutoscrolls(false);
+    try {
+      Image img=null;
+      Icon icn=th.getVisualRepresentation(t);
+      if (icn != null) {
+        if (icn instanceof ImageIcon) {
+          img=((ImageIcon)icn).getImage();
+        }
+ else {
+          img=new BufferedImage(icn.getIconWidth(),icn.getIconHeight(),BufferedImage.TYPE_4BYTE_ABGR);
+          Graphics g=img.getGraphics();
+          icn.paintIcon(c,g,0,0);
+        }
+      }
+      if (img == null) {
+        dge.startDrag(null,t,this);
+      }
+ else {
+        dge.startDrag(null,img,new Point(0,-1 * img.getHeight(null)),t,this);
+      }
+      return;
+    }
+ catch (    RuntimeException re) {
+      c.setAutoscrolls(scrolls);
+    }
+  }
+  th.exportDone(c,t,NONE);
+}

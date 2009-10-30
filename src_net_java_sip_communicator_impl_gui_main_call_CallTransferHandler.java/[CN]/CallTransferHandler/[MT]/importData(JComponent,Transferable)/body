@@ -1,0 +1,50 @@
+{
+  if (t.isDataFlavorSupported(metaContactDataFlavor)) {
+    Object o=null;
+    try {
+      o=t.getTransferData(metaContactDataFlavor);
+    }
+ catch (    UnsupportedFlavorException e) {
+      if (logger.isDebugEnabled())       logger.debug("Failed to drop meta contact.",e);
+    }
+catch (    IOException e) {
+      if (logger.isDebugEnabled())       logger.debug("Failed to drop meta contact.",e);
+    }
+    if (o instanceof MetaContact) {
+      Iterator<Contact> contacts=((MetaContact)o).getContactsForProvider(call.getProtocolProvider());
+      String callee=null;
+      if (contacts.hasNext())       callee=contacts.next().getAddress();
+      if (callee != null) {
+        CallManager.inviteToConferenceCall(new String[]{callee},call);
+        return true;
+      }
+ else       new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.CONTACT_NOT_SUPPORTING_TELEPHONY",new String[]{callee})).showDialog();
+    }
+  }
+ else   if (t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+    InputContext inputContext=comp.getInputContext();
+    if (inputContext != null) {
+      inputContext.endComposition();
+    }
+    try {
+      BufferedReader reader=new BufferedReader(DataFlavor.stringFlavor.getReaderForText(t));
+      final StringBuffer buffToCall=new StringBuffer();
+      String str;
+      while ((str=reader.readLine()) != null)       buffToCall.append(str);
+      SwingUtilities.invokeLater(new Runnable(){
+        public void run(){
+          CallManager.inviteToConferenceCall(new String[]{buffToCall.toString()},call);
+        }
+      }
+);
+      return true;
+    }
+ catch (    UnsupportedFlavorException e) {
+      if (logger.isDebugEnabled())       logger.debug("Failed to drop string.",e);
+    }
+catch (    IOException e) {
+      if (logger.isDebugEnabled())       logger.debug("Failed to drop string.",e);
+    }
+  }
+  return false;
+}
