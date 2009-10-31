@@ -1,34 +1,45 @@
 {
-  setEncodingPreference(Constants.H264_RTP_SDP,1100);
-  setEncodingPreference(SdpConstants.H263,1000);
-  setEncodingPreference(SdpConstants.JPEG,950);
-  setEncodingPreference(SdpConstants.H261,800);
-  setEncodingPreference(SdpConstants.PCMU,650);
-  setEncodingPreference(SdpConstants.PCMA,600);
-  setEncodingPreference(97,500);
-  setEncodingPreference(SdpConstants.GSM,450);
-  setEncodingPreference(110,350);
-  setEncodingPreference(SdpConstants.DVI4_8000,300);
-  setEncodingPreference(SdpConstants.DVI4_16000,250);
-  setEncodingPreference(SdpConstants.G723,150);
-  setEncodingPreference(SdpConstants.G728,100);
-  if (G729)   setEncodingPreference(SdpConstants.G729,50);
+  setEncodingPreference("H264",VideoMediaFormatImpl.DEFAULT_CLOCK_RATE,1100);
+  setEncodingPreference("H263",VideoMediaFormatImpl.DEFAULT_CLOCK_RATE,1000);
+  setEncodingPreference("JPEG",VideoMediaFormatImpl.DEFAULT_CLOCK_RATE,950);
+  setEncodingPreference("H261",VideoMediaFormatImpl.DEFAULT_CLOCK_RATE,800);
+  setEncodingPreference("PCMU",8000,650);
+  setEncodingPreference("PCMA",8000,600);
+  setEncodingPreference("iLBC",8000,500);
+  setEncodingPreference("GSM",8000,450);
+  setEncodingPreference("speex",8000,352);
+  setEncodingPreference("speex",16000,351);
+  setEncodingPreference("speex",32000,350);
+  setEncodingPreference("DVI4",8000,300);
+  setEncodingPreference("DVI4",16000,250);
+  setEncodingPreference("G723",8000,150);
+  setEncodingPreference("G728",8000,100);
+  setEncodingPreference("G729",8000,50);
   ConfigurationService confService=NeomediaActivator.getConfigurationService();
   List<String> sdpPreferences=confService.getPropertyNamesByPrefix(PROP_SDP_PREFERENCE,false);
   for (  String pName : sdpPreferences) {
     String prefStr=confService.getString(pName);
     String fmtName=pName.substring(pName.lastIndexOf('.') + 1).replaceAll("sdp","");
     int preference=-1;
-    int fmt=-1;
+    String encoding;
+    double clockRate;
     try {
       preference=Integer.parseInt(prefStr);
-      fmt=Integer.parseInt(fmtName);
+      int encodingClockRateSeparator=fmtName.lastIndexOf('/');
+      if (encodingClockRateSeparator > -1) {
+        encoding=fmtName.substring(0,encodingClockRateSeparator);
+        clockRate=Double.parseDouble(fmtName.substring(encodingClockRateSeparator + 1));
+      }
+ else {
+        encoding=fmtName;
+        clockRate=-1;
+      }
     }
- catch (    NumberFormatException exc) {
-      logger.warn("Failed to parse format (" + fmtName + ") or preference("+ prefStr+ ").",exc);
+ catch (    NumberFormatException nfe) {
+      logger.warn("Failed to parse format (" + fmtName + ") or preference("+ prefStr+ ").",nfe);
       continue;
     }
-    setEncodingPreference(fmt,preference);
+    setEncodingPreference(encoding,clockRate,preference);
   }
   updateSupportedEncodings();
 }
