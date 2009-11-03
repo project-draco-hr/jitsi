@@ -1,21 +1,25 @@
 {
-  if (evt.getSourceCall() == call) {
-    if (isLastConference) {
-      ((ConferenceCallPanel)callPanel).addCallPeerPanel(evt.getSourceCallPeer());
-    }
- else {
-      this.isLastConference=isConference();
+  SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
+      if (evt.getSourceCall() != call)       return;
       if (isLastConference) {
-        contentPane.remove(callPanel);
-        this.callPanel=new ConferenceCallPanel(this,call);
-        contentPane.add(callPanel,BorderLayout.CENTER);
+        ((ConferenceCallPanel)callPanel).addCallPeerPanel(evt.getSourceCallPeer());
       }
  else {
-        CallPeer onlyCallPeer=null;
-        if (call.getCallPeers().hasNext())         onlyCallPeer=call.getCallPeers().next();
-        if (onlyCallPeer != null)         ((OneToOneCallPanel)callPanel).addCallPeerPanel(onlyCallPeer);
+        isLastConference=isConference();
+        if (isLastConference) {
+          contentPane.remove(callPanel);
+          callPanel=new ConferenceCallPanel(CallDialog.this,call);
+          contentPane.add(callPanel,BorderLayout.CENTER);
+        }
+ else {
+          CallPeer onlyCallPeer=null;
+          if (call.getCallPeers().hasNext())           onlyCallPeer=call.getCallPeers().next();
+          if (onlyCallPeer != null)           ((OneToOneCallPanel)callPanel).addCallPeerPanel(onlyCallPeer);
+        }
       }
+      refreshWindow();
     }
-    if (contentPane.isVisible())     pack();
   }
+);
 }
