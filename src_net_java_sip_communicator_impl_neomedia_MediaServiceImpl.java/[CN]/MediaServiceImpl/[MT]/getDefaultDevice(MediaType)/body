@@ -3,11 +3,30 @@
 switch (mediaType) {
 case AUDIO:
     captureDeviceInfo=getDeviceConfiguration().getAudioCaptureDevice();
-  return (captureDeviceInfo == null) ? null : new AudioCaptureMediaDevice(captureDeviceInfo);
+  break;
 case VIDEO:
 captureDeviceInfo=getDeviceConfiguration().getVideoCaptureDevice();
-return (captureDeviceInfo == null) ? null : new CaptureMediaDevice(captureDeviceInfo,mediaType);
+break;
 default :
-return null;
+captureDeviceInfo=null;
+break;
 }
+MediaDevice defaultDevice=null;
+if (captureDeviceInfo != null) {
+for (MediaDevice device : getDevices(mediaType)) if ((device instanceof MediaDeviceImpl) && captureDeviceInfo.equals(((MediaDeviceImpl)device).getCaptureDeviceInfo())) {
+defaultDevice=device;
+break;
+}
+}
+if (defaultDevice == null) switch (mediaType) {
+case AUDIO:
+defaultDevice=getNonSendAudioDevice();
+break;
+case VIDEO:
+defaultDevice=getNonSendVideoDevice();
+break;
+default :
+break;
+}
+return defaultDevice;
 }

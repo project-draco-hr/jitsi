@@ -1,26 +1,23 @@
 {
   CaptureDeviceInfo[] captureDeviceInfos;
-  List<CaptureMediaDevice> devices;
+  List<MediaDeviceImpl> privateDevices;
 switch (mediaType) {
 case AUDIO:
     captureDeviceInfos=getDeviceConfiguration().getAvailableAudioCaptureDevices();
-  devices=audioDevices;
+  privateDevices=audioDevices;
 break;
 case VIDEO:
 captureDeviceInfos=getDeviceConfiguration().getAvailableVideoCaptureDevices();
-devices=videoDevices;
+privateDevices=videoDevices;
 break;
 default :
-captureDeviceInfos=null;
-devices=null;
-break;
-}
-synchronized (devices) {
-if ((captureDeviceInfos == null) || (captureDeviceInfos.length == 0)) {
-devices.clear();
 return EMPTY_DEVICES;
 }
-Iterator<CaptureMediaDevice> deviceIter=devices.iterator();
+List<MediaDevice> publicDevices=new ArrayList<MediaDevice>();
+synchronized (privateDevices) {
+if ((captureDeviceInfos == null) || (captureDeviceInfos.length == 0)) privateDevices.clear();
+ else {
+Iterator<MediaDeviceImpl> deviceIter=privateDevices.iterator();
 while (deviceIter.hasNext()) {
 CaptureDeviceInfo captureDeviceInfo=deviceIter.next().getCaptureDeviceInfo();
 boolean deviceIsFound=false;
@@ -33,18 +30,37 @@ if (!deviceIsFound) deviceIter.remove();
 }
 for (CaptureDeviceInfo captureDeviceInfo : captureDeviceInfos) {
 if (captureDeviceInfo == null) continue;
-CaptureMediaDevice device;
+MediaDeviceImpl device;
 switch (mediaType) {
 case AUDIO:
-device=new AudioCaptureMediaDevice(captureDeviceInfo);
+device=new AudioMediaDeviceImpl(captureDeviceInfo);
 break;
 case VIDEO:
+device=new MediaDeviceImpl(captureDeviceInfo,mediaType);
+break;
 default :
-device=new CaptureMediaDevice(captureDeviceInfo,mediaType);
+device=null;
 break;
 }
-devices.add(device);
+if (device != null) privateDevices.add(device);
 }
-return new ArrayList<MediaDevice>(devices);
 }
+publicDevices=new ArrayList<MediaDevice>(privateDevices);
+}
+if (publicDevices.isEmpty()) {
+MediaDevice nonSendDevice;
+switch (mediaType) {
+case AUDIO:
+nonSendDevice=getNonSendAudioDevice();
+break;
+case VIDEO:
+nonSendDevice=getNonSendVideoDevice();
+break;
+default :
+nonSendDevice=null;
+break;
+}
+if (nonSendDevice != null) publicDevices.add(nonSendDevice);
+}
+return publicDevices;
 }
