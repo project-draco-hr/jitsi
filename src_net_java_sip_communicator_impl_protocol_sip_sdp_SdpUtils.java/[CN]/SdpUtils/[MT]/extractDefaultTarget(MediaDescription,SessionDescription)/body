@@ -13,12 +13,30 @@
  catch (  SdpParseException exc) {
     throw new IllegalArgumentException("Couldn't extract connection address.",exc);
   }
-  InetAddress inetAddress=null;
+  InetAddress rtpAddress=null;
   try {
-    inetAddress=NetworkUtils.getInetAddress(address);
+    rtpAddress=NetworkUtils.getInetAddress(address);
   }
  catch (  UnknownHostException exc) {
     throw new IllegalArgumentException("Failed to parse address " + address,exc);
   }
-  return null;
+  int rtpPort;
+  try {
+    rtpPort=mediaDesc.getMedia().getMediaPort();
+  }
+ catch (  SdpParseException exc) {
+    throw new IllegalArgumentException("Couldn't extract port from a media description.",exc);
+  }
+  InetSocketAddress rtpTarget=new InetSocketAddress(rtpAddress,rtpPort);
+  InetAddress rtcpAddress=rtpAddress;
+  int rtcpPort=rtpPort + 1;
+  String rtcpAttributeValue;
+  try {
+    rtcpAttributeValue=mediaDesc.getAttribute(RTCP_ATTR);
+  }
+ catch (  SdpParseException exc) {
+    throw new IllegalArgumentException("Couldn't extract attribute value.",exc);
+  }
+  InetSocketAddress rtcpTarget=determineRtcpAddress(rtcpAttributeValue,rtcpAddress,rtcpPort);
+  return new MediaStreamTarget(rtpTarget,rtcpTarget);
 }

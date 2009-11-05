@@ -1,0 +1,36 @@
+{
+  if (rtcpAttrValue == null) {
+    return new InetSocketAddress(defaultAddr,defaultPort);
+  }
+  if (rtcpAttrValue == null || rtcpAttrValue.trim().length() == 0) {
+    return new InetSocketAddress(defaultAddr,defaultPort);
+  }
+  StringTokenizer rtcpTokenizer=new StringTokenizer(rtcpAttrValue.trim()," ");
+  int tokenCount=rtcpTokenizer.countTokens();
+  int rtcpPort;
+  try {
+    rtcpPort=Integer.parseInt(rtcpTokenizer.nextToken());
+  }
+ catch (  NumberFormatException exc) {
+    throw new IllegalArgumentException("Error while parsing rtcp attribute: " + rtcpAttrValue,exc);
+  }
+  if (tokenCount == 1) {
+    return new InetSocketAddress(defaultAddr,rtcpPort);
+  }
+ else   if (tokenCount == 4) {
+    rtcpTokenizer.nextToken();
+    rtcpTokenizer.nextToken();
+    String rtcpAddrStr=rtcpTokenizer.nextToken();
+    InetAddress rtcpAddress=null;
+    try {
+      rtcpAddress=NetworkUtils.getInetAddress(rtcpAddrStr);
+    }
+ catch (    UnknownHostException exc) {
+      throw new IllegalArgumentException("Failed to parse address " + rtcpAddress,exc);
+    }
+    return new InetSocketAddress(rtcpAddress,rtcpPort);
+  }
+ else {
+    throw new IllegalArgumentException("Error while parsing rtcp attribute: " + rtcpAttrValue + ". Too many tokens! ("+ tokenCount+ ")");
+  }
+}
