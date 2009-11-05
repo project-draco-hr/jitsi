@@ -13,4 +13,23 @@ catch (  SipException ex) {
   if (!CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(getState())) {
     setSdpDescription(new String(ok.getRawContent()));
   }
+  try {
+    if (!CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(getState())) {
+      getMediaHandler().processAnswer(SdpUtils.parseSdpString(getSdpDescription()));
+    }
+  }
+ catch (  Exception exc) {
+    logger.error("There was an error parsing the SDP description of " + getDisplayName() + "("+ getAddress()+ ")",exc);
+    try {
+      setState(CallPeerState.CONNECTED);
+      hangup();
+    }
+ catch (    Exception e) {
+    }
+ finally {
+      logAndFail("Remote party sent a faulty session description.",exc);
+    }
+    return;
+  }
+  if (!CallPeerState.isOnHold(getState()))   setState(CallPeerState.CONNECTED);
 }

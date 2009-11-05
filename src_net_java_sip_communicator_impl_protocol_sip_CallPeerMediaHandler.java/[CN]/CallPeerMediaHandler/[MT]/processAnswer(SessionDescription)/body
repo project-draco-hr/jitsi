@@ -1,0 +1,20 @@
+{
+  this.remoteSess=answer;
+  Vector<MediaDescription> remoteDescriptions=SdpUtils.extractMediaDescriptions(answer);
+  this.setCallInfoURL(SdpUtils.getCallInfoURL(answer));
+  MediaService mediaService=SipActivator.getMediaService();
+  for (  MediaDescription mediaDescription : remoteDescriptions) {
+    MediaType mediaType=SdpUtils.getMediaType(mediaDescription);
+    List<MediaFormat> supportedFormats=SdpUtils.extractFormats(mediaDescription,dynamicPayloadTypes);
+    MediaDevice dev=mediaService.getDefaultDevice(mediaType);
+    MediaDirection devDirection=dev.getDirection();
+    if (supportedFormats == null || supportedFormats.size() == 0 || dev == null || devDirection == MediaDirection.INACTIVE) {
+      ProtocolProviderServiceSipImpl.throwOperationFailedException("Remote party sent an invlid SDP answer.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
+    }
+    StreamConnector connector=getStreamConnector(mediaType);
+    MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
+    MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
+    MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,answer);
+    initStream(connector,dev,supportedFormats.get(0),target,direction);
+  }
+}

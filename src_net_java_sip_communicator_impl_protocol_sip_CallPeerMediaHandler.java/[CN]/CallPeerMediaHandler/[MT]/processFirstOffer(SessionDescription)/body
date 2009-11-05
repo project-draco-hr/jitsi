@@ -1,30 +1,29 @@
 {
   this.remoteSess=offer;
-  Vector<MediaDescription> remoteDescriptions=null;
-  try {
-    remoteDescriptions=offer.getMediaDescriptions(false);
-  }
- catch (  SdpException e) {
-  }
-  if (remoteDescriptions == null || remoteDescriptions.size() == 0) {
-    ProtocolProviderServiceSipImpl.throwOperationFailedException("Remote party did not send any media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
-  }
+  Vector<MediaDescription> remoteDescriptions=SdpUtils.extractMediaDescriptions(offer);
   MediaService mediaService=SipActivator.getMediaService();
   Vector<MediaDescription> answerDescriptions=new Vector<MediaDescription>(remoteDescriptions.size());
+  this.setCallInfoURL(SdpUtils.getCallInfoURL(offer));
+  boolean atLeastOneValidDescription=false;
   for (  MediaDescription mediaDescription : remoteDescriptions) {
-    MediaType mediaType=MediaType.parseString(mediaDescription.getMedia().getMediaType());
+    MediaType mediaType=SdpUtils.getMediaType(mediaDescription);
     List<MediaFormat> supportedFormats=SdpUtils.extractFormats(mediaDescription,dynamicPayloadTypes);
-    if (supportedFormats == null || supportedFormats.size() == 0) {
+    MediaDevice dev=mediaService.getDefaultDevice(mediaType);
+    MediaDirection devDirection=dev.getDirection();
+    if (supportedFormats == null || supportedFormats.size() == 0 || dev == null || devDirection == MediaDirection.INACTIVE) {
+      answerDescriptions.add(SdpUtils.createDisablingAnswer(mediaDescription));
       continue;
     }
     StreamConnector connector=getStreamConnector(mediaType);
     MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
-    MediaDirection localDirection=mediaService.getDefaultDevice(mediaType).getDirection();
-    MediaDirection direction=localDirection.getDirectionForAnswer(remoteDirection);
-    createMediaDescription(supportedFormats,connector,direction);
+    MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
+    MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,offer);
+    initStream(connector,dev,supportedFormats.get(0),target,direction);
+    answerDescriptions.add(createMediaDescription(supportedFormats,connector,direction));
+    atLeastOneValidDescription=true;
   }
-  String userName=peer.getProtocolProvider().getAccountID().getUserID();
-  SessionDescription answer=SdpUtils.createSessionDescription(videoStreamConnector.getDataSocket().getLocalAddress(),userName,answerDescriptions);
+  if (!atLeastOneValidDescription)   throw new OperationFailedException("Offer contained no valid " + "media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT);
+  SessionDescription answer=SdpUtils.createSessionDescription(getLocalHost(),getUserName(),answerDescriptions);
   this.localSess=answer;
   return localSess.toString();
 }
