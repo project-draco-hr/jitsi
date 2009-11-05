@@ -1,0 +1,30 @@
+{
+  String encoding=null;
+  int clockRate=-1;
+  int numChannels=1;
+  if (rtpmap != null) {
+    String rtpmapValue=rtpmap.getValue();
+    StringTokenizer tokenizer=new StringTokenizer(rtpmapValue," /",false);
+    if (tokenizer.hasMoreTokens()) {
+      tokenizer.nextToken();
+    }
+    if (tokenizer.hasMoreTokens()) {
+      encoding=tokenizer.nextToken();
+    }
+    if (tokenizer.hasMoreTokens()) {
+      clockRate=Integer.parseInt(tokenizer.nextToken());
+    }
+    if (tokenizer.hasMoreTokens()) {
+      String nChansStr=tokenizer.nextToken();
+      try {
+        numChannels=Integer.parseInt(nChansStr);
+      }
+ catch (      NumberFormatException exc) {
+        logger.debug(nChansStr + " is not a valid number of channels.");
+      }
+    }
+  }
+  Map<String,String> fmtParamsMap=parseFmtpAttribute(fmtp);
+  MediaFormat format=SipActivator.getMediaService().getFormatFactory().createMediaFormat(payloadType,encoding,clockRate,numChannels,fmtParamsMap);
+  return format;
+}
