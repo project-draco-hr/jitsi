@@ -1,0 +1,23 @@
+{
+  MediaService mediaService=SipActivator.getMediaService();
+  Vector<MediaDescription> mediaDescs=new Vector<MediaDescription>();
+  MediaDevice aDev=mediaService.getDefaultDevice(MediaType.AUDIO);
+  MediaDirection audioDirection=aDev.getDirection().and(audioDirectionUserPreference);
+  if (audioDirection != MediaDirection.INACTIVE)   ;
+{
+    mediaDescs.add(createMediaDescription(aDev.getSupportedFormats(),getAudioStreamConnector(),audioDirection));
+  }
+  MediaDevice vDev=mediaService.getDefaultDevice(MediaType.VIDEO);
+  MediaDirection videoDirection=vDev.getDirection().and(videoDirectionUserPreference);
+  if (videoDirection != MediaDirection.INACTIVE)   ;
+{
+    mediaDescs.add(createMediaDescription(vDev.getSupportedFormats(),getVideoStreamConnector(),videoDirection));
+  }
+  if (mediaDescs.size() == 0) {
+    ProtocolProviderServiceSipImpl.throwOperationFailedException("We couldn't find any active Audio/Video devices and " + "couldn't create a call",OperationFailedException.GENERAL_ERROR,null,logger);
+  }
+  String userName=peer.getProtocolProvider().getAccountID().getUserID();
+  SessionDescription sDes=SdpUtils.createSessionDescription(videoStreamConnector.getDataSocket().getLocalAddress(),userName,mediaDescs);
+  this.localSess=sDes;
+  return localSess.toString();
+}

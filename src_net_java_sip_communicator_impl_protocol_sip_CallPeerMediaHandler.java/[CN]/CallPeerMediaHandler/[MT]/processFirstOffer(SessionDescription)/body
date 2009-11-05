@@ -1,0 +1,43 @@
+{
+  this.remoteSess=offer;
+  Vector<MediaDescription> remoteDescriptions=null;
+  try {
+    remoteDescriptions=offer.getMediaDescriptions(false);
+  }
+ catch (  SdpException e) {
+  }
+  if (remoteDescriptions == null || remoteDescriptions.size() == 0) {
+    ProtocolProviderServiceSipImpl.throwOperationFailedException("Remote party did not send any media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
+  }
+  Vector<MediaDescription> answerDescriptions=new Vector<MediaDescription>(remoteDescriptions.size());
+  for (  MediaDescription mediaDescription : remoteDescriptions) {
+    MediaType mediaType=MediaType.valueOf(mediaDescription.getMedia().getMediaType());
+    List<MediaFormat> supportedFormats=SdpUtils.extractFormats(mediaDescription,dynamicPayloadTypes);
+    if (supportedFormats == null || supportedFormats.size() == 0) {
+      continue;
+    }
+  }
+  MediaService mediaService=SipActivator.getMediaService();
+  audioStreamConnector=getAudioStreamConnector();
+  videoStreamConnector=getVideoStreamConnector();
+  Vector<MediaDescription> mediaDescs=new Vector<MediaDescription>();
+  MediaDevice aDev=mediaService.getDefaultDevice(MediaType.AUDIO);
+  MediaDirection audioDirection=aDev.getDirection().and(audioDirectionUserPreference);
+  if (audioDirection != MediaDirection.INACTIVE)   ;
+{
+    mediaDescs.add(createMediaDescription(aDev.getSupportedFormats(),this.audioStreamConnector,audioDirection));
+  }
+  MediaDevice vDev=mediaService.getDefaultDevice(MediaType.VIDEO);
+  MediaDirection videoDirection=vDev.getDirection().and(videoDirectionUserPreference);
+  if (videoDirection != MediaDirection.INACTIVE)   ;
+{
+    mediaDescs.add(createMediaDescription(vDev.getSupportedFormats(),this.videoStreamConnector,videoDirection));
+  }
+  if (mediaDescs.size() == 0) {
+    ProtocolProviderServiceSipImpl.throwOperationFailedException("We couldn't find any active Audio/Video devices and " + "couldn't create a call",OperationFailedException.GENERAL_ERROR,null,logger);
+  }
+  String userName=peer.getProtocolProvider().getAccountID().getUserID();
+  SessionDescription answer=SdpUtils.createSessionDescription(videoStreamConnector.getDataSocket().getLocalAddress(),userName,mediaDescs);
+  this.localSess=answer;
+  return localSess.toString();
+}
