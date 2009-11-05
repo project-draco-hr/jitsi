@@ -5,9 +5,12 @@
   if (minPort > maxPort) {
     throw new IllegalArgumentException("minPort (" + minPort + ") should be less than or "+ "equal to maxPort ("+ maxPort+ ")");
   }
+  if (minPort > preferredPort || preferredPort > maxPort) {
+    throw new IllegalArgumentException("preferredPort (" + preferredPort + ") must be between minPort ("+ minPort+ ") and maxPort ("+ maxPort+ ")");
+  }
   ConfigurationService config=NeomediaActivator.getConfigurationService();
   int bindRetries=config.getInt(BIND_RETRIES_PROPERTY_NAME,BIND_RETRIES_DEFAULT_VALUE);
-  int port=minPort;
+  int port=preferredPort;
   for (int i=0; i < bindRetries; i++) {
     try {
       return new DatagramSocket(port,laddr);
@@ -16,6 +19,7 @@
       logger.info("Retrying a bind because of a failure to bind to address " + laddr + " and port "+ port,se);
     }
     port++;
+    if (port > maxPort)     port=minPort;
   }
   throw new BindException("Could not bind to any port between " + minPort + " and "+ (port - 1));
 }
