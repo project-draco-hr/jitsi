@@ -1,7 +1,13 @@
 {
   ContentLengthHeader contentLength=ack.getContentLength();
   if ((contentLength != null) && (contentLength.getContentLength() > 0)) {
-    setSdpDescription(new String(ack.getRawContent()));
+    try {
+      getMediaHandler().processAnswer(new String(ack.getRawContent()));
+    }
+ catch (    Exception exc) {
+      logAndFail("There was an error parsing the SDP description of " + getDisplayName() + "("+ getAddress()+ ")",exc);
+      return;
+    }
   }
   CallPeerState peerState=getState();
   if (!CallPeerState.isOnHold(peerState)) {

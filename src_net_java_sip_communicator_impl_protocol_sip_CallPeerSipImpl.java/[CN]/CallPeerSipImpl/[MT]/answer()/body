@@ -27,7 +27,13 @@
     ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to create a content type header for the OK response",OperationFailedException.INTERNAL_ERROR,ex,logger);
   }
   try {
-    String sdpOffer=getSdpDescription();
+    String sdpOffer=null;
+    Request invite=getLatestInviteTransaction().getRequest();
+    ContentLengthHeader cl=invite.getContentLength();
+    if (cl != null && cl.getContentLength() > 0) {
+      sdpOffer=new String(invite.getRawContent());
+    }
+    ;
     String sdp;
     if ((sdpOffer != null) && (sdpOffer.length() > 0)) {
       sdp=getMediaHandler().processFirstOffer(SdpUtils.parseSdpString(sdpOffer)).toString();
