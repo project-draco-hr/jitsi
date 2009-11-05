@@ -1,0 +1,21 @@
+{
+  if (!NetworkUtils.isValidPortNumber(minPort) || !NetworkUtils.isValidPortNumber(maxPort)) {
+    throw new IllegalArgumentException("minPort (" + minPort + ") and maxPort ("+ maxPort+ ") "+ "should be integers between 1024 and 65535.");
+  }
+  if (minPort > maxPort) {
+    throw new IllegalArgumentException("minPort (" + minPort + ") should be less than or "+ "equal to maxPort ("+ maxPort+ ")");
+  }
+  ConfigurationService config=NeomediaActivator.getConfigurationService();
+  int bindRetries=config.getInt(BIND_RETRIES_PROPERTY_NAME,BIND_RETRIES_DEFAULT_VALUE);
+  int port=minPort;
+  for (int i=0; i < bindRetries; i++) {
+    try {
+      return new DatagramSocket(port,laddr);
+    }
+ catch (    SocketException se) {
+      logger.info("Retrying a bind because of a failure to bind to address " + laddr + " and port "+ port,se);
+    }
+    port++;
+  }
+  throw new BindException("Could not bind to any port between " + minPort + " and "+ (port - 1));
+}
