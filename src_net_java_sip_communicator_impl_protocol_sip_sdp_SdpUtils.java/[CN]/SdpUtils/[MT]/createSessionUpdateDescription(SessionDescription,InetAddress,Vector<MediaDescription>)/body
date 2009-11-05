@@ -1,0 +1,33 @@
+{
+  SessionDescription update=createSessionDescription(newConnectionAddress,null,newMediaDescriptions);
+  try {
+    Origin o=(Origin)descToUpdate.getOrigin().clone();
+    long version=o.getSessionVersion();
+    o.setSessionId(version + 1);
+    update.setOrigin(o);
+  }
+ catch (  Exception e) {
+    logger.info("Something very odd just happened.",e);
+  }
+  Vector<MediaDescription> prevMedias=extractMediaDescriptions(descToUpdate);
+  Vector<MediaDescription> completeMediaDescList=new Vector<MediaDescription>();
+  newMediaDescriptions=new Vector<MediaDescription>(newMediaDescriptions);
+  for (  MediaDescription medToUpdate : prevMedias) {
+    MediaType type=getMediaType(medToUpdate);
+    MediaDescription desc=removeMediaDesc(newMediaDescriptions,type);
+    if (desc == null) {
+      desc=createDisablingAnswer(medToUpdate);
+    }
+    completeMediaDescList.add(desc);
+  }
+  for (  MediaDescription medToAdd : newMediaDescriptions) {
+    completeMediaDescList.add(medToAdd);
+  }
+  try {
+    update.setMediaDescriptions(completeMediaDescList);
+  }
+ catch (  SdpException e) {
+    logger.info("A crazy thing just happened.",e);
+  }
+  return update;
+}

@@ -10,20 +10,20 @@
     List<MediaFormat> supportedFormats=SdpUtils.extractFormats(mediaDescription,dynamicPayloadTypes);
     MediaDevice dev=mediaService.getDefaultDevice(mediaType);
     MediaDirection devDirection=dev.getDirection();
-    if (supportedFormats == null || supportedFormats.size() == 0 || dev == null || devDirection == MediaDirection.INACTIVE) {
+    MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,offer);
+    if (supportedFormats == null || supportedFormats.size() == 0 || dev == null || devDirection == MediaDirection.INACTIVE || target.getDataAddress().getPort() == 0) {
       answerDescriptions.add(SdpUtils.createDisablingAnswer(mediaDescription));
       continue;
     }
     StreamConnector connector=getStreamConnector(mediaType);
     MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
     MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
-    MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,offer);
     initStream(connector,dev,supportedFormats.get(0),target,direction);
     answerDescriptions.add(createMediaDescription(supportedFormats,connector,direction));
     atLeastOneValidDescription=true;
   }
   if (!atLeastOneValidDescription)   throw new OperationFailedException("Offer contained no valid " + "media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT);
-  SessionDescription answer=SdpUtils.createSessionDescription(getLocalHost(),getUserName(),answerDescriptions);
+  SessionDescription answer=SdpUtils.createSessionDescription(getLastUsedLocalHost(),getUserName(),answerDescriptions);
   this.localSess=answer;
-  return localSess.toString();
+  return localSess;
 }

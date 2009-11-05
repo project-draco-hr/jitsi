@@ -27,6 +27,21 @@
     ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to create a content type header for the OK response",OperationFailedException.INTERNAL_ERROR,ex,logger);
   }
   try {
+    String sdpOffer=getSdpDescription();
+    String sdp;
+    if ((sdpOffer != null) && (sdpOffer.length() > 0)) {
+      sdp=getMediaHandler().processFirstOffer(SdpUtils.parseSdpString(sdpOffer)).toString();
+    }
+ else {
+      sdp=getMediaHandler().createOffer();
+    }
+    ok.setContent(sdp,contentTypeHeader);
+  }
+ catch (  Exception ex) {
+    logger.error("Failed to create an SDP description for an OK response " + "to an INVITE request!",ex);
+    getProtocolProvider().sayError(serverTransaction,Response.NOT_ACCEPTABLE_HERE);
+  }
+  try {
     serverTransaction.sendResponse(ok);
     if (logger.isDebugEnabled())     logger.debug("sent response\n" + ok);
   }
