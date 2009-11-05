@@ -1,0 +1,39 @@
+{
+  TrackControl[] trackControls=processor.getTrackControls();
+  MediaType mediaType=getMediaType();
+  for (int trackIndex=0; trackIndex < trackControls.length; trackIndex++) {
+    TrackControl trackControl=trackControls[trackIndex];
+    if (!trackControl.isEnabled())     continue;
+    Format[] supportedFormats=trackControl.getSupportedFormats();
+    if ((supportedFormats == null) || (supportedFormats.length < 1)) {
+      trackControl.setEnabled(false);
+      continue;
+    }
+    Format supportedFormat=null;
+switch (mediaType) {
+case AUDIO:
+      if (supportedFormats[0] instanceof AudioFormat) {
+        if (FMJConditionals.FORCE_AUDIO_FORMAT != null)         trackControl.setFormat(FMJConditionals.FORCE_AUDIO_FORMAT);
+ else {
+          supportedFormat=findFirstMatchingFormat(supportedFormats,format);
+          if (supportedFormat == null)           supportedFormat=format;
+        }
+      }
+    break;
+case VIDEO:
+  if (supportedFormats[0] instanceof VideoFormat) {
+    supportedFormat=findFirstMatchingFormat(supportedFormats,format);
+    if (supportedFormat == null)     supportedFormat=format;
+    if (supportedFormat != null)     supportedFormat=assertSize((VideoFormat)supportedFormat);
+  }
+break;
+}
+if (supportedFormat == null) trackControl.setEnabled(false);
+ else {
+Format setFormat=trackControl.setFormat(supportedFormat);
+if (setFormat == null) logger.error("Failed to set format of track " + trackIndex + " to "+ supportedFormat+ ". Processor is in state "+ processor.getState());
+ else if (setFormat != supportedFormat) logger.warn("Failed to change format of track " + trackIndex + " from "+ setFormat+ " to "+ supportedFormat+ ". Processor is in state "+ processor.getState());
+ else if (logger.isTraceEnabled()) logger.trace("Set format of track " + trackIndex + " to "+ setFormat);
+}
+}
+}

@@ -1,6 +1,7 @@
 {
   RTPManager rtpManager=getRTPManager();
-  DataSource dataSource=getDeviceSession().getOutputDataSource();
+  MediaDeviceSession deviceSession=getDeviceSession();
+  DataSource dataSource=deviceSession.getOutputDataSource();
   int streamCount;
   if (dataSource instanceof PushBufferDataSource) {
     PushBufferStream[] streams=((PushBufferDataSource)dataSource).getStreams();
@@ -23,6 +24,7 @@
     Throwable exception=null;
     try {
       rtpManager.createSendStream(dataSource,streamIndex);
+      if (logger.isTraceEnabled())       logger.trace("Created send stream for data source " + dataSource + " and stream index "+ streamIndex);
     }
  catch (    IOException ioe) {
       exception=ioe;
@@ -35,4 +37,11 @@ catch (    UnsupportedFormatException ufe) {
     }
   }
   sendStreamsAreCreated=true;
+  if (deviceSessionPropertyChangeListener == null)   deviceSessionPropertyChangeListener=new PropertyChangeListener(){
+    public void propertyChange(    PropertyChangeEvent event){
+      if (MediaDeviceSession.OUTPUT_DATA_SOURCE.equals(event.getPropertyName()))       deviceSessionOutputDataSourceChanged();
+    }
+  }
+;
+  deviceSession.addPropertyChangeListener(deviceSessionPropertyChangeListener);
 }

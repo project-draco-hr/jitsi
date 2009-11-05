@@ -14,19 +14,33 @@ catch (      NoProcessorException npe) {
         exception=npe;
       }
       if (exception != null)       logger.error("Failed to create Processor for " + captureDevice,exception);
- else       if (waitForState(processor,Processor.Configured)) {
-        try {
-          exception=null;
-          processor.setContentDescriptor(new ContentDescriptor(ContentDescriptor.RAW_RTP));
+ else {
+        if (processorControllerListener == null)         processorControllerListener=new ControllerListener(){
+          /** 
+ * Notifies this <tt>ControllerListener</tt> that
+ * the <tt>Controller</tt> which it is registered
+ * with has generated an event.
+ * @param event the <tt>ControllerEvent</tt>
+ * specifying the <tt>Controller</tt> which is the
+ * source of the event and the very type of the
+ * event
+ * @see ControllerListener#controllerUpdate(ControllerEvent)
+ */
+          public void controllerUpdate(          ControllerEvent event){
+            processorControllerUpdate(event);
+          }
         }
- catch (        NotConfiguredError nce) {
-          exception=nce;
+;
+        processor.addControllerListener(processorControllerListener);
+        if (waitForState(processor,Processor.Configured)) {
+          this.processor=processor;
+          processorIsPrematurelyClosed=false;
+        }
+ else {
+          if (processorControllerListener != null)           processor.removeControllerListener(processorControllerListener);
           processor=null;
         }
-        if (exception != null)         logger.error("Failed to set ContentDescriptor to Processor.",exception);
- else         this.processor=processor;
       }
- else       processor=null;
     }
   }
   return processor;
