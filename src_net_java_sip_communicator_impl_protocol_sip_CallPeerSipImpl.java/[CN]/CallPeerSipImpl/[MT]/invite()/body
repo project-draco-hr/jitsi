@@ -2,16 +2,12 @@
   ClientTransaction inviteTran;
   try {
     inviteTran=(ClientTransaction)getLatestInviteTransaction();
-  }
- catch (  ClassCastException exc) {
-    throw new OperationFailedException("Can't invite someone that is actually inviting us",OperationFailedException.INTERNAL_ERROR,exc);
-  }
-  attachSdpOffer(inviteTran.getRequest());
-  try {
+    ContentTypeHeader contentTypeHeader=getProtocolProvider().getHeaderFactory().createContentTypeHeader("application","sdp");
+    inviteTran.getRequest().setContent(getMediaHandler().createOffer(),contentTypeHeader);
     inviteTran.sendRequest();
     if (logger.isDebugEnabled())     logger.debug("sent request:\n" + inviteTran.getRequest());
   }
- catch (  SipException ex) {
+ catch (  Exception ex) {
     ProtocolProviderServiceSipImpl.throwOperationFailedException("An error occurred while sending invite request",OperationFailedException.NETWORK_FAILURE,ex,logger);
   }
 }

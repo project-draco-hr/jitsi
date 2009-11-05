@@ -1,0 +1,26 @@
+{
+  Vector<MediaDescription> remoteDescriptions=SdpUtils.extractMediaDescriptions(offer);
+  MediaService mediaService=SipActivator.getMediaService();
+  Vector<MediaDescription> answerDescriptions=new Vector<MediaDescription>(remoteDescriptions.size());
+  this.setCallInfoURL(SdpUtils.getCallInfoURL(offer));
+  boolean atLeastOneValidDescription=false;
+  for (  MediaDescription mediaDescription : remoteDescriptions) {
+    MediaType mediaType=SdpUtils.getMediaType(mediaDescription);
+    List<MediaFormat> supportedFormats=SdpUtils.extractFormats(mediaDescription,dynamicPayloadTypes);
+    MediaDevice dev=mediaService.getDefaultDevice(mediaType);
+    MediaDirection devDirection=dev.getDirection();
+    MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,offer);
+    if (supportedFormats == null || supportedFormats.size() == 0 || dev == null || devDirection == MediaDirection.INACTIVE || target.getDataAddress().getPort() == 0) {
+      answerDescriptions.add(SdpUtils.createDisablingAnswer(mediaDescription));
+      continue;
+    }
+    StreamConnector connector=getStreamConnector(mediaType);
+    MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
+    MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
+    initStream(connector,dev,supportedFormats.get(0),target,direction);
+    answerDescriptions.add(createMediaDescription(supportedFormats,connector,direction));
+    atLeastOneValidDescription=true;
+  }
+  if (!atLeastOneValidDescription)   throw new OperationFailedException("Offer contained no valid " + "media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT);
+  return answerDescriptions;
+}
