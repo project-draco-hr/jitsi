@@ -1,3 +1,29 @@
 {
-  return getEncoding() + "/" + (getClockRateString())+ " PayloadType="+ getRTPPayloadType();
+  StringBuffer str=new StringBuffer();
+  str.append("rtpmap:");
+  str.append(getRTPPayloadType());
+  str.append(' ');
+  str.append(getEncoding());
+  str.append('/');
+  str.append(getClockRateString());
+  if (MediaType.AUDIO.equals(getMediaType())) {
+    int channels=((AudioFormat)getFormat()).getChannels();
+    if (channels != 1) {
+      str.append('/');
+      str.append(channels);
+    }
+  }
+  Map<String,String> formatParameters=getFormatParameters();
+  if (!formatParameters.isEmpty()) {
+    str.append(" fmtp:");
+    boolean prependSeparator=false;
+    for (    Map.Entry<String,String> formatParameter : formatParameters.entrySet()) {
+      if (prependSeparator)       str.append(';');
+ else       prependSeparator=true;
+      str.append(formatParameter.getKey());
+      str.append('=');
+      str.append(formatParameter.getValue());
+    }
+  }
+  return str.toString();
 }
