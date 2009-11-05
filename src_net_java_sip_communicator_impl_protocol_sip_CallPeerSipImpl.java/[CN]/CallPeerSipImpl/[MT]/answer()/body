@@ -27,29 +27,6 @@
     ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to create a content type header for the OK response",OperationFailedException.INTERNAL_ERROR,ex,logger);
   }
   try {
-    CallSession callSession=SipActivator.getMediaService().createCallSession(getCall());
-    setMediaCallSession(callSession);
-    callSession.setSessionCreatorCallback(this);
-    String sdpOffer=getSdpDescription();
-    String sdp;
-    if ((sdpOffer != null) && (sdpOffer.length() > 0)) {
-      sdp=callSession.processSdpOffer(this,sdpOffer);
-      setCallInfoURL(callSession.getCallInfoURL());
-    }
- else {
-      sdp=callSession.createSdpOffer();
-    }
-    ok.setContent(sdp,contentTypeHeader);
-  }
- catch (  MediaException ex) {
-    logger.error("Failed to create an SDP description for an OK response " + "to an INVITE request!",ex);
-    getProtocolProvider().sayError(serverTransaction,Response.NOT_ACCEPTABLE_HERE);
-  }
-catch (  ParseException ex) {
-    logger.error("Failed to parse SDP of an invoming INVITE",ex);
-    getProtocolProvider().sayError(serverTransaction,Response.NOT_ACCEPTABLE_HERE);
-  }
-  try {
     serverTransaction.sendResponse(ok);
     if (logger.isDebugEnabled())     logger.debug("sent response\n" + ok);
   }
