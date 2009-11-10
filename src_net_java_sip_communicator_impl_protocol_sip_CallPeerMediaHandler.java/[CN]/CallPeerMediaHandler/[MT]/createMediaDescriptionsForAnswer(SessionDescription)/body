@@ -8,16 +8,18 @@
     MediaType mediaType=SdpUtils.getMediaType(mediaDescription);
     List<MediaFormat> supportedFormats=SdpUtils.extractFormats(mediaDescription,dynamicPayloadTypes);
     MediaDevice dev=mediaService.getDefaultDevice(mediaType);
-    MediaDirection devDirection=dev.getDirection();
+    MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
+    devDirection=devDirection.and(getDirectionUserPreference(mediaType));
     MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,offer);
-    if (supportedFormats == null || supportedFormats.size() == 0 || dev == null || devDirection == MediaDirection.INACTIVE || target.getDataAddress().getPort() == 0) {
+    int targetDataPort=target.getDataAddress().getPort();
+    if (supportedFormats.isEmpty() || (devDirection == MediaDirection.INACTIVE) || (targetDataPort == 0)) {
       answerDescriptions.add(SdpUtils.createDisablingAnswer(mediaDescription));
       continue;
     }
     StreamConnector connector=getStreamConnector(mediaType);
     MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
     MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
-    if (target.getDataAddress().getPort() != 0) {
+    if (targetDataPort != 0) {
       initStream(connector,dev,supportedFormats.get(0),target,direction);
     }
  else {

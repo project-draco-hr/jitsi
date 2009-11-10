@@ -1,20 +1,12 @@
 {
   MediaService mediaService=SipActivator.getMediaService();
   Vector<MediaDescription> mediaDescs=new Vector<MediaDescription>();
-  MediaDevice aDev=mediaService.getDefaultDevice(MediaType.AUDIO);
-  if (aDev != null) {
-    MediaDirection audioDirection=aDev.getDirection().and(audioDirectionUserPreference);
-    if (locallyOnHold)     audioDirection=audioDirection.and(MediaDirection.SENDONLY);
-    if (audioDirection != MediaDirection.INACTIVE) {
-      mediaDescs.add(createMediaDescription(aDev.getSupportedFormats(),getStreamConnector(MediaType.AUDIO),audioDirection));
-    }
-  }
-  MediaDevice vDev=mediaService.getDefaultDevice(MediaType.VIDEO);
-  if (vDev != null) {
-    MediaDirection videoDirection=vDev.getDirection().and(videoDirectionUserPreference);
-    if (locallyOnHold)     videoDirection=videoDirection.and(MediaDirection.SENDONLY);
-    if (videoDirection != MediaDirection.INACTIVE) {
-      mediaDescs.add(createMediaDescription(vDev.getSupportedFormats(),getStreamConnector(MediaType.VIDEO),videoDirection));
+  for (  MediaType mediaType : MediaType.values()) {
+    MediaDevice dev=mediaService.getDefaultDevice(mediaType);
+    if (dev != null) {
+      MediaDirection direction=dev.getDirection().and(getDirectionUserPreference(mediaType));
+      if (locallyOnHold)       direction=direction.and(MediaDirection.SENDONLY);
+      if (direction != MediaDirection.INACTIVE)       mediaDescs.add(createMediaDescription(dev.getSupportedFormats(),getStreamConnector(mediaType),direction));
     }
   }
   if (mediaDescs.size() == 0) {
