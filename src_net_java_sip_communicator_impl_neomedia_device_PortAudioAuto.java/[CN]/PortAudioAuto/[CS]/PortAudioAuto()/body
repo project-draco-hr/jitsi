@@ -2,6 +2,8 @@
   PortAudio.initialize();
   int deviceCount=PortAudio.Pa_GetDeviceCount();
   int deviceIndex=0;
+  int defaultInputDeviceIx=PortAudio.Pa_GetDefaultInputDevice();
+  int defaultOutputDeviceIx=PortAudio.Pa_GetDefaultOutputDevice();
   Vector<CaptureDeviceInfo> playbackDevVector=new Vector<CaptureDeviceInfo>();
   for (; deviceIndex < deviceCount; deviceIndex++) {
     long deviceInfo=PortAudio.Pa_GetDeviceInfo(deviceIndex);
@@ -14,6 +16,8 @@
     if (maxOutputChannels > 0) {
       playbackDevVector.add(jmfInfo);
     }
+    if (deviceIndex == defaultInputDeviceIx)     defaultCaptureDevice=jmfInfo;
+    if (deviceIndex == defaultOutputDeviceIx)     defaultPlaybackDevice=jmfInfo;
   }
   playbackDevices=playbackDevVector.toArray(new CaptureDeviceInfo[0]);
   CaptureDeviceManager.commit();
