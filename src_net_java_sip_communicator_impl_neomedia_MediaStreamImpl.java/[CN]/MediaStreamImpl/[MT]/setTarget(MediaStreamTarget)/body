@@ -1,13 +1,26 @@
 {
+  if (target == null) {
+    if (rtpConnectorTarget == null)     return;
+  }
+ else   if (target.equals(rtpConnectorTarget))   return;
   rtpConnector.removeTargets();
+  rtpConnectorTarget=null;
+  boolean targetIsSet;
   if (target != null) {
     InetSocketAddress dataAddr=target.getDataAddress();
     InetSocketAddress controlAddr=target.getControlAddress();
     try {
       rtpConnector.addTarget(new SessionAddress(dataAddr.getAddress(),dataAddr.getPort(),controlAddr.getAddress(),controlAddr.getPort()));
+      targetIsSet=true;
     }
  catch (    IOException ioe) {
-      logger.error("Failed to add target " + target,ioe);
+      targetIsSet=false;
+      logger.error("Failed to set target " + target,ioe);
     }
+  }
+ else   targetIsSet=true;
+  if (targetIsSet) {
+    rtpConnectorTarget=target;
+    if (logger.isTraceEnabled())     logger.trace("Set target of " + getClass().getSimpleName() + " with hashCode "+ hashCode()+ " to "+ target);
   }
 }
