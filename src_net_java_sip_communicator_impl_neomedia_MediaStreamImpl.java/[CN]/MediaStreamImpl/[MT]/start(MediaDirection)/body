@@ -1,12 +1,12 @@
 {
   if (direction == null)   throw new NullPointerException("direction");
-  if ((MediaDirection.SENDRECV.equals(direction) || MediaDirection.SENDONLY.equals(direction)) && (!MediaDirection.SENDRECV.equals(startedDirection) && !MediaDirection.SENDONLY.equals(startedDirection))) {
+  if (direction.allowsSending() && ((startedDirection == null) || !startedDirection.allowsSending())) {
     startSendStreams();
     getDeviceSession().start(MediaDirection.SENDONLY);
     if (MediaDirection.RECVONLY.equals(startedDirection))     startedDirection=MediaDirection.SENDRECV;
  else     if (startedDirection == null)     startedDirection=MediaDirection.SENDONLY;
   }
-  if ((MediaDirection.SENDRECV.equals(direction) || MediaDirection.RECVONLY.equals(direction)) && (!MediaDirection.SENDRECV.equals(startedDirection) && !MediaDirection.RECVONLY.equals(startedDirection))) {
+  if (direction.allowsReceiving() && ((startedDirection == null) || !startedDirection.allowsReceiving())) {
     RTPManager rtpManager=getRTPManager();
     Iterable<ReceiveStream> receiveStreams;
     try {
@@ -24,7 +24,7 @@
       logger.warn("Failed to start stream " + receiveStream,ioe);
     }
     getDeviceSession().start(MediaDirection.RECVONLY);
-    if (MediaDirection.SENDONLY.equals(startedDirection))     startedDirection=MediaDirection.SENDONLY;
+    if (MediaDirection.SENDONLY.equals(startedDirection))     startedDirection=MediaDirection.SENDRECV;
  else     if (startedDirection == null)     startedDirection=MediaDirection.RECVONLY;
   }
 }

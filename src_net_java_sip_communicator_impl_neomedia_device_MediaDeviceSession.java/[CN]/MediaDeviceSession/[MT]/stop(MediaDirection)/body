@@ -1,4 +1,23 @@
 {
   if (direction == null)   throw new NullPointerException("direction");
-  if (MediaDirection.SENDRECV.equals(direction) || MediaDirection.SENDONLY.equals(direction))   if ((processor != null) && (processor.getState() > Processor.Configured))   processor.stop();
+switch (this.direction) {
+case SENDRECV:
+    if (direction.allowsReceiving())     this.direction=direction.allowsSending() ? MediaDirection.INACTIVE : MediaDirection.SENDONLY;
+ else     if (direction.allowsSending())     this.direction=MediaDirection.RECVONLY;
+  break;
+case SENDONLY:
+if (direction.allowsSending()) this.direction=MediaDirection.INACTIVE;
+break;
+case RECVONLY:
+if (direction.allowsReceiving()) this.direction=MediaDirection.INACTIVE;
+break;
+case INACTIVE:
+break;
+default :
+throw new IllegalArgumentException("direction");
+}
+if (this.direction.allowsSending()) if ((processor != null) && (processor.getState() > Processor.Configured)) {
+processor.stop();
+if (logger.isTraceEnabled()) logger.trace("Stopped Processor with hashCode " + processor.hashCode());
+}
 }
