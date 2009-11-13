@@ -1,2 +1,18 @@
 {
+  if (listener == null)   throw new NullPointerException("listener");
+synchronized (videoPropertyChangeListeners) {
+    if (!videoPropertyChangeListeners.contains(listener) && videoPropertyChangeListeners.add(listener) && (mediaHandlerPropertyChangeListener == null)) {
+      mediaHandlerPropertyChangeListener=new PropertyChangeListener(){
+        public void propertyChange(        PropertyChangeEvent event){
+          Iterable<PropertyChangeListener> listeners;
+synchronized (videoPropertyChangeListeners) {
+            listeners=new LinkedList<PropertyChangeListener>(videoPropertyChangeListeners);
+          }
+          PropertyChangeEvent thisEvent=new PropertyChangeEvent(this,event.getPropertyName(),event.getOldValue(),event.getNewValue());
+          for (          PropertyChangeListener listener : listeners)           listener.propertyChange(thisEvent);
+        }
+      }
+;
+    }
+  }
 }
