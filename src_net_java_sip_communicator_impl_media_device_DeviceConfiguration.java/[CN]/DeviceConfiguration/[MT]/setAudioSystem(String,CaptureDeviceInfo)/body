@@ -25,33 +25,30 @@
     }
   }
  else   if (name.equals(AUDIO_SYSTEM_PORTAUDIO)) {
-    setAudioCaptureDevice(PortAudioAuto.defaultCaptureDevice);
-    setAudioNotifyDevice(PortAudioAuto.defaultPlaybackDevice);
+    String audioNotifyDevName=config.getString(PROP_AUDIO_NOTIFY_DEVICE);
+    String audioPlaybackDevName=config.getString(PROP_AUDIO_PLAYBACK_DEVICE);
     setAudioPlaybackDevice(PortAudioAuto.defaultPlaybackDevice);
+    setAudioNotifyDevice(PortAudioAuto.defaultPlaybackDevice);
     if (captureDevice != null) {
-      setAudioCaptureDevice(captureDevice);
-      String audioDevName=config.getString(PROP_AUDIO_NOTIFY_DEVICE);
-      if (audioDevName != null) {
+      this.audioCaptureDevice=captureDevice;
+      if (audioNotifyDevName != null) {
         for (        CaptureDeviceInfo captureDeviceInfo : PortAudioAuto.playbackDevices) {
-          if (audioDevName.equals(captureDeviceInfo.getName())) {
-            this.audioNotifyDevice=captureDeviceInfo;
+          if (audioNotifyDevName.equals(captureDeviceInfo.getName())) {
+            setAudioNotifyDevice(captureDeviceInfo);
             break;
           }
         }
       }
-      audioDevName=config.getString(PROP_AUDIO_PLAYBACK_DEVICE);
-      if (audioDevName != null) {
+      if (audioPlaybackDevName != null) {
         for (        CaptureDeviceInfo captureDeviceInfo : PortAudioAuto.playbackDevices) {
-          if (audioDevName.equals(captureDeviceInfo.getName())) {
-            this.audioPlaybackDevice=captureDeviceInfo;
-            setDeviceToRenderer(audioPlaybackDevice);
-            removeJavaSoundRenderer();
-            initPortAudioRenderer();
+          if (audioPlaybackDevName.equals(captureDeviceInfo.getName())) {
+            setAudioPlaybackDevice(captureDeviceInfo);
             break;
           }
         }
       }
     }
+ else     setAudioCaptureDevice(PortAudioAuto.defaultCaptureDevice);
     return;
   }
  else {
