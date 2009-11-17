@@ -1,0 +1,53 @@
+{
+  NodeList usersList=conferenceInfoDocument.getElementsByTagName(ELEMENT_USERS);
+  ConferenceMember[] conferenceMembersToRemove=callPeer.getConferenceMembers();
+  int conferenceMembersToRemoveCount=conferenceMembersToRemove.length;
+  if (usersList.getLength() > 0) {
+    NodeList userList=usersList.item(0).getChildNodes();
+    int userCount=userList.getLength();
+    for (int userIndex=0; userIndex < userCount; userIndex++) {
+      Node user=userList.item(userIndex);
+      if (!ELEMENT_USER.equals(user.getNodeName()))       continue;
+      String address=((Element)user).getAttribute("entity");
+      if ((address == null) || (address.length() < 1))       continue;
+      ConferenceMemberSipImpl existingConferenceMember=null;
+      for (int conferenceMemberIndex=0; conferenceMemberIndex < conferenceMembersToRemoveCount; conferenceMemberIndex++) {
+        ConferenceMemberSipImpl conferenceMember=(ConferenceMemberSipImpl)conferenceMembersToRemove[conferenceMemberIndex];
+        if ((conferenceMember != null) && address.equalsIgnoreCase(conferenceMember.getAddress())) {
+          conferenceMembersToRemove[conferenceMemberIndex]=null;
+          existingConferenceMember=conferenceMember;
+          break;
+        }
+      }
+      boolean addConferenceMember;
+      if (existingConferenceMember == null) {
+        existingConferenceMember=new ConferenceMemberSipImpl(callPeer,address);
+        addConferenceMember=true;
+      }
+ else       addConferenceMember=false;
+      if (existingConferenceMember != null) {
+        NodeList userChildList=user.getChildNodes();
+        int userChildCount=userChildList.getLength();
+        String displayName=null;
+        String endpointStatus=null;
+        for (int userChildIndex=0; userChildIndex < userChildCount; userChildIndex++) {
+          Node userChild=userChildList.item(userChildIndex);
+          String userChildName=userChild.getNodeName();
+          if (ELEMENT_DISPLAY_TEXT.equals(userChildName)) {
+            displayName=userChild.getTextContent();
+          }
+ else           if (ELEMENT_ENDPOINT.equals(userChildName)) {
+            endpointStatus=getEndpointStatus(userChild);
+          }
+        }
+        existingConferenceMember.setDisplayName(displayName);
+        existingConferenceMember.setEndpointStatus(endpointStatus);
+        if (addConferenceMember)         callPeer.addConferenceMember(existingConferenceMember);
+      }
+    }
+  }
+  for (int conferenceMemberIndex=0; conferenceMemberIndex < conferenceMembersToRemoveCount; conferenceMemberIndex++) {
+    ConferenceMember conferenceMemberToRemove=conferenceMembersToRemove[conferenceMemberIndex];
+    if (conferenceMemberToRemove != null)     callPeer.removeConferenceMember(conferenceMemberToRemove);
+  }
+}

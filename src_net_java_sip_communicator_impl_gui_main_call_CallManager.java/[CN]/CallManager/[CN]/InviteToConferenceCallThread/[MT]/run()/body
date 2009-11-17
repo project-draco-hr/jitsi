@@ -2,12 +2,19 @@
   OperationSetTelephonyConferencing confOpSet=call.getProtocolProvider().getOperationSet(OperationSetTelephonyConferencing.class);
   if (confOpSet == null)   return;
   for (  String callee : callees) {
+    Throwable exception=null;
     try {
       confOpSet.inviteCalleeToCall(callee,call);
     }
- catch (    OperationNotSupportedException e) {
-      logger.error("Failed to invite callee: " + callee,e);
-      new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),e.getMessage(),ErrorDialog.ERROR).showDialog();
+ catch (    OperationFailedException ofe) {
+      exception=ofe;
+    }
+catch (    OperationNotSupportedException onse) {
+      exception=onse;
+    }
+    if (exception != null) {
+      logger.error("Failed to invite callee: " + callee,exception);
+      new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),exception.getMessage(),ErrorDialog.ERROR).showDialog();
     }
   }
 }

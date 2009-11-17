@@ -1,7 +1,9 @@
 {
+  Dialog dialog=subscription.getDialog();
+  if ((dialog != null) && DialogState.TERMINATED.equals(dialog.getState()))   dialog=null;
   ClientTransaction subscribeTransaction=null;
   try {
-    subscribeTransaction=createSubscription(subscription,subscriptionDuration);
+    subscribeTransaction=(dialog == null) ? createSubscription(subscription,subscriptionDuration) : createSubscription(subscription,dialog,subscriptionDuration);
   }
  catch (  OperationFailedException ex) {
     ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to create the subscription",OperationFailedException.INTERNAL_ERROR,ex,logger);
@@ -10,7 +12,8 @@
   String callId=callIdHeader.getCallId();
   addSubscription(callId,subscription);
   try {
-    subscribeTransaction.sendRequest();
+    if (dialog == null)     subscribeTransaction.sendRequest();
+ else     dialog.sendRequest(subscribeTransaction);
   }
  catch (  SipException ex) {
     removeSubscription(callId,subscription);

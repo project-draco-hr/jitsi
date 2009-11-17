@@ -10,9 +10,11 @@
     return;
   }
   ServerTransaction serverTransaction=(ServerTransaction)transaction;
+  Request invite=serverTransaction.getRequest();
   Response ok=null;
   try {
-    ok=messageFactory.createResponse(Response.OK,serverTransaction.getRequest());
+    ok=messageFactory.createResponse(Response.OK,invite);
+    reflectConferenceFocus(ok);
   }
  catch (  ParseException ex) {
     setState(CallPeerState.DISCONNECTED);
@@ -28,7 +30,6 @@
   }
   try {
     String sdpOffer=null;
-    Request invite=getLatestInviteTransaction().getRequest();
     ContentLengthHeader cl=invite.getContentLength();
     if (cl != null && cl.getContentLength() > 0) {
       sdpOffer=SdpUtils.getContentAsString(invite);
@@ -54,4 +55,5 @@
     setState(CallPeerState.DISCONNECTED);
     ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to send an OK response to an INVITE request",OperationFailedException.NETWORK_FAILURE,ex,logger);
   }
+  fireRequestProcessed(invite,ok);
 }

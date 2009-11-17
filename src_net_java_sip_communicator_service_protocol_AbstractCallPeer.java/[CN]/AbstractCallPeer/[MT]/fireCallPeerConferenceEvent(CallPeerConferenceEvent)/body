@@ -4,10 +4,28 @@ synchronized (callPeerConferenceListeners) {
     listeners=callPeerConferenceListeners.toArray(new CallPeerConferenceListener[callPeerConferenceListeners.size()]);
   }
   int eventID=conferenceEvent.getEventID();
-  for (  CallPeerConferenceListener listener : listeners) switch (eventID) {
+  if (logger.isDebugEnabled()) {
+    String eventIDString;
+switch (eventID) {
 case CallPeerConferenceEvent.CONFERENCE_FOCUS_CHANGED:
-    listener.conferenceFocusChanged(conferenceEvent);
-  break;
+      eventIDString="CONFERENCE_FOCUS_CHANGED";
+    break;
+case CallPeerConferenceEvent.CONFERENCE_MEMBER_ADDED:
+  eventIDString="CONFERENCE_MEMBER_ADDED";
+break;
+case CallPeerConferenceEvent.CONFERENCE_MEMBER_REMOVED:
+eventIDString="CONFERENCE_MEMBER_REMOVED";
+break;
+default :
+eventIDString="UNKNOWN";
+break;
+}
+logger.debug("Firing CallPeerConferenceEvent with ID " + eventIDString + " to "+ listeners.length+ " listeners");
+}
+for (CallPeerConferenceListener listener : listeners) switch (eventID) {
+case CallPeerConferenceEvent.CONFERENCE_FOCUS_CHANGED:
+listener.conferenceFocusChanged(conferenceEvent);
+break;
 case CallPeerConferenceEvent.CONFERENCE_MEMBER_ADDED:
 listener.conferenceMemberAdded(conferenceEvent);
 break;

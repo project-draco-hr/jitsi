@@ -1,0 +1,21 @@
+{
+  ContactHeader contactHeader=(ContactHeader)remoteMessage.getHeader(ContactHeader.NAME);
+  boolean conferenceFocus=false;
+  if (contactHeader != null) {
+    Iterator<?> parameterNameIter=contactHeader.getParameterNames();
+    while (parameterNameIter.hasNext())     if ("isfocus".equalsIgnoreCase(parameterNameIter.next().toString())) {
+      conferenceFocus=true;
+      break;
+    }
+  }
+  sourceCallPeer.setConferenceFocus(conferenceFocus);
+  if (conferenceFocus) {
+    ConferenceSubscriberSubscription subscription=new ConferenceSubscriberSubscription(sourceCallPeer);
+    try {
+      subscriber.subscribe(subscription);
+    }
+ catch (    OperationFailedException ofe) {
+      logger.error("Failed to create or send a conference subscription to " + sourceCallPeer,ofe);
+    }
+  }
+}
