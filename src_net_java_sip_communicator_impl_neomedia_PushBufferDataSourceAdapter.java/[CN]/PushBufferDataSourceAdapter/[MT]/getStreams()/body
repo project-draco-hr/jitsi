@@ -1,0 +1,35 @@
+{
+synchronized (streams) {
+    PullBufferStream[] dataSourceStreams=dataSource.getStreams();
+    int dataSourceStreamCount;
+    if (dataSourceStreams != null) {
+      dataSourceStreams=dataSourceStreams.clone();
+      dataSourceStreamCount=dataSourceStreams.length;
+    }
+ else     dataSourceStreamCount=0;
+    Iterator<PushBufferStreamAdapter> streamIter=streams.iterator();
+    while (streamIter.hasNext()) {
+      PushBufferStreamAdapter streamAdapter=streamIter.next();
+      PullBufferStream stream=streamAdapter.stream;
+      boolean removeStream=true;
+      for (int dataSourceStreamIndex=0; dataSourceStreamIndex < dataSourceStreamCount; dataSourceStreamIndex++)       if (stream == dataSourceStreams[dataSourceStreamIndex]) {
+        removeStream=false;
+        dataSourceStreams[dataSourceStreamIndex]=null;
+        break;
+      }
+      if (removeStream) {
+        streamIter.remove();
+        streamAdapter.close();
+      }
+    }
+    for (int dataSourceStreamIndex=0; dataSourceStreamIndex < dataSourceStreamCount; dataSourceStreamIndex++) {
+      PullBufferStream dataSourceStream=dataSourceStreams[dataSourceStreamIndex];
+      if (dataSourceStream != null) {
+        PushBufferStreamAdapter stream=new PushBufferStreamAdapter(dataSourceStream);
+        streams.add(stream);
+        if (started)         stream.start();
+      }
+    }
+    return streams.toArray(EMPTY_STREAMS);
+  }
+}

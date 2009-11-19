@@ -1,12 +1,14 @@
 {
   List<InputStreamDesc> inputStreams=new ArrayList<InputStreamDesc>();
-  for (  InputDataSourceDesc inputDataSourceDesc : inputDataSources) {
-    boolean got=getInputStreamsFromInputDataSource(inputDataSourceDesc,outputFormat,inputStreams);
-    if (!got) {
-      DataSource transcodingDataSource=createTranscodingDataSource(inputDataSourceDesc.getEffectiveInputDataSource(),outputFormat);
-      if (transcodingDataSource != null) {
-        inputDataSourceDesc.setTranscodingDataSource(transcodingDataSource);
-        getInputStreamsFromInputDataSource(inputDataSourceDesc,outputFormat,inputStreams);
+synchronized (inputDataSources) {
+    for (    InputDataSourceDesc inputDataSourceDesc : inputDataSources) {
+      boolean got=getInputStreamsFromInputDataSource(inputDataSourceDesc,outputFormat,inputStreams);
+      if (!got) {
+        DataSource transcodingDataSource=createTranscodingDataSource(inputDataSourceDesc.getEffectiveInputDataSource(),outputFormat);
+        if (transcodingDataSource != null) {
+          inputDataSourceDesc.setTranscodingDataSource(transcodingDataSource);
+          getInputStreamsFromInputDataSource(inputDataSourceDesc,outputFormat,inputStreams);
+        }
       }
     }
   }

@@ -1,21 +1,28 @@
 {
+  AudioFormat inputStreamFormat=(AudioFormat)inputStream.getFormat();
   Buffer buffer=new Buffer();
   if (sampleCount != 0) {
-    AudioFormat inputFormat=(AudioFormat)inputStream.getFormat();
-    Class<?> inputDataType=inputFormat.getDataType();
+    Class<?> inputDataType=inputStreamFormat.getDataType();
     if (Format.byteArray.equals(inputDataType)) {
-      buffer.setData(new byte[sampleCount * (inputFormat.getSampleSizeInBits() / 8)]);
+      buffer.setData(new byte[sampleCount * (inputStreamFormat.getSampleSizeInBits() / 8)]);
       buffer.setLength(0);
       buffer.setOffset(0);
     }
- else     throw new UnsupportedFormatException("!Format.getDataType().equals(byte[].class)",inputFormat);
+ else     throw new UnsupportedFormatException("!Format.getDataType().equals(byte[].class)",inputStreamFormat);
   }
   inputStream.read(buffer);
   int inputLength=buffer.getLength();
   if (inputLength <= 0)   return null;
   AudioFormat inputFormat=(AudioFormat)buffer.getFormat();
-  if (inputFormat.getSigned() != AudioFormat.SIGNED)   throw new UnsupportedFormatException("AudioFormat.getSigned()",inputFormat);
-  if (inputFormat.getChannels() != outputFormat.getChannels())   throw new UnsupportedFormatException("AudioFormat.getChannels()",inputFormat);
+  if (inputFormat == null)   inputFormat=inputStreamFormat;
+  int inputFormatSigned=inputFormat.getSigned();
+  if ((inputFormatSigned != AudioFormat.SIGNED) && (inputFormatSigned != Format.NOT_SPECIFIED))   throw new UnsupportedFormatException("AudioFormat.getSigned()",inputFormat);
+  int inputFormatChannels=inputFormat.getChannels();
+  int outputFormatChannels=outputFormat.getChannels();
+  if ((inputFormatChannels != outputFormatChannels) && (inputFormatChannels != Format.NOT_SPECIFIED) && (outputFormatChannels != Format.NOT_SPECIFIED)) {
+    logger.error("Encountered inputFormat with a different number of" + " channels than outputFormat for inputFormat " + inputFormat + " and outputFormat "+ outputFormat);
+    throw new UnsupportedFormatException("AudioFormat.getChannels()",inputFormat);
+  }
   Object inputData=buffer.getData();
   if (inputData instanceof byte[]) {
     byte[] inputSamples=(byte[])inputData;

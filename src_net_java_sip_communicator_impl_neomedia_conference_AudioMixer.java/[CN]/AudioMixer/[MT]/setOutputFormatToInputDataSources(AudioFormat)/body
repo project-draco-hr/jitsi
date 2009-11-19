@@ -1,11 +1,18 @@
 {
   String formatControlType=FormatControl.class.getName();
-  for (  InputDataSourceDesc inputDataSourceDesc : inputDataSources) {
-    DataSource inputDataSource=inputDataSourceDesc.getEffectiveInputDataSource();
-    FormatControl formatControl=(FormatControl)inputDataSource.getControl(formatControlType);
-    if (formatControl != null) {
-      Format inputFormat=formatControl.getFormat();
-      if ((inputFormat == null) || !matches(inputFormat,outputFormat))       formatControl.setFormat(outputFormat);
+synchronized (inputDataSources) {
+    for (    InputDataSourceDesc inputDataSourceDesc : inputDataSources) {
+      DataSource inputDataSource=inputDataSourceDesc.getEffectiveInputDataSource();
+      FormatControl formatControl=(FormatControl)inputDataSource.getControl(formatControlType);
+      if (formatControl != null) {
+        Format inputFormat=formatControl.getFormat();
+        if ((inputFormat == null) || !matches(inputFormat,outputFormat)) {
+          Format setFormat=formatControl.setFormat(outputFormat);
+          if (setFormat == null)           logger.error("Failed to set format of inputDataSource to " + outputFormat);
+ else           if (setFormat != outputFormat)           logger.warn("Failed to change format of inputDataSource from " + setFormat + " to "+ outputFormat);
+ else           if (logger.isTraceEnabled())           logger.trace("Set format of inputDataSource to " + setFormat);
+        }
+      }
     }
   }
 }
