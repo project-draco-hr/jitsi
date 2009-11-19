@@ -1,10 +1,13 @@
 {
-  InputStreamDesc[] oldValue=this.inputStreams;
+  InputStreamDesc[] oldValue;
   InputStreamDesc[] newValue=inputStreams.toArray(new InputStreamDesc[inputStreams.size()]);
+synchronized (inputStreamsSyncRoot) {
+    oldValue=this.inputStreams;
+    this.inputStreams=newValue;
+  }
   boolean valueIsChanged=!Arrays.equals(oldValue,newValue);
-  if (valueIsChanged)   setTransferHandler(oldValue,null);
-  this.inputStreams=newValue;
   if (valueIsChanged) {
+    setTransferHandler(oldValue,null);
     boolean skippedForTransferHandler=false;
     for (    InputStreamDesc inputStreamDesc : newValue) {
       SourceStream inputStream=inputStreamDesc.getInputStream();
@@ -14,5 +17,12 @@
       }
     }
     setTransferHandler(newValue,transferHandler);
+    if (logger.isTraceEnabled()) {
+      int oldValueLength=(oldValue == null) ? 0 : oldValue.length;
+      int newValueLength=(newValue == null) ? 0 : newValue.length;
+      int difference=newValueLength - oldValueLength;
+      if (difference > 0)       logger.trace("Added " + difference + " inputStream(s).");
+ else       if (difference < 0)       logger.trace("Removed " + difference + " inputStream(s).");
+    }
   }
 }

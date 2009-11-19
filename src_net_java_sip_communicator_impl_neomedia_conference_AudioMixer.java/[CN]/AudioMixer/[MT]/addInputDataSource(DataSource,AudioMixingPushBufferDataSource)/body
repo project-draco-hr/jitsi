@@ -2,6 +2,23 @@
   if (inputDataSource == null)   throw new IllegalArgumentException("inputDataSource");
 synchronized (inputDataSources) {
     for (    InputDataSourceDesc inputDataSourceDesc : inputDataSources)     if (inputDataSource.equals(inputDataSourceDesc.inputDataSource))     throw new IllegalArgumentException("inputDataSource");
-    inputDataSources.add(new InputDataSourceDesc(inputDataSource,outputDataSource));
+    InputDataSourceDesc inputDataSourceDesc=new InputDataSourceDesc(inputDataSource,outputDataSource);
+    boolean added=inputDataSources.add(inputDataSourceDesc);
+    if (added) {
+      if (logger.isTraceEnabled())       logger.trace("Added input DataSource with hashCode " + inputDataSource.hashCode());
+      if (connected > 0)       try {
+        inputDataSourceDesc.getEffectiveInputDataSource().connect();
+      }
+ catch (      IOException ioe) {
+        throw new UndeclaredThrowableException(ioe);
+      }
+      if (outputStream != null)       getOutputStream();
+      if (started > 0)       try {
+        inputDataSourceDesc.getEffectiveInputDataSource().start();
+      }
+ catch (      IOException ioe) {
+        throw new UndeclaredThrowableException(ioe);
+      }
+    }
   }
 }

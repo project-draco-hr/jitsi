@@ -1,17 +1,19 @@
 {
-  AudioFormat outputFormat=getOutputFormatFromInputDataSources();
-  setOutputFormatToInputDataSources(outputFormat);
-  Collection<InputStreamDesc> inputStreams;
-  try {
-    inputStreams=getInputStreamsFromInputDataSources(outputFormat);
-  }
- catch (  IOException ex) {
-    throw new UndeclaredThrowableException(ex);
-  }
-  if (inputStreams.size() <= 0)   outputStream=null;
+synchronized (inputDataSources) {
+    AudioFormat outputFormat=getOutputFormatFromInputDataSources();
+    setOutputFormatToInputDataSources(outputFormat);
+    Collection<InputStreamDesc> inputStreams;
+    try {
+      inputStreams=getInputStreamsFromInputDataSources(outputFormat);
+    }
+ catch (    IOException ex) {
+      throw new UndeclaredThrowableException(ex);
+    }
+    if (inputStreams.size() <= 0)     outputStream=null;
  else {
-    if (outputStream == null)     outputStream=new AudioMixerPushBufferStream(outputFormat);
-    outputStream.setInputStreams(inputStreams);
+      if (outputStream == null)       outputStream=new AudioMixerPushBufferStream(outputFormat);
+      outputStream.setInputStreams(inputStreams);
+    }
+    return outputStream;
   }
-  return outputStream;
 }
