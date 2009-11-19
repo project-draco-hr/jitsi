@@ -1,24 +1,18 @@
 {
-  CallPeerRenderer peerRenderer;
-  if (peer.isConferenceFocus()) {
-    peerRenderer=new ConferenceFocusPanel(callDialog,peer);
-    peer.addConferenceMembersSoundLevelListener((ConferenceFocusPanel)peerRenderer);
-    peer.addCallPeerConferenceListener((ConferenceFocusPanel)peerRenderer);
-  }
- else {
-    peerRenderer=new ConferencePeerPanel(callDialog,peer);
-    peer.addStreamSoundLevelListener((ConferencePeerPanel)peerRenderer);
-  }
-  callPeerPanels.put(peer,peerRenderer);
+  ConferencePeerPanel confPeerPanel=new ConferencePeerPanel(callDialog,peer);
+  peer.addCallPeerConferenceListener(confPeerPanel);
+  peer.addConferenceMembersSoundLevelListener(confPeerPanel);
+  peer.addStreamSoundLevelListener(confPeerPanel);
+  callPeerPanels.put(peer,confPeerPanel);
   constraints.fill=GridBagConstraints.BOTH;
   constraints.gridx=0;
   constraints.gridy=mainPanel.getComponentCount() + 1;
   constraints.weightx=1;
   constraints.weighty=0;
   constraints.insets=new Insets(0,0,10,10);
-  mainPanel.add((Component)peerRenderer,constraints);
-  CallPeerAdapter callPeerAdapter=new CallPeerAdapter(peer,peerRenderer);
-  peerRenderer.setCallPeerAdapter(callPeerAdapter);
+  mainPanel.add(confPeerPanel,constraints);
+  CallPeerAdapter callPeerAdapter=new CallPeerAdapter(peer,confPeerPanel);
+  confPeerPanel.setCallPeerAdapter(callPeerAdapter);
   peer.addCallPeerListener(callPeerAdapter);
   peer.addPropertyChangeListener(callPeerAdapter);
   peer.addCallPeerSecurityListener(callPeerAdapter);
