@@ -11,9 +11,15 @@ synchronized (inputStreamsSyncRoot) {
     boolean skippedForTransferHandler=false;
     for (    InputStreamDesc inputStreamDesc : newValue) {
       SourceStream inputStream=inputStreamDesc.getInputStream();
-      if (inputStream instanceof PushBufferStream) {
-        if (!skippedForTransferHandler)         skippedForTransferHandler=true;
- else         if (!(inputStream instanceof CachingPushBufferStream))         inputStreamDesc.setInputStream(new CachingPushBufferStream((PushBufferStream)inputStream));
+      if (!(inputStream instanceof PushBufferStream))       continue;
+      if (!skippedForTransferHandler) {
+        skippedForTransferHandler=true;
+        continue;
+      }
+      if (!(inputStream instanceof CachingPushBufferStream)) {
+        PushBufferStream cachingInputStream=new CachingPushBufferStream((PushBufferStream)inputStream);
+        inputStreamDesc.setInputStream(cachingInputStream);
+        if (logger.isTraceEnabled())         logger.trace("Created CachingPushBufferStream" + " with hashCode " + cachingInputStream.hashCode() + " for inputStream with hashCode "+ inputStream.hashCode());
       }
     }
     setTransferHandler(newValue,transferHandler);
