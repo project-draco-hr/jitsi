@@ -1,23 +1,11 @@
 {
   String branchID=challengedTransaction.getBranchId();
   Request challengedRequest=challengedTransaction.getRequest();
-  Request reoriginatedRequest=(Request)challengedRequest.clone();
-  removeBranchID(reoriginatedRequest);
-  ListIterator authHeaders=null;
-  if (challenge.getStatusCode() == Response.UNAUTHORIZED) {
-    authHeaders=challenge.getHeaders(WWWAuthenticateHeader.NAME);
-    reoriginatedRequest.removeHeader(AuthorizationHeader.NAME);
-  }
- else   if (challenge.getStatusCode() == Response.PROXY_AUTHENTICATION_REQUIRED) {
-    authHeaders=challenge.getHeaders(ProxyAuthenticateHeader.NAME);
-    reoriginatedRequest.removeHeader(ProxyAuthorizationHeader.NAME);
-  }
-  CSeqHeader cSeq=(CSeqHeader)reoriginatedRequest.getHeader(CSeqHeader.NAME);
-  cSeq.setSeqNumber(cSeq.getSeqNumber() + 1l);
+  Request reoriginatedRequest=cloneReqForAuthentication(challengedRequest,challenge);
+  ListIterator<WWWAuthenticateHeader> authHeaders=extractChallenges(challenge);
   ClientTransaction retryTran=transactionCreator.getNewClientTransaction(reoriginatedRequest);
-  WWWAuthenticateHeader authHeader=null;
   while (authHeaders.hasNext()) {
-    authHeader=(WWWAuthenticateHeader)authHeaders.next();
+    WWWAuthenticateHeader authHeader=authHeaders.next();
     String realm=authHeader.getRealm();
     CredentialsCacheEntry ccEntry=cachedCredentials.remove(realm);
     boolean ccEntryHasSeenTran=false;
@@ -49,7 +37,7 @@
     if (ccEntry.userCredentials == null) {
       throw new OperationFailedException("Unable to authenticate with realm " + realm + ". User did not provide credentials.",OperationFailedException.AUTHENTICATION_FAILED);
     }
-    AuthorizationHeader authorization=this.getAuthorization(reoriginatedRequest.getMethod(),reoriginatedRequest.getRequestURI().toString(),(reoriginatedRequest.getContent() == null) ? "" : reoriginatedRequest.getContent().toString(),authHeader,ccEntry.userCredentials);
+    AuthorizationHeader authorization=this.createAuthorizationHeader(reoriginatedRequest.getMethod(),reoriginatedRequest.getRequestURI().toString(),(reoriginatedRequest.getContent() == null) ? "" : reoriginatedRequest.getContent().toString(),authHeader,ccEntry.userCredentials);
     ccEntry.pushBranchID(retryTran.getBranchId());
     cachedCredentials.cacheEntry(realm,ccEntry);
     logger.debug("Created authorization header: " + authorization.toString());

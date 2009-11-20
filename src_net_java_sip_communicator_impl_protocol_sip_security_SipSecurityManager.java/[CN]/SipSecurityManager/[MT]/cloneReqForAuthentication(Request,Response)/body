@@ -1,0 +1,13 @@
+{
+  Request reoriginatedRequest=(Request)challengedRequest.clone();
+  removeBranchID(reoriginatedRequest);
+  if (challenge.getStatusCode() == Response.UNAUTHORIZED) {
+    reoriginatedRequest.removeHeader(AuthorizationHeader.NAME);
+  }
+ else   if (challenge.getStatusCode() == Response.PROXY_AUTHENTICATION_REQUIRED) {
+    reoriginatedRequest.removeHeader(ProxyAuthorizationHeader.NAME);
+  }
+  CSeqHeader cSeq=(CSeqHeader)reoriginatedRequest.getHeader(CSeqHeader.NAME);
+  cSeq.setSeqNumber(cSeq.getSeqNumber() + 1l);
+  return reoriginatedRequest;
+}
