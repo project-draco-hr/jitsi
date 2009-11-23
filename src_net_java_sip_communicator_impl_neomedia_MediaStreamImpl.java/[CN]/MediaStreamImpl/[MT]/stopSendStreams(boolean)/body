@@ -1,19 +1,7 @@
 {
-  if (rtpManager == null)   return;
+  if (rtpManager == null)   return null;
   @SuppressWarnings("unchecked") Iterable<SendStream> sendStreams=rtpManager.getSendStreams();
-  if (sendStreams == null)   return;
-  for (  SendStream sendStream : sendStreams)   try {
-    sendStream.getDataSource().stop();
-    sendStream.stop();
-    if (close)     try {
-      sendStream.close();
-    }
- catch (    NullPointerException npe) {
-      logger.error("Failed to close stream " + sendStream,npe);
-    }
-  }
- catch (  IOException ioe) {
-    logger.warn("Failed to stop stream " + sendStream,ioe);
-  }
+  Iterable<SendStream> stoppedSendStreams=stopSendStreams(sendStreams,close);
   if (close)   sendStreamsAreCreated=false;
+  return stoppedSendStreams;
 }

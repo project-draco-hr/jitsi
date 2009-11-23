@@ -3,17 +3,23 @@
   AbstractMediaDevice abstractMediaDevice=(AbstractMediaDevice)device;
   if ((deviceSession == null) || (deviceSession.getDevice() != device)) {
     MediaDeviceSession oldValue=deviceSession;
+    MediaDirection startedDirection;
     if (deviceSession != null) {
+      startedDirection=deviceSession.getStartedDirection();
       if (deviceSessionPropertyChangeListener != null)       deviceSession.removePropertyChangeListener(deviceSessionPropertyChangeListener);
       deviceSession.close();
       deviceSession=null;
     }
+ else     startedDirection=MediaDirection.INACTIVE;
     deviceSession=abstractMediaDevice.createSession();
     direction=null;
     MediaDeviceSession newValue=deviceSession;
     deviceSessionChanged(oldValue,newValue);
-    if (deviceSession != null) synchronized (receiveStreams) {
-      for (      ReceiveStream receiveStream : receiveStreams)       deviceSession.addReceiveStream(receiveStream);
+    if (deviceSession != null) {
+      deviceSession.start(startedDirection);
+synchronized (receiveStreams) {
+        for (        ReceiveStream receiveStream : receiveStreams)         deviceSession.addReceiveStream(receiveStream);
+      }
     }
   }
 }
