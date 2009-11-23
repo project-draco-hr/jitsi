@@ -18,21 +18,21 @@
       }
  else {
         logger.trace("We don't seem to have a good pass! Get one.");
+        System.err.println("!!!???!!! - asking for authentication because we don't have a password at all.");
         ccEntry=createCcEntryWithNewCredentials(realm,SecurityAuthority.AUTHENTICATION_REQUIRED);
         if (ccEntry == null)         throw new OperationFailedException("User has canceled the authentication process.",OperationFailedException.AUTHENTICATION_CANCELED);
       }
     }
  else {
-      if (ccEntryHasSeenTran) {
+      if (ccEntryHasSeenTran && !authHeader.isStale()) {
         SipActivator.getProtocolProviderFactory().storePassword(accountID,null);
+        System.err.println("!!!???!!! - asking for authentication because passwd was wrong");
         ccEntry=createCcEntryWithNewCredentials(realm,SecurityAuthority.WRONG_PASSWORD);
         if (ccEntry == null)         throw new OperationFailedException("User has canceled the authentication process.",OperationFailedException.AUTHENTICATION_CANCELED);
       }
  else {
         logger.trace("We seem to have a pass in the cache. " + "Let's try with it.");
       }
-    }
-    if (ccEntry == null || ((ccEntryHasSeenTran && !authHeader.isStale()))) {
     }
     if (ccEntry.userCredentials == null) {
       throw new OperationFailedException("Unable to authenticate with realm " + realm + ". User did not provide credentials.",OperationFailedException.AUTHENTICATION_FAILED);
