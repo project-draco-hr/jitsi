@@ -1,13 +1,23 @@
 {
   java.util.List<String> selectedContactAddresses=new ArrayList<String>();
   Enumeration<MetaContact> selectedContacts=getSelectedMetaContacts();
-  while (selectedContacts.hasMoreElements()) {
-    MetaContact metaContact=selectedContacts.nextElement();
-    Iterator<Contact> contactsIter=metaContact.getContactsForProvider(inviteChatTransport.getProtocolProvider());
-    if (contactsIter.hasNext()) {
-      Contact inviteContact=contactsIter.next();
-      selectedContactAddresses.add(inviteContact.getAddress());
+  if (selectedContacts != null) {
+    while (selectedContacts.hasMoreElements()) {
+      MetaContact metaContact=selectedContacts.nextElement();
+      Iterator<Contact> contactsIter=metaContact.getContactsForProvider(inviteChatTransport.getProtocolProvider());
+      if (contactsIter.hasNext()) {
+        Contact inviteContact=contactsIter.next();
+        selectedContactAddresses.add(inviteContact.getAddress());
+      }
     }
   }
-  chatPanel.inviteContacts(inviteChatTransport,selectedContactAddresses,this.getReason());
+  Enumeration<String> selectedStrings=getSelectedStrings();
+  if (selectedStrings != null) {
+    while (selectedStrings.hasMoreElements()) {
+      selectedContactAddresses.add(selectedStrings.nextElement());
+    }
+  }
+  if (selectedContactAddresses.size() > 0) {
+    chatPanel.inviteContacts(inviteChatTransport,selectedContactAddresses,this.getReason());
+  }
 }
