@@ -1,0 +1,19 @@
+{
+  if (!checkInputBuffer(inputBuffer)) {
+    return BUFFER_PROCESSED_FAILED;
+  }
+  if (isEOM(inputBuffer)) {
+    propagateEOM(outputBuffer);
+    return BUFFER_PROCESSED_OK;
+  }
+  Format newFormat=inputBuffer.getFormat();
+  if (lastFormat != newFormat) {
+    initConverter((AudioFormat)newFormat);
+  }
+  int outLength=calculateOutputSize(inputBuffer.getLength());
+  byte[] inpData=(byte[])inputBuffer.getData();
+  byte[] outData=validateByteArraySize(outputBuffer,outLength);
+  pcm162alaw(inpData,inputBuffer.getOffset(),outData,0,outData.length,bigEndian);
+  updateOutput(outputBuffer,outputFormat,outLength,0);
+  return BUFFER_PROCESSED_OK;
+}

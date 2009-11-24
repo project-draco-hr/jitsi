@@ -1,0 +1,32 @@
+{
+  if (!checkInputBuffer(inputBuffer)) {
+    return BUFFER_PROCESSED_FAILED;
+  }
+  if (isEOM(inputBuffer)) {
+    propagateEOM(outputBuffer);
+    return BUFFER_PROCESSED_OK;
+  }
+  Format newFormat=inputBuffer.getFormat();
+  if (lastFormat != newFormat) {
+    initConverter((AudioFormat)newFormat);
+  }
+  int inpLength=inputBuffer.getLength();
+  int inOffset=inputBuffer.getOffset();
+  byte[] inpData=(byte[])inputBuffer.getData();
+  if (inpLength == 0) {
+    return OUTPUT_BUFFER_NOT_FILLED;
+  }
+ else   if (inpLength < enc.ULP_inst.blockl * 2) {
+    return OUTPUT_BUFFER_NOT_FILLED;
+  }
+  short[] encoded_data=new short[ILBC_NO_OF_BYTES / 2];
+  int outLength=ILBC_NO_OF_BYTES;
+  byte[] outdata=validateByteArraySize(outputBuffer,outLength);
+  short[] data=Utils.byteToShortArray(inpData,inOffset,inpLength,true);
+  enc.encode(encoded_data,data);
+  Utils.shortArrToByteArr(encoded_data,outdata,false);
+  updateOutput(outputBuffer,outputFormat,outLength,0);
+  inputBuffer.setLength(inpLength - enc.ULP_inst.blockl * 2);
+  inputBuffer.setOffset(inOffset + enc.ULP_inst.blockl * 2);
+  return BUFFER_PROCESSED_OK | INPUT_BUFFER_NOT_CONSUMED;
+}

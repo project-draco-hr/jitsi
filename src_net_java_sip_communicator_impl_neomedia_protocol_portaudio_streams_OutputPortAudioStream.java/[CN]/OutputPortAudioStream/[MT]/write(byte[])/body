@@ -1,0 +1,40 @@
+{
+  if (!started)   return;
+  int numSamples=PortAudioManager.NUM_SAMPLES * frameSize;
+  int currentIx=0;
+  if (bufferLeft != null && bufferLeft.length > 0) {
+    if (buffer.length + bufferLeft.length >= numSamples) {
+      byte[] tmp=new byte[numSamples];
+      System.arraycopy(bufferLeft,0,tmp,0,bufferLeft.length);
+      System.arraycopy(buffer,currentIx,tmp,bufferLeft.length,numSamples - bufferLeft.length);
+      currentIx+=numSamples - bufferLeft.length;
+      bufferLeft=null;
+      PortAudio.Pa_WriteStream(getStream(),tmp,tmp.length / frameSize);
+    }
+ else {
+      byte[] tmp=new byte[numSamples];
+      System.arraycopy(bufferLeft,0,tmp,0,bufferLeft.length);
+      System.arraycopy(buffer,currentIx,tmp,bufferLeft.length,numSamples - bufferLeft.length);
+      bufferLeft=null;
+      return;
+    }
+  }
+  if (buffer.length > numSamples) {
+    while (currentIx <= buffer.length - numSamples) {
+      byte[] tmp=new byte[numSamples];
+      System.arraycopy(buffer,currentIx,tmp,0,numSamples);
+      PortAudio.Pa_WriteStream(getStream(),tmp,tmp.length / frameSize);
+      currentIx+=numSamples;
+    }
+    if (currentIx < buffer.length) {
+      bufferLeft=new byte[buffer.length - currentIx];
+      System.arraycopy(buffer,currentIx,bufferLeft,0,bufferLeft.length);
+    }
+  }
+ else   if (buffer.length < numSamples) {
+    bufferLeft=buffer;
+  }
+ else {
+    PortAudio.Pa_WriteStream(getStream(),buffer,buffer.length / frameSize);
+  }
+}

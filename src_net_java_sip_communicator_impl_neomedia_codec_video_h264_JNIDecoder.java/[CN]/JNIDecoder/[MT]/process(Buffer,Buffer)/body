@@ -1,0 +1,69 @@
+{
+  if (!checkInputBuffer(inputBuffer)) {
+    return BUFFER_PROCESSED_FAILED;
+  }
+  if (isEOM(inputBuffer) || !opened) {
+    propagateEOM(outputBuffer);
+    return BUFFER_PROCESSED_OK;
+  }
+  if (inputBuffer.isDiscard()) {
+    inputBuffer.setDiscard(true);
+    reset();
+    return BUFFER_PROCESSED_OK;
+  }
+  if (waitingForMarker) {
+    lastReceivedSeq=inputBuffer.getSequenceNumber();
+    if ((inputBuffer.getFlags() & Buffer.FLAG_RTP_MARKER) != 0) {
+      waitingForMarker=false;
+      outputBuffer.setDiscard(true);
+      return BUFFER_PROCESSED_OK;
+    }
+ else     return OUTPUT_BUFFER_NOT_FILLED;
+  }
+  if (lastReceivedSeq != -1 && inputBuffer.getSequenceNumber() - lastReceivedSeq > 1) {
+    long oldRecv=lastReceivedSeq;
+    lastReceivedSeq=inputBuffer.getSequenceNumber();
+    waitingForMarker=true;
+    logger.trace("DROP rtp data! " + oldRecv + "/"+ lastReceivedSeq);
+    parser.reset();
+    reset();
+    return OUTPUT_BUFFER_NOT_FILLED;
+  }
+ else   if (!parser.pushRTPInput(inputBuffer)) {
+    lastReceivedSeq=inputBuffer.getSequenceNumber();
+    return OUTPUT_BUFFER_NOT_FILLED;
+  }
+  lastReceivedSeq=inputBuffer.getSequenceNumber();
+  got_picture[0]=false;
+  FFMPEG.avcodec_decode_video(avcontext,avframe,got_picture,parser.getEncodedFrame(),parser.getEncodedFrameLen());
+  int avctxWidth=FFMPEG.avcodeccontext_get_width(avcontext);
+  if (avctxWidth != 0 && currentVideoWidth != avctxWidth) {
+    currentVideoWidth=avctxWidth;
+    VideoFormat ivf=(VideoFormat)inputBuffer.getFormat();
+    VideoFormat ovf=getVideoFormat(currentVideoWidth,ivf.getFrameRate());
+    if (ovf != null) {
+      outputFormat=ovf;
+    }
+  }
+  outputBuffer.setFormat(outputFormat);
+  if (!got_picture[0]) {
+    outputBuffer.setDiscard(true);
+    return BUFFER_PROCESSED_OK;
+  }
+  int avctxHeight=FFMPEG.avcodeccontext_get_height(avcontext);
+  int numBytes=FFMPEG.avpicture_get_size(FFMPEG.PIX_FMT_RGB32,avctxWidth,avctxHeight);
+  long buffer=FFMPEG.av_malloc(numBytes);
+  FFMPEG.avpicture_fill(frameRGB,buffer,FFMPEG.PIX_FMT_RGB32,avctxWidth,avctxHeight);
+  FFMPEG.img_convert(frameRGB,FFMPEG.PIX_FMT_RGB32,avframe,FFMPEG.avcodeccontext_get_pix_fmt(avcontext),avctxWidth,avctxHeight);
+  Object outData=outputBuffer.getData();
+  int dataLength=numBytes / 4;
+  int[] data;
+  if ((outData instanceof int[]) && ((int[])outData).length >= dataLength)   data=(int[])outData;
+ else   data=new int[dataLength];
+  FFMPEG.memcpy(data,0,dataLength,FFMPEG.avpicture_get_data0(frameRGB));
+  outputBuffer.setOffset(0);
+  outputBuffer.setLength(dataLength);
+  outputBuffer.setData(data);
+  FFMPEG.av_free(buffer);
+  return BUFFER_PROCESSED_OK;
+}

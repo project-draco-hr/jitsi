@@ -1,0 +1,36 @@
+{
+  float GAP1=Ld8k.GAP1;
+  float GAP2=Ld8k.GAP2;
+  int M=Ld8k.M;
+  int MODE=Ld8k.MODE;
+  int NC=Ld8k.NC;
+  int NC0_B=Ld8k.NC0_B;
+  int NC1_B=Ld8k.NC1_B;
+  int mode, j;
+  int index, mode_index;
+  int[] cand=new int[MODE];
+  int cand_cur;
+  int[] tindex1=new int[MODE], tindex2=new int[MODE];
+  float[] tdist=new float[MODE];
+  float[] rbuf=new float[M];
+  float[] buf=new float[M];
+  for (mode=0; mode < MODE; mode++) {
+    Lspgetq.lsp_prev_extract(lsp,rbuf,fg[mode],freq_prev,fg_sum_inv[mode]);
+    cand_cur=lsp_pre_select(rbuf,lspcb1);
+    cand[mode]=cand_cur;
+    index=lsp_select_1(rbuf,lspcb1[cand_cur],wegt,lspcb2);
+    tindex1[mode]=index;
+    for (j=0; j < NC; j++)     buf[j]=lspcb1[cand_cur][j] + lspcb2[index][j];
+    Lspgetq.lsp_expand_1(buf,GAP1);
+    index=lsp_select_2(rbuf,lspcb1[cand_cur],wegt,lspcb2);
+    tindex2[mode]=index;
+    for (j=NC; j < M; j++)     buf[j]=lspcb1[cand_cur][j] + lspcb2[index][j];
+    Lspgetq.lsp_expand_2(buf,GAP1);
+    Lspgetq.lsp_expand_1_2(buf,GAP2);
+    tdist[mode]=lsp_get_tdist(wegt,buf,rbuf,fg_sum[mode]);
+  }
+  mode_index=lsp_last_select(tdist);
+  code_ana[0]=(mode_index << NC0_B) | cand[mode_index];
+  code_ana[1]=(tindex1[mode_index] << NC1_B) | tindex2[mode_index];
+  Lspgetq.lsp_get_quant(lspcb1,lspcb2,cand[mode_index],tindex1[mode_index],tindex2[mode_index],fg[mode_index],freq_prev,lspq,fg_sum[mode_index]);
+}

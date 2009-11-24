@@ -1,0 +1,21 @@
+{
+  int L_SUBFR=Ld8k.L_SUBFR;
+  int i, j, k;
+  float[] excf=new float[L_SUBFR];
+  float alp, s, norm;
+  k=exc_offset - t_min;
+  Filter.convolve(exc,k,h,excf,l_subfr);
+  for (i=t_min; i <= t_max; i++) {
+    alp=0.01f;
+    for (j=0; j < l_subfr; j++)     alp+=excf[j] * excf[j];
+    norm=inv_sqrt(alp);
+    s=0.0f;
+    for (j=0; j < l_subfr; j++)     s+=xn[j] * excf[j];
+    corr_norm[corr_norm_offset + i]=s * norm;
+    if (i != t_max) {
+      k--;
+      for (j=l_subfr - 1; j > 0; j--)       excf[j]=excf[j - 1] + exc[k] * h[j];
+      excf[0]=exc[k];
+    }
+  }
+}

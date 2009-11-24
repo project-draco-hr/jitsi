@@ -1,0 +1,21 @@
+{
+  int k;
+  float decblock[]=new float[ilbc_constants.BLOCKL_MAX];
+  float dtmp;
+  bitstream en_data=new bitstream(this.ULP_inst.no_of_bytes);
+  if ((mode < 0) || (mode > 1)) {
+    System.out.println("\nERROR - Wrong mode - 0, 1 allowed\n");
+  }
+  for (k=0; k < encoded_data.length; k++) {
+    en_data.buffer[2 * k + 1]=(char)(encoded_data[k] & 0xff);
+    en_data.buffer[2 * k]=(char)((encoded_data[k] >> 8) & 0xff);
+  }
+  iLBC_decode(decblock,en_data,mode);
+  for (k=0; k < this.ULP_inst.blockl; k++) {
+    dtmp=decblock[k];
+    if (dtmp < ilbc_constants.MIN_SAMPLE)     dtmp=ilbc_constants.MIN_SAMPLE;
+ else     if (dtmp > ilbc_constants.MAX_SAMPLE)     dtmp=ilbc_constants.MAX_SAMPLE;
+    decoded_data[k]=(short)dtmp;
+  }
+  return ((short)this.ULP_inst.blockl);
+}

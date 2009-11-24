@@ -1,0 +1,31 @@
+{
+  byte mask;
+  byte seg=8;
+  byte aval;
+  if (pcm_val >= 0) {
+    mask=(byte)0xD5;
+  }
+ else {
+    mask=0x55;
+    pcm_val=(short)(-pcm_val - 8);
+  }
+  for (int i=0; i < 8; i++) {
+    if (pcm_val <= seg_end[i]) {
+      seg=(byte)i;
+      break;
+    }
+  }
+  if (seg >= 8) {
+    return (byte)((0x7F ^ mask) & 0xFF);
+  }
+ else {
+    aval=(byte)(seg << SEG_SHIFT);
+    if (seg < 2) {
+      aval|=(pcm_val >> 4) & QUANT_MASK;
+    }
+ else {
+      aval|=(pcm_val >> (seg + 3)) & QUANT_MASK;
+    }
+    return (byte)((aval ^ mask) & 0xFF);
+  }
+}

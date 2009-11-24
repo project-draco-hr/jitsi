@@ -1,0 +1,23 @@
+{
+  int NCODE2=Ld8k.NCODE2;
+  float[][] gbk1=TabLd8k.gbk1;
+  float[][] gbk2=TabLd8k.gbk2;
+  int[] imap1=TabLd8k.imap1;
+  int[] imap2=TabLd8k.imap2;
+  int index1, index2;
+  float gcode0, g_code;
+  if (bfi != 0) {
+    gain_pit.value*=0.9f;
+    if (gain_pit.value > 0.9f)     gain_pit.value=0.9f;
+    gain_code.value*=0.98f;
+    Gainpred.gain_update_erasure(past_qua_en);
+    return;
+  }
+  index1=imap1[index / NCODE2];
+  index2=imap2[index % NCODE2];
+  gain_pit.value=gbk1[index1][0] + gbk2[index2][0];
+  gcode0=Gainpred.gain_predict(past_qua_en,code,l_subfr);
+  g_code=gbk1[index1][1] + gbk2[index2][1];
+  gain_code.value=g_code * gcode0;
+  Gainpred.gain_update(past_qua_en,g_code);
+}

@@ -1,0 +1,25 @@
+{
+  int k, is;
+  float[] temp=new float[ilbc_constants.BLOCKL_MAX];
+  float[] lp=new float[ilbc_constants.LPC_FILTERORDER + 1];
+  float[] lp2=new float[ilbc_constants.LPC_FILTERORDER + 1];
+  float[] r=new float[ilbc_constants.LPC_FILTERORDER + 1];
+  is=ilbc_constants.LPC_LOOKBACK + ilbc_constants.BLOCKL_MAX - this.ULP_inst.blockl;
+  System.arraycopy(data,0,this.lpc_buffer,is,this.ULP_inst.blockl);
+  for (k=0; k < this.ULP_inst.lpc_n; k++) {
+    is=ilbc_constants.LPC_LOOKBACK;
+    if (k < (this.ULP_inst.lpc_n - 1)) {
+      window(temp,ilbc_constants.lpc_winTbl,this.lpc_buffer,0,ilbc_constants.BLOCKL_MAX);
+    }
+ else {
+      window(temp,ilbc_constants.lpc_asymwinTbl,this.lpc_buffer,is,ilbc_constants.BLOCKL_MAX);
+    }
+    autocorr(r,temp,ilbc_constants.BLOCKL_MAX,ilbc_constants.LPC_FILTERORDER);
+    window(r,r,ilbc_constants.lpc_lagwinTbl,0,ilbc_constants.LPC_FILTERORDER + 1);
+    levdurb(lp,temp,r,ilbc_constants.LPC_FILTERORDER);
+    ilbc_common.bwexpand(lp2,0,lp,ilbc_constants.LPC_CHIRP_SYNTDENUM,ilbc_constants.LPC_FILTERORDER + 1);
+    a2lsf(lsf,k * ilbc_constants.LPC_FILTERORDER,lp2);
+  }
+  is=ilbc_constants.LPC_LOOKBACK + ilbc_constants.BLOCKL_MAX - this.ULP_inst.blockl;
+  System.arraycopy(this.lpc_buffer,ilbc_constants.LPC_LOOKBACK + ilbc_constants.BLOCKL_MAX - is,this.lpc_buffer,0,is);
+}

@@ -1,0 +1,70 @@
+{
+  int i, j;
+  float hlp;
+  float[] p=new float[ilbc_constants.LPC_HALFORDER];
+  float[] q=new float[ilbc_constants.LPC_HALFORDER];
+  float[] a=new float[ilbc_constants.LPC_HALFORDER + 1];
+  float[] a1=new float[ilbc_constants.LPC_HALFORDER];
+  float[] a2=new float[ilbc_constants.LPC_HALFORDER];
+  float[] b=new float[ilbc_constants.LPC_HALFORDER + 1];
+  float[] b1=new float[ilbc_constants.LPC_HALFORDER];
+  float[] b2=new float[ilbc_constants.LPC_HALFORDER];
+  for (i=0; i < ilbc_constants.LPC_FILTERORDER; i++) {
+    freq[i]=freq[i] * ilbc_constants.PI2;
+  }
+  if ((freq[0] <= 0.0f) || (freq[ilbc_constants.LPC_FILTERORDER - 1] >= 0.5)) {
+    if (freq[0] <= 0.0f) {
+      freq[0]=(float)0.022;
+    }
+    if (freq[ilbc_constants.LPC_FILTERORDER - 1] >= 0.5) {
+      freq[ilbc_constants.LPC_FILTERORDER - 1]=(float)0.499;
+    }
+    hlp=(freq[ilbc_constants.LPC_FILTERORDER - 1] - freq[0]) / (float)(ilbc_constants.LPC_FILTERORDER - 1);
+    for (i=1; i < ilbc_constants.LPC_FILTERORDER; i++) {
+      freq[i]=freq[i - 1] + hlp;
+    }
+  }
+  for (int li=0; li < ilbc_constants.LPC_HALFORDER; li++) {
+    a1[li]=0.0f;
+    a2[li]=0.0f;
+    b1[li]=0.0f;
+    b2[li]=0.0f;
+  }
+  for (int li=0; li < ilbc_constants.LPC_HALFORDER + 1; li++) {
+    a[li]=0.0f;
+    b[li]=0.0f;
+  }
+  for (i=0; i < ilbc_constants.LPC_HALFORDER; i++) {
+    p[i]=(float)Math.cos(ilbc_constants.TWO_PI * freq[2 * i]);
+    q[i]=(float)Math.cos(ilbc_constants.TWO_PI * freq[2 * i + 1]);
+  }
+  a[0]=0.25f;
+  b[0]=0.25f;
+  for (i=0; i < ilbc_constants.LPC_HALFORDER; i++) {
+    a[i + 1]=a[i] - 2 * p[i] * a1[i] + a2[i];
+    b[i + 1]=b[i] - 2 * q[i] * b1[i] + b2[i];
+    a2[i]=a1[i];
+    a1[i]=a[i];
+    b2[i]=b1[i];
+    b1[i]=b[i];
+  }
+  for (j=0; j < ilbc_constants.LPC_FILTERORDER; j++) {
+    if (j == 0) {
+      a[0]=0.25f;
+      b[0]=-0.25f;
+    }
+ else {
+      a[0]=b[0]=0.0f;
+    }
+    for (i=0; i < ilbc_constants.LPC_HALFORDER; i++) {
+      a[i + 1]=a[i] - 2 * p[i] * a1[i] + a2[i];
+      b[i + 1]=b[i] - 2 * q[i] * b1[i] + b2[i];
+      a2[i]=a1[i];
+      a1[i]=a[i];
+      b2[i]=b1[i];
+      b1[i]=b[i];
+    }
+    a_coef[j + 1]=2 * (a[ilbc_constants.LPC_HALFORDER] + b[ilbc_constants.LPC_HALFORDER]);
+  }
+  a_coef[0]=1.0f;
+}
