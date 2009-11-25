@@ -7,17 +7,17 @@ synchronized (inputStreamsSyncRoot) {
   int inputStreamCount=(inputStreams == null) ? 0 : inputStreams.length;
   if (inputStreamCount <= 0)   return;
   AudioFormat outputFormat=getFormat();
-  int[][] inputSamples=new int[inputStreamCount][];
+  InputSampleDesc inputSampleDesc=new InputSampleDesc(new int[inputStreamCount][],inputStreams);
   int maxInputSampleCount;
   try {
-    maxInputSampleCount=readInputPushBufferStreams(inputStreams,outputFormat,inputSamples);
+    maxInputSampleCount=readInputPushBufferStreams(outputFormat,inputSampleDesc);
   }
  catch (  UnsupportedFormatException ufex) {
     IOException ioex=new IOException();
     ioex.initCause(ufex);
     throw ioex;
   }
-  maxInputSampleCount=Math.max(maxInputSampleCount,readInputPullBufferStreams(inputStreams,outputFormat,maxInputSampleCount,inputSamples));
-  buffer.setData(new InputSampleDesc(inputSamples,inputStreams));
+  maxInputSampleCount=Math.max(maxInputSampleCount,readInputPullBufferStreams(outputFormat,maxInputSampleCount,inputSampleDesc));
+  buffer.setData(inputSampleDesc);
   buffer.setLength(maxInputSampleCount);
 }

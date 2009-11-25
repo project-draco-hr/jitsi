@@ -9,14 +9,23 @@
     }
     Class<?> dataType=outputData.getClass();
     if (inputData.getClass().equals(dataType) && dataType.equals(byte[].class)) {
+      int inputOffset=input.getOffset();
+      int inputLength=input.getLength();
       byte[] outputBytes=(byte[])outputData;
-      int outputLength=Math.min(input.getLength(),outputBytes.length);
-      System.arraycopy((byte[])inputData,input.getOffset(),outputBytes,output.getOffset(),outputLength);
+      int outputLength=Math.min(inputLength,outputBytes.length);
+      System.arraycopy((byte[])inputData,inputOffset,outputBytes,output.getOffset(),outputLength);
       output.setData(outputBytes);
-      output.setFormat(input.getFormat());
       output.setLength(outputLength);
-      input.setLength(input.getLength() - outputLength);
-      input.setOffset(input.getOffset() + outputLength);
+      output.setFormat(input.getFormat());
+      output.setDiscard(input.isDiscard());
+      output.setEOM(input.isEOM());
+      output.setFlags(input.getFlags());
+      output.setHeader(input.getHeader());
+      output.setSequenceNumber(input.getSequenceNumber());
+      output.setTimeStamp(input.getTimeStamp());
+      output.setDuration(Buffer.TIME_UNKNOWN);
+      input.setLength(inputLength - outputLength);
+      input.setOffset(inputOffset + outputLength);
       return;
     }
   }

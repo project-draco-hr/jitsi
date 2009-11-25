@@ -21,18 +21,23 @@
   }
   int inputFormatSigned=inputFormat.getSigned();
   if ((inputFormatSigned != AudioFormat.SIGNED) && (inputFormatSigned != Format.NOT_SPECIFIED))   throw new UnsupportedFormatException("AudioFormat.getSigned()",inputFormat);
-  int inputFormatChannels=inputFormat.getChannels();
-  int outputFormatChannels=outputFormat.getChannels();
-  if ((inputFormatChannels != outputFormatChannels) && (inputFormatChannels != Format.NOT_SPECIFIED) && (outputFormatChannels != Format.NOT_SPECIFIED)) {
-    logger.error("Encountered inputFormat with a different number of" + " channels than outputFormat for inputFormat " + inputFormat + " and outputFormat "+ outputFormat);
+  int inputChannels=inputFormat.getChannels();
+  int outputChannels=outputFormat.getChannels();
+  if ((inputChannels != outputChannels) && (inputChannels != Format.NOT_SPECIFIED) && (outputChannels != Format.NOT_SPECIFIED)) {
+    logger.error("Read inputFormat with channels " + inputChannels + " while expected outputFormat channels is "+ outputChannels);
     throw new UnsupportedFormatException("AudioFormat.getChannels()",inputFormat);
   }
+  double inputSampleRate=inputFormat.getSampleRate();
+  double outputSampleRate=outputFormat.getSampleRate();
+  if (inputSampleRate != outputSampleRate)   logger.warn("Read inputFormat with sampleRate " + inputSampleRate + " while expected outputFormat sampleRate is "+ outputSampleRate);
   Object inputData=buffer.getData();
   if (inputData instanceof byte[]) {
+    int inputSampleSizeInBits=inputFormat.getSampleSizeInBits();
     byte[] inputSamples=(byte[])inputData;
     int[] outputSamples;
     int outputSampleSizeInBits=outputFormat.getSampleSizeInBits();
-switch (inputFormat.getSampleSizeInBits()) {
+    if (logger.isTraceEnabled() && (inputSampleSizeInBits != outputSampleSizeInBits))     logger.trace("Read inputFormat with sampleSizeInBits " + inputSampleSizeInBits + ". Will convert to sampleSizeInBits"+ outputSampleSizeInBits);
+switch (inputSampleSizeInBits) {
 case 16:
       outputSamples=new int[inputSamples.length / 2];
     for (int i=0; i < outputSamples.length; i++) {
