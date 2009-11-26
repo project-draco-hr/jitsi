@@ -10,12 +10,14 @@
     }
  else     throw new UnsupportedFormatException("!Format.getDataType().equals(byte[].class)",inputStreamFormat);
   }
-  inputStream.read(buffer);
+  if (captureDevice)   readCaptureDeviceStream(inputStream,buffer);
+ else   inputStream.read(buffer);
+  if (buffer.isDiscard())   return null;
   int inputLength=buffer.getLength();
   if (inputLength <= 0)   return null;
   AudioFormat inputFormat=(AudioFormat)buffer.getFormat();
   if (inputFormat == null)   inputFormat=inputStreamFormat;
-  if (logger.isTraceEnabled() && ((lastReadInputFormat == null) || !lastReadInputFormat.matches(inputFormat))) {
+  if (logger.isTraceEnabled() && (lastReadInputFormat != null) && !lastReadInputFormat.matches(inputFormat)) {
     lastReadInputFormat=inputFormat;
     logger.trace("Read inputSamples in different format " + lastReadInputFormat);
   }
@@ -55,7 +57,11 @@ default :
 }
 outputSamples[i]=sample;
 }
-return outputSamples;
+buffer.setData(outputSamples);
+buffer.setFormat(outputFormat);
+buffer.setLength(outputSamples.length);
+buffer.setOffset(0);
+return buffer;
 case 32:
 outputSamples=new int[inputSamples.length / 4];
 for (int i=0; i < outputSamples.length; i++) {
@@ -73,7 +79,11 @@ throw new UnsupportedFormatException("AudioFormat.getSampleSizeInBits()",outputF
 }
 outputSamples[i]=sample;
 }
-return outputSamples;
+buffer.setData(outputSamples);
+buffer.setFormat(outputFormat);
+buffer.setLength(outputSamples.length);
+buffer.setOffset(0);
+return buffer;
 case 8:
 case 24:
 default :

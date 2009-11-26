@@ -6,13 +6,15 @@
     InputStreamDesc inputStreamDesc=inputStreams[i];
     SourceStream inputStream=inputStreamDesc.getInputStream();
     if (inputStream instanceof PushBufferStream) {
-      int[] inputStreamSamples=read((PushBufferStream)inputStream,outputFormat,maxInputSampleCount);
+      Buffer inputStreamBuffer=read((PushBufferStream)inputStream,outputFormat,maxInputSampleCount,inputStreamDesc.getInputDataSource() == captureDevice);
+      int[] inputStreamSamples=(inputStreamBuffer == null) ? null : (int[])inputStreamBuffer.getData();
       int inputStreamSampleCount;
       if (inputStreamSamples != null) {
         inputStreamSampleCount=inputStreamSamples.length;
         if (inputStreamSampleCount != 0) {
           inputSamples[i]=inputStreamSamples;
           if (maxInputSampleCount < inputStreamSampleCount)           maxInputSampleCount=inputStreamSampleCount;
+          if (inputSampleDesc.getTimeStamp() == Buffer.TIME_UNKNOWN)           inputSampleDesc.setTimeStamp(inputStreamBuffer.getTimeStamp());
         }
  else         if (logger.isTraceEnabled())         inputStreamDesc.nonContributingReadCount++;
       }

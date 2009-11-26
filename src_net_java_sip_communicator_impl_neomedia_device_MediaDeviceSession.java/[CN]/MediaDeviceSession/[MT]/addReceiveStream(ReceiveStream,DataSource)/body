@@ -15,15 +15,17 @@ synchronized (players) {
 catch (      NoPlayerException npe) {
         exception=npe;
       }
-      if (exception != null)       logger.error("Failed to create player for new receive stream " + receiveStream,exception);
+      if (exception != null)       logger.error("Failed to create player" + " for ReceiveStream with ssrc " + receiveStream.getSSRC(),exception);
+ else       if (!waitForState(player,Processor.Configured))       logger.error("Failed to configure player" + " for ReceiveStream with ssrc " + receiveStream.getSSRC());
  else {
-        waitForState(player,Processor.Configured);
         player.setContentDescriptor(null);
-        waitForState(player,Processor.Realized);
-        player.start();
-        realizeComplete(player);
-        if (logger.isTraceEnabled())         logger.trace("Created Player with hashCode " + player.hashCode() + " for ReceiveStream with ssrc "+ receiveStream.getSSRC());
-        players.put(receiveStreamDataSource,player);
+        if (waitForState(player,Processor.Realized)) {
+          player.start();
+          realizeComplete(player);
+          if (logger.isTraceEnabled())           logger.trace("Created Player with hashCode " + player.hashCode() + " for ReceiveStream with ssrc "+ receiveStream.getSSRC());
+          players.put(receiveStreamDataSource,player);
+        }
+ else         logger.error("Failed to realize player" + " for ReceiveStream with ssrc " + receiveStream.getSSRC());
       }
     }
   }
