@@ -1,0 +1,25 @@
+{
+  long[] ssrcArray=(long[])evt.getNewValue();
+  int elementsToRemove=0;
+  long remoteSrcID=this.getRemoteSourceID();
+  for (  long csrc : ssrcArray) {
+    if (csrc == remoteSrcID) {
+      elementsToRemove++;
+    }
+  }
+  if (elementsToRemove >= ssrcArray.length) {
+    this.localContributingSourceIDList=null;
+    return;
+  }
+  int cc=Math.min(ssrcArray.length - elementsToRemove + 1,15);
+  long[] csrcArray=new long[cc];
+  for (int i=0, j=0; i < ssrcArray.length && j < csrcArray.length - 1; i++) {
+    long ssrc=ssrcArray[i];
+    if (ssrc != remoteSrcID) {
+      csrcArray[j]=ssrc;
+      j++;
+    }
+  }
+  csrcArray[csrcArray.length - 1]=getLocalSourceID();
+  this.localContributingSourceIDList=csrcArray;
+}
