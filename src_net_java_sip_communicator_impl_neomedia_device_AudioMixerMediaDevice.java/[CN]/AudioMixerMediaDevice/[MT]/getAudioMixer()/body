@@ -3,9 +3,18 @@
     @Override protected void read(    PushBufferStream stream,    Buffer buffer,    DataSource dataSource) throws IOException {
       super.read(stream,buffer,dataSource);
       if (dataSource == captureDevice) {
+        if (localEventsDispatcher == null) {
+          localEventsDispatcher=new LocalSliEventDispatcher();
+          new Thread(localEventsDispatcher).start();
+        }
+        localEventsDispatcher.addData(buffer);
       }
  else       if (dataSource instanceof ReceiveStreamPushBufferDataSource) {
         ReceiveStream receiveStream=((ReceiveStreamPushBufferDataSource)dataSource).getReceiveStream();
+        StreamSliEventDispatcher stEvDispatch=streamSoundLevelListeners.get(receiveStream);
+        if (stEvDispatch != null) {
+          stEvDispatch.addData(buffer);
+        }
       }
     }
   }

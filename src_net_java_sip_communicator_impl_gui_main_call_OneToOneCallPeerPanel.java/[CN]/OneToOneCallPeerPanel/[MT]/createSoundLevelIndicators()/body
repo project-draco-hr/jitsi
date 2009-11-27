@@ -3,8 +3,8 @@
   TransparentPanel remoteLevelPanel=new TransparentPanel(new BorderLayout(5,0));
   JLabel localLevelLabel=new JLabel(new ImageIcon(ImageLoader.getImage(ImageLoader.MICROPHONE)));
   JLabel remoteLevelLabel=new JLabel(new ImageIcon(ImageLoader.getImage(ImageLoader.HEADPHONE)));
-  final SoundLevelIndicator localLevelIndicator=new SoundLevelIndicator(LocalUserSoundLevelEvent.MIN_LEVEL,LocalUserSoundLevelEvent.MAX_LEVEL);
-  final SoundLevelIndicator remoteLevelIndicator=new SoundLevelIndicator(LocalUserSoundLevelEvent.MIN_LEVEL,LocalUserSoundLevelEvent.MAX_LEVEL);
+  final SoundLevelIndicator localLevelIndicator=new SoundLevelIndicator(SoundLevelChangeEvent.MIN_LEVEL,SoundLevelChangeEvent.MAX_LEVEL);
+  final SoundLevelIndicator remoteLevelIndicator=new SoundLevelIndicator(SoundLevelChangeEvent.MIN_LEVEL,SoundLevelChangeEvent.MAX_LEVEL);
   localLevelPanel.add(localLevelLabel,BorderLayout.WEST);
   localLevelPanel.add(localLevelIndicator,BorderLayout.CENTER);
   remoteLevelPanel.add(remoteLevelLabel,BorderLayout.WEST);
@@ -24,15 +24,17 @@
   constraints.weighty=0;
   constraints.insets=new Insets(5,0,10,0);
   add(remoteLevelPanel,constraints);
-  this.callPeer.addStreamSoundLevelListener(new StreamSoundLevelListener(){
-    public void streamSoundLevelChanged(    StreamSoundLevelEvent event){
-      remoteLevelIndicator.updateSoundLevel(event.getLevel());
+  this.callPeer.addStreamSoundLevelListener(new SoundLevelListener<Long>(){
+    public void soundLevelChanged(    SoundLevelChangeEvent<Long> event){
+      Collection<Integer> levels=event.getLevels().values();
+      if (!levels.isEmpty())       remoteLevelIndicator.updateSoundLevel(levels.iterator().next());
     }
   }
 );
-  GuiActivator.getMediaService().addLocalUserSoundLevelListener(new LocalUserSoundLevelListener(){
-    public void localUserSoundLevelChanged(    LocalUserSoundLevelEvent event){
-      localLevelIndicator.updateSoundLevel(event.getLevel());
+  this.callPeer.getCall().addLocalUserSoundLevelListener(new SoundLevelListener<Long>(){
+    public void soundLevelChanged(    SoundLevelChangeEvent<Long> event){
+      Collection<Integer> levels=event.getLevels().values();
+      if (!levels.isEmpty())       localLevelIndicator.updateSoundLevel(levels.iterator().next());
     }
   }
 );

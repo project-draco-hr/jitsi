@@ -19,6 +19,23 @@ catch (      NoPlayerException npe) {
       if (exception != null)       logger.error("Failed to create player" + " for ReceiveStream with ssrc " + receiveStream.getSSRC(),exception);
  else       if (!waitForState(player,Processor.Configured))       logger.error("Failed to configure player" + " for ReceiveStream with ssrc " + receiveStream.getSSRC());
  else {
+        boolean status=waitForState(player,Processor.Configured);
+        if (status) {
+          try {
+            TrackControl tcs[]=player.getTrackControls();
+            if (tcs != null) {
+              for (              TrackControl tc : tcs) {
+                if (tc.getFormat() instanceof AudioFormat) {
+                  addSoundLevelIndicator(parentStream,tc);
+                  break;
+                }
+              }
+            }
+          }
+ catch (          UnsupportedPlugInException ex) {
+            logger.error("The processor does not support effects",ex);
+          }
+        }
         player.setContentDescriptor(null);
         if (waitForState(player,Processor.Realized)) {
           player.start();

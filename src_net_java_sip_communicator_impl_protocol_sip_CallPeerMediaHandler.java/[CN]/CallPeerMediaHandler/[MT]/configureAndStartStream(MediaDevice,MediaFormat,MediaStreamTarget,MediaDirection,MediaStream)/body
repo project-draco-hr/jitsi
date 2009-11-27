@@ -4,7 +4,21 @@
   stream.setTarget(target);
   stream.setDirection(direction);
   stream.setFormat(format);
-  if (stream instanceof AudioMediaStream)   this.audioStream=(AudioMediaStream)stream;
+  if (stream instanceof AudioMediaStream) {
+    this.audioStream=(AudioMediaStream)stream;
+synchronized (localSoundLevelListeners) {
+      for (Iterator<SoundLevelListener> listenerIter=localSoundLevelListeners.iterator(); listenerIter.hasNext(); ) {
+        SoundLevelListener listener=listenerIter.next();
+        this.audioStream.addLocalUserSoundLevelListener(listener);
+      }
+    }
+synchronized (streamSoundLevelListeners) {
+      for (Iterator<SoundLevelListener> listenerIter=streamSoundLevelListeners.iterator(); listenerIter.hasNext(); ) {
+        SoundLevelListener listener=listenerIter.next();
+        this.audioStream.addSoundLevelListener(listener);
+      }
+    }
+  }
  else   setVideoStream((VideoMediaStream)stream);
   if (!stream.isStarted())   stream.start();
   return stream;

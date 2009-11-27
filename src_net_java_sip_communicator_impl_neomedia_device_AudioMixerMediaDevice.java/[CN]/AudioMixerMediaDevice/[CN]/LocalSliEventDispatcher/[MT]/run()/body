@@ -1,0 +1,29 @@
+{
+  stopped=false;
+  while (!stopped) {
+    byte[] dataToProcess=null;
+synchronized (this) {
+      if (data == null)       try {
+        wait();
+      }
+ catch (      InterruptedException ie) {
+      }
+      dataToProcess=data;
+      data=null;
+    }
+    if (dataToProcess != null) {
+      int newLevel=SoundLevelIndicatorEffect.calculateCurrentSignalPower(dataToProcess,0,dataToProcess.length,SoundLevelChangeEvent.MAX_LEVEL,SoundLevelChangeEvent.MIN_LEVEL,lastLevel);
+      Map<Long,Integer> lev=new HashMap<Long,Integer>();
+      lev.put(deviceSession.getParentStream().getLocalSourceID(),newLevel);
+      SoundLevelChangeEvent soundLevelEvent=new SoundLevelChangeEvent(deviceSession.getParentStream(),lev);
+      List<SoundLevelListener> listeners;
+synchronized (localSoundLevelListeners) {
+        listeners=new ArrayList<SoundLevelListener>(localSoundLevelListeners);
+      }
+      for (Iterator<SoundLevelListener> listenerIter=listeners.iterator(); listenerIter.hasNext(); ) {
+        listenerIter.next().soundLevelChanged(soundLevelEvent);
+      }
+      lastLevel=newLevel;
+    }
+  }
+}

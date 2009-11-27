@@ -1,5 +1,5 @@
 {
-  ConferencePeerPanel localPeerPanel=new ConferencePeerPanel(callDialog,call.getProtocolProvider());
+  final ConferencePeerPanel localPeerPanel=new ConferencePeerPanel(callDialog,call.getProtocolProvider());
   constraints.fill=GridBagConstraints.BOTH;
   constraints.gridx=0;
   constraints.gridy=0;
@@ -7,5 +7,12 @@
   constraints.weighty=0;
   constraints.insets=new Insets(0,0,10,10);
   mainPanel.add(localPeerPanel,constraints);
-  GuiActivator.getMediaService().addLocalUserSoundLevelListener(localPeerPanel);
+  call.addLocalUserSoundLevelListener(new SoundLevelListener<Long>(){
+    public void soundLevelChanged(    SoundLevelChangeEvent<Long> evt){
+      if (evt.getLevels().size() > 0) {
+        localPeerPanel.fireLocalUserSoundLevelChanged(evt.getLevels().values().iterator().next());
+      }
+    }
+  }
+);
 }
