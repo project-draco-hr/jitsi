@@ -6,45 +6,20 @@
 synchronized (players) {
     Processor player=players.get(receiveStreamDataSource);
     if (player == null) {
-      Throwable exception=null;
+      Throwable exception;
       try {
-        player=Manager.createProcessor(receiveStreamDataSource);
+        receiveStreamDataSource.connect();
+        exception=null;
       }
- catch (      IOException ioe) {
-        exception=ioe;
+ catch (      IOException ioex) {
+        exception=ioex;
       }
-catch (      NoPlayerException npe) {
-        exception=npe;
+      if (exception == null) {
+        player=createPlayer(receiveStream,receiveStreamDataSource);
+        if (player == null)         receiveStreamDataSource.disconnect();
+ else         players.put(receiveStreamDataSource,player);
       }
-      if (exception != null)       logger.error("Failed to create player" + " for ReceiveStream with ssrc " + receiveStream.getSSRC(),exception);
- else       if (!waitForState(player,Processor.Configured))       logger.error("Failed to configure player" + " for ReceiveStream with ssrc " + receiveStream.getSSRC());
- else {
-        boolean status=waitForState(player,Processor.Configured);
-        if (status) {
-          try {
-            TrackControl tcs[]=player.getTrackControls();
-            if (tcs != null) {
-              for (              TrackControl tc : tcs) {
-                if (tc.getFormat() instanceof AudioFormat) {
-                  addSoundLevelIndicator(parentStream,tc);
-                  break;
-                }
-              }
-            }
-          }
- catch (          UnsupportedPlugInException ex) {
-            logger.error("The processor does not support effects",ex);
-          }
-        }
-        player.setContentDescriptor(null);
-        if (waitForState(player,Processor.Realized)) {
-          player.start();
-          realizeComplete(player);
-          if (logger.isTraceEnabled())           logger.trace("Created Player with hashCode " + player.hashCode() + " for ReceiveStream with ssrc "+ receiveStream.getSSRC());
-          players.put(receiveStreamDataSource,player);
-        }
- else         logger.error("Failed to realize player" + " for ReceiveStream with ssrc " + receiveStream.getSSRC());
-      }
+ else       logger.error("Failed to connect to DataSource" + " of ReceiveStream with ssrc " + receiveStream.getSSRC(),exception);
     }
   }
 }
