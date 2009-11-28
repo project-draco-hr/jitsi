@@ -1,0 +1,33 @@
+{
+  StringTokenizer tokenizer=new StringTokenizer(extmapAttr," ");
+  if (!tokenizer.hasMoreElements())   return null;
+  String idAndDirection=tokenizer.nextToken();
+  String extIDStr;
+  MediaDirection direction=MediaDirection.SENDRECV;
+  if (idAndDirection.contains("/")) {
+    StringTokenizer idAndDirTokenizer=new StringTokenizer(idAndDirection,"/");
+    if (!idAndDirTokenizer.hasMoreElements())     return null;
+    extIDStr=idAndDirTokenizer.nextToken();
+    if (!idAndDirTokenizer.hasMoreTokens())     return null;
+    direction=MediaDirection.parseString(idAndDirTokenizer.nextToken());
+  }
+ else {
+    extIDStr=idAndDirection;
+  }
+  if (!tokenizer.hasMoreElements())   return null;
+  String uriStr=tokenizer.nextToken();
+  URI uri;
+  try {
+    uri=new URI(uriStr);
+  }
+ catch (  URISyntaxException e) {
+    return null;
+  }
+  String extensionAttributes=null;
+  if (tokenizer.hasMoreElements()) {
+    extensionAttributes=tokenizer.nextToken();
+  }
+  RTPExtension rtpExtension=new RTPExtension(uri,direction,extensionAttributes);
+  extMap.addMapping(rtpExtension,Byte.parseByte(extIDStr));
+  return rtpExtension;
+}

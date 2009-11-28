@@ -6,6 +6,7 @@
   for (  MediaDescription mediaDescription : remoteDescriptions) {
     MediaType mediaType=SdpUtils.getMediaType(mediaDescription);
     List<MediaFormat> supportedFormats=SdpUtils.extractFormats(mediaDescription,dynamicPayloadTypes);
+    List<RTPExtension> offeredRTPExtensions=SdpUtils.extractRTPExtensions(mediaDescription,this.rtpExtensionsRegistry);
     MediaDevice dev=getDefaultDevice(mediaType);
     MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
     devDirection=devDirection.and(getDirectionUserPreference(mediaType));
@@ -20,7 +21,7 @@
     MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
     MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
     initStream(connector,dev,supportedFormats.get(0),target,direction);
-    answerDescriptions.add(createMediaDescription(supportedFormats,connector,direction));
+    answerDescriptions.add(createMediaDescription(supportedFormats,connector,direction,supportedRTPExtensions));
     atLeastOneValidDescription=true;
   }
   if (!atLeastOneValidDescription)   throw new OperationFailedException("Offer contained no valid " + "media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT);
