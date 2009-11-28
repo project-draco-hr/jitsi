@@ -13,17 +13,13 @@
     int targetDataPort=target.getDataAddress().getPort();
     if (supportedFormats.isEmpty() || (devDirection == MediaDirection.INACTIVE) || (targetDataPort == 0)) {
       answerDescriptions.add(SdpUtils.createDisablingAnswer(mediaDescription));
+      closeStream(mediaType);
       continue;
     }
     StreamConnector connector=getStreamConnector(mediaType);
     MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
     MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
-    if (targetDataPort != 0) {
-      initStream(connector,dev,supportedFormats.get(0),target,direction);
-    }
- else {
-      closeStream(mediaType);
-    }
+    initStream(connector,dev,supportedFormats.get(0),target,direction);
     answerDescriptions.add(createMediaDescription(supportedFormats,connector,direction));
     atLeastOneValidDescription=true;
   }
