@@ -37,14 +37,16 @@
     Attribute rtcpAttr=sdpFactory.createAttribute(RTCP_ATTR,Integer.toString(rtcpPort));
     mediaAttributes.add(rtcpAttr);
   }
-  for (  RTPExtension extension : supportedExtensions) {
-    byte extID=rtpExtensionsRegistry.obtainExtensionMapping(extension);
-    String uri=extension.getURI().toString();
-    MediaDirection extDirection=extension.getDirection();
-    String attributes=extension.getExtensionAttributes();
-    String attrValue=Byte.toString(extID) + ((extDirection == MediaDirection.SENDRECV) ? "" : ("/" + extDirection.toString())) + " "+ uri+ (attributes == null ? "" : (" " + attributes));
-    Attribute extMapAttr=sdpFactory.createAttribute(EXTMAP_ATTR,attrValue);
-    mediaAttributes.add(extMapAttr);
+  if (rtpExtensions != null && rtpExtensions.size() > 0) {
+    for (    RTPExtension extension : rtpExtensions) {
+      byte extID=rtpExtensionsRegistry.obtainExtensionMapping(extension);
+      String uri=extension.getURI().toString();
+      MediaDirection extDirection=extension.getDirection();
+      String attributes=extension.getExtensionAttributes();
+      String attrValue=Byte.toString(extID) + ((extDirection == MediaDirection.SENDRECV) ? "" : ("/" + extDirection.toString())) + " "+ uri+ (attributes == null ? "" : (" " + attributes));
+      Attribute extMapAttr=sdpFactory.createAttribute(EXTMAP_ATTR,attrValue);
+      mediaAttributes.add(extMapAttr);
+    }
   }
   MediaDescription mediaDesc=null;
   try {
