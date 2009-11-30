@@ -1,0 +1,39 @@
+{
+  final Call call=callPeer.getCall();
+  if (call != null) {
+    OperationSetAdvancedTelephony telephony=call.getProtocolProvider().getOperationSet(OperationSetAdvancedTelephony.class);
+    if (telephony != null) {
+      final TransferCallDialog dialog=new TransferCallDialog(null);
+      CallChangeListener callChangeListener=new CallChangeAdapter(){
+        public void callStateChanged(        CallChangeEvent evt){
+          if (!evt.getEventType().equals(CallChangeEvent.CALL_STATE_CHANGE))           return;
+          if (!CallState.CALL_IN_PROGRESS.equals(call.getCallState())) {
+            dialog.setVisible(false);
+            dialog.dispose();
+          }
+        }
+      }
+;
+      call.addCallChangeListener(callChangeListener);
+      try {
+        dialog.setModal(true);
+        dialog.pack();
+        dialog.setVisible(true);
+      }
+  finally {
+        call.removeCallChangeListener(callChangeListener);
+      }
+      String target=dialog.getTarget();
+      if ((target != null) && (target.length() > 0)) {
+        try {
+          CallPeer targetPeer=findCallPeer(target);
+          if (targetPeer == null)           telephony.transfer(callPeer,target);
+ else           telephony.transfer(callPeer,targetPeer);
+        }
+ catch (        OperationFailedException ex) {
+          logger.error("Failed to transfer call " + call + " to "+ target,ex);
+        }
+      }
+    }
+  }
+}
