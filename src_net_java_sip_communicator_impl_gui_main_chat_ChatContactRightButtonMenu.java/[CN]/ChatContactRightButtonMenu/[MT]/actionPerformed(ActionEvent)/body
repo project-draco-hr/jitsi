@@ -1,10 +1,77 @@
 {
   JMenuItem menuItem=(JMenuItem)e.getSource();
-  String itemName=menuItem.getName();
-  if (itemName.equals("kick")) {
-    new ReasonDialog(KICK_OPERATION).setVisible(true);
+  if (menuItem.equals(kickItem)) {
+    ChatOperationReasonDialog reasonDialog=new ChatOperationReasonDialog();
+    int result=new ChatOperationReasonDialog().showDialog();
+    if (result == 0)     new KickParticipantThread(room,reasonDialog.getReason()).start();
   }
- else   if (itemName.equals("ban")) {
-    new ReasonDialog(BAN_OPERATION).setVisible(true);
+ else   if (menuItem.equals(banItem)) {
+    ChatOperationReasonDialog reasonDialog=new ChatOperationReasonDialog();
+    int result=new ChatOperationReasonDialog().showDialog();
+    if (result == 0)     new BanParticipantThread(room,reasonDialog.getReason()).start();
+  }
+ else   if (menuItem.equals(changeRoomSubjectItem)) {
+    ChatOperationReasonDialog reasonDialog=new ChatOperationReasonDialog(GuiActivator.getResources().getI18NString("service.gui.CHANGE_ROOM_SUBJECT"),GuiActivator.getResources().getI18NString("service.gui.CHANGE_ROOM_SUBJECT_LABEL"));
+    int result=new ChatOperationReasonDialog().showDialog();
+    if (result == 0) {
+      try {
+        room.setSubject(reasonDialog.getReason().trim());
+      }
+ catch (      OperationFailedException ex) {
+        ex.printStackTrace();
+      }
+    }
+  }
+ else   if (menuItem.equals(changeNicknameItem)) {
+    ChatOperationReasonDialog reasonDialog=new ChatOperationReasonDialog(GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME"),GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME_LABEL"));
+    int result=new ChatOperationReasonDialog().showDialog();
+    if (result == 0) {
+      try {
+        room.setUserNickname(reasonDialog.getReason().trim());
+      }
+ catch (      OperationFailedException ex) {
+        ex.printStackTrace();
+      }
+    }
+  }
+ else   if (menuItem.equals(grantVoiceItem)) {
+    room.grantVoice(chatContact.getName());
+    ((ChatRoomMember)chatContact.getDescriptor()).setRole(ChatRoomMemberRole.GUEST);
+  }
+ else   if (menuItem.equals(grantMembershipItem)) {
+    room.grantMembership(((ChatRoomMember)chatContact.getDescriptor()).getContactAddress());
+    ((ChatRoomMember)chatContact.getDescriptor()).setRole(ChatRoomMemberRole.MEMBER);
+  }
+ else   if (menuItem.equals(grantModeratorItem)) {
+    room.grantModerator(chatContact.getName());
+    ((ChatRoomMember)chatContact.getDescriptor()).setRole(ChatRoomMemberRole.MODERATOR);
+  }
+ else   if (menuItem.equals(grantAdminItem)) {
+    room.grantAdmin(((ChatRoomMember)chatContact.getDescriptor()).getContactAddress());
+    ((ChatRoomMember)chatContact.getDescriptor()).setRole(ChatRoomMemberRole.ADMINISTRATOR);
+  }
+ else   if (menuItem.equals(grantOwnershipItem)) {
+    room.grantOwnership(((ChatRoomMember)chatContact.getDescriptor()).getContactAddress());
+    ((ChatRoomMember)chatContact.getDescriptor()).setRole(ChatRoomMemberRole.OWNER);
+  }
+ else   if (menuItem.equals(revokeOwnershipItem)) {
+    room.revokeOwnership(((ChatRoomMember)chatContact.getDescriptor()).getContactAddress());
+    ((ChatRoomMember)chatContact.getDescriptor()).setRole(ChatRoomMemberRole.ADMINISTRATOR);
+  }
+ else   if (menuItem.equals(revokeAdminItem)) {
+    room.revokeAdmin(((ChatRoomMember)chatContact.getDescriptor()).getContactAddress());
+    ((ChatRoomMember)chatContact.getDescriptor()).setRole(ChatRoomMemberRole.MEMBER);
+  }
+ else   if (menuItem.equals(revokeModeratorItem)) {
+    room.revokeModerator(chatContact.getName());
+    ((ChatRoomMember)chatContact.getDescriptor()).setRole(ChatRoomMemberRole.MEMBER);
+  }
+ else   if (menuItem.equals(revokeMembershipItem)) {
+    room.revokeMembership(((ChatRoomMember)chatContact.getDescriptor()).getContactAddress());
+    ((ChatRoomMember)chatContact.getDescriptor()).setRole(ChatRoomMemberRole.GUEST);
+  }
+ else   if (menuItem.equals(revokeVoiceItem)) {
+    room.revokeVoice(chatContact.getName());
+    ((ChatRoomMember)chatContact.getDescriptor()).setRole(ChatRoomMemberRole.SILENT_MEMBER);
   }
 }

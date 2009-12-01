@@ -1,10 +1,87 @@
 {
-  this.add(kickItem);
-  this.add(banItem);
-  this.kickItem.setName("kick");
-  this.banItem.setName("ban");
   this.kickItem.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.KICK"));
   this.banItem.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.BAN"));
+  this.grantAdminItem.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.GRANT_ADMIN"));
+  this.grantMembershipItem.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.GRANT_MEMBERSHIP"));
+  this.grantModeratorItem.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.GRANT_MODERATOR"));
+  this.grantOwnershipItem.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.GRANT_OWNERSHIP"));
+  this.grantVoiceItem.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.GRANT_VOICE"));
+  this.revokeAdminItem.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.REVOKE_ADMIN"));
+  this.revokeMembershipItem.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.REVOKE_MEMBERSHIP"));
+  this.revokeModeratorItem.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.REVOKE_MODERATOR"));
+  this.revokeOwnershipItem.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.REVOKE_OWNERSHIP"));
+  this.revokeVoiceItem.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.REVOKE_VOICE"));
+  this.changeNicknameItem.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.CHANGE_NICKNAME"));
+  this.changeNicknameItem.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.CHANGE_ROOM_SUBJECT"));
   this.kickItem.addActionListener(this);
   this.banItem.addActionListener(this);
+  this.changeNicknameItem.addActionListener(this);
+  this.changeRoomSubjectItem.addActionListener(this);
+  this.grantAdminItem.addActionListener(this);
+  this.grantMembershipItem.addActionListener(this);
+  this.grantModeratorItem.addActionListener(this);
+  this.grantOwnershipItem.addActionListener(this);
+  this.grantVoiceItem.addActionListener(this);
+  this.revokeAdminItem.addActionListener(this);
+  this.revokeMembershipItem.addActionListener(this);
+  this.revokeModeratorItem.addActionListener(this);
+  this.revokeOwnershipItem.addActionListener(this);
+  this.revokeVoiceItem.addActionListener(this);
+  this.grantOwnershipItem.setIcon(ImageUtils.getScaledRoundedIcon(ImageLoader.getImage(ImageLoader.CHATROOM_MEMBER_OWNER),16,16));
+  this.grantAdminItem.setIcon(ImageUtils.getScaledRoundedIcon(ImageLoader.getImage(ImageLoader.CHATROOM_MEMBER_ADMIN),16,16));
+  this.grantMembershipItem.setIcon(ImageUtils.getScaledRoundedIcon(ImageLoader.getImage(ImageLoader.CHATROOM_MEMBER_STANDARD),16,16));
+  this.grantModeratorItem.setIcon(ImageUtils.getScaledRoundedIcon(ImageLoader.getImage(ImageLoader.CHATROOM_MEMBER_MODERATOR),16,16));
+  this.grantVoiceItem.setIcon(ImageUtils.getScaledRoundedIcon(ImageLoader.getImage(ImageLoader.CHATROOM_MEMBER_STANDARD),16,16));
+  this.revokeAdminItem.setIcon(ImageUtils.getScaledRoundedIcon(ImageLoader.getImage(ImageLoader.CHATROOM_MEMBER_STANDARD),16,16));
+  this.revokeMembershipItem.setIcon(ImageUtils.getScaledRoundedIcon(ImageLoader.getImage(ImageLoader.CHATROOM_MEMBER_GUEST),16,16));
+  this.revokeModeratorItem.setIcon(ImageUtils.getScaledRoundedIcon(ImageLoader.getImage(ImageLoader.CHATROOM_MEMBER_STANDARD),16,16));
+  this.revokeOwnershipItem.setIcon(ImageUtils.getScaledRoundedIcon(ImageLoader.getImage(ImageLoader.CHATROOM_MEMBER_ADMIN),16,16));
+  this.revokeVoiceItem.setIcon(ImageUtils.getScaledRoundedIcon(ImageLoader.getImage(ImageLoader.CHATROOM_MEMBER_SILENT),16,16));
+  this.kickItem.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.KICK_ICON_16x16)));
+  this.banItem.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.BAN_ICON_16x16)));
+  this.changeNicknameItem.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.CHANGE_NICKNAME_ICON_16x16)));
+  this.changeRoomSubjectItem.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.CHANGE_ROOM_SUBJECT_ICON_16x16)));
+  int roleIndex=((ChatRoomMember)chatContact.getDescriptor()).getRole().getRoleIndex();
+  String roleName=((ChatRoomMember)chatContact.getDescriptor()).getRole().getRoleName();
+  if (chatContact.getName().equals(room.getUserNickname())) {
+    roleName=room.getUserRole().getRoleName();
+    roleIndex=room.getUserRole().getRoleIndex();
+  }
+  JLabel jl_username=new JLabel(" " + chatContact.getName() + " ("+ roleName+ ") ");
+  jl_username.setFont(jl_username.getFont().deriveFont(Font.BOLD));
+  this.add(jl_username);
+  this.addSeparator();
+  OperationSetPersistentPresence opSet=(OperationSetPersistentPresence)room.getParentProvider().getOperationSet(OperationSetPersistentPresence.class);
+  Contact c=opSet.findContactByID(room.getUserNickname());
+  if (chatContact.getName().equals(room.getUserNickname())) {
+    if (roleIndex >= 50) {
+      this.add(this.changeRoomSubjectItem);
+    }
+    this.add(this.changeNicknameItem);
+  }
+ else {
+    if (room.getUserRole().getRoleIndex() >= 50) {
+      if (roleIndex <= 40) {
+        this.add(this.kickItem);
+        if (room.getUserRole().getRoleIndex() >= 60 && roleIndex < 50) {
+          this.add(this.banItem);
+        }
+        this.addSeparator();
+      }
+      if (roleIndex <= 20)       this.add(this.grantVoiceItem);
+ else       if (roleIndex == 40 || roleIndex == 30)       this.add(this.revokeVoiceItem);
+    }
+    if (room.getUserRole().getRoleIndex() >= 60) {
+      if (roleIndex < 40)       this.add(this.grantMembershipItem);
+ else       if (roleIndex == 40)       this.add(this.revokeMembershipItem);
+      if (roleIndex < 50)       this.add(this.grantModeratorItem);
+ else       if (roleIndex == 50)       this.add(this.revokeModeratorItem);
+    }
+    if (room.getUserRole().getRoleIndex() == 70) {
+      if (roleIndex != 60 && roleIndex >= 30)       this.add(this.grantAdminItem);
+ else       if (roleIndex == 60)       this.add(this.revokeAdminItem);
+      if (roleIndex != 70 && roleIndex >= 40)       this.add(this.grantOwnershipItem);
+ else       if (roleIndex == 70)       this.add(this.revokeOwnershipItem);
+    }
+  }
 }

@@ -1,10 +1,13 @@
 {
   assertSupportedAndConnected();
-  ChatRoom room=findRoom(roomName);
+  ChatRoom room=null;
+  if (roomName == null)   roomName="chatroom-" + StringUtils.randomString(4);
+ else   room=findRoom(roomName);
   if (room == null) {
+    logger.info("Find room returns null.");
     MultiUserChat muc=new MultiUserChat(getXmppConnection(),getCanonicalRoomName(roomName));
     try {
-      muc.create(getXmppConnection().getUser());
+      muc.create(StringUtils.parseName(getXmppConnection().getUser()));
       muc.sendConfigurationForm(new Form(Form.TYPE_SUBMIT));
     }
  catch (    XMPPException ex) {
@@ -12,6 +15,8 @@
       throw new OperationFailedException("Failed to create chat room",ex.getXMPPError().getCode(),ex.getCause());
     }
     room=createLocalChatRoomInstance(muc);
+    room.setUserRole(ChatRoomMemberRole.OWNER);
   }
+  room.join();
   return room;
 }

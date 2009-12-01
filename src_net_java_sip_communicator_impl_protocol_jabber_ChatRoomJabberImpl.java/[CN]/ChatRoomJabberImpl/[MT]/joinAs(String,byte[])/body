@@ -1,9 +1,12 @@
 {
   this.assertConnected();
-  this.nickname=nickname;
+  this.nickname=StringUtils.parseName(nickname);
   try {
     multiUserChat.join(nickname,new String(password));
-    ChatRoomMemberJabberImpl member=new ChatRoomMemberJabberImpl(this,nickname,provider.getAccountID().getAccountAddress(),ChatRoomMemberRole.GUEST);
+    ChatRoomMemberRole role=null;
+    if (this.getUserRole() == null)     role=ChatRoomMemberRole.GUEST;
+ else     role=this.getUserRole();
+    ChatRoomMemberJabberImpl member=new ChatRoomMemberJabberImpl(this,nickname,provider.getAccountID().getAccountAddress(),role);
     members.put(nickname,member);
     opSetMuc.fireLocalUserPresenceEvent(this,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
   }
