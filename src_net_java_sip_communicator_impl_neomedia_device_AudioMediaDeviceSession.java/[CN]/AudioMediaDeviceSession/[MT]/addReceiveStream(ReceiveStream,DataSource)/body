@@ -1,0 +1,22 @@
+{
+  if (receiveStreamDataSource == null)   return;
+  super.addReceiveStream(receiveStream,receiveStreamDataSource);
+  Processor player=getPlayer(receiveStreamDataSource);
+  if (player == null || player.getState() < Processor.Configured) {
+    return;
+  }
+  try {
+    TrackControl tcs[]=player.getTrackControls();
+    if (tcs != null) {
+      for (      TrackControl tc : tcs) {
+        if (tc.getFormat() instanceof AudioFormat) {
+          registerStreamAudioLevelJMFEffect(parentStream,tc);
+          break;
+        }
+      }
+    }
+  }
+ catch (  UnsupportedPlugInException ex) {
+    logger.error("The processor does not support effects",ex);
+  }
+}

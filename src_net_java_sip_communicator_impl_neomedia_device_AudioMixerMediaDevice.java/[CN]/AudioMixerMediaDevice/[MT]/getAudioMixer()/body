@@ -7,17 +7,17 @@
     @Override protected void read(    PushBufferStream stream,    Buffer buffer,    DataSource dataSource) throws IOException {
       super.read(stream,buffer,dataSource);
       if (dataSource == captureDevice) {
-        if (localEventsDispatcher == null) {
-          localEventsDispatcher=new LocalSliEventDispatcher();
-          new Thread(localEventsDispatcher).start();
+        if (localAudioLevelEventDispatcher == null) {
+          localAudioLevelEventDispatcher=new AudioLevelEventDispatcher();
+          new Thread(localAudioLevelEventDispatcher).start();
         }
-        localEventsDispatcher.addData(buffer);
+        localAudioLevelEventDispatcher.addData(buffer);
       }
  else       if (dataSource instanceof ReceiveStreamPushBufferDataSource) {
         ReceiveStream receiveStream=((ReceiveStreamPushBufferDataSource)dataSource).getReceiveStream();
-        StreamSliEventDispatcher stEvDispatch;
-synchronized (streamSoundLevelListeners) {
-          stEvDispatch=streamSoundLevelListeners.get(receiveStream);
+        AudioLevelEventDispatcher stEvDispatch;
+synchronized (streamAudioLevelListeners) {
+          stEvDispatch=streamAudioLevelListeners.get(receiveStream);
         }
         if (stEvDispatch != null)         stEvDispatch.addData(buffer);
       }

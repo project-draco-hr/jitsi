@@ -1,0 +1,25 @@
+{
+  stopped=false;
+  while (!stopped) {
+    byte[] dataToProcess=null;
+synchronized (this) {
+      if (data == null) {
+        try {
+          wait();
+          if (levelListeners.size() == 0)           continue;
+        }
+ catch (        InterruptedException ie) {
+        }
+      }
+      dataToProcess=data;
+      data=null;
+    }
+    if (dataToProcess != null) {
+      int newLevel=AudioLevelEffect.calculateCurrentSignalPower(dataToProcess,0,dataToProcess.length,SoundLevelChangeEvent.MAX_LEVEL,SoundLevelChangeEvent.MIN_LEVEL,lastLevel);
+synchronized (levelListeners) {
+        for (        SimpleAudioLevelListener listener : levelListeners)         listener.audioLevelChanged(newLevel);
+      }
+      lastLevel=newLevel;
+    }
+  }
+}
