@@ -1,6 +1,13 @@
 {
 synchronized (localUserAudioLevelListeners) {
-    localUserAudioLevelListeners.remove(l);
+    SimpleAudioLevelListenerWrapper wrapper=new SimpleAudioLevelListenerWrapper(l);
+    localUserAudioLevelListeners.remove(wrapper);
+    int index=localUserAudioLevelListeners.indexOf(wrapper);
+    if (index != -1) {
+      wrapper=localUserAudioLevelListeners.get(index);
+      if (wrapper.refCounter > 1)       wrapper.refCounter--;
+ else       localUserAudioLevelListeners.remove(wrapper);
+    }
     if (localUserAudioLevelListeners.size() == 0) {
       localUserAudioLevelDispatcher.stop();
       localUserAudioLevelDispatcher.setAudioLevelListener(null);

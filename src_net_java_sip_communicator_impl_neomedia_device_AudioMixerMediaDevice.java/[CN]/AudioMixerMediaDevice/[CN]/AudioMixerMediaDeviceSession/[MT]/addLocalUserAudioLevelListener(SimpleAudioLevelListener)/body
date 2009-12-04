@@ -2,8 +2,16 @@
 synchronized (localUserAudioLevelListeners) {
     if (localUserAudioLevelListeners.size() == 0) {
       localUserAudioLevelDispatcher.setAudioLevelListener(localUserAudioLevelDelegator);
-      new Thread(localUserAudioLevelDispatcher).start();
+      new Thread(localUserAudioLevelDispatcher,"Local User Audio Level Dispatcher (Mixer Edition)").start();
     }
-    if (!localUserAudioLevelListeners.contains(l))     localUserAudioLevelListeners.add(l);
+    SimpleAudioLevelListenerWrapper wrapper=new SimpleAudioLevelListenerWrapper(l);
+    int index=localUserAudioLevelListeners.indexOf(wrapper);
+    if (index != -1) {
+      wrapper=localUserAudioLevelListeners.get(index);
+      wrapper.refCounter++;
+    }
+ else {
+      localUserAudioLevelListeners.add(wrapper);
+    }
   }
 }

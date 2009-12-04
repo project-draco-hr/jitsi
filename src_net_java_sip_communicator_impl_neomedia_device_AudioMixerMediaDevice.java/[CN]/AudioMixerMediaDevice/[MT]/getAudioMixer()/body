@@ -14,11 +14,14 @@ synchronized (localUserAudioLevelListeners) {
       }
  else       if (dataSource instanceof ReceiveStreamPushBufferDataSource) {
         ReceiveStream receiveStream=((ReceiveStreamPushBufferDataSource)dataSource).getReceiveStream();
-        AudioLevelEventDispatcher stEvDispatch;
+        AudioLevelEventDispatcher streamEventDispatcher;
 synchronized (streamAudioLevelListeners) {
-          stEvDispatch=streamAudioLevelListeners.get(receiveStream);
+          streamEventDispatcher=streamAudioLevelListeners.get(receiveStream);
         }
-        if (stEvDispatch != null)         stEvDispatch.addData(buffer);
+        if (streamEventDispatcher != null) {
+          if (!streamEventDispatcher.isRunning())           new Thread(streamEventDispatcher,"StreamAudioLevelDispatcher (Mixer Edition)").start();
+          streamEventDispatcher.addData(buffer);
+        }
       }
     }
   }

@@ -1,4 +1,9 @@
 {
-  if (listener != null)   audioMixerMediaDeviceSession.putStreamAudioLevelListener(getReceiveStream(),listener);
- else   audioMixerMediaDeviceSession.removeStreamAudioLevelListener(getReceiveStream());
+synchronized (streamAudioLevelListenerLock) {
+    this.streamAudioLevelListener=listener;
+    if (listener != null) {
+      if (getReceiveStream() != null)       audioMixerMediaDeviceSession.putStreamAudioLevelListener(getReceiveStream(),listener);
+    }
+ else     if (getReceiveStream() != null)     audioMixerMediaDeviceSession.removeStreamAudioLevelListener(getReceiveStream());
+  }
 }
