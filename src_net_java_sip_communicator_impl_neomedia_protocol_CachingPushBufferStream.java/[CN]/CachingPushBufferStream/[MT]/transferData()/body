@@ -1,21 +1,22 @@
 {
-  Object syncRoot=getSyncRoot();
-synchronized (syncRoot) {
+synchronized (cache) {
     boolean interrupted=false;
-    while (cache != null)     try {
-      syncRoot.wait();
+    while (!canWriteInCache())     try {
+      cache.wait();
     }
- catch (    InterruptedException ie) {
+ catch (    InterruptedException iex) {
       interrupted=true;
     }
     if (interrupted)     Thread.currentThread().interrupt();
-    cache=new Buffer();
+    Buffer buffer=new Buffer();
     try {
-      stream.read(cache);
+      stream.read(buffer);
       readException=null;
     }
- catch (    IOException ioe) {
-      readException=ioe;
+ catch (    IOException ioex) {
+      readException=ioex;
     }
+    cache.add(buffer);
+    cacheLengthInMillis+=getLengthInMillis(buffer);
   }
 }

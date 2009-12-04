@@ -1,0 +1,24 @@
+{
+  InputStreamDesc[] inputStreams;
+synchronized (inputStreamsSyncRoot) {
+    inputStreams=(this.inputStreams == null) ? null : this.inputStreams.clone();
+  }
+  int inputStreamCount=(inputStreams == null) ? 0 : inputStreams.length;
+  if (inputStreamCount <= 0)   return;
+  AudioFormat outputFormat=getFormat();
+  InputSampleDesc inputSampleDesc=new InputSampleDesc(new int[inputStreamCount][],inputStreams);
+  int maxInputSampleCount;
+  try {
+    maxInputSampleCount=readInputPushBufferStreams(outputFormat,inputSampleDesc);
+  }
+ catch (  UnsupportedFormatException ufex) {
+    IOException ioex=new IOException();
+    ioex.initCause(ufex);
+    throw ioex;
+  }
+  maxInputSampleCount=Math.max(maxInputSampleCount,readInputPullBufferStreams(outputFormat,maxInputSampleCount,inputSampleDesc));
+  buffer.setData(inputSampleDesc);
+  buffer.setLength(maxInputSampleCount);
+  long timeStamp=inputSampleDesc.getTimeStamp();
+  if (timeStamp != Buffer.TIME_UNKNOWN)   buffer.setTimeStamp(timeStamp);
+}

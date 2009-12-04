@@ -1,12 +1,20 @@
 {
-  int[][] inputSamples=this.inputSamples;
+  int[][] inputSamples;
+  int maxInputSampleCount;
+  long timeStamp;
+synchronized (readSyncRoot) {
+    inputSamples=this.inputSamples;
+    maxInputSampleCount=this.maxInputSampleCount;
+    timeStamp=this.timeStamp;
+    this.inputSamples=null;
+    this.maxInputSampleCount=0;
+    this.timeStamp=Buffer.TIME_UNKNOWN;
+  }
   int inputSampleCount=(inputSamples == null) ? 0 : inputSamples.length;
-  int maxInputSampleCount=this.maxInputSampleCount;
-  long timeStamp=this.timeStamp;
-  this.inputSamples=null;
-  this.maxInputSampleCount=0;
-  this.timeStamp=Buffer.TIME_UNKNOWN;
-  if ((inputSampleCount == 0) || (maxInputSampleCount <= 0))   return;
+  if ((inputSampleCount == 0) || (maxInputSampleCount <= 0)) {
+    buffer.setLength(0);
+    return;
+  }
   AudioFormat outputFormat=getFormat();
   int[] outputSamples=mix(inputSamples,outputFormat,maxInputSampleCount);
   Class<?> outputDataType=outputFormat.getDataType();

@@ -1,3 +1,23 @@
 {
-  return stream.getControls();
+  Object[] controls=stream.getControls();
+  if (controls == null) {
+    BufferControl bufferControl=getBufferControl();
+    if (bufferControl != null)     controls=new Object[]{bufferControl};
+  }
+ else {
+    boolean bufferControlExists=false;
+    for (    Object control : controls)     if (control instanceof BufferControl) {
+      bufferControlExists=true;
+      break;
+    }
+    if (!bufferControlExists) {
+      BufferControl bufferControl=getBufferControl();
+      if (bufferControl != null) {
+        Object[] newControls=new Object[controls.length + 1];
+        newControls[0]=bufferControl;
+        System.arraycopy(controls,0,newControls,1,controls.length);
+      }
+    }
+  }
+  return controls;
 }

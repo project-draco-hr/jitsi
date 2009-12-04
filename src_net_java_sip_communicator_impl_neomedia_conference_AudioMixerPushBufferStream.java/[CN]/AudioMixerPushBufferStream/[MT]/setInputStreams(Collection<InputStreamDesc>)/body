@@ -1,0 +1,35 @@
+{
+  InputStreamDesc[] oldValue;
+  InputStreamDesc[] newValue=inputStreams.toArray(new InputStreamDesc[inputStreams.size()]);
+synchronized (inputStreamsSyncRoot) {
+    oldValue=this.inputStreams;
+    this.inputStreams=newValue;
+  }
+  boolean valueIsChanged=!Arrays.equals(oldValue,newValue);
+  if (valueIsChanged) {
+    setTransferHandler(oldValue,null);
+    boolean skippedForTransferHandler=false;
+    for (    InputStreamDesc inputStreamDesc : newValue) {
+      SourceStream inputStream=inputStreamDesc.getInputStream();
+      if (!(inputStream instanceof PushBufferStream))       continue;
+      if (!skippedForTransferHandler) {
+        skippedForTransferHandler=true;
+        continue;
+      }
+      if (!(inputStream instanceof CachingPushBufferStream)) {
+        PushBufferStream cachingInputStream=new CachingPushBufferStream((PushBufferStream)inputStream);
+        inputStreamDesc.setInputStream(cachingInputStream);
+        if (logger.isTraceEnabled())         logger.trace("Created CachingPushBufferStream" + " with hashCode " + cachingInputStream.hashCode() + " for inputStream with hashCode "+ inputStream.hashCode());
+      }
+    }
+    setTransferHandler(newValue,transferHandler);
+    equalizeInputStreamBufferLength();
+    if (logger.isTraceEnabled()) {
+      int oldValueLength=(oldValue == null) ? 0 : oldValue.length;
+      int newValueLength=(newValue == null) ? 0 : newValue.length;
+      int difference=newValueLength - oldValueLength;
+      if (difference > 0)       logger.trace("Added " + difference + " inputStream(s) and the total is "+ newValueLength);
+ else       if (difference < 0)       logger.trace("Removed " + difference + " inputStream(s) and the total is "+ newValueLength);
+    }
+  }
+}
