@@ -1,28 +1,2 @@
 {
-  if (audioMixer == null)   audioMixer=new AudioMixer(device.createCaptureDevice()){
-    @Override protected void connect(    DataSource dataSource,    DataSource inputDataSource) throws IOException {
-      if (inputDataSource == captureDevice)       AudioMixerMediaDevice.this.connect(dataSource);
- else       super.connect(dataSource,inputDataSource);
-    }
-    @Override protected void read(    PushBufferStream stream,    Buffer buffer,    DataSource dataSource) throws IOException {
-      super.read(stream,buffer,dataSource);
-      if (dataSource == captureDevice) {
-        if (localAudioLevelEventDispatcher == null) {
-          localAudioLevelEventDispatcher=new AudioLevelEventDispatcher();
-          new Thread(localAudioLevelEventDispatcher).start();
-        }
-        localAudioLevelEventDispatcher.addData(buffer);
-      }
- else       if (dataSource instanceof ReceiveStreamPushBufferDataSource) {
-        ReceiveStream receiveStream=((ReceiveStreamPushBufferDataSource)dataSource).getReceiveStream();
-        AudioLevelEventDispatcher stEvDispatch;
-synchronized (streamAudioLevelListeners) {
-          stEvDispatch=streamAudioLevelListeners.get(receiveStream);
-        }
-        if (stEvDispatch != null)         stEvDispatch.addData(buffer);
-      }
-    }
-  }
-;
-  return audioMixer;
 }

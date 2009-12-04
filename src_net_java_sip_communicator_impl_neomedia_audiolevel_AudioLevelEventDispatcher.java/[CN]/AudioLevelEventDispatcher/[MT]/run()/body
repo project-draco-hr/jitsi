@@ -1,12 +1,14 @@
 {
   stopped=false;
+  SimpleAudioLevelListener listenerToNotify=null;
   while (!stopped) {
     byte[] dataToProcess=null;
 synchronized (this) {
       if (data == null) {
         try {
           wait();
-          if (levelListeners.size() == 0)           continue;
+          if (levelListener == null)           continue;
+          listenerToNotify=levelListener;
         }
  catch (        InterruptedException ie) {
         }
@@ -16,9 +18,7 @@ synchronized (this) {
     }
     if (dataToProcess != null) {
       int newLevel=AudioLevelEffect.calculateCurrentSignalPower(dataToProcess,0,dataToProcess.length,SimpleAudioLevelListener.MAX_LEVEL,SimpleAudioLevelListener.MIN_LEVEL,lastLevel);
-synchronized (levelListeners) {
-        for (        SimpleAudioLevelListener listener : levelListeners)         listener.audioLevelChanged(newLevel);
-      }
+      listenerToNotify.audioLevelChanged(newLevel);
       lastLevel=newLevel;
     }
   }
