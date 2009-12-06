@@ -1,0 +1,86 @@
+{
+  final JButton upButton=new JButton(ZrtpConfigureActivator.resourceService.getI18NString("impl.media.configform.UP"));
+  upButton.setOpaque(false);
+  final JButton downButton=new JButton(ZrtpConfigureActivator.resourceService.getI18NString("impl.media.configform.DOWN"));
+  downButton.setOpaque(false);
+  Container buttonBar=new JPanel(new GridLayout(0,1));
+  buttonBar.add(upButton);
+  buttonBar.add(downButton);
+  panel.setLayout(new GridBagLayout());
+  panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED),title));
+  final JTable table=new JTable(model.getRowCount(),2);
+  table.setShowGrid(false);
+  table.setTableHeader(null);
+  table.setModel(model);
+  table.setPreferredScrollableViewportSize(new Dimension(400,60));
+  TableColumnModel tableColumnModel=table.getColumnModel();
+  TableColumn tableColumn=tableColumnModel.getColumn(0);
+  tableColumn.setMaxWidth(tableColumn.getMinWidth() + 5);
+  table.doLayout();
+  GridBagConstraints constraints=new GridBagConstraints();
+  constraints.anchor=GridBagConstraints.CENTER;
+  constraints.fill=GridBagConstraints.BOTH;
+  constraints.gridwidth=1;
+  constraints.gridx=0;
+  constraints.gridy=1;
+  constraints.weightx=1;
+  constraints.weighty=1;
+  panel.add(new JScrollPane(table),constraints);
+  constraints.anchor=GridBagConstraints.NORTHEAST;
+  constraints.fill=GridBagConstraints.NONE;
+  constraints.gridwidth=1;
+  constraints.gridx=1;
+  constraints.gridy=1;
+  constraints.weightx=0;
+  constraints.weighty=0;
+  panel.add(buttonBar,constraints);
+  ListSelectionListener tableSelectionListener=new ListSelectionListener(){
+    @SuppressWarnings("unchecked") public void valueChanged(    ListSelectionEvent event){
+      if (table.getSelectedRowCount() == 1) {
+        int selectedRow=table.getSelectedRow();
+        if (selectedRow > -1) {
+          ZrtpConfigureTableModel<T> model=(ZrtpConfigureTableModel<T>)table.getModel();
+          upButton.setEnabled(selectedRow > 0 && model.checkEnableUp(selectedRow));
+          downButton.setEnabled(selectedRow < (table.getRowCount() - 1) && model.checkEnableDown(selectedRow));
+          return;
+        }
+      }
+      upButton.setEnabled(false);
+      downButton.setEnabled(false);
+    }
+  }
+;
+  table.getSelectionModel().addListSelectionListener(tableSelectionListener);
+  TableModelListener tableListener=new TableModelListener(){
+    @SuppressWarnings("unchecked") public void tableChanged(    TableModelEvent e){
+      if (table.getSelectedRowCount() == 1) {
+        int selectedRow=table.getSelectedRow();
+        if (selectedRow > -1) {
+          ZrtpConfigureTableModel<T> model=(ZrtpConfigureTableModel<T>)table.getModel();
+          upButton.setEnabled(selectedRow > 0 && model.checkEnableUp(selectedRow));
+          downButton.setEnabled(selectedRow < (table.getRowCount() - 1) && model.checkEnableDown(selectedRow));
+          return;
+        }
+      }
+      upButton.setEnabled(false);
+      downButton.setEnabled(false);
+    }
+  }
+;
+  table.getModel().addTableModelListener(tableListener);
+  tableSelectionListener.valueChanged(null);
+  ActionListener buttonListener=new ActionListener(){
+    @SuppressWarnings("unchecked") public void actionPerformed(    ActionEvent event){
+      Object source=event.getSource();
+      boolean up;
+      if (source == upButton)       up=true;
+ else       if (source == downButton)       up=false;
+ else       return;
+      int index=((ZrtpConfigureTableModel<T>)table.getModel()).move(table.getSelectedRow(),up,up);
+      table.getSelectionModel().setSelectionInterval(index,index);
+    }
+  }
+;
+  upButton.addActionListener(buttonListener);
+  downButton.addActionListener(buttonListener);
+}
