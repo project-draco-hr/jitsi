@@ -2,20 +2,23 @@
   if (event instanceof NewReceiveStreamEvent) {
     ReceiveStream receiveStream=event.getReceiveStream();
     if (receiveStream != null) {
-      if (logger.isTraceEnabled())       logger.trace("Received new ReceiveStream with ssrc " + receiveStream.getSSRC());
-      setRemoteSourceID(receiveStream.getSSRC());
-synchronized (receiveStreams) {
-        if (!receiveStreams.contains(receiveStream) && receiveStreams.add(receiveStream)) {
+      long receiveStreamSSRC=receiveStream.getSSRC();
+      if (logger.isTraceEnabled())       logger.trace("Received new ReceiveStream with ssrc " + receiveStreamSSRC);
+      setRemoteSourceID(receiveStreamSSRC);
+synchronized (receiveStreamSyncRoot) {
+        if (this.receiveStream != receiveStream) {
+          this.receiveStream=receiveStream;
           MediaDeviceSession deviceSession=getDeviceSession();
-          if (deviceSession != null)           deviceSession.addReceiveStream(receiveStream);
+          if (deviceSession != null)           deviceSession.addReceiveStream(this.receiveStream);
         }
       }
     }
   }
  else   if (event instanceof TimeoutEvent) {
     ReceiveStream receiveStream=event.getReceiveStream();
-    if (receiveStream != null) synchronized (receiveStreams) {
-      if (receiveStreams.remove(receiveStream)) {
+    if (receiveStream != null) synchronized (receiveStreamSyncRoot) {
+      if (this.receiveStream == receiveStream) {
+        this.receiveStream=null;
         MediaDeviceSession deviceSession=getDeviceSession();
         if (deviceSession != null)         deviceSession.removeReceiveStream(receiveStream);
       }
