@@ -1,45 +1,27 @@
 {
-  if (!checkInitialized()) {
-    return;
-  }
-  String osName=System.getProperty("os.name");
+  if (!checkInitialized())   return;
+  boolean isMac=OSUtils.isMac();
   ImageIcon toChangeSystrayIcon=null;
   if (imageType == SystrayService.SC_IMG_TYPE) {
-    if (osName.startsWith("Mac OS X") && TrayMenuFactory.isVisible(menu)) {
-      toChangeSystrayIcon=logoIconWhite;
-    }
- else {
-      toChangeSystrayIcon=logoIcon;
-    }
+    toChangeSystrayIcon=(isMac && TrayMenuFactory.isVisible(menu)) ? logoIconWhite : logoIcon;
   }
  else   if (imageType == SystrayService.SC_IMG_OFFLINE_TYPE) {
-    if (!osName.startsWith("Mac OS X")) {
-      toChangeSystrayIcon=logoIconOffline;
-    }
+    if (!isMac)     toChangeSystrayIcon=logoIconOffline;
   }
  else   if (imageType == SystrayService.SC_IMG_AWAY_TYPE) {
-    if (!osName.startsWith("Mac OS X")) {
-      toChangeSystrayIcon=logoIconAway;
-    }
+    if (!isMac)     toChangeSystrayIcon=logoIconAway;
   }
  else   if (imageType == SystrayService.SC_IMG_FFC_TYPE) {
-    if (!osName.startsWith("Mac OS X")) {
-      toChangeSystrayIcon=logoIconFFC;
-    }
+    if (!isMac)     toChangeSystrayIcon=logoIconFFC;
   }
  else   if (imageType == SystrayService.ENVELOPE_IMG_TYPE) {
-    if (osName.startsWith("Mac OS X") && TrayMenuFactory.isVisible(menu)) {
-      toChangeSystrayIcon=envelopeIconWhite;
-    }
- else {
-      toChangeSystrayIcon=envelopeIcon;
-    }
+    toChangeSystrayIcon=(isMac && TrayMenuFactory.isVisible(menu)) ? envelopeIconWhite : envelopeIcon;
   }
   if (toChangeSystrayIcon != null) {
     this.trayIcon.setIcon(toChangeSystrayIcon);
     this.currentIcon=toChangeSystrayIcon;
   }
-  if (osName.startsWith("Mac OS X")) {
+  if (isMac) {
     URL toChangeDockIcon=null;
 switch (imageType) {
 case SystrayService.SC_IMG_TYPE:
@@ -55,12 +37,8 @@ toChangeDockIcon=dockIconFFC;
 break;
 }
 try {
-if (toChangeDockIcon != null) {
-Dock.setDockTileImage(toChangeDockIcon);
-}
- else {
-Dock.restoreDockTileImage();
-}
+if (toChangeDockIcon != null) Dock.setDockTileImage(toChangeDockIcon);
+ else Dock.restoreDockTileImage();
 }
  catch (Exception e) {
 logger.error("failed to change dock icon",e);

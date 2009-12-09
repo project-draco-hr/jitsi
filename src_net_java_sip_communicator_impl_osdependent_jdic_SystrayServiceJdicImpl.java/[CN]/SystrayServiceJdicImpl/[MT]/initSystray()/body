@@ -1,14 +1,14 @@
 {
   menu=TrayMenuFactory.createTrayMenu(this,systray.isSwing());
-  String osName=System.getProperty("os.name");
-  if (osName.startsWith("Windows")) {
+  boolean isMac=OSUtils.isMac();
+  if (OSUtils.isWindows()) {
     logoIcon=Resources.getImage("service.systray.TRAY_ICON_WINDOWS");
     logoIconOffline=Resources.getImage("service.systray.TRAY_ICON_WINDOWS_OFFLINE");
     logoIconAway=Resources.getImage("service.systray.TRAY_ICON_WINDOWS_AWAY");
     logoIconFFC=Resources.getImage("service.systray.TRAY_ICON_WINDOWS_FFC");
     envelopeIcon=Resources.getImage("service.systray.MESSAGE_ICON_WINDOWS");
   }
- else   if (osName.startsWith("Mac OS X")) {
+ else   if (isMac) {
     logoIcon=Resources.getImage("service.systray.TRAY_ICON_MACOSX");
     logoIconWhite=Resources.getImage("service.systray.TRAY_ICON_MACOSX_WHITE");
     envelopeIcon=Resources.getImage("service.systray.MESSAGE_ICON_MACOSX");
@@ -21,15 +21,10 @@
     logoIconFFC=Resources.getImage("service.systray.TRAY_ICON_FFC");
     envelopeIcon=Resources.getImage("service.systray.MESSAGE_ICON");
   }
-  if (!osName.startsWith("Mac OS X")) {
-    currentIcon=logoIconOffline;
-  }
- else {
-    currentIcon=logoIcon;
-  }
+  currentIcon=isMac ? logoIcon : logoIconOffline;
   trayIcon=new TrayIcon(currentIcon,Resources.getApplicationString("service.gui.APPLICATION_NAME"),menu);
   trayIcon.setIconAutoSize(true);
-  if (osName.startsWith("Mac OS X")) {
+  if (isMac) {
     dockIconOffline=Resources.getImageURL("service.systray.DOCK_ICON_OFFLINE");
     dockIconAway=Resources.getImageURL("service.systray.DOCK_ICON_AWAY");
     dockIconFFC=Resources.getImageURL("service.systray.DOCK_ICON_FFC");
@@ -47,27 +42,17 @@
     }
   }
 );
-  if (osName.startsWith("Mac OS X")) {
+  if (isMac) {
     TrayMenuFactory.addPopupMenuListener(menu,new PopupMenuListener(){
       public void popupMenuWillBecomeVisible(      PopupMenuEvent e){
-        if (currentIcon == envelopeIcon) {
-          trayIcon.setIcon(envelopeIconWhite);
-          currentIcon=envelopeIconWhite;
-        }
- else {
-          trayIcon.setIcon(logoIconWhite);
-          currentIcon=logoIconWhite;
-        }
+        ImageIcon newIcon=(currentIcon == envelopeIcon) ? envelopeIconWhite : logoIconWhite;
+        trayIcon.setIcon(newIcon);
+        currentIcon=newIcon;
       }
       public void popupMenuWillBecomeInvisible(      PopupMenuEvent e){
-        if (currentIcon == envelopeIconWhite) {
-          trayIcon.setIcon(envelopeIcon);
-          currentIcon=envelopeIcon;
-        }
- else {
-          getTrayIcon().setIcon(logoIcon);
-          currentIcon=logoIcon;
-        }
+        ImageIcon newIcon=(currentIcon == envelopeIconWhite) ? envelopeIcon : logoIcon;
+        getTrayIcon().setIcon(newIcon);
+        currentIcon=newIcon;
       }
       public void popupMenuCanceled(      PopupMenuEvent e){
         popupMenuWillBecomeInvisible(e);
@@ -76,7 +61,7 @@
 );
   }
   PopupMessageHandler pph=null;
-  if (!osName.startsWith("Mac OS X")) {
+  if (!isMac) {
     pph=new PopupMessageHandlerTrayIconImpl(trayIcon);
     popupHandlerSet.put(pph.getClass().getName(),pph);
     OsDependentActivator.bundleContext.registerService(PopupMessageHandler.class.getName(),pph,null);
