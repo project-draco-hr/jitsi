@@ -1,0 +1,70 @@
+{
+  int multiStreams=0;
+  Iterator<?> ii=subCode.iterator();
+  Object msgCode=ii.next();
+  String message=null;
+  String i18nMessage=null;
+  int severity=0;
+  boolean sendEvent=true;
+  if (msgCode instanceof ZrtpCodes.InfoCodes) {
+    ZrtpCodes.InfoCodes inf=(ZrtpCodes.InfoCodes)msgCode;
+    sendEvent=false;
+    if (inf == ZrtpCodes.InfoCodes.InfoSecureStateOn) {
+      if (isDHSession) {
+        securityListener.securityTurnedOn(sessionType,cipher,sas,isSasVerified,((ZrtpControlImpl)mediaStream.getZrtpControl()).getZrtpEngine().getMultiStrParams());
+      }
+ else {
+        securityListener.securityTurnedOn(sessionType,cipher,null,false,null);
+      }
+    }
+  }
+ else   if (msgCode instanceof ZrtpCodes.WarningCodes) {
+    ZrtpCodes.WarningCodes warn=(ZrtpCodes.WarningCodes)msgCode;
+    severity=CallPeerSecurityMessageEvent.WARNING;
+    if (warn == ZrtpCodes.WarningCodes.WarningNoRSMatch) {
+      message="No retained shared secret available.";
+      i18nMessage=WARNING_NO_RS_MATCH;
+    }
+ else     if (warn == ZrtpCodes.WarningCodes.WarningNoExpectedRSMatch) {
+      message="An expected retained shared secret is missing.";
+      i18nMessage=WARNING_NO_EXPECTED_RS_MATCH;
+    }
+ else     if (warn == ZrtpCodes.WarningCodes.WarningCRCmismatch) {
+      message="Internal ZRTP packet checksum mismatch.";
+      i18nMessage=getI18NString("impl.media.security.CHECKSUM_MISMATCH",null);
+    }
+ else {
+      sendEvent=false;
+    }
+  }
+ else   if (msgCode instanceof ZrtpCodes.SevereCodes) {
+    ZrtpCodes.SevereCodes severe=(ZrtpCodes.SevereCodes)msgCode;
+    severity=CallPeerSecurityMessageEvent.SEVERE;
+    if (severe == ZrtpCodes.SevereCodes.SevereCannotSend) {
+      message="Failed to send data." + "Internet data connection or peer is down.";
+      i18nMessage=getI18NString("impl.media.security.DATA_SEND_FAILED",msgCode.toString());
+    }
+ else     if (severe == ZrtpCodes.SevereCodes.SevereTooMuchRetries) {
+      message="Too much retries during ZRTP negotiation.";
+      i18nMessage=getI18NString("impl.media.security.RETRY_RATE_EXCEEDED",msgCode.toString());
+    }
+ else     if (severe == ZrtpCodes.SevereCodes.SevereProtocolError) {
+      message="Internal protocol error occured.";
+      i18nMessage=getI18NString("impl.media.security.INTERNAL_PROTOCOL_ERROR",msgCode.toString());
+    }
+ else {
+      message="General error has occurred.";
+      i18nMessage=getI18NString("impl.media.security.ZRTP_GENERIC_MSG",msgCode.toString());
+    }
+  }
+ else   if (msgCode instanceof ZrtpCodes.ZrtpErrorCodes) {
+    severity=CallPeerSecurityMessageEvent.ERROR;
+    message="Indicates compatibility problems like for example:" + "unsupported protocol version, unsupported hash type," + "cypher type, SAS scheme, etc.";
+    i18nMessage=getI18NString("impl.media.security.ZRTP_GENERIC_MSG",msgCode.toString());
+  }
+ else {
+    sendEvent=false;
+  }
+  if (sendEvent)   securityListener.securityMessageReceived(message,i18nMessage,severity);
+  logger.debug(sessionTypeToString(sessionType) + ": " + "ZRTP message: severity: "+ sev+ ", sub code: "+ msgCode+ ", DH session: "+ isDHSession+ ", multi: "+ multiStreams);
+}

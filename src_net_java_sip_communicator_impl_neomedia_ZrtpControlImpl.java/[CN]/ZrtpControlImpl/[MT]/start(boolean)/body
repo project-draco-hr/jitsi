@@ -1,0 +1,22 @@
+{
+  usingZRTP=true;
+  KeyProviderAlgorithm selectedKeyProviderAlgorithm=keySharingAlgorithms.get(0);
+  if (selectedKeyProviderAlgorithm != null && selectedKeyProviderAlgorithm == KeyProviderAlgorithm.ZRTP_PROVIDER) {
+    SecurityEventManager securityEventManager=new SecurityEventManager(stream);
+    boolean zrtpAutoStart=false;
+    if (masterSession) {
+      zrtpAutoStart=true;
+      securityEventManager.setDHSession(true);
+      securityEventManager.setSessionType(SecurityEventManager.AUDIO_SESSION);
+    }
+ else {
+      securityEventManager.setSessionType(SecurityEventManager.VIDEO_SESSION);
+    }
+    ZRTPTransformEngine zrtpEngine=stream.getZrtpEngine();
+    zrtpEngine.initialize("GNUZRTP4J.zid",zrtpAutoStart);
+    zrtpEngine.setConnector(stream.getRtpConnector());
+    zrtpEngine.setUserCallback(securityEventManager);
+    usingZRTP=true;
+    zrtpEngine.sendInfo(ZrtpCodes.MessageSeverity.Info,EnumSet.of(ZRTPCustomInfoCodes.ZRTPEnabledByDefault));
+  }
+}

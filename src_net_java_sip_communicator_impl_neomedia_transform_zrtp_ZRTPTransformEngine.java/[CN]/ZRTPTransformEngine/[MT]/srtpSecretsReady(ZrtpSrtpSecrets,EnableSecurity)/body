@@ -1,0 +1,28 @@
+{
+  SRTPPolicy srtpPolicy=null;
+  if (part == EnableSecurity.ForSender) {
+    if (secrets.getRole() == Role.Initiator) {
+      srtpPolicy=new SRTPPolicy(SRTPPolicy.AESCM_ENCRYPTION,secrets.getInitKeyLen() / 8,SRTPPolicy.HMACSHA1_AUTHENTICATION,20,secrets.getSrtpAuthTagLen() / 8,secrets.getInitSaltLen() / 8);
+      SRTPTransformEngine engine=new SRTPTransformEngine(secrets.getKeyInitiator(),secrets.getSaltInitiator(),srtpPolicy,srtpPolicy);
+      srtpOutTransformer=engine.getRTPTransformer();
+    }
+ else {
+      srtpPolicy=new SRTPPolicy(SRTPPolicy.AESCM_ENCRYPTION,secrets.getRespKeyLen() / 8,SRTPPolicy.HMACSHA1_AUTHENTICATION,20,secrets.getSrtpAuthTagLen() / 8,secrets.getRespSaltLen() / 8);
+      SRTPTransformEngine engine=new SRTPTransformEngine(secrets.getKeyResponder(),secrets.getSaltResponder(),srtpPolicy,srtpPolicy);
+      srtpOutTransformer=engine.getRTPTransformer();
+    }
+  }
+  if (part == EnableSecurity.ForReceiver) {
+    if (secrets.getRole() == Role.Initiator) {
+      srtpPolicy=new SRTPPolicy(SRTPPolicy.AESCM_ENCRYPTION,secrets.getRespKeyLen() / 8,SRTPPolicy.HMACSHA1_AUTHENTICATION,20,secrets.getSrtpAuthTagLen() / 8,secrets.getRespSaltLen() / 8);
+      SRTPTransformEngine engine=new SRTPTransformEngine(secrets.getKeyResponder(),secrets.getSaltResponder(),srtpPolicy,srtpPolicy);
+      srtpInTransformer=engine.getRTPTransformer();
+    }
+ else {
+      srtpPolicy=new SRTPPolicy(SRTPPolicy.AESCM_ENCRYPTION,secrets.getInitKeyLen() / 8,SRTPPolicy.HMACSHA1_AUTHENTICATION,20,secrets.getSrtpAuthTagLen() / 8,secrets.getInitSaltLen() / 8);
+      SRTPTransformEngine engine=new SRTPTransformEngine(secrets.getKeyInitiator(),secrets.getSaltInitiator(),srtpPolicy,srtpPolicy);
+      srtpInTransformer=engine.getRTPTransformer();
+    }
+  }
+  return true;
+}
