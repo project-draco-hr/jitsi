@@ -8,6 +8,18 @@
       if (direction != MediaDirection.INACTIVE) {
         MediaDescription md=createMediaDescription(dev.getSupportedFormats(),getStreamConnector(mediaType),direction,dev.getSupportedExtensions());
         if (peer.getCall().isSipZrtpAttribute()) {
+          try {
+            ZrtpControl control=zrtpControls.get(mediaType);
+            if (control == null) {
+              control=SipActivator.getMediaService().createZrtpControl();
+              zrtpControls.put(mediaType,control);
+            }
+            String helloHash=control.getHelloHash();
+            if (helloHash != null && helloHash.length() > 0)             md.setAttribute("zrtp-hash",helloHash);
+          }
+ catch (          SdpException ex) {
+            logger.error("Cannot add zrtp-hash to sdp",ex);
+          }
         }
         mediaDescs.add(md);
       }
