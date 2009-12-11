@@ -1,0 +1,21 @@
+{
+synchronized (playbackSyncRoot) {
+    if (this.receiveStream == receiveStream)     return;
+    ReceiveStream oldValue=this.receiveStream;
+    if (this.receiveStream != null) {
+      removeSSRC(this.receiveStream.getSSRC());
+      setPlaybackDataSource(null);
+    }
+    this.receiveStream=receiveStream;
+    receiveStreamChanged(oldValue,this.receiveStream);
+    if (this.receiveStream != null) {
+      addSSRC(this.receiveStream.getSSRC());
+      DataSource receiveStreamDataSource=receiveStream.getDataSource();
+      if (receiveStreamDataSource != null) {
+        if (receiveStreamDataSource instanceof PushBufferDataSource)         receiveStreamDataSource=new ReceiveStreamPushBufferDataSource(receiveStream,(PushBufferDataSource)receiveStreamDataSource,true);
+ else         logger.warn("Adding ReceiveStream with DataSource" + " not of type PushBufferDataSource but " + receiveStreamDataSource.getClass().getSimpleName() + " which may prevent the ReceiveStream"+ " from properly transferring to another"+ " MediaDevice if such a need arises.");
+        setPlaybackDataSource(receiveStreamDataSource);
+      }
+    }
+  }
+}
