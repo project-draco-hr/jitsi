@@ -1,5 +1,13 @@
 {
   long[] csrcList=mediaStream.getLocalContributingSourceIDs();
-  if (csrcList != null && csrcList.length > 0)   pkt.setCsrcList(csrcList);
+  if (csrcList == null || csrcList.length == 0) {
+    return pkt;
+  }
+  pkt.setCsrcList(csrcList);
+  if (this.csrcAudioLevelExtID > 0 && mediaStream instanceof AudioMediaStreamImpl) {
+    AudioMediaStreamImpl audioStream=(AudioMediaStreamImpl)mediaStream;
+    byte[] levelsExt=createLevelExtensionBuffer(csrcList);
+    pkt.addExtension(levelsExt);
+  }
   return pkt;
 }
