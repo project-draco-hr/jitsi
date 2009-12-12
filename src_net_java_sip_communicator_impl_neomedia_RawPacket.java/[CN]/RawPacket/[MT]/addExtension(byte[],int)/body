@@ -1,3 +1,19 @@
 {
-  byte[] newBuffer=new byte[getLength() + EXT_HEADER_SIZE + length];
+  int newBuffLen=getLength() + length;
+  if (!getExtensionBit())   newBuffLen+=EXT_HEADER_SIZE;
+  byte[] newBuffer=new byte[newBuffLen];
+  System.arraycopy(buffer,offset,newBuffer,offset,FIXED_HEADER_SIZE + getCsrcCount() * 4 + getExtensionLength());
+  newBuffer[offset]|=0x10;
+  if (!getExtensionBit()) {
+    int extHdrOffset=FIXED_HEADER_SIZE + getCsrcCount() * 4;
+    newBuffer[extHdrOffset]=(byte)0xBE;
+    newBuffer[extHdrOffset + 1]=(byte)0xDE;
+    int newExtensionLen=length + getExtensionLength();
+    newBuffer[extHdrOffset + 2]=(byte)(newExtensionLen >> 4);
+    newBuffer[extHdrOffset + 3]=(byte)newExtensionLen;
+  }
+  System.arraycopy(extBuff,0,newBuffer,FIXED_HEADER_SIZE + getCsrcCount() * 4 + getExtensionLength(),length);
+  int oldPayloadOffset=FIXED_HEADER_SIZE + getCsrcCount() * 4 + getExtensionLength();
+  int newPayloadOffset=oldPayloadOffset + length;
+  System.arraycopy(buffer,oldPayloadOffset,newBuffer,newPayloadOffset,FIXED_HEADER_SIZE + getCsrcCount() * 4 + getExtensionLength());
 }
