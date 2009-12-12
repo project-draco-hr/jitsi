@@ -1,0 +1,24 @@
+{
+  if (!getExtensionBit() || getExtensionLength() == 0)   return 0;
+  int extOffset=FIXED_HEADER_SIZE + getCsrcCount() * 4 + EXT_HEADER_SIZE;
+  int extensionEnd=extOffset + getExtensionLength();
+  int extHdrLen=getExtensionHeaderLength();
+  if (extHdrLen != 1 && extHdrLen != 2)   return -1;
+  while (extOffset < extensionEnd) {
+    int currType=-1;
+    int currLen=-1;
+    if (extHdrLen == 1) {
+      currType=buffer[extOffset] >> 4;
+      currLen=(buffer[extOffset] & 0x0F) + 1;
+      extOffset++;
+    }
+ else {
+      currType=buffer[extOffset];
+      currLen=buffer[extOffset + 1];
+      extOffset+=2;
+    }
+    if (currType == extensionID)     return extOffset;
+    extOffset+=currLen;
+  }
+  return -1;
+}
