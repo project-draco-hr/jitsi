@@ -1,15 +1,11 @@
 {
-  if (!started && enableZrtp && ownSSRC != 0) {
-    startZrtp();
-  }
+  if (!started && enableZrtp && ownSSRC != 0)   startZrtp();
   byte[] buffer=pkt.getBuffer();
   int offset=pkt.getOffset();
   if ((buffer[offset] & 0x10) != 0x10) {
-    if (srtpInTransformer == null) {
-      return pkt;
-    }
+    if (srtpInTransformer == null)     return pkt;
     pkt=srtpInTransformer.reverseTransform(pkt);
-    if (pkt != null && started && zrtpEngine.inState(ZrtpStateClass.ZrtpStates.WaitConfAck)) {
+    if ((pkt != null) && started && zrtpEngine.inState(ZrtpStateClass.ZrtpStates.WaitConfAck)) {
       zrtpEngine.conf2AckSecure();
     }
     return pkt;
@@ -18,13 +14,11 @@
     ZrtpRawPacket zPkt=new ZrtpRawPacket(pkt);
     if (!zPkt.checkCrc()) {
       securityEventManager.showMessage(ZrtpCodes.MessageSeverity.Warning,EnumSet.of(ZrtpCodes.WarningCodes.WarningCRCmismatch));
-      return null;
     }
-    if (!zPkt.hasMagic()) {
-      return null;
+ else     if (zPkt.hasMagic()) {
+      byte[] extHeader=zPkt.getMessagePart();
+      zrtpEngine.processZrtpMessage(extHeader,zPkt.getSSRC());
     }
-    byte[] extHeader=zPkt.getMessagePart();
-    zrtpEngine.processZrtpMessage(extHeader,zPkt.getSSRC());
   }
   return null;
 }
