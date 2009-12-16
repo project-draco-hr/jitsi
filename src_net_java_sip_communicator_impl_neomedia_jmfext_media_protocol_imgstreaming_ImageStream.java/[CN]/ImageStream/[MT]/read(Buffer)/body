@@ -1,2 +1,27 @@
 {
+  RGBFormat format=(RGBFormat)currentFormat;
+  int intData[]=null;
+  byte data[]=null;
+  BufferedImage scaledScreen=null;
+  int width=(int)format.getSize().getWidth();
+  int height=(int)format.getSize().getHeight();
+  try {
+    scaledScreen=ImageStreamingUtils.getScaledImage(screen,width,height,BufferedImage.TYPE_INT_ARGB);
+  }
+ catch (  Exception e) {
+    logger.warn("Cannot capture screen.");
+    return;
+  }
+  long t=System.nanoTime();
+  data=ImageStreamingUtils.getImageByte(scaledScreen);
+  t=System.nanoTime() - t;
+  buffer.setData(data);
+  buffer.setOffset(0);
+  buffer.setLength(data.length * 4);
+  buffer.setFormat(currentFormat);
+  buffer.setHeader(null);
+  buffer.setTimeStamp(System.nanoTime());
+  buffer.setSequenceNumber(seqNo);
+  seqNo++;
+  buffer.setFlags(Buffer.FLAG_LIVE_DATA | Buffer.FLAG_SYSTEM_TIME);
 }
