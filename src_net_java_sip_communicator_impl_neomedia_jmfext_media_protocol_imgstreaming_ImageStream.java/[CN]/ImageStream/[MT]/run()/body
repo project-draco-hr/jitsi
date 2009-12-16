@@ -3,40 +3,47 @@
   final RGBFormat format=(RGBFormat)currentFormat;
   final int width=(int)format.getSize().getWidth();
   final int height=(int)format.getSize().getHeight();
-  BufferedImage scaledScreen=null;
-  BufferedImage screen=null;
   Buffer buffer=new Buffer();
-  byte data[]=null;
-  while (started) {
+  if (desktopInteract == null) {
     try {
-      long t=System.nanoTime();
-      screen=RobotDesktopInteractImpl.getInstance().captureScreen();
-      scaledScreen=ImageStreamingUtils.getScaledImage(screen,width,height,BufferedImage.TYPE_INT_ARGB);
-      data=ImageStreamingUtils.getImageByte(scaledScreen);
-      buffer.setData(data);
-      buffer.setOffset(0);
-      buffer.setLength(data.length);
-      buffer.setFormat(currentFormat);
-      buffer.setHeader(null);
-      buffer.setTimeStamp(System.nanoTime());
-      buffer.setSequenceNumber(seqNo);
-      buffer.setFlags(Buffer.FLAG_LIVE_DATA | Buffer.FLAG_SYSTEM_TIME);
-      seqNo++;
-      ringBuffer.put(buffer);
-      if (transferHandler != null) {
-        transferHandler.transferData(this);
-      }
-      t=System.nanoTime() - t;
-      logger.info("Desktop capture processing time: " + t);
-      screen=null;
-      scaledScreen=null;
-      data=null;
+      desktopInteract=new DesktopInteractImpl();
+    }
+ catch (    Exception e) {
+      logger.warn("Cannot create DesktopInteract object!");
+      started=false;
+      return;
+    }
+  }
+  while (started) {
+    byte data[]=null;
+    BufferedImage scaledScreen=null;
+    BufferedImage screen=null;
+    long t=System.nanoTime();
+    screen=desktopInteract.captureScreen();
+    scaledScreen=ImageStreamingUtils.getScaledImage(screen,width,height,BufferedImage.TYPE_INT_ARGB);
+    data=ImageStreamingUtils.getImageByte(scaledScreen);
+    buffer.setData(data);
+    buffer.setOffset(0);
+    buffer.setLength(data.length);
+    buffer.setFormat(currentFormat);
+    buffer.setHeader(null);
+    buffer.setTimeStamp(System.nanoTime());
+    buffer.setSequenceNumber(seqNo);
+    buffer.setFlags(Buffer.FLAG_LIVE_DATA | Buffer.FLAG_SYSTEM_TIME);
+    seqNo++;
+    ringBuffer.put(buffer);
+    if (transferHandler != null) {
+      transferHandler.transferData(this);
+    }
+    t=System.nanoTime() - t;
+    logger.info("Desktop capture processing time: " + t);
+    screen=null;
+    scaledScreen=null;
+    data=null;
+    try {
       Thread.sleep(500);
     }
- catch (    AWTException ae) {
-      logger.warn("Desktop capture failed!");
-    }
-catch (    InterruptedException e) {
+ catch (    InterruptedException e) {
     }
   }
   buffer=null;
