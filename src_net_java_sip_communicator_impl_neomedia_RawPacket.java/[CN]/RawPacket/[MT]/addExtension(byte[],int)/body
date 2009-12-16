@@ -1,19 +1,35 @@
 {
-  int newBuffLen=getLength() + length;
-  if (!getExtensionBit())   newBuffLen+=EXT_HEADER_SIZE;
-  byte[] newBuffer=new byte[newBuffLen];
-  System.arraycopy(buffer,offset,newBuffer,offset,FIXED_HEADER_SIZE + getCsrcCount() * 4 + getExtensionLength());
-  newBuffer[offset]|=0x10;
-  if (!getExtensionBit()) {
-    int extHdrOffset=FIXED_HEADER_SIZE + getCsrcCount() * 4;
-    newBuffer[extHdrOffset]=(byte)0xBE;
-    newBuffer[extHdrOffset + 1]=(byte)0xDE;
-    int newExtensionLen=length + getExtensionLength();
-    newBuffer[extHdrOffset + 2]=(byte)(newExtensionLen >> 4);
-    newBuffer[extHdrOffset + 3]=(byte)newExtensionLen;
+  int newBuffLen=buffer.length + newExtensionLen;
+  int bufferOffset=offset;
+  int newBufferOffset=offset;
+  int lengthToCopy=FIXED_HEADER_SIZE + getCsrcCount() * 4;
+  boolean extensionBit=getExtensionBit();
+  if (extensionBit) {
+    lengthToCopy+=EXT_HEADER_SIZE - 2;
   }
-  System.arraycopy(extBuff,0,newBuffer,FIXED_HEADER_SIZE + getCsrcCount() * 4 + getExtensionLength(),length);
-  int oldPayloadOffset=FIXED_HEADER_SIZE + getCsrcCount() * 4 + getExtensionLength();
-  int newPayloadOffset=oldPayloadOffset + length;
-  System.arraycopy(buffer,oldPayloadOffset,newBuffer,newPayloadOffset,FIXED_HEADER_SIZE + getCsrcCount() * 4 + getExtensionLength());
+ else   newBuffLen+=EXT_HEADER_SIZE;
+  byte[] newBuffer=new byte[newBuffLen];
+  System.arraycopy(buffer,bufferOffset,newBuffer,newBufferOffset,lengthToCopy);
+  newBuffer[newBufferOffset]|=0x10;
+  bufferOffset+=lengthToCopy;
+  newBufferOffset+=lengthToCopy;
+  int totalExtensionLen=newExtensionLen + getExtensionLength();
+  if (extensionBit)   bufferOffset+=4;
+ else {
+    newBuffer[newBufferOffset++]=(byte)0xBE;
+    newBuffer[newBufferOffset++]=(byte)0xDE;
+  }
+  newBuffer[newBufferOffset++]=(byte)(totalExtensionLen >> 4);
+  newBuffer[newBufferOffset++]=(byte)totalExtensionLen;
+  if (extensionBit) {
+    lengthToCopy=getExtensionLength();
+    System.arraycopy(buffer,bufferOffset,newBuffer,newBufferOffset,lengthToCopy);
+    bufferOffset+=lengthToCopy;
+    newBufferOffset+=lengthToCopy;
+  }
+  System.arraycopy(extBuff,0,newBuffer,newBufferOffset,newExtensionLen);
+  newBufferOffset+=newExtensionLen;
+  System.arraycopy(buffer,bufferOffset,newBuffer,newBufferOffset,getPayloadLength());
+  buffer=newBuffer;
+  this.length=newBuffLen - offset;
 }
