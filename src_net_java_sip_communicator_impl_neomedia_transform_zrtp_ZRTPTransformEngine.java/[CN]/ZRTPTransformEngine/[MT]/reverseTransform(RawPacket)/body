@@ -14,7 +14,8 @@
       securityEventManager.showMessage(ZrtpCodes.MessageSeverity.Warning,EnumSet.of(ZrtpCodes.WarningCodes.WarningCRCmismatch));
     }
  else     if (zPkt.hasMagic()) {
-      byte[] extHeader=zPkt.readRegion(zPkt.getHeaderLength() - zPkt.getExtensionLength(),zPkt.getExtensionLength() + zPkt.getPayloadLength());
+      int extHeaderOffset=zPkt.getHeaderLength() - zPkt.getExtensionLength() - RawPacket.EXT_HEADER_SIZE;
+      byte[] extHeader=zPkt.readRegion(extHeaderOffset,RawPacket.EXT_HEADER_SIZE + zPkt.getExtensionLength() + zPkt.getPayloadLength());
       zrtpEngine.processZrtpMessage(extHeader,zPkt.getSSRC());
     }
   }
