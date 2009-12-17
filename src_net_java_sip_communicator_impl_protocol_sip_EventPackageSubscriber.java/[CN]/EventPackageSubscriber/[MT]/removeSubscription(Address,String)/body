@@ -1,8 +1,16 @@
 {
+  boolean removed=false;
 synchronized (subscriptions) {
-    for (    Map.Entry<String,Subscription> entry : subscriptions.entrySet()) {
-      Subscription subscription=entry.getValue();
-      if (subscription.equals(toAddress,eventId))       removeSubscription(entry.getKey(),subscription);
+    Iterator<Map.Entry<String,Subscription>> subscriptionIter=subscriptions.entrySet().iterator();
+    while (subscriptionIter.hasNext()) {
+      Map.Entry<String,Subscription> subscriptionEntry=subscriptionIter.next();
+      Subscription subscription=subscriptionEntry.getValue();
+      if (subscription.equals(toAddress,eventId)) {
+        subscriptionIter.remove();
+        removed=true;
+        subscription.removed();
+      }
     }
   }
+  return removed;
 }
