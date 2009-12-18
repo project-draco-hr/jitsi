@@ -2,19 +2,19 @@
   ConfigurationService config=NeomediaActivator.getConfigurationService();
   audioSystem=name;
   if (name.equals(AUDIO_SYSTEM_NONE)) {
-    setAudioCaptureDevice(null);
-    setAudioNotifyDevice(null);
-    setAudioPlaybackDevice(null);
+    setAudioCaptureDevice(null,save);
+    setAudioNotifyDevice(null,save);
+    setAudioPlaybackDevice(null,save);
   }
  else   if (name.equals(AUDIO_SYSTEM_JAVASOUND)) {
-    setAudioNotifyDevice(null);
-    setAudioPlaybackDevice(null);
-    if (captureDevice != null)     setAudioCaptureDevice(captureDevice);
+    setAudioNotifyDevice(null,save);
+    setAudioPlaybackDevice(null,save);
+    if (captureDevice != null)     setAudioCaptureDevice(captureDevice,save);
  else {
       CaptureDeviceInfo[] audioCaptureDevices=getAvailableAudioCaptureDevices();
       for (      CaptureDeviceInfo captureDeviceInfo : audioCaptureDevices) {
         if (captureDeviceInfo.getLocator().getProtocol().equals("javasound")) {
-          setAudioCaptureDevice(captureDeviceInfo);
+          setAudioCaptureDevice(captureDeviceInfo,save);
           break;
         }
       }
@@ -27,14 +27,14 @@
  else   if (name.equals(AUDIO_SYSTEM_PORTAUDIO)) {
     String audioNotifyDevName=config.getString(PROP_AUDIO_NOTIFY_DEVICE);
     String audioPlaybackDevName=config.getString(PROP_AUDIO_PLAYBACK_DEVICE);
-    setAudioPlaybackDevice(PortAudioAuto.defaultPlaybackDevice);
-    setAudioNotifyDevice(PortAudioAuto.defaultPlaybackDevice);
+    setAudioPlaybackDevice(PortAudioAuto.defaultPlaybackDevice,save);
+    setAudioNotifyDevice(PortAudioAuto.defaultPlaybackDevice,save);
     if (captureDevice != null) {
       this.audioCaptureDevice=captureDevice;
       if (audioNotifyDevName != null) {
         for (        CaptureDeviceInfo captureDeviceInfo : PortAudioAuto.playbackDevices) {
           if (audioNotifyDevName.equals(captureDeviceInfo.getName())) {
-            setAudioNotifyDevice(captureDeviceInfo);
+            setAudioNotifyDevice(captureDeviceInfo,save);
             break;
           }
         }
@@ -42,18 +42,20 @@
       if (audioPlaybackDevName != null) {
         for (        CaptureDeviceInfo captureDeviceInfo : PortAudioAuto.playbackDevices) {
           if (audioPlaybackDevName.equals(captureDeviceInfo.getName())) {
-            setAudioPlaybackDevice(captureDeviceInfo);
+            setAudioPlaybackDevice(captureDeviceInfo,save);
             break;
           }
         }
       }
     }
- else     setAudioCaptureDevice(PortAudioAuto.defaultCaptureDevice);
+ else     setAudioCaptureDevice(PortAudioAuto.defaultCaptureDevice,save);
     return;
   }
  else {
     logger.error("Unknown audio system! Name:" + name);
     audioSystem=null;
   }
-  config.setProperty(PROP_AUDIO_DEVICE_IS_DISABLED,audioCaptureDevice == null);
+  if (save) {
+    config.setProperty(PROP_AUDIO_DEVICE_IS_DISABLED,audioCaptureDevice == null);
+  }
 }
