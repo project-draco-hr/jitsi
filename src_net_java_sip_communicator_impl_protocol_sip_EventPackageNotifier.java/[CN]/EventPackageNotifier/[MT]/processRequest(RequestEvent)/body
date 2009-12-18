@@ -9,6 +9,8 @@
   if (serverTransaction == null)   return false;
   ExpiresHeader expHeader=request.getExpires();
   int expires=(expHeader == null) ? subscriptionDuration : expHeader.getExpires();
+  CallIdHeader callIdHeader=(CallIdHeader)request.getHeader(CallIdHeader.NAME);
+  String callId=callIdHeader.getCallId();
   if ((expires < SUBSCRIBE_MIN_EXPIRE) && (expires > 0)) {
     Response response;
     try {
@@ -36,10 +38,7 @@
     }
     return true;
   }
-  FromHeader fromHeader=(FromHeader)request.getHeader(FromHeader.NAME);
-  Address fromAddress=fromHeader.getAddress();
-  String eventId=eventHeader.getEventId();
-  Subscription subscription=getSubscription(fromAddress,eventId);
+  Subscription subscription=getSubscription(callId);
   if ((subscription != null) && (expires != 0)) {
     Dialog dialog=subscription.getDialog();
     if (dialog.equals(serverTransaction.getDialog())) {
@@ -81,7 +80,7 @@
         logger.error("failed to create the new notify",e);
         return false;
       }
-      removeSubscription(subscription);
+      removeSubscription(callId,subscription);
       try {
         dialog.sendRequest(transac);
       }
@@ -91,14 +90,19 @@
       }
     }
   }
-  if (subscription == null)   subscription=createSubscription(fromAddress,eventId);
+  if (subscription == null) {
+    FromHeader fromHeader=(FromHeader)request.getHeader(FromHeader.NAME);
+    Address fromAddress=fromHeader.getAddress();
+    String eventId=eventHeader.getEventId();
+    subscription=createSubscription(fromAddress,eventId);
+  }
   Dialog dialog;
 synchronized (subscription) {
     subscription.setDialog(serverTransaction.getDialog());
     dialog=subscription.getDialog();
   }
   if (expires == 0) {
-    removeSubscription(subscription);
+    removeSubscription(callId,subscription);
     Response response;
     try {
       response=protocolProvider.getMessageFactory().createResponse(Response.OK,request);
@@ -162,7 +166,7 @@ synchronized (subscription) {
     logger.error("Error while sending the response 200",e);
     return false;
   }
-  addSubscription(subscription);
+  addSubscription(callId,subscription);
   ClientTransaction transac;
   try {
     transac=createNotify(dialog,subscription,SubscriptionStateHeader.ACTIVE,null);
