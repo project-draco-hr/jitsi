@@ -27,23 +27,21 @@
         previewContainer.remove(preview);
       }
       public void hierarchyChanged(      HierarchyEvent event){
-        if ((event.getChangeFlags() & HierarchyEvent.DISPLAYABILITY_CHANGED) != 0) {
-          if (preview.isDisplayable()) {
-            if (windowListener == null) {
-              window=SwingUtilities.windowForComponent(preview);
-              if (window != null) {
-                windowListener=new WindowAdapter(){
-                  public void windowClosing(                  WindowEvent event){
-                    dispose();
-                  }
-                }
-;
-                window.addWindowListener(windowListener);
+        if ((event.getChangeFlags() & HierarchyEvent.DISPLAYABILITY_CHANGED) == 0)         return;
+        if (!preview.isDisplayable()) {
+          dispose();
+          return;
+        }
+        if (windowListener == null) {
+          window=SwingUtilities.windowForComponent(preview);
+          if (window != null) {
+            windowListener=new WindowAdapter(){
+              @Override public void windowClosing(              WindowEvent event){
+                dispose();
               }
             }
-          }
- else {
-            dispose();
+;
+            window.addWindowListener(windowListener);
           }
         }
       }
