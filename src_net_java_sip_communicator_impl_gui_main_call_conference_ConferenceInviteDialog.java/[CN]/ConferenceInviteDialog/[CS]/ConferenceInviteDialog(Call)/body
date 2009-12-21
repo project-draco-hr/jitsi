@@ -6,6 +6,8 @@
   accountSelectorPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
   accountSelectorPanel.add(accountSelectorLabel,BorderLayout.WEST);
   accountSelectorPanel.add(accountSelectorBox,BorderLayout.CENTER);
+  this.initAccountListData();
+  this.initContactListData((ProtocolProviderService)accountSelectorBox.getSelectedItem());
   this.getContentPane().add(accountSelectorPanel,BorderLayout.NORTH);
   this.accountSelectorBox.setRenderer(new DefaultListCellRenderer(){
     public Component getListCellRendererComponent(    JList list,    Object value,    int index,    boolean isSelected,    boolean cellHasFocus){
@@ -28,13 +30,13 @@
     }
   }
 );
-  this.initAccountListData();
-  this.initContactListData((ProtocolProviderService)accountSelectorBox.getSelectedItem());
   this.addInviteButtonListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
       if (getSelectedMetaContacts() != null || getSelectedStrings() != null) {
-        inviteContacts();
-        ConfigurationManager.setLastCallConferenceProvider((ProtocolProviderService)accountSelectorBox.getSelectedItem());
+        ProtocolProviderService selectedProvider=(ProtocolProviderService)accountSelectorBox.getSelectedItem();
+        if (selectedProvider == null)         return;
+        inviteContacts(selectedProvider);
+        ConfigurationManager.setLastCallConferenceProvider(selectedProvider);
         dispose();
       }
  else {
