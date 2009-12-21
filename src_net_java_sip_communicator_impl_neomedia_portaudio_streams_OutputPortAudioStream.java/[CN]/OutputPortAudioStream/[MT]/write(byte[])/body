@@ -1,5 +1,5 @@
 {
-  if (!started)   return;
+  if ((stream == 0) || !started)   return;
   int numSamples=PortAudioManager.NUM_SAMPLES * frameSize;
   int currentIx=0;
   if (bufferLeft != null && bufferLeft.length > 0) {
@@ -9,7 +9,7 @@
       System.arraycopy(buffer,currentIx,tmp,bufferLeft.length,numSamples - bufferLeft.length);
       currentIx+=numSamples - bufferLeft.length;
       bufferLeft=null;
-      PortAudio.Pa_WriteStream(getStream(),tmp,tmp.length / frameSize);
+      PortAudio.Pa_WriteStream(stream,tmp,tmp.length / frameSize);
     }
  else {
       byte[] tmp=new byte[numSamples];
@@ -23,7 +23,7 @@
     while (currentIx <= buffer.length - numSamples) {
       byte[] tmp=new byte[numSamples];
       System.arraycopy(buffer,currentIx,tmp,0,numSamples);
-      PortAudio.Pa_WriteStream(getStream(),tmp,tmp.length / frameSize);
+      PortAudio.Pa_WriteStream(stream,tmp,tmp.length / frameSize);
       currentIx+=numSamples;
     }
     if (currentIx < buffer.length) {
@@ -35,6 +35,6 @@
     bufferLeft=buffer;
   }
  else {
-    PortAudio.Pa_WriteStream(getStream(),buffer,buffer.length / frameSize);
+    PortAudio.Pa_WriteStream(stream,buffer,buffer.length / frameSize);
   }
 }
