@@ -4,6 +4,11 @@
   this.setCallInfoURL(SdpUtils.getCallInfoURL(answer));
   for (  MediaDescription mediaDescription : remoteDescriptions) {
     MediaType mediaType=SdpUtils.getMediaType(mediaDescription);
+    MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,answer);
+    if (target.getDataAddress().getPort() == 0) {
+      closeStream(mediaType);
+      continue;
+    }
     List<MediaFormat> supportedFormats=SdpUtils.extractFormats(mediaDescription,dynamicPayloadTypes);
     MediaDevice dev=getDefaultDevice(mediaType);
     MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
@@ -13,12 +18,6 @@
     StreamConnector connector=getStreamConnector(mediaType);
     MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
     MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
-    MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,answer);
-    if (target.getDataAddress().getPort() != 0) {
-      initStream(connector,dev,supportedFormats.get(0),target,direction);
-    }
- else {
-      closeStream(mediaType);
-    }
+    initStream(connector,dev,supportedFormats.get(0),target,direction);
   }
 }
