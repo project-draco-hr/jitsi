@@ -13,14 +13,22 @@
         portAudioStream.close();
         return;
       }
-      while (audioStream.read(buffer) != -1)       portAudioStream.write(buffer);
+      while (started && audioStream.read(buffer) != -1)       portAudioStream.write(buffer);
       if (!isLooping()) {
         portAudioStream.stop();
         portAudioStream.close();
         break;
       }
  else {
-        Thread.sleep(getLoopInterval());
+synchronized (syncObject) {
+          if (started) {
+            try {
+              syncObject.wait(getLoopInterval());
+            }
+ catch (            InterruptedException e) {
+            }
+          }
+        }
       }
     }
   }
@@ -29,9 +37,6 @@
   }
 catch (  IOException e) {
     logger.error("Error reading from audio resource",e);
-  }
-catch (  InterruptedException e) {
-    logger.error("Cannot wait the interval between plays",e);
   }
 catch (  UnsupportedAudioFileException e) {
     logger.error("Unknown file format",e);
