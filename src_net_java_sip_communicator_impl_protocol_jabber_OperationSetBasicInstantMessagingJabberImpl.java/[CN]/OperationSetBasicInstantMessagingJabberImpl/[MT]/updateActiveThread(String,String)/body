@@ -1,0 +1,20 @@
+{
+  logger.trace("Updating thread=" + threadID + " from="+ from);
+  long currentTime=System.currentTimeMillis();
+synchronized (activeThreads) {
+    Iterator<ActiveThread> threadsIter=activeThreads.iterator();
+    while (threadsIter.hasNext()) {
+      ActiveThread currentThread=threadsIter.next();
+      if (from.startsWith(currentThread.jid) || currentThread.threadID.equals(threadID)) {
+        currentThread.lastUpdatedTime=currentTime;
+        currentThread.lastFrom=from;
+        currentThread.threadID=threadID;
+      }
+ else {
+        if (currentTime - currentThread.lastUpdatedTime < THREAD_INACTIVITY_TIMEOUT) {
+          threadsIter.remove();
+        }
+      }
+    }
+  }
+}

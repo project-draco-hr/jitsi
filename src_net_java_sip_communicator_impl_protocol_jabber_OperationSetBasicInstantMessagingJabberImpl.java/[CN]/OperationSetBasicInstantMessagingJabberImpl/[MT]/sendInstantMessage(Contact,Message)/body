@@ -2,18 +2,13 @@
   if (!(to instanceof ContactJabberImpl))   throw new IllegalArgumentException("The specified contact is not a Jabber contact." + to);
   try {
     assertConnected();
-    org.jivesoftware.smack.MessageListener msgListener=new org.jivesoftware.smack.MessageListener(){
-      public void processMessage(      Chat arg0,      org.jivesoftware.smack.packet.Message arg1){
-      }
-    }
-;
-    XMPPConnection jabberConnection=jabberProvider.getConnection();
-    Chat chat=jabberConnection.getChatManager().createChat(to.getAddress(),msgListener);
+    Chat chat=obtainChatInstance(to.getAddress());
     org.jivesoftware.smack.packet.Message msg=new org.jivesoftware.smack.packet.Message();
     MessageDeliveredEvent msgDeliveryPendingEvt=new MessageDeliveredEvent(message,to);
     msgDeliveryPendingEvt=messageDeliveryPendingTransform(msgDeliveryPendingEvt);
     if (msgDeliveryPendingEvt == null)     return;
     String content=msgDeliveryPendingEvt.getSourceMessage().getContent();
+    XMPPConnection jabberConnection=jabberProvider.getConnection();
     if (message.getContentType().equals(HTML_MIME_TYPE)) {
       msg.setBody(Html2Text.extractText(content));
       if (XHTMLManager.isServiceEnabled(jabberConnection,chat.getParticipant())) {
