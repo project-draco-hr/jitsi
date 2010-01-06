@@ -1,0 +1,51 @@
+{
+  Hashtable<String,String> accountProperties=new Hashtable<String,String>();
+  accountProperties.put(ProtocolProviderFactory.PROTOCOL,PROTOCOL);
+  accountProperties.put(ProtocolProviderFactory.PROTOCOL_ICON_PATH,"resources/images/protocol/iptel");
+  if (registration.isRememberPassword()) {
+    accountProperties.put(ProtocolProviderFactory.PASSWORD,passwd);
+  }
+  String serverAddress=null;
+  if (registration.getServerAddress() != null)   serverAddress=registration.getServerAddress();
+ else   serverAddress=getServerFromUserName(userName);
+  if (serverAddress != null) {
+    accountProperties.put(ProtocolProviderFactory.SERVER_ADDRESS,serverAddress);
+    if (userName.indexOf(serverAddress) < 0)     accountProperties.put(ProtocolProviderFactory.IS_SERVER_OVERRIDDEN,Boolean.toString(true));
+  }
+  if (registration.getAuthorizationName() != null)   accountProperties.put(ProtocolProviderFactory.AUTHORIZATION_NAME,registration.getAuthorizationName());
+  accountProperties.put(ProtocolProviderFactory.SERVER_PORT,registration.getServerPort());
+  String proxyAddress=null;
+  if (registration.getProxy() != null)   proxyAddress=registration.getProxy();
+ else   proxyAddress=getServerFromUserName(userName);
+  if (proxyAddress != null)   accountProperties.put(ProtocolProviderFactory.PROXY_ADDRESS,proxyAddress);
+  accountProperties.put(ProtocolProviderFactory.PROXY_PORT,registration.getProxyPort());
+  accountProperties.put(ProtocolProviderFactory.PREFERRED_TRANSPORT,registration.getPreferredTransport());
+  accountProperties.put(ProtocolProviderFactory.IS_PRESENCE_ENABLED,Boolean.toString(registration.isEnablePresence()));
+  accountProperties.put(ProtocolProviderFactory.FORCE_P2P_MODE,Boolean.toString(registration.isForceP2PMode()));
+  accountProperties.put(ProtocolProviderFactory.DEFAULT_ENCRYPTION,Boolean.toString(registration.isDefaultEncryption()));
+  accountProperties.put(ProtocolProviderFactory.DEFAULT_SIPZRTP_ATTRIBUTE,Boolean.toString(registration.isSipZrtpAttribute()));
+  accountProperties.put(ProtocolProviderFactory.POLLING_PERIOD,registration.getPollingPeriod());
+  accountProperties.put(ProtocolProviderFactory.SUBSCRIPTION_EXPIRATION,registration.getSubscriptionExpiration());
+  accountProperties.put("KEEP_ALIVE_METHOD",registration.getKeepAliveMethod());
+  accountProperties.put("KEEP_ALIVE_INTERVAL",registration.getKeepAliveInterval());
+  if (isModification) {
+    accountProperties.put(ProtocolProviderFactory.USER_ID,userName);
+    providerFactory.modifyAccount(protocolProvider,accountProperties);
+    this.isModification=false;
+    return protocolProvider;
+  }
+  try {
+    AccountID accountID=providerFactory.installAccount(userName,accountProperties);
+    ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
+    protocolProvider=(ProtocolProviderService)IptelAccRegWizzActivator.bundleContext.getService(serRef);
+  }
+ catch (  IllegalStateException exc) {
+    logger.warn(exc.getMessage());
+    throw new OperationFailedException("Account already exists.",OperationFailedException.IDENTIFICATION_CONFLICT);
+  }
+catch (  Exception exc) {
+    exc.printStackTrace();
+    throw new OperationFailedException(exc.getMessage(),OperationFailedException.GENERAL_ERROR);
+  }
+  return protocolProvider;
+}
