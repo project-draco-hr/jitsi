@@ -1,41 +1,12 @@
 {
-  ActiveThread resultThread=null;
-  long currentTime=System.currentTimeMillis();
-synchronized (activeThreads) {
-    Iterator<ActiveThread> threadsIter=activeThreads.iterator();
-    while (threadsIter.hasNext()) {
-      ActiveThread currentThread=threadsIter.next();
-      if (currentThread.jid.equals(jid)) {
-        resultThread=currentThread;
-      }
- else {
-        if (currentTime - currentThread.lastUpdatedTime < THREAD_INACTIVITY_TIMEOUT) {
-          threadsIter.remove();
-        }
-      }
+  XMPPConnection jabberConnection=jabberProvider.getConnection();
+  Chat chat=jabberConnection.getChatManager().getUserChat(jid);
+  if (chat != null)   return chat;
+  org.jivesoftware.smack.MessageListener msgListener=new org.jivesoftware.smack.MessageListener(){
+    public void processMessage(    Chat chat,    org.jivesoftware.smack.packet.Message message){
     }
-    XMPPConnection jabberConnection=jabberProvider.getConnection();
-    org.jivesoftware.smack.MessageListener msgListener=new org.jivesoftware.smack.MessageListener(){
-      public void processMessage(      Chat chat,      org.jivesoftware.smack.packet.Message message){
-      }
-    }
-;
-    Chat chat=null;
-    if (resultThread != null) {
-      chat=jabberConnection.getChatManager().getThreadChat(resultThread.threadID);
-      resultThread.lastUpdatedTime=currentTime;
-      if (chat == null) {
-        chat=jabberConnection.getChatManager().createChat(jid,resultThread.threadID,msgListener);
-      }
-    }
- else {
-      chat=jabberConnection.getChatManager().createChat(jid,msgListener);
-      ActiveThread newThread=new ActiveThread();
-      newThread.jid=jid;
-      newThread.lastUpdatedTime=currentTime;
-      newThread.threadID=chat.getThreadID();
-      activeThreads.add(newThread);
-    }
-    return chat;
   }
+;
+  chat=jabberConnection.getChatManager().createChat(jid,msgListener);
+  return chat;
 }

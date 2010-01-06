@@ -2,8 +2,12 @@
   if (!(to instanceof ContactJabberImpl))   throw new IllegalArgumentException("The specified contact is not a Jabber contact." + to);
   try {
     assertConnected();
-    Chat chat=obtainChatInstance(to.getAddress());
     org.jivesoftware.smack.packet.Message msg=new org.jivesoftware.smack.packet.Message();
+    String toJID=getJidForAddress(to.getAddress());
+    if (toJID == null)     toJID=to.getAddress();
+    Chat chat=obtainChatInstance(toJID);
+    msg.setTo(toJID);
+    logger.trace("Will send a message to:" + toJID + " chat.jid="+ chat.getParticipant()+ " chat.tid="+ chat.getThreadID());
     MessageDeliveredEvent msgDeliveryPendingEvt=new MessageDeliveredEvent(message,to);
     msgDeliveryPendingEvt=messageDeliveryPendingTransform(msgDeliveryPendingEvt);
     if (msgDeliveryPendingEvt == null)     return;
