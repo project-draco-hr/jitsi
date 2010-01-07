@@ -8,26 +8,39 @@
   OperationSetPersistentPresence opSetPersPresence2=(OperationSetPersistentPresence)supportedOperationSets2.get(OperationSetPersistentPresence.class.getName());
   if (opSetPersPresence2 == null)   throw new NullPointerException("An implementation of the Sip service must provide an " + "implementation of at least the one of the Presence " + "Operation Sets");
   ContactGroup rootGroup1=opSetPersPresence1.getServerStoredContactListRoot();
+  Object lock=new Object();
   Iterator<ContactGroup> cgiter=rootGroup1.subgroups();
   while (cgiter.hasNext()) {
     ContactGroup item=cgiter.next();
     opSetPersPresence1.removeServerStoredContactGroup(item);
+synchronized (lock) {
+      lock.wait(1000);
+    }
     cgiter=rootGroup1.subgroups();
   }
   Iterator<Contact> citer=rootGroup1.contacts();
   while (citer.hasNext()) {
     opSetPersPresence1.unsubscribe(citer.next());
+synchronized (lock) {
+      lock.wait(1000);
+    }
     citer=rootGroup1.contacts();
   }
   ContactGroup rootGroup2=opSetPersPresence2.getServerStoredContactListRoot();
   cgiter=rootGroup2.subgroups();
   while (cgiter.hasNext()) {
     ContactGroup item=cgiter.next();
+synchronized (lock) {
+      lock.wait(1000);
+    }
     opSetPersPresence2.removeServerStoredContactGroup(item);
   }
   citer=rootGroup2.contacts();
   while (citer.hasNext()) {
     opSetPersPresence2.unsubscribe(citer.next());
+synchronized (lock) {
+      lock.wait(1000);
+    }
     citer=rootGroup2.contacts();
   }
 }

@@ -15,6 +15,11 @@
   assertEquals("A status changed event contained wrong old status.",oldStatus,((ProviderPresenceStatusChangeEvent)statusEventCollector.collectedPresEvents.get(0)).getOldStatus());
   assertEquals("A status changed event contained wrong new status.",newStatus,((ProviderPresenceStatusChangeEvent)statusEventCollector.collectedPresEvents.get(0)).getNewStatus());
   assertEquals("opSet.getPresenceStatus() did not return properly.",newStatus,this.operationSetPresence1.getPresenceStatus());
+  Object lock=new Object();
+synchronized (lock) {
+    logger.trace("Will wait status to be received from the other side!");
+    lock.wait(5000);
+  }
   PresenceStatus actualStatus=this.operationSetPresence2.queryContactStatus(this.fixture.userID1);
   if (newStatus.getStatus() != 0) {
     assertEquals("The underlying implementation did not switch to the " + "requested presence status.",newStatus,actualStatus);
