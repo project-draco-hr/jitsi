@@ -10,7 +10,8 @@
   }
   logger.info("JavaSound Capture Supported = " + supported);
   if (supported) {
-    Vector<CaptureDeviceInfo> devices=(Vector)CaptureDeviceManager.getDeviceList(null).clone();
+    Vector<CaptureDeviceInfo> devices=CaptureDeviceManager.getDeviceList(null);
+    devices=(Vector<CaptureDeviceInfo>)devices.clone();
     String name;
     Enumeration<CaptureDeviceInfo> enumeration=devices.elements();
     while (enumeration.hasMoreElements()) {
@@ -18,15 +19,15 @@
       name=cdi.getName();
       if (name.startsWith("JavaSound"))       CaptureDeviceManager.removeDevice(cdi);
     }
-    CaptureDeviceInfo[] cdi=com.sun.media.protocol.javasound.JavaSoundSourceStream.listCaptureDeviceInfo();
-    if (cdi != null) {
-      for (int i=0; i < cdi.length; i++)       CaptureDeviceManager.addDevice(cdi[i]);
+    CaptureDeviceInfo[] cdis=com.sun.media.protocol.javasound.JavaSoundSourceStream.listCaptureDeviceInfo();
+    if (cdis != null) {
+      for (      CaptureDeviceInfo cdi : cdis)       CaptureDeviceManager.addDevice(cdi);
       try {
         CaptureDeviceManager.commit();
         logger.info("JavaSoundAuto: Committed ok");
       }
- catch (      java.io.IOException ioe) {
-        logger.error("JavaSoundAuto: error committing cdm");
+ catch (      IOException ioex) {
+        logger.error("JavaSoundAuto: error committing cdm",ioex);
       }
     }
     DeviceConfiguration.addAudioSystem(DeviceConfiguration.AUDIO_SYSTEM_JAVASOUND);

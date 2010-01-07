@@ -1,9 +1,8 @@
 {
-  final Dimension dim=Toolkit.getDefaultToolkit().getScreenSize();
   final RGBFormat format=(RGBFormat)currentFormat;
-  final int width=(int)format.getSize().getWidth();
-  final int height=(int)format.getSize().getHeight();
-  Buffer buffer=new Buffer();
+  Dimension formatSize=format.getSize();
+  final int width=(int)formatSize.getWidth();
+  final int height=(int)formatSize.getHeight();
   if (desktopInteract == null) {
     try {
       desktopInteract=new DesktopInteractImpl();
@@ -21,18 +20,17 @@
     screen=desktopInteract.captureScreen();
     scaledScreen=ImageStreamingUtils.getScaledImage(screen,width,height,BufferedImage.TYPE_INT_ARGB);
     data=ImageStreamingUtils.getImageByte(scaledScreen);
-    buffer.setData(data);
-    buffer.setOffset(0);
-    buffer.setLength(data.length);
-    buffer.setFormat(currentFormat);
-    buffer.setHeader(null);
-    buffer.setTimeStamp(System.nanoTime());
-    buffer.setSequenceNumber(seqNo);
-    buffer.setFlags(Buffer.FLAG_LIVE_DATA | Buffer.FLAG_SYSTEM_TIME);
-    seqNo++;
-synchronized (syncBuf) {
-      buf=buffer;
+synchronized (buf) {
+      buf.setData(data);
+      buf.setOffset(0);
+      buf.setLength(data.length);
+      buf.setFormat(currentFormat);
+      buf.setHeader(null);
+      buf.setTimeStamp(System.nanoTime());
+      buf.setSequenceNumber(seqNo++);
+      buf.setFlags(Buffer.FLAG_LIVE_DATA | Buffer.FLAG_SYSTEM_TIME);
     }
+    BufferTransferHandler transferHandler=this.transferHandler;
     if (transferHandler != null) {
       transferHandler.transferData(this);
       Thread.yield();
@@ -46,5 +44,4 @@ synchronized (syncBuf) {
  catch (    InterruptedException e) {
     }
   }
-  buffer=null;
 }
