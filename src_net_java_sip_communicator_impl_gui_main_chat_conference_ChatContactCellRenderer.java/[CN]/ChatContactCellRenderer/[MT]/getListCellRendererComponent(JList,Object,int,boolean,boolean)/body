@@ -2,7 +2,8 @@
   this.index=index;
   this.rightLabel.setIcon(null);
   final ChatContact chatContact=(ChatContact)value;
-  final ChatRoomMember member=(ChatRoomMember)chatContact.getDescriptor();
+  ChatRoomMember member=null;
+  if (chatContact.getDescriptor() instanceof ChatRoomMember)   member=(ChatRoomMember)chatContact.getDescriptor();
   this.setPreferredSize(new Dimension(20,30));
   String displayName=chatContact.getName();
   if (displayName == null || displayName.length() < 1) {
@@ -10,12 +11,12 @@
   }
   this.nameLabel.setFont(this.getFont().deriveFont(Font.PLAIN));
   this.nameLabel.setText(displayName);
-  if (member.getRole() != null)   this.nameLabel.setIcon(ChatContactRoleIcon.getRoleIcon(member.getRole()));
+  if (member != null)   if (member.getRole() != null)   this.nameLabel.setIcon(ChatContactRoleIcon.getRoleIcon(member.getRole()));
   if (contactForegroundColor != null)   this.nameLabel.setForeground(contactForegroundColor);
   this.setBorder(BorderFactory.createEmptyBorder(1,5,1,1));
   ImageIcon avatar=chatContact.getAvatar();
   if (avatar != null)   this.rightLabel.setIcon(avatar);
- else {
+ else   if (member != null) {
     if (chatContact.getName().equals(member.getChatRoom().getUserNickname())) {
       OperationSetServerStoredAccountInfo opSet=member.getChatRoom().getParentProvider().getOperationSet(OperationSetServerStoredAccountInfo.class);
       Iterator<GenericDetail> itr=opSet.getAllAvailableDetails();
