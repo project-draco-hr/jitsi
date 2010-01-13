@@ -21,19 +21,25 @@
   DeviceConfiguration.addAudioSystem(DeviceConfiguration.AUDIO_SYSTEM_NONE);
   if (NeomediaActivator.getConfigurationService().getBoolean(MediaServiceImpl.DISABLE_VIDEO_SUPPORT_PROPERTY_NAME,false))   return;
   logger.info("Looking for video capture devices");
+  boolean fmjVideoAvailable=isFMJVideoAvailable();
   try {
-    if (isFMJVideoAvailable())     new FMJCivilVideoAuto();
+    if (fmjVideoAvailable)     new FMJCivilVideoAuto();
   }
  catch (  Throwable exc) {
     logger.debug("No FMJ CIVIL video detected: " + exc.getMessage(),exc);
+    fmjVideoAvailable=false;
+  }
+  if (!fmjVideoAvailable && OSUtils.IS_MAC)   try {
+    new QuickTimeAuto();
+  }
+ catch (  Throwable t) {
+    logger.debug("No QuickTime detected: " + t.getMessage(),t);
   }
   String allowDs=System.getProperty("net.java.sip.communicator.impl.neomedia.imgstreaming");
-  if (allowDs != null && allowDs.equals("true")) {
-    try {
-      new ImageStreamingAuto();
-    }
- catch (    Throwable exc) {
-      logger.debug("No desktop streaming available: " + exc.getMessage(),exc);
-    }
+  if (Boolean.parseBoolean(allowDs))   try {
+    new ImageStreamingAuto();
+  }
+ catch (  Throwable exc) {
+    logger.debug("No desktop streaming available: " + exc.getMessage(),exc);
   }
 }
