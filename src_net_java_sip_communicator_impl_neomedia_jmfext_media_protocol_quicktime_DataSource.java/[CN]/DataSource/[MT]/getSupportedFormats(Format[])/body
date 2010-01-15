@@ -1,0 +1,20 @@
+{
+  if ((supportedFormats != null) && (supportedFormats.length > 0))   return supportedFormats.clone();
+  List<Format> specificFormats=new LinkedList<Format>();
+  for (  Format genericFormat : genericFormats) {
+    VideoFormat genericVideoFormat=(VideoFormat)genericFormat;
+    if (genericVideoFormat.getSize() == null) {
+      @SuppressWarnings("unchecked") Vector<String> codecs=PlugInManager.getPlugInList(new VideoFormat(genericVideoFormat.getEncoding()),null,PlugInManager.CODEC);
+      for (      String codec : codecs) {
+        Format[] supportedInputFormats=PlugInManager.getSupportedInputFormats(codec,PlugInManager.CODEC);
+        for (        Format supportedInputFormat : supportedInputFormats)         if (supportedInputFormat instanceof VideoFormat) {
+          Dimension size=((VideoFormat)supportedInputFormat).getSize();
+          if (size != null)           specificFormats.add(genericFormat.intersects(new VideoFormat(null,size,Format.NOT_SPECIFIED,null,Format.NOT_SPECIFIED)));
+        }
+      }
+    }
+    specificFormats.add(genericFormat);
+  }
+  supportedFormats=specificFormats.toArray(new Format[specificFormats.size()]);
+  return supportedFormats.clone();
+}

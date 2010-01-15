@@ -1,7 +1,8 @@
 {
   VideoFormat videoFormat=(VideoFormat)format;
   Dimension size=videoFormat.getSize();
-  if (size == null)   size=new Dimension(640,480);
+  System.err.println(format);
+  if (size == null)   size=new Dimension(DataSource.DEFAULT_WIDTH,DataSource.DEFAULT_HEIGHT);
   NSMutableDictionary pixelBufferAttributes=null;
   if (size != null) {
     if (pixelBufferAttributes == null)     pixelBufferAttributes=new NSMutableDictionary();
@@ -11,6 +12,10 @@
   if (format.isSameEncoding(VideoFormat.RGB)) {
     if (pixelBufferAttributes == null)     pixelBufferAttributes=new NSMutableDictionary();
     pixelBufferAttributes.setIntForKey(CVPixelFormatType.kCVPixelFormatType_32ARGB,CVPixelBufferAttributeKey.kCVPixelBufferPixelFormatTypeKey);
+  }
+ else   if (format.isSameEncoding(VideoFormat.YUV)) {
+    if (pixelBufferAttributes == null)     pixelBufferAttributes=new NSMutableDictionary();
+    pixelBufferAttributes.setIntForKey(CVPixelFormatType.kCVPixelFormatType_420YpCbCr8Planar,CVPixelBufferAttributeKey.kCVPixelBufferPixelFormatTypeKey);
   }
  else   throw new IllegalArgumentException("format");
   if (pixelBufferAttributes != null)   captureOutput.setPixelBufferAttributes(pixelBufferAttributes);
