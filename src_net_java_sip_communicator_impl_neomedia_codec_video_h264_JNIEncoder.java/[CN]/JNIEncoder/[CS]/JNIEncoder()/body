@@ -1,13 +1,21 @@
 {
+  Format formats[]=new ImageScaler().getSupportedOutputFormats(null);
+  int i=0;
   DEF_WIDTH=Constants.VIDEO_WIDTH;
   DEF_HEIGHT=Constants.VIDEO_HEIGHT;
-  int strideY=DEF_WIDTH;
-  int strideUV=strideY / 2;
-  int offsetU=strideY * DEF_HEIGHT;
-  int offsetV=offsetU + strideUV * DEF_HEIGHT / 2;
-  int inputYuvLength=(strideY + strideUV) * DEF_HEIGHT;
-  float sourceFrameRate=TARGET_FRAME_RATE;
-  inputFormats=new Format[]{new YUVFormat(new Dimension(DEF_WIDTH,DEF_HEIGHT),inputYuvLength + INPUT_BUFFER_PADDING_SIZE,Format.byteArray,sourceFrameRate,YUVFormat.YUV_420,strideY,strideUV,0,offsetU,offsetV)};
+  inputFormats=new Format[formats.length];
+  for (  Format format : formats) {
+    int width=(int)((VideoFormat)format).getSize().getWidth();
+    int height=(int)((VideoFormat)format).getSize().getHeight();
+    int strideY=width;
+    int strideUV=strideY / 2;
+    int offsetU=strideY * height;
+    int offsetV=offsetU + strideUV * height / 2;
+    int inputYuvLength=(strideY + strideUV) * height;
+    float sourceFrameRate=TARGET_FRAME_RATE;
+    inputFormats[i]=new YUVFormat(new Dimension(width,height),inputYuvLength + INPUT_BUFFER_PADDING_SIZE,Format.byteArray,sourceFrameRate,YUVFormat.YUV_420,strideY,strideUV,0,offsetU,offsetV);
+    i++;
+  }
   inputFormat=null;
   outputFormat=null;
 }
