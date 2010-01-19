@@ -14,8 +14,23 @@
  else {
     logger.debug("Found " + audioCaptureDevices.length + " capture devices: "+ audioCaptureDevices);
     String audioDevName=config.getString(PROP_AUDIO_DEVICE);
+    boolean errorStartingPA=false;
+    try {
+      PortAudioManager.getInstance().isEnabledEchoCancel();
+    }
+ catch (    Throwable e) {
+      errorStartingPA=true;
+    }
     if (audioDevName == null) {
-      setAudioSystem(AUDIO_SYSTEM_PORTAUDIO,null,false);
+      if (!errorStartingPA) {
+        setAudioSystem(AUDIO_SYSTEM_PORTAUDIO,null,false);
+      }
+ else {
+        setAudioPlaybackDevice(null,false);
+        setAudioNotifyDevice(null,false);
+        setAudioCaptureDevice(null,false);
+        setAudioSystem(AUDIO_SYSTEM_JAVASOUND,null,false);
+      }
     }
  else {
       for (      CaptureDeviceInfo captureDeviceInfo : audioCaptureDevices) {
@@ -24,8 +39,8 @@
           break;
         }
       }
-      if (getAudioSystem() == null) {
-        logger.warn("Computer sound config changed or " + "there is a problem since last config was saved, " + "will back to default javasound");
+      if (getAudioSystem() == null || errorStartingPA) {
+        logger.warn("Computer sound config changed or " + "there is a problem since last config was saved, " + "will back to javasound");
         setAudioPlaybackDevice(null,false);
         setAudioNotifyDevice(null,false);
         setAudioCaptureDevice(null,false);
@@ -33,19 +48,21 @@
       }
     }
     if (audioCaptureDevice != null)     logger.info("Found " + audioCaptureDevice.getName() + " as an audio capture device.");
-    try {
-      boolean echoCancelEnabled=config.getBoolean(PROP_AUDIO_ECHOCANCEL_ENABLED,PortAudioManager.getInstance().isEnabledEchoCancel());
-      if (echoCancelEnabled) {
-        int echoCancelTail=config.getInt(PROP_AUDIO_ECHOCANCEL_TAIL,PortAudioManager.getInstance().getFilterLength());
-        PortAudioManager.getInstance().setEchoCancel(echoCancelEnabled,PortAudioManager.getInstance().getFrameSize(),echoCancelTail);
+    if (!errorStartingPA) {
+      try {
+        boolean echoCancelEnabled=config.getBoolean(PROP_AUDIO_ECHOCANCEL_ENABLED,PortAudioManager.getInstance().isEnabledEchoCancel());
+        if (echoCancelEnabled) {
+          int echoCancelTail=config.getInt(PROP_AUDIO_ECHOCANCEL_TAIL,PortAudioManager.getInstance().getFilterLength());
+          PortAudioManager.getInstance().setEchoCancel(echoCancelEnabled,PortAudioManager.getInstance().getFrameSize(),echoCancelTail);
+        }
+        boolean denoiseEnabled=config.getBoolean(PROP_AUDIO_DENOISE_ENABLED,PortAudioManager.getInstance().isEnabledDeNoise());
+        PortAudioManager.getInstance().setDeNoise(denoiseEnabled);
+        int audioLatency=config.getInt(PROP_AUDIO_LATENCY,(int)(PortAudioManager.getSuggestedLatency() * 1000));
+        if (audioLatency != (int)PortAudioManager.getSuggestedLatency() * 1000)         PortAudioManager.setSuggestedLatency((double)audioLatency / 1000d);
       }
-      boolean denoiseEnabled=config.getBoolean(PROP_AUDIO_DENOISE_ENABLED,PortAudioManager.getInstance().isEnabledDeNoise());
-      PortAudioManager.getInstance().setDeNoise(denoiseEnabled);
-      int audioLatency=config.getInt(PROP_AUDIO_LATENCY,(int)(PortAudioManager.getSuggestedLatency() * 1000));
-      if (audioLatency != (int)PortAudioManager.getSuggestedLatency() * 1000)       PortAudioManager.setSuggestedLatency((double)audioLatency / 1000d);
-    }
- catch (    Exception e) {
-      logger.error("Error parsing audio config",e);
+ catch (      Exception e) {
+        logger.error("Error parsing audio config",e);
+      }
     }
   }
   if (config.getBoolean(PROP_VIDEO_DEVICE_IS_DISABLED,false))   videoCaptureDevice=null;
