@@ -6,7 +6,7 @@
     MessageDeliveredEvent msgDeliveryPendingEvt=new MessageDeliveredEvent(message,to,System.currentTimeMillis());
     msgDeliveryPendingEvt=messageDeliveryPendingTransform(msgDeliveryPendingEvt);
     if (msgDeliveryPendingEvt == null)     return;
-    byte[] msgBytesToBeSent=msgDeliveryPendingEvt.getSourceMessage().getContent().trim().getBytes();
+    byte[] msgBytesToBeSent=msgDeliveryPendingEvt.getSourceMessage().getContent().trim().getBytes("UTF-8");
     do {
       if (msgBytesToBeSent.length > MAX_MESSAGE_LENGTH) {
         byte[] tmp1=new byte[MAX_MESSAGE_LENGTH];
@@ -14,10 +14,10 @@
         byte[] tmp2=new byte[msgBytesToBeSent.length - MAX_MESSAGE_LENGTH];
         System.arraycopy(msgBytesToBeSent,MAX_MESSAGE_LENGTH,tmp2,0,tmp2.length);
         msgBytesToBeSent=tmp2;
-        yahooProvider.getYahooSession().sendMessage(toUserID,new String(tmp1));
+        yahooProvider.getYahooSession().sendMessage(toUserID,new String(tmp1,"UTF-8"));
       }
  else {
-        yahooProvider.getYahooSession().sendMessage(toUserID,new String(msgBytesToBeSent));
+        yahooProvider.getYahooSession().sendMessage(toUserID,new String(msgBytesToBeSent,"UTF-8"));
       }
       MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(message,to,System.currentTimeMillis());
       if (msgDeliveredEvt != null)       fireMessageEvent(msgDeliveredEvt);
