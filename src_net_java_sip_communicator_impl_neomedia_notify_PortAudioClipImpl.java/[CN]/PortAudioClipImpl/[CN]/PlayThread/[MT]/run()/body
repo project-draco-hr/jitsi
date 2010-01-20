@@ -13,7 +13,8 @@
         portAudioStream.close();
         return;
       }
-      while (started && audioStream.read(buffer) != -1)       portAudioStream.write(buffer);
+      int bufferLength;
+      while (started && ((bufferLength=audioStream.read(buffer)) != -1))       portAudioStream.write(buffer,0,bufferLength);
       if (!isLooping()) {
         portAudioStream.stop();
         portAudioStream.close();
@@ -21,12 +22,10 @@
       }
  else {
 synchronized (syncObject) {
-          if (started) {
-            try {
-              syncObject.wait(getLoopInterval());
-            }
- catch (            InterruptedException e) {
-            }
+          if (started)           try {
+            syncObject.wait(getLoopInterval());
+          }
+ catch (          InterruptedException e) {
           }
         }
       }
