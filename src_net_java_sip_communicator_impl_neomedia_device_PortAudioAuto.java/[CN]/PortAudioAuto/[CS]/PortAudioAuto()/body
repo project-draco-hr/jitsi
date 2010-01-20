@@ -1,6 +1,6 @@
 {
   PortAudioManager.getInstance();
-  if (Logger.getLogger(PortAudioAuto.class).isDebugEnabled())   Registry.set("allowLogging",true);
+  if (logger.isDebugEnabled())   Registry.set("allowLogging",true);
   int deviceCount=PortAudio.Pa_GetDeviceCount();
   int defaultInputDeviceIx=PortAudio.Pa_GetDefaultInputDevice();
   int defaultOutputDeviceIx=PortAudio.Pa_GetDefaultOutputDevice();
@@ -22,4 +22,20 @@
   playbackDevices=playbackDevVector.toArray(new CaptureDeviceInfo[0]);
   CaptureDeviceManager.commit();
   DeviceConfiguration.addAudioSystem(DeviceConfiguration.AUDIO_SYSTEM_PORTAUDIO);
+  try {
+    ConfigurationService config=NeomediaActivator.getConfigurationService();
+    boolean echoCancelEnabled=config.getBoolean(DeviceConfiguration.PROP_AUDIO_ECHOCANCEL_ENABLED,PortAudioManager.getInstance().isEnabledEchoCancel());
+    if (echoCancelEnabled) {
+      int echoCancelTail=config.getInt(DeviceConfiguration.PROP_AUDIO_ECHOCANCEL_TAIL,PortAudioManager.getInstance().getFilterLength());
+      PortAudioManager.getInstance().setEchoCancel(echoCancelEnabled,PortAudioManager.getInstance().getFrameSize(),echoCancelTail);
+    }
+    boolean denoiseEnabled=config.getBoolean(DeviceConfiguration.PROP_AUDIO_DENOISE_ENABLED,PortAudioManager.getInstance().isEnabledDeNoise());
+    PortAudioManager.getInstance().setDeNoise(denoiseEnabled);
+    int audioLatency=config.getInt(DeviceConfiguration.PROP_AUDIO_LATENCY,(int)(PortAudioManager.getSuggestedLatency() * 1000));
+    if (audioLatency != (int)PortAudioManager.getSuggestedLatency() * 1000)     PortAudioManager.setSuggestedLatency((double)audioLatency / 1000d);
+  }
+ catch (  Exception e) {
+    logger.error("Error parsing audio config",e);
+  }
+  supported=true;
 }
