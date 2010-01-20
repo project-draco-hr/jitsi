@@ -18,16 +18,21 @@ synchronized (this.messageListeners) {
   if (evt == null)   return;
   for (Iterator<MessageListener> listenerIter=listeners.iterator(); listenerIter.hasNext(); ) {
     MessageListener listener=listenerIter.next();
+    try {
 switch (eventType) {
 case MessageDelivered:
-      listener.messageDelivered((MessageDeliveredEvent)evt);
-    break;
+        listener.messageDelivered((MessageDeliveredEvent)evt);
+      break;
 case MessageDeliveryFailed:
-  listener.messageDeliveryFailed((MessageDeliveryFailedEvent)evt);
-break;
+    listener.messageDeliveryFailed((MessageDeliveryFailedEvent)evt);
+  break;
 case MessageReceived:
 listener.messageReceived((MessageReceivedEvent)evt);
 break;
+}
+}
+ catch (Throwable e) {
+logger.error("Error delivering message",e);
 }
 }
 }
