@@ -1,0 +1,23 @@
+{
+  assertEquals("There are any rooms to retrieve on user 1 side's",1,opSetAHMUC1.getAdHocChatRooms().size());
+  assertEquals("There are any rooms to retrieve on user 2 side's",1,opSetAHMUC2.getAdHocChatRooms().size());
+  assertEquals("There are any rooms to retrieve on user 3 side's",1,opSetAHMUC3.getAdHocChatRooms().size());
+  AdHocChatRoom room=opSetAHMUC1.getAdHocChatRooms().get(0);
+  AHMUCEventCollector collector=new AHMUCEventCollector(room,AHMUCEventCollector.PRESENCE_EVENT);
+  opSetAHMUC2.getAdHocChatRooms().get(0).leave();
+  collector.waitForEvent(10000);
+  assertEquals("Wrong events count when first peer leaved the room",1,collector.events.size());
+  AdHocChatRoomParticipantPresenceChangeEvent presenceEvent=(AdHocChatRoomParticipantPresenceChangeEvent)collector.events.get(0);
+  assertEquals("Wrong type of event",presenceEvent.getEventType(),AdHocChatRoomParticipantPresenceChangeEvent.CONTACT_LEFT);
+  assertEquals("The event belongs to an unexpected room",room.getName(),presenceEvent.getAdHocChatRoom().getName());
+  assertEquals("The event belongs to an unexpected user",fixture.userID2,presenceEvent.getParticipant().getAddress());
+  assertEquals("No event was generated when second peer leaved the room",1,room.getParticipantsCount());
+  assertEquals("The room was not supposed to contain this user anymore",fixture.userID3,room.getParticipants().get(0).getAddress());
+  opSetAHMUC3.getAdHocChatRooms().get(0).leave();
+  collector.waitForEvent(10000);
+  presenceEvent=(AdHocChatRoomParticipantPresenceChangeEvent)collector.events.get(1);
+  assertEquals("Wrong type of event",presenceEvent.getEventType(),AdHocChatRoomParticipantPresenceChangeEvent.CONTACT_LEFT);
+  assertEquals("The event belongs to an unexpected room",room.getName(),presenceEvent.getAdHocChatRoom().getName());
+  assertEquals("The event belongs to an unexpected user",fixture.userID3,presenceEvent.getParticipant().getAddress());
+  assertEquals("The room was supposed to be empty, but it still contains" + " participants",0,room.getParticipantsCount());
+}

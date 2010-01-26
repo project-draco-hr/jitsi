@@ -1,0 +1,31 @@
+{
+  String roomName=testRoomBaseName + roomID;
+  ChatRoom roomUser1=opSetMUC1.findRoom(roomName);
+  assertNotNull("The room can't be retrieved on user1's side",roomUser1);
+  ChatRoom roomUser2=opSetMUC2.findRoom(roomName);
+  assertNotNull("The room can't be retrieved on user2's side",roomUser2);
+  ChatRoom roomUser3=opSetMUC3.findRoom(roomName);
+  assertNotNull("The room can't be retrieved on user3's side",roomUser3);
+  MUCEventCollector roomUser1Col=new MUCEventCollector(roomUser1,MUCEventCollector.EVENT_ROLE);
+  MUCEventCollector roomUser2Col=new MUCEventCollector(roomUser2,MUCEventCollector.EVENT_ROLE);
+  roomUser2.revokeVoice(fixture.userID3);
+  roomUser1Col.waitForEvent(10000);
+  roomUser2Col.waitForEvent(10000);
+  assertEquals("Wrong count of collected events on user1's side",1,roomUser1Col.collectedEvents.size());
+  ChatRoomMemberRoleChangeEvent roleEventUser1=(ChatRoomMemberRoleChangeEvent)roomUser1Col.collectedEvents.get(0);
+  assertEquals("Wrong count of collected events on user2's side",1,roomUser2Col.collectedEvents.size());
+  ChatRoomMemberRoleChangeEvent roleEventUser2=(ChatRoomMemberRoleChangeEvent)roomUser2Col.collectedEvents.get(0);
+  assertEquals("Collected event does not belong to the right chatroom",roomName,roleEventUser1.getSourceChatRoom().getName());
+  assertEquals("Collected event does not belong to the expected user",fixture.userID3,roleEventUser1.getSourceMember().getContactAddress());
+  assertEquals("User2's previous role does not match",roleEventUser1.getPreviousRole(),ChatRoomMemberRole.GUEST);
+  assertEquals("Unexpected new role",roleEventUser1.getNewRole(),ChatRoomMemberRole.SILENT_MEMBER);
+  assertEquals(roleEventUser1,roleEventUser2);
+  Message messageUser3=roomUser3.createMessage("Mute?");
+  try {
+    roomUser3.sendMessage(messageUser3);
+  }
+ catch (  OperationFailedException ofe) {
+    return;
+  }
+  fail("User3 may have succeeded to send a message through the room");
+}

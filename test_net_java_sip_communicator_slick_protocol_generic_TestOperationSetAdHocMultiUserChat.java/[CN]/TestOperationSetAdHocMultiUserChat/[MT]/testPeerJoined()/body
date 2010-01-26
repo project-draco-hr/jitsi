@@ -1,0 +1,32 @@
+{
+  assertEquals("There are any rooms to retrieve on user 1 side's",1,opSetAHMUC1.getAdHocChatRooms().size());
+  AdHocChatRoom adHocChatRoom=opSetAHMUC1.getAdHocChatRooms().get(0);
+  assertNotNull("The room can NOT been retrieved.",adHocChatRoom);
+  AHMUCEventCollector collector=new AHMUCEventCollector(adHocChatRoom,AHMUCEventCollector.PRESENCE_EVENT);
+  adHocChatRoom.invite(fixture.userID2,"");
+  adHocChatRoom.invite(fixture.userID3,"");
+  collector.waitForEvent(10000);
+  collector.waitForEvent(10000);
+  assertEquals("Wrong number of collected events",2,collector.events.size());
+  AdHocChatRoomParticipantPresenceChangeEvent presenceEvent1=(AdHocChatRoomParticipantPresenceChangeEvent)collector.events.get(0);
+  assertEquals("Wrong event type",AdHocChatRoomParticipantPresenceChangeEvent.CONTACT_JOINED,presenceEvent1.getEventType());
+  assertEquals("Unexpected chatroom",adHocChatRoom.getName(),presenceEvent1.getAdHocChatRoom().getName());
+  AdHocChatRoomParticipantPresenceChangeEvent presenceEvent2=(AdHocChatRoomParticipantPresenceChangeEvent)collector.events.get(1);
+  assertEquals("Wrong event type",AdHocChatRoomParticipantPresenceChangeEvent.CONTACT_JOINED,presenceEvent2.getEventType());
+  assertEquals("Unexpected chatroom",adHocChatRoom.getName(),presenceEvent2.getAdHocChatRoom().getName());
+  assertEquals("Wrong number of participants",2,adHocChatRoom.getParticipantsCount());
+  List<String> participantsAdress=new ArrayList<String>();
+  for (  Contact c : adHocChatRoom.getParticipants()) {
+    participantsAdress.add(c.getAddress());
+  }
+  assertTrue("A participant is missing",participantsAdress.contains(fixture.userID2));
+  assertTrue("A participant is missing",participantsAdress.contains(fixture.userID3));
+  AHMUCEventCollector collector2=new AHMUCEventCollector(adHocChatRoom,AHMUCEventCollector.MESSAGE_EVENT);
+  Message message=adHocChatRoom.createMessage("Don't ask your country" + "what it can do for you, ask you what you can do for it.");
+  adHocChatRoom.sendMessage(message);
+  collector2.waitForEvent(10000);
+  AdHocChatRoomMessageDeliveredEvent deliveredMessage=(AdHocChatRoomMessageDeliveredEvent)collector2.events.get(0);
+  assertEquals("Message delivered to an unexpected room",adHocChatRoom.getName(),deliveredMessage.getSourceAdHocChatRoom().getName());
+  assertEquals("Wrong message type",AdHocChatRoomMessageDeliveredEvent.CONVERSATION_MESSAGE_DELIVERED,deliveredMessage.getEventType());
+  assertEquals("Message's content does NOT match",message.getContent(),deliveredMessage.getMessage().getContent());
+}

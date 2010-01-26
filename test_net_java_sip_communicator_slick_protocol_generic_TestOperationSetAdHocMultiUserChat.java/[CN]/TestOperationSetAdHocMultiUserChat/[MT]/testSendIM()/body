@@ -1,0 +1,37 @@
+{
+  assertEquals("There are any rooms to retrieve on user 1 side's",1,opSetAHMUC1.getAdHocChatRooms().size());
+  assertEquals("There are any rooms to retrieve on user 2 side's",1,opSetAHMUC2.getAdHocChatRooms().size());
+  assertEquals("There are any rooms to retrieve on user 3 side's",1,opSetAHMUC3.getAdHocChatRooms().size());
+  AdHocChatRoom roomUser1=opSetAHMUC1.getAdHocChatRooms().get(0);
+  AdHocChatRoom roomUser2=opSetAHMUC2.getAdHocChatRooms().get(0);
+  AdHocChatRoom roomUser3=opSetAHMUC3.getAdHocChatRooms().get(0);
+  assertNotNull("The room can NOT been retrieved on user's 1 side.",roomUser1);
+  assertNotNull("The room can NOT been retrieved on user's 2 side.",roomUser2);
+  assertNotNull("The room can NOT been retrieved on user's 3 side.",roomUser3);
+  AHMUCEventCollector collectorUser1=new AHMUCEventCollector(roomUser1,AHMUCEventCollector.MESSAGE_EVENT);
+  AHMUCEventCollector collectorUser2=new AHMUCEventCollector(roomUser2,AHMUCEventCollector.MESSAGE_EVENT);
+  AHMUCEventCollector collectorUser3=new AHMUCEventCollector(roomUser3,AHMUCEventCollector.MESSAGE_EVENT);
+  Message message=roomUser1.createMessage("Quick brown fox jumps over the lazy dog");
+  roomUser1.sendMessage(message);
+  try {
+    Thread.sleep(10000);
+  }
+ catch (  InterruptedException e) {
+    e.printStackTrace();
+  }
+  assertEquals("User 1 did NOT receive a message delivered event. Wrong" + " event collected number",1,collectorUser1.events.size());
+  assertEquals("User 2 did NOT receive a message received event. Wrong " + "event collected number",1,collectorUser2.events.size());
+  assertEquals("User 3 did NOT receive a message received event. Wrong " + "event collected number",1,collectorUser3.events.size());
+  AdHocChatRoomMessageDeliveredEvent deliveredMessage=(AdHocChatRoomMessageDeliveredEvent)collectorUser1.events.get(0);
+  assertEquals("Message delivered to an unexpected room",roomUser1.getName(),deliveredMessage.getSourceAdHocChatRoom().getName());
+  assertEquals("Wrong message type",AdHocChatRoomMessageDeliveredEvent.CONVERSATION_MESSAGE_DELIVERED,deliveredMessage.getEventType());
+  assertEquals("Message's content does NOT match",message.getContent(),deliveredMessage.getMessage().getContent());
+  AdHocChatRoomMessageReceivedEvent receivedMessage=(AdHocChatRoomMessageReceivedEvent)collectorUser2.events.get(0);
+  assertEquals("Message does NOT belong to this room",roomUser2.getName(),receivedMessage.getSourceChatRoom().getName());
+  assertEquals("Wrong message type",AdHocChatRoomMessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED,receivedMessage.getEventType());
+  assertEquals("Message's content does NOT match",message.getContent(),receivedMessage.getMessage().getContent());
+  receivedMessage=(AdHocChatRoomMessageReceivedEvent)collectorUser3.events.get(0);
+  assertEquals("Message does NOT belong to this room",roomUser3.getName(),receivedMessage.getSourceChatRoom().getName());
+  assertEquals("Wrong message type",AdHocChatRoomMessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED,receivedMessage.getEventType());
+  assertEquals("Message's content does NOT match",message.getContent(),receivedMessage.getMessage().getContent());
+}
