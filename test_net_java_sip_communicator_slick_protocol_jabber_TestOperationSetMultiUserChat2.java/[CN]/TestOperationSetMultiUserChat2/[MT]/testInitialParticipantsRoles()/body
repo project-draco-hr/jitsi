@@ -1,21 +1,22 @@
 {
-  String roomName=testRoomBaseName + roomID++;
+  String roomName=testRoomBaseName + roomID;
   ChatRoom roomUser1=opSetMUC1.createChatRoom(roomName,null);
   roomUser1.join();
   MUCEventCollector roomUser1Collector=new MUCEventCollector(roomUser1,MUCEventCollector.EVENT_PRESENCE);
-  assertEquals("Unexpected role for user1",roomUser1.getUserRole(),ChatRoomMemberRole.OWNER);
+  assertEquals("Unexpected role for user1",roomUser1.getUserRole(),ChatRoomMemberRole.MODERATOR);
+  assertEquals("Unexpected role for user1",roomUser1.getUserRole(),roomUser1.getMembers().remove(0).getRole());
   ChatRoom roomUser2=opSetMUC2.findRoom(roomName);
   assertNotNull("Room can't be retrieved on user2's side",roomUser2);
   roomUser2.join();
+  roomUser1Collector.waitForEvent(10000);
   ChatRoom roomUser3=opSetMUC3.findRoom(roomName);
   assertNotNull("Room can't be retrieved on user3's side",roomUser2);
   roomUser3.join();
   roomUser1Collector.waitForEvent(10000);
-  roomUser1Collector.waitForEvent(10000);
   assertTrue("User2 not on member list after having join the room",nameIsOnMemberList(fixture.userID2,roomUser1.getMembers()));
   assertTrue("User3 not on member list after having join the room",nameIsOnMemberList(fixture.userID3,roomUser1.getMembers()));
   List<ChatRoomMember> members=roomUser1.getMembers();
-  assertTrue("Unexpected members count",members.size() == 2);
-  assertEquals("The current implementation requires that room's new " + "comers must have MEMBER role",ChatRoomMemberRole.MEMBER,members.get(0).getRole());
-  assertEquals("The current implementation requires that room's new " + "comers must have the MEMBER role",ChatRoomMemberRole.MEMBER,members.get(1).getRole());
+  assertEquals("Unexpected members count",3,members.size());
+  assertEquals("The current implementation requires that room's new " + "comers must have MEMBER role",ChatRoomMemberRole.MEMBER,members.get(1).getRole());
+  assertEquals("The current implementation requires that room's new " + "comers must have the MEMBER role",ChatRoomMemberRole.MEMBER,members.get(2).getRole());
 }
