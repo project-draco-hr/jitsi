@@ -8,19 +8,17 @@
     ExpiresHeader expiresHeader=register.getExpires();
     if (expiresHeader != null)     requestedExpiration=expiresHeader.getExpires();
   }
-  int grantedExpiration=registrationsExpiration;
-  expiresHeader=response.getExpires();
+  int grantedExpiration=-1;
+  ContactHeader responseContactHdr=(ContactHeader)response.getHeader(ContactHeader.NAME);
+  if (responseContactHdr != null) {
+    grantedExpiration=responseContactHdr.getExpires();
+  }
+  ExpiresHeader expiresHeader=response.getExpires();
   if (expiresHeader != null) {
     grantedExpiration=expiresHeader.getExpires();
   }
  else {
-    ContactHeader contactHeader=(ContactHeader)response.getHeader(ContactHeader.NAME);
-    if (contactHeader != null) {
-      grantedExpiration=contactHeader.getExpires();
-    }
- else {
-      grantedExpiration=requestedExpiration;
-    }
+    grantedExpiration=requestedExpiration;
   }
   if (grantedExpiration <= 0 || requestedExpiration <= 0) {
     setRegistrationState(RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"Registration terminated.");
