@@ -1,0 +1,30 @@
+{
+  if (videoEvent != null) {
+    if ((videoEvent.getOrigin() == VideoEvent.REMOTE) && (videoEvent instanceof SizeChangeVideoEvent)) {
+      SizeChangeVideoEvent sizeChangeVideoEvent=(SizeChangeVideoEvent)videoEvent;
+      Component visualComponent=sizeChangeVideoEvent.getVisualComponent();
+      int width=sizeChangeVideoEvent.getWidth();
+      int height=sizeChangeVideoEvent.getHeight();
+      if (visualComponent.getParent() == null)       visualComponent.setPreferredSize(new Dimension(width,height));
+ else       if (isAncestor(videoContainer,visualComponent))       ensureSize(visualComponent,width,height);
+      return;
+    }
+switch (videoEvent.getType()) {
+case VideoEvent.VIDEO_ADDED:
+case VideoEvent.VIDEO_REMOVED:
+      break;
+default :
+    return;
+}
+}
+int zOrder=0;
+videoContainer.removeAll();
+if (localVideo != null) {
+videoContainer.add(localVideo,VideoLayout.LOCAL,zOrder++);
+if (!callDialog.isVideoButtonSelected()) callDialog.setVideoButtonSelected(true);
+}
+Component video=videoTelephony.getVisualComponent(callPeer);
+if (video != null) videoContainer.add(video,VideoLayout.CENTER_REMOTE,zOrder++);
+videoContainer.validate();
+videoContainer.repaint();
+}
