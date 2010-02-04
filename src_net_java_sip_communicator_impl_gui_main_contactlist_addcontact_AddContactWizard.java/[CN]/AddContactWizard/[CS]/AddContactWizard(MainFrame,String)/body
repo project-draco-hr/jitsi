@@ -1,0 +1,22 @@
+{
+  super(mainFrame);
+  this.mainFrame=mainFrame;
+  super.addWizardListener(this);
+  this.setTitle(GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_WIZARD"));
+  this.setFinishButtonText(GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT"));
+  Vector<ProtocolProviderService> pps=new Vector<ProtocolProviderService>();
+  Iterator<ProtocolProviderService> iter=mainFrame.getProtocolProviders();
+  while (iter.hasNext()) {
+    ProtocolProviderService p=iter.next();
+    boolean isHidden=p.getAccountID().getAccountProperty(ProtocolProviderFactory.IS_PROTOCOL_HIDDEN) != null;
+    if (!isHidden)     pps.add(p);
+  }
+  page1=new AddContactWizardPage1(this,newContact,pps.iterator());
+  this.registerWizardPage(AddContactWizardPage1.IDENTIFIER,page1);
+  page2=new AddContactWizardPage2(this,newContact);
+  this.registerWizardPage(AddContactWizardPage2.IDENTIFIER,page2);
+  if (contactAddress != null)   page3=new AddContactWizardPage3(this,newContact,contactAddress);
+ else   page3=new AddContactWizardPage3(this,newContact);
+  this.registerWizardPage(AddContactWizardPage3.IDENTIFIER,page3);
+  this.setCurrentPage(AddContactWizardPage1.IDENTIFIER);
+}

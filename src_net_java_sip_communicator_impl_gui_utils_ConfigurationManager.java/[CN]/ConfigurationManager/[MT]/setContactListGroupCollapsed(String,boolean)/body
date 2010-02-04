@@ -1,0 +1,19 @@
+{
+  String prefix="net.java.sip.communicator.impl.gui.contactlist.groups";
+  List<String> groups=configService.getPropertyNamesByPrefix(prefix,true);
+  boolean isExistingGroup=false;
+  for (  String groupRootPropName : groups) {
+    String storedID=configService.getString(groupRootPropName);
+    if (storedID.equals(groupID)) {
+      configService.setProperty(groupRootPropName + ".isClosed",Boolean.toString(isCollapsed));
+      isExistingGroup=true;
+      break;
+    }
+  }
+  if (!isExistingGroup) {
+    String groupNodeName="group" + Long.toString(System.currentTimeMillis());
+    String groupPackage=prefix + "." + groupNodeName;
+    configService.setProperty(groupPackage,groupID);
+    configService.setProperty(groupPackage + ".isClosed",Boolean.toString(isCollapsed));
+  }
+}

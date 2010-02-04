@@ -60,26 +60,25 @@
     }
   }
  else   if (itemName.startsWith(moveToPrefix)) {
-    MetaContactGroup group=mainFrame.getGroupByID(itemName.substring(moveToPrefix.length()));
-    guiContactList.moveMetaContactToGroup(contactItem,group);
+    MetaContactListManager.moveMetaContactToGroup(contactItem,itemName.substring(moveToPrefix.length()));
   }
  else   if (itemName.startsWith(removeContactPrefix)) {
     contact=getContactFromMetaContact(itemName.substring(removeContactPrefix.length()));
     if (contact != null) {
-      new RemoveContactThread(contact).start();
+      MetaContactListManager.removeContact(contact);
     }
  else {
-      new RemoveAllContactsThread().start();
+      MetaContactListManager.removeMetaContact(contactItem);
     }
   }
  else   if (itemName.startsWith(moveSubcontactPrefix)) {
     contact=getContactFromMetaContact(itemName.substring(moveSubcontactPrefix.length()));
-    guiContactList.addExcContactListListener(this);
-    guiContactList.setDisableOpenClose(true);
+    contactList.addContactListListener(this);
+    contactList.setGroupClickConsumed(true);
     this.moveDialog=new MoveSubcontactMessageDialog(mainFrame,this);
     this.moveDialog.addWindowListener(new WindowAdapter(){
       public void windowClosed(      WindowEvent e){
-        guiContactList.setDisableOpenClose(false);
+        contactList.setGroupClickConsumed(false);
       }
     }
 );

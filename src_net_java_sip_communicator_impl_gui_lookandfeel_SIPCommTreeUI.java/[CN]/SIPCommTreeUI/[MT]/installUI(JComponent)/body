@@ -1,0 +1,22 @@
+{
+  if (c == null)   throw new NullPointerException("null component passed to BasicTreeUI.installUI()");
+  tree=(JTree)c;
+  tree.addTreeSelectionListener(new TreeSelectionListener(){
+    public void valueChanged(    TreeSelectionEvent e){
+      layoutCache.invalidatePathBounds(e.getOldLeadSelectionPath());
+      layoutCache.invalidatePathBounds(e.getNewLeadSelectionPath());
+      updateSize();
+      tree.repaint();
+    }
+  }
+);
+  tree.addHierarchyListener(new HierarchyListener(){
+    public void hierarchyChanged(    HierarchyEvent e){
+      if (e.getID() == HierarchyEvent.HIERARCHY_CHANGED && (e.getChangeFlags() & HierarchyEvent.PARENT_CHANGED) != 0 && e.getChangedParent() instanceof JViewport) {
+        parentViewport=(JViewport)e.getChangedParent();
+      }
+    }
+  }
+);
+  super.installUI(c);
+}

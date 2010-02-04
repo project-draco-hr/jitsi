@@ -1,0 +1,62 @@
+{
+  super(new GridBagLayout());
+  this.setBorder(BorderFactory.createEmptyBorder(2,5,2,2));
+  int groupForegroundProperty=GuiActivator.getResources().getColor("service.gui.CONTACT_LIST_GROUP_FOREGROUND");
+  if (groupForegroundProperty > -1)   groupForegroundColor=new Color(groupForegroundProperty);
+  int contactForegroundProperty=GuiActivator.getResources().getColor("service.gui.CONTACT_LIST_CONTACT_FOREGROUND");
+  if (contactForegroundProperty > -1)   contactForegroundColor=new Color(contactForegroundProperty);
+  this.setOpaque(false);
+  this.nameLabel.setOpaque(false);
+  this.statusMessageLabel.setFont(getFont().deriveFont(9f));
+  this.statusMessageLabel.setForeground(Color.GRAY);
+  this.rightLabel.setFont(rightLabel.getFont().deriveFont(9f));
+  this.rightLabel.setHorizontalAlignment(JLabel.RIGHT);
+  statusLabel.setBorder(BorderFactory.createEmptyBorder(2,0,0,2));
+  constraints.anchor=GridBagConstraints.WEST;
+  constraints.fill=GridBagConstraints.VERTICAL;
+  constraints.gridx=0;
+  constraints.gridy=0;
+  constraints.gridheight=1;
+  constraints.weightx=0f;
+  constraints.weighty=1f;
+  this.add(statusLabel,constraints);
+  constraints.anchor=GridBagConstraints.WEST;
+  constraints.fill=GridBagConstraints.NONE;
+  constraints.gridx=1;
+  constraints.gridy=0;
+  constraints.weightx=1f;
+  constraints.weighty=0f;
+  constraints.gridheight=1;
+  constraints.gridwidth=2;
+  this.add(nameLabel,constraints);
+  rightLabel.setBorder(BorderFactory.createEmptyBorder(0,0,0,2));
+  constraints.anchor=GridBagConstraints.NORTHEAST;
+  constraints.fill=GridBagConstraints.VERTICAL;
+  constraints.gridx=3;
+  constraints.gridy=0;
+  constraints.gridheight=3;
+  constraints.weightx=0f;
+  constraints.weighty=1f;
+  this.add(rightLabel,constraints);
+  this.callButton.setName(CALL_BUTTON_NAME);
+  this.chatButton.setName(CHAT_BUTTON_NAME);
+  callButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      if (treeNode != null && treeNode instanceof ContactNode) {
+        Contact contact=((ContactNode)treeNode).getMetaContact().getDefaultContact(OperationSetBasicTelephony.class);
+        if (contact != null)         CallManager.createCall(contact.getProtocolProvider(),contact);
+      }
+    }
+  }
+);
+  chatButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      if (treeNode != null && treeNode instanceof ContactNode) {
+        ContactListPane clistPanel=GuiActivator.getUIService().getMainFrame().getContactListPanel();
+        SwingUtilities.invokeLater(clistPanel.new RunMessageWindow(((ContactNode)treeNode).getMetaContact()));
+      }
+    }
+  }
+);
+  this.setToolTipText("");
+}

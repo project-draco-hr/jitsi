@@ -1,0 +1,34 @@
+{
+  this.parentWindow=window;
+  this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+  addContact.setAlignmentX(JButton.CENTER_ALIGNMENT);
+  callContact.setAlignmentX(JButton.CENTER_ALIGNMENT);
+  addContact.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.ADD_CONTACT"));
+  callContact.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.CALL_CONTACT"));
+  this.add(addContact);
+  this.add(callContact);
+  addContact.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      AddContactWizard wizard=new AddContactWizard(parentWindow,parentWindow.getCurrentSearchText());
+      wizard.showDialog(false);
+    }
+  }
+);
+  callContact.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      String searchText=parentWindow.getCurrentSearchText();
+      if (searchText == null)       return;
+      Vector<ProtocolProviderService> telephonyProviders=CallManager.getTelephonyProviders();
+      ProtocolProviderService callProvider=null;
+      if (telephonyProviders.size() == 1) {
+        callProvider=telephonyProviders.get(0);
+      }
+ else       if (telephonyProviders.size() > 1) {
+        ChooseCallAccountDialog chooseAccountDialog=new ChooseCallAccountDialog(telephonyProviders);
+        callProvider=chooseAccountDialog.showDialog();
+      }
+      if (callProvider != null)       CallManager.createCall(callProvider,searchText);
+    }
+  }
+);
+}
