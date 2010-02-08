@@ -6,8 +6,10 @@
   String statusMessage=null;
   if (eventType.equals(ChatRoomMemberPresenceChangeEvent.MEMBER_JOINED)) {
     ConferenceChatContact chatContact=new ConferenceChatContact(chatRoomMember);
-    for (    ChatContact cc : chatParticipants)     if (!cc.getUID().equals(chatContact.getUID()))     chatParticipants.add(chatContact);
-    sessionRenderer.addChatContact(chatContact);
+synchronized (chatParticipants) {
+      if (!chatParticipants.contains(chatContact))       chatParticipants.add(chatContact);
+      sessionRenderer.addChatContact(chatContact);
+    }
     if (!evt.isReasonUserList()) {
       statusMessage=GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_USER_JOINED",new String[]{sourceChatRoom.getName()});
       sessionRenderer.updateChatContactStatus(chatContact,statusMessage);
