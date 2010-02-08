@@ -1,15 +1,12 @@
 {
   Iterator<ChatRoomConfigurationFormField> configurationSet=configForm.getConfigurationSet();
-  int labelWidth=computeLabelWidth(configForm);
   while (configurationSet.hasNext()) {
     ChatRoomConfigurationFormField formField=configurationSet.next();
     Iterator<?> values=formField.getValues();
     Iterator<String> options=formField.getOptions();
     JComponent field=null;
-    JLabel label=new JLabel();
-    if (formField.getLabel() != null) {
-      label.setText(formField.getLabel() + ": ");
-    }
+    JLabel label=new JLabel("",JLabel.RIGHT);
+    if (formField.getLabel() != null)     label.setText(formField.getLabel() + ": ");
     String fieldType=formField.getType();
     if (fieldType.equals(ChatRoomConfigurationFormField.TYPE_BOOLEAN)) {
       field=new SIPCommCheckBox(formField.getLabel());
@@ -18,11 +15,12 @@
       }
     }
  else     if (fieldType.equals(ChatRoomConfigurationFormField.TYPE_TEXT_FIXED)) {
-      field=new JTextArea();
-      ((JTextArea)field).setEditable(false);
+      field=new JLabel();
       if (values.hasNext()) {
         String value=values.next().toString();
-        ((JTextArea)field).setText(value);
+        ((JLabel)field).setText(value);
+        ((JLabel)field).setFont(new Font(null,Font.ITALIC,9));
+        ((JLabel)field).setForeground(Color.GRAY);
       }
     }
  else     if (fieldType.equals(ChatRoomConfigurationFormField.TYPE_LIST_MULTI)) {
@@ -85,13 +83,12 @@
       roomOptionsPanel.add(field);
     }
  else {
-      JPanel fieldPanel=new JPanel(new BorderLayout());
+      JPanel fieldPanel=new JPanel(new GridLayout(1,2));
       fieldPanel.setOpaque(false);
-      fieldPanel.setBorder(BorderFactory.createEmptyBorder(0,0,10,0));
-      label.setPreferredSize(new Dimension(labelWidth,30));
-      label.setAlignmentX(JLabel.RIGHT_ALIGNMENT);
-      fieldPanel.add(label,BorderLayout.WEST);
-      fieldPanel.add(field,BorderLayout.CENTER);
+      if (!(field instanceof JLabel))       fieldPanel.setBorder(BorderFactory.createEmptyBorder(0,0,10,0));
+      label.setPreferredSize(new Dimension(computeLabelWidth(configForm),30));
+      fieldPanel.add(label);
+      fieldPanel.add(field);
       this.mainPanel.add(fieldPanel);
     }
   }
