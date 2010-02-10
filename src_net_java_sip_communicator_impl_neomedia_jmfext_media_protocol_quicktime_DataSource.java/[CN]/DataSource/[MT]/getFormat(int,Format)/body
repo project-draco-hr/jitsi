@@ -7,7 +7,14 @@
       QTFormatDescription[] formatDescriptions=device.formatDescriptions();
       if ((formatDescriptions != null) && (streamIndex < formatDescriptions.length)) {
         size=formatDescriptions[streamIndex].sizeForKey(QTFormatDescription.VideoEncodedPixelsSizeAttribute);
-        if (size != null)         format=format.intersects(new VideoFormat(format.getEncoding(),size,videoFormat.getMaxDataLength(),format.getDataType(),videoFormat.getFrameRate()));
+        if (size != null) {
+          if ((size.width < DEFAULT_WIDTH) && (size.height < DEFAULT_HEIGHT)) {
+            double ratio=size.height / (double)size.width;
+            size.width=DEFAULT_WIDTH;
+            size.height=(int)(size.width * ratio);
+          }
+          format=format.intersects(new VideoFormat(format.getEncoding(),size,videoFormat.getMaxDataLength(),format.getDataType(),videoFormat.getFrameRate()));
+        }
       }
     }
   }
