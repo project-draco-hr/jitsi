@@ -1,0 +1,21 @@
+{
+  StringBuilder stanza=new StringBuilder();
+  byte response[];
+  if (challenge != null) {
+    response=sc.evaluateChallenge(Base64.decode(challenge));
+  }
+ else {
+    response=sc.evaluateChallenge(null);
+  }
+  String authenticationText=null;
+  if (null != response) {
+    authenticationText=Base64.encodeBytes(response,Base64.DONT_BREAK_LINES);
+  }
+  if ((null == authenticationText) || (authenticationText.equals(""))) {
+    authenticationText="=";
+  }
+  stanza.append("<response xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\">");
+  stanza.append(authenticationText);
+  stanza.append("</response>");
+  getSASLAuthentication().send(stanza.toString());
+}
