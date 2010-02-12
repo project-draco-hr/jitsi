@@ -1,22 +1,32 @@
 {
-synchronized (buf) {
-    try {
-      Object bufData=buf.getData();
-      int bufLength=buf.getLength();
-      if ((bufData != null) || (bufLength != 0)) {
-        buffer.setData(bufData);
-        buffer.setOffset(0);
-        buffer.setLength(bufLength);
-        buffer.setFormat(buf.getFormat());
-        buffer.setHeader(null);
-        buffer.setTimeStamp(buf.getTimeStamp());
-        buffer.setSequenceNumber(buf.getSequenceNumber());
-        buffer.setFlags(buf.getFlags());
-        buf.setData(null);
-        buf.setLength(0);
-      }
+  byte data[]=(byte[])buffer.getData();
+  int dataLength=(data != null) ? data.length : 0;
+  long begin=System.currentTimeMillis();
+  long maxTime=1000 / 10;
+  int wait=0;
+  if ((data != null) || (dataLength != 0)) {
+    byte buf[]=readScreen(data);
+    if (buf != data) {
+      buffer.setData(buf);
     }
- catch (    Exception e) {
+    buffer.setOffset(0);
+    buffer.setLength(buf.length);
+    buffer.setFormat(getFormat());
+    buffer.setHeader(null);
+    buffer.setTimeStamp(System.nanoTime());
+    buffer.setSequenceNumber(seqNo);
+    buffer.setFlags(Buffer.FLAG_SYSTEM_TIME | Buffer.FLAG_LIVE_DATA);
+    seqNo++;
+  }
+  wait=(int)(maxTime - (System.currentTimeMillis() - begin));
+  try {
+    if (wait > 0) {
+      Thread.sleep(wait);
     }
+ else {
+      Thread.yield();
+    }
+  }
+ catch (  Exception e) {
   }
 }
