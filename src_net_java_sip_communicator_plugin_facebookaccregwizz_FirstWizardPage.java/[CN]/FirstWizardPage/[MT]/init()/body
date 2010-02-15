@@ -7,19 +7,38 @@
   this.usernameExampleLabel.setFont(usernameExampleLabel.getFont().deriveFont(8));
   this.emptyPanel.setMaximumSize(new Dimension(40,35));
   this.usernameExampleLabel.setBorder(BorderFactory.createEmptyBorder(0,0,8,0));
+  JPanel labelsPanel=new TransparentPanel();
+  labelsPanel.setLayout(new BoxLayout(labelsPanel,BoxLayout.Y_AXIS));
   labelsPanel.add(usernameLabel);
   labelsPanel.add(emptyPanel);
   labelsPanel.add(passLabel);
+  JPanel valuesPanel=new TransparentPanel();
+  valuesPanel.setLayout(new BoxLayout(valuesPanel,BoxLayout.Y_AXIS));
   valuesPanel.add(usernameField);
   valuesPanel.add(usernameExampleLabel);
   valuesPanel.add(passField);
-  JLabel experimentalWarningLabel=new JLabel(Resources.getString("plugin.facebookaccregwizz.DESCRIPTION"));
-  experimentalWarningLabel.setHorizontalAlignment(JLabel.CENTER);
-  setPreferredWidthInCharCount(experimentalWarningLabel,50);
-  userPassPanel.add(experimentalWarningLabel,BorderLayout.NORTH);
+  JPanel descriptionPanel=new TransparentPanel(new BorderLayout());
+  descriptionPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+  JEditorPane descriptionValue=new JEditorPane();
+  descriptionValue.setAlignmentX(JEditorPane.CENTER_ALIGNMENT);
+  descriptionValue.setOpaque(false);
+  descriptionValue.setContentType("text/html");
+  descriptionValue.setEditable(false);
+  descriptionValue.setText(Resources.getString("plugin.facebookaccregwizz.DESCRIPTION"));
+  descriptionValue.addHyperlinkListener(new HyperlinkListener(){
+    public void hyperlinkUpdate(    HyperlinkEvent e){
+      if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+        FacebookAccRegWizzActivator.getBrowserLauncher().openURL(e.getURL().toString());
+      }
+    }
+  }
+);
+  descriptionPanel.add(descriptionValue,BorderLayout.CENTER);
   userPassPanel.add(labelsPanel,BorderLayout.WEST);
   userPassPanel.add(valuesPanel,BorderLayout.CENTER);
   userPassPanel.add(rememberPassBox,BorderLayout.SOUTH);
   userPassPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("plugin.facebookaccregwizz.USERNAME_AND_PASSWORD")));
-  this.add(userPassPanel,BorderLayout.NORTH);
+  mainPanel.add(userPassPanel,BorderLayout.CENTER);
+  mainPanel.add(descriptionPanel,BorderLayout.SOUTH);
+  this.add(mainPanel,BorderLayout.NORTH);
 }
