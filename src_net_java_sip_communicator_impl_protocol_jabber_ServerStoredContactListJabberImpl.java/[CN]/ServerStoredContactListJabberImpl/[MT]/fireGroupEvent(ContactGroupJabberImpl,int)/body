@@ -9,6 +9,13 @@
 synchronized (serverStoredGroupListeners) {
     listeners=new ArrayList<ServerStoredGroupListener>(serverStoredGroupListeners);
   }
+  if (eventID == ServerStoredGroupEvent.GROUP_CREATED_EVENT) {
+    Iterator iter=group.contacts();
+    while (iter.hasNext()) {
+      ContactJabberImpl c=(ContactJabberImpl)iter.next();
+      parentOperationSet.firePresenceStatuschanged(roster.getPresence(c.getAddress()));
+    }
+  }
   for (  ServerStoredGroupListener listener : listeners) {
     if (eventID == ServerStoredGroupEvent.GROUP_REMOVED_EVENT)     listener.groupRemoved(evt);
  else     if (eventID == ServerStoredGroupEvent.GROUP_RENAMED_EVENT)     listener.groupNameChanged(evt);

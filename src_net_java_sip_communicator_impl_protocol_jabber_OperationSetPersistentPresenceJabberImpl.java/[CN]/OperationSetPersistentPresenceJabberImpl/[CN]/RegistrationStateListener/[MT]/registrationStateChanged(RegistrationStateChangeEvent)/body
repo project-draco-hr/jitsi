@@ -1,7 +1,8 @@
 {
   logger.debug("The Jabber provider changed state from: " + evt.getOldState() + " to: "+ evt.getNewState());
   if (evt.getNewState() == RegistrationState.REGISTERED) {
-    parentProvider.getConnection().getRoster().addRosterListener(new ContactChangesListener());
+    contactChangesListener=new ContactChangesListener();
+    parentProvider.getConnection().getRoster().addRosterListener(contactChangesListener);
     fireProviderStatusChangeEvent(currentStatus,parentProvider.getJabberStatusEnum().getStatus(JabberStatusEnum.AVAILABLE));
     ssContactList.init();
   }
@@ -10,6 +11,7 @@
     PresenceStatus offlineStatus=parentProvider.getJabberStatusEnum().getStatus(JabberStatusEnum.OFFLINE);
     currentStatus=offlineStatus;
     fireProviderStatusChangeEvent(oldStatus,currentStatus);
+    contactChangesListener=null;
     Iterator<ContactGroup> groupsIter=getServerStoredContactListRoot().subgroups();
     while (groupsIter.hasNext()) {
       ContactGroup group=groupsIter.next();
