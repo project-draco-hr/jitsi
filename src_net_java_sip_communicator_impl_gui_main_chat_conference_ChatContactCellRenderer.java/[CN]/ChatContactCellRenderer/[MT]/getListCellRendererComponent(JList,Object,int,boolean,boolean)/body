@@ -11,30 +11,49 @@
   }
   this.nameLabel.setFont(this.getFont().deriveFont(Font.PLAIN));
   this.nameLabel.setText(displayName);
-  if (member != null)   if (member.getRole() != null)   this.nameLabel.setIcon(ChatContactRoleIcon.getRoleIcon(member.getRole()));
+  if (member != null) {
+    ChatRoomMemberRole memberRole=member.getRole();
+    if (memberRole != null)     this.nameLabel.setIcon(ChatContactRoleIcon.getRoleIcon(memberRole));
+  }
   if (contactForegroundColor != null)   this.nameLabel.setForeground(contactForegroundColor);
   this.setBorder(BorderFactory.createEmptyBorder(1,5,1,1));
   ImageIcon avatar=chatContact.getAvatar();
   if (avatar != null)   this.rightLabel.setIcon(avatar);
  else   if (member != null) {
-    if (chatContact.getName().equals(member.getChatRoom().getUserNickname())) {
-      OperationSetServerStoredAccountInfo opSet=member.getChatRoom().getParentProvider().getOperationSet(OperationSetServerStoredAccountInfo.class);
-      Iterator<GenericDetail> itr=opSet.getAllAvailableDetails();
-      while (itr.hasNext()) {
-        GenericDetail detail=itr.next();
-        if (detail instanceof BinaryDetail) {
-          BinaryDetail bin=(BinaryDetail)detail;
-          if (bin.getBytes() != null)           this.rightLabel.setIcon(ImageUtils.getScaledRoundedIcon(bin.getBytes(),25,25));
-          break;
+    ChatRoom memberChatRoom=member.getChatRoom();
+    ProtocolProviderService protocolProvider=memberChatRoom.getParentProvider();
+    if (chatContact.getName().equals(memberChatRoom.getUserNickname())) {
+      OperationSetServerStoredAccountInfo opSet=protocolProvider.getOperationSet(OperationSetServerStoredAccountInfo.class);
+      if (opSet != null) {
+        Iterator<GenericDetail> itr=opSet.getAllAvailableDetails();
+        while (itr.hasNext()) {
+          GenericDetail detail=itr.next();
+          if (detail instanceof BinaryDetail) {
+            BinaryDetail bin=(BinaryDetail)detail;
+            byte[] binBytes=bin.getBytes();
+            if (binBytes != null)             this.rightLabel.setIcon(ImageUtils.getScaledRoundedIcon(binBytes,25,25));
+            break;
+          }
         }
       }
-      ChatRoomMemberRole role=member.getChatRoom().getUserRole();
+      ChatRoomMemberRole role;
+      try {
+        role=memberChatRoom.getUserRole();
+      }
+ catch (      UnsupportedOperationException uoex) {
+        role=member.getRole();
+      }
       if (role != null)       this.nameLabel.setIcon(ChatContactRoleIcon.getRoleIcon(role));
     }
  else {
-      OperationSetPersistentPresence opSet=member.getChatRoom().getParentProvider().getOperationSet(OperationSetPersistentPresence.class);
-      Contact c=opSet.findContactByID(member.getContactAddress());
-      if (opSet != null && c != null && c.getImage() != null)       this.rightLabel.setIcon(ImageUtils.getScaledRoundedIcon(c.getImage(),25,25));
+      OperationSetPersistentPresence opSet=protocolProvider.getOperationSet(OperationSetPersistentPresence.class);
+      if (opSet != null) {
+        Contact c=opSet.findContactByID(member.getContactAddress());
+        if (c != null) {
+          byte[] cImage=c.getImage();
+          if (cImage != null)           this.rightLabel.setIcon(ImageUtils.getScaledRoundedIcon(cImage,25,25));
+        }
+      }
     }
   }
   this.setBounds(0,0,list.getWidth() - 2,30);
