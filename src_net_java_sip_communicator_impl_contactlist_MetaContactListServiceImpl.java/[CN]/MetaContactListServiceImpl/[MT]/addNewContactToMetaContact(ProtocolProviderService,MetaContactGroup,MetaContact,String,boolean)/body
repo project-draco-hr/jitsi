@@ -15,17 +15,18 @@
   opSetPersPresence.addSubscriptionListener(evtRetriever);
   opSetPersPresence.addServerStoredGroupChangeListener(evtRetriever);
   try {
-    opSetPersPresence.subscribe(parentProtoGroup,contactID);
+    if (parentMetaGroup.equals(rootMetaGroup))     opSetPersPresence.subscribe(contactID);
+ else     opSetPersPresence.subscribe(parentProtoGroup,contactID);
     evtRetriever.waitForEvent(CONTACT_LIST_MODIFICATION_TIMEOUT);
   }
  catch (  OperationFailedException ex) {
     if (ex.getErrorCode() == OperationFailedException.SUBSCRIPTION_ALREADY_EXISTS) {
-      throw new MetaContactListException("failed to create contact" + contactID,ex,MetaContactListException.CODE_CONTACT_ALREADY_EXISTS_ERROR);
+      throw new MetaContactListException("failed to create contact " + contactID,ex,MetaContactListException.CODE_CONTACT_ALREADY_EXISTS_ERROR);
     }
-    throw new MetaContactListException("failed to create contact" + contactID,ex,MetaContactListException.CODE_NETWORK_ERROR);
+    throw new MetaContactListException("failed to create contact " + contactID,ex,MetaContactListException.CODE_NETWORK_ERROR);
   }
 catch (  Exception ex) {
-    throw new MetaContactListException("failed to create contact" + contactID,ex,MetaContactListException.CODE_NETWORK_ERROR);
+    throw new MetaContactListException("failed to create contact " + contactID,ex,MetaContactListException.CODE_NETWORK_ERROR);
   }
  finally {
     removeContactFromEventIgnoreList(contactID,provider);
