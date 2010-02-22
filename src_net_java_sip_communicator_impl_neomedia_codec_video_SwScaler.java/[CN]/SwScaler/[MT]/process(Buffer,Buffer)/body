@@ -1,0 +1,42 @@
+{
+  VideoFormat vinput=(VideoFormat)input.getFormat();
+  VideoFormat voutput=(VideoFormat)output.getFormat();
+  int inputWidth=(int)vinput.getSize().getWidth();
+  int inputHeight=(int)vinput.getSize().getHeight();
+  int outputWidth=(int)voutput.getSize().getWidth();
+  int outputHeight=(int)voutput.getSize().getHeight();
+  byte src[]=(byte[])input.getData();
+  byte dst[]=(byte[])output.getData();
+  int outputSize=0;
+  int infmt=0;
+  int outfmt=0;
+  if (!checkInputBuffer(input)) {
+    return BUFFER_PROCESSED_FAILED;
+  }
+  if (isEOM(input)) {
+    propagateEOM(output);
+    return BUFFER_PROCESSED_OK;
+  }
+  if (voutput instanceof YUVFormat) {
+    outputSize=(int)(outputWidth * outputHeight * 1.5);
+    outfmt=FFMPEG.PIX_FMT_YUV420P;
+  }
+ else {
+    outputSize=(outputWidth * outputHeight * 4);
+    outfmt=FFMPEG.PIX_FMT_RGBA;
+  }
+  if (vinput instanceof YUVFormat) {
+    infmt=FFMPEG.PIX_FMT_YUV420P;
+  }
+ else {
+    infmt=FFMPEG.PIX_FMT_RGBA;
+  }
+  if (dst == null || dst.length < outputSize) {
+    dst=new byte[outputSize];
+  }
+  FFMPEG.img_convert(dst,outfmt,src,infmt,inputWidth,inputHeight,outputWidth,outputHeight);
+  output.setData(dst);
+  output.setLength(dst.length);
+  output.setOffset(0);
+  return BUFFER_PROCESSED_OK;
+}
