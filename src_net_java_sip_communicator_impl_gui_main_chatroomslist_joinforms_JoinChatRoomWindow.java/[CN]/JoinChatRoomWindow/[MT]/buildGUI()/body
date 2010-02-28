@@ -1,0 +1,80 @@
+{
+  String title=GuiActivator.getResources().getI18NString("service.gui.JOIN_CHAT_ROOM_TITLE");
+  this.setLayout(new BorderLayout());
+  this.setTitle(title);
+  jcb_chatRoomProviders=new JComboBox(providerNames);
+  jcb_chatRoomProviders.setRenderer(new ComboBoxRenderer());
+  jcb_roomName.setEditable(true);
+  jcb_roomName.setPreferredSize(jcb_chatRoomProviders.getPreferredSize());
+  JPanel jp_buttons=new TransparentPanel(new FlowLayout(FlowLayout.RIGHT));
+  final JButton jb_join=new JButton(GuiActivator.getResources().getI18NString("service.gui.JOIN"));
+  JButton jb_back=new JButton(GuiActivator.getResources().getI18NString("service.gui.CANCEL"));
+  jp_buttons.add(jb_back);
+  jp_buttons.add(jb_join);
+  jb_back.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      dispose();
+    }
+  }
+);
+  jb_join.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(editor.getText(),getSelectedProvider());
+      dispose();
+    }
+  }
+);
+  editor=((JTextField)jcb_roomName.getEditor().getEditorComponent());
+  editor.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      handleChange();
+    }
+  }
+);
+  jcb_chatRoomProviders.addItemListener(new ItemListener(){
+    public void itemStateChanged(    ItemEvent e){
+      if (e.getStateChange() == ItemEvent.SELECTED)       new Thread(){
+        public void run(){
+          jb_join.setEnabled(false);
+          jcb_roomName.setEnabled(false);
+          jl_searchState.setVisible(true);
+          loadProviderRooms();
+          jl_searchState.setVisible(false);
+          jcb_roomName.setEnabled(true);
+          jb_join.setEnabled(true);
+        }
+      }
+.start();
+    }
+  }
+);
+  JPanel jp_formFields=new TransparentPanel();
+  JPanel jp_accountField=new TransparentPanel(new FlowLayout(FlowLayout.RIGHT));
+  JPanel jp_roomField=new TransparentPanel(new FlowLayout(FlowLayout.RIGHT));
+  JPanel jp_indication=new TransparentPanel(new FlowLayout(FlowLayout.RIGHT));
+  jp_formFields.setLayout(new BoxLayout(jp_formFields,BoxLayout.Y_AXIS));
+  jp_accountField.setBorder(BorderFactory.createEmptyBorder(7,7,7,7));
+  jp_roomField.setBorder(BorderFactory.createEmptyBorder(0,7,0,7));
+  jp_accountField.add(new JLabel(GuiActivator.getResources().getI18NString("service.gui.ACCOUNT") + ": "));
+  jp_accountField.add(jcb_chatRoomProviders);
+  jp_roomField.add(new JLabel(GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_NAME") + ": "));
+  jp_roomField.add(jcb_roomName);
+  jl_searchState.setBorder(BorderFactory.createEmptyBorder(3,7,0,0));
+  jl_searchState.setFont(jl_searchState.getFont().deriveFont(Font.ITALIC,11));
+  jl_searchState.setForeground(Color.DARK_GRAY);
+  jl_searchState.setVisible(false);
+  JLabel jl_indication=new JLabel(GuiActivator.getResources().getI18NString("service.gui.PRESS_ENTER_FOR_SUGGESTIONS"));
+  jl_indication.setFont(jl_searchState.getFont());
+  jl_indication.setForeground(jl_searchState.getForeground());
+  jl_indication.setBorder(BorderFactory.createEmptyBorder(0,0,7,8));
+  jp_indication.add(jl_indication);
+  jp_formFields.add(jl_searchState);
+  jp_formFields.add(jp_accountField);
+  jp_formFields.add(jp_roomField);
+  jp_formFields.add(jp_indication);
+  this.add(jp_formFields,BorderLayout.CENTER);
+  this.add(jp_buttons,BorderLayout.SOUTH);
+  this.setSize(new Dimension(415,190));
+  this.setResizable(false);
+  this.setLocationRelativeTo(null);
+}
