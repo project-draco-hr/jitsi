@@ -1,12 +1,22 @@
 {
   MediaStream stream=null;
+  Dimension size=null;
   if (device.getMediaType() == MediaType.AUDIO)   stream=this.audioStream;
- else   stream=this.videoStream;
+ else {
+    stream=this.videoStream;
+    Dimension deviceSize=((VideoMediaFormat)device.getFormat()).getSize();
+    if ((deviceSize != null && maxRecvSize != null) && (maxRecvSize.width > 0 && maxRecvSize.height > 0) && (deviceSize.width > maxRecvSize.width || deviceSize.height > maxRecvSize.height)) {
+      size=maxRecvSize;
+    }
+  }
   if (stream == null) {
     ZrtpControl control=zrtpControls.get(format.getMediaType());
     MediaService mediaService=SipActivator.getMediaService();
     if (control == null)     stream=mediaService.createMediaStream(connector,device);
  else     stream=mediaService.createMediaStream(connector,device,control);
+    if (device.getMediaType() == MediaType.VIDEO) {
+      ((VideoMediaStream)stream).setOutputSize(size);
+    }
   }
  else {
   }
