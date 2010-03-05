@@ -2,18 +2,12 @@
   Response optionsOK=null;
   try {
     optionsOK=provider.getMessageFactory().createResponse(Response.OK,requestEvent.getRequest());
-    Iterator<String> supportedMethods=provider.getSupportedMethods().iterator();
-    while (supportedMethods.hasNext()) {
-      String method=supportedMethods.next();
-      if (method.equals(Request.REGISTER))       continue;
-      optionsOK.addHeader(provider.getHeaderFactory().createAllowHeader(method));
+    for (    String method : provider.getSupportedMethods()) {
+      if (!method.equals(Request.REGISTER))       optionsOK.addHeader(provider.getHeaderFactory().createAllowHeader(method));
     }
-    Iterator<String> events=provider.getKnownEventsList().iterator();
-synchronized (provider.getKnownEventsList()) {
-      while (events.hasNext()) {
-        String event=events.next();
-        optionsOK.addHeader(provider.getHeaderFactory().createAllowEventsHeader(event));
-      }
+    Iterable<String> knownEventsList=provider.getKnownEventsList();
+synchronized (knownEventsList) {
+      for (      String event : knownEventsList)       optionsOK.addHeader(provider.getHeaderFactory().createAllowEventsHeader(event));
     }
   }
  catch (  ParseException ex) {
