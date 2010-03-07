@@ -1,0 +1,39 @@
+{
+  JButton button=(JButton)e.getSource();
+  if (button.equals(addButton)) {
+    if (metaContact != null) {
+      new Thread(){
+        public void run(){
+          GuiActivator.getContactListService().addNewContactToMetaContact((ProtocolProviderService)accountCombo.getSelectedItem(),metaContact,contactAddressField.getText());
+        }
+      }
+.start();
+    }
+ else {
+      final String contactName=contactAddressField.getText();
+      new Thread(){
+        public void run(){
+          try {
+            GuiActivator.getContactListService().createMetaContact((ProtocolProviderService)accountCombo.getSelectedItem(),(MetaContactGroup)groupCombo.getSelectedItem(),contactName);
+          }
+ catch (          MetaContactListException ex) {
+            logger.error(ex);
+            ex.printStackTrace();
+            int errorCode=ex.getErrorCode();
+            if (errorCode == MetaContactListException.CODE_CONTACT_ALREADY_EXISTS_ERROR) {
+              new ErrorDialog(mainFrame,GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_ERROR_TITLE"),GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_EXIST_ERROR",new String[]{contactName}),ex).showDialog();
+            }
+ else             if (errorCode == MetaContactListException.CODE_NETWORK_ERROR) {
+              new ErrorDialog(mainFrame,GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_ERROR_TITLE"),GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_NETWORK_ERROR",new String[]{contactName}),ex).showDialog();
+            }
+ else {
+              new ErrorDialog(mainFrame,GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_ERROR_TITLE"),GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_ERROR",new String[]{contactName}),ex).showDialog();
+            }
+          }
+        }
+      }
+.start();
+    }
+  }
+  dispose();
+}
