@@ -1,0 +1,40 @@
+{
+  super.playerConfigureComplete(player);
+  TrackControl[] trackControls=player.getTrackControls();
+  SwScaler playerScaler=null;
+  if ((trackControls != null) && (trackControls.length != 0)) {
+    try {
+      for (      TrackControl trackControl : trackControls) {
+        playerScaler=new SwScaler(){
+          /** 
+ * The last size reported in the form of a
+ * SizeChangeEvent.
+ */
+          private Dimension lastSize;
+          @Override public int process(          Buffer input,          Buffer output){
+            int result=super.process(input,output);
+            if (result == BUFFER_PROCESSED_OK) {
+              Format inputFormat=input.getFormat();
+              if (inputFormat != null) {
+                Dimension inputSize=((VideoFormat)inputFormat).getSize();
+                if ((inputSize != null) && ((lastSize == null) || !lastSize.equals(inputSize))) {
+                  lastSize=inputSize;
+                  playerSizeChange(player,lastSize.width,lastSize.height);
+                }
+              }
+            }
+            return result;
+          }
+        }
+;
+        trackControl.setCodecChain(new Codec[]{playerScaler});
+        break;
+      }
+    }
+ catch (    UnsupportedPlugInException upiex) {
+      logger.error("Failed to add SwScaler to codec chain",upiex);
+      playerScaler=null;
+    }
+  }
+  this.playerScaler=playerScaler;
+}

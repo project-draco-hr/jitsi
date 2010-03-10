@@ -22,20 +22,6 @@ case AUDIO:
     break;
 case VIDEO:
   if (supportedFormats[0] instanceof VideoFormat) {
-    VideoFormat tmp=(VideoFormat)format;
-    Dimension size=tmp.getSize();
-    if (size != null) {
-      Codec ar[]=new Codec[1];
-      SwScaler scaler=new SwScaler();
-      scaler.setOutputSize(size);
-      ar[0]=scaler;
-      try {
-        trackControl.setCodecChain(ar);
-      }
- catch (      Exception e) {
-        System.out.println("Error setCodecChain: " + e);
-      }
-    }
     supportedFormat=findFirstMatchingFormat(supportedFormats,format);
     if (supportedFormat == null)     supportedFormat=format;
     if (supportedFormat != null)     supportedFormat=assertSize((VideoFormat)supportedFormat);
@@ -44,7 +30,7 @@ break;
 }
 if (supportedFormat == null) trackControl.setEnabled(false);
  else if (!supportedFormat.equals(trackControl.getFormat())) {
-Format setFormat=trackControl.setFormat(supportedFormat);
+Format setFormat=setProcessorFormat(trackControl,supportedFormat);
 if (setFormat == null) logger.error("Failed to set format of track " + trackIndex + " to "+ supportedFormat+ ". Processor is in state "+ processor.getState());
  else if (setFormat != supportedFormat) logger.warn("Failed to change format of track " + trackIndex + " from "+ setFormat+ " to "+ supportedFormat+ ". Processor is in state "+ processor.getState());
  else if (logger.isTraceEnabled()) logger.trace("Set format of track " + trackIndex + " to "+ setFormat);
