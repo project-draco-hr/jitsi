@@ -9,6 +9,14 @@
   supportedOutputFormats[6]=new RGBFormat(size,-1,Format.byteArray,-1.0f,24,-1,-1,-1);
   supportedOutputFormats[7]=new RGBFormat(size,-1,Format.intArray,-1.0f,24,-1,-1,-1);
   supportedOutputFormats[8]=new RGBFormat(size,-1,Format.shortArray,-1.0f,24,-1,-1,-1);
-  VideoFormat outputFormat=(VideoFormat)this.outputFormat;
-  if (outputFormat != null)   setOutputFormat(new VideoFormat(outputFormat.getEncoding(),size,outputFormat.getMaxDataLength(),outputFormat.getDataType(),outputFormat.getFrameRate()).intersects(outputFormat));
+  VideoFormat outputFormat=(VideoFormat)getOutputFormat();
+  if (outputFormat instanceof RGBFormat) {
+    RGBFormat rgbOutputFormat=(RGBFormat)outputFormat;
+    setOutputFormat(new RGBFormat(size,Format.NOT_SPECIFIED,outputFormat.getDataType(),outputFormat.getFrameRate(),rgbOutputFormat.getBitsPerPixel(),rgbOutputFormat.getRedMask(),rgbOutputFormat.getGreenMask(),rgbOutputFormat.getBlueMask(),rgbOutputFormat.getPixelStride(),size.width,rgbOutputFormat.getFlipped(),rgbOutputFormat.getEndian()));
+  }
+ else   if (outputFormat instanceof YUVFormat) {
+    YUVFormat yuvOutputFormat=(YUVFormat)outputFormat;
+    setOutputFormat(new YUVFormat(size,Format.NOT_SPECIFIED,outputFormat.getDataType(),outputFormat.getFrameRate(),yuvOutputFormat.getYuvType(),Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,0,Format.NOT_SPECIFIED,Format.NOT_SPECIFIED));
+  }
+ else   if (outputFormat != null)   logger.warn("SwScaler outputFormat of type " + outputFormat.getClass().getSimpleName() + " is not supported for optimized scaling.");
 }
