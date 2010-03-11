@@ -12,7 +12,11 @@
   VideoFormat outputFormat=(VideoFormat)getOutputFormat();
   if (outputFormat instanceof RGBFormat) {
     RGBFormat rgbOutputFormat=(RGBFormat)outputFormat;
-    setOutputFormat(new RGBFormat(size,Format.NOT_SPECIFIED,outputFormat.getDataType(),outputFormat.getFrameRate(),rgbOutputFormat.getBitsPerPixel(),rgbOutputFormat.getRedMask(),rgbOutputFormat.getGreenMask(),rgbOutputFormat.getBlueMask(),rgbOutputFormat.getPixelStride(),size.width,rgbOutputFormat.getFlipped(),rgbOutputFormat.getEndian()));
+    Class<?> dataType=outputFormat.getDataType();
+    int bitsPerPixel=rgbOutputFormat.getBitsPerPixel();
+    int pixelStride=rgbOutputFormat.getPixelStride();
+    if ((pixelStride == Format.NOT_SPECIFIED) && (dataType != null) && (bitsPerPixel != Format.NOT_SPECIFIED))     pixelStride=dataType.equals(Format.byteArray) ? (bitsPerPixel / 8) : 1;
+    setOutputFormat(new RGBFormat(size,Format.NOT_SPECIFIED,dataType,outputFormat.getFrameRate(),bitsPerPixel,rgbOutputFormat.getRedMask(),rgbOutputFormat.getGreenMask(),rgbOutputFormat.getBlueMask(),pixelStride,(pixelStride == Format.NOT_SPECIFIED) ? Format.NOT_SPECIFIED : (pixelStride * size.width),rgbOutputFormat.getFlipped(),rgbOutputFormat.getEndian()));
   }
  else   if (outputFormat instanceof YUVFormat) {
     YUVFormat yuvOutputFormat=(YUVFormat)outputFormat;
