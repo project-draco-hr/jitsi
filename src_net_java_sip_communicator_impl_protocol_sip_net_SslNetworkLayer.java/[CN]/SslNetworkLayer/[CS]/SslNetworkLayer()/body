@@ -1,0 +1,26 @@
+{
+  SipActivator.getBundleContext().addServiceListener(this);
+  ServiceReference guiVerifyReference=SipActivator.getBundleContext().getServiceReference(CertificateVerificationService.class.getName());
+  if (guiVerifyReference != null)   guiVerification=(CertificateVerificationService)SipActivator.getBundleContext().getService(guiVerifyReference);
+  keyStore=KeyStore.getInstance(KeyStore.getDefaultType());
+  keyStore.load(null,defaultPassword);
+  try {
+    String keyStoreFile=SipActivator.getConfigurationService().getString(KEYSTORE_FILE_PROP);
+    if (keyStoreFile == null || keyStoreFile.length() == 0) {
+      File f=SipActivator.getFileAccessService().getPrivatePersistentFile("jssecacerts");
+      keyStoreFile=f.getCanonicalPath();
+      SipActivator.getConfigurationService().setProperty(KEYSTORE_FILE_PROP,keyStoreFile);
+      keyStore.store(new FileOutputStream(f),defaultPassword);
+    }
+ else {
+      File f=new File(keyStoreFile);
+      if (!f.exists()) {
+        keyStore.store(new FileOutputStream(f),defaultPassword);
+      }
+      keyStore.load(new FileInputStream(keyStoreFile),null);
+    }
+  }
+ catch (  Exception e) {
+    logger.error("Cannot init keystore file.",e);
+  }
+}

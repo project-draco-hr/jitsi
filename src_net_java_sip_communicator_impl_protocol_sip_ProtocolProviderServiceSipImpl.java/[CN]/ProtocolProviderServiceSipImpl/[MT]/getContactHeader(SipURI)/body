@@ -9,9 +9,11 @@
     contactURI.setTransportParam(transport);
     int localPort=srcListeningPoint.getPort();
     if (ListeningPoint.TCP.equalsIgnoreCase(transport)) {
+      InetAddress intendedDestinationAddress=NetworkUtils.getInetAddress(intendedDestination.getHost());
       int dstPort=intendedDestination.getPort();
+      if (!targetAddress.equals(intendedDestinationAddress) && getOutboundProxy() != null)       dstPort=getOutboundProxy().getPort();
       if (dstPort == -1)       dstPort=5060;
-      InetSocketAddress localSockAddr=sipStackSharing.obtainLocalAddress(NetworkUtils.getInetAddress(intendedDestination.getHost()),dstPort,localAddress);
+      InetSocketAddress localSockAddr=sipStackSharing.obtainLocalAddress(targetAddress,dstPort,localAddress);
       localPort=localSockAddr.getPort();
     }
     contactURI.setPort(localPort);
