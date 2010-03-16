@@ -11,14 +11,16 @@ catch (    IOException e) {
       if (logger.isDebugEnabled())       logger.debug("Failed to drop meta contact.",e);
     }
     if (o instanceof ContactNode) {
-      Iterator<Contact> contacts=((ContactNode)o).getMetaContact().getContactsForProvider(call.getProtocolProvider());
+      MetaContact metaContact=((ContactNode)o).getMetaContact();
+      ProtocolProviderService callProvider=call.getProtocolProvider();
+      Iterator<Contact> contacts=metaContact.getContactsForProvider(callProvider);
       String callee=null;
       if (contacts.hasNext())       callee=contacts.next().getAddress();
       if (callee != null) {
         CallManager.inviteToConferenceCall(new String[]{callee},call);
         return true;
       }
- else       new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.CONTACT_NOT_SUPPORTING_TELEPHONY",new String[]{callee})).showDialog();
+ else       new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.CALL_NOT_SUPPORTING_PARTICIPANT",new String[]{callProvider.getAccountID().getService(),callProvider.getAccountID().getUserID(),metaContact.getDisplayName()})).showDialog();
     }
   }
  else   if (t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
