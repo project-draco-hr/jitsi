@@ -28,8 +28,8 @@
     setState(CallPeerState.DISCONNECTED);
     ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to create a content type header for the OK response",OperationFailedException.INTERNAL_ERROR,ex,logger);
   }
+  String sdpOffer=null;
   try {
-    String sdpOffer=null;
     ContentLengthHeader cl=invite.getContentLength();
     if (cl != null && cl.getContentLength() > 0) {
       sdpOffer=SdpUtils.getContentAsString(invite);
@@ -56,4 +56,6 @@
     ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to send an OK response to an INVITE request",OperationFailedException.NETWORK_FAILURE,ex,logger);
   }
   fireRequestProcessed(invite,ok);
+  if (sdpOffer != null && sdpOffer.length() > 0)   setState(CallPeerState.CONNECTING_INCOMING_CALL_WITH_MEDIA);
+ else   setState(CallPeerState.CONNECTING_INCOMING_CALL);
 }
