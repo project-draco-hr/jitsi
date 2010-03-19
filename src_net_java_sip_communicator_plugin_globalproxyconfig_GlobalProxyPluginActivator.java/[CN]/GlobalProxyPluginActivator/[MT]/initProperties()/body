@@ -1,0 +1,37 @@
+{
+  String globalProxyType=getConfigurationService().getString(ProxyInfo.CONNECTON_PROXY_TYPE_PROPERTY_NAME);
+  if (globalProxyType != null && !globalProxyType.equals(ProxyInfo.ProxyType.NONE.name())) {
+    String globalProxyAddress=getConfigurationService().getString(ProxyInfo.CONNECTON_PROXY_ADDRESS_PROPERTY_NAME);
+    String globalProxyPortStr=getConfigurationService().getString(ProxyInfo.CONNECTON_PROXY_PORT_PROPERTY_NAME);
+    int globalProxyPort=-1;
+    try {
+      globalProxyPort=Integer.parseInt(globalProxyPortStr);
+    }
+ catch (    NumberFormatException ex) {
+    }
+    String globalProxyUsername=getConfigurationService().getString(ProxyInfo.CONNECTON_PROXY_USERNAME_PROPERTY_NAME);
+    String globalProxyPassword=getConfigurationService().getString(ProxyInfo.CONNECTON_PROXY_PASSWORD_PROPERTY_NAME);
+    if (globalProxyAddress == null || globalProxyAddress.length() <= 0) {
+      return;
+    }
+    String type=null;
+    if (globalProxyType.equals(ProxyInfo.ProxyType.HTTP.name())) {
+      type="HTTP";
+      System.setProperty("http.proxyHost",globalProxyAddress);
+      if (globalProxyPortStr != null) {
+        System.setProperty("http.proxyPort",globalProxyPortStr);
+      }
+      System.setProperty("proxySet","true");
+    }
+ else     if (globalProxyType.equals(ProxyInfo.ProxyType.SOCKS4.name()) || globalProxyType.equals(ProxyInfo.ProxyType.SOCKS5.name())) {
+      type="SOCKS";
+      System.setProperty("socksProxyHost",globalProxyAddress);
+      if (globalProxyPortStr != null) {
+        System.setProperty("socksProxyPort",globalProxyPortStr);
+      }
+      System.setProperty("socksProxySet","true");
+    }
+    Authenticator.setDefault(new AuthenticatorImpl(globalProxyAddress,globalProxyPort,type,globalProxyUsername,globalProxyPassword));
+  }
+ else   Authenticator.setDefault(null);
+}

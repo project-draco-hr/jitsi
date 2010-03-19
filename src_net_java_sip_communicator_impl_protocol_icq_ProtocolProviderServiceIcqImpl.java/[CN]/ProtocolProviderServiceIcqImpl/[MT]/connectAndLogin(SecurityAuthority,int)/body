@@ -26,7 +26,7 @@ synchronized (initializationLock) {
     session=new DefaultAppSession();
     aimSession=session.openAimSession(new Screenname(getAccountID().getUserID()));
     String globalProxyType=IcqActivator.getConfigurationService().getString(ProxyInfo.CONNECTON_PROXY_TYPE_PROPERTY_NAME);
-    if (globalProxyType != null && !globalProxyType.equals(ProxyInfo.ProxyType.NONE.name())) {
+    if (globalProxyType != null && globalProxyType.equals(ProxyInfo.ProxyType.HTTP.name())) {
       String globalProxyAddress=IcqActivator.getConfigurationService().getString(ProxyInfo.CONNECTON_PROXY_ADDRESS_PROPERTY_NAME);
       String globalProxyPortStr=IcqActivator.getConfigurationService().getString(ProxyInfo.CONNECTON_PROXY_PORT_PROPERTY_NAME);
       int proxyPort;
@@ -41,22 +41,11 @@ synchronized (initializationLock) {
       if (globalProxyAddress == null || globalProxyAddress.length() <= 0) {
         throw new OperationFailedException("Missing Proxy Address",OperationFailedException.INVALID_ACCOUNT_PROPERTIES);
       }
-      if (globalProxyType.equals(ProxyInfo.ProxyType.HTTP.name())) {
-        AimConnectionProperties connProps=new AimConnectionProperties(new Screenname(getAccountID().getUserID()),password);
-        connProps.setLoginHost("login.icq.com");
-        connProps.setLoginPort(443);
-        aimConnection=aimSession.openConnection(connProps);
-        aimConnection.setProxy(AimProxyInfo.forHttp(globalProxyAddress,proxyPort,globalProxyUsername,globalProxyPassword));
-      }
- else {
-        aimConnection=aimSession.openConnection(new AimConnectionProperties(new Screenname(getAccountID().getUserID()),password));
-        if (globalProxyType.equals(ProxyInfo.ProxyType.SOCKS4.name())) {
-          aimConnection.setProxy(AimProxyInfo.forSocks4(globalProxyAddress,proxyPort,globalProxyUsername));
-        }
- else         if (globalProxyType.equals(ProxyInfo.ProxyType.SOCKS5.name())) {
-          aimConnection.setProxy(AimProxyInfo.forSocks5(globalProxyAddress,proxyPort,globalProxyUsername,globalProxyPassword));
-        }
-      }
+      AimConnectionProperties connProps=new AimConnectionProperties(new Screenname(getAccountID().getUserID()),password);
+      connProps.setLoginHost("login.icq.com");
+      connProps.setLoginPort(443);
+      aimConnection=aimSession.openConnection(connProps);
+      aimConnection.setProxy(AimProxyInfo.forHttp(globalProxyAddress,proxyPort,globalProxyUsername,globalProxyPassword));
     }
  else {
       aimConnection=aimSession.openConnection(new AimConnectionProperties(new Screenname(getAccountID().getUserID()),password));
