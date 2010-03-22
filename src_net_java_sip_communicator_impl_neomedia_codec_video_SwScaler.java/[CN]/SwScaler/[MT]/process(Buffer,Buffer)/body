@@ -4,6 +4,16 @@
     propagateEOM(output);
     return BUFFER_PROCESSED_OK;
   }
+  if (input.isDiscard() || frameProcessingControl.isMinimalProcessing()) {
+    output.setDiscard(true);
+    return BUFFER_PROCESSED_OK;
+  }
+  VideoFormat inputFormat=(VideoFormat)input.getFormat();
+  Format thisInputFormat=getInputFormat();
+  if ((inputFormat != thisInputFormat) && !inputFormat.equals(thisInputFormat))   setInputFormat(inputFormat);
+  int srcFmt;
+  if (inputFormat instanceof YUVFormat)   srcFmt=FFMPEG.PIX_FMT_YUV420P;
+ else   srcFmt=getNativeRGBFormat((RGBFormat)inputFormat);
   VideoFormat outputFormat=(VideoFormat)getOutputFormat();
   if (outputFormat == null) {
     outputFormat=(VideoFormat)output.getFormat();
@@ -22,10 +32,6 @@
     dstFmt=FFMPEG.PIX_FMT_RGB32;
     dstLength=(outputWidth * outputHeight * 4);
   }
-  VideoFormat inputFormat=(VideoFormat)input.getFormat();
-  int srcFmt;
-  if (inputFormat instanceof YUVFormat)   srcFmt=FFMPEG.PIX_FMT_YUV420P;
- else   srcFmt=getNativeRGBFormat((RGBFormat)inputFormat);
   Class<?> outputDataType=outputFormat.getDataType();
   Object dst=output.getData();
   if (Format.byteArray.equals(outputDataType)) {
@@ -49,8 +55,12 @@ synchronized (src) {
     FFMPEG.img_convert(dst,dstFmt,src,srcFmt,inputSize.width,inputSize.height,outputWidth,outputHeight);
   }
   output.setData(dst);
+  output.setDuration(input.getDuration());
+  output.setFlags(input.getFlags());
   output.setFormat(outputFormat);
   output.setLength(dstLength);
   output.setOffset(0);
+  output.setSequenceNumber(input.getSequenceNumber());
+  output.setTimeStamp(input.getTimeStamp());
   return BUFFER_PROCESSED_OK;
 }
