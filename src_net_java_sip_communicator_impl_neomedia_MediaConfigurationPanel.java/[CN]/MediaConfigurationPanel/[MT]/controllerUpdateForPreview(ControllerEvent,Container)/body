@@ -1,7 +1,29 @@
 {
-  if (event instanceof RealizeCompleteEvent) {
+  if (event instanceof ConfigureCompleteEvent) {
+    Processor player=(Processor)event.getSourceController();
+    TrackControl[] trackControls=player.getTrackControls();
+    if ((trackControls != null) && (trackControls.length != 0))     try {
+      for (      TrackControl trackControl : trackControls) {
+        SwScaler playerScaler=new SwScaler();
+        trackControl.setCodecChain(new Codec[]{playerScaler});
+        break;
+      }
+    }
+ catch (    UnsupportedPlugInException upiex) {
+      logger.warn("Failed to add SwScaler to codec chain",upiex);
+    }
+    try {
+      player.setContentDescriptor(null);
+    }
+ catch (    NotConfiguredError nce) {
+      logger.error("Failed to set ContentDescriptor of Processor",nce);
+    }
+    player.realize();
+  }
+ else   if (event instanceof RealizeCompleteEvent) {
     Player player=(Player)event.getSourceController();
     Component video=player.getVisualComponent();
     showPreview(videoContainer,video,player);
+    player.start();
   }
 }
