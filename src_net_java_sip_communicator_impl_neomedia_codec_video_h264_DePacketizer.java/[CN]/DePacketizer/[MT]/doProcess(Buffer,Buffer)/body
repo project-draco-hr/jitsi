@@ -1,0 +1,61 @@
+{
+  if (waitingForMarker) {
+    lastSequenceNumber=inputBuffer.getSequenceNumber();
+    if ((inputBuffer.getFlags() & Buffer.FLAG_RTP_MARKER) != 0) {
+      waitingForMarker=false;
+      discardOutputBuffer(outputBuffer);
+      return BUFFER_PROCESSED_OK;
+    }
+ else     return OUTPUT_BUFFER_NOT_FILLED;
+  }
+  long inputSequenceNumber=inputBuffer.getSequenceNumber();
+  if ((lastSequenceNumber != -1) && (inputSequenceNumber - lastSequenceNumber > 1)) {
+    if (logger.isTraceEnabled())     logger.trace("Dropping RTP data! " + lastSequenceNumber + "/"+ inputSequenceNumber);
+    lastSequenceNumber=inputSequenceNumber;
+    waitingForMarker=true;
+    outputBuffer.setLength(0);
+    return OUTPUT_BUFFER_NOT_FILLED;
+  }
+ else   lastSequenceNumber=inputSequenceNumber;
+  long timeStamp=inputBuffer.getTimeStamp();
+  if ((timeStamp != lastTimeStamp) || lastHasMarker)   outputBuffer.setLength(0);
+  lastTimeStamp=timeStamp;
+  byte[] input=(byte[])inputBuffer.getData();
+  int inputOffset=inputBuffer.getOffset();
+  byte fByte=input[inputOffset];
+  int nri=(fByte & 0x60) >> 5;
+  if (nri == 0)   return OUTPUT_BUFFER_NOT_FILLED;
+  int type=fByte & 0x1f;
+  try {
+    if ((type >= 1) && (type <= 23)) {
+      int outputOffset=outputBuffer.getOffset();
+      int outputLength=outputBuffer.getLength();
+      int inputLength=inputBuffer.getLength();
+      int newOutputLength=outputLength + NAL_START_SEQUENCE.length + inputLength;
+      byte[] output=validateByteArraySize(outputBuffer,outputOffset + newOutputLength + outputPaddingSize);
+      outputOffset+=outputLength;
+      System.arraycopy(NAL_START_SEQUENCE,0,output,outputOffset,NAL_START_SEQUENCE.length);
+      outputOffset+=NAL_START_SEQUENCE.length;
+      System.arraycopy(input,inputOffset,output,outputOffset,inputLength);
+      outputOffset+=inputLength;
+      padOutput(output,outputOffset);
+      outputBuffer.setLength(newOutputLength);
+    }
+ else     if (type == 28) {
+      deencapsulateFU(input,inputOffset,inputBuffer.getLength(),outputBuffer);
+    }
+ else {
+      logger.warn("Skipping unsupported NAL unit type");
+      return OUTPUT_BUFFER_NOT_FILLED;
+    }
+  }
+ catch (  Exception ex) {
+    logger.warn("Cannot parse incoming packet",ex);
+    outputBuffer.setLength(0);
+    return OUTPUT_BUFFER_NOT_FILLED;
+  }
+  outputBuffer.setTimeStamp(timeStamp);
+  boolean hasMarker=(inputBuffer.getFlags() & Buffer.FLAG_RTP_MARKER) != 0;
+  lastHasMarker=hasMarker;
+  return hasMarker ? BUFFER_PROCESSED_OK : OUTPUT_BUFFER_NOT_FILLED;
+}

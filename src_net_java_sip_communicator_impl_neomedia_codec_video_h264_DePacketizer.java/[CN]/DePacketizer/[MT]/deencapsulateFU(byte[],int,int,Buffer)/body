@@ -1,0 +1,29 @@
+{
+  byte fu_indicator=input[inputOffset];
+  inputOffset++;
+  inputLength--;
+  byte fu_header=input[inputOffset];
+  boolean start_bit=(fu_header >> 7) != 0;
+  int nal_type=(fu_header & 0x1f);
+  byte reconstructed_nal;
+  reconstructed_nal=(byte)(fu_indicator & (byte)0xe0);
+  reconstructed_nal|=nal_type;
+  inputOffset++;
+  inputLength--;
+  int outputOffset=outputBuffer.getOffset();
+  int outputLength=outputBuffer.getLength();
+  int newOutputLength=outputLength + inputLength;
+  if (start_bit)   newOutputLength+=NAL_START_SEQUENCE.length + 1;
+  byte[] output=validateByteArraySize(outputBuffer,outputOffset + newOutputLength + outputPaddingSize);
+  outputOffset+=outputLength;
+  if (start_bit) {
+    System.arraycopy(NAL_START_SEQUENCE,0,output,outputOffset,NAL_START_SEQUENCE.length);
+    outputOffset+=NAL_START_SEQUENCE.length;
+    output[outputOffset]=reconstructed_nal;
+    outputOffset++;
+  }
+  System.arraycopy(input,inputOffset,output,outputOffset,inputLength);
+  outputOffset+=inputLength;
+  padOutput(output,outputOffset);
+  outputBuffer.setLength(newOutputLength);
+}
