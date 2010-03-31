@@ -66,8 +66,40 @@ synchronized (initializationLock) {
         }
         ConnectionConfiguration confConn=new ConnectionConfiguration(serverAddress,Integer.parseInt(serverPort),serviceName,proxy);
         confConn.setReconnectionAllowed(false);
+        confConn.setExpiredCertificatesCheckEnabled(additionalCertificateChecks);
+        confConn.setNotMatchingDomainCheckEnabled(additionalCertificateChecks);
+        TrustManagerFactory tmFactory=null;
+        try {
+          keyStore=KeyStore.getInstance(KeyStore.getDefaultType());
+          keyStore.load(null,defaultPassword);
+          String keyStoreFile=JabberActivator.getConfigurationService().getString(KEYSTORE_FILE_PROP);
+          if (keyStoreFile == null || keyStoreFile.length() == 0) {
+            File f=JabberActivator.getFileAccessService().getPrivatePersistentFile("jssecacerts");
+            keyStoreFile=f.getCanonicalPath();
+            JabberActivator.getConfigurationService().setProperty(KEYSTORE_FILE_PROP,keyStoreFile);
+            keyStore.store(new FileOutputStream(f),defaultPassword);
+          }
+ else {
+            File f=new File(keyStoreFile);
+            if (!f.exists()) {
+              keyStore.store(new FileOutputStream(f),defaultPassword);
+            }
+            keyStore.load(new FileInputStream(keyStoreFile),null);
+          }
+          String algorithm=KeyManagerFactory.getDefaultAlgorithm();
+          tmFactory=TrustManagerFactory.getInstance(algorithm);
+          tmFactory.init(keyStore);
+          confConn.setKeystorePath(keyStoreFile);
+        }
+ catch (        Exception e) {
+          logger.error("Cannot create key store",e);
+        }
         connection=new XMPPConnection(confConn);
+        if (tmFactory != null) {
+          connection.setCustomTrustManager(new HostTrustManager((X509TrustManager)tmFactory.getTrustManagers()[0],serverAddress,Integer.parseInt(serverPort)));
+        }
         connection.connect();
+        connection.addConnectionListener(new JabberConnectionListener());
       }
  catch (      XMPPException exc) {
         if (logger.isInfoEnabled()) {
@@ -75,7 +107,17 @@ synchronized (initializationLock) {
         }
         throw new OperationFailedException("Failed to establish a Jabber connection for " + getAccountID().getAccountUniqueID(),OperationFailedException.NETWORK_FAILURE,exc);
       }
-      connection.addConnectionListener(new JabberConnectionListener());
+      if (abortConnecting) {
+        abortConnecting=false;
+        if (abortConnectingAndReconnect) {
+          abortConnectingAndReconnect=false;
+          reregister(SecurityAuthority.CONNECTION_FAILED);
+        }
+ else {
+          connection.disconnect();
+        }
+        return;
+      }
       fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERING,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
       if (accountResource == null || accountResource.equals(""))       accountResource="sip-comm";
       SASLAuthentication.supportSASLMechanism("PLAIN",0);
@@ -94,6 +136,17 @@ synchronized (initializationLock) {
           }
           connection.connect();
           connection.addConnectionListener(new JabberConnectionListener());
+          if (abortConnecting) {
+            abortConnecting=false;
+            if (abortConnectingAndReconnect) {
+              abortConnectingAndReconnect=false;
+              reregister(SecurityAuthority.CONNECTION_FAILED);
+            }
+ else {
+              connection.disconnect();
+            }
+            return;
+          }
           fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERING,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
           connection.login(userID + "@" + serviceName,password,accountResource);
         }
