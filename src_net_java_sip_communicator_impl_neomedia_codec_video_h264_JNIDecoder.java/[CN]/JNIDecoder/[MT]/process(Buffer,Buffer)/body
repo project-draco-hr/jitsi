@@ -1,18 +1,17 @@
 {
-  if (!checkInputBuffer(inputBuffer))   return BUFFER_PROCESSED_FAILED;
-  if (isEOM(inputBuffer) || !opened) {
-    propagateEOM(outputBuffer);
+  if (!checkInputBuffer(inBuffer))   return BUFFER_PROCESSED_FAILED;
+  if (isEOM(inBuffer) || !opened) {
+    propagateEOM(outBuffer);
     return BUFFER_PROCESSED_OK;
   }
-  if (inputBuffer.isDiscard()) {
-    inputBuffer.setDiscard(true);
-    reset();
+  if (inBuffer.isDiscard()) {
+    outBuffer.setDiscard(true);
     return BUFFER_PROCESSED_OK;
   }
   got_picture[0]=false;
-  FFmpeg.avcodec_decode_video(avcontext,avframe,got_picture,(byte[])inputBuffer.getData(),inputBuffer.getLength());
+  FFmpeg.avcodec_decode_video(avcontext,avframe,got_picture,(byte[])inBuffer.getData(),inBuffer.getLength());
   if (!got_picture[0]) {
-    outputBuffer.setDiscard(true);
+    outBuffer.setDiscard(true);
     return BUFFER_PROCESSED_OK;
   }
   int avctxWidth=FFmpeg.avcodeccontext_get_width(avcontext);
@@ -20,12 +19,12 @@
   if ((avctxWidth != 0) && (avctxWidth != width)) {
     width=avctxWidth;
     Dimension outSize=new Dimension(avctxWidth,avctxHeight);
-    VideoFormat ivf=(VideoFormat)inputBuffer.getFormat();
-    float outFrameRate=ensureFrameRate(ivf.getFrameRate());
+    VideoFormat inFormat=(VideoFormat)inBuffer.getFormat();
+    float outFrameRate=ensureFrameRate(inFormat.getFrameRate());
     outputFormat=new AVFrameFormat(outSize,outFrameRate);
   }
-  outputBuffer.setFormat(outputFormat);
-  Object outputData=outputBuffer.getData();
-  if (!(outputData instanceof AVFrame) || (((AVFrame)outputData).getPtr() != avframe))   outputBuffer.setData(new AVFrame(avframe));
+  outBuffer.setFormat(outputFormat);
+  Object out=outBuffer.getData();
+  if (!(out instanceof AVFrame) || (((AVFrame)out).getPtr() != avframe))   outBuffer.setData(new AVFrame(avframe));
   return BUFFER_PROCESSED_OK;
 }
