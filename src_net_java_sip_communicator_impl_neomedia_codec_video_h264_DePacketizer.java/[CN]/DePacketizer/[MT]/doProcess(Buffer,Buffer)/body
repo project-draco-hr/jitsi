@@ -1,61 +1,41 @@
 {
-  if (waitingForMarker) {
-    lastSequenceNumber=inputBuffer.getSequenceNumber();
-    if ((inputBuffer.getFlags() & Buffer.FLAG_RTP_MARKER) != 0) {
-      waitingForMarker=false;
-      discardOutputBuffer(outputBuffer);
+  long sequenceNumber=inBuffer.getSequenceNumber();
+  if ((lastSequenceNumber != -1) && ((sequenceNumber - lastSequenceNumber) != 1)) {
+    if (logger.isTraceEnabled())     logger.trace("Dropping RTP packets upto sequenceNumber " + lastSequenceNumber + " and continuing with sequenceNumber "+ sequenceNumber);
+    fuaStartedAndNotEnded=false;
+    if (sequenceNumber <= lastSequenceNumber) {
+      outBuffer.setDiscard(true);
       return BUFFER_PROCESSED_OK;
     }
- else     return OUTPUT_BUFFER_NOT_FILLED;
+ else     outBuffer.setLength(0);
   }
-  long inputSequenceNumber=inputBuffer.getSequenceNumber();
-  if ((lastSequenceNumber != -1) && (inputSequenceNumber - lastSequenceNumber > 1)) {
-    if (logger.isTraceEnabled())     logger.trace("Dropping RTP data! " + lastSequenceNumber + "/"+ inputSequenceNumber);
-    lastSequenceNumber=inputSequenceNumber;
-    waitingForMarker=true;
-    outputBuffer.setLength(0);
-    return OUTPUT_BUFFER_NOT_FILLED;
+  lastSequenceNumber=sequenceNumber;
+  long timeStamp=inBuffer.getTimeStamp();
+  if (timeStamp != lastTimeStamp) {
+    fuaStartedAndNotEnded=false;
+    outBuffer.setLength(0);
   }
- else   lastSequenceNumber=inputSequenceNumber;
-  long timeStamp=inputBuffer.getTimeStamp();
-  if ((timeStamp != lastTimeStamp) || lastHasMarker)   outputBuffer.setLength(0);
   lastTimeStamp=timeStamp;
-  byte[] input=(byte[])inputBuffer.getData();
-  int inputOffset=inputBuffer.getOffset();
-  byte fByte=input[inputOffset];
-  int nri=(fByte & 0x60) >> 5;
-  if (nri == 0)   return OUTPUT_BUFFER_NOT_FILLED;
-  int type=fByte & 0x1f;
-  try {
-    if ((type >= 1) && (type <= 23)) {
-      int outputOffset=outputBuffer.getOffset();
-      int outputLength=outputBuffer.getLength();
-      int inputLength=inputBuffer.getLength();
-      int newOutputLength=outputLength + NAL_START_SEQUENCE.length + inputLength;
-      byte[] output=validateByteArraySize(outputBuffer,outputOffset + newOutputLength + outputPaddingSize);
-      outputOffset+=outputLength;
-      System.arraycopy(NAL_START_SEQUENCE,0,output,outputOffset,NAL_START_SEQUENCE.length);
-      outputOffset+=NAL_START_SEQUENCE.length;
-      System.arraycopy(input,inputOffset,output,outputOffset,inputLength);
-      outputOffset+=inputLength;
-      padOutput(output,outputOffset);
-      outputBuffer.setLength(newOutputLength);
-    }
- else     if (type == 28) {
-      deencapsulateFU(input,inputOffset,inputBuffer.getLength(),outputBuffer);
-    }
+  byte[] in=(byte[])inBuffer.getData();
+  int inOffset=inBuffer.getOffset();
+  byte octet=in[inOffset];
+  int nal_unit_type=octet & 0x1F;
+  int ret;
+  if ((nal_unit_type >= 1) && (nal_unit_type <= 23)) {
+    fuaStartedAndNotEnded=false;
+    ret=dePacketizeSingleNALUnitPacket(in,inOffset,inBuffer.getLength(),outBuffer);
+  }
+ else   if (nal_unit_type == 28) {
+    ret=dePacketizeFUA(in,inOffset,inBuffer.getLength(),outBuffer);
+    if (outBuffer.isDiscard())     fuaStartedAndNotEnded=false;
+  }
  else {
-      logger.warn("Skipping unsupported NAL unit type");
-      return OUTPUT_BUFFER_NOT_FILLED;
-    }
+    logger.warn("Dropping NAL unit of unsupported type " + nal_unit_type);
+    fuaStartedAndNotEnded=false;
+    outBuffer.setDiscard(true);
+    ret=BUFFER_PROCESSED_OK;
   }
- catch (  Exception ex) {
-    logger.warn("Cannot parse incoming packet",ex);
-    outputBuffer.setLength(0);
-    return OUTPUT_BUFFER_NOT_FILLED;
-  }
-  outputBuffer.setTimeStamp(timeStamp);
-  boolean hasMarker=(inputBuffer.getFlags() & Buffer.FLAG_RTP_MARKER) != 0;
-  lastHasMarker=hasMarker;
-  return hasMarker ? BUFFER_PROCESSED_OK : OUTPUT_BUFFER_NOT_FILLED;
+  outBuffer.setSequenceNumber(sequenceNumber);
+  if ((inBuffer.getFlags() & Buffer.FLAG_RTP_MARKER) != 0)   outBuffer.setFlags(outBuffer.getFlags() | Buffer.FLAG_RTP_MARKER);
+  return ret;
 }

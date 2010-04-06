@@ -1,0 +1,34 @@
+{
+  if (nalLength <= MAX_PAYLOAD_SIZE) {
+    byte[] singleNALUnitPacket=new byte[nalLength];
+    System.arraycopy(nal,nalOffset,singleNALUnitPacket,0,nalLength);
+    return nals.add(singleNALUnitPacket);
+  }
+  byte octet=nal[nalOffset];
+  int forbidden_zero_bit=octet & 0x80;
+  int nri=octet & 0x60;
+  int nal_unit_type=octet & 0x1F;
+  byte fuIndicator=(byte)(0xFF & (forbidden_zero_bit | nri | 28));
+  byte fuHeader=(byte)(0xFF & (0x80 | 0 | 0| nal_unit_type));
+  nalOffset++;
+  nalLength--;
+  int maxFUPayloadLength=MAX_PAYLOAD_SIZE - 2;
+  boolean nalsAdded=false;
+  while (nalLength > 0) {
+    int fuPayloadLength;
+    if (nalLength > maxFUPayloadLength)     fuPayloadLength=maxFUPayloadLength;
+ else {
+      fuPayloadLength=nalLength;
+      fuHeader|=0x40;
+    }
+    byte[] fua=new byte[2 + maxFUPayloadLength];
+    fua[0]=fuIndicator;
+    fua[1]=fuHeader;
+    System.arraycopy(nal,nalOffset,fua,2,fuPayloadLength);
+    nalOffset+=fuPayloadLength;
+    nalLength-=fuPayloadLength;
+    nalsAdded=nals.add(fua) || nalsAdded;
+    fuHeader&=~0x80;
+  }
+  return nalsAdded;
+}

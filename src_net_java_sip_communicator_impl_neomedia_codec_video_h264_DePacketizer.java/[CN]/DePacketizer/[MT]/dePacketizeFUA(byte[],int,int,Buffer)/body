@@ -1,0 +1,48 @@
+{
+  byte fu_indicator=in[inOffset];
+  inOffset++;
+  inLength--;
+  byte fu_header=in[inOffset];
+  inOffset++;
+  inLength--;
+  boolean start_bit=(fu_header & 0x80) != 0;
+  boolean end_bit=(fu_header & 0x40) != 0;
+  int outOffset=outBuffer.getOffset();
+  int newOutLength=inLength;
+  int octet;
+  if (start_bit) {
+    if (end_bit) {
+      outBuffer.setDiscard(true);
+      return BUFFER_PROCESSED_OK;
+    }
+    fuaStartedAndNotEnded=true;
+    newOutLength+=NAL_PREFIX.length + 1;
+    octet=(fu_indicator & 0xE0) | (fu_header & 0x1F);
+  }
+ else   if (!fuaStartedAndNotEnded) {
+    outBuffer.setDiscard(true);
+    return BUFFER_PROCESSED_OK;
+  }
+ else {
+    int outLength=outBuffer.getLength();
+    outOffset+=outLength;
+    newOutLength+=outLength;
+    octet=0;
+  }
+  byte[] out=validateByteArraySize(outBuffer,outBuffer.getOffset() + newOutLength + outputPaddingSize);
+  if (start_bit) {
+    System.arraycopy(NAL_PREFIX,0,out,outOffset,NAL_PREFIX.length);
+    outOffset+=NAL_PREFIX.length;
+    out[outOffset]=(byte)(octet & 0xFF);
+    outOffset++;
+  }
+  System.arraycopy(in,inOffset,out,outOffset,inLength);
+  outOffset+=inLength;
+  padOutput(out,outOffset);
+  outBuffer.setLength(newOutLength);
+  if (end_bit) {
+    fuaStartedAndNotEnded=false;
+    return BUFFER_PROCESSED_OK;
+  }
+ else   return OUTPUT_BUFFER_NOT_FILLED;
+}
