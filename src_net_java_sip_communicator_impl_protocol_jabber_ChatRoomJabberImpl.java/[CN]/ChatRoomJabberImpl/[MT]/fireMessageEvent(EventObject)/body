@@ -4,14 +4,19 @@ synchronized (messageListeners) {
     listeners=new ArrayList<ChatRoomMessageListener>(messageListeners);
   }
   for (  ChatRoomMessageListener listener : listeners) {
-    if (evt instanceof ChatRoomMessageDeliveredEvent) {
-      listener.messageDelivered((ChatRoomMessageDeliveredEvent)evt);
+    try {
+      if (evt instanceof ChatRoomMessageDeliveredEvent) {
+        listener.messageDelivered((ChatRoomMessageDeliveredEvent)evt);
+      }
+ else       if (evt instanceof ChatRoomMessageReceivedEvent) {
+        listener.messageReceived((ChatRoomMessageReceivedEvent)evt);
+      }
+ else       if (evt instanceof ChatRoomMessageDeliveryFailedEvent) {
+        listener.messageDeliveryFailed((ChatRoomMessageDeliveryFailedEvent)evt);
+      }
     }
- else     if (evt instanceof ChatRoomMessageReceivedEvent) {
-      listener.messageReceived((ChatRoomMessageReceivedEvent)evt);
-    }
- else     if (evt instanceof ChatRoomMessageDeliveryFailedEvent) {
-      listener.messageDeliveryFailed((ChatRoomMessageDeliveryFailedEvent)evt);
+ catch (    Throwable e) {
+      logger.error("Error delivering multi chat message for " + listener,e);
     }
   }
 }
