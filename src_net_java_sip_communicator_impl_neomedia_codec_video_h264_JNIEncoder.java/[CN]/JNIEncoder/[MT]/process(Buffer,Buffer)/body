@@ -10,7 +10,7 @@
     return BUFFER_PROCESSED_OK;
   }
   Format inFormat=inBuffer.getFormat();
-  if (inFormat != inputFormat && !(inFormat.matches(inputFormat)))   setInputFormat(inFormat);
+  if ((inFormat != inputFormat) && !(inFormat.matches(inputFormat)))   setInputFormat(inFormat);
   if (inBuffer.getLength() < 10) {
     outBuffer.setDiscard(true);
     reset();
@@ -26,10 +26,17 @@
     FFmpeg.avframe_set_key_frame(avframe,false);
   }
   int encLen=FFmpeg.avcodec_encode_video(avcontext,encFrameBuffer,encFrameLen,avframe);
-  byte[] r=new byte[encLen];
-  System.arraycopy(encFrameBuffer,0,r,0,r.length);
-  outBuffer.setData(r);
-  outBuffer.setLength(r.length);
+  Object outData=outBuffer.getData();
+  byte[] out;
+  if (outData instanceof byte[]) {
+    out=(byte[])outData;
+    if (out.length < encLen)     out=null;
+  }
+ else   out=null;
+  if (out == null)   out=new byte[encLen];
+  System.arraycopy(encFrameBuffer,0,out,0,encLen);
+  outBuffer.setData(out);
+  outBuffer.setLength(encLen);
   outBuffer.setOffset(0);
   return BUFFER_PROCESSED_OK;
 }
