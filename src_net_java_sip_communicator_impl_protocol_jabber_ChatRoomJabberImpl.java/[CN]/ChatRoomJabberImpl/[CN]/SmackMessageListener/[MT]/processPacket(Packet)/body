@@ -3,10 +3,18 @@
   org.jivesoftware.smack.packet.Message msg=(org.jivesoftware.smack.packet.Message)packet;
   String msgBody=msg.getBody();
   if (msgBody == null)   return;
+  int messageReceivedEventType=ChatRoomMessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED;
   String msgFrom=msg.getFrom();
+  ChatRoomMember member=null;
   String fromUserName=StringUtils.parseResource(msgFrom);
   if (nickname.equals(getNickName(fromUserName)))   return;
-  ChatRoomMember member=smackParticipantToScMember(msgFrom);
+  if (msgFrom.equals(getName())) {
+    messageReceivedEventType=ChatRoomMessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED;
+    member=new ChatRoomMemberJabberImpl(ChatRoomJabberImpl.this,getName(),getName(),null);
+  }
+ else {
+    member=smackParticipantToScMember(msgFrom);
+  }
   if (logger.isDebugEnabled()) {
     logger.debug("Received from " + fromUserName + " the message "+ msg.toXML());
   }
@@ -25,6 +33,6 @@
     fireMessageEvent(evt);
     return;
   }
-  ChatRoomMessageReceivedEvent msgReceivedEvt=new ChatRoomMessageReceivedEvent(ChatRoomJabberImpl.this,member,System.currentTimeMillis(),newMessage,ChatRoomMessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED);
+  ChatRoomMessageReceivedEvent msgReceivedEvt=new ChatRoomMessageReceivedEvent(ChatRoomJabberImpl.this,member,System.currentTimeMillis(),newMessage,messageReceivedEventType);
   fireMessageEvent(msgReceivedEvt);
 }
