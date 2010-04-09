@@ -1,25 +1,25 @@
 {
   long sequenceNumber=inBuffer.getSequenceNumber();
+  int ret;
   if ((lastSequenceNumber != -1) && ((sequenceNumber - lastSequenceNumber) != 1)) {
     if (logger.isTraceEnabled())     logger.trace("Dropped RTP packets upto sequenceNumber " + lastSequenceNumber + " and continuing with sequenceNumber "+ sequenceNumber);
-    fuaStartedAndNotEnded=false;
-    outBuffer.setLength(0);
+    ret=reset(outBuffer);
+    if ((ret & OUTPUT_BUFFER_NOT_FILLED) == 0)     return ret;
   }
-  lastSequenceNumber=sequenceNumber;
   long timeStamp=inBuffer.getTimeStamp();
   if (timeStamp != lastTimeStamp) {
-    fuaStartedAndNotEnded=false;
-    outBuffer.setLength(0);
+    ret=reset(outBuffer);
+    if ((ret & OUTPUT_BUFFER_NOT_FILLED) == 0)     return ret;
   }
+  lastSequenceNumber=sequenceNumber;
   lastTimeStamp=timeStamp;
   byte[] in=(byte[])inBuffer.getData();
   int inOffset=inBuffer.getOffset();
   byte octet=in[inOffset];
   int nal_unit_type=octet & 0x1F;
-  int ret;
   if ((nal_unit_type >= 1) && (nal_unit_type <= 23)) {
     fuaStartedAndNotEnded=false;
-    ret=dePacketizeSingleNALUnitPacket(in,inOffset,inBuffer.getLength(),outBuffer);
+    ret=dePacketizeSingleNALUnitPacket(nal_unit_type,in,inOffset,inBuffer.getLength(),outBuffer);
   }
  else   if (nal_unit_type == 28) {
     ret=dePacketizeFUA(in,inOffset,inBuffer.getLength(),outBuffer);
