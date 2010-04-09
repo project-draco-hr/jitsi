@@ -2,10 +2,21 @@
   CVPixelBuffer pixelBuffer=(CVPixelBuffer)videoFrame;
   boolean transferData;
 synchronized (dataSyncRoot) {
+    if (!automaticallyDropsLateVideoFrames && (data != null)) {
+      nextData=pixelBuffer.getBytes();
+      nextDataTimeStamp=System.nanoTime();
+      if (nextDataFormat == null)       nextDataFormat=getVideoFrameFormat(pixelBuffer);
+      return;
+    }
     data=pixelBuffer.getBytes();
     dataTimeStamp=System.nanoTime();
-    transferData=(data != null);
     if (dataFormat == null)     dataFormat=getVideoFrameFormat(pixelBuffer);
+    nextData=null;
+    if (automaticallyDropsLateVideoFrames)     transferData=(data != null);
+ else {
+      transferData=false;
+      dataSyncRoot.notifyAll();
+    }
   }
   if (transferData) {
     BufferTransferHandler transferHandler=this.transferHandler;
