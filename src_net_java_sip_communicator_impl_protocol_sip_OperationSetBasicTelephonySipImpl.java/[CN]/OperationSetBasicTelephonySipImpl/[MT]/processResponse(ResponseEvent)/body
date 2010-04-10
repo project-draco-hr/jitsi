@@ -45,6 +45,15 @@ case Response.PROXY_AUTHENTICATION_REQUIRED:
 processAuthenticationChallenge(clientTransaction,response,sourceProvider);
 processed=true;
 break;
+case Response.REQUEST_TERMINATED:
+{
+CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(clientTransaction.getDialog());
+if (callPeer != null) {
+callPeer.setState(CallPeerState.FAILED);
+}
+processed=true;
+}
+break;
 default :
 int responseStatusCodeRange=responseStatusCode / 100;
 if ((responseStatusCodeRange == 4) || (responseStatusCodeRange == 5) || (responseStatusCodeRange == 6)) {
