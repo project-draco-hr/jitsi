@@ -1,56 +1,25 @@
 {
-  if (JabberActivator.getConfigurationService().getBoolean(CertificateVerificationService.ALWAYS_TRUST_MODE_ENABLED_PROP_NAME,false))   return;
+  if (certChecked)   return;
+  abortConnecting=true;
   try {
+    certChecked=true;
     tm.checkServerTrusted(chain,authType);
   }
- catch (  Throwable certificateException) {
-    try {
-      for (int i=0; i < chain.length; i++) {
-        X509Certificate c=chain[i];
-        if (temporalyAllowed.contains(c)) {
-          return;
-        }
-        String alias=keyStore.getCertificateAlias(c);
-        if (alias != null)         return;
-      }
-      CertificateVerificationService guiVerification=getCertificateVerificationService();
-      if (guiVerification == null)       throw new CertificateException(certificateException.getMessage());
-      abortConnecting=true;
-      int result=guiVerification.verificationNeeded(chain,address,port);
-      if (result == CertificateVerificationService.DO_NOT_TRUST) {
-        fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"Not trusted certificate");
-        return;
-      }
- else       if (result == CertificateVerificationService.TRUST_THIS_SESSION_ONLY) {
-        for (        X509Certificate c : chain)         temporalyAllowed.add(c);
-      }
- else       if (result == CertificateVerificationService.TRUST_ALWAYS) {
-        for (        X509Certificate c : chain)         keyStore.setCertificateEntry(String.valueOf(System.currentTimeMillis()),c);
-      }
-      try {
-        String keyStoreFile=JabberActivator.getConfigurationService().getString(KEYSTORE_FILE_PROP);
-        keyStore.store(new FileOutputStream(keyStoreFile),defaultPassword);
-      }
- catch (      Exception e) {
-        logger.error("Error saving keystore.",e);
-      }
-      if (abortConnecting) {
-        abortConnectingAndReconnect=true;
-        return;
-      }
+ catch (  CertificateException e) {
+    fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"Not trusted certificate");
+    throw e;
+  }
+  if (abortConnecting) {
+    abortConnectingAndReconnect=true;
+    return;
+  }
  else {
-        new Thread(new Runnable(){
-          public void run(){
-            reregister(SecurityAuthority.CONNECTION_FAILED);
-          }
-        }
-).start();
-        return;
+    new Thread(new Runnable(){
+      public void run(){
+        reregister(SecurityAuthority.CONNECTION_FAILED);
       }
     }
- catch (    KeyStoreException e) {
-      logger.error("Error trying to " + "show certificate to user",e);
-      throw new CertificateException(certificateException.getMessage());
-    }
+).start();
+    return;
   }
 }

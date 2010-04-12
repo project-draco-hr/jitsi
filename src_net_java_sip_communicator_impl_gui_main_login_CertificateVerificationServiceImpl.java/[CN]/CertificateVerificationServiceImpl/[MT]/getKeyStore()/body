@@ -1,0 +1,28 @@
+{
+  if (keyStore == null) {
+    try {
+      keyStore=KeyStore.getInstance(KeyStore.getDefaultType());
+synchronized (keyStore) {
+        keyStore.load(null,defaultPassword);
+        String keyStoreFile=GuiActivator.getConfigurationService().getString(KEYSTORE_FILE_PROP);
+        if (keyStoreFile == null || keyStoreFile.length() == 0) {
+          File f=GuiActivator.getFileAccessService().getPrivatePersistentFile("jssecacerts");
+          keyStoreFile=f.getCanonicalPath();
+          GuiActivator.getConfigurationService().setProperty(KEYSTORE_FILE_PROP,keyStoreFile);
+          keyStore.store(new FileOutputStream(f),defaultPassword);
+        }
+ else {
+          File f=new File(keyStoreFile);
+          if (!f.exists()) {
+            keyStore.store(new FileOutputStream(f),defaultPassword);
+          }
+          keyStore.load(new FileInputStream(keyStoreFile),null);
+        }
+      }
+    }
+ catch (    Exception e) {
+      logger.error("Cannot init keystore file.",e);
+    }
+  }
+  return keyStore;
+}

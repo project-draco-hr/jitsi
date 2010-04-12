@@ -1,20 +1,21 @@
 {
-  try {
-    SSLContext sslContext;
-    sslContext=SSLContext.getInstance("TLS");
-    String algorithm=KeyManagerFactory.getDefaultAlgorithm();
-    TrustManagerFactory tmFactory=TrustManagerFactory.getInstance(algorithm);
-    KeyManagerFactory kmFactory=KeyManagerFactory.getInstance(algorithm);
-    SecureRandom secureRandom=new SecureRandom();
-    secureRandom.nextInt();
-    KeyStore trustStore=KeyStore.getInstance(KeyStore.getDefaultType());
-    trustStore.load(null,defaultPassword);
-    tmFactory.init(trustStore);
-    kmFactory.init(keyStore,defaultPassword);
-    sslContext.init(kmFactory.getKeyManagers(),new TrustManager[]{new HostTrustManager((X509TrustManager)tmFactory.getTrustManagers()[0],address,port)},secureRandom);
-    return sslContext;
-  }
- catch (  Exception e) {
-    throw new IOException("Cannot init SSLContext: " + e.getMessage());
+  if (certificateVerification != null)   return certificateVerification.getSSLContext(address,port);
+ else {
+    try {
+      SSLContext sslContext;
+      sslContext=SSLContext.getInstance("TLS");
+      String algorithm=KeyManagerFactory.getDefaultAlgorithm();
+      TrustManagerFactory tmFactory=TrustManagerFactory.getInstance(algorithm);
+      KeyManagerFactory kmFactory=KeyManagerFactory.getInstance(algorithm);
+      SecureRandom secureRandom=new SecureRandom();
+      secureRandom.nextInt();
+      tmFactory.init((KeyStore)null);
+      kmFactory.init(null,null);
+      sslContext.init(kmFactory.getKeyManagers(),tmFactory.getTrustManagers(),secureRandom);
+      return sslContext;
+    }
+ catch (    Throwable e) {
+      throw new IOException("Cannot init SSLContext: " + e.getMessage());
+    }
   }
 }
