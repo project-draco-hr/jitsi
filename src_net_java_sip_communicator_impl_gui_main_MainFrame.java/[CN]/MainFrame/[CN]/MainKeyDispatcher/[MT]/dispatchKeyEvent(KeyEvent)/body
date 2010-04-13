@@ -1,5 +1,5 @@
 {
-  if (!isFocused() || e.getID() != KeyEvent.KEY_PRESSED)   return false;
+  if (!isFocused() || (e.getID() != KeyEvent.KEY_PRESSED && e.getID() != KeyEvent.KEY_TYPED))   return false;
   TreeContactList contactList=getContactListPanel().getContactList();
   if (searchField.isFocusOwner() && (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_PAGE_UP || e.getKeyCode() == KeyEvent.VK_PAGE_DOWN)) {
     contactList.selectFirstContact();
@@ -17,13 +17,9 @@
   if (e.getKeyChar() == KeyEvent.CHAR_UNDEFINED || e.getKeyCode() == KeyEvent.VK_ENTER || e.getKeyCode() == KeyEvent.VK_DELETE || e.getKeyCode() == KeyEvent.VK_BACK_SPACE || e.getKeyCode() == KeyEvent.VK_TAB || e.getKeyCode() == KeyEvent.VK_SPACE || (selectionPath != null && selectionPath.getLastPathComponent() instanceof GroupNode && (e.getKeyChar() == '+' || e.getKeyChar() == '-'))) {
     return false;
   }
-  if (!searchField.isFocusOwner()) {
-    String searchText="";
-    if (searchField.getText() != null)     searchText+=searchField.getText() + e.getKeyChar();
- else     searchText+=e.getKeyChar();
-    e.consume();
-    searchField.setText(searchText);
-    searchField.requestFocus();
+  if (!searchField.isFocusOwner() && keyManager.getFocusOwner().equals(keyManager.getPermanentFocusOwner())) {
+    searchField.requestFocusInWindow();
+    keyManager.redispatchEvent(searchField,e);
     return true;
   }
   return false;
