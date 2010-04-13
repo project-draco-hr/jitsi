@@ -4,13 +4,15 @@
   if (metaContact == null || (evt.getOldStatus() == evt.getNewStatus()))   return;
   SwingUtilities.invokeLater(new Runnable(){
     public void run(){
-      ContactNode contactNode=treeModel.findContactNodeByMetaContact(metaContact);
-      if (contactNode == null && currentFilter.isMatching(metaContact)) {
-        addContact(metaContact);
-      }
- else       if (contactNode != null) {
-        if (!currentFilter.isMatching(metaContact))         removeContact(metaContact,metaContact.getParentMetaContactGroup());
- else         treeModel.nodeChanged(contactNode);
+synchronized (tempTreeModel) {
+        ContactNode contactNode=treeModel.findContactNodeByMetaContact(metaContact);
+        if (contactNode == null && currentFilter.isMatching(metaContact)) {
+          addContact(metaContact);
+        }
+ else         if (contactNode != null) {
+          if (!currentFilter.isMatching(metaContact))           removeContact(metaContact,metaContact.getParentMetaContactGroup());
+ else           treeModel.nodeChanged(contactNode);
+        }
       }
     }
   }

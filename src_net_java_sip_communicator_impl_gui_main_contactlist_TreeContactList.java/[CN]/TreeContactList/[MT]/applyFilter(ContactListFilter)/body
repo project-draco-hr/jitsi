@@ -1,7 +1,25 @@
 {
+  isFiltering=true;
   if (currentFilter == null || !currentFilter.equals(filter))   this.currentFilter=filter;
-  treeModel.clear();
-  addAllMatching();
-  if (treeModel.getChildCount(treeModel.getRoot()) > 0)   return true;
+  tempTreeModel=new ContactListTreeModel(GuiActivator.getContactListService().getRoot());
+synchronized (tempTreeModel) {
+    addAllMatching(tempTreeModel);
+    treeModel=tempTreeModel;
+  }
+  if (!isFiltering) {
+    return (treeModel.getChildCount(treeModel.getRoot()) > 0);
+  }
+  SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
+      setTreeModel(treeModel);
+      treeModel.reload();
+      expandAllRows();
+      revalidate();
+      repaint();
+    }
+  }
+);
+  isFiltering=false;
+  if (tempTreeModel.getChildCount(tempTreeModel.getRoot()) > 0)   return true;
   return false;
 }
