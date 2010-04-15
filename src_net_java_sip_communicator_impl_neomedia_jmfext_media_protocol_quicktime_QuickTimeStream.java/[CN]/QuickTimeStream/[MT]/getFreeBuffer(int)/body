@@ -1,0 +1,20 @@
+{
+synchronized (buffers) {
+    if (closed)     return null;
+    int bufferCount=buffers.size();
+    ByteBuffer freeBuffer=null;
+    for (int bufferIndex=0; bufferIndex < bufferCount; bufferIndex++) {
+      ByteBuffer buffer=buffers.get(bufferIndex);
+      if (buffer.isFree() && (buffer.capacity >= capacity)) {
+        freeBuffer=buffer;
+        break;
+      }
+    }
+    if (freeBuffer == null) {
+      freeBuffer=new ByteBuffer(capacity);
+      buffers.add(freeBuffer);
+    }
+    freeBuffer.setFree(false);
+    return freeBuffer;
+  }
+}

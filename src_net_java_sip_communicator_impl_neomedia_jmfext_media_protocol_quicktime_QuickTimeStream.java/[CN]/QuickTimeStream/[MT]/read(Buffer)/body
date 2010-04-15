@@ -2,12 +2,24 @@
 synchronized (dataSyncRoot) {
     if (data == null)     buffer.setLength(0);
  else {
-      buffer.setData(data);
+      Object bufferData=buffer.getData();
+      byte[] bufferByteData=null;
+      int dataLength=data.getLength();
+      if (bufferData instanceof byte[]) {
+        bufferByteData=(byte[])bufferData;
+        if (bufferByteData.length < dataLength)         bufferByteData=null;
+      }
+      if (bufferByteData == null) {
+        bufferByteData=new byte[dataLength];
+        buffer.setData(bufferByteData);
+      }
+      CVPixelBuffer.memcpy(bufferByteData,0,dataLength,data.ptr);
       buffer.setFlags(Buffer.FLAG_LIVE_DATA | Buffer.FLAG_SYSTEM_TIME);
       if (dataFormat != null)       buffer.setFormat(dataFormat);
-      buffer.setLength(data.length);
+      buffer.setLength(dataLength);
       buffer.setOffset(0);
       buffer.setTimeStamp(dataTimeStamp);
+      returnFreeBuffer(data);
       data=null;
       if (!automaticallyDropsLateVideoFrames)       dataSyncRoot.notifyAll();
     }
