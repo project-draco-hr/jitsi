@@ -26,6 +26,10 @@ synchronized (initializationLock) {
     int subscriptionExpiration=accountID.getAccountPropertyInt(ProtocolProviderFactory.SUBSCRIPTION_EXPIRATION,3600);
     headerFactory=new HeaderFactoryImpl();
     addressFactory=new AddressFactoryImpl();
+    ourDisplayName=accountID.getAccountPropertyString(ProtocolProviderFactory.DISPLAY_NAME);
+    if (ourDisplayName == null || ourDisplayName.trim().length() == 0) {
+      ourDisplayName=accountID.getUserID();
+    }
     initRegistrarConnection(accountID);
     OperationSetBasicTelephonySipImpl opSetBasicTelephonySipImpl=new OperationSetBasicTelephonySipImpl(this);
     addSupportedOperationSet(OperationSetBasicTelephony.class,opSetBasicTelephonySipImpl);
@@ -43,10 +47,6 @@ synchronized (initializationLock) {
     addSupportedOperationSet(OperationSetDTMF.class,new OperationSetDTMFSipImpl(this));
     addSupportedOperationSet(OperationSetTelephonyConferencing.class,new OperationSetTelephonyConferencingSipImpl(this));
     new ClientCapabilities(this);
-    ourDisplayName=accountID.getAccountPropertyString(ProtocolProviderFactory.DISPLAY_NAME);
-    if (ourDisplayName == null || ourDisplayName.trim().length() == 0) {
-      ourDisplayName=accountID.getUserID();
-    }
     this.sipSecurityManager=new SipSecurityManager(accountID);
     sipSecurityManager.setHeaderFactory(headerFactory);
     ProtocolProviderExtensions.registerCustomOperationSets(this);
