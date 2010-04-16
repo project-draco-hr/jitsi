@@ -1,27 +1,57 @@
 {
 synchronized (dataSyncRoot) {
-    if (data == null)     buffer.setLength(0);
+    if (data == null) {
+      buffer.setLength(0);
+      return;
+    }
+    if (dataFormat != null)     buffer.setFormat(dataFormat);
+    Format bufferFormat=buffer.getFormat();
+    if (bufferFormat == null) {
+      bufferFormat=getFormat();
+      if (bufferFormat != null)       buffer.setFormat(bufferFormat);
+    }
+    if (bufferFormat instanceof AVFrameFormat) {
+      Object bufferData=buffer.getData();
+      AVFrame bufferFrame;
+      long bufferFramePtr;
+      long bufferPtrToReturnFree;
+      if (bufferData instanceof AVFrame) {
+        bufferFrame=(AVFrame)bufferData;
+        bufferFramePtr=bufferFrame.getPtr();
+        bufferPtrToReturnFree=FFmpeg.avpicture_get_data0(bufferFramePtr);
+      }
+ else {
+        bufferFrame=new FinalizableAVFrame();
+        buffer.setData(bufferFrame);
+        bufferFramePtr=bufferFrame.getPtr();
+        bufferPtrToReturnFree=0;
+      }
+      AVFrameFormat bufferFrameFormat=(AVFrameFormat)bufferFormat;
+      Dimension bufferFrameSize=bufferFrameFormat.getSize();
+      FFmpeg.avpicture_fill(bufferFramePtr,data.ptr,bufferFrameFormat.getPixFmt(),bufferFrameSize.width,bufferFrameSize.height);
+      if (bufferPtrToReturnFree != 0)       returnFreeBuffer(bufferPtrToReturnFree);
+    }
  else {
       Object bufferData=buffer.getData();
-      byte[] bufferByteData=null;
+      byte[] bufferByteData;
       int dataLength=data.getLength();
       if (bufferData instanceof byte[]) {
         bufferByteData=(byte[])bufferData;
         if (bufferByteData.length < dataLength)         bufferByteData=null;
       }
+ else       bufferByteData=null;
       if (bufferByteData == null) {
         bufferByteData=new byte[dataLength];
         buffer.setData(bufferByteData);
       }
       CVPixelBuffer.memcpy(bufferByteData,0,dataLength,data.ptr);
-      buffer.setFlags(Buffer.FLAG_LIVE_DATA | Buffer.FLAG_SYSTEM_TIME);
-      if (dataFormat != null)       buffer.setFormat(dataFormat);
       buffer.setLength(dataLength);
       buffer.setOffset(0);
-      buffer.setTimeStamp(dataTimeStamp);
       returnFreeBuffer(data);
-      data=null;
-      if (!automaticallyDropsLateVideoFrames)       dataSyncRoot.notifyAll();
     }
+    buffer.setFlags(Buffer.FLAG_LIVE_DATA | Buffer.FLAG_SYSTEM_TIME);
+    buffer.setTimeStamp(dataTimeStamp);
+    data=null;
+    if (!automaticallyDropsLateVideoFrames)     dataSyncRoot.notifyAll();
   }
 }
