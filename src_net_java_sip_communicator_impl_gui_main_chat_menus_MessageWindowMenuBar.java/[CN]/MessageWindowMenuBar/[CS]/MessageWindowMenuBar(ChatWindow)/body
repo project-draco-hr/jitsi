@@ -1,23 +1,18 @@
 {
-  this.parentWindow=parentWindow;
-  final ResourceManagementService resources=GuiActivator.getResources();
-  this.setForeground(new Color(resources.getColor("service.gui.MAIN_MENU_FOREGROUND")));
-  fileMenu=new FileMenu(this.parentWindow);
-  editMenu=new EditMenu(this.parentWindow);
-  optionsMenu=new OptionsMenu(this.parentWindow);
-  helpMenu=new HelpMenu(this.parentWindow);
-  fileMenu.setOpaque(false);
-  editMenu.setOpaque(false);
-  helpMenu.setOpaque(false);
+  super("service.gui.CHAT_MENU_FOREGROUND");
+  fileMenu=new FileMenu(parentWindow);
+  editMenu=new EditMenu(parentWindow);
+  optionsMenu=new OptionsMenu(parentWindow);
+  helpMenu=new HelpMenu(parentWindow);
   this.init();
   pluginContainer=new PluginContainer(this,Container.CONTAINER_CHAT_MENU_BAR){
-    protected void addComponentToContainer(    Component component,    JComponent container){
-      if (component instanceof SIPCommMenu)       component.setForeground(new Color(resources.getColor("service.gui.CHAT_MENU_FOREGROUND")));
+    @Override protected void addComponentToContainer(    Component component,    JComponent container){
+      if (component instanceof SIPCommMenu)       ((SIPCommMenu)component).setOpaque(false);
       container.add(component,getComponentIndex(helpMenu));
     }
   }
 ;
-  this.parentWindow.addChatChangeListener(new ChatChangeListener(){
+  parentWindow.addChatChangeListener(new ChatChangeListener(){
     public void chatChanged(    ChatPanel panel){
       MetaContact contact=GuiActivator.getUIService().getChatContact(panel);
       for (      PluginComponent c : pluginContainer.getPluginComponents())       c.setCurrentContact(contact);
