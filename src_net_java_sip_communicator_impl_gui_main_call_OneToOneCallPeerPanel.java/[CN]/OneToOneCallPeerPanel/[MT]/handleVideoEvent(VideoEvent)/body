@@ -1,14 +1,14 @@
 {
 synchronized (videoContainers) {
-    if ((event != null) && !event.isConsumed() && (event.getOrigin() == VideoEvent.LOCAL)) {
-      Component localVideo=event.getVisualComponent();
+    if ((event != null) && !event.isConsumed() && event.getOrigin() == VideoEvent.LOCAL) {
+      Component video=event.getVisualComponent();
 switch (event.getType()) {
 case VideoEvent.VIDEO_ADDED:
-        this.localVideo=localVideo;
+        this.localVideo=video;
       event.consume();
     break;
 case VideoEvent.VIDEO_REMOVED:
-  if (this.localVideo == localVideo)   this.localVideo=null;
+  if (this.localVideo == video)   this.localVideo=null;
 break;
 }
 }
@@ -21,6 +21,19 @@ handleVideoEvent(event);
 }
 );
 return;
+}
+if (event != null && event.getType() == VideoEvent.VIDEO_ADDED && event.getOrigin() == VideoEvent.REMOTE) {
+event.getVisualComponent().addComponentListener(new ComponentAdapter(){
+public void componentResized(ComponentEvent e){
+Component c=e.getComponent();
+if (resizeList == null) resizeList=new LinkedList<ResizedCoordinates>();
+synchronized (resizeList) {
+if (resizeList.size() > 10) resizeList.clear();
+resizeList.add(new ResizedCoordinates(c.getWidth(),c.getHeight()));
+}
+}
+}
+);
 }
 synchronized (videoContainers) {
 int videoContainerCount;
