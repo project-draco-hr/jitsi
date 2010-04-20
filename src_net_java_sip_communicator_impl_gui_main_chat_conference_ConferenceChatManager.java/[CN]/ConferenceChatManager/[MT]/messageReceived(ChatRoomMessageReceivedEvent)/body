@@ -13,7 +13,6 @@ case ChatRoomMessageReceivedEvent.ACTION_MESSAGE_RECEIVED:
 messageType=Chat.ACTION_MESSAGE;
 break;
 }
-logger.info("MESSAGE RECEIVED from " + sourceMember.getContactAddress());
 logger.trace("MESSAGE RECEIVED from contact: " + sourceMember.getContactAddress());
 Message message=evt.getMessage();
 ChatPanel chatPanel=null;
@@ -32,7 +31,8 @@ boolean fireChatNotification;
 if (sourceChatRoom.isSystem() || isPrivate(sourceChatRoom) || (messageContent == null)) fireChatNotification=true;
  else {
 String nickname=sourceChatRoom.getUserNickname();
-fireChatNotification=(nickname == null) || messageContent.toLowerCase().contains(nickname.toLowerCase());
+int atIx=nickname.indexOf("@");
+fireChatNotification=(nickname == null) || messageContent.toLowerCase().contains(nickname.toLowerCase()) || ((atIx == -1) ? false : messageContent.toLowerCase().contains(nickname.substring(0,atIx + 1)));
 }
 if (fireChatNotification) {
 String title=GuiActivator.getResources().getI18NString("service.gui.MSG_RECEIVED",new String[]{sourceMember.getName()});
