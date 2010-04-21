@@ -1,13 +1,37 @@
 {
-  if (outputSize != null) {
-    SwScaler scaler=new SwScaler();
-    scaler.setOutputSize(outputSize);
+  Codec codecs[]=null;
+  JNIEncoder encoder=null;
+  SwScaler scaler=null;
+  int nbCodec=0;
+  if (format.getEncoding().equals("h264/rtp") && usePLI) {
+    encoder=new JNIEncoder();
     try {
-      trackControl.setCodecChain(new Codec[]{scaler});
+      ((ControlTransformInputStream)rtpConnector.getControlInputStream()).addRTCPFeedbackListener(encoder);
     }
- catch (    UnsupportedPlugInException upiex) {
-      logger.error("Failed to add SwScaler to codec chain",upiex);
+ catch (    Exception e) {
+      logger.error("Error cannot get RTCP input stream",e);
     }
+    nbCodec++;
+  }
+  if (outputSize != null) {
+    scaler=new SwScaler();
+    scaler.setOutputSize(outputSize);
+    nbCodec++;
+  }
+  codecs=new Codec[nbCodec];
+  nbCodec=0;
+  if (scaler != null) {
+    codecs[nbCodec]=scaler;
+    nbCodec++;
+  }
+  if (encoder != null) {
+    codecs[nbCodec]=encoder;
+  }
+  try {
+    trackControl.setCodecChain(codecs);
+  }
+ catch (  UnsupportedPlugInException upiex) {
+    logger.error("Failed to add SwScaler/JNIEncoder to codec chain",upiex);
   }
   return super.setProcessorFormat(trackControl,format);
 }

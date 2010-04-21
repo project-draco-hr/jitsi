@@ -27,7 +27,21 @@
           }
         }
 ;
-        trackControl.setCodecChain(new Codec[]{playerScaler});
+        if (format.getEncoding().equals("h264/rtp") && usePLI) {
+          DePacketizer depack=new DePacketizer();
+          depack.setRtcpFeedbackPLI(usePLI);
+          try {
+            depack.setConnector(rtpConnector.getControlOutputStream());
+          }
+ catch (          Exception e) {
+            logger.error("Error cannot get RTCP output stream",e);
+          }
+          depack.setSSRC(localSSRC,remoteSSRC);
+          trackControl.setCodecChain(new Codec[]{depack,playerScaler});
+        }
+ else {
+          trackControl.setCodecChain(new Codec[]{playerScaler});
+        }
         break;
       }
     }

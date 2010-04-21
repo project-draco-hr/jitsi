@@ -3,6 +3,9 @@
   int ret;
   if ((lastSequenceNumber != -1) && ((sequenceNumber - lastSequenceNumber) != 1)) {
     if (logger.isTraceEnabled())     logger.trace("Dropped RTP packets upto sequenceNumber " + lastSequenceNumber + " and continuing with sequenceNumber "+ sequenceNumber);
+    if (usePLI && lastKeyframeRequestTimeStamp == -1) {
+      sendRTCPFeedbackPLI();
+    }
     ret=reset(outBuffer);
     if ((ret & OUTPUT_BUFFER_NOT_FILLED) == 0)     return ret;
   }
@@ -33,5 +36,8 @@
   }
   outBuffer.setSequenceNumber(sequenceNumber);
   if ((inBuffer.getFlags() & Buffer.FLAG_RTP_MARKER) != 0)   outBuffer.setFlags(outBuffer.getFlags() | Buffer.FLAG_RTP_MARKER);
+  if (usePLI && lastKeyframeRequestTimeStamp != -1 && System.currentTimeMillis() > (lastKeyframeRequestTimeStamp + PLI_INTERVAL)) {
+    sendRTCPFeedbackPLI();
+  }
   return ret;
 }
