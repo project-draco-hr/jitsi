@@ -35,6 +35,23 @@
     ChatInviteDialog inviteDialog=new ChatInviteDialog(chatPanel);
     inviteDialog.setVisible(true);
   }
+ else   if (buttonText.equals("call")) {
+    ChatSession chatSession=chatPanel.getChatSession();
+    List<ChatTransport> telTransports=null;
+    if (chatSession != null)     telTransports=chatSession.getTransportsForOperationSet(OperationSetBasicTelephony.class);
+    if (telTransports != null) {
+      if (telTransports.size() == 1) {
+        ChatTransport transport=telTransports.get(0);
+        CallManager.createCall(transport.getProtocolProvider(),transport.getName());
+      }
+ else       if (telTransports.size() > 1) {
+        ChooseCallAccountPopupMenu chooseAccountDialog=new ChooseCallAccountPopupMenu(callButton,telTransports);
+        Point location=new Point(callButton.getX(),callButton.getY() + callButton.getHeight());
+        SwingUtilities.convertPointToScreen(location,this);
+        chooseAccountDialog.showPopupMenu(location.x,location.y);
+      }
+    }
+  }
  else   if (buttonText.equals("options")) {
     GuiActivator.getUIService().setConfigurationWindowVisible(true);
   }
