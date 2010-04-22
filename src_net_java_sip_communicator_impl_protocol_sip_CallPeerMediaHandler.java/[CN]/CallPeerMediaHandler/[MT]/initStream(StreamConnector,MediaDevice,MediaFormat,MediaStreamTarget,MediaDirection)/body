@@ -1,15 +1,8 @@
 {
   MediaStream stream=null;
-  Dimension size=null;
   if (device.getMediaType() == MediaType.AUDIO)   stream=this.audioStream;
  else {
     stream=this.videoStream;
-    if (device != null && device.getFormat() != null) {
-      Dimension deviceSize=((VideoMediaFormat)device.getFormat()).getSize();
-      if ((deviceSize != null && maxRecvSize != null) && (maxRecvSize.width > 0 && maxRecvSize.height > 0) && (deviceSize.width > maxRecvSize.width || deviceSize.height > maxRecvSize.height)) {
-        size=maxRecvSize;
-      }
-    }
   }
   if (stream == null) {
     ZrtpControl control=zrtpControls.get(format.getMediaType());
@@ -19,11 +12,6 @@
   }
  else {
   }
-  if (device != null && device.getMediaType() == MediaType.VIDEO) {
-    ((VideoMediaStream)stream).setOutputSize(size);
-    if (format.getAdvancedParameters().containsKey("rtcp-fb")) {
-      ((VideoMediaStream)stream).setRtcpFeedbackPLI(true);
-    }
-  }
+  stream.setAdvancedAttributes(format.getAdvancedParameters());
   return configureAndStartStream(device,format,target,direction,stream);
 }

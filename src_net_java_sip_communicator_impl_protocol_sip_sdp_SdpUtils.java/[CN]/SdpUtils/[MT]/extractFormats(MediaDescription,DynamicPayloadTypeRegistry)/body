@@ -1,20 +1,12 @@
 {
   List<MediaFormat> mediaFmts=new ArrayList<MediaFormat>();
   Vector<String> formatStrings;
-  List<Attribute> advp=new ArrayList<Attribute>();
   try {
     formatStrings=(Vector<String>)mediaDesc.getMedia().getMediaFormats(true);
   }
  catch (  SdpParseException exc) {
     logger.debug("A funny thing just happened ...",exc);
     return mediaFmts;
-  }
-  try {
-    Attribute rtcpFbAsterisk=findPayloadTypeSpecificAttribute(mediaDesc.getAttributes(false),"rtcp-fb","*");
-    if (rtcpFbAsterisk != null)     advp.add(rtcpFbAsterisk);
-  }
- catch (  SdpException e) {
-    logger.debug("Does not seem like a valid rtcp-fb:* attribute",e);
   }
   for (  String ptStr : formatStrings) {
     byte pt=-1;
@@ -33,14 +25,18 @@
       logger.debug(rtpmap + " does not seem like a valid rtpmap: attribute",e);
     }
     Attribute fmtp=null;
-    Attribute rtcpFb=null;
     try {
       fmtp=findPayloadTypeSpecificAttribute(mediaDesc.getAttributes(false),"fmtp",ptStr);
-      rtcpFb=findPayloadTypeSpecificAttribute(mediaDesc.getAttributes(false),"rtcp-fb",ptStr);
-      if (rtcpFb != null)       advp.add(rtcpFb);
     }
  catch (    SdpException exc) {
       logger.debug(fmtp + " does not seem like a valid fmtp: attribute",exc);
+    }
+    List<Attribute> advp=null;
+    try {
+      advp=findAdvancedAttributes(mediaDesc.getAttributes(false),ptStr);
+    }
+ catch (    SdpException exc) {
+      logger.debug("Problem parsing advanced attributes",exc);
     }
     MediaFormat mediaFormat=null;
     try {
