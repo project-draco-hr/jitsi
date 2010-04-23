@@ -1,0 +1,23 @@
+{
+  super.startedDirectionChanged(oldValue,newValue);
+  Player player=getPlayer();
+  if (player == null)   return;
+  int state=player.getState();
+  if (state < Player.Realized)   return;
+  if (newValue.allowsReceiving()) {
+    if (state != Player.Started) {
+      player.start();
+      Component visualComponent=getVisualComponent(player);
+      if (visualComponent != null) {
+        fireVideoEvent(VideoEvent.VIDEO_ADDED,visualComponent,VideoEvent.REMOTE);
+      }
+    }
+  }
+ else   if (state > Processor.Configured) {
+    Component visualComponent=getVisualComponent(player);
+    player.stop();
+    if (visualComponent != null) {
+      fireVideoEvent(VideoEvent.VIDEO_REMOVED,visualComponent,VideoEvent.REMOTE);
+    }
+  }
+}
