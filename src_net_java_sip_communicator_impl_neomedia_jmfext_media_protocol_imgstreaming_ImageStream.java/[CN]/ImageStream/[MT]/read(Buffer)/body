@@ -2,7 +2,12 @@
   long begin=System.currentTimeMillis();
   long maxTime=1000 / 10;
   int wait=0;
-  if (buffer.getFormat() instanceof AVFrameFormat) {
+  Format bufferFormat=buffer.getFormat();
+  if (bufferFormat == null) {
+    bufferFormat=getFormat();
+    if (bufferFormat != null)     buffer.setFormat(bufferFormat);
+  }
+  if (bufferFormat instanceof AVFrameFormat) {
     Object dataAv=buffer.getData();
     AVFrame bufferFrame=null;
     long bufferFramePtr=0;
@@ -14,7 +19,7 @@
       bufferFrame=new FinalizableAVFrame();
       bufferFramePtr=bufferFrame.getPtr();
     }
-    AVFrameFormat bufferFrameFormat=(AVFrameFormat)buffer.getFormat();
+    AVFrameFormat bufferFrameFormat=(AVFrameFormat)bufferFormat;
     Dimension bufferFrameSize=bufferFrameFormat.getSize();
     if (readScreenNative(bufferFrameSize)) {
       FFmpeg.avpicture_fill(bufferFramePtr,data.ptr,bufferFrameFormat.getPixFmt(),bufferFrameSize.width,bufferFrameSize.height);
@@ -33,7 +38,6 @@
       buffer.setLength(buf.length);
     }
   }
-  buffer.setFormat(buffer.getFormat());
   buffer.setHeader(null);
   buffer.setTimeStamp(System.nanoTime());
   buffer.setSequenceNumber(seqNo);
