@@ -3,19 +3,25 @@
     buffer.setLength(0);
     return;
   }
-  int bufferLength=bytesPerBuffer;
-  byte[] bufferData=new byte[bufferLength];
+  Object data=buffer.getData();
+  byte[] bufferData;
+  if (data instanceof byte[] && ((byte[])data).length >= bytesPerBuffer) {
+    bufferData=(byte[])data;
+  }
+ else {
+    bufferData=new byte[bytesPerBuffer];
+    buffer.setData(bufferData);
+  }
 synchronized (connectedToStreamSync) {
     PortAudio.Pa_ReadStream(stream,bufferData,framesPerBuffer);
   }
   long bufferTimeStamp=System.nanoTime();
-  buffer.setData(bufferData);
   buffer.setFlags(Buffer.FLAG_SYSTEM_TIME);
-  buffer.setLength(bufferLength);
+  buffer.setLength(bytesPerBuffer);
   buffer.setOffset(0);
   buffer.setTimeStamp(bufferTimeStamp);
   int slaveCount=slaves.size();
   for (int slaveIndex=0; slaveIndex < slaveCount; slaveIndex++) {
-    slaves.get(slaveIndex).setBuffer(bufferData,bufferLength,bufferTimeStamp);
+    slaves.get(slaveIndex).setBuffer(bufferData,bytesPerBuffer,bufferTimeStamp);
   }
 }

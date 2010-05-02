@@ -8,7 +8,16 @@ synchronized (parentStream) {
       parentStream.read(buffer);
     }
  else {
-      buffer.setData(bufferData);
+      Object data=buffer.getData();
+      byte[] tmpArray;
+      if (data instanceof byte[] && ((byte[])data).length >= bufferLength) {
+        tmpArray=(byte[])data;
+      }
+ else {
+        tmpArray=new byte[bufferLength];
+        buffer.setData(tmpArray);
+      }
+      System.arraycopy(bufferData,0,tmpArray,0,bufferLength);
       buffer.setFlags(Buffer.FLAG_SYSTEM_TIME);
       buffer.setLength(bufferLength);
       buffer.setOffset(0);
