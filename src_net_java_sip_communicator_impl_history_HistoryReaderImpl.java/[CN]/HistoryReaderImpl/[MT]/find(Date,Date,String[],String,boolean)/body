@@ -6,7 +6,7 @@
   if (filelist.size() != 0)   fileProgressStep=HistorySearchProgressListener.PROGRESS_MAXIMUM_VALUE / filelist.size();
   fireProgressStateChanged(startDate,endDate,keywords,HistorySearchProgressListener.PROGRESS_MINIMUM_VALUE);
   Iterator<String> fileIterator=filelist.iterator();
-  while (fileIterator.hasNext()) {
+  while (fileIterator.hasNext() && !isFindCanceled) {
     String filename=fileIterator.next();
     Document doc=this.historyImpl.getDocumentForFile(filename);
     if (doc == null)     continue;
@@ -14,7 +14,7 @@
     double nodesProgressStep=fileProgressStep;
     if (nodes.getLength() != 0)     nodesProgressStep=fileProgressStep / nodes.getLength();
     Node node;
-    for (int i=0; i < nodes.getLength(); i++) {
+    for (int i=0; i < nodes.getLength() && !isFindCanceled; i++) {
       node=nodes.item(i);
       String ts=node.getAttributes().getNamedItem("timestamp").getNodeValue();
       Date timestamp=new Date(Long.parseLong(ts));
@@ -32,5 +32,6 @@
   if ((int)currentProgress < HistorySearchProgressListener.PROGRESS_MAXIMUM_VALUE) {
     fireProgressStateChanged(startDate,endDate,keywords,HistorySearchProgressListener.PROGRESS_MAXIMUM_VALUE);
   }
+  isFindCanceled=false;
   return new OrderedQueryResultSet<HistoryRecord>(result);
 }

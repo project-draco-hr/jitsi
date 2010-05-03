@@ -1,0 +1,20 @@
+{
+  SIPCommMenu callContactMenu=new SIPCommMenu(GuiActivator.getResources().getI18NString("service.gui.CALL"));
+  callContactMenu.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.CALL_16x16_ICON)));
+  Iterator<ContactDetail> details=sourceContact.getContactDetails(OperationSetBasicTelephony.class).iterator();
+  while (details.hasNext()) {
+    final ContactDetail detail=details.next();
+    JMenuItem callContactItem=new JMenuItem();
+    callContactItem.setName(detail.getContactAddress());
+    callContactItem.addActionListener(new ActionListener(){
+      public void actionPerformed(      ActionEvent e){
+        ProtocolProviderService protocolProvider=detail.getPreferredProtocolProvider(OperationSetBasicTelephony.class);
+        if (protocolProvider != null)         CallManager.createCall(protocolProvider,detail.getContactAddress());
+ else         CallManager.createCall(detail.getContactAddress());
+      }
+    }
+);
+    callContactMenu.add(callContactItem);
+  }
+  return callContactMenu;
+}

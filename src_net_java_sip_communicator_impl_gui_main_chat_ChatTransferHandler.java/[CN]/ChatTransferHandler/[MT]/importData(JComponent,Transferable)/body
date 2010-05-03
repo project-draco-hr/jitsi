@@ -17,10 +17,10 @@ catch (    IOException e) {
       logger.debug("Failed to drop files.",e);
     }
   }
- else   if (t.isDataFlavorSupported(metaContactDataFlavor)) {
+ else   if (t.isDataFlavorSupported(uiContactDataFlavor)) {
     Object o=null;
     try {
-      o=t.getTransferData(metaContactDataFlavor);
+      o=t.getTransferData(uiContactDataFlavor);
     }
  catch (    UnsupportedFlavorException e) {
       logger.debug("Failed to drop meta contact.",e);
@@ -29,9 +29,10 @@ catch (    IOException e) {
       logger.debug("Failed to drop meta contact.",e);
     }
     if (o instanceof ContactNode) {
-      MetaContact metaContact=((ContactNode)o).getMetaContact();
+      UIContact uiContact=((ContactNode)o).getContactDescriptor();
+      if (!(uiContact instanceof MetaUIContact))       return false;
       ChatTransport currentChatTransport=chatPanel.getChatSession().getCurrentChatTransport();
-      Iterator<Contact> contacts=metaContact.getContactsForProvider(currentChatTransport.getProtocolProvider());
+      Iterator<Contact> contacts=((MetaContact)uiContact.getDescriptor()).getContactsForProvider(currentChatTransport.getProtocolProvider());
       String contact=null;
       if (contacts.hasNext())       contact=contacts.next().getAddress();
       if (contact != null) {
@@ -40,7 +41,7 @@ catch (    IOException e) {
         chatPanel.inviteContacts(currentChatTransport,inviteList,null);
         return true;
       }
- else       new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.CONTACT_NOT_SUPPORTING_CHAT_CONF",new String[]{metaContact.getDisplayName()})).showDialog();
+ else       new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.CONTACT_NOT_SUPPORTING_CHAT_CONF",new String[]{uiContact.getDisplayName()})).showDialog();
     }
   }
  else   if (t.isDataFlavorSupported(DataFlavor.stringFlavor)) {

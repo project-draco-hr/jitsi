@@ -22,10 +22,10 @@ catch (    IOException e) {
       }
     }
   }
- else   if (t.isDataFlavorSupported(metaContactDataFlavor)) {
+ else   if (t.isDataFlavorSupported(uiContactDataFlavor)) {
     Object o=null;
     try {
-      o=t.getTransferData(metaContactDataFlavor);
+      o=t.getTransferData(uiContactDataFlavor);
     }
  catch (    UnsupportedFlavorException e) {
       if (logger.isDebugEnabled())       logger.debug("Failed to drop meta contact.",e);
@@ -34,21 +34,24 @@ catch (    IOException e) {
       if (logger.isDebugEnabled())       logger.debug("Failed to drop meta contact.",e);
     }
     if (o instanceof ContactNode && comp instanceof TreeContactList) {
-      MetaContact transferredContact=((ContactNode)o).getMetaContact();
+      UIContact transferredContact=((ContactNode)o).getContactDescriptor();
+      if (!(transferredContact instanceof MetaUIContact))       return false;
       TreeContactList list=(TreeContactList)comp;
       Object dest=list.getSelectionPath().getLastPathComponent();
       if (transferredContact != null) {
         if (dest instanceof ContactNode) {
-          MetaContact destContact=((ContactNode)dest).getMetaContact();
+          UIContact destContact=((ContactNode)dest).getContactDescriptor();
+          if (!(destContact instanceof MetaUIContact))           return false;
           if (transferredContact != destContact) {
-            MetaContactListManager.moveMetaContactToMetaContact(transferredContact,destContact);
+            MetaContactListManager.moveMetaContactToMetaContact((MetaContact)transferredContact.getDescriptor(),(MetaContact)destContact.getDescriptor());
           }
           return true;
         }
  else         if (dest instanceof GroupNode) {
-          MetaContactGroup destGroup=((GroupNode)dest).getMetaContactGroup();
-          if (transferredContact.getParentMetaContactGroup() != destGroup) {
-            MetaContactListManager.moveMetaContactToGroup(transferredContact,destGroup);
+          UIGroup destGroup=((GroupNode)dest).getGroupDescriptor();
+          if (!(destGroup instanceof MetaUIGroup))           return false;
+          if (!transferredContact.getParentGroup().equals(destGroup)) {
+            MetaContactListManager.moveMetaContactToGroup((MetaContact)transferredContact.getDescriptor(),(MetaContactGroup)destGroup.getDescriptor());
           }
           return true;
         }

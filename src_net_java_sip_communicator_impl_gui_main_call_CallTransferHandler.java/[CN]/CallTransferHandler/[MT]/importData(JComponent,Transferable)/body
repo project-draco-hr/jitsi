@@ -1,8 +1,8 @@
 {
-  if (t.isDataFlavorSupported(metaContactDataFlavor)) {
+  if (t.isDataFlavorSupported(uiContactDataFlavor)) {
     Object o=null;
     try {
-      o=t.getTransferData(metaContactDataFlavor);
+      o=t.getTransferData(uiContactDataFlavor);
     }
  catch (    UnsupportedFlavorException e) {
       if (logger.isDebugEnabled())       logger.debug("Failed to drop meta contact.",e);
@@ -11,16 +11,20 @@ catch (    IOException e) {
       if (logger.isDebugEnabled())       logger.debug("Failed to drop meta contact.",e);
     }
     if (o instanceof ContactNode) {
-      MetaContact metaContact=((ContactNode)o).getMetaContact();
+      UIContact uiContact=((ContactNode)o).getContactDescriptor();
       ProtocolProviderService callProvider=call.getProtocolProvider();
-      Iterator<Contact> contacts=metaContact.getContactsForProvider(callProvider);
+      Iterator<UIContactDetail> contactDetails=uiContact.getContactDetailsForOperationSet(OperationSetBasicTelephony.class).iterator();
       String callee=null;
-      if (contacts.hasNext())       callee=contacts.next().getAddress();
+      while (contactDetails.hasNext()) {
+        UIContactDetail detail=contactDetails.next();
+        ProtocolProviderService detailProvider=detail.getPreferredProtocolProvider(OperationSetBasicTelephony.class);
+        if (detailProvider != null && detailProvider.equals(callProvider))         callee=detail.getAddress();
+      }
       if (callee != null) {
         CallManager.inviteToConferenceCall(new String[]{callee},call);
         return true;
       }
- else       new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.CALL_NOT_SUPPORTING_PARTICIPANT",new String[]{callProvider.getAccountID().getService(),callProvider.getAccountID().getUserID(),metaContact.getDisplayName()})).showDialog();
+ else       new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.CALL_NOT_SUPPORTING_PARTICIPANT",new String[]{callProvider.getAccountID().getService(),callProvider.getAccountID().getUserID(),uiContact.getDisplayName()})).showDialog();
     }
   }
  else   if (t.isDataFlavorSupported(DataFlavor.stringFlavor)) {

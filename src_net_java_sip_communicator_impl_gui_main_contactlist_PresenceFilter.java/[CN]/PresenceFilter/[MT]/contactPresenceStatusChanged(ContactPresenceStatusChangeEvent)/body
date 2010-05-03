@@ -1,0 +1,21 @@
+{
+  final Contact sourceContact=evt.getSourceContact();
+  final MetaContact metaContact=GuiActivator.getContactListService().findMetaContactByContact(sourceContact);
+  if (metaContact == null || (evt.getOldStatus() == evt.getNewStatus()))   return;
+  SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
+      UIContact cDescriptor=MetaContactListSource.getUIContact(metaContact);
+      if (cDescriptor == null)       cDescriptor=MetaContactListSource.createUIContact(metaContact);
+synchronized (lockedFiltering) {
+        if (GuiActivator.getContactList().getCurrentFilter().equals(PresenceFilter.this) && isMatching(metaContact)) {
+          if (cDescriptor.getContactNode() == null)           GuiActivator.getContactList().addContact(cDescriptor);
+ else           GuiActivator.getContactList().nodeChanged(cDescriptor.getContactNode());
+        }
+ else {
+          GuiActivator.getContactList().removeContact(cDescriptor);
+        }
+      }
+    }
+  }
+);
+}

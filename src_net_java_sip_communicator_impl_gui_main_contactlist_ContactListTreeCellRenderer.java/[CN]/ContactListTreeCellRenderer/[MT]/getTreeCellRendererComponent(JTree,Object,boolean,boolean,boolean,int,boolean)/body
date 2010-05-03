@@ -6,40 +6,40 @@
   this.rightLabel.setIcon(null);
   DefaultTreeContactList contactList=(DefaultTreeContactList)tree;
   if (value instanceof ContactNode) {
-    MetaContact metaContact=((ContactNode)value).getMetaContact();
-    String displayName=metaContact.getDisplayName();
+    UIContact contact=((ContactNode)value).getContactDescriptor();
+    String displayName=contact.getDisplayName();
     if (displayName == null || displayName.length() < 1) {
       displayName=GuiActivator.getResources().getI18NString("service.gui.UNKNOWN");
     }
     this.nameLabel.setText(displayName);
-    if (contactList.isContactActive(metaContact)) {
+    if (contactList.isContactActive(contact)) {
       statusIcon.setImage(msgReceivedImage);
     }
  else {
-      statusIcon.setImage(Constants.getStatusIcon(contactList.getMetaContactStatus(metaContact)));
+      statusIcon=contact.getStatusIcon();
     }
     this.statusLabel.setIcon(statusIcon);
     this.nameLabel.setFont(this.getFont().deriveFont(Font.PLAIN));
     if (contactForegroundColor != null)     this.nameLabel.setForeground(contactForegroundColor);
-    this.initStatusMessage(metaContact);
-    this.initButtonsPanel(metaContact);
-    ImageIcon avatar=getAvatar(metaContact);
+    this.initDisplayDetails(contact);
+    this.initButtonsPanel(contact);
+    ImageIcon avatar=isSelected ? contact.getAvatar(isSelected,EXTENDED_AVATAR_WIDTH,EXTENDED_AVATAR_HEIGHT) : contact.getAvatar(isSelected,AVATAR_WIDTH,AVATAR_HEIGHT);
     if (avatar != null)     this.rightLabel.setIcon(avatar);
     this.rightLabel.setText("");
-    this.setToolTipText(metaContact.getMetaUID());
+    this.setToolTipText(contact.getDescriptor().toString());
   }
  else   if (value instanceof GroupNode) {
-    MetaContactGroup groupItem=((GroupNode)value).getMetaContactGroup();
-    this.nameLabel.setText(groupItem.getGroupName());
+    UIGroup groupItem=((GroupNode)value).getGroupDescriptor();
+    this.nameLabel.setText(groupItem.getDisplayName());
     this.nameLabel.setFont(this.getFont().deriveFont(Font.BOLD));
     if (groupForegroundColor != null)     this.nameLabel.setForeground(groupForegroundColor);
-    this.remove(statusMessageLabel);
+    this.remove(displayDetailsLabel);
     this.remove(callButton);
     this.remove(chatButton);
     this.statusLabel.setIcon(expanded ? openedGroupIcon : closedGroupIcon);
     this.rightLabel.setIcon(null);
-    this.rightLabel.setText(groupItem.countOnlineChildContacts() + "/" + groupItem.countChildContacts());
-    this.setToolTipText(groupItem.getMetaUID());
+    if (groupItem.countChildContacts() >= 0)     this.rightLabel.setText(groupItem.countOnlineChildContacts() + "/" + groupItem.countChildContacts());
+    this.setToolTipText(groupItem.getDescriptor().toString());
   }
   return this;
 }

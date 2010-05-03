@@ -1,14 +1,21 @@
 {
-  MetaContact oldParent=evt.getOldParent();
+  final MetaContact oldParent=evt.getOldParent();
+  final MetaContact newParent=evt.getNewParent();
+  SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
 synchronized (tempTreeModel) {
-    ContactNode oldContactNode=treeModel.findContactNodeByMetaContact(oldParent);
-    if (oldContactNode != null && !currentFilter.isMatching(oldParent)) {
-      removeContact(oldParent,oldParent.getParentMetaContactGroup());
-    }
-    MetaContact newParent=evt.getNewParent();
-    ContactNode newContactNode=treeModel.findContactNodeByMetaContact(newParent);
-    if (newContactNode == null && currentFilter.isMatching(newParent)) {
-      addContact(newParent);
+        final UIContact oldUIContact=MetaContactListSource.getUIContact(oldParent);
+        if (oldUIContact != null && !currentFilter.isMatching(oldUIContact)) {
+          removeContact(oldUIContact);
+        }
+        UIContact newUIContact=MetaContactListSource.getUIContact(newParent);
+        if (newUIContact == null) {
+          UIContact uiContact=MetaContactListSource.createUIContact(newParent);
+          if (currentFilter.isMatching(uiContact))           addContact(uiContact);
+ else           MetaContactListSource.removeUIContact(newParent);
+        }
+      }
     }
   }
+);
 }

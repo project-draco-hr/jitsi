@@ -1,9 +1,16 @@
 {
-  MetaContact parent=evt.getNewParent();
+  final MetaContact metaContact=evt.getNewParent();
+  final UIContact parentUIContact=MetaContactListSource.getUIContact(metaContact);
+  SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
 synchronized (tempTreeModel) {
-    ContactNode contactNode=treeModel.findContactNodeByMetaContact(parent);
-    if (contactNode == null && currentFilter.isMatching(parent)) {
-      addContact(parent);
+        if (parentUIContact == null) {
+          UIContact uiContact=MetaContactListSource.createUIContact(metaContact);
+          if (currentFilter.isMatching(uiContact))           addContact(uiContact);
+ else           MetaContactListSource.removeUIContact(metaContact);
+        }
+      }
     }
   }
+);
 }

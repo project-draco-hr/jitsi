@@ -1,0 +1,21 @@
+{
+  Iterator<CallPeerRecord> recordsIter=callRecord.getPeerRecords().iterator();
+  while (recordsIter.hasNext()) {
+    String peerAddress=recordsIter.next().getPeerAddress();
+    if (displayName.length() > 0)     displayName+="," + peerAddress;
+ else     displayName+=peerAddress;
+    if (peerAddress != null) {
+      ContactDetail contactDetail=new ContactDetail(peerAddress);
+      Map<Class<? extends OperationSet>,ProtocolProviderService> preferredProviders=null;
+      if (callRecord.getProtocolProvider() != null) {
+        preferredProviders=new Hashtable<Class<? extends OperationSet>,ProtocolProviderService>();
+        preferredProviders.put(OperationSetBasicTelephony.class,callRecord.getProtocolProvider());
+        contactDetail.setPreferredProviders(preferredProviders);
+      }
+      LinkedList<Class<? extends OperationSet>> supportedOpSets=new LinkedList<Class<? extends OperationSet>>();
+      supportedOpSets.add(OperationSetBasicTelephony.class);
+      contactDetail.setSupportedOpSets(supportedOpSets);
+      contactDetails.add(contactDetail);
+    }
+  }
+}
