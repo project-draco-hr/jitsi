@@ -1,16 +1,28 @@
 {
+  final MetaContact metaContact=evt.getSourceMetaContact();
+  final MetaContactGroup oldParent=evt.getOldParent();
+  final MetaContactGroup newParent=evt.getNewParent();
   SwingUtilities.invokeLater(new Runnable(){
     public void run(){
 synchronized (filterLock) {
-        UIContact uiContact=MetaContactListSource.getUIContact(evt.getSourceMetaContact());
-        UIGroup oldUIGroup=MetaContactListSource.getUIGroup(evt.getOldParent());
-        UIGroup newUIGroup=MetaContactListSource.getUIGroup(evt.getNewParent());
-        if (currentFilter.isMatching(uiContact)) {
-          GroupNode oldParent=oldUIGroup.getGroupNode();
-          GroupNode newParent=newUIGroup.getGroupNode();
-          if (oldParent != null)           oldParent.removeContact(uiContact);
-          if (newParent != null)           newParent.sortedAddContact(uiContact,true);
+        UIContact uiContact=MetaContactListSource.getUIContact(metaContact);
+        if (uiContact == null)         return;
+        UIGroup oldUIGroup=null;
+        if (!MetaContactListSource.isRootGroup(oldParent)) {
+          oldUIGroup=MetaContactListSource.getUIGroup(oldParent);
         }
+ else {
+          oldUIGroup=treeModel.getRoot().getGroupDescriptor();
+        }
+        if (oldUIGroup != null)         removeContact(uiContact);
+        uiContact=MetaContactListSource.createUIContact(evt.getSourceMetaContact());
+        UIGroup newUIGroup=null;
+        if (!MetaContactListSource.isRootGroup(newParent)) {
+          newUIGroup=MetaContactListSource.getUIGroup(newParent);
+          if (newUIGroup == null)           newUIGroup=MetaContactListSource.createUIGroup(newParent);
+        }
+        if (currentFilter.isMatching(uiContact))         addContact(treeModel,uiContact,newUIGroup,true,true);
+ else         MetaContactListSource.removeUIContact(metaContact);
       }
     }
   }

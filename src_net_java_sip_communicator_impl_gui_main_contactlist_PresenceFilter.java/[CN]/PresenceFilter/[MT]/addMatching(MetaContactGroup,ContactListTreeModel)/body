@@ -2,7 +2,15 @@
   Iterator<MetaContact> childContacts=metaGroup.getChildContacts();
   while (childContacts.hasNext() && isFiltering) {
     MetaContact metaContact=childContacts.next();
-    if (isMatching(metaContact))     GuiActivator.getContactList().addContact(resultTreeModel,MetaContactListSource.createUIContact(metaContact),true,false);
+    if (isMatching(metaContact)) {
+      MetaContactGroup parentGroup=metaContact.getParentMetaContactGroup();
+      UIGroup uiGroup=null;
+      if (!MetaContactListSource.isRootGroup(parentGroup)) {
+        uiGroup=MetaContactListSource.getUIGroup(parentGroup);
+        if (uiGroup == null)         uiGroup=MetaContactListSource.createUIGroup(parentGroup);
+      }
+      GuiActivator.getContactList().addContact(resultTreeModel,MetaContactListSource.createUIContact(metaContact),uiGroup,true,false);
+    }
   }
   Iterator<MetaContactGroup> subgroups=metaGroup.getSubgroups();
   while (subgroups.hasNext() && isFiltering) {

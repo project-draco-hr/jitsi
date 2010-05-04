@@ -6,7 +6,15 @@ synchronized (filterLock) {
         UIContact parentUIContact=MetaContactListSource.getUIContact(metaContact);
         if (parentUIContact == null) {
           UIContact uiContact=MetaContactListSource.createUIContact(metaContact);
-          if (currentFilter.isMatching(uiContact))           addContact(uiContact);
+          if (currentFilter.isMatching(uiContact)) {
+            MetaContactGroup parentGroup=metaContact.getParentMetaContactGroup();
+            UIGroup uiGroup=null;
+            if (!MetaContactListSource.isRootGroup(parentGroup)) {
+              uiGroup=MetaContactListSource.getUIGroup(parentGroup);
+              if (uiGroup == null)               uiGroup=MetaContactListSource.createUIGroup(parentGroup);
+            }
+            addContact(uiContact,uiGroup);
+          }
  else           MetaContactListSource.removeUIContact(metaContact);
         }
       }
