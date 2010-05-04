@@ -2,7 +2,7 @@
   isFiltering=true;
   if (currentFilter == null || !currentFilter.equals(filter))   this.currentFilter=filter;
   tempTreeModel=new ContactListTreeModel();
-synchronized (tempTreeModel) {
+synchronized (filterLock) {
     treeModel.clearDependencies();
     currentFilter.applyFilter(tempTreeModel);
     treeModel=tempTreeModel;
@@ -21,6 +21,8 @@ synchronized (tempTreeModel) {
   }
 );
   isFiltering=false;
-  if (tempTreeModel.getChildCount(tempTreeModel.getRoot()) > 0)   return true;
-  return false;
+  boolean hasResults=false;
+  if (tempTreeModel.getChildCount(tempTreeModel.getRoot()) > 0)   hasResults=true;
+  tempTreeModel=null;
+  return hasResults;
 }
