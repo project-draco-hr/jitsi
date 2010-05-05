@@ -1,0 +1,27 @@
+{
+  isFiltering=true;
+  if (currentFilter == null || !currentFilter.equals(filter))   this.currentFilter=filter;
+synchronized (filterLock) {
+    treeModel.clearDependencies();
+    if (contactSource != null && filter instanceof ContactListSourceFilter)     ((ContactListSourceFilter)currentFilter).applyFilter(contactSource,tempTreeModel);
+ else     currentFilter.applyFilter(tempTreeModel);
+    treeModel=tempTreeModel;
+  }
+  if (!isFiltering) {
+    return (treeModel.getChildCount(treeModel.getRoot()) > 0);
+  }
+  SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
+      setTreeModel(treeModel);
+      treeModel.reload();
+      expandAllRows();
+      revalidate();
+      repaint();
+    }
+  }
+);
+  isFiltering=false;
+  boolean hasResults=false;
+  if (tempTreeModel.getChildCount(tempTreeModel.getRoot()) > 0)   hasResults=true;
+  return hasResults;
+}
