@@ -1,0 +1,26 @@
+{
+  Vector<String> filelist=HistoryReaderImpl.filterFilesByDate(history.getFileList(),startDate,endDate);
+  Iterator<String> fileIterator=filelist.iterator();
+  while (fileIterator.hasNext() && resultCount > 0 && !query.isCanceled()) {
+    String filename=fileIterator.next();
+    Document doc=history.getDocumentForFile(filename);
+    if (doc == null)     continue;
+    NodeList nodes=doc.getElementsByTagName("record");
+    Node node;
+    for (int i=0; i < nodes.getLength() && !query.isCanceled(); i++) {
+      node=nodes.item(i);
+      String ts=node.getAttributes().getNamedItem("timestamp").getNodeValue();
+      Date timestamp=new Date(Long.parseLong(ts));
+      if (HistoryReaderImpl.isInPeriod(timestamp,startDate,endDate)) {
+        NodeList propertyNodes=node.getChildNodes();
+        HistoryRecord record=HistoryReaderImpl.filterByKeyword(propertyNodes,timestamp,keywords,field,caseSensitive);
+        if (record != null) {
+          query.addHistoryRecord(record);
+          resultCount--;
+        }
+      }
+    }
+  }
+  if (query.isCanceled())   query.setStatus(HistoryQueryStatusEvent.QUERY_CANCELED);
+ else   query.setStatus(HistoryQueryStatusEvent.QUERY_COMPLETED);
+}
