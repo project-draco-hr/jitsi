@@ -1,11 +1,16 @@
 {
-  RawPacket pkt=createRawPacket(buffer,offset,length);
-  if (pkt == null)   return length;
-  for (  InetSocketAddress target : targets)   try {
-    socket.send(new DatagramPacket(pkt.getBuffer(),pkt.getOffset(),pkt.getLength(),target.getAddress(),target.getPort()));
+  if (maxPacketsPerMillisPolicy != null) {
+    byte[] newBuffer=new byte[length];
+    System.arraycopy(buffer,offset,newBuffer,0,length);
+    buffer=newBuffer;
+    offset=0;
   }
- catch (  IOException ex) {
-    return -1;
+  RawPacket packet=createRawPacket(buffer,offset,length);
+  if (packet != null) {
+    if (maxPacketsPerMillisPolicy == null) {
+      if (!send(packet))       return -1;
+    }
+ else     maxPacketsPerMillisPolicy.write(packet);
   }
   return length;
 }

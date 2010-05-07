@@ -1,0 +1,44 @@
+{
+  try {
+    while (true) {
+      RawPacket packet;
+synchronized (packetQueue) {
+        while (packetQueue.size() < 1) {
+          try {
+            packetQueue.wait();
+          }
+ catch (          InterruptedException iex) {
+          }
+        }
+        packet=packetQueue.remove(0);
+        packetQueue.notifyAll();
+      }
+      long time=System.nanoTime();
+      long millisRemainingTime=time - millisStartTime;
+      if ((perNanos < 1) || (millisRemainingTime >= perNanos)) {
+        millisStartTime=time;
+        packetsSentInMillis=0;
+      }
+ else       if ((maxPackets > 0) && (packetsSentInMillis >= maxPackets)) {
+        while (true) {
+          millisRemainingTime=System.nanoTime() - millisStartTime;
+          if (millisRemainingTime >= perNanos)           break;
+          try {
+            Thread.sleep(millisRemainingTime / 1000000,(int)(millisRemainingTime % 1000000));
+          }
+ catch (          InterruptedException iex) {
+          }
+        }
+        millisStartTime=System.nanoTime();
+        packetsSentInMillis=0;
+      }
+      send(packet);
+      packetsSentInMillis++;
+    }
+  }
+  finally {
+synchronized (packetQueue) {
+      if (Thread.currentThread().equals(sendThread))       sendThread=null;
+    }
+  }
+}

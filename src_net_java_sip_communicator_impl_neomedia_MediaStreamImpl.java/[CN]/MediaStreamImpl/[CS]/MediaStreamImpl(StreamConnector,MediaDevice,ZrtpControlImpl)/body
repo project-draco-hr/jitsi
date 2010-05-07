@@ -1,11 +1,14 @@
 {
   setDevice(device);
-  this.rtpConnector=new RTPTransformConnector(connector);
-  if (zrtpControl != null) {
-    this.zrtpControl=zrtpControl;
+  rtpConnector=new RTPTransformConnector(connector){
+    @Override protected TransformOutputStream createDataOutputStream() throws IOException {
+      TransformOutputStream dataOutputStream=super.createDataOutputStream();
+      if (dataOutputStream != null)       configureDataOutputStream(dataOutputStream);
+      return dataOutputStream;
+    }
   }
- else   this.zrtpControl=new ZrtpControlImpl();
+;
+  this.zrtpControl=(zrtpControl == null) ? new ZrtpControlImpl() : zrtpControl;
   this.zrtpControl.setConnector(rtpConnector);
-  TransformEngineChain engineChain=createTransformEngineChain();
-  rtpConnector.setEngine(engineChain);
+  rtpConnector.setEngine(createTransformEngineChain());
 }
