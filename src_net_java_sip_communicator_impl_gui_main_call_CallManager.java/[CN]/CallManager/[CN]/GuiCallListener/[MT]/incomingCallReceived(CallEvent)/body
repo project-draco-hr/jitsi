@@ -3,11 +3,13 @@
   ReceivedCallDialog receivedCallDialog=new ReceivedCallDialog(sourceCall);
   receivedCallDialog.pack();
   receivedCallDialog.setVisible(true);
-  NotificationManager.fireNotification(NotificationManager.INCOMING_CALL,"",GuiActivator.getResources().getI18NString("service.gui.INCOMING_CALL",new String[]{sourceCall.getCallPeers().next().toString()}));
+  final String peerName=sourceCall.getCallPeers().next().getDisplayName();
+  final Date callDate=new Date();
+  NotificationManager.fireNotification(NotificationManager.INCOMING_CALL,"",GuiActivator.getResources().getI18NString("service.gui.INCOMING_CALL",new String[]{peerName}));
   sourceCall.addCallChangeListener(new CallChangeAdapter(){
     public void callStateChanged(    CallChangeEvent evt){
       if (evt.getNewValue().equals(CallState.CALL_ENDED) && evt.getOldValue().equals(CallState.CALL_INITIALIZATION)) {
-        addMissedCall();
+        addMissedCall(new MissedCall(peerName,callDate));
         evt.getSourceCall().removeCallChangeListener(this);
       }
     }
