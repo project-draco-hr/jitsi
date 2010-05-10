@@ -1,8 +1,17 @@
 {
-  MainFrame mainFrame=GuiActivator.getUIService().getMainFrame();
+  final MainFrame mainFrame=GuiActivator.getUIService().getMainFrame();
   String currentSearchText=mainFrame.getCurrentSearchText();
   if (currentSearchText != null && currentSearchText.length() > 0) {
-    mainFrame.clearCurrentSearchText();
+    if (!SwingUtilities.isEventDispatchThread())     SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        mainFrame.clearCurrentSearchText();
+      }
+    }
+);
+ else     mainFrame.clearCurrentSearchText();
   }
- else   applyFilter(defaultFilter,new ContactListTreeModel(),null);
+ else {
+    treeModel.clear();
+    applyFilter(defaultFilter,null);
+  }
 }

@@ -2,29 +2,22 @@
   final Contact sourceContact=evt.getSourceContact();
   final MetaContact metaContact=GuiActivator.getContactListService().findMetaContactByContact(sourceContact);
   if (metaContact == null || (evt.getOldStatus() == evt.getNewStatus()))   return;
-  SwingUtilities.invokeLater(new Runnable(){
-    public void run(){
-synchronized (filterLock) {
-        UIContact uiContact=MetaContactListSource.getUIContact(metaContact);
-        if (uiContact == null) {
-          uiContact=MetaContactListSource.createUIContact(metaContact);
-          if (currentFilter.isMatching(uiContact)) {
-            MetaContactGroup parentGroup=metaContact.getParentMetaContactGroup();
-            UIGroup uiGroup=null;
-            if (!MetaContactListSource.isRootGroup(parentGroup)) {
-              uiGroup=MetaContactListSource.getUIGroup(parentGroup);
-              if (uiGroup == null)               uiGroup=MetaContactListSource.createUIGroup(parentGroup);
-            }
-            addContact(uiContact,uiGroup);
-          }
- else           MetaContactListSource.removeUIContact(metaContact);
-        }
- else {
-          if (!currentFilter.isMatching(uiContact))           removeContact(uiContact);
- else           treeModel.nodeChanged(uiContact.getContactNode());
-        }
+  UIContact uiContact=MetaContactListSource.getUIContact(metaContact);
+  if (uiContact == null) {
+    uiContact=MetaContactListSource.createUIContact(metaContact);
+    if (currentFilter.isMatching(uiContact)) {
+      MetaContactGroup parentGroup=metaContact.getParentMetaContactGroup();
+      UIGroup uiGroup=null;
+      if (!MetaContactListSource.isRootGroup(parentGroup)) {
+        uiGroup=MetaContactListSource.getUIGroup(parentGroup);
+        if (uiGroup == null)         uiGroup=MetaContactListSource.createUIGroup(parentGroup);
       }
+      addContact(uiContact,uiGroup,true);
     }
+ else     MetaContactListSource.removeUIContact(metaContact);
   }
-);
+ else {
+    if (!currentFilter.isMatching(uiContact))     removeContact(uiContact);
+ else     treeModel.nodeChanged(uiContact.getContactNode());
+  }
 }

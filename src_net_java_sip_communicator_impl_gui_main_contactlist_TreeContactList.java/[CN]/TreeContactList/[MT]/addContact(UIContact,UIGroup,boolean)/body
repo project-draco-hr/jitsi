@@ -1,0 +1,24 @@
+{
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        addContact(contact,group,isSorted);
+      }
+    }
+);
+    return;
+  }
+  GroupNode groupNode;
+  if (group == null)   groupNode=treeModel.getRoot();
+ else {
+    groupNode=group.getGroupNode();
+    if (groupNode == null) {
+      GroupNode parentNode=treeModel.getRoot();
+      groupNode=parentNode.sortedAddContactGroup(group);
+    }
+  }
+  contact.setParentGroup(groupNode.getGroupDescriptor());
+  if (isSorted)   groupNode.sortedAddContact(contact);
+ else   groupNode.addContact(contact);
+  if ((!currentFilter.equals(presenceFilter) || !groupNode.isCollapsed()))   this.expandGroup(groupNode);
+}

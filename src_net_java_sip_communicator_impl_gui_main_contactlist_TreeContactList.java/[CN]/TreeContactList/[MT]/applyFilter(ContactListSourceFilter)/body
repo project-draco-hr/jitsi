@@ -1,18 +1,12 @@
 {
-  final ContactListTreeModel tempTreeModel=new ContactListTreeModel();
   filterQuery=new FilterQuery();
-  if (filter.hasDefaultSource())   filterQuery.setSucceeded(applyFilter(filter,tempTreeModel,null));
+  treeModel.clear();
+  if (filter.hasDefaultSource())   applyFilter(filter,null);
   Iterator<ExternalContactSource> filterSources=filter.getContactSources().iterator();
   while (filterSources.hasNext()) {
     final ExternalContactSource filterSource=filterSources.next();
     if (filterQuery.isCanceled())     return filterQuery;
-    new Thread(){
-      public void run(){
-        boolean isSucceeded=applyFilter(filter,tempTreeModel,filterSource);
-        if (!filterQuery.isSucceeded() && isSucceeded)         filterQuery.setSucceeded(true);
-      }
-    }
-.start();
+    applyFilter(filter,filterSource);
   }
   return filterQuery;
 }
