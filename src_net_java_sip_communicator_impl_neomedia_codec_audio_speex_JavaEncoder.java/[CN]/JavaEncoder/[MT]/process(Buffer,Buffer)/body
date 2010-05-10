@@ -20,9 +20,19 @@
     encoder.processData(inpData,inOffset,FRAME_SIZE);
     byte[] buff=new byte[encoder.getProcessedDataByteSize()];
     encoder.getProcessedData(buff,0);
-    byte[] outData=validateByteArraySize(outputBuffer,buff.length);
-    System.arraycopy(buff,0,outData,outputBuffer.getOffset(),buff.length);
-    updateOutput(outputBuffer,outputFormat,outData.length,0);
+    Object outData=outputBuffer.getData();
+    byte[] out;
+    if (outData instanceof byte[]) {
+      out=(byte[])outData;
+      if (out.length < buff.length)       out=null;
+    }
+ else     out=null;
+    if (out == null)     out=new byte[buff.length];
+    System.arraycopy(buff,0,out,outputBuffer.getOffset(),buff.length);
+    outputBuffer.setData(out);
+    outputBuffer.setLength(out.length);
+    outputBuffer.setOffset(0);
+    outputBuffer.setFormat(outFormat);
     if ((inpLength - inOffset) > FRAME_SIZE) {
       inputBuffer.setOffset(inOffset + FRAME_SIZE);
       return BUFFER_PROCESSED_OK | INPUT_BUFFER_NOT_CONSUMED;
