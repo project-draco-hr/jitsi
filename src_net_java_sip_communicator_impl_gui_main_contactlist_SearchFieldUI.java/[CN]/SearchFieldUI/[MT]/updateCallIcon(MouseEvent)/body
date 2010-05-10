@@ -1,0 +1,25 @@
+{
+  int x=evt.getX();
+  int y=evt.getY();
+  Rectangle callButtonRect=getCallButtonRect();
+  if (callButtonRect.contains(x,y)) {
+    isCallMouseOver=true;
+    getComponent().setCursor(Cursor.getDefaultCursor());
+    if (evt.getID() == MouseEvent.MOUSE_CLICKED) {
+      JTextComponent c=getComponent();
+      String searchText=c.getText();
+      if (searchText == null)       return;
+      List<ProtocolProviderService> telephonyProviders=CallManager.getTelephonyProviders();
+      if (telephonyProviders.size() == 1) {
+        CallManager.createCall(telephonyProviders.get(0),searchText);
+      }
+ else       if (telephonyProviders.size() > 1) {
+        ChooseCallAccountPopupMenu chooseAccountDialog=new ChooseCallAccountPopupMenu(c,searchText,telephonyProviders);
+        chooseAccountDialog.setLocation(getCallButtonRect().getLocation());
+        chooseAccountDialog.showPopupMenu();
+      }
+    }
+  }
+ else   isCallMouseOver=false;
+  getComponent().repaint();
+}
