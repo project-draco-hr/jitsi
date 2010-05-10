@@ -16,14 +16,27 @@
     initConverter((AudioFormat)newFormat);
   }
   try {
-    decoder.processData(inData,inOffset,inpLength);
+    int fullyProcessed=decoder.processData(inData,inOffset,inpLength);
+    while (fullyProcessed != 1) {
+      fullyProcessed=decoder.processData(false);
+    }
     outLength=decoder.getProcessedDataByteSize();
-    byte[] outData=validateByteArraySize(outputBuffer,outLength);
-    decoder.getProcessedData(outData,outOffset);
+    Object outData=outputBuffer.getData();
+    byte[] out;
+    if (outData instanceof byte[]) {
+      out=(byte[])outData;
+      if (out.length < outLength)       out=null;
+    }
+ else     out=null;
+    if (out == null)     out=new byte[outLength];
+    decoder.getProcessedData(out,outOffset);
+    outputBuffer.setData(out);
+    outputBuffer.setLength(out.length);
+    outputBuffer.setOffset(0);
+    outputBuffer.setFormat(outputFormat);
   }
  catch (  StreamCorruptedException ex) {
     ex.printStackTrace();
   }
-  updateOutput(outputBuffer,outputFormat,outLength,0);
   return BUFFER_PROCESSED_OK;
 }
