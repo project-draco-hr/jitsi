@@ -3,12 +3,14 @@
   int y=evt.getY();
   Rectangle callButtonRect=getCallButtonRect();
   if (callButtonRect.contains(x,y)) {
+    JTextComponent c=getComponent();
+    String searchText=c.getText();
+    if (searchText == null)     return;
+    getComponent().setToolTipText(callString + " " + searchText);
+    ToolTipManager.sharedInstance().mouseEntered(new MouseEvent(getComponent(),0,x,y,x,y,0,false));
     isCallMouseOver=true;
     getComponent().setCursor(Cursor.getDefaultCursor());
     if (evt.getID() == MouseEvent.MOUSE_CLICKED) {
-      JTextComponent c=getComponent();
-      String searchText=c.getText();
-      if (searchText == null)       return;
       List<ProtocolProviderService> telephonyProviders=CallManager.getTelephonyProviders();
       if (telephonyProviders.size() == 1) {
         CallManager.createCall(telephonyProviders.get(0),searchText);
@@ -20,6 +22,10 @@
       }
     }
   }
- else   isCallMouseOver=false;
+ else {
+    getComponent().setToolTipText("");
+    ToolTipManager.sharedInstance().mouseExited(new MouseEvent(getComponent(),0,x,y,x,y,0,false));
+    isCallMouseOver=false;
+  }
   getComponent().repaint();
 }
