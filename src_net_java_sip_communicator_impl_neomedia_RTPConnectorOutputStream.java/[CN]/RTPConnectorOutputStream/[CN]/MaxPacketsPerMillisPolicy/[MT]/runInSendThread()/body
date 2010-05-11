@@ -1,18 +1,17 @@
 {
   try {
-    while (true) {
-      RawPacket packet;
-synchronized (packetQueue) {
-        while (packetQueue.size() < 1) {
-          try {
-            packetQueue.wait();
-          }
- catch (          InterruptedException iex) {
-          }
+    while (sendRun) {
+      RawPacket packet=null;
+      while (true) {
+        try {
+          packet=packetQueue.take();
+          break;
         }
-        packet=packetQueue.remove(0);
-        packetQueue.notifyAll();
+ catch (        InterruptedException iex) {
+          continue;
+        }
       }
+      if (!sendRun)       break;
       long time=System.nanoTime();
       long millisRemainingTime=time - millisStartTime;
       if ((perNanos < 1) || (millisRemainingTime >= perNanos)) {
@@ -23,11 +22,7 @@ synchronized (packetQueue) {
         while (true) {
           millisRemainingTime=System.nanoTime() - millisStartTime;
           if (millisRemainingTime >= perNanos)           break;
-          try {
-            Thread.sleep(millisRemainingTime / 1000000,(int)(millisRemainingTime % 1000000));
-          }
- catch (          InterruptedException iex) {
-          }
+          LockSupport.parkNanos(millisRemainingTime);
         }
         millisStartTime=System.nanoTime();
         packetsSentInMillis=0;
@@ -37,6 +32,7 @@ synchronized (packetQueue) {
     }
   }
   finally {
+    packetQueue.clear();
 synchronized (packetQueue) {
       if (Thread.currentThread().equals(sendThread))       sendThread=null;
     }
