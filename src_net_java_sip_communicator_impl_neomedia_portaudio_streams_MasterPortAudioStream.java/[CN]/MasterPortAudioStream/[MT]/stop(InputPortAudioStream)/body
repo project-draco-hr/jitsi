@@ -2,9 +2,19 @@
   if (!started)   return;
   slaves.remove(slave);
   if (slaves.isEmpty()) {
-    PortAudio.Pa_CloseStream(stream);
-    stream=0;
-    started=false;
-    PortAudioManager.getInstance().stoppedInputPortAudioStream(this);
+synchronized (readSync) {
+      while (readActive) {
+        try {
+          readSync.wait();
+        }
+ catch (        InterruptedException e) {
+          continue;
+        }
+      }
+      PortAudio.Pa_CloseStream(stream);
+      stream=0;
+      started=false;
+      PortAudioManager.getInstance().stoppedInputPortAudioStream(this);
+    }
   }
 }

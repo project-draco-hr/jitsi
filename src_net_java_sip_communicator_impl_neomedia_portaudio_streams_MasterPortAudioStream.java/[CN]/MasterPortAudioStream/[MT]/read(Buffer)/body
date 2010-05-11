@@ -1,7 +1,13 @@
 {
-  if (!started) {
-    buffer.setLength(0);
-    return;
+synchronized (readSync) {
+    if (readActive) {
+      return false;
+    }
+    readActive=true;
+    if (!started) {
+      buffer.setLength(0);
+      return true;
+    }
   }
   Object data=buffer.getData();
   byte[] bufferData;
@@ -24,4 +30,9 @@ synchronized (connectedToStreamSync) {
   for (int slaveIndex=0; slaveIndex < slaveCount; slaveIndex++) {
     slaves.get(slaveIndex).setBuffer(bufferData,bytesPerBuffer,bufferTimeStamp);
   }
+synchronized (readSync) {
+    readActive=false;
+    readSync.notify();
+  }
+  return true;
 }

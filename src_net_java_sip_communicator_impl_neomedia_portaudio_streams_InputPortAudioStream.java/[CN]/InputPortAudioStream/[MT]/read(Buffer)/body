@@ -3,25 +3,36 @@
     buffer.setLength(0);
     return;
   }
-synchronized (parentStream) {
-    if (bufferData == null) {
-      parentStream.read(buffer);
-    }
- else {
-      Object data=buffer.getData();
-      byte[] tmpArray;
-      if (data instanceof byte[] && ((byte[])data).length >= bufferLength) {
-        tmpArray=(byte[])data;
+synchronized (readSync) {
+    while (true) {
+      if (bufferData == null) {
+        if (!parentStream.read(buffer)) {
+          try {
+            readSync.wait();
+          }
+ catch (          InterruptedException e) {
+            continue;
+          }
+          continue;
+        }
       }
  else {
-        tmpArray=new byte[bufferLength];
-        buffer.setData(tmpArray);
+        Object data=buffer.getData();
+        byte[] tmpArray;
+        if (data instanceof byte[] && ((byte[])data).length >= bufferLength) {
+          tmpArray=(byte[])data;
+        }
+ else {
+          tmpArray=new byte[bufferLength];
+          buffer.setData(tmpArray);
+        }
+        System.arraycopy(bufferData,0,tmpArray,0,bufferLength);
+        buffer.setFlags(Buffer.FLAG_SYSTEM_TIME);
+        buffer.setLength(bufferLength);
+        buffer.setOffset(0);
+        buffer.setTimeStamp(bufferTimeStamp);
       }
-      System.arraycopy(bufferData,0,tmpArray,0,bufferLength);
-      buffer.setFlags(Buffer.FLAG_SYSTEM_TIME);
-      buffer.setLength(bufferLength);
-      buffer.setOffset(0);
-      buffer.setTimeStamp(bufferTimeStamp);
+      break;
     }
     bufferData=null;
   }
