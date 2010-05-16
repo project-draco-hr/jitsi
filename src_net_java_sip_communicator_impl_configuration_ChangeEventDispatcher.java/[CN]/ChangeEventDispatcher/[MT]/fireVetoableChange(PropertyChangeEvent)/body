@@ -5,11 +5,11 @@
   if (oldValue != null && newValue != null && oldValue.equals(newValue)) {
     return;
   }
-  VetoableChangeListener[] targets=null;
+  ConfigVetoableChangeListener[] targets=null;
   ChangeEventDispatcher child=null;
 synchronized (this) {
     if (vetoableChangeListeners != null) {
-      targets=vetoableChangeListeners.toArray(new VetoableChangeListener[vetoableChangeListeners.size()]);
+      targets=vetoableChangeListeners.toArray(new ConfigVetoableChangeListener[vetoableChangeListeners.size()]);
     }
     if (vetoableChangeChildren != null && propertyName != null) {
       child=vetoableChangeChildren.get(propertyName);
@@ -17,13 +17,8 @@ synchronized (this) {
   }
   if (vetoableChangeListeners != null && targets != null) {
     for (int i=0; i < targets.length; i++) {
-      VetoableChangeListener target=targets[i];
-      try {
-        target.vetoableChange(evt);
-      }
- catch (      PropertyVetoException e) {
-        throw new ConfigPropertyVetoException(e.getLocalizedMessage(),evt);
-      }
+      ConfigVetoableChangeListener target=targets[i];
+      target.vetoableChange(evt);
     }
   }
   if (child != null) {
