@@ -4,10 +4,10 @@
 synchronized (dataSyncRoot) {
     if (!automaticallyDropsLateVideoFrames && (data != null)) {
       if (nextData != null) {
-        returnFreeBuffer(nextData);
+        byteBufferPool.returnFreeBuffer(nextData);
         nextData=null;
       }
-      nextData=getFreeBuffer(pixelBuffer.getByteCount());
+      nextData=byteBufferPool.getFreeBuffer(pixelBuffer.getByteCount());
       if (nextData != null) {
         nextData.setLength(pixelBuffer.getBytes(nextData.ptr,nextData.capacity));
         nextDataTimeStamp=System.nanoTime();
@@ -16,17 +16,17 @@ synchronized (dataSyncRoot) {
       return;
     }
     if (data != null) {
-      returnFreeBuffer(data);
+      byteBufferPool.returnFreeBuffer(data);
       data=null;
     }
-    data=getFreeBuffer(pixelBuffer.getByteCount());
+    data=byteBufferPool.getFreeBuffer(pixelBuffer.getByteCount());
     if (data != null) {
       data.setLength(pixelBuffer.getBytes(data.ptr,data.capacity));
       dataTimeStamp=System.nanoTime();
       if (dataFormat == null)       dataFormat=getVideoFrameFormat(pixelBuffer);
     }
     if (nextData != null) {
-      returnFreeBuffer(nextData);
+      byteBufferPool.returnFreeBuffer(nextData);
       nextData=null;
     }
     if (automaticallyDropsLateVideoFrames)     transferData=(data != null);

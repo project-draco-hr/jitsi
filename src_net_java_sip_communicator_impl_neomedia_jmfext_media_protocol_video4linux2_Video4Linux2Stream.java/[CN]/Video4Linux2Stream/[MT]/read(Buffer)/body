@@ -1,0 +1,23 @@
+{
+  Format format=buffer.getFormat();
+  if (!(format instanceof AVFrameFormat))   format=null;
+  if (format == null) {
+    format=getFormat();
+    if (format != null)     buffer.setFormat(format);
+  }
+  if (Video4Linux2.ioctl(fd,Video4Linux2.VIDIOC_DQBUF,v4l2_buffer) == -1)   throw new IOException("ioctl: request= VIDIOC_DQBUF");
+  try {
+    int bytesused=Video4Linux2.v4l2_buffer_getBytesused(v4l2_buffer);
+    ByteBuffer data=byteBufferPool.getFreeBuffer(bytesused);
+    if (data != null) {
+      int index=Video4Linux2.v4l2_buffer_getIndex(v4l2_buffer);
+      long mmap=mmaps[index];
+      Video4Linux2.memcpy(data.ptr,mmap,bytesused);
+      data.setLength(bytesused);
+      FinalizableAVFrame.read(buffer,format,data,byteBufferPool);
+    }
+  }
+  finally {
+    if (Video4Linux2.ioctl(fd,Video4Linux2.VIDIOC_QBUF,v4l2_buffer) == -1)     throw new IOException("ioctl: request= VIDIOC_QBUF");
+  }
+}

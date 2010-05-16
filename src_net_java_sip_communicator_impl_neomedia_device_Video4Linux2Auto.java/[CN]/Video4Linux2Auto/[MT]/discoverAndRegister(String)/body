@@ -1,0 +1,23 @@
+{
+  int fd=Video4Linux2.open(deviceName,Video4Linux2.O_RDWR);
+  boolean captureDeviceInfoIsAdded=false;
+  if (-1 != fd) {
+    try {
+      long v4l2_capability=Video4Linux2.v4l2_capability_alloc();
+      if (0 != v4l2_capability) {
+        try {
+          if ((Video4Linux2.ioctl(fd,Video4Linux2.VIDIOC_QUERYCAP,v4l2_capability) != -1) && ((Video4Linux2.v4l2_capability_getCapabilities(v4l2_capability) & Video4Linux2.V4L2_CAP_VIDEO_CAPTURE) == Video4Linux2.V4L2_CAP_VIDEO_CAPTURE)) {
+            captureDeviceInfoIsAdded=register(deviceName,fd,v4l2_capability);
+          }
+        }
+  finally {
+          Video4Linux2.free(v4l2_capability);
+        }
+      }
+    }
+  finally {
+      Video4Linux2.close(fd);
+    }
+  }
+  return captureDeviceInfoIsAdded;
+}

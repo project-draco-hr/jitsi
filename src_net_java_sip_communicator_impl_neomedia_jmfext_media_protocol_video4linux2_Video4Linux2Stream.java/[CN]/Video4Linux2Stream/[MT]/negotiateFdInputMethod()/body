@@ -1,0 +1,56 @@
+{
+  long v4l2_capability=Video4Linux2.v4l2_capability_alloc();
+  if (0 == v4l2_capability)   throw new OutOfMemoryError("v4l2_capability_alloc");
+  try {
+    if (Video4Linux2.ioctl(fd,Video4Linux2.VIDIOC_QUERYCAP,v4l2_capability) == -1)     throw new IOException("ioctl: request= VIDIOC_QUERYCAP");
+    capabilities=Video4Linux2.v4l2_capability_getCapabilities(v4l2_capability);
+  }
+  finally {
+    Video4Linux2.free(v4l2_capability);
+  }
+  if ((capabilities & Video4Linux2.V4L2_CAP_STREAMING) != Video4Linux2.V4L2_CAP_STREAMING)   throw new IOException("Non-streaming V4L2 device not supported.");
+  long v4l2_requestbuffers=Video4Linux2.v4l2_requestbuffers_alloc(Video4Linux2.V4L2_BUF_TYPE_VIDEO_CAPTURE);
+  if (0 == v4l2_requestbuffers)   throw new OutOfMemoryError("v4l2_requestbuffers_alloc");
+  try {
+    requestbuffersMemory=Video4Linux2.V4L2_MEMORY_MMAP;
+    Video4Linux2.v4l2_requestbuffers_setMemory(v4l2_requestbuffers,requestbuffersMemory);
+    Video4Linux2.v4l2_requestbuffers_setCount(v4l2_requestbuffers,2);
+    if (Video4Linux2.ioctl(fd,Video4Linux2.VIDIOC_REQBUFS,v4l2_requestbuffers) == -1) {
+      throw new IOException("ioctl: request= VIDIOC_REQBUFS, memory= " + requestbuffersMemory);
+    }
+    requestbuffersCount=Video4Linux2.v4l2_requestbuffers_getCount(v4l2_requestbuffers);
+  }
+  finally {
+    Video4Linux2.free(v4l2_requestbuffers);
+  }
+  if (requestbuffersCount < 1)   throw new IOException("Insufficient V4L2 device memory.");
+  long v4l2_buffer=Video4Linux2.v4l2_buffer_alloc(Video4Linux2.V4L2_BUF_TYPE_VIDEO_CAPTURE);
+  if (0 == v4l2_buffer)   throw new OutOfMemoryError("v4l2_buffer_alloc");
+  try {
+    Video4Linux2.v4l2_buffer_setMemory(v4l2_buffer,Video4Linux2.V4L2_MEMORY_MMAP);
+    mmaps=new long[requestbuffersCount];
+    mmapLengths=new int[requestbuffersCount];
+    boolean munmap=true;
+    try {
+      for (int i=0; i < requestbuffersCount; i++) {
+        Video4Linux2.v4l2_buffer_setIndex(v4l2_buffer,i);
+        if (Video4Linux2.ioctl(fd,Video4Linux2.VIDIOC_QUERYBUF,v4l2_buffer) == -1) {
+          throw new IOException("ioctl: request= VIDIOC_QUERYBUF");
+        }
+        int length=Video4Linux2.v4l2_buffer_getLength(v4l2_buffer);
+        long offset=Video4Linux2.v4l2_buffer_getMOffset(v4l2_buffer);
+        long mmap=Video4Linux2.mmap(0,length,Video4Linux2.PROT_READ | Video4Linux2.PROT_WRITE,Video4Linux2.MAP_SHARED,fd,offset);
+        if (-1 == mmap)         throw new IOException("mmap");
+        mmaps[i]=mmap;
+        mmapLengths[i]=length;
+      }
+      munmap=false;
+    }
+  finally {
+      if (munmap)       munmap();
+    }
+  }
+  finally {
+    Video4Linux2.free(v4l2_buffer);
+  }
+}

@@ -1,0 +1,26 @@
+{
+  Object bufferData=buffer.getData();
+  AVFrame frame;
+  long framePtr;
+  long bufferPtrToReturnFree;
+  if (bufferData instanceof AVFrame) {
+    frame=(AVFrame)bufferData;
+    framePtr=frame.getPtr();
+    bufferPtrToReturnFree=FFmpeg.avpicture_get_data0(framePtr);
+  }
+ else {
+    frame=new FinalizableAVFrame(){
+      @Override protected void freeData0(      long data0){
+        byteBufferPool.returnFreeBuffer(data0);
+      }
+    }
+;
+    buffer.setData(frame);
+    framePtr=frame.getPtr();
+    bufferPtrToReturnFree=0;
+  }
+  AVFrameFormat frameFormat=(AVFrameFormat)format;
+  Dimension frameSize=frameFormat.getSize();
+  FFmpeg.avpicture_fill(framePtr,data.ptr,frameFormat.getPixFmt(),frameSize.width,frameSize.height);
+  if (bufferPtrToReturnFree != 0)   byteBufferPool.returnFreeBuffer(bufferPtrToReturnFree);
+}

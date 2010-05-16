@@ -1,21 +1,5 @@
 {
   super.close();
   captureOutput.setDelegate(null);
-synchronized (buffers) {
-    closed=true;
-    Iterator<ByteBuffer> bufferIter=buffers.iterator();
-    boolean loggerIsTraceEnabled=logger.isTraceEnabled();
-    int leakedCount=0;
-    while (bufferIter.hasNext()) {
-      ByteBuffer buffer=bufferIter.next();
-      if (buffer.isFree()) {
-        bufferIter.remove();
-        FFmpeg.av_free(buffer.ptr);
-      }
- else       if (loggerIsTraceEnabled)       leakedCount++;
-    }
-    if (loggerIsTraceEnabled) {
-      logger.trace("Leaking " + leakedCount + " ByteBuffer instances.");
-    }
-  }
+  byteBufferPool.close();
 }

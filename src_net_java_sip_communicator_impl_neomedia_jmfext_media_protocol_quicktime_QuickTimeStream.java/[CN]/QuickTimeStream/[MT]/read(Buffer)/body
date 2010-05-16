@@ -11,25 +11,7 @@ synchronized (dataSyncRoot) {
       if (bufferFormat != null)       buffer.setFormat(bufferFormat);
     }
     if (bufferFormat instanceof AVFrameFormat) {
-      Object bufferData=buffer.getData();
-      AVFrame bufferFrame;
-      long bufferFramePtr;
-      long bufferPtrToReturnFree;
-      if (bufferData instanceof AVFrame) {
-        bufferFrame=(AVFrame)bufferData;
-        bufferFramePtr=bufferFrame.getPtr();
-        bufferPtrToReturnFree=FFmpeg.avpicture_get_data0(bufferFramePtr);
-      }
- else {
-        bufferFrame=new FinalizableAVFrame();
-        buffer.setData(bufferFrame);
-        bufferFramePtr=bufferFrame.getPtr();
-        bufferPtrToReturnFree=0;
-      }
-      AVFrameFormat bufferFrameFormat=(AVFrameFormat)bufferFormat;
-      Dimension bufferFrameSize=bufferFrameFormat.getSize();
-      FFmpeg.avpicture_fill(bufferFramePtr,data.ptr,bufferFrameFormat.getPixFmt(),bufferFrameSize.width,bufferFrameSize.height);
-      if (bufferPtrToReturnFree != 0)       returnFreeBuffer(bufferPtrToReturnFree);
+      FinalizableAVFrame.read(buffer,bufferFormat,data,byteBufferPool);
     }
  else {
       Object bufferData=buffer.getData();
@@ -47,7 +29,7 @@ synchronized (dataSyncRoot) {
       CVPixelBuffer.memcpy(bufferByteData,0,dataLength,data.ptr);
       buffer.setLength(dataLength);
       buffer.setOffset(0);
-      returnFreeBuffer(data);
+      byteBufferPool.returnFreeBuffer(data);
     }
     buffer.setFlags(Buffer.FLAG_LIVE_DATA | Buffer.FLAG_SYSTEM_TIME);
     buffer.setTimeStamp(dataTimeStamp);
