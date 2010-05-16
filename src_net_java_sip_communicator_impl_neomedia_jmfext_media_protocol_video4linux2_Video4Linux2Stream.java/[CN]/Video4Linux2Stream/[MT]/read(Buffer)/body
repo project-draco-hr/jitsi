@@ -6,6 +6,7 @@
     if (format != null)     buffer.setFormat(format);
   }
   if (Video4Linux2.ioctl(fd,Video4Linux2.VIDIOC_DQBUF,v4l2_buffer) == -1)   throw new IOException("ioctl: request= VIDIOC_DQBUF");
+  long timeStamp=System.nanoTime();
   try {
     int bytesused=Video4Linux2.v4l2_buffer_getBytesused(v4l2_buffer);
     ByteBuffer data=byteBufferPool.getFreeBuffer(bytesused);
@@ -20,4 +21,6 @@
   finally {
     if (Video4Linux2.ioctl(fd,Video4Linux2.VIDIOC_QBUF,v4l2_buffer) == -1)     throw new IOException("ioctl: request= VIDIOC_QBUF");
   }
+  buffer.setFlags(Buffer.FLAG_LIVE_DATA | Buffer.FLAG_SYSTEM_TIME);
+  buffer.setTimeStamp(timeStamp);
 }
