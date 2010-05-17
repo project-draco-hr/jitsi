@@ -1,0 +1,29 @@
+{
+  try {
+    logger.logEntry();
+    ReconnectPluginActivator.bundleContext=bundleContext;
+  }
+  finally {
+    logger.logExit();
+  }
+  bundleContext.addServiceListener(this);
+  if (timer == null)   timer=new Timer("Reconnect timer");
+  ServiceReference serviceReference=bundleContext.getServiceReference(NetworkAddressManagerService.class.getName());
+  this.networkAddressManagerService=(NetworkAddressManagerService)bundleContext.getService(serviceReference);
+  this.networkAddressManagerService.addNetworkConfigurationChangeListener(this);
+  ServiceReference[] protocolProviderRefs=null;
+  try {
+    protocolProviderRefs=bundleContext.getServiceReferences(ProtocolProviderService.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException ex) {
+    logger.error("Error while retrieving service refs",ex);
+    return;
+  }
+  if (protocolProviderRefs != null) {
+    logger.debug("Found " + protocolProviderRefs.length + " already installed providers.");
+    for (int i=0; i < protocolProviderRefs.length; i++) {
+      ProtocolProviderService provider=(ProtocolProviderService)bundleContext.getService(protocolProviderRefs[i]);
+      this.handleProviderAdded(provider);
+    }
+  }
+}

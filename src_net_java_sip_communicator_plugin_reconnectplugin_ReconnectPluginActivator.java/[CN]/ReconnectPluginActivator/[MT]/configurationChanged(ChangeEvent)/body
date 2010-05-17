@@ -1,0 +1,53 @@
+{
+  if (!(event.getSource() instanceof NetworkInterface))   return;
+  NetworkInterface iface=(NetworkInterface)event.getSource();
+  if (event.getType() == ChangeEvent.IFACE_UP) {
+    if (connectedInterfaces.size() == 0) {
+      Iterator<ProtocolProviderService> iter=needsReconnection.iterator();
+      while (iter.hasNext()) {
+        ProtocolProviderService pp=iter.next();
+        if (currentlyReconnecting.containsKey(pp)) {
+          currentlyReconnecting.get(pp).cancel();
+          currentlyReconnecting.remove(pp);
+        }
+        reconnect(pp);
+      }
+      needsReconnection.clear();
+    }
+    connectedInterfaces.add(iface.getName());
+  }
+ else   if (event.getType() == ChangeEvent.IFACE_DOWN) {
+    connectedInterfaces.remove(iface.getName());
+    if (connectedInterfaces.size() > 0) {
+      Iterator<Map.Entry<ProtocolProviderService,List<String>>> iter=autoReconnEnabledProviders.entrySet().iterator();
+      while (iter.hasNext()) {
+        Map.Entry<ProtocolProviderService,List<String>> entry=iter.next();
+        if (entry.getValue().contains(iface.getName())) {
+          ProtocolProviderService pp=entry.getKey();
+          if (currentlyReconnecting.containsKey(pp)) {
+            currentlyReconnecting.get(pp).cancel();
+            currentlyReconnecting.remove(pp);
+          }
+          reconnect(pp);
+        }
+      }
+    }
+ else {
+      needsReconnection.addAll(autoReconnEnabledProviders.keySet());
+      Iterator<ProtocolProviderService> iter=needsReconnection.iterator();
+      while (iter.hasNext()) {
+        ProtocolProviderService pp=iter.next();
+        try {
+          unregisteredProviders.add(pp);
+          pp.unregister();
+        }
+ catch (        Exception e) {
+          logger.error("Cannot unregister provider",e);
+        }
+      }
+      connectedInterfaces.clear();
+      logger.trace("Network is down!");
+      getNotificationService().fireNotification(NETWORK_NOTIFICATIONS,"Network is down!","",null,null);
+    }
+  }
+}

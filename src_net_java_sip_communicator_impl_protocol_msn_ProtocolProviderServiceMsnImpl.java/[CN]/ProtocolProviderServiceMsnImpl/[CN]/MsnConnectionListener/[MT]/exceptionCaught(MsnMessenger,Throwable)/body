@@ -9,7 +9,6 @@
     fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,null);
   }
  else   if (throwable instanceof UnknownHostException) {
-    unregister(false);
     fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,"A network error occured. Could not connect to server.");
   }
  else   if (throwable instanceof MsnProtocolException) {
@@ -36,5 +35,10 @@ break;
 }
  else {
 logger.error("Error in Msn lib ",throwable);
+if (throwable instanceof LoginException) {
+MsnActivator.getProtocolProviderFactory().storePassword(getAccountID(),null);
+fireRegistrationStateChanged(getRegistrationState(),RegistrationState.AUTHENTICATION_FAILED,RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED,null);
+reconnect(SecurityAuthority.WRONG_PASSWORD);
+}
 }
 }

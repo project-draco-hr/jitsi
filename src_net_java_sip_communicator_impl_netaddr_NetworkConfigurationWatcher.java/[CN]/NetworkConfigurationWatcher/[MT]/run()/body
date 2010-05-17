@@ -1,0 +1,50 @@
+{
+  long last=0;
+  boolean isAfterStandby=false;
+  List<NetworkInterface> activeInterfaces=new ArrayList<NetworkInterface>();
+  while (isRunning) {
+    long curr=System.currentTimeMillis();
+    if (!isAfterStandby && last != 0)     isAfterStandby=(last + CHECK_INTERVAL + 100 - curr) < 0;
+    try {
+      Enumeration<NetworkInterface> e=NetworkInterface.getNetworkInterfaces();
+      boolean networkIsUP=activeInterfaces.size() > 0;
+      List<NetworkInterface> currentActiveInterfaces=new ArrayList<NetworkInterface>();
+      while (e.hasMoreElements()) {
+        NetworkInterface networkInterface=e.nextElement();
+        if (isInterfaceLoopback(networkInterface))         continue;
+        if (isInterfaceUp(networkInterface) && hasValidAddress(networkInterface)) {
+          currentActiveInterfaces.add(networkInterface);
+        }
+      }
+      List<NetworkInterface> inactiveActiveInterfaces=new ArrayList<NetworkInterface>(activeInterfaces);
+      inactiveActiveInterfaces.removeAll(currentActiveInterfaces);
+      for (int i=0; i < inactiveActiveInterfaces.size(); i++) {
+        NetworkInterface iface=inactiveActiveInterfaces.get(i);
+        if (!containsInterfaceWithName(currentActiveInterfaces,iface.getName())) {
+          fireChangeEvent(new ChangeEvent(iface,ChangeEvent.IFACE_DOWN,isAfterStandby));
+          activeInterfaces.remove(iface);
+        }
+      }
+      currentActiveInterfaces.removeAll(activeInterfaces);
+      for (int i=0; i < currentActiveInterfaces.size(); i++) {
+        NetworkInterface iface=currentActiveInterfaces.get(i);
+        fireChangeEvent(new ChangeEvent(iface,ChangeEvent.IFACE_UP,isAfterStandby));
+        activeInterfaces.add(iface);
+      }
+      if (!networkIsUP && activeInterfaces.size() > 0) {
+        isAfterStandby=false;
+      }
+      last=curr;
+    }
+ catch (    SocketException e) {
+      logger.error("Error checking network interfaces",e);
+    }
+synchronized (this) {
+      try {
+        wait(CHECK_INTERVAL);
+      }
+ catch (      Exception e) {
+      }
+    }
+  }
+}

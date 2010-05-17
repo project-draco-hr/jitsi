@@ -1,0 +1,22 @@
+{
+  long delay;
+  if (currentlyReconnecting.containsKey(pp)) {
+    delay=currentlyReconnecting.get(pp).delay;
+    delay=Math.min(delay * 2,MAX_RECONNECT_DELAY * 1000);
+  }
+ else {
+    delay=(long)(RECONNECT_DELAY_MIN + Math.random() * RECONNECT_DELAY_MAX) * 1000;
+  }
+  try {
+    unregisteredProviders.add(pp);
+    pp.unregister();
+  }
+ catch (  OperationFailedException e) {
+    logger.error("Cannot unregister provider",e);
+  }
+  ReconnectTask task=new ReconnectTask(pp);
+  task.delay=delay;
+  currentlyReconnecting.put(pp,task);
+  logger.trace("Reconnect " + pp + " after "+ delay+ " ms.");
+  timer.schedule(task,delay);
+}

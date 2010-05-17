@@ -1,0 +1,31 @@
+{
+  ServiceReference serviceRef=serviceEvent.getServiceReference();
+  if (serviceRef.getBundle().getState() == Bundle.STOPPING) {
+    return;
+  }
+  Object sService=bundleContext.getService(serviceRef);
+  logger.trace("Received a service event for: " + sService.getClass().getName());
+  if (sService instanceof NetworkAddressManagerService) {
+switch (serviceEvent.getType()) {
+case ServiceEvent.REGISTERED:
+      if (this.networkAddressManagerService != null)       break;
+    this.networkAddressManagerService=(NetworkAddressManagerService)sService;
+  networkAddressManagerService.addNetworkConfigurationChangeListener(this);
+break;
+case ServiceEvent.UNREGISTERING:
+((NetworkAddressManagerService)sService).removeNetworkConfigurationChangeListener(this);
+break;
+}
+return;
+}
+if (!(sService instanceof ProtocolProviderService)) return;
+logger.debug("Service is a protocol provider.");
+switch (serviceEvent.getType()) {
+case ServiceEvent.REGISTERED:
+this.handleProviderAdded((ProtocolProviderService)sService);
+break;
+case ServiceEvent.UNREGISTERING:
+this.handleProviderRemoved((ProtocolProviderService)sService);
+break;
+}
+}
