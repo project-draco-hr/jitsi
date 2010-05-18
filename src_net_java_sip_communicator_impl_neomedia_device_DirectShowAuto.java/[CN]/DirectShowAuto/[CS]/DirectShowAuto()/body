@@ -1,0 +1,17 @@
+{
+  DSManager manager=DSManager.getInstance();
+  DSCaptureDevice devices[]=null;
+  boolean captureDeviceInfoIsAdded=false;
+  devices=manager.getCaptureDevices();
+  if (devices == null || devices.length == 0) {
+    throw new Exception("no devices!");
+  }
+  for (int i=0; i < devices.length; i++) {
+    CaptureDeviceInfo device=new CaptureDeviceInfo(devices[i].getName(),new MediaLocator(LOCATOR_PROTOCOL + ':' + devices[i].getName()),new Format[]{new AVFrameFormat(FFmpeg.PIX_FMT_RGB24),new AVFrameFormat(FFmpeg.PIX_FMT_RGB32)});
+    CaptureDeviceManager.addDevice(device);
+    captureDeviceInfoIsAdded=true;
+  }
+  if (captureDeviceInfoIsAdded)   CaptureDeviceManager.commit();
+  devices=null;
+  DSManager.dispose();
+}

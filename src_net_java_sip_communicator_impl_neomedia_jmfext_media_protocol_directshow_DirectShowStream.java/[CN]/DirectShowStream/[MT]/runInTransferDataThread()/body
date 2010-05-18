@@ -1,0 +1,39 @@
+{
+  boolean transferData=false;
+  while (Thread.currentThread().equals(transferDataThread)) {
+    if (transferData) {
+      BufferTransferHandler transferHandler=this.transferHandler;
+      if (transferHandler != null)       transferHandler.transferData(this);
+synchronized (dataSyncRoot) {
+        if (data != null) {
+          bufferPool.returnFreeBuffer(data);
+          data=null;
+        }
+        data=nextData;
+        dataTimeStamp=nextDataTimeStamp;
+        nextData=null;
+      }
+    }
+synchronized (dataSyncRoot) {
+      if (data == null) {
+        data=nextData;
+        dataTimeStamp=nextDataTimeStamp;
+        nextData=null;
+      }
+      if (data == null) {
+        boolean interrupted=false;
+        try {
+          dataSyncRoot.wait();
+        }
+ catch (        InterruptedException iex) {
+          interrupted=true;
+        }
+        if (interrupted)         Thread.currentThread().interrupt();
+        transferData=(data != null);
+      }
+ else {
+        transferData=true;
+      }
+    }
+  }
+}
