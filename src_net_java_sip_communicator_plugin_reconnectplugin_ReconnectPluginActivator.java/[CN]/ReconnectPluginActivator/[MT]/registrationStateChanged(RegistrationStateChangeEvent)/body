@@ -2,6 +2,11 @@
   if (!(evt.getSource() instanceof ProtocolProviderService))   return;
   ProtocolProviderService pp=(ProtocolProviderService)evt.getSource();
   if (evt.getNewState().equals(RegistrationState.CONNECTION_FAILED)) {
+    if (!hasAtLeastOneSuccessfulConnection(pp)) {
+      String msgText=getResources().getI18NString("plugin.reconnectplugin.CONNECTION_FAILED_MSG",new String[]{pp.getAccountID().getUserID(),pp.getAccountID().getService()});
+      getUIService().getPopupDialog().showMessagePopupDialog(msgText,getResources().getI18NString("service.gui.ERROR"),PopupDialog.ERROR_MESSAGE);
+      return;
+    }
     if (needsReconnection.contains(pp))     return;
     if (connectedInterfaces.size() == 0)     needsReconnection.add(pp);
  else {
@@ -10,11 +15,14 @@
     unregisteredProviders.remove(pp);
   }
  else   if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
-    autoReconnEnabledProviders.put((ProtocolProviderService)evt.getSource(),new ArrayList<String>(connectedInterfaces));
+    if (!hasAtLeastOneSuccessfulConnection(pp)) {
+      setAtLeastOneSuccessfulConnection(pp,true);
+    }
+    autoReconnEnabledProviders.put(pp,new ArrayList<String>(connectedInterfaces));
     currentlyReconnecting.remove(pp);
   }
  else   if (evt.getNewState().equals(RegistrationState.UNREGISTERED)) {
-    autoReconnEnabledProviders.remove((ProtocolProviderService)evt.getSource());
+    autoReconnEnabledProviders.remove(pp);
     if (!unregisteredProviders.contains(pp) && currentlyReconnecting.containsKey(pp)) {
       currentlyReconnecting.remove(pp).cancel();
     }

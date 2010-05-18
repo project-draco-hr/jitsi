@@ -1,5 +1,12 @@
 {
-  if (provider instanceof ProtocolProviderService) {
-    provider.removeRegistrationStateChangeListener(this);
+  logger.trace("Provider modified forget every instance of it");
+  if (hasAtLeastOneSuccessfulConnection(provider)) {
+    setAtLeastOneSuccessfulConnection(provider,false);
+  }
+  provider.removeRegistrationStateChangeListener(this);
+  autoReconnEnabledProviders.remove(provider);
+  needsReconnection.remove(provider);
+  if (currentlyReconnecting.containsKey(provider)) {
+    currentlyReconnecting.remove(provider).cancel();
   }
 }
