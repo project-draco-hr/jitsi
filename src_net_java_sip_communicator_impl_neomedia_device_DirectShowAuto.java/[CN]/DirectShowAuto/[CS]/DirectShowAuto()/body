@@ -7,7 +7,18 @@
     throw new Exception("no devices!");
   }
   for (int i=0; i < devices.length; i++) {
-    CaptureDeviceInfo device=new CaptureDeviceInfo(devices[i].getName(),new MediaLocator(LOCATOR_PROTOCOL + ':' + devices[i].getName()),new Format[]{new AVFrameFormat(FFmpeg.PIX_FMT_RGB24),new AVFrameFormat(FFmpeg.PIX_FMT_RGB32)});
+    DSFormat fmt=devices[i].getFormat();
+    long pixelFormat=fmt.getPixelFormat();
+    Format format=null;
+    int ffmpegPixFmt=(int)DataSource.getFFmpegPixFmt(pixelFormat);
+    if (ffmpegPixFmt != FFmpeg.PIX_FMT_NONE) {
+      format=new AVFrameFormat(ffmpegPixFmt);
+    }
+ else {
+      logger.warn("No support for this webcam: " + devices[i].getName() + "(no format supported)");
+      continue;
+    }
+    CaptureDeviceInfo device=new CaptureDeviceInfo(devices[i].getName(),new MediaLocator(LOCATOR_PROTOCOL + ':' + devices[i].getName()),new Format[]{format});
     CaptureDeviceManager.addDevice(device);
     captureDeviceInfoIsAdded=true;
   }
