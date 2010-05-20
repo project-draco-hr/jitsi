@@ -1,4 +1,16 @@
 {
-  treeModel.clear();
-  applyFilter(filter,null);
+  if (currentFilterQuery != null && !currentFilterQuery.isCanceled())   currentFilterQuery.cancel();
+  currentFilterQuery=new FilterQuery();
+  if (filterThread == null) {
+    filterThread=new FilterThread();
+    filterThread.setFilter(filter);
+    filterThread.start();
+  }
+ else {
+    filterThread.setFilter(filter);
+synchronized (filterThread) {
+      filterThread.notify();
+    }
+  }
+  return currentFilterQuery;
 }

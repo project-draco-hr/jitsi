@@ -1,0 +1,25 @@
+{
+  Iterator<MetaContact> childContacts=parentGroup.getChildContacts();
+  while (childContacts.hasNext() && !query.isCanceled()) {
+    MetaContact metaContact=childContacts.next();
+    if (isMatching(filterPattern,metaContact)) {
+      resultCount++;
+      if (resultCount <= INITIAL_CONTACT_COUNT) {
+        UIGroup uiGroup=null;
+        if (!MetaContactListSource.isRootGroup(parentGroup)) {
+          uiGroup=MetaContactListSource.getUIGroup(parentGroup);
+          if (uiGroup == null)           uiGroup=MetaContactListSource.createUIGroup(parentGroup);
+        }
+        GuiActivator.getContactList().addContact(MetaContactListSource.createUIContact(metaContact),uiGroup,true);
+        query.setInitialResultCount(resultCount);
+      }
+ else       query.fireQueryEvent(metaContact);
+    }
+  }
+  if (query.isCanceled())   return;
+  Iterator<MetaContactGroup> subgroups=parentGroup.getSubgroups();
+  while (subgroups.hasNext() && !query.isCanceled()) {
+    MetaContactGroup subgroup=subgroups.next();
+    queryMetaContactSource(filterPattern,subgroup,query,resultCount);
+  }
+}

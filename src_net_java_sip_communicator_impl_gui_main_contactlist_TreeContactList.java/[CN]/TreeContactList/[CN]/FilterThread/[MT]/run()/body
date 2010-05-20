@@ -1,0 +1,18 @@
+{
+  while (true) {
+    FilterQuery filterQuery=currentFilterQuery;
+    treeModel.clear();
+    if (!filterQuery.isCanceled()) {
+      if (currentFilter == null || !currentFilter.equals(filter))       currentFilter=filter;
+      currentFilter.applyFilter(filterQuery);
+    }
+synchronized (this) {
+      try {
+        if (filterQuery == currentFilterQuery)         this.wait();
+      }
+ catch (      InterruptedException e) {
+        logger.debug("Search thread was interrupted.",e);
+      }
+    }
+  }
+}
