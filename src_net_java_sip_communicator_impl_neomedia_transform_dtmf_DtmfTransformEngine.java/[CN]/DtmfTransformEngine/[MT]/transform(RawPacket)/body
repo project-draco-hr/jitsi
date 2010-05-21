@@ -1,5 +1,5 @@
 {
-  if (this.toneTransmissionState == ToneTransmissionState.IDLE || currentTone == null) {
+  if (this.toneTransmissionState.equals(ToneTransmissionState.IDLE) || currentTone == null) {
     return pkt;
   }
   byte currentDtmfPayload=mediaStream.getDynamicRTPPayloadType(Constants.TELEPHONE_EVENT);
@@ -9,5 +9,37 @@
   boolean pktEnd=false;
   boolean pktMarker=false;
   int pktDuration=0;
+  if (toneTransmissionState == ToneTransmissionState.SEND_PENDING) {
+    currentDuration=0;
+    currentDuration+=currentSpacingDuration;
+    pktDuration=currentDuration;
+    pktMarker=true;
+    currentTimestamp=audioPacketTimestamp;
+    toneTransmissionState=ToneTransmissionState.SENDING;
+  }
+ else   if (toneTransmissionState == ToneTransmissionState.SENDING) {
+    currentDuration+=currentSpacingDuration;
+    pktDuration=currentDuration;
+    if (currentDuration > 0xFFFF) {
+      pktDuration=0xFFFF;
+      currentDuration=0;
+      currentTimestamp=audioPacketTimestamp;
+    }
+  }
+ else   if (toneTransmissionState == ToneTransmissionState.END_REQUESTED) {
+    currentDuration+=currentSpacingDuration;
+    pktDuration=currentDuration;
+    pktEnd=true;
+    remainingsEndPackets=2;
+    toneTransmissionState=ToneTransmissionState.END_SEQUENCE_INITIATED;
+  }
+ else   if (toneTransmissionState == ToneTransmissionState.END_SEQUENCE_INITIATED) {
+    pktEnd=true;
+    pktDuration=currentDuration;
+    remainingsEndPackets--;
+    if (remainingsEndPackets == 0)     toneTransmissionState=ToneTransmissionState.IDLE;
+  }
+  dtmfPkt.init(currentTone.getCode(),pktEnd,pktMarker,pktDuration,currentTimestamp);
+  pkt=dtmfPkt;
   return pkt;
 }
