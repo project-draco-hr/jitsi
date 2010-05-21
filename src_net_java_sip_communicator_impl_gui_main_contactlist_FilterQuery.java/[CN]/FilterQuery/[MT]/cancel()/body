@@ -1,19 +1,10 @@
 {
-  isCanceled=true;
-  Iterator<Object> queriesIter=filterQueries.iterator();
-  while (queriesIter.hasNext()) {
-    Object query=queriesIter.next();
-    if (query instanceof ContactQuery) {
-      ContactQuery contactQuery=((ContactQuery)query);
-      contactQuery.cancel();
-      contactQuery.removeContactQueryListener(GuiActivator.getContactList());
-      if (!isSucceeded && contactQuery.getQueryResults().size() > 0)       isSucceeded=true;
-    }
- else     if (query instanceof MetaContactQuery) {
-      MetaContactQuery metaContactQuery=((MetaContactQuery)query);
-      metaContactQuery.cancel();
-      metaContactQuery.removeContactQueryListener(GuiActivator.getContactList());
-      if (!isSucceeded && metaContactQuery.getResultCount() > 0)       isSucceeded=true;
+  Iterator<Object> queriesIter;
+synchronized (filterQueries) {
+    isCanceled=true;
+    queriesIter=filterQueries.iterator();
+    while (queriesIter.hasNext()) {
+      cancelQuery(queriesIter.next());
     }
   }
 }
