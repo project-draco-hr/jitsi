@@ -11,13 +11,19 @@
   }
   int oldCsrcCount=getCsrcCount();
   byte[] oldBuffer=this.getBuffer();
-  byte[] newBuffer=new byte[oldBuffer.length + csrcBuff.length - oldCsrcCount * 4];
+  byte newBuffer[];
+  if (oldBuffer.length < (this.length + this.offset + csrcBuff.length - oldCsrcCount * 4)) {
+    newBuffer=new byte[this.length + this.offset + csrcBuff.length - oldCsrcCount * 4];
+  }
+ else {
+    newBuffer=oldBuffer;
+  }
   System.arraycopy(oldBuffer,0,newBuffer,0,offset + FIXED_HEADER_SIZE);
-  System.arraycopy(csrcBuff,0,newBuffer,offset + FIXED_HEADER_SIZE,csrcBuff.length);
   int payloadOffsetForOldBuff=offset + FIXED_HEADER_SIZE + oldCsrcCount * 4;
   int payloadOffsetForNewBuff=offset + FIXED_HEADER_SIZE + newCsrcCount * 4;
-  System.arraycopy(oldBuffer,payloadOffsetForOldBuff,newBuffer,payloadOffsetForNewBuff,oldBuffer.length - payloadOffsetForOldBuff);
+  System.arraycopy(oldBuffer,payloadOffsetForOldBuff,newBuffer,payloadOffsetForNewBuff,this.length - payloadOffsetForOldBuff);
+  System.arraycopy(csrcBuff,0,newBuffer,offset + FIXED_HEADER_SIZE,csrcBuff.length);
   newBuffer[offset]=(byte)((newBuffer[offset] & 0xF0) | newCsrcCount);
   this.buffer=newBuffer;
-  this.length=payloadOffsetForNewBuff + oldBuffer.length - payloadOffsetForOldBuff - offset;
+  this.length=this.length + payloadOffsetForNewBuff - payloadOffsetForOldBuff;
 }
