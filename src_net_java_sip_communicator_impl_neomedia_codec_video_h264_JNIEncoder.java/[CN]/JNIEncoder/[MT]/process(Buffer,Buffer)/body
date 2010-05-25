@@ -17,10 +17,16 @@
     return BUFFER_PROCESSED_OK;
   }
   FFmpeg.memcpy(rawFrameBuffer,(byte[])inBuffer.getData(),inBuffer.getOffset(),encFrameLen);
-  if (framesSinceLastIFrame >= IFRAME_INTERVAL || forceKeyFrame) {
+  if (forceKeyFrame) {
     FFmpeg.avframe_set_key_frame(avframe,true);
     framesSinceLastIFrame=0;
-    forceKeyFrame=false;
+    if (secondKeyFrame) {
+      secondKeyFrame=false;
+      forceKeyFrame=true;
+    }
+ else {
+      forceKeyFrame=false;
+    }
   }
  else {
     framesSinceLastIFrame++;
