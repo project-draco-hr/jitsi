@@ -1,0 +1,19 @@
+{
+  AudioNotifierService audioNotifier=GuiActivator.getAudioNotifier();
+  if (info.sound != null) {
+    if (currentlyPlayingAudio != null)     currentlyPlayingAudio.stop();
+    currentlyPlayingAudio=audioNotifier.createAudio(info.sound);
+    currentlyPlayingAudio.playInLoop(10);
+  }
+  Iterator<? extends CallPeer> callPeers=this.call.getCallPeers();
+  try {
+    while (callPeers.hasNext()) {
+      CallPeer peer=callPeers.next();
+      OperationSetDTMF dtmfOpSet=peer.getProtocolProvider().getOperationSet(OperationSetDTMF.class);
+      if (dtmfOpSet != null)       dtmfOpSet.startSendingDTMF(peer,info.tone);
+    }
+  }
+ catch (  Throwable e1) {
+    logger.error("Failed to send a DTMF tone.",e1);
+  }
+}
