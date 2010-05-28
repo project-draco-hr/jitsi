@@ -42,29 +42,8 @@
   this.chatButton.setName(CHAT_BUTTON_NAME);
   callButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
-      ChooseCallAccountPopupMenu chooseAccountDialog=null;
       if (treeNode != null && treeNode instanceof ContactNode) {
-        List<UIContactDetail> telephonyContacts=((ContactNode)treeNode).getContactDescriptor().getContactDetailsForOperationSet(OperationSetBasicTelephony.class);
-        if (telephonyContacts.size() == 1) {
-          UIContactDetail detail=telephonyContacts.get(0);
-          ProtocolProviderService preferredProvider=detail.getPreferredProtocolProvider(OperationSetBasicTelephony.class);
-          if (preferredProvider != null)           CallManager.createCall(preferredProvider,detail.getAddress());
- else {
-            List<ProtocolProviderService> providers=CallManager.getTelephonyProviders();
-            int providersCount=providers.size();
-            if (providersCount == 1)             CallManager.createCall(providers.get(0),detail.getAddress());
- else             if (providersCount > 1)             chooseAccountDialog=new ChooseCallAccountPopupMenu(tree,detail.getAddress(),providers);
-          }
-        }
- else         if (telephonyContacts.size() > 1) {
-          chooseAccountDialog=new ChooseCallAccountPopupMenu(tree,telephonyContacts);
-        }
-        if (chooseAccountDialog != null) {
-          Point location=new Point(callButton.getX(),callButton.getY() + callButton.getHeight());
-          SwingUtilities.convertPointToScreen(location,tree);
-          location.y=location.y + tree.getPathBounds(tree.getSelectionPath()).y;
-          chooseAccountDialog.showPopupMenu(location.x + 8,location.y - 8);
-        }
+        call(treeNode);
       }
     }
   }
