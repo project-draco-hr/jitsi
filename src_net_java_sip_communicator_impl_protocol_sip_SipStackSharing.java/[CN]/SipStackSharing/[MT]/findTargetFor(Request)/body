@@ -15,13 +15,13 @@
     for (    ProtocolProviderServiceSipImpl listener : currentListeners) {
       String ourUserID=listener.getAccountID().getUserID();
       if (ourUserID.equals(requestUser)) {
-        logger.trace("suitable candidate found: " + listener.getAccountID());
+        if (logger.isTraceEnabled())         logger.trace("suitable candidate found: " + listener.getAccountID());
         candidates.add(listener);
       }
     }
     if (candidates.size() == 1) {
       ProtocolProviderServiceSipImpl perfectMatch=candidates.get(0);
-      logger.trace("Will dispatch to \"" + perfectMatch.getAccountID() + "\"");
+      if (logger.isTraceEnabled())       logger.trace("Will dispatch to \"" + perfectMatch.getAccountID() + "\"");
       return perfectMatch;
     }
     if (candidates.size() > 1) {
@@ -29,7 +29,7 @@
         String hostValue=((SipURI)requestURI).getParameter(SipStackSharing.CONTACT_ADDRESS_CUSTOM_PARAM_NAME);
         if (hostValue == null)         continue;
         if (hostValue.equals(candidate.getContactAddressCustomParamValue())) {
-          logger.trace("Will dispatch to \"" + candidate.getAccountID() + "\" because "+ "\" the custom param was set");
+          if (logger.isTraceEnabled())           logger.trace("Will dispatch to \"" + candidate.getAccountID() + "\" because "+ "\" the custom param was set");
           return candidate;
         }
       }
@@ -42,18 +42,18 @@
         if (toURI.isSipURI() == false)         continue;
         String toHost=((SipURI)toURI).getHost();
         if (toHost.equals(ourHost)) {
-          logger.trace("Will dispatch to \"" + candidate.getAccountID() + "\" because "+ "host in the To: is the same as in our AOR");
+          if (logger.isTraceEnabled())           logger.trace("Will dispatch to \"" + candidate.getAccountID() + "\" because "+ "host in the To: is the same as in our AOR");
           return candidate;
         }
       }
       ProtocolProviderServiceSipImpl target=candidates.iterator().next();
       logger.warn("Will randomly dispatch to \"" + target.getAccountID() + "\" because there is ambiguity on the username from"+ " the Request-URI");
-      logger.trace("\n" + request);
+      if (logger.isTraceEnabled())       logger.trace("\n" + request);
       return target;
     }
     ProtocolProviderServiceSipImpl target=currentListeners.iterator().next();
-    logger.info("Will randomly dispatch to \"" + target.getAccountID() + "\" because the username in the Request-URI "+ "is unknown or empty");
-    logger.trace("\n" + request);
+    if (logger.isInfoEnabled())     logger.info("Will randomly dispatch to \"" + target.getAccountID() + "\" because the username in the Request-URI "+ "is unknown or empty");
+    if (logger.isTraceEnabled())     logger.trace("\n" + request);
     return target;
   }
  else {

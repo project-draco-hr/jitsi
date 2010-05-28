@@ -9,7 +9,7 @@ synchronized (messageProcessors) {
     content=new String(req.getRawContent(),getCharset(req));
   }
  catch (  UnsupportedEncodingException exc) {
-    logger.debug("failed to convert the message charset",exc);
+    if (logger.isDebugEnabled())     logger.debug("failed to convert the message charset",exc);
     content=new String(req.getRawContent());
   }
   ToHeader toHeader=(ToHeader)req.getHeader(ToHeader.NAME);
@@ -31,13 +31,13 @@ synchronized (messageProcessors) {
     return true;
   }
   if (status >= 400 && status != 401 && status != 407) {
-    logger.info(responseEvent.getResponse().getStatusCode() + " " + responseEvent.getResponse().getReasonPhrase());
+    if (logger.isInfoEnabled())     logger.info(responseEvent.getResponse().getStatusCode() + " " + responseEvent.getResponse().getReasonPhrase());
     MessageDeliveryFailedEvent evt=new MessageDeliveryFailedEvent(newMessage,to,MessageDeliveryFailedEvent.NETWORK_FAILURE,System.currentTimeMillis(),responseEvent.getResponse().getStatusCode() + " " + responseEvent.getResponse().getReasonPhrase());
     fireMessageEvent(evt);
     sentMsg.remove(key);
   }
  else   if (status == 401 || status == 407) {
-    logger.debug("proxy asks authentication : " + responseEvent.getResponse().getStatusCode() + " "+ responseEvent.getResponse().getReasonPhrase());
+    if (logger.isDebugEnabled())     logger.debug("proxy asks authentication : " + responseEvent.getResponse().getStatusCode() + " "+ responseEvent.getResponse().getReasonPhrase());
     ClientTransaction clientTransaction=responseEvent.getClientTransaction();
     SipProvider sourceProvider=(SipProvider)responseEvent.getSource();
     try {
@@ -51,7 +51,7 @@ synchronized (messageProcessors) {
     }
   }
  else   if (status >= 200) {
-    logger.debug("Ack received from the network : " + responseEvent.getResponse().getStatusCode() + " "+ responseEvent.getResponse().getReasonPhrase());
+    if (logger.isDebugEnabled())     logger.debug("Ack received from the network : " + responseEvent.getResponse().getStatusCode() + " "+ responseEvent.getResponse().getReasonPhrase());
     MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(newMessage,to,System.currentTimeMillis());
     fireMessageEvent(msgDeliveredEvt);
     sentMsg.remove(key);

@@ -1,6 +1,6 @@
 {
   if (getRegistrationState() == RegistrationState.UNREGISTERED) {
-    logger.trace("Trying to unregister when already unresgistered");
+    if (logger.isTraceEnabled())     logger.trace("Trying to unregister when already unresgistered");
     return;
   }
   cancelPendingRegistrations();
@@ -32,14 +32,14 @@
   try {
     callIdHeader=null;
     unregisterTransaction.sendRequest();
-    logger.info("sent request:\n" + unregisterRequest);
+    if (logger.isInfoEnabled())     logger.info("sent request:\n" + unregisterRequest);
     if (!(getRegistrationState().equals(RegistrationState.REGISTERED) || getRegistrationState().equals(RegistrationState.UNREGISTERING))) {
-      logger.info("Setting state to UNREGISTERED.");
+      if (logger.isInfoEnabled())       logger.info("Setting state to UNREGISTERED.");
       setRegistrationState(RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,null);
       if (regTrans != null && regTrans.getState().getValue() <= TransactionState.PROCEEDING.getValue()) {
-        logger.trace("Will try to terminate reg tran ...");
+        if (logger.isTraceEnabled())         logger.trace("Will try to terminate reg tran ...");
         regTrans.terminate();
-        logger.trace("Transaction terminated!");
+        if (logger.isTraceEnabled())         logger.trace("Transaction terminated!");
       }
     }
   }

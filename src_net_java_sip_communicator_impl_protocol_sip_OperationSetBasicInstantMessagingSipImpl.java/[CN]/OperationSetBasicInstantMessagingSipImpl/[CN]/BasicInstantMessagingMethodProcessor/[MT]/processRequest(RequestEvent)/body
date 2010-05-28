@@ -8,7 +8,7 @@ synchronized (messageProcessors) {
     content=new String(req.getRawContent(),getCharset(req));
   }
  catch (  UnsupportedEncodingException ex) {
-    logger.debug("failed to convert the message charset");
+    if (logger.isDebugEnabled())     logger.debug("failed to convert the message charset");
     content=new String(requestEvent.getRequest().getRawContent());
   }
   FromHeader fromHeader=(FromHeader)requestEvent.getRequest().getHeader(FromHeader.NAME);
@@ -30,7 +30,7 @@ synchronized (messageProcessors) {
   if (cencoding == null)   cencoding=DEFAULT_MIME_ENCODING;
   Message newMessage=createMessage(content,ctype,cencoding,null);
   if (from == null) {
-    logger.debug("received a message from an unknown contact: " + fromHeader.getAddress().getURI().toString());
+    if (logger.isDebugEnabled())     logger.debug("received a message from an unknown contact: " + fromHeader.getAddress().getURI().toString());
     from=opSetPersPresence.createVolatileContact(fromHeader.getAddress());
   }
   try {
@@ -44,7 +44,7 @@ catch (  SipException exc) {
     logger.error("failed to send the response : " + exc.getMessage(),exc);
   }
 catch (  InvalidArgumentException exc) {
-    logger.debug("Invalid argument for createResponse : " + exc.getMessage(),exc);
+    if (logger.isDebugEnabled())     logger.debug("Invalid argument for createResponse : " + exc.getMessage(),exc);
   }
   MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(newMessage,from,System.currentTimeMillis());
   fireMessageEvent(msgReceivedEvt);
