@@ -3,24 +3,10 @@
   this.authority=authority;
   try {
     abortConnecting=false;
-    abortConnectingAndReconnect=false;
     connectAndLogin(authority,SecurityAuthority.AUTHENTICATION_REQUIRED);
   }
  catch (  XMPPException ex) {
     logger.error("Error registering",ex);
-    int reason=RegistrationStateChangeEvent.REASON_NOT_SPECIFIED;
-    RegistrationState regState=RegistrationState.UNREGISTERED;
-    Throwable wrappedEx=ex.getWrappedThrowable();
-    if (wrappedEx instanceof UnknownHostException || wrappedEx instanceof ConnectException) {
-      reason=RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND;
-      regState=RegistrationState.CONNECTION_FAILED;
-    }
- else     if ((connection.getSASLAuthentication() != null && connection.getSASLAuthentication().isAuthenticated()) || !connection.isAuthenticated()) {
-      JabberActivator.getProtocolProviderFactory().storePassword(getAccountID(),null);
-      reason=RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED;
-      regState=RegistrationState.AUTHENTICATION_FAILED;
-      reregister(SecurityAuthority.WRONG_PASSWORD);
-    }
-    fireRegistrationStateChanged(getRegistrationState(),regState,reason,null);
+    fireRegistrationStateChanged(ex);
   }
 }

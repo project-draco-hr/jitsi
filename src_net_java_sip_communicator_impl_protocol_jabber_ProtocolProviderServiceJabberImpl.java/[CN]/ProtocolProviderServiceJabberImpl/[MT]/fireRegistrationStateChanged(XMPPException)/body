@@ -1,0 +1,25 @@
+{
+  int reason=RegistrationStateChangeEvent.REASON_NOT_SPECIFIED;
+  RegistrationState regState=RegistrationState.UNREGISTERED;
+  Throwable wrappedEx=ex.getWrappedThrowable();
+  if (wrappedEx != null && (wrappedEx instanceof UnknownHostException || wrappedEx instanceof ConnectException)) {
+    reason=RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND;
+    regState=RegistrationState.CONNECTION_FAILED;
+  }
+ else {
+    String exMsg=ex.getMessage().toLowerCase();
+    if (exMsg.indexOf("authentication failed") != -1 || exMsg.indexOf("login failed") != -1 || exMsg.indexOf("unable to determine password") != -1) {
+      JabberActivator.getProtocolProviderFactory().storePassword(getAccountID(),null);
+      reason=RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED;
+      regState=RegistrationState.AUTHENTICATION_FAILED;
+      fireRegistrationStateChanged(getRegistrationState(),regState,reason,null);
+      reregister(SecurityAuthority.WRONG_PASSWORD);
+      return;
+    }
+ else     if (exMsg.indexOf("no response from the server") != -1 || exMsg.indexOf("connection failed") != -1) {
+      reason=RegistrationStateChangeEvent.REASON_NOT_SPECIFIED;
+      regState=RegistrationState.CONNECTION_FAILED;
+    }
+  }
+  fireRegistrationStateChanged(getRegistrationState(),regState,reason,null);
+}
