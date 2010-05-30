@@ -4,7 +4,7 @@
   Presence.Type presenceType=presence.getType();
   String fromID=presence.getFrom();
   if (presenceType == Presence.Type.subscribe) {
-    logger.trace(fromID + " wants to add you to its contact list");
+    if (logger.isTraceEnabled())     logger.trace(fromID + " wants to add you to its contact list");
     ContactJabberImpl srcContact=ssContactList.findContactById(fromID);
     if (srcContact == null)     srcContact=createVolatileContact(fromID);
     AuthorizationRequest req=new AuthorizationRequest();
@@ -12,18 +12,18 @@
     Presence.Type responsePresenceType;
     if (response != null && response.getResponseCode().equals(AuthorizationResponse.ACCEPT)) {
       responsePresenceType=Presence.Type.subscribed;
-      logger.info("Sending Accepted Subscription");
+      if (logger.isInfoEnabled())       logger.info("Sending Accepted Subscription");
     }
  else {
       responsePresenceType=Presence.Type.unsubscribed;
-      logger.info("Sending Rejected Subscription");
+      if (logger.isInfoEnabled())       logger.info("Sending Rejected Subscription");
     }
     Presence responsePacket=new Presence(responsePresenceType);
     responsePacket.setTo(fromID);
     parentProvider.getConnection().sendPacket(responsePacket);
   }
  else   if (presenceType == Presence.Type.unsubscribed) {
-    logger.trace(fromID + " does not allow your subscription");
+    if (logger.isTraceEnabled())     logger.trace(fromID + " does not allow your subscription");
     ContactJabberImpl contact=ssContactList.findContactById(fromID);
     if (contact != null) {
       AuthorizationResponse response=new AuthorizationResponse(AuthorizationResponse.REJECT,"");

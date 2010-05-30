@@ -2,7 +2,7 @@
   State newState=event.getNewState();
   State oldState=event.getOldState();
   AimConnection conn=event.getAimConnection();
-  logger.debug("ICQ protocol provider " + getProtocolName() + " changed registration status from "+ oldState+ " to "+ newState);
+  if (logger.isDebugEnabled())   logger.debug("ICQ protocol provider " + getProtocolName() + " changed registration status from "+ oldState+ " to "+ newState);
   int reasonCode=RegistrationStateChangeEvent.REASON_NOT_SPECIFIED;
   String reasonStr=null;
   if (newState == State.ONLINE) {
@@ -16,23 +16,23 @@
       int discconectCode=service.getOscarConnection().getLastCloseCode();
       reasonCode=ConnectionClosedListener.convertCodeToRegistrationStateChangeEvent(discconectCode);
       reasonStr=ConnectionClosedListener.convertCodeToStringReason(discconectCode);
-      logger.debug("The aim Connection was disconnected! with reason : " + reasonStr);
+      if (logger.isDebugEnabled())       logger.debug("The aim Connection was disconnected! with reason : " + reasonStr);
     }
     if (reasonCode == RegistrationStateChangeEvent.REASON_NOT_SPECIFIED && event.getNewStateInfo() instanceof DisconnectedStateInfo) {
       if (((DisconnectedStateInfo)event.getNewStateInfo()).isOnPurpose()) {
         reasonCode=RegistrationStateChangeEvent.REASON_USER_REQUEST;
       }
     }
- else     logger.debug("The aim Connection was disconnected!");
+ else     if (logger.isDebugEnabled())     logger.debug("The aim Connection was disconnected!");
   }
  else   if (newState == State.FAILED) {
-    logger.debug("The aim Connection failed! " + event.getNewStateInfo());
+    if (logger.isDebugEnabled())     logger.debug("The aim Connection failed! " + event.getNewStateInfo());
   }
   if (event.getNewStateInfo() instanceof LoginFailureStateInfo) {
     LoginFailureInfo loginFailure=((LoginFailureStateInfo)event.getNewStateInfo()).getLoginFailureInfo();
     if (loginFailure instanceof AuthFailureInfo) {
       AuthFailureInfo afi=(AuthFailureInfo)loginFailure;
-      logger.debug("AuthFailureInfo code : " + afi.getErrorCode());
+      if (logger.isDebugEnabled())       logger.debug("AuthFailureInfo code : " + afi.getErrorCode());
       int code=ConnectionClosedListener.convertAuthCodeToReasonCode(afi);
       reasonCode=ConnectionClosedListener.convertCodeToRegistrationStateChangeEvent(code);
       reasonStr=ConnectionClosedListener.convertCodeToStringReason(code);

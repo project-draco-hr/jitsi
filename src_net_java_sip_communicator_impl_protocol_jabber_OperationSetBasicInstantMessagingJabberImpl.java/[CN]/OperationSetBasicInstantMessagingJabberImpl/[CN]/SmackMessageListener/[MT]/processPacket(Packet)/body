@@ -4,7 +4,7 @@
   if (msg.getBody() == null)   return;
   String fromUserID=StringUtils.parseBareAddress(msg.getFrom());
   if (logger.isDebugEnabled()) {
-    logger.debug("Received from " + fromUserID + " the message "+ msg.toXML());
+    if (logger.isDebugEnabled())     logger.debug("Received from " + fromUserID + " the message "+ msg.toXML());
   }
   Message newMessage=createMessage(msg.getBody());
   PacketExtension ext=msg.getExtension("http://jabber.org/protocol/xhtml-im");
@@ -23,7 +23,7 @@
   }
   Contact sourceContact=opSetPersPresence.findContactByID(fromUserID);
   if (msg.getType() == org.jivesoftware.smack.packet.Message.Type.error) {
-    logger.info("Message error received from " + fromUserID);
+    if (logger.isInfoEnabled())     logger.info("Message error received from " + fromUserID);
     int errorCode=packet.getError().getCode();
     int errorResultCode=MessageDeliveryFailedEvent.UNKNOWN_ERROR;
     if (errorCode == 503) {
@@ -37,9 +37,9 @@
     return;
   }
   putJidForAddress(fromUserID,msg.getFrom());
-  logger.trace("just mapped: " + fromUserID + " to "+ msg.getFrom());
+  if (logger.isTraceEnabled())   logger.trace("just mapped: " + fromUserID + " to "+ msg.getFrom());
   if (sourceContact == null) {
-    logger.debug("received a message from an unknown contact: " + fromUserID);
+    if (logger.isDebugEnabled())     logger.debug("received a message from an unknown contact: " + fromUserID);
     sourceContact=opSetPersPresence.createVolatileContact(fromUserID);
   }
   MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(newMessage,sourceContact,System.currentTimeMillis());

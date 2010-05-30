@@ -1,12 +1,12 @@
 {
   SnacCommand snac=evt.getSnacCommand();
-  logger.debug("Received a response to our offline message request: " + snac);
+  if (logger.isDebugEnabled())   logger.debug("Received a response to our offline message request: " + snac);
   if (snac instanceof OfflineMsgIcqCmd) {
     OfflineMsgIcqCmd offlineMsgCmd=(OfflineMsgIcqCmd)snac;
     String contactUIN=String.valueOf(offlineMsgCmd.getFromUIN());
     Contact sourceContact=opSetPersPresence.findContactByID(contactUIN);
     if (sourceContact == null) {
-      logger.debug("received a message from a unknown contact: " + contactUIN);
+      if (logger.isDebugEnabled())       logger.debug("received a message from a unknown contact: " + contactUIN);
       sourceContact=opSetPersPresence.createVolatileContact(contactUIN);
     }
     long current=System.currentTimeMillis();
@@ -14,16 +14,16 @@
     if ((current + ONE_DAY) > msgDate)     msgDate=current;
     MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(createMessage(offlineMsgCmd.getContents()),sourceContact,msgDate);
     if (msgReceivedEvt != null) {
-      logger.debug("fire msg received for : " + offlineMsgCmd.getContents());
+      if (logger.isDebugEnabled())       logger.debug("fire msg received for : " + offlineMsgCmd.getContents());
       fireMessageEvent(msgReceivedEvt);
     }
   }
  else   if (snac instanceof OfflineMsgDoneCmd) {
-    logger.debug("send ack to delete offline messages");
+    if (logger.isDebugEnabled())     logger.debug("send ack to delete offline messages");
     OfflineMsgIcqAckCmd offlineMsgDeleteReq=new OfflineMsgIcqAckCmd(Long.parseLong(icqProvider.getAimSession().getScreenname().getNormal()),requestID);
     icqProvider.getAimConnection().getInfoService().getOscarConnection().sendSnac(offlineMsgDeleteReq);
   }
  else   if (snac instanceof SnacError) {
-    logger.debug("error receiving offline messages");
+    if (logger.isDebugEnabled())     logger.debug("error receiving offline messages");
   }
 }

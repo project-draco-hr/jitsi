@@ -1,7 +1,7 @@
 {
   if (!(packet instanceof StreamInitiation))   return;
   if (!(file instanceof ThumbnailedFile))   return;
-  logger.debug("File transfer packet intercepted" + " in order to add thumbnail.");
+  if (logger.isDebugEnabled())   logger.debug("File transfer packet intercepted" + " in order to add thumbnail.");
   StreamInitiation fileTransferPacket=(StreamInitiation)packet;
   ThumbnailedFile thumbnailedFile=(ThumbnailedFile)file;
   if (jabberTransfer.getStreamID().equals(fileTransferPacket.getSessionID())) {
@@ -9,7 +9,7 @@
     thumbnailElement=new ThumbnailElement(StringUtils.parseServer(fileTransferPacket.getTo()),thumbnailedFile.getThumbnailData(),thumbnailedFile.getThumbnailMimeType(),thumbnailedFile.getThumbnailWidth(),thumbnailedFile.getThumbnailHeight());
     FileElement fileElement=new FileElement(file,thumbnailElement);
     fileTransferPacket.setFile(fileElement);
-    logger.debug("The file transfer packet with thumbnail: " + fileTransferPacket.toXML());
+    if (logger.isDebugEnabled())     logger.debug("The file transfer packet with thumbnail: " + fileTransferPacket.toXML());
     if (protocolProvider.getConnection() != null) {
       protocolProvider.getConnection().addPacketListener(thumbnailRequestListener,new AndFilter(new PacketTypeFilter(IQ.class),new IQTypeFilter(IQ.Type.GET)));
     }
