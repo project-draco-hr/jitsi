@@ -1,6 +1,6 @@
 {
   ConfigurationService config=NeomediaActivator.getConfigurationService();
-  logger.info("Scanning for configured Audio Devices.");
+  if (logger.isInfoEnabled())   logger.info("Scanning for configured Audio Devices.");
   CaptureDeviceInfo[] audioCaptureDevices=getAvailableAudioCaptureDevices();
   if (config.getBoolean(PROP_AUDIO_DEVICE_IS_DISABLED,false)) {
     audioCaptureDevice=null;
@@ -12,7 +12,7 @@
     audioSystem=AUDIO_SYSTEM_NONE;
   }
  else {
-    logger.debug("Found " + audioCaptureDevices.length + " capture devices: "+ audioCaptureDevices);
+    if (logger.isDebugEnabled())     logger.debug("Found " + audioCaptureDevices.length + " capture devices: "+ audioCaptureDevices);
     String audioDevName=config.getString(PROP_AUDIO_DEVICE);
     if (audioDevName == null) {
       if (PortAudioAuto.isSupported()) {
@@ -40,16 +40,16 @@
         setAudioSystem(AUDIO_SYSTEM_PORTAUDIO,null,false);
       }
     }
-    if (audioCaptureDevice != null)     logger.info("Found " + audioCaptureDevice.getName() + " as an audio capture device.");
+    if (audioCaptureDevice != null)     if (logger.isInfoEnabled())     logger.info("Found " + audioCaptureDevice.getName() + " as an audio capture device.");
   }
   if (config.getBoolean(PROP_VIDEO_DEVICE_IS_DISABLED,false))   videoCaptureDevice=null;
  else {
-    logger.info("Scanning for configured Video Devices.");
+    if (logger.isInfoEnabled())     logger.info("Scanning for configured Video Devices.");
     Format[] formats=new Format[]{new AVFrameFormat(),new VideoFormat(VideoFormat.RGB),new VideoFormat(VideoFormat.YUV)};
     for (    Format format : formats) {
       videoCaptureDevice=extractConfiguredVideoCaptureDevice(format);
       if (videoCaptureDevice != null)       break;
     }
-    if (videoCaptureDevice == null)     logger.info("No Video Device was found.");
+    if (videoCaptureDevice == null)     if (logger.isInfoEnabled())     logger.info("No Video Device was found.");
   }
 }
