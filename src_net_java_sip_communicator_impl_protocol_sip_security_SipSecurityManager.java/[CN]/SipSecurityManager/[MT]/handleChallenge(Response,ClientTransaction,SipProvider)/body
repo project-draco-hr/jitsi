@@ -14,10 +14,10 @@
     if (ccEntry == null) {
       if (storedPassword != null) {
         ccEntry=createCcEntryWithStoredPassword(storedPassword);
-        logger.trace("seem to have a stored pass! Try with it.");
+        if (logger.isTraceEnabled())         logger.trace("seem to have a stored pass! Try with it.");
       }
  else {
-        logger.trace("We don't seem to have a good pass! Get one.");
+        if (logger.isTraceEnabled())         logger.trace("We don't seem to have a good pass! Get one.");
         ccEntry=createCcEntryWithNewCredentials(realm,SecurityAuthority.AUTHENTICATION_REQUIRED);
         if (ccEntry == null)         throw new OperationFailedException("User has canceled the authentication process.",OperationFailedException.AUTHENTICATION_CANCELED);
       }
@@ -29,7 +29,7 @@
         if (ccEntry == null)         throw new OperationFailedException("User has canceled the authentication process.",OperationFailedException.AUTHENTICATION_CANCELED);
       }
  else {
-        logger.trace("We seem to have a pass in the cache. " + "Let's try with it.");
+        if (logger.isTraceEnabled())         logger.trace("We seem to have a pass in the cache. " + "Let's try with it.");
       }
     }
     if (ccEntry.userCredentials == null) {
@@ -38,7 +38,7 @@
     AuthorizationHeader authorization=this.createAuthorizationHeader(reoriginatedRequest.getMethod(),reoriginatedRequest.getRequestURI().toString(),(reoriginatedRequest.getContent() == null) ? "" : reoriginatedRequest.getContent().toString(),authHeader,ccEntry.userCredentials);
     ccEntry.pushBranchID(retryTran.getBranchId());
     cachedCredentials.cacheEntry(realm,ccEntry);
-    logger.debug("Created authorization header: " + authorization.toString());
+    if (logger.isDebugEnabled())     logger.debug("Created authorization header: " + authorization.toString());
     CallIdHeader call=(CallIdHeader)reoriginatedRequest.getHeader(CallIdHeader.NAME);
     if (call != null) {
       String callid=call.getCallId();
@@ -46,6 +46,6 @@
     }
     reoriginatedRequest.addHeader(authorization);
   }
-  logger.debug("Returning authorization transaction.");
+  if (logger.isDebugEnabled())   logger.debug("Returning authorization transaction.");
   return retryTran;
 }

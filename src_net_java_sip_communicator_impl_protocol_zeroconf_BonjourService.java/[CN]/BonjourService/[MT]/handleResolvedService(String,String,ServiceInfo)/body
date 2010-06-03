@@ -1,21 +1,21 @@
 {
   if (contactID.equals(id))   return;
   if (info.getAddress().toString().length() > 15) {
-    logger.debug("ZEROCONF: Temporarily ignoring IPv6 addresses!");
+    if (logger.isDebugEnabled())     logger.debug("ZEROCONF: Temporarily ignoring IPv6 addresses!");
     return;
   }
   ContactZeroconfImpl newFriend;
 synchronized (this) {
     if (getContact(contactID,info.getAddress()) != null) {
-      logger.debug("Contact " + contactID + " already in contact list! Skipping.");
+      if (logger.isDebugEnabled())       logger.debug("Contact " + contactID + " already in contact list! Skipping.");
       return;
     }
     ;
-    logger.debug("ZEROCNF: ContactID " + contactID + " Address "+ info.getAddress());
-    logger.debug("            Address=>" + info.getAddress() + ":"+ info.getPort());
+    if (logger.isDebugEnabled())     logger.debug("ZEROCNF: ContactID " + contactID + " Address "+ info.getAddress());
+    if (logger.isDebugEnabled())     logger.debug("            Address=>" + info.getAddress() + ":"+ info.getPort());
     for (Iterator<String> names=info.getPropertyNames(); names.hasNext(); ) {
       String prop=names.next();
-      logger.debug("            " + prop + "=>"+ info.getPropertyString(prop));
+      if (logger.isDebugEnabled())       logger.debug("            " + prop + "=>"+ info.getPropertyString(prop));
     }
     String name=info.getPropertyString("1st");
     if (info.getPropertyString("last") != null)     name+=" " + info.getPropertyString("last");
@@ -24,7 +24,7 @@ synchronized (this) {
       logger.error("ZEROCONF: Flawed contact announced himself" + "without necessary parameters : " + contactID);
       return;
     }
-    logger.debug("ZEROCONF: Detected client " + name);
+    if (logger.isDebugEnabled())     logger.debug("ZEROCONF: Detected client " + name);
     newFriend=opSetPersPresence.createVolatileContact(contactID,this,name,info.getAddress(),port);
   }
   int clientType=ContactZeroconfImpl.XMPP;
@@ -32,7 +32,7 @@ synchronized (this) {
  else   if ((info.getPropertyString("jid") != null) && (info.getPropertyString("node") == null))   clientType=ContactZeroconfImpl.GAIM;
  else   if (info.getPropertyString("jid") == null)   clientType=ContactZeroconfImpl.ICHAT;
   newFriend.setClientType(clientType);
-  logger.debug("ZEROCONF: CLIENT TYPE " + clientType);
+  if (logger.isDebugEnabled())   logger.debug("ZEROCONF: CLIENT TYPE " + clientType);
   ZeroconfStatusEnum status=ZeroconfStatusEnum.statusOf(info.getPropertyString("status"));
   opSetPersPresence.changePresenceStatusForContact(newFriend,status == null ? ZeroconfStatusEnum.ONLINE : status);
   jmdns.addListener(this,new DNSQuestion(info.getQualifiedName(),DNSConstants.TYPE_SRV,DNSConstants.CLASS_UNIQUE));

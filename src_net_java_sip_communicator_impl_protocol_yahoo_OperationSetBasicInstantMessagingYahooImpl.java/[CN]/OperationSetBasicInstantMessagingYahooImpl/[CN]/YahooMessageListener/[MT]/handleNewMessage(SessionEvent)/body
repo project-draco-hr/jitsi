@@ -1,15 +1,15 @@
 {
-  logger.debug("Message received : " + ev);
+  if (logger.isDebugEnabled())   logger.debug("Message received : " + ev);
   String formattedMessage=ev.getMessage();
-  logger.debug("original message received : " + formattedMessage);
+  if (logger.isDebugEnabled())   logger.debug("original message received : " + formattedMessage);
   formattedMessage=processLinks(messageDecoder.decodeToHTML(formattedMessage));
   formattedMessage=formattedMessage.replaceAll("(<font) (.*) size=\"0\">","$1 $2 size=\"10\">");
   formattedMessage=formattedMessage.replaceAll("(<font) (.*) size=\"(\\d+)\">","$1 $2 style=\"font-size: $3px;\">");
-  logger.debug("formatted Message : " + formattedMessage);
+  if (logger.isDebugEnabled())   logger.debug("formatted Message : " + formattedMessage);
   Message newMessage=createMessage(formattedMessage,HTML_MIME_TYPE,DEFAULT_MIME_ENCODING,null);
   Contact sourceContact=opSetPersPresence.findContactByID(ev.getFrom());
   if (sourceContact == null) {
-    logger.debug("received a message from an unknown contact: " + ev.getFrom());
+    if (logger.isDebugEnabled())     logger.debug("received a message from an unknown contact: " + ev.getFrom());
     sourceContact=opSetPersPresence.createVolatileContact(ev.getFrom());
   }
   MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(newMessage,sourceContact,System.currentTimeMillis());

@@ -4,14 +4,14 @@ synchronized (JmDNS.this) {
     services.put(info.getQualifiedName().toLowerCase(),info);
   }
 synchronized (info) {
-    logger.debug("updateInfos() JmDNS updating " + info.getQualifiedName() + " state "+ info.getState());
+    if (logger.isDebugEnabled())     logger.debug("updateInfos() JmDNS updating " + info.getQualifiedName() + " state "+ info.getState());
     out=new DNSOutgoing(DNSConstants.FLAGS_RA | DNSConstants.FLAGS_AA);
     out2=new DNSOutgoing(DNSConstants.FLAGS_RA | DNSConstants.FLAGS_AA);
     try {
       out.addAnswer(new DNSRecord.Text(info.getQualifiedName(),DNSConstants.TYPE_TXT,DNSConstants.CLASS_IN,0,old),0);
       out.addAnswer(new DNSRecord.Text(info.getQualifiedName(),DNSConstants.TYPE_TXT,DNSConstants.CLASS_IN | DNSConstants.CLASS_UNIQUE,DNSConstants.DNS_TTL,info.text),0);
       out2.addAnswer(new DNSRecord.Text(info.getQualifiedName(),DNSConstants.TYPE_TXT,DNSConstants.CLASS_IN | DNSConstants.CLASS_UNIQUE,DNSConstants.DNS_TTL,info.text),0);
-      logger.debug("updateInfos() JmDNS updated infos for " + info);
+      if (logger.isDebugEnabled())       logger.debug("updateInfos() JmDNS updated infos for " + info);
       send(out);
       Thread.sleep(1000);
       send(out2);

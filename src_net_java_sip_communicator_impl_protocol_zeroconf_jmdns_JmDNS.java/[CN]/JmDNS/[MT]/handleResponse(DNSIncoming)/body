@@ -2,25 +2,25 @@
   long now=System.currentTimeMillis();
   boolean hostConflictDetected=false;
   boolean serviceConflictDetected=false;
-  logger.trace("JMDNS/handleResponse received " + msg.answers.size() + " messages");
+  if (logger.isTraceEnabled())   logger.trace("JMDNS/handleResponse received " + msg.answers.size() + " messages");
   for (  DNSRecord rec : msg.answers) {
-    logger.trace("PRINT: " + rec);
+    if (logger.isTraceEnabled())     logger.trace("PRINT: " + rec);
   }
   for (  DNSRecord rec : msg.answers) {
     boolean isInformative=false;
     boolean expired=rec.isExpired(now);
-    logger.trace("JMDNS received : " + rec + " expired: "+ expired);
+    if (logger.isTraceEnabled())     logger.trace("JMDNS received : " + rec + " expired: "+ expired);
     DNSRecord c=(DNSRecord)cache.get(rec);
     if (c != null) {
-      logger.trace("JMDNS has found " + rec + " in cache");
+      if (logger.isTraceEnabled())       logger.trace("JMDNS has found " + rec + " in cache");
       if (expired) {
         isInformative=true;
         cache.remove(c);
       }
  else {
-        logger.trace(new Boolean(c.isUnique()).toString() + c.getType() + c.getClazz()+ "/"+ DNSConstants.TYPE_TXT+ " "+ DNSConstants.CLASS_IN);
+        if (logger.isTraceEnabled())         logger.trace(new Boolean(c.isUnique()).toString() + c.getType() + c.getClazz()+ "/"+ DNSConstants.TYPE_TXT+ " "+ DNSConstants.CLASS_IN);
         if ((rec.isUnique() && ((rec.getType() & DNSConstants.TYPE_TXT) != 0) && ((rec.getClazz() & DNSConstants.CLASS_IN) != 0))) {
-          logger.trace("UPDATING CACHE !! ");
+          if (logger.isTraceEnabled())           logger.trace("UPDATING CACHE !! ");
           isInformative=true;
           cache.remove(c);
           cache.add(rec);
@@ -34,7 +34,7 @@
  else {
       if (!expired) {
         isInformative=true;
-        logger.trace("Adding " + rec + " to the cache");
+        if (logger.isTraceEnabled())         logger.trace("Adding " + rec + " to the cache");
         cache.add(rec);
       }
     }
