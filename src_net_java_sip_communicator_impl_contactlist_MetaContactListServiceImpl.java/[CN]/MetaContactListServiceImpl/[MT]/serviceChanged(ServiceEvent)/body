@@ -1,10 +1,10 @@
 {
   Object sService=bundleContext.getService(event.getServiceReference());
-  logger.trace("Received a service event for: " + sService.getClass().getName());
+  if (logger.isTraceEnabled())   logger.trace("Received a service event for: " + sService.getClass().getName());
   if (!(sService instanceof ProtocolProviderService)) {
     return;
   }
-  logger.debug("Service is a protocol provider.");
+  if (logger.isDebugEnabled())   logger.debug("Service is a protocol provider.");
   ProtocolProviderService provider=(ProtocolProviderService)sService;
   ProtocolProviderFactory sourceFactory=null;
   ServiceReference[] allBundleServices=event.getServiceReference().getBundle().getRegisteredServices();
@@ -16,17 +16,17 @@
     }
   }
   if (event.getType() == ServiceEvent.REGISTERED) {
-    logger.debug("Handling registration of a new Protocol Provider.");
+    if (logger.isDebugEnabled())     logger.debug("Handling registration of a new Protocol Provider.");
     String providerMask=System.getProperty(MetaContactListService.PROVIDER_MASK_PROPERTY);
     if (providerMask != null && providerMask.trim().length() > 0) {
       String servRefMask=(String)event.getServiceReference().getProperty(MetaContactListService.PROVIDER_MASK_PROPERTY);
       if (servRefMask == null || !servRefMask.equals(providerMask)) {
-        logger.debug("Ignoing masked provider: " + provider.getAccountID());
+        if (logger.isDebugEnabled())         logger.debug("Ignoing masked provider: " + provider.getAccountID());
         return;
       }
     }
     if (sourceFactory != null && currentlyInstalledProviders.containsKey(provider.getAccountID().getAccountUniqueID())) {
-      logger.debug("Ignoing an already installed account: " + provider.getAccountID());
+      if (logger.isDebugEnabled())       logger.debug("Ignoing an already installed account: " + provider.getAccountID());
       return;
     }
     this.handleProviderAdded((ProtocolProviderService)sService);
@@ -38,7 +38,7 @@
     if (sourceFactory.getRegisteredAccounts().contains(provider.getAccountID())) {
       return;
     }
-    logger.debug("Account uninstalled. acc.id=" + provider.getAccountID() + ". Removing from meta "+ "contact list.");
+    if (logger.isDebugEnabled())     logger.debug("Account uninstalled. acc.id=" + provider.getAccountID() + ". Removing from meta "+ "contact list.");
     this.handleProviderRemoved((ProtocolProviderService)sService);
   }
 }
