@@ -47,6 +47,8 @@ catch (    SipException ex) {
       }
     }
   }
+  CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(serverTransaction.getDialog());
+  if (callPeer != null)   callPeer.setState(CallPeerState.REFERRED);
   Call referToCall;
   try {
     referToCall=createOutgoingCall(referToAddress,referRequest);
@@ -72,7 +74,7 @@ catch (    SipException ex) {
  * <tt>Call</tt> which has changed its state
  */
     @Override public synchronized void callStateChanged(    CallChangeEvent evt){
-      if (!evt.getEventType().equals(CallChangeEvent.CALL_STATE_CHANGE))       return;
+      if (evt != null && !evt.getEventType().equals(CallChangeEvent.CALL_STATE_CHANGE))       return;
       if (!done && referToCallStateChanged(referToCallListenerSource,sendNotifyRequest,dialog,sipProvider,subscription)) {
         done=true;
         if (referToCallListenerSource != null)         referToCallListenerSource.removeCallChangeListener(this);

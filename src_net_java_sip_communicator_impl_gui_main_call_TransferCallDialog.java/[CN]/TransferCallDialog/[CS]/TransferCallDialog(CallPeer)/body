@@ -1,0 +1,29 @@
+{
+  super(GuiActivator.getResources().getI18NString("service.gui.TRANSFER_CALL_TITLE"));
+  this.initContactListData(peer.getProtocolProvider());
+  this.setInfoText(GuiActivator.getResources().getI18NString("service.gui.TRANSFER_CALL_MSG"));
+  this.setOkButtonText(GuiActivator.getResources().getI18NString("service.gui.TRANSFER"));
+  addOkButtonListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      String transferString=getSelectedString();
+      if (transferString != null && transferString.length() > 0)       CallManager.transferCall(peer,transferString);
+ else {
+        MetaContact metaContact=getSelectedMetaContact();
+        if (metaContact != null) {
+          Iterator<Contact> contactsIter=metaContact.getContactsForProvider(peer.getProtocolProvider());
+          if (contactsIter.hasNext())           CallManager.transferCall(peer,contactsIter.next().getAddress());
+        }
+      }
+      setVisible(false);
+      dispose();
+    }
+  }
+);
+  addCancelButtonListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      setVisible(false);
+      dispose();
+    }
+  }
+);
+}

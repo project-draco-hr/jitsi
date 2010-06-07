@@ -1,0 +1,32 @@
+{
+  OperationSetAdvancedTelephony telephony=call.getProtocolProvider().getOperationSet(OperationSetAdvancedTelephony.class);
+  if (telephony == null)   return;
+  Collection<CallPeer> transferCalls=getTransferCallPeers();
+  CallPeer initialPeer=call.getCallPeers().next();
+  if (transferCalls == null) {
+    final TransferCallDialog dialog=new TransferCallDialog(initialPeer);
+    CallChangeListener callChangeListener=new CallChangeAdapter(){
+      public void callStateChanged(      CallChangeEvent evt){
+        if (!evt.getEventType().equals(CallChangeEvent.CALL_STATE_CHANGE))         return;
+        if (!CallState.CALL_IN_PROGRESS.equals(call.getCallState())) {
+          dialog.setVisible(false);
+          dialog.dispose();
+        }
+      }
+    }
+;
+    call.addCallChangeListener(callChangeListener);
+    try {
+      dialog.setModal(true);
+      dialog.pack();
+      dialog.setVisible(true);
+    }
+  finally {
+      call.removeCallChangeListener(callChangeListener);
+    }
+  }
+ else {
+    TransferActiveCallsMenu activeCallsMenu=new TransferActiveCallsMenu(TransferCallButton.this,initialPeer,transferCalls);
+    activeCallsMenu.showPopupMenu();
+  }
+}

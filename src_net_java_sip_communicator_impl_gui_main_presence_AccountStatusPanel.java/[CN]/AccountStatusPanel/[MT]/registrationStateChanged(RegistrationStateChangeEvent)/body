@@ -5,20 +5,34 @@
     final OperationSetServerStoredAccountInfo accountInfoOpSet=protocolProvider.getOperationSet(OperationSetServerStoredAccountInfo.class);
     if (accountInfoOpSet != null)     new Thread(){
       public void run(){
-        byte[] accountImage=AccountInfoUtils.getImage(accountInfoOpSet);
-        if ((accountImage != null) && (accountImage.length > 0))         accountImageLabel.setImageIcon(accountImage);
-        String firstName=AccountInfoUtils.getFirstName(accountInfoOpSet);
-        String lastName=AccountInfoUtils.getLastName(accountInfoOpSet);
-        String accountName;
-        if (firstName != null)         if (lastName != null)         accountName=firstName + " " + lastName;
- else         accountName=firstName;
- else         if (lastName != null)         accountName=lastName;
- else         accountName="";
-        if (accountName.length() == 0) {
+        if (currentImage == null) {
+          byte[] accountImage=AccountInfoUtils.getImage(accountInfoOpSet);
+          if ((accountImage != null) && (accountImage.length > 0)) {
+            currentImage=accountImage;
+            accountImageLabel.setImageIcon(currentImage);
+          }
+        }
+        String accountName=null;
+        if (currentFirstName == null) {
+          String firstName=AccountInfoUtils.getFirstName(accountInfoOpSet);
+          if (firstName != null && firstName.length() > 0) {
+            currentFirstName=firstName;
+            accountName=currentFirstName;
+          }
+        }
+        if (currentLastName == null) {
+          String lastName=AccountInfoUtils.getLastName(accountInfoOpSet);
+          if (lastName != null && lastName.length() > 0) {
+            currentLastName=lastName;
+            if (accountName != null)             accountName+=" ";
+            accountName+=currentLastName;
+          }
+        }
+        if (currentFirstName == null && currentLastName == null) {
           String displayName=AccountInfoUtils.getDisplayName(accountInfoOpSet);
           if (displayName != null)           accountName=displayName;
         }
-        if (accountName.length() > 0)         accountNameLabel.setText(accountName);
+        if (accountName != null && accountName.length() > 0)         accountNameLabel.setText(accountName);
       }
     }
 .start();
