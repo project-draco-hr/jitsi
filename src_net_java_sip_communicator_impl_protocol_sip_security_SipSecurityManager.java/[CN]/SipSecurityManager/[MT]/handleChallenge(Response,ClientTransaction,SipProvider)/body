@@ -2,8 +2,11 @@
   String branchID=challengedTransaction.getBranchId();
   Request challengedRequest=challengedTransaction.getRequest();
   Request reoriginatedRequest=cloneReqForAuthentication(challengedRequest,challenge);
+  incrementRequestSeqNo(reoriginatedRequest);
   ListIterator<WWWAuthenticateHeader> authHeaders=extractChallenges(challenge);
   ClientTransaction retryTran=transactionCreator.getNewClientTransaction(reoriginatedRequest);
+  Dialog tranDialog=retryTran.getDialog();
+  if (tranDialog != null && tranDialog.getLocalSeqNumber() != getRequestSeqNo(reoriginatedRequest))   tranDialog.incrementLocalSequenceNumber();
   while (authHeaders.hasNext()) {
     WWWAuthenticateHeader authHeader=authHeaders.next();
     String realm=authHeader.getRealm();

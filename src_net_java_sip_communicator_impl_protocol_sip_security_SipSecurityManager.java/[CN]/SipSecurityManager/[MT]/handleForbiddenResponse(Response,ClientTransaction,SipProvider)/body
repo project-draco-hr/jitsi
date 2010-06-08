@@ -5,9 +5,10 @@
   Request reoriginatedRequest=(Request)challengedRequest.clone();
   removeBranchID(reoriginatedRequest);
   List<String> realms=removeAuthHeaders(reoriginatedRequest);
-  CSeqHeader cSeq=(CSeqHeader)reoriginatedRequest.getHeader((CSeqHeader.NAME));
-  cSeq.setSeqNumber(cSeq.getSeqNumber() + 1l);
+  incrementRequestSeqNo(reoriginatedRequest);
   ClientTransaction retryTran=transactionCreator.getNewClientTransaction(reoriginatedRequest);
+  Dialog tranDialog=retryTran.getDialog();
+  if (tranDialog != null && tranDialog.getLocalSeqNumber() != getRequestSeqNo(reoriginatedRequest))   tranDialog.incrementLocalSequenceNumber();
   Iterator<String> realmsIter=realms.iterator();
   while (realmsIter.hasNext()) {
     CredentialsCacheEntry ccEntry=createCcEntryWithStoredPassword("");
