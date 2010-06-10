@@ -7,18 +7,29 @@
       return;
     }
     if (needsReconnection.contains(pp))     return;
-    if (connectedInterfaces.size() == 0)     needsReconnection.add(pp);
+    if (connectedInterfaces.size() == 0) {
+      needsReconnection.add(pp);
+      if (currentlyReconnecting.containsKey(pp))       currentlyReconnecting.remove(pp).cancel();
+    }
  else {
       reconnect(pp);
     }
     unregisteredProviders.remove(pp);
+    if (logger.isTraceEnabled()) {
+      logger.trace("Got Connection Failed for " + pp);
+      traceCurrentPPState();
+    }
   }
  else   if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
     if (!hasAtLeastOneSuccessfulConnection(pp)) {
       setAtLeastOneSuccessfulConnection(pp,true);
     }
     autoReconnEnabledProviders.put(pp,new ArrayList<String>(connectedInterfaces));
-    currentlyReconnecting.remove(pp);
+    if (currentlyReconnecting.containsKey(pp))     currentlyReconnecting.remove(pp).cancel();
+    if (logger.isTraceEnabled()) {
+      logger.trace("Got Registered for " + pp);
+      traceCurrentPPState();
+    }
   }
  else   if (evt.getNewState().equals(RegistrationState.UNREGISTERED)) {
     autoReconnEnabledProviders.remove(pp);
@@ -26,5 +37,9 @@
       currentlyReconnecting.remove(pp).cancel();
     }
     unregisteredProviders.remove(pp);
+    if (logger.isTraceEnabled()) {
+      logger.trace("Got Unregistered for " + pp);
+      traceCurrentPPState();
+    }
   }
 }

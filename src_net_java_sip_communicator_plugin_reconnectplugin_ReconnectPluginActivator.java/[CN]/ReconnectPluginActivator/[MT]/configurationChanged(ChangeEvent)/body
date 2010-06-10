@@ -7,8 +7,7 @@
       while (iter.hasNext()) {
         ProtocolProviderService pp=iter.next();
         if (currentlyReconnecting.containsKey(pp)) {
-          currentlyReconnecting.get(pp).cancel();
-          currentlyReconnecting.remove(pp);
+          currentlyReconnecting.remove(pp).cancel();
         }
         reconnect(pp);
       }
@@ -25,8 +24,7 @@
         if (entry.getValue().contains(iface.getName())) {
           ProtocolProviderService pp=entry.getKey();
           if (currentlyReconnecting.containsKey(pp)) {
-            currentlyReconnecting.get(pp).cancel();
-            currentlyReconnecting.remove(pp);
+            currentlyReconnecting.remove(pp).cancel();
           }
           reconnect(pp);
         }
@@ -38,6 +36,9 @@
       while (iter.hasNext()) {
         ProtocolProviderService pp=iter.next();
         try {
+          if (currentlyReconnecting.containsKey(pp)) {
+            currentlyReconnecting.remove(pp).cancel();
+          }
           unregisteredProviders.add(pp);
           pp.unregister();
         }
@@ -49,5 +50,9 @@
       if (logger.isTraceEnabled())       logger.trace("Network is down!");
       notify("","plugin.reconnectplugin.NETWORK_DOWN",new String[0]);
     }
+  }
+  if (logger.isTraceEnabled()) {
+    logger.trace("Event received " + event + " src="+ event.getSource());
+    traceCurrentPPState();
   }
 }
