@@ -1,11 +1,13 @@
 {
   DataSource captureDevice=getDevice().createOutputDataSource();
-  if (captureDevice instanceof PushBufferDataSource) {
-    captureDevice=new MutePushBufferDataSource((PushBufferDataSource)captureDevice);
+  if (!(captureDevice instanceof MuteDataSource)) {
+    if (captureDevice instanceof PushBufferDataSource) {
+      captureDevice=new MutePushBufferDataSource((PushBufferDataSource)captureDevice);
+    }
+ else     if (captureDevice instanceof PullBufferDataSource) {
+      captureDevice=new MutePullBufferDataSource((PullBufferDataSource)captureDevice);
+    }
   }
- else   if (captureDevice instanceof PullBufferDataSource) {
-    captureDevice=new MutePullBufferDataSource((PullBufferDataSource)captureDevice);
-  }
-  if (captureDevice instanceof MuteDataSource)   ((MuteDataSource)captureDevice).setMute(mute);
+  ((MuteDataSource)captureDevice).setMute(mute);
   return captureDevice;
 }
