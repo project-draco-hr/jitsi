@@ -41,6 +41,15 @@ synchronized (this) {
         forcePollContact(contact);
       }
     }
+    Iterator<Contact> rootContactsIter=getServerStoredContactListRoot().contacts();
+    while (rootContactsIter.hasNext()) {
+      ContactSipImpl contact=(ContactSipImpl)rootContactsIter.next();
+      if (contact.isResolved()) {
+        if (logger.isDebugEnabled())         logger.debug("contact " + contact + " already resolved");
+        continue;
+      }
+      forcePollContact(contact);
+    }
     pollingTask=new PollOfflineContactsTask();
     timer.schedule(pollingTask,pollingTaskPeriod,pollingTaskPeriod);
   }
