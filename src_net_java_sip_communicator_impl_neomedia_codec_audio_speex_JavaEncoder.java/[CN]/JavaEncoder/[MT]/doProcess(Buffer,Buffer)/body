@@ -1,0 +1,33 @@
+{
+  Format newFormat=inputBuffer.getFormat();
+  if (lastFormat != newFormat)   initConverter((AudioFormat)newFormat);
+  int inputLength=inputBuffer.getLength();
+  if (inputLength == 0)   return OUTPUT_BUFFER_NOT_FILLED;
+  if (inputLength >= frameSize) {
+    byte[] inputData=(byte[])inputBuffer.getData();
+    int inputOffset=inputBuffer.getOffset();
+    encoder.processData(inputData,inputOffset,frameSize);
+    byte[] buff=new byte[encoder.getProcessedDataByteSize()];
+    encoder.getProcessedData(buff,0);
+    Object outputData=outputBuffer.getData();
+    byte[] output;
+    if (outputData instanceof byte[]) {
+      output=(byte[])outputData;
+      if (output.length < buff.length)       output=null;
+    }
+ else     output=null;
+    if (output == null)     output=new byte[buff.length];
+    System.arraycopy(buff,0,output,0,buff.length);
+    outputBuffer.setData(output);
+    outputBuffer.setFormat(outFormat);
+    outputBuffer.setLength(output.length);
+    outputBuffer.setOffset(0);
+    if (inputLength > frameSize) {
+      inputBuffer.setLength(inputLength - frameSize);
+      inputBuffer.setOffset(inputOffset + frameSize);
+      return BUFFER_PROCESSED_OK | INPUT_BUFFER_NOT_CONSUMED;
+    }
+ else     return BUFFER_PROCESSED_OK;
+  }
+ else   return OUTPUT_BUFFER_NOT_FILLED;
+}
