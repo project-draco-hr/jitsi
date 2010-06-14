@@ -1,0 +1,107 @@
+{
+  Format inputFormat=inputBuffer.getFormat();
+  if ((inputFormat != null) && (inputFormat != this.inputFormat) && !inputFormat.equals(this.inputFormat)) {
+    if (null == setInputFormat(inputFormat))     return BUFFER_PROCESSED_FAILED;
+  }
+  inputFormat=this.inputFormat;
+  AudioFormat inputAudioFormat=(AudioFormat)inputFormat;
+  int inputSampleRate=(int)inputAudioFormat.getSampleRate();
+  if ((state != 0) && (sampleRate != inputSampleRate)) {
+    Speex.speex_encoder_destroy(state);
+    state=0;
+    sampleRate=0;
+    frameSize=0;
+  }
+  if (state == 0) {
+    long mode=Speex.speex_lib_get_mode((inputSampleRate == 16000) ? Speex.SPEEX_MODEID_WB : (inputSampleRate == 32000) ? Speex.SPEEX_MODEID_UWB : Speex.SPEEX_MODEID_NB);
+    if (mode == 0)     return BUFFER_PROCESSED_FAILED;
+    state=Speex.speex_encoder_init(mode);
+    if (state == 0)     return BUFFER_PROCESSED_FAILED;
+    if (Speex.speex_encoder_ctl(state,Speex.SPEEX_SET_QUALITY,4) != 0)     return BUFFER_PROCESSED_FAILED;
+    if (Speex.speex_encoder_ctl(state,Speex.SPEEX_SET_SAMPLING_RATE,inputSampleRate) != 0)     return BUFFER_PROCESSED_FAILED;
+    int frameSize=Speex.speex_encoder_ctl(state,Speex.SPEEX_GET_FRAME_SIZE);
+    if (frameSize < 0)     return BUFFER_PROCESSED_FAILED;
+    sampleRate=inputSampleRate;
+    this.frameSize=frameSize * 2;
+    duration=(long)((frameSize * 1000 * 1000000) / sampleRate);
+  }
+  byte[] input=(byte[])inputBuffer.getData();
+  int inputLength=inputBuffer.getLength();
+  int inputOffset=inputBuffer.getOffset();
+  if ((previousInput != null) && (previousInputLength > 0)) {
+    if (previousInputLength < this.frameSize) {
+      if (previousInput.length < this.frameSize) {
+        byte[] newPreviousInput=new byte[this.frameSize];
+        System.arraycopy(previousInput,0,newPreviousInput,0,previousInput.length);
+        previousInput=newPreviousInput;
+      }
+      int bytesToCopyFromInputToPreviousInput=Math.min(this.frameSize - previousInputLength,inputLength);
+      if (bytesToCopyFromInputToPreviousInput > 0) {
+        System.arraycopy(input,inputOffset,previousInput,previousInputLength,bytesToCopyFromInputToPreviousInput);
+        previousInputLength+=bytesToCopyFromInputToPreviousInput;
+        inputLength-=bytesToCopyFromInputToPreviousInput;
+        inputBuffer.setLength(inputLength);
+        inputBuffer.setOffset(inputOffset + bytesToCopyFromInputToPreviousInput);
+      }
+    }
+    if (previousInputLength == this.frameSize) {
+      input=previousInput;
+      inputOffset=0;
+      previousInputLength=0;
+    }
+ else     if (previousInputLength > this.frameSize) {
+      input=new byte[this.frameSize];
+      System.arraycopy(previousInput,0,input,0,input.length);
+      inputOffset=0;
+      previousInputLength-=input.length;
+      System.arraycopy(previousInput,input.length,previousInput,0,previousInputLength);
+    }
+ else {
+      outputBuffer.setLength(0);
+      discardOutputBuffer(outputBuffer);
+      if (inputLength < 1)       return BUFFER_PROCESSED_OK;
+ else       return BUFFER_PROCESSED_OK | INPUT_BUFFER_NOT_CONSUMED;
+    }
+  }
+ else   if (inputLength < 1) {
+    outputBuffer.setLength(0);
+    discardOutputBuffer(outputBuffer);
+    return BUFFER_PROCESSED_OK;
+  }
+ else   if (inputLength < this.frameSize) {
+    if ((previousInput == null) || (previousInput.length < inputLength))     previousInput=new byte[this.frameSize];
+    System.arraycopy(input,inputOffset,previousInput,0,inputLength);
+    previousInputLength=inputLength;
+    outputBuffer.setLength(0);
+    discardOutputBuffer(outputBuffer);
+    return BUFFER_PROCESSED_OK;
+  }
+ else {
+    inputLength-=this.frameSize;
+    inputBuffer.setLength(inputLength);
+    inputBuffer.setOffset(inputOffset + this.frameSize);
+  }
+  Speex.speex_bits_reset(bits);
+  Speex.speex_encode_int(state,input,inputOffset,bits);
+  int outputLength=Speex.speex_bits_nbytes(bits);
+  if (outputLength > 0) {
+    byte[] output=validateByteArraySize(outputBuffer,outputLength);
+    outputLength=Speex.speex_bits_write(bits,output,0,output.length);
+    if (outputLength > 0) {
+      outputBuffer.setDuration(duration);
+      outputBuffer.setFormat(getOutputFormat());
+      outputBuffer.setLength(outputLength);
+      outputBuffer.setOffset(0);
+    }
+ else {
+      outputBuffer.setLength(0);
+      discardOutputBuffer(outputBuffer);
+    }
+  }
+ else {
+    outputBuffer.setLength(0);
+    discardOutputBuffer(outputBuffer);
+  }
+  if (inputLength < 1)   return BUFFER_PROCESSED_OK;
+ else   return BUFFER_PROCESSED_OK | INPUT_BUFFER_NOT_CONSUMED;
+}

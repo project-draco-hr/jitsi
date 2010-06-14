@@ -1,0 +1,53 @@
+{
+  Format inputFormat=inputBuffer.getFormat();
+  if ((inputFormat != null) && (inputFormat != this.inputFormat) && !inputFormat.equals(this.inputFormat)) {
+    if (null == setInputFormat(inputFormat))     return BUFFER_PROCESSED_FAILED;
+  }
+  inputFormat=this.inputFormat;
+  AudioFormat inputAudioFormat=(AudioFormat)inputFormat;
+  int inputSampleRate=(int)inputAudioFormat.getSampleRate();
+  AudioFormat outputAudioFormat=(AudioFormat)getOutputFormat();
+  int outputSampleRate=(int)outputAudioFormat.getSampleRate();
+  if (inputSampleRate == outputSampleRate) {
+    byte[] input=(byte[])inputBuffer.getData();
+    int size=(input == null) ? 0 : input.length;
+    byte[] output=validateByteArraySize(outputBuffer,size);
+    if ((input != null) && (output != null))     System.arraycopy(input,0,output,0,size);
+    outputBuffer.setFormat(inputBuffer.getFormat());
+    outputBuffer.setLength(inputBuffer.getLength());
+    outputBuffer.setOffset(inputBuffer.getOffset());
+  }
+ else {
+    if ((this.inputSampleRate != inputSampleRate) || (this.outputSampleRate != outputSampleRate)) {
+      if (resampler == 0) {
+        resampler=Speex.speex_resampler_init(1,inputSampleRate,outputSampleRate,Speex.SPEEX_RESAMPLER_QUALITY_VOIP,0);
+      }
+ else {
+        Speex.speex_resampler_set_rate(resampler,inputSampleRate,outputSampleRate);
+      }
+      if (resampler != 0) {
+        this.inputSampleRate=inputSampleRate;
+        this.outputSampleRate=outputSampleRate;
+      }
+    }
+    if (resampler == 0)     return BUFFER_PROCESSED_FAILED;
+    byte[] input=(byte[])inputBuffer.getData();
+    int inputLength=inputBuffer.getLength();
+    int sampleSizeInBytes=inputAudioFormat.getSampleSizeInBits() / 8;
+    int inputSampleCount=inputLength / sampleSizeInBytes;
+    int outputLength=(int)((inputLength * outputSampleRate) / inputSampleRate);
+    byte[] output=validateByteArraySize(outputBuffer,outputLength);
+    int outputSampleCount=outputLength / sampleSizeInBytes;
+    outputSampleCount=Speex.speex_resampler_process_interleaved_int(resampler,input,inputBuffer.getOffset(),inputSampleCount,output,0,outputSampleCount);
+    outputBuffer.setFormat(outputAudioFormat);
+    outputBuffer.setLength(outputSampleCount * sampleSizeInBytes);
+    outputBuffer.setOffset(0);
+  }
+  outputBuffer.setDuration(inputBuffer.getDuration());
+  outputBuffer.setEOM(inputBuffer.isEOM());
+  outputBuffer.setFlags(inputBuffer.getFlags());
+  outputBuffer.setHeader(inputBuffer.getHeader());
+  outputBuffer.setSequenceNumber(inputBuffer.getSequenceNumber());
+  outputBuffer.setTimeStamp(inputBuffer.getTimeStamp());
+  return BUFFER_PROCESSED_OK;
+}
