@@ -54,6 +54,21 @@ synchronized (this) {
     timer.schedule(pollingTask,pollingTaskPeriod,pollingTaskPeriod);
   }
  else   if (evt.getNewState() == RegistrationState.CONNECTION_FAILED) {
+    Iterator<Contact> rootcontactsIter=getServerStoredContactListRoot().contacts();
+    while (rootcontactsIter.hasNext()) {
+      ContactSipImpl contact=(ContactSipImpl)rootcontactsIter.next();
+      PresenceStatus oldContactStatus=contact.getPresenceStatus();
+      contact.setResolved(false);
+      if (subscriber != null)       try {
+        subscriber.removeSubscription(getAddress(contact));
+      }
+ catch (      OperationFailedException ex) {
+        if (logger.isDebugEnabled())         logger.debug("Failed to remove subscription to contact " + contact);
+      }
+      if (!oldContactStatus.isOnline())       continue;
+      contact.setPresenceStatus(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE));
+      fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldContactStatus);
+    }
     Iterator<ContactGroup> groupsIter=getServerStoredContactListRoot().subgroups();
     while (groupsIter.hasNext()) {
       ContactGroup group=groupsIter.next();

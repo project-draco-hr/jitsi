@@ -4,7 +4,25 @@
   List<NetworkInterface> activeInterfaces=new ArrayList<NetworkInterface>();
   while (isRunning) {
     long curr=System.currentTimeMillis();
-    if (!isAfterStandby && last != 0)     isAfterStandby=(last + CHECK_INTERVAL + 100 - curr) < 0;
+    if (!isAfterStandby && last != 0)     isAfterStandby=(last + 2 * CHECK_INTERVAL - curr) < 0;
+    if (isAfterStandby) {
+      Iterator<NetworkInterface> iter=activeInterfaces.iterator();
+      while (iter.hasNext()) {
+        NetworkInterface niface=iter.next();
+        fireChangeEvent(new ChangeEvent(niface,ChangeEvent.IFACE_DOWN,isAfterStandby));
+      }
+      activeInterfaces.clear();
+      isAfterStandby=false;
+      last=curr;
+synchronized (this) {
+        try {
+          wait(CHECK_INTERVAL);
+        }
+ catch (        Exception e) {
+        }
+      }
+      continue;
+    }
     try {
       Enumeration<NetworkInterface> e=NetworkInterface.getNetworkInterfaces();
       boolean networkIsUP=activeInterfaces.size() > 0;
