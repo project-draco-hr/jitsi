@@ -1,0 +1,29 @@
+{
+  ZrtpFortuna fortuna=ZrtpFortuna.getInstance();
+  Buffer firstBuf=new Buffer();
+  if ((dataSource == null) || (portAudioStream == null))   return;
+  try {
+    dataSource.start();
+    for (int i=0; i < NUM_OF_FRAMES; i++) {
+      portAudioStream.read(firstBuf);
+      byte[] entropy=(byte[])firstBuf.getData();
+      gatheredEntropy+=entropy.length;
+      if (i < 32) {
+        fortuna.addSeedMaterial(entropy);
+      }
+ else {
+        fortuna.addSeedMaterial((i % 3),entropy,0,entropy.length);
+      }
+    }
+    entropyOk=true;
+  }
+ catch (  IOException ioex) {
+  }
+ finally {
+    portAudioStream=null;
+    dataSource.disconnect();
+  }
+  byte[] random=new byte[300];
+  fortuna.nextBytes(random);
+  return;
+}
