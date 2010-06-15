@@ -1,0 +1,26 @@
+{
+  if ((bufferLeft != null) && (bufferLeftLength > 0)) {
+    int numberOfBytesInBufferLeftToBytesPerBuffer=bytesPerBuffer - bufferLeftLength;
+    int numberOfBytesToCopyToBufferLeft=(numberOfBytesInBufferLeftToBytesPerBuffer < length) ? numberOfBytesInBufferLeftToBytesPerBuffer : length;
+    System.arraycopy(buffer,offset,bufferLeft,bufferLeftLength,numberOfBytesToCopyToBufferLeft);
+    offset+=numberOfBytesToCopyToBufferLeft;
+    length-=numberOfBytesToCopyToBufferLeft;
+    bufferLeftLength+=numberOfBytesToCopyToBufferLeft;
+    if (bufferLeftLength == bytesPerBuffer) {
+      PortAudio.Pa_WriteStream(stream,bufferLeft,framesPerBuffer);
+      bufferLeftLength=0;
+    }
+  }
+  int numberOfWrites=length / bytesPerBuffer;
+  if (numberOfWrites > 0) {
+    PortAudio.Pa_WriteStream(stream,buffer,offset,framesPerBuffer,numberOfWrites);
+    int bytesWritten=numberOfWrites * bytesPerBuffer;
+    offset+=bytesWritten;
+    length-=bytesWritten;
+  }
+  if (length > 0) {
+    if (bufferLeft == null)     bufferLeft=new byte[bytesPerBuffer];
+    System.arraycopy(buffer,offset,bufferLeft,0,length);
+    bufferLeftLength=length;
+  }
+}

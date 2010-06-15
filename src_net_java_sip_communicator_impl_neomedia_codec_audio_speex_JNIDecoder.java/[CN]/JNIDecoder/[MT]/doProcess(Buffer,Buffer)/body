@@ -35,6 +35,7 @@
     inputBuffer.setOffset(inputOffset + inputLength);
   }
   int outputLength=this.frameSize;
+  boolean inputBufferNotConsumed;
   if (outputLength > 0) {
     byte[] output=validateByteArraySize(outputBuffer,outputLength);
     if (0 == Speex.speex_decode_int(state,bits,output,0)) {
@@ -42,16 +43,19 @@
       outputBuffer.setFormat(getOutputFormat());
       outputBuffer.setLength(outputLength);
       outputBuffer.setOffset(0);
+      inputBufferNotConsumed=(Speex.speex_bits_remaining(bits) > 0);
     }
  else {
       outputBuffer.setLength(0);
       discardOutputBuffer(outputBuffer);
+      inputBufferNotConsumed=false;
     }
   }
  else {
     outputBuffer.setLength(0);
     discardOutputBuffer(outputBuffer);
+    inputBufferNotConsumed=false;
   }
-  if ((inputLength < 1) && (Speex.speex_bits_remaining(bits) < 1))   return BUFFER_PROCESSED_OK;
+  if ((inputLength < 1) && !inputBufferNotConsumed)   return BUFFER_PROCESSED_OK;
  else   return BUFFER_PROCESSED_OK | INPUT_BUFFER_NOT_CONSUMED;
 }

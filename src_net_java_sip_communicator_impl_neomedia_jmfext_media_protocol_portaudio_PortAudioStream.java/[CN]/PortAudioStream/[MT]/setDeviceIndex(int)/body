@@ -1,0 +1,41 @@
+{
+  if (this.deviceIndex == deviceIndex)   return;
+  if (this.deviceIndex != PortAudio.paNoDevice) {
+    if (stream != 0) {
+      try {
+        PortAudio.Pa_CloseStream(stream);
+      }
+ catch (      PortAudioException paex) {
+        IOException ioex=new IOException();
+        ioex.initCause(paex);
+        throw ioex;
+      }
+      stream=0;
+      this.format=null;
+    }
+  }
+  this.deviceIndex=deviceIndex;
+  if (this.deviceIndex != PortAudio.paNoDevice) {
+    AudioFormat format=(AudioFormat)getFormat();
+    int channels=format.getChannels();
+    int sampleSizeInBits=format.getSampleSizeInBits();
+    long sampleFormat=PortAudio.getPaSampleFormat(sampleSizeInBits);
+    double sampleRate=format.getSampleRate();
+    int framesPerBuffer=(int)((sampleRate * PortAudio.DEFAULT_MILLIS_PER_BUFFER) / (channels * 1000));
+    try {
+      long inputParameters=PortAudio.PaStreamParameters_new(this.deviceIndex,channels,sampleFormat,PortAudioManager.getSuggestedLatency());
+      stream=PortAudio.Pa_OpenStream(inputParameters,0,sampleRate,PortAudio.FRAMES_PER_BUFFER_UNSPECIFIED,PortAudio.STREAM_FLAGS_CLIP_OFF | PortAudio.STREAM_FLAGS_DITHER_OFF,null);
+    }
+ catch (    PortAudioException paex) {
+      IOException ioex=new IOException();
+      ioex.initCause(paex);
+      throw ioex;
+    }
+    if (stream == 0)     throw new IOException("Pa_OpenStream");
+    this.framesPerBuffer=framesPerBuffer;
+    bytesPerBuffer=PortAudio.Pa_GetSampleSize(sampleFormat) * channels * framesPerBuffer;
+    this.format=new AudioFormat(AudioFormat.LINEAR,sampleRate,sampleSizeInBits,channels,AudioFormat.LITTLE_ENDIAN,AudioFormat.SIGNED,sampleSizeInBits * channels,Format.NOT_SPECIFIED,Format.byteArray);
+    PortAudio.setDenoise(stream,PortAudioManager.isEnabledDeNoise());
+    PortAudio.setEchoFilterLengthInMillis(stream,PortAudioManager.isEnabledEchoCancel() ? PortAudioManager.getFilterLengthInMillis() : 0);
+  }
+}

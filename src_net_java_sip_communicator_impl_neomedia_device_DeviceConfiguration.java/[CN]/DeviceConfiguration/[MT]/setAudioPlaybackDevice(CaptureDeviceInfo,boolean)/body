@@ -2,9 +2,11 @@
   if (this.audioPlaybackDevice != audioPlaybackDevice) {
     CaptureDeviceInfo oldDev=this.audioPlaybackDevice;
     this.audioPlaybackDevice=audioPlaybackDevice;
-    setDeviceToRenderer(audioPlaybackDevice);
-    removeJavaSoundRenderer();
-    initPortAudioRenderer();
+    if (this.audioPlaybackDevice != null) {
+      PlugInManager.removePlugIn("com.sun.media.renderer.audio.JavaSoundRenderer",PlugInManager.RENDERER);
+      PortAudioRenderer.setDefaultLocator(this.audioPlaybackDevice.getLocator());
+      PlugInManager.addPlugIn("net.java.sip.communicator.impl.neomedia.jmfext.media" + ".renderer.audio.PortAudioRenderer",new PortAudioRenderer().getSupportedInputFormats(),null,PlugInManager.RENDERER);
+    }
     if (save) {
       ConfigurationService config=NeomediaActivator.getConfigurationService();
       if (audioPlaybackDevice != null) {

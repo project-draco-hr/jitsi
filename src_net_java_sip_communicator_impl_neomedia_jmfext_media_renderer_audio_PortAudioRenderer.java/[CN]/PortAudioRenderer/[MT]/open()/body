@@ -1,10 +1,20 @@
 {
-  if (stream == null) {
+  if (stream == 0) {
+    int deviceIndex=DataSource.getDeviceIndex(getLocator());
+    AudioFormat inputFormat=this.inputFormat;
+    int channels=inputFormat.getChannels();
+    if (channels == Format.NOT_SPECIFIED)     channels=1;
+    long sampleFormat=PortAudio.getPaSampleFormat(inputFormat.getSampleSizeInBits());
+    double sampleRate=inputFormat.getSampleRate();
     try {
-      stream=PortAudioManager.getInstance().getOutputStream(deviceIndex,inputFormat.getSampleRate(),inputFormat.getChannels());
+      long outputParameters=PortAudio.PaStreamParameters_new(deviceIndex,channels,sampleFormat,PortAudioManager.getSuggestedLatency());
+      stream=PortAudio.Pa_OpenStream(0,outputParameters,sampleRate,PortAudio.FRAMES_PER_BUFFER_UNSPECIFIED,PortAudio.STREAM_FLAGS_CLIP_OFF | PortAudio.STREAM_FLAGS_DITHER_OFF,null);
     }
  catch (    PortAudioException paex) {
       throw new ResourceUnavailableException(paex.getMessage());
     }
+    if (stream == 0)     throw new ResourceUnavailableException("Pa_OpenStream");
+    framesPerBuffer=(int)((sampleRate * PortAudio.DEFAULT_MILLIS_PER_BUFFER) / (channels * 1000));
+    bytesPerBuffer=PortAudio.Pa_GetSampleSize(sampleFormat) * channels * framesPerBuffer;
   }
 }

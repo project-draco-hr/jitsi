@@ -1,0 +1,48 @@
+{
+  MediaLocator rendererLocator=audioNotifier.getDeviceConfiguration().getAudioNotifyDevice().getLocator();
+  if (rendererLocator == null)   return false;
+  renderer.setLocator(rendererLocator);
+  AudioInputStream audioStream=null;
+  try {
+    audioStream=AudioSystem.getAudioInputStream(url);
+  }
+ catch (  IOException ioex) {
+    logger.error("Failed to get audio stream " + url,ioex);
+  }
+catch (  UnsupportedAudioFileException uafex) {
+    logger.error("Unsupported format of audio stream " + url,uafex);
+  }
+  if (audioStream == null)   return false;
+  try {
+    AudioFormat audioStreamFormat=audioStream.getFormat();
+    javax.media.format.AudioFormat rendererFormat=new javax.media.format.AudioFormat(javax.media.format.AudioFormat.LINEAR,audioStreamFormat.getSampleRate(),audioStreamFormat.getSampleSizeInBits(),audioStreamFormat.getChannels());
+    renderer.setInputFormat(rendererFormat);
+    buffer.setFormat(rendererFormat);
+    try {
+      renderer.open();
+      renderer.start();
+      int bufferLength;
+      while (started && ((bufferLength=audioStream.read(bufferData)) != -1)) {
+        buffer.setLength(bufferLength);
+        buffer.setOffset(0);
+        renderer.process(buffer);
+      }
+    }
+ catch (    IOException ioex) {
+      logger.error("Failed to read from audio stream " + url,ioex);
+      return false;
+    }
+catch (    ResourceUnavailableException ruex) {
+      logger.error("Failed to open PortAudioRenderer.",ruex);
+      return false;
+    }
+  }
+  finally {
+    try {
+      audioStream.close();
+    }
+ catch (    IOException ioex) {
+    }
+  }
+  return true;
+}

@@ -1,8 +1,22 @@
 {
-  try {
-    stream.stop();
+  boolean interrupted=false;
+  while (streamIsBusy) {
+    try {
+      wait();
+    }
+ catch (    InterruptedException iex) {
+      interrupted=true;
+    }
   }
- catch (  PortAudioException paex) {
-    logger.error("Closing PortAudio stream failed",paex);
+  if (interrupted)   Thread.currentThread().interrupt();
+  if (started && (stream != 0)) {
+    try {
+      PortAudio.Pa_StopStream(stream);
+      started=false;
+      bufferLeft=null;
+    }
+ catch (    PortAudioException paex) {
+      logger.error("Failed to close PortAudio stream.",paex);
+    }
   }
 }
