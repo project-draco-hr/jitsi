@@ -3,6 +3,31 @@
   if (isHidden)   return;
   OperationSetPersistentPresence presenceOpSet=(OperationSetPersistentPresence)protocolProvider.getOperationSet(OperationSetPresence.class);
   StatusSelectorMenu statusSelectorMenu=(presenceOpSet != null) ? new PresenceStatusMenu(protocolProvider) : new SimpleStatusMenu(protocolProvider);
-  this.add(statusSelectorMenu);
-  this.accountMenus.put(protocolProvider,statusSelectorMenu);
+  if (isFirstAccount) {
+    add(statusSelectorMenu);
+    isFirstAccount=false;
+    return;
+  }
+  boolean isMenuAdded=false;
+  AccountID accountId=protocolProvider.getAccountID();
+  for (  Component c : getPopupMenu().getComponents()) {
+    if (!(c instanceof StatusSelectorMenu))     continue;
+    StatusSelectorMenu menu=(StatusSelectorMenu)c;
+    int menuIndex=getPopupMenu().getComponentIndex(menu);
+    AccountID menuAccountID=menu.getProtocolProvider().getAccountID();
+    int protocolCompare=accountId.getProtocolDisplayName().compareTo(menuAccountID.getProtocolDisplayName());
+    if (protocolCompare < 0) {
+      insert(statusSelectorMenu,menuIndex);
+      isMenuAdded=true;
+      break;
+    }
+ else     if (protocolCompare == 0) {
+      if (accountId.getDisplayName().compareTo(menuAccountID.getDisplayName()) < 0) {
+        insert(statusSelectorMenu,menuIndex);
+        isMenuAdded=true;
+        break;
+      }
+    }
+  }
+  if (!isMenuAdded)   add(statusSelectorMenu);
 }
