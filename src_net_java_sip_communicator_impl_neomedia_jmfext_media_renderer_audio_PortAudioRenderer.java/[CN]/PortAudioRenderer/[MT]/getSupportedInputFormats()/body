@@ -1,3 +1,21 @@
 {
-  return SUPPORTED_INPUT_FORMATS.clone();
+  if (supportedInputFormats == null) {
+    MediaLocator locator=getLocator();
+    int deviceIndex;
+    if ((locator == null) || ((deviceIndex=DataSource.getDeviceIndex(locator)) == PortAudio.paNoDevice))     supportedInputFormats=SUPPORTED_INPUT_FORMATS;
+ else {
+      long deviceInfo=PortAudio.Pa_GetDeviceInfo(deviceIndex);
+      if (deviceInfo == 0)       supportedInputFormats=SUPPORTED_INPUT_FORMATS;
+ else {
+        int minOutputChannels=1;
+        int maxOutputChannels=Math.min(PortAudio.PaDeviceInfo_getMaxOutputChannels(deviceInfo),2);
+        List<Format> supportedInputFormats=new ArrayList<Format>(SUPPORTED_INPUT_FORMATS.length);
+        for (        Format supportedInputFormat : SUPPORTED_INPUT_FORMATS) {
+          getSupportedInputFormats(supportedInputFormat,deviceIndex,minOutputChannels,maxOutputChannels,supportedInputFormats);
+        }
+        this.supportedInputFormats=supportedInputFormats.isEmpty() ? EMPTY_SUPPORTED_INPUT_FORMATS : supportedInputFormats.toArray(EMPTY_SUPPORTED_INPUT_FORMATS);
+      }
+    }
+  }
+  return (supportedInputFormats.length == 0) ? EMPTY_SUPPORTED_INPUT_FORMATS : supportedInputFormats.clone();
 }

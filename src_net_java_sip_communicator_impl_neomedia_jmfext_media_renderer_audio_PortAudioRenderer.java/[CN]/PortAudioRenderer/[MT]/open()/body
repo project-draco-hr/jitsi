@@ -7,11 +7,17 @@
     long sampleFormat=PortAudio.getPaSampleFormat(inputFormat.getSampleSizeInBits());
     double sampleRate=inputFormat.getSampleRate();
     try {
-      long outputParameters=PortAudio.PaStreamParameters_new(deviceIndex,channels,sampleFormat,PortAudioManager.getSuggestedLatency());
+      outputParameters=PortAudio.PaStreamParameters_new(deviceIndex,channels,sampleFormat,PortAudioManager.getSuggestedLatency());
       stream=PortAudio.Pa_OpenStream(0,outputParameters,sampleRate,PortAudio.FRAMES_PER_BUFFER_UNSPECIFIED,PortAudio.STREAM_FLAGS_CLIP_OFF | PortAudio.STREAM_FLAGS_DITHER_OFF,null);
     }
  catch (    PortAudioException paex) {
       throw new ResourceUnavailableException(paex.getMessage());
+    }
+ finally {
+      if ((stream == 0) && (outputParameters != 0)) {
+        PortAudio.PaStreamParameters_free(outputParameters);
+        outputParameters=0;
+      }
     }
     if (stream == 0)     throw new ResourceUnavailableException("Pa_OpenStream");
     framesPerBuffer=(int)((sampleRate * PortAudio.DEFAULT_MILLIS_PER_BUFFER) / (channels * 1000));

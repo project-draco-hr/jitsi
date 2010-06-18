@@ -11,6 +11,10 @@
         throw ioex;
       }
       stream=0;
+      if (inputParameters != 0) {
+        PortAudio.PaStreamParameters_free(inputParameters);
+        inputParameters=0;
+      }
       this.format=null;
     }
   }
@@ -23,13 +27,19 @@
     double sampleRate=format.getSampleRate();
     int framesPerBuffer=(int)((sampleRate * PortAudio.DEFAULT_MILLIS_PER_BUFFER) / (channels * 1000));
     try {
-      long inputParameters=PortAudio.PaStreamParameters_new(this.deviceIndex,channels,sampleFormat,PortAudioManager.getSuggestedLatency());
+      inputParameters=PortAudio.PaStreamParameters_new(this.deviceIndex,channels,sampleFormat,PortAudioManager.getSuggestedLatency());
       stream=PortAudio.Pa_OpenStream(inputParameters,0,sampleRate,PortAudio.FRAMES_PER_BUFFER_UNSPECIFIED,PortAudio.STREAM_FLAGS_CLIP_OFF | PortAudio.STREAM_FLAGS_DITHER_OFF,null);
     }
  catch (    PortAudioException paex) {
       IOException ioex=new IOException();
       ioex.initCause(paex);
       throw ioex;
+    }
+ finally {
+      if ((stream == 0) && (inputParameters != 0)) {
+        PortAudio.PaStreamParameters_free(inputParameters);
+        inputParameters=0;
+      }
     }
     if (stream == 0)     throw new IOException("Pa_OpenStream");
     this.framesPerBuffer=framesPerBuffer;

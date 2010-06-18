@@ -1,0 +1,33 @@
+{
+  long deviceInfo=PortAudio.Pa_GetDeviceInfo(deviceIndex);
+  double supportedSampleRate;
+  if (deviceInfo != 0) {
+    double defaultSampleRate=PortAudio.PaDeviceInfo_getDefaultSampleRate(deviceInfo);
+    if (defaultSampleRate >= MediaUtils.MAX_AUDIO_SAMPLE_RATE)     supportedSampleRate=defaultSampleRate;
+ else {
+      long streamParameters=PortAudio.PaStreamParameters_new(deviceIndex,channelCount,sampleFormat,PortAudio.LATENCY_UNSPECIFIED);
+      if (streamParameters == 0)       supportedSampleRate=defaultSampleRate;
+ else {
+        try {
+          long inputParameters;
+          long outputParameters;
+          if (input) {
+            inputParameters=streamParameters;
+            outputParameters=0;
+          }
+ else {
+            inputParameters=0;
+            outputParameters=streamParameters;
+          }
+          boolean formatIsSupported=PortAudio.Pa_IsFormatSupported(inputParameters,outputParameters,PortAudio.DEFAULT_SAMPLE_RATE);
+          supportedSampleRate=formatIsSupported ? PortAudio.DEFAULT_SAMPLE_RATE : defaultSampleRate;
+        }
+  finally {
+          PortAudio.PaStreamParameters_free(streamParameters);
+        }
+      }
+    }
+  }
+ else   supportedSampleRate=PortAudio.DEFAULT_SAMPLE_RATE;
+  return supportedSampleRate;
+}
