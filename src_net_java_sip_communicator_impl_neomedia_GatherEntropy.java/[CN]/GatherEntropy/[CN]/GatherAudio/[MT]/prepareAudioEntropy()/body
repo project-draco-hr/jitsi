@@ -13,7 +13,11 @@ catch (  IOException e) {
     return false;
   }
   FormatControl fc=((CaptureDevice)dataSource).getFormatControls()[0];
-  fc.setFormat(new AudioFormat(AudioFormat.LINEAR,8000,16,1,AudioFormat.LITTLE_ENDIAN,AudioFormat.SIGNED,Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,Format.byteArray));
+  AudioFormat af=(AudioFormat)fc.getFormat();
+  int framesToRead=(int)(af.getSampleRate() * NUM_OF_SECONDS);
+  int frameSize=(af.getSampleSizeInBits() / 8) * af.getChannels();
+  bytesToGather=framesToRead * frameSize;
+  bytes20ms=frameSize * (int)(af.getSampleRate() / 50);
   if (dataSource instanceof PullBufferDataSource) {
     audioStream=((PullBufferDataSource)dataSource).getStreams()[0];
   }
