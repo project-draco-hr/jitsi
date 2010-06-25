@@ -1,6 +1,7 @@
 {
   CVPixelBuffer pixelBuffer=(CVPixelBuffer)videoFrame;
   boolean transferData;
+  Format videoFrameFormat=getVideoFrameFormat(pixelBuffer);
 synchronized (dataSyncRoot) {
     if (!automaticallyDropsLateVideoFrames && (data != null)) {
       if (nextData != null) {
@@ -11,7 +12,7 @@ synchronized (dataSyncRoot) {
       if (nextData != null) {
         nextData.setLength(pixelBuffer.getBytes(nextData.ptr,nextData.capacity));
         nextDataTimeStamp=System.nanoTime();
-        if (nextDataFormat == null)         nextDataFormat=getVideoFrameFormat(pixelBuffer);
+        if (nextDataFormat == null)         nextDataFormat=videoFrameFormat;
       }
       return;
     }
@@ -23,7 +24,7 @@ synchronized (dataSyncRoot) {
     if (data != null) {
       data.setLength(pixelBuffer.getBytes(data.ptr,data.capacity));
       dataTimeStamp=System.nanoTime();
-      if (dataFormat == null)       dataFormat=getVideoFrameFormat(pixelBuffer);
+      if (dataFormat == null)       dataFormat=videoFrameFormat;
     }
     if (nextData != null) {
       byteBufferPool.returnFreeBuffer(nextData);
