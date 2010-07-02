@@ -23,14 +23,18 @@
     Dimension bufferFrameSize=bufferFrameFormat.getSize();
     if (readScreenNative(bufferFrameSize)) {
       FFmpeg.avpicture_fill(bufferFramePtr,data.ptr,bufferFrameFormat.getPixFmt(),bufferFrameSize.width,bufferFrameSize.height);
+      buffer.setData(bufferFrame);
     }
-    buffer.setData(bufferFrame);
+ else {
+      throw new IOException("Failed to grab screen");
+    }
   }
  else {
     byte dataByte[]=(byte[])buffer.getData();
     int dataLength=(dataByte != null) ? dataByte.length : 0;
     if ((dataByte != null) || (dataLength != 0)) {
-      byte buf[]=readScreen(dataByte);
+      Dimension bufferFrameSize=((VideoFormat)bufferFormat).getSize();
+      byte buf[]=readScreen(dataByte,bufferFrameSize);
       if (buf != dataByte) {
         buffer.setData(buf);
       }

@@ -1,6 +1,33 @@
 {
-  String name="Desktop Streaming (Experimental)";
-  CaptureDeviceInfo devInfo=new CaptureDeviceInfo(name,new MediaLocator(ImageStreamingUtils.LOCATOR_PROTOCOL + ":" + name),DataSource.getFormats());
-  CaptureDeviceManager.addDevice(devInfo);
+  String name="Desktop Streaming";
+  List<ScreenDevice> screens=NeomediaActivator.getMediaServiceImpl().getAvailableScreenDevices();
+  int i=0;
+  boolean multipleMonitorOneScreen=false;
+  Dimension screenSize=null;
+  if (OSUtils.IS_LINUX) {
+    Dimension size=new Dimension(0,0);
+    for (    ScreenDevice screen : screens) {
+      size.width+=screen.getSize().width;
+      size.height+=screen.getSize().height;
+    }
+    try {
+      screenSize=Toolkit.getDefaultToolkit().getScreenSize();
+      if (screenSize.width == size.width || screenSize.height == size.height) {
+        multipleMonitorOneScreen=true;
+      }
+    }
+ catch (    Exception e) {
+    }
+  }
+  for (  ScreenDevice screen : screens) {
+    Dimension size=screenSize != null ? screenSize : screen.getSize();
+    Format formats[]=new Format[]{new AVFrameFormat(size,Format.NOT_SPECIFIED,FFmpeg.PIX_FMT_ARGB,Format.NOT_SPECIFIED),new RGBFormat(size,Format.NOT_SPECIFIED,Format.byteArray,Format.NOT_SPECIFIED,32,2,3,4)};
+    CaptureDeviceInfo devInfo=new CaptureDeviceInfo(name + " " + i,new MediaLocator(ImageStreamingUtils.LOCATOR_PROTOCOL + ":" + i),formats);
+    CaptureDeviceManager.addDevice(devInfo);
+    i++;
+    if (multipleMonitorOneScreen) {
+      break;
+    }
+  }
   CaptureDeviceManager.commit();
 }
