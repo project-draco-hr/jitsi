@@ -14,12 +14,13 @@
     if (presence != null) {
       presence.addProviderPresenceStatusListener(this);
     }
-    accountListModel.addAccount(new Account(protocolProvider));
+    Account account=accountListModel.getAccount(protocolProvider.getAccountID());
+    if (account != null)     account.setProtocolProvider(protocolProvider);
+ else     accountListModel.addAccount(new Account(protocolProvider));
+    this.repaint();
   }
  else   if (event.getType() == ServiceEvent.UNREGISTERING) {
-    for (    Object accountListModelElement : accountListModel.toArray()) {
-      Account account=(Account)accountListModelElement;
-      if (account.getProtocolProvider().equals(protocolProvider))       accountListModel.removeElement(account);
-    }
+    Account account=accountListModel.getAccount(protocolProvider.getAccountID());
+    if (account != null && account.isEnabled())     accountListModel.removeElement(account);
   }
 }

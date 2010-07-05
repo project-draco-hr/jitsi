@@ -1,0 +1,39 @@
+{
+  int row=notifTable.rowAtPoint(e.getPoint());
+  int col=notifTable.columnAtPoint(e.getPoint());
+  Object o=notifTable.getValueAt(row,col);
+  if (col > 0 && col < 4)   if (o.equals(ENABLED))   notifTable.setValueAt(DISABLED,row,col);
+ else   notifTable.setValueAt(ENABLED,row,col);
+  NotificationEntry entry=(NotificationEntry)notifTable.getValueAt(row,notifTable.getColumnCount() - 1);
+switch (col) {
+case 0:
+    boolean isActive=notifTable.getValueAt(row,0).equals(Boolean.TRUE);
+  entry.setEnabled(isActive);
+notificationService.setActive(entry.getEvent(),isActive);
+notifTable.repaint();
+break;
+case 1:
+boolean isProgram=notifTable.getValueAt(row,1).equals(ENABLED);
+entry.setProgram(isProgram);
+if (isProgram) notificationService.registerNotificationForEvent(entry.getEvent(),NotificationService.ACTION_COMMAND,entry.getProgramFile(),"");
+ else notificationService.removeEventNotificationAction(entry.getEvent(),NotificationService.ACTION_COMMAND);
+break;
+case 2:
+boolean isPopup=notifTable.getValueAt(row,2).equals(ENABLED);
+entry.setPopup(isPopup);
+if (isPopup) {
+notificationService.registerNotificationForEvent(entry.getEvent(),NotificationService.ACTION_POPUP_MESSAGE,"","");
+}
+ else {
+notificationService.removeEventNotificationAction(entry.getEvent(),NotificationService.ACTION_POPUP_MESSAGE);
+}
+break;
+case 3:
+boolean isSound=notifTable.getValueAt(row,3).equals(ENABLED);
+entry.setSound(isSound);
+if (isSound) notificationService.registerNotificationForEvent(entry.getEvent(),NotificationService.ACTION_SOUND,entry.getSoundFile(),"");
+ else notificationService.removeEventNotificationAction(entry.getEvent(),NotificationService.ACTION_SOUND);
+break;
+}
+;
+}

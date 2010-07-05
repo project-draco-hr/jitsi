@@ -1,0 +1,32 @@
+{
+  this.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED),SecurityConfigActivator.getResources().getI18NString("plugin.otr.configform.MY_PRIVATE_KEYS")));
+  JPanel labelsPanel=new TransparentPanel(new GridLayout(0,1));
+  labelsPanel.add(new JLabel(SecurityConfigActivator.getResources().getI18NString("service.gui.ACCOUNT") + ": "));
+  labelsPanel.add(new JLabel(SecurityConfigActivator.getResources().getI18NString("plugin.otr.configform.FINGERPRINT") + ": "));
+  JPanel valuesPanel=new TransparentPanel(new GridLayout(0,1));
+  cbAccounts=new AccountsComboBox();
+  cbAccounts.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      openAccount(((AccountsComboBox)e.getSource()).getSelectedAccountID());
+    }
+  }
+);
+  valuesPanel.add(cbAccounts);
+  lblFingerprint=new JLabel();
+  valuesPanel.add(lblFingerprint);
+  JPanel buttonPanel=new TransparentPanel(new FlowLayout(FlowLayout.LEADING,0,0));
+  btnGenerate=new JButton();
+  buttonPanel.add(btnGenerate);
+  btnGenerate.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      AccountID account=cbAccounts.getSelectedAccountID();
+      if (account == null)       return;
+      SecurityConfigActivator.getOtrKeyManagerService().generateKeyPair(account);
+      openAccount(account);
+    }
+  }
+);
+  add(labelsPanel,BorderLayout.WEST);
+  add(valuesPanel,BorderLayout.CENTER);
+  add(buttonPanel,BorderLayout.EAST);
+}

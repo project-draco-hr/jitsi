@@ -1,5 +1,5 @@
 {
-  super(mainFrame);
+  super(mainFrame,false);
   this.configList=new ConfigFormList(this);
   JScrollPane configScrollList=new JScrollPane();
   configScrollList.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -11,9 +11,13 @@
   this.getContentPane().setLayout(new BorderLayout());
   this.addDefaultForms();
   TransparentPanel mainPanel=new TransparentPanel(new BorderLayout(5,5));
+  centerPanel.setMinimumSize(new Dimension(600,100));
+  centerPanel.setMaximumSize(new Dimension(600,Toolkit.getDefaultToolkit().getScreenSize().height));
+  this.setResizable(false);
   mainPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-  mainPanel.add(centerPanel,BorderLayout.CENTER);
-  mainPanel.add(configScrollList,BorderLayout.WEST);
+  mainPanel.add(centerPanel,BorderLayout.SOUTH);
+  mainPanel.add(configScrollList,BorderLayout.NORTH);
+  centerPanel.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
   this.getContentPane().add(mainPanel);
   GuiActivator.bundleContext.addServiceListener(this);
   ServiceReference[] confFormsRefs=null;
@@ -25,7 +29,7 @@
   if (confFormsRefs != null) {
     for (int i=0; i < confFormsRefs.length; i++) {
       ConfigurationForm form=(ConfigurationForm)GuiActivator.bundleContext.getService(confFormsRefs[i]);
-      this.addConfigurationForm(form);
+      if (!form.isAdvanced())       this.addConfigurationForm(form);
     }
   }
 }

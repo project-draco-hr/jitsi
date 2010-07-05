@@ -1,0 +1,22 @@
+{
+  configList.setModel(new DefaultListModel());
+  configList.setCellRenderer(new ConfigListCellRenderer());
+  configList.addListSelectionListener(this);
+  configList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+  JScrollPane configScrollList=new JScrollPane();
+  configScrollList.getVerticalScrollBar().setUnitIncrement(30);
+  configScrollList.getViewport().add(configList);
+  add(configScrollList,BorderLayout.WEST);
+  ServiceReference[] confFormsRefs=null;
+  try {
+    confFormsRefs=AdvancedConfigActivator.bundleContext.getServiceReferences(ConfigurationForm.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException ex) {
+  }
+  if (confFormsRefs != null) {
+    for (int i=0; i < confFormsRefs.length; i++) {
+      ConfigurationForm form=(ConfigurationForm)AdvancedConfigActivator.bundleContext.getService(confFormsRefs[i]);
+      if (form.isAdvanced())       this.addConfigForm(form);
+    }
+  }
+}

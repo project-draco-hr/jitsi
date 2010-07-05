@@ -1,0 +1,39 @@
+{
+  configPanel=panel;
+  notificationService=NotificationConfigurationActivator.getNotificationService();
+  notificationService.addNotificationChangeListener(this);
+  String strTmp=new String();
+  model=new NotificationsTableModel(columns,0);
+  notifTable=new NotificationTable(model,columnToolTips);
+  notifTable.setRowSelectionAllowed(true);
+  notifTable.getTableHeader().setReorderingAllowed(false);
+  notifTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+  notifTable.addMouseListener(new NotificationsCellListener());
+  notifTable.setDefaultRenderer(String.class,new StringTableRenderer());
+  notifTable.setDefaultRenderer(NotificationEntry.class,new StringTableRenderer());
+  notifTable.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
+    public void valueChanged(    ListSelectionEvent e){
+      if (e.getValueIsAdjusting())       return;
+      int row=notifTable.getSelectedRow();
+      if (row > -1)       configPanel.setNotificationEntry(getNotificationEntry(row));
+    }
+  }
+);
+  initTableData();
+  for (int i=0; i < columns.length; i++) {
+    TableColumn tmp=notifTable.getColumnModel().getColumn(i);
+    if (columns[i].getClass() != strTmp.getClass()) {
+      tmp.setHeaderRenderer(new TableHeaderRenderer((JLabel)columns[i]));
+      tmp.setHeaderValue("");
+    }
+ else {
+      tmp.setHeaderValue((String)columns[i]);
+    }
+    if (i < columns.length - 1) {
+      tmp.setMaxWidth(25);
+      tmp.setMinWidth(25);
+      tmp.setPreferredWidth(25);
+    }
+  }
+  this.getViewport().add(notifTable);
+}

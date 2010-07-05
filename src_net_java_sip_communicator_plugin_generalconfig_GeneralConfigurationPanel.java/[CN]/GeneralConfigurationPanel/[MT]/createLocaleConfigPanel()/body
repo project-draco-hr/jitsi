@@ -1,0 +1,29 @@
+{
+  JPanel localeConfigPanel=new TransparentPanel(new BorderLayout());
+  localeConfigPanel.add(GeneralConfigPluginActivator.createConfigSectionComponent(Resources.getString("plugin.generalconfig.DEFAULT_LANGUAGE") + ":"),BorderLayout.WEST);
+  final JComboBox localesConfigComboBox=new JComboBox();
+  Iterator<Locale> iter=Resources.getResources().getAvailableLocales();
+  while (iter.hasNext()) {
+    Locale locale=iter.next();
+    localesConfigComboBox.addItem(locale.getDisplayLanguage(locale));
+  }
+  Locale currLocale=ConfigurationManager.getCurrentLanguage();
+  localesConfigComboBox.setSelectedItem(currLocale.getDisplayLanguage(currLocale));
+  localesConfigComboBox.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      GeneralConfigPluginActivator.getUIService().getPopupDialog().showMessagePopupDialog(Resources.getString("plugin.generalconfig.DEFAULT_LANGUAGE_RESTART_WARN"));
+      String language=(String)localesConfigComboBox.getSelectedItem();
+      Iterator<Locale> iter=Resources.getResources().getAvailableLocales();
+      while (iter.hasNext()) {
+        Locale locale=iter.next();
+        if (locale.getDisplayLanguage(locale).equals(language)) {
+          ConfigurationManager.setLanguage(locale);
+          break;
+        }
+      }
+    }
+  }
+);
+  localeConfigPanel.add(localesConfigComboBox);
+  return localeConfigPanel;
+}

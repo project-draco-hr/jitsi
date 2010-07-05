@@ -1,0 +1,51 @@
+{
+  final JComboBox comboBox=new JComboBox();
+  comboBox.setEditable(false);
+  comboBox.setModel(new DeviceConfigurationComboBoxModel(mediaService.getDeviceConfiguration(),type));
+  final JPanel portAudioPanel;
+  if (type == DeviceConfigurationComboBoxModel.AUDIO) {
+    portAudioPanel=new TransparentPanel(new GridBagLayout());
+    portAudioPanel.setPreferredSize(new Dimension(WIDTH,200));
+    portAudioPanel.setMaximumSize(new Dimension(WIDTH,200));
+    comboBox.addItemListener(new ItemListener(){
+      public void itemStateChanged(      ItemEvent e){
+        if (e.getStateChange() == ItemEvent.SELECTED) {
+          if (DeviceConfiguration.AUDIO_SYSTEM_PORTAUDIO.equals(e.getItem())) {
+            createPortAudioControls(portAudioPanel);
+          }
+ else {
+            portAudioPanel.removeAll();
+            portAudioPanel.revalidate();
+            portAudioPanel.repaint();
+          }
+        }
+      }
+    }
+);
+    if (comboBox.getSelectedItem().equals(DeviceConfiguration.AUDIO_SYSTEM_PORTAUDIO))     createPortAudioControls(portAudioPanel);
+  }
+ else {
+    portAudioPanel=null;
+  }
+  JLabel label=new JLabel(getLabelText(type));
+  label.setDisplayedMnemonic(getDisplayedMnemonic(type));
+  label.setLabelFor(comboBox);
+  Container firstContainer=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
+  firstContainer.setMaximumSize(new Dimension(WIDTH,25));
+  firstContainer.add(label);
+  firstContainer.add(comboBox);
+  JPanel secondContainer=new TransparentPanel();
+  secondContainer.setLayout(new BoxLayout(secondContainer,BoxLayout.Y_AXIS));
+  if (portAudioPanel != null) {
+    secondContainer.add(portAudioPanel);
+  }
+ else {
+    comboBox.setLightWeightPopupEnabled(false);
+    secondContainer.add(createPreview(type,comboBox));
+  }
+  secondContainer.add(createEncodingControls(type));
+  JPanel container=new TransparentPanel(new BorderLayout());
+  container.add(firstContainer,BorderLayout.NORTH);
+  container.add(secondContainer,BorderLayout.CENTER);
+  return container;
+}

@@ -1,32 +1,17 @@
 {
-  if (e.getSource() == activate) {
-    NotificationsTableEntry tmpNTE=dataVector.elementAt(index);
-    tmpNTE.setEnabled(true);
-    this.updateTableRow(tmpNTE,index);
-    activate.setEnabled(false);
-    deactivate.setEnabled(true);
-    tmpNTE.setModify(true);
-  }
- else   if (e.getSource() == deactivate) {
-    NotificationsTableEntry tmpNTE=dataVector.elementAt(index);
-    tmpNTE.setEnabled(false);
-    this.updateTableRow(tmpNTE,index);
-    activate.setEnabled(true);
-    deactivate.setEnabled(false);
-    tmpNTE.setModify(true);
+  int row=notificationList.getSelectedRow();
+  if (e.getSource() == restoreButton) {
+    notificationList.clear();
+    NotificationConfigurationActivator.getNotificationService().restoreDefaults();
   }
  else   if (e.getSource() == soundFileChooser) {
+    if (row < 0)     return;
+    NotificationEntry entry=notificationList.getNotificationEntry(row);
     File file=fileChooserSound.getFileFromDialog();
-    noListener=true;
     if (file != null) {
       try {
-        NotificationsTableEntry tmpNTE=dataVector.elementAt(index);
         if (logger.isDebugEnabled())         logger.debug("Opening: " + file.toURI().toURL().toExternalForm());
-        tmpNTE.setSoundFile(file.toURI().toURL().toExternalForm());
-        tmpNTE.setSound(true);
-        tmpNTE.setModify(true);
-        this.updateTableRow(tmpNTE,index);
-        notificationList.setLine(tmpNTE,index);
+        entry.setSoundFile(file.toURI().toURL().toExternalForm());
         soundFileTextField.setText(file.toURI().toURL().toExternalForm());
       }
  catch (      MalformedURLException ex) {
@@ -36,161 +21,30 @@
  else {
       if (logger.isDebugEnabled())       logger.debug("Open command cancelled by user.");
     }
-    noListener=false;
   }
  else   if (e.getSource() == programFileChooser) {
+    if (row < 0)     return;
+    NotificationEntry entry=notificationList.getNotificationEntry(row);
     File file=fileChooserProgram.getFileFromDialog();
-    noListener=true;
     if (file != null) {
-      NotificationsTableEntry tmpNTE=dataVector.elementAt(index);
       if (logger.isDebugEnabled())       logger.debug("Opening: " + file.getAbsolutePath());
-      tmpNTE.setProgramFile(file.getAbsolutePath());
-      tmpNTE.setProgram(true);
-      tmpNTE.setModify(true);
-      this.updateTableRow(tmpNTE,index);
-      notificationList.setLine(tmpNTE,index);
+      entry.setProgramFile(file.getAbsolutePath());
       programFileTextField.setText(file.getAbsolutePath());
     }
  else {
       if (logger.isDebugEnabled())       logger.debug("Open command cancelled by user.");
     }
-    noListener=false;
   }
  else   if (e.getSource() == playSoundButton) {
-    if (playSoundCheckBox.isSelected() == true) {
-      String soundFile=soundFileTextField.getText();
-      if (logger.isDebugEnabled())       logger.debug("****" + soundFile + "****"+ soundFile.length());
-      if (soundFile.length() != 0) {
-        AudioNotifierService audioNotifServ=NotificationConfigurationActivator.getAudioNotifierService();
-        SCAudioClip sound=audioNotifServ.createAudio(soundFile);
-        sound.play();
-      }
- else {
-        if (logger.isDebugEnabled())         logger.debug("No file specified");
-      }
+    String soundFile=soundFileTextField.getText();
+    if (logger.isDebugEnabled())     logger.debug("****" + soundFile + "****"+ soundFile.length());
+    if (soundFile.length() != 0) {
+      AudioNotifierService audioNotifServ=NotificationConfigurationActivator.getAudioNotifierService();
+      SCAudioClip sound=audioNotifServ.createAudio(soundFile);
+      sound.play();
     }
  else {
-      if (logger.isDebugEnabled())       logger.debug("Its non-active");
-    }
-  }
- else   if (e.getSource() == turnOnAll) {
-    Iterator<NotificationsTableEntry> it=dataVector.iterator();
-    NotificationsTableEntry tmpNTE=null;
-    int cpt=0;
-    if (!it.hasNext())     return;
-    turnAll=true;
-    while (it.hasNext()) {
-      tmpNTE=it.next();
-      if (((String)comboBoxTurnOn.getSelectedItem()).equals("Sounds")) {
-        if (tmpNTE.getSoundFile().trim().length() != 0) {
-          tmpNTE.setSound(true);
-          tmpNTE.setModify(true);
-        }
-      }
-      if (((String)comboBoxTurnOn.getSelectedItem()).equals("Program Execution")) {
-        if (tmpNTE.getProgramFile().trim().length() != 0) {
-          tmpNTE.setProgram(true);
-          tmpNTE.setModify(true);
-        }
-      }
-      if (((String)comboBoxTurnOn.getSelectedItem()).equals("Messages Popup")) {
-        tmpNTE.setPopup(true);
-        tmpNTE.setModify(true);
-      }
-      notificationList.setLine(tmpNTE,cpt);
-      cpt++;
-    }
-    notificationList.setRowSelectionInterval(index,index);
-    tmpNTE=dataVector.elementAt(index);
-    if (((String)comboBoxTurnOn.getSelectedItem()).equals("Sounds")) {
-      playSoundCheckBox.setSelected(tmpNTE.getSound());
-    }
- else     if (((String)comboBoxTurnOn.getSelectedItem()).equals("Program Execution")) {
-      programCheckBox.setSelected(tmpNTE.getProgram());
-    }
- else     if (((String)comboBoxTurnOn.getSelectedItem()).equals("Messages Popup")) {
-      popupCheckBox.setSelected(tmpNTE.getPopup());
-    }
-    turnAll=false;
-  }
- else   if (e.getSource() == turnOffAll) {
-    Iterator<NotificationsTableEntry> it=dataVector.iterator();
-    NotificationsTableEntry tmpNTE=null;
-    int cpt=0;
-    if (!it.hasNext())     return;
-    turnAll=true;
-    while (it.hasNext()) {
-      tmpNTE=it.next();
-      if (((String)comboBoxTurnOff.getSelectedItem()).equals("Sounds")) {
-        tmpNTE.setSound(false);
-        tmpNTE.setModify(true);
-      }
-      if (((String)comboBoxTurnOff.getSelectedItem()).equals("Program Execution")) {
-        tmpNTE.setProgram(false);
-        tmpNTE.setModify(true);
-      }
-      if (((String)comboBoxTurnOff.getSelectedItem()).equals("Messages Popup")) {
-        tmpNTE.setPopup(false);
-        tmpNTE.setModify(true);
-      }
-      notificationList.setLine(tmpNTE,cpt);
-      cpt++;
-    }
-    notificationList.setRowSelectionInterval(index,index);
-    tmpNTE=dataVector.elementAt(index);
-    if (((String)comboBoxTurnOn.getSelectedItem()).equals("Sounds")) {
-      playSoundCheckBox.setSelected(tmpNTE.getSound());
-    }
- else     if (((String)comboBoxTurnOn.getSelectedItem()).equals("Program Execution")) {
-      programCheckBox.setSelected(tmpNTE.getProgram());
-    }
- else     if (((String)comboBoxTurnOn.getSelectedItem()).equals("Messages Popup")) {
-      popupCheckBox.setSelected(tmpNTE.getPopup());
-    }
-    turnAll=false;
-  }
- else   if (e.getSource() == apply) {
-    Iterator<NotificationsTableEntry> it=dataVector.iterator();
-    NotificationsTableEntry tmpNTE=null;
-    while (it.hasNext()) {
-      tmpNTE=it.next();
-      if (tmpNTE.isModified()) {
-        if (logger.isDebugEnabled())         logger.debug("Event modify : " + tmpNTE.getEvent());
-        notificationService.setActive(tmpNTE.getEvent(),tmpNTE.getEnabled());
-        if (tmpNTE.getSound() == true) {
-          notificationService.registerNotificationForEvent(tmpNTE.getEvent(),NotificationService.ACTION_SOUND,tmpNTE.getSoundFile(),"");
-          if (logger.isDebugEnabled())           logger.debug("Adding Sound");
-        }
- else {
-          notificationService.removeEventNotificationAction(tmpNTE.getEvent(),NotificationService.ACTION_SOUND);
-          if (logger.isDebugEnabled())           logger.debug("Deleting Sound");
-        }
-        if (tmpNTE.getProgram() == true) {
-          notificationService.registerNotificationForEvent(tmpNTE.getEvent(),NotificationService.ACTION_COMMAND,tmpNTE.getProgramFile(),"");
-          if (logger.isDebugEnabled())           logger.debug("Program");
-        }
- else {
-          notificationService.removeEventNotificationAction(tmpNTE.getEvent(),NotificationService.ACTION_COMMAND);
-          if (logger.isDebugEnabled())           logger.debug("Deleting Program");
-        }
-        if (tmpNTE.getPopup()) {
-          notificationService.registerNotificationForEvent(tmpNTE.getEvent(),NotificationService.ACTION_POPUP_MESSAGE,"","");
-          if (logger.isDebugEnabled())           logger.debug("Popup");
-        }
- else {
-          notificationService.removeEventNotificationAction(tmpNTE.getEvent(),NotificationService.ACTION_POPUP_MESSAGE);
-          if (logger.isDebugEnabled())           logger.debug("Deleting Popup");
-        }
-        tmpNTE.setModify(false);
-      }
-    }
-  }
- else   if (e.getSource() == restore) {
-    notificationService.restoreDefaults();
-    int ix=notificationList.getLine();
-    if (ix >= 0) {
-      NotificationsTableEntry tmpNTE=dataVector.elementAt(ix);
-      updatePanel(tmpNTE);
+      if (logger.isDebugEnabled())       logger.debug("No file specified");
     }
   }
 }

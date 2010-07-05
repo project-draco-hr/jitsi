@@ -1,0 +1,87 @@
+{
+  super(new BorderLayout());
+  JPanel mainPanel=new TransparentPanel(new BorderLayout(0,10));
+  final JButton stdButton=new JButton(SecurityConfigActivator.getResources().getI18NString("impl.media.security.zrtp.STANDARD"));
+  stdButton.setOpaque(false);
+  final JButton mandButton=new JButton(SecurityConfigActivator.getResources().getI18NString("impl.media.security.zrtp.MANDATORY"));
+  mandButton.setOpaque(false);
+  final JButton saveButton=new JButton(SecurityConfigActivator.getResources().getI18NString("service.gui.SAVE"));
+  saveButton.setOpaque(false);
+  JPanel buttonBar=new TransparentPanel(new GridLayout(1,7));
+  buttonBar.add(stdButton);
+  buttonBar.add(mandButton);
+  buttonBar.add(Box.createHorizontalStrut(10));
+  buttonBar.add(saveButton);
+  boolean trusted=SecurityConfigActivator.getConfigurationService().getBoolean(TRUSTED_PROP,false);
+  boolean sasSign=SecurityConfigActivator.getConfigurationService().getBoolean(SASSIGN_PROP,false);
+  JPanel checkBar=new TransparentPanel(new GridLayout(1,2));
+  final JCheckBox trustedMitM=new JCheckBox(SecurityConfigActivator.getResources().getI18NString("impl.media.security.zrtp.TRUSTED"),trusted);
+  final JCheckBox sasSignature=new JCheckBox(SecurityConfigActivator.getResources().getI18NString("impl.media.security.zrtp.SASSIGNATURE"),sasSign);
+  checkBar.add(trustedMitM);
+  checkBar.add(sasSignature);
+  mainPanel.add(checkBar,BorderLayout.NORTH);
+  ActionListener buttonListener=new ActionListener(){
+    public void actionPerformed(    ActionEvent event){
+      Object source=event.getSource();
+      if (source == stdButton) {
+        inActive.clear();
+        active.setStandardConfig();
+        pkc.setStandard();
+        hc.setStandard();
+        sc.setStandard();
+        cc.setStandard();
+        lc.setStandard();
+      }
+ else       if (source == mandButton) {
+        inActive.clear();
+        active.setMandatoryOnly();
+        pkc.setStandard();
+        hc.setStandard();
+        sc.setStandard();
+        cc.setStandard();
+        lc.setStandard();
+      }
+ else       if (source == saveButton) {
+        Boolean t=new Boolean(active.isTrustedMitM());
+        Boolean s=new Boolean(active.isSasSignature());
+        SecurityConfigActivator.getConfigurationService().setProperty(TRUSTED_PROP,t);
+        SecurityConfigActivator.getConfigurationService().setProperty(SASSIGN_PROP,s);
+        pkc.saveConfig();
+        hc.saveConfig();
+        sc.saveConfig();
+        cc.saveConfig();
+        lc.saveConfig();
+      }
+ else       return;
+    }
+  }
+;
+  stdButton.addActionListener(buttonListener);
+  mandButton.addActionListener(buttonListener);
+  saveButton.addActionListener(buttonListener);
+  ItemListener itemListener=new ItemListener(){
+    public void itemStateChanged(    ItemEvent e){
+      Object source=e.getItemSelectable();
+      if (source == trustedMitM) {
+        active.setTrustedMitM(trustedMitM.isSelected());
+      }
+ else       if (source == sasSignature) {
+        active.setSasSignature(sasSignature.isSelected());
+      }
+    }
+  }
+;
+  trustedMitM.addItemListener(itemListener);
+  sasSignature.addItemListener(itemListener);
+  JTabbedPane algorithmsPane=new JTabbedPane();
+  algorithmsPane.addTab(SecurityConfigActivator.getResources().getI18NString("impl.media.security.zrtp.PUB_KEYS"),pkc);
+  algorithmsPane.addTab(SecurityConfigActivator.getResources().getI18NString("impl.media.security.zrtp.HASHES"),hc);
+  algorithmsPane.addTab(SecurityConfigActivator.getResources().getI18NString("impl.media.security.zrtp.SYM_CIPHERS"),cc);
+  algorithmsPane.addTab(SecurityConfigActivator.getResources().getI18NString("impl.media.security.zrtp.SAS_TYPES"),sc);
+  algorithmsPane.addTab(SecurityConfigActivator.getResources().getI18NString("impl.media.security.zrtp.SRTP_LENGTHS"),lc);
+  algorithmsPane.setMinimumSize(new Dimension(400,100));
+  algorithmsPane.setPreferredSize(new Dimension(400,200));
+  mainPanel.add(algorithmsPane,BorderLayout.CENTER);
+  mainPanel.add(buttonBar,BorderLayout.SOUTH);
+  add(mainPanel);
+}

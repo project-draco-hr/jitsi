@@ -1,18 +1,22 @@
 {
   ConfigurationService configService=ProtocolProviderActivator.getConfigurationService();
   String factoryPackage=getFactoryImplPackageName(factory);
-  List<String> storedAccounts=configService.getPropertyNamesByPrefix(factoryPackage,true);
-  if (logger.isDebugEnabled())   logger.debug("Discovered " + storedAccounts.size() + " stored "+ factoryPackage+ " accounts");
-  for (Iterator<String> storedAccountIter=storedAccounts.iterator(); storedAccountIter.hasNext(); ) {
+  List<String> accounts=configService.getPropertyNamesByPrefix(factoryPackage,true);
+  if (logger.isDebugEnabled())   logger.debug("Discovered " + accounts.size() + " stored "+ factoryPackage+ " accounts");
+  for (Iterator<String> storedAccountIter=accounts.iterator(); storedAccountIter.hasNext(); ) {
     String storedAccount=storedAccountIter.next();
     if (logger.isDebugEnabled())     logger.debug("Loading account " + storedAccount);
     List<String> storedAccountProperties=configService.getPropertyNamesByPrefix(storedAccount,true);
     Map<String,String> accountProperties=new Hashtable<String,String>();
+    boolean isDisabled=false;
     for (Iterator<String> storedAccountPropertyIter=storedAccountProperties.iterator(); storedAccountPropertyIter.hasNext(); ) {
       String property=storedAccountPropertyIter.next();
       String value=configService.getString(property);
       property=stripPackagePrefix(property);
-      if (ProtocolProviderFactory.PASSWORD.equals(property)) {
+      if (ProtocolProviderFactory.IS_ACCOUNT_DISABLED.equals(property)) {
+        isDisabled=new Boolean(value).booleanValue();
+      }
+ else       if (ProtocolProviderFactory.PASSWORD.equals(property)) {
         if (value == null) {
           value="";
         }
@@ -25,7 +29,12 @@
       }
     }
     try {
-      factory.loadAccount(accountProperties);
+      AccountID accountID=factory.createAccount(accountProperties);
+      if (accountID == null)       return;
+synchronized (storedAccounts) {
+        storedAccounts.add(accountID);
+      }
+      if (!isDisabled)       factory.loadAccount(accountID);
     }
  catch (    Exception ex) {
       logger.error("Failed to load account " + accountProperties,ex);

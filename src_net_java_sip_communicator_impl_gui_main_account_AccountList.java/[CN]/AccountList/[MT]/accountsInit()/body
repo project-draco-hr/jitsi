@@ -1,18 +1,23 @@
 {
-  for (  ProtocolProviderFactory providerFactory : GuiActivator.getProtocolProviderFactories().values()) {
-    ServiceReference serRef;
-    ProtocolProviderService protocolProvider;
-    for (    AccountID accountID : providerFactory.getRegisteredAccounts()) {
-      boolean isHidden=(accountID.getAccountProperty(ProtocolProviderFactory.IS_PROTOCOL_HIDDEN) != null);
-      if (isHidden)       continue;
-      serRef=providerFactory.getProviderForAccount(accountID);
-      protocolProvider=(ProtocolProviderService)GuiActivator.bundleContext.getService(serRef);
-      protocolProvider.addRegistrationStateChangeListener(this);
-      OperationSetPresence presence=protocolProvider.getOperationSet(OperationSetPresence.class);
-      if (presence != null) {
-        presence.addProviderPresenceStatusListener(this);
+  AccountManager accountManager=GuiActivator.getAccountManager();
+  Iterator<AccountID> storedAccounts=accountManager.getStoredAccounts().iterator();
+  while (storedAccounts.hasNext()) {
+    AccountID accountID=storedAccounts.next();
+    boolean isHidden=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_PROTOCOL_HIDDEN,false);
+    if (isHidden)     continue;
+    Account uiAccount=null;
+    if (accountManager.isAccountLoaded(accountID)) {
+      ProtocolProviderService protocolProvider=GuiActivator.getRegisteredProviderForAccount(accountID);
+      if (protocolProvider != null) {
+        uiAccount=new Account(protocolProvider);
+        protocolProvider.addRegistrationStateChangeListener(this);
+        OperationSetPresence presence=protocolProvider.getOperationSet(OperationSetPresence.class);
+        if (presence != null) {
+          presence.addProviderPresenceStatusListener(this);
+        }
       }
-      accountListModel.addAccount(new Account(protocolProvider));
     }
+ else     uiAccount=new Account(accountID);
+    if (uiAccount != null)     accountListModel.addAccount(uiAccount);
   }
 }

@@ -1,0 +1,30 @@
+{
+  if (!OSUtils.IS_WINDOWS)   return null;
+  final JCheckBox autoStartCheckBox=new SIPCommCheckBox();
+  autoStartCheckBox.setAlignmentX(JCheckBox.LEFT_ALIGNMENT);
+  autoStartCheckBox.setText(Resources.getString("plugin.generalconfig.AUTO_START",new String[]{getApplicationName()}));
+  autoStartCheckBox.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      try {
+        setAutostart(autoStartCheckBox.isSelected());
+      }
+ catch (      Exception ex) {
+        logger.error("Cannot create/delete startup shortcut",ex);
+      }
+    }
+  }
+);
+  try {
+    String appName=getApplicationName();
+    ShellLink shortcut=new ShellLink(ShellLink.STARTUP,appName);
+    shortcut.setUserType(ShellLink.CURRENT_USER);
+    String f1=shortcut.getcurrentUserLinkPath() + File.separator + appName+ ".lnk";
+    String f2=f1.replaceAll(System.getProperty("user.name"),"All Users");
+    if (new File(f1).exists() || new File(f2).exists())     autoStartCheckBox.setSelected(true);
+ else     autoStartCheckBox.setSelected(false);
+  }
+ catch (  Exception e) {
+    logger.error(e);
+  }
+  return autoStartCheckBox;
+}

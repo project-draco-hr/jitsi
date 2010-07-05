@@ -1,0 +1,51 @@
+{
+  final JDialog dialog=new JDialog();
+  dialog.setTitle(dialogTitle);
+  dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+  dialog.setResizable(false);
+  if (showLabels)   dialog.add(display.makeLabels(),BorderLayout.NORTH);
+  dialog.add(display);
+  JPanel controlSection=new TransparentPanel(new GridLayout(1,0));
+  final String PRESSED_STATE="pressed";
+  final JButton okButton=new JButton("OK");
+  okButton.setName("not " + PRESSED_STATE);
+  okButton.setPreferredSize(new Dimension(okButton.getPreferredSize().width,25));
+  okButton.setFocusable(false);
+  okButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent event){
+      okButton.setName(PRESSED_STATE);
+      dialog.dispose();
+    }
+  }
+);
+  controlSection.add(okButton);
+  final JButton cancelButton=new JButton("Cancel");
+  cancelButton.setPreferredSize(new Dimension(cancelButton.getPreferredSize().width,25));
+  cancelButton.setFocusable(false);
+  cancelButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent event){
+      dialog.dispose();
+    }
+  }
+);
+  controlSection.add(cancelButton);
+  dialog.add(controlSection,BorderLayout.SOUTH);
+  dialog.addKeyListener(new KeyAdapter(){
+    public void keyPressed(    KeyEvent event){
+      if (display.selectedEntry == null) {
+        if (event.getKeyCode() == KeyEvent.VK_ENTER) {
+          okButton.doClick();
+        }
+ else         if (event.getKeyCode() == KeyEvent.VK_ESCAPE) {
+          cancelButton.doClick();
+        }
+      }
+    }
+  }
+);
+  dialog.addKeyListener(adaptor);
+  dialog.pack();
+  dialog.setVisible(true);
+  if (okButton.getName().equals(PRESSED_STATE))   return display.getBindingMap();
+ else   return null;
+}
