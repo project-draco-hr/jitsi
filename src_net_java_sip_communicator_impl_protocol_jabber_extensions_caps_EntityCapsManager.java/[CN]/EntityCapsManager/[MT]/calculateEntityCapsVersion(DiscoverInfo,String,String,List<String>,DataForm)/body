@@ -1,0 +1,41 @@
+{
+  String s="";
+  s+="client/" + identityType + "//"+ identityName+ "<";
+synchronized (features) {
+    SortedSet<String> fs=new TreeSet<String>();
+    for (    String f : features) {
+      fs.add(f);
+    }
+    for (    String f : fs) {
+      s+=f + "<";
+    }
+  }
+  if (extendedInfo != null) {
+synchronized (extendedInfo) {
+      SortedSet<FormField> fs=new TreeSet<FormField>(new Comparator<FormField>(){
+        public int compare(        FormField f1,        FormField f2){
+          return f1.getVariable().compareTo(f2.getVariable());
+        }
+      }
+);
+      FormField ft=null;
+      for (Iterator<FormField> i=extendedInfo.getFields(); i.hasNext(); ) {
+        FormField f=i.next();
+        if (!f.getVariable().equals("FORM_TYPE")) {
+          fs.add(f);
+        }
+ else {
+          ft=f;
+        }
+      }
+      if (ft != null) {
+        s+=formFieldValuesToCaps(ft.getValues());
+      }
+      for (      FormField f : fs) {
+        s+=f.getVariable() + "<";
+        s+=formFieldValuesToCaps(f.getValues());
+      }
+    }
+  }
+  setCurrentCapsVersion(discoverInfo,capsToHash(s));
+}
