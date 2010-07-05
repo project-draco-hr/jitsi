@@ -1,5 +1,11 @@
 {
-  ProtocolProviderFactory providerFactory=getProtocolProviderFactory(accountID.getProtocolDisplayName());
-  ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
-  return (ProtocolProviderService)GuiActivator.bundleContext.getService(serRef);
+  Iterator<ProtocolProviderFactory> factories=getProtocolProviderFactories().values().iterator();
+  while (factories.hasNext()) {
+    ProtocolProviderFactory factory=factories.next();
+    if (factory.getRegisteredAccounts().contains(accountID)) {
+      ServiceReference serRef=factory.getProviderForAccount(accountID);
+      if (serRef != null)       return (ProtocolProviderService)bundleContext.getService(serRef);
+    }
+  }
+  return null;
 }
