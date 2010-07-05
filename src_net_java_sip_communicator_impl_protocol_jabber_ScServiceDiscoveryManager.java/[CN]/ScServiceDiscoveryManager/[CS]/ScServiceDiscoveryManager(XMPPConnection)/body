@@ -1,8 +1,16 @@
 {
   this.discoveryManager=ServiceDiscoveryManager.getInstanceFor(connection);
+  this.features=new ArrayList<String>();
+  this.identities=new ArrayList<DiscoverInfo.Identity>();
+  DiscoverInfo.Identity identity=new DiscoverInfo.Identity("client",ServiceDiscoveryManager.getIdentityName());
+  identity.setType(ServiceDiscoveryManager.getIdentityType());
+  identities.add(identity);
   discoveryManager.addFeature(CapsPacketExtension.NAMESPACE);
   this.connection=connection;
   this.capsManager=new EntityCapsManager();
   capsManager.addPacketListener(connection);
   updateEntityCapsVersion();
+  PacketFilter capsPacketFilter=new PacketTypeFilter(Presence.class);
+  connection.addPacketWriterInterceptor(this,capsPacketFilter);
+  initFeatures();
 }

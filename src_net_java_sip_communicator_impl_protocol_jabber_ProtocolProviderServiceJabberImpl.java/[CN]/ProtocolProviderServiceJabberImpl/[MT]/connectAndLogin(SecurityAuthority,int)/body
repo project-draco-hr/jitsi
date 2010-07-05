@@ -74,6 +74,7 @@ synchronized (initializationLock) {
         logger.error("Error creating custom trust manager",e);
       }
       connection.connect();
+      registerServiceDiscoveryManager();
       connection.addConnectionListener(new JabberConnectionListener());
       if (abortConnecting) {
         abortConnecting=false;
@@ -120,17 +121,6 @@ synchronized (initializationLock) {
     }
  catch (    NumberFormatException ex) {
       throw new OperationFailedException("Wrong port",OperationFailedException.INVALID_ACCOUNT_PROPERTIES,ex);
-    }
-  }
-  if (getRegistrationState() == RegistrationState.REGISTERED) {
-    discoveryManager=ServiceDiscoveryManager.getInstanceFor(connection);
-    ServiceDiscoveryManager.setIdentityName("sip-comm");
-    ServiceDiscoveryManager.setIdentityType("pc");
-    Iterator<String> it=supportedFeatures.iterator();
-    discoveryManager.removeFeature("http://jabber.org/protocol/commands");
-    while (it.hasNext()) {
-      String feature=it.next();
-      if (!discoveryManager.includesFeature(feature))       discoveryManager.addFeature(feature);
     }
   }
 }
