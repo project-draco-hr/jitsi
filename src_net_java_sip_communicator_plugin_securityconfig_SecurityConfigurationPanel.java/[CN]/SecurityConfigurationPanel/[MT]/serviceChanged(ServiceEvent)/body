@@ -1,0 +1,20 @@
+{
+  ServiceReference serviceRef=event.getServiceReference();
+  Object property=serviceRef.getProperty(ConfigurationForm.FORM_TYPE);
+  if (property != ConfigurationForm.SECURITY_TYPE)   return;
+  Object sService=SecurityConfigActivator.bundleContext.getService(serviceRef);
+  if (!(sService instanceof ConfigurationForm))   return;
+  ConfigurationForm configForm=(ConfigurationForm)sService;
+  if (!configForm.isAdvanced())   return;
+  Object formComponent;
+switch (event.getType()) {
+case ServiceEvent.REGISTERED:
+    formComponent=configForm.getForm();
+  if (formComponent instanceof Component)   addTab(configForm.getTitle(),(Component)formComponent);
+break;
+case ServiceEvent.UNREGISTERING:
+formComponent=configForm.getForm();
+if (formComponent instanceof Component) remove((Component)formComponent);
+break;
+}
+}

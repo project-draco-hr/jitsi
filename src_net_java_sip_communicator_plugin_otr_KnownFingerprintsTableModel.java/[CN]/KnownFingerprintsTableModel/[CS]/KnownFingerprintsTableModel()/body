@@ -1,0 +1,23 @@
+{
+  ServiceReference[] protocolProviderRefs=null;
+  try {
+    protocolProviderRefs=OtrActivator.bundleContext.getServiceReferences(ProtocolProviderService.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException ex) {
+    return;
+  }
+  if (protocolProviderRefs == null || protocolProviderRefs.length < 1)   return;
+  ServiceReference ref=OtrActivator.bundleContext.getServiceReference(MetaContactListService.class.getName());
+  MetaContactListService service=(MetaContactListService)OtrActivator.bundleContext.getService(ref);
+  for (int i=0; i < protocolProviderRefs.length; i++) {
+    ProtocolProviderService provider=(ProtocolProviderService)OtrActivator.bundleContext.getService(protocolProviderRefs[i]);
+    Iterator<MetaContact> metaContacts=service.findAllMetaContactsForProvider(provider);
+    while (metaContacts.hasNext()) {
+      MetaContact metaContact=metaContacts.next();
+      Iterator<Contact> contacts=metaContact.getContacts();
+      while (contacts.hasNext()) {
+        allContacts.add(contacts.next());
+      }
+    }
+  }
+}
