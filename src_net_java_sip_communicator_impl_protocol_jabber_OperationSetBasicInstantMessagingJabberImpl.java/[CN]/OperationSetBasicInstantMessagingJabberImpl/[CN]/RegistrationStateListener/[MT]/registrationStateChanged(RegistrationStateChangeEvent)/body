@@ -2,7 +2,8 @@
   if (logger.isDebugEnabled())   logger.debug("The provider changed state from: " + evt.getOldState() + " to: "+ evt.getNewState());
   if (evt.getNewState() == RegistrationState.REGISTERING) {
     opSetPersPresence=(OperationSetPersistentPresenceJabberImpl)jabberProvider.getOperationSet(OperationSetPersistentPresence.class);
-    jabberProvider.getConnection().addPacketListener(new SmackMessageListener(),new AndFilter(new PacketFilter[]{new GroupMessagePacketFilter(),new PacketTypeFilter(org.jivesoftware.smack.packet.Message.class)}));
+    if (smackMessageListener == null)     smackMessageListener=new SmackMessageListener();
+    jabberProvider.getConnection().addPacketListener(smackMessageListener,new AndFilter(new PacketFilter[]{new GroupMessagePacketFilter(),new PacketTypeFilter(org.jivesoftware.smack.packet.Message.class)}));
   }
  else   if (evt.getNewState() == RegistrationState.REGISTERED) {
     boolean enableGmailNotifications=jabberProvider.getAccountID().getAccountPropertyBoolean("GMAIL_NOTIFICATIONS_ENABLED",false);
@@ -12,5 +13,8 @@
       keepAliveSendTask=new KeepAliveSendTask();
       keepAliveTimer.scheduleAtFixedRate(keepAliveSendTask,KEEPALIVE_INTERVAL,KEEPALIVE_INTERVAL);
     }
+  }
+ else   if (evt.getNewState() == RegistrationState.UNREGISTERED || evt.getNewState() == RegistrationState.CONNECTION_FAILED || evt.getNewState() == RegistrationState.AUTHENTICATION_FAILED) {
+    smackMessageListener=null;
   }
 }
