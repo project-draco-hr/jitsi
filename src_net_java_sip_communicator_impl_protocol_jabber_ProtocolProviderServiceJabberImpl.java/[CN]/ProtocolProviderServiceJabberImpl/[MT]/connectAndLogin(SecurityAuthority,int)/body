@@ -1,4 +1,7 @@
 {
+synchronized (connectAndLoginLock) {
+    inConnectAndLogin=true;
+  }
 synchronized (initializationLock) {
     String password=JabberActivator.getProtocolProviderFactory().loadPassword(getAccountID());
     if (password == null) {
@@ -122,5 +125,14 @@ synchronized (initializationLock) {
  catch (    NumberFormatException ex) {
       throw new OperationFailedException("Wrong port",OperationFailedException.INVALID_ACCOUNT_PROPERTIES,ex);
     }
+  }
+synchronized (connectAndLoginLock) {
+    if (eventDuringLogin != null) {
+      fireRegistrationStateChanged(eventDuringLogin.getOldState(),eventDuringLogin.getNewState(),eventDuringLogin.getReasonCode(),eventDuringLogin.getReason());
+      eventDuringLogin=null;
+      inConnectAndLogin=false;
+      return;
+    }
+    inConnectAndLogin=false;
   }
 }

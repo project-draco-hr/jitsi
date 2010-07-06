@@ -3,12 +3,24 @@
   if (exception instanceof XMPPException) {
     StreamError err=((XMPPException)exception).getStreamError();
     if (err != null && err.getCode().equals(XMPPError.Condition.conflict.toString())) {
+synchronized (connectAndLoginLock) {
+        if (inConnectAndLogin) {
+          eventDuringLogin=new RegistrationStateChangeEvent(ProtocolProviderServiceJabberImpl.this,getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_MULTIPLE_LOGINS,"Connecting multiple times with the same resource");
+          return;
+        }
+      }
       fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_MULTIPLE_LOGINS,"Connecting multiple times with the same resource");
       return;
     }
   }
  else   if (exception instanceof SSLHandshakeException && exception.getCause() instanceof CertificateException) {
     return;
+  }
+synchronized (connectAndLoginLock) {
+    if (inConnectAndLogin) {
+      eventDuringLogin=new RegistrationStateChangeEvent(ProtocolProviderServiceJabberImpl.this,getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,exception.getMessage());
+      return;
+    }
   }
   fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,exception.getMessage());
 }
