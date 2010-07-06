@@ -1,23 +1,21 @@
 {
   ServiceReference serRef=getProviderForAccount(accountID);
-  if (serRef == null) {
-    return false;
-  }
-  BundleContext bundleContext=getBundleContext();
-  ProtocolProviderService protocolProvider=(ProtocolProviderService)bundleContext.getService(serRef);
-  try {
-    protocolProvider.unregister();
-  }
- catch (  OperationFailedException ex) {
-    logger.error("Failed to unregister protocol provider for account : " + accountID + " caused by: "+ ex);
-  }
-  ServiceRegistration registration;
+  if (serRef != null) {
+    BundleContext bundleContext=getBundleContext();
+    ProtocolProviderService protocolProvider=(ProtocolProviderService)bundleContext.getService(serRef);
+    try {
+      protocolProvider.unregister();
+    }
+ catch (    OperationFailedException ex) {
+      logger.error("Failed to unregister protocol provider for account : " + accountID + " caused by: "+ ex);
+    }
+    ServiceRegistration registration;
 synchronized (registeredAccounts) {
-    registration=registeredAccounts.remove(accountID);
+      registration=registeredAccounts.remove(accountID);
+    }
+    if (registration != null) {
+      registration.unregister();
+    }
   }
-  if (registration == null) {
-    return false;
-  }
-  registration.unregister();
   return removeStoredAccount(accountID);
 }
