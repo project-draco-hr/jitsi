@@ -4,18 +4,11 @@
       keyStore=KeyStore.getInstance(KeyStore.getDefaultType());
 synchronized (keyStore) {
         keyStore.load(null,defaultPassword);
-        String keyStoreFile=GuiActivator.getConfigurationService().getString(KEYSTORE_FILE_PROP);
-        if (keyStoreFile == null || keyStoreFile.length() == 0) {
-          File f=GuiActivator.getFileAccessService().getPrivatePersistentFile("jssecacerts");
-          keyStoreFile=f.getCanonicalPath();
-          GuiActivator.getConfigurationService().setProperty(KEYSTORE_FILE_PROP,keyStoreFile);
-          keyStore.store(new FileOutputStream(f),defaultPassword);
+        File keyStoreFile=getKeyStoreLocation();
+        if (!keyStoreFile.exists()) {
+          keyStore.store(new FileOutputStream(keyStoreFile),defaultPassword);
         }
  else {
-          File f=new File(keyStoreFile);
-          if (!f.exists()) {
-            keyStore.store(new FileOutputStream(f),defaultPassword);
-          }
           keyStore.load(new FileInputStream(keyStoreFile),null);
         }
       }
