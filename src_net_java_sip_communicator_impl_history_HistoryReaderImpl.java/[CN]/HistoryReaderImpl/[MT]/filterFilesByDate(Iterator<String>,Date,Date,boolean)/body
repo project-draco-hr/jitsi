@@ -1,0 +1,75 @@
+{
+  if (startDate == null && endDate == null) {
+    Vector<String> result=new Vector<String>();
+    while (filelist.hasNext()) {
+      result.add(filelist.next());
+    }
+    Collections.sort(result,new Comparator<String>(){
+      public int compare(      String o1,      String o2){
+        if (reverseOrder)         return o2.compareTo(o1);
+ else         return o1.compareTo(o2);
+      }
+    }
+);
+    return result;
+  }
+  TreeSet<Long> files=new TreeSet<Long>();
+  while (filelist.hasNext()) {
+    String filename=filelist.next();
+    files.add(Long.parseLong(filename.substring(0,filename.length() - 4)));
+  }
+  TreeSet<Long> resultAsLong=new TreeSet<Long>();
+  if (files.size() == 0) {
+    Vector<String> result=new Vector<String>();
+    Iterator<Long> iter=resultAsLong.iterator();
+    while (iter.hasNext()) {
+      Long item=iter.next();
+      result.add(item.toString() + ".xml");
+    }
+    return result;
+  }
+  if (startDate == null) {
+    Long endLong=Long.valueOf(endDate.getTime());
+    files.add(endLong);
+    resultAsLong.addAll(files.subSet(files.first(),endLong));
+    resultAsLong.remove(endLong);
+  }
+ else   if (endDate == null) {
+    Long startLong=Long.valueOf(startDate.getTime());
+    if (files.size() > 0 && (startLong.longValue() < (files.first()).longValue())) {
+      resultAsLong=files;
+    }
+ else {
+      files.add(startLong);
+      resultAsLong.addAll(files.subSet(startLong,files.last()));
+      resultAsLong.add(files.last());
+      resultAsLong.add(files.subSet(files.first(),startLong).last());
+      resultAsLong.remove(startLong);
+    }
+  }
+ else {
+    Long startLong=Long.valueOf(startDate.getTime());
+    Long endLong=Long.valueOf(endDate.getTime());
+    files.add(startLong);
+    files.add(endLong);
+    resultAsLong.addAll(files.subSet(startLong,endLong));
+    SortedSet<Long> theFirstToStart=files.subSet(files.first(),startLong);
+    if (!theFirstToStart.isEmpty())     resultAsLong.add(theFirstToStart.last());
+    resultAsLong.remove(startLong);
+    resultAsLong.remove(endLong);
+  }
+  Vector<String> result=new Vector<String>();
+  Iterator<Long> iter=resultAsLong.iterator();
+  while (iter.hasNext()) {
+    Long item=iter.next();
+    result.add(item.toString() + ".xml");
+  }
+  Collections.sort(result,new Comparator<String>(){
+    public int compare(    String o1,    String o2){
+      if (reverseOrder)       return o2.compareTo(o1);
+ else       return o1.compareTo(o2);
+    }
+  }
+);
+  return result;
+}
