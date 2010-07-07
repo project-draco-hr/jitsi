@@ -2,21 +2,19 @@
   int mouseIndex=this.locationToIndex(event.getPoint());
   if (logger.isTraceEnabled())   logger.trace("Account list: index under mouse found:" + mouseIndex);
   if (mouseIndex < 0)   return;
-  Object value=getModel().getElementAt(mouseIndex);
-  if (logger.isTraceEnabled())   logger.trace("Account list: element at mouse index:" + value);
-  AccountListCellRenderer renderer=(AccountListCellRenderer)getCellRenderer().getListCellRendererComponent(this,value,mouseIndex,true,true);
+  Account account=(Account)getModel().getElementAt(mouseIndex);
+  if (logger.isTraceEnabled())   logger.trace("Account list: element at mouse index:" + account);
+  AccountListCellRenderer renderer=(AccountListCellRenderer)getCellRenderer().getListCellRendererComponent(this,account,mouseIndex,true,true);
   if (logger.isTraceEnabled())   logger.trace("Account list: renderer bounds for mouse index:" + renderer.getBounds());
   Rectangle r=this.getCellBounds(mouseIndex,mouseIndex);
   int translatedX=event.getX() - r.x;
   int translatedY=event.getY() - r.y;
   if (logger.isTraceEnabled())   logger.trace("Account list: find component at:" + translatedX + ", "+ translatedY);
-  Component mouseComponent=renderer.findComponentAt(translatedX,translatedY);
-  if (logger.isTraceEnabled())   logger.trace("Account list: component under the mouse:" + mouseComponent);
-  if (mouseComponent instanceof JCheckBox) {
-    JCheckBox checkBox=((JCheckBox)mouseComponent);
+  if (renderer.isOverCheckBox(translatedX,translatedY)) {
+    JCheckBox checkBox=account.getEnableCheckBox();
     if (logger.isTraceEnabled())     logger.trace("Account list: checkBox set selected" + !checkBox.isSelected());
     checkBox.setSelected(!checkBox.isSelected());
-    enableAccount((Account)value,checkBox.isSelected());
+    enableAccount(account,checkBox.isSelected());
     this.repaint();
   }
 }
