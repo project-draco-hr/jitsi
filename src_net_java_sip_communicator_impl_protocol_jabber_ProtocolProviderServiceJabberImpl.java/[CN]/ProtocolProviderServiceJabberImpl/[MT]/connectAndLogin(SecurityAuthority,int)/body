@@ -68,6 +68,9 @@ synchronized (initializationLock) {
       }
       ConnectionConfiguration confConn=new ConnectionConfiguration(serverAddress,Integer.parseInt(serverPort),serviceName,proxy);
       confConn.setReconnectionAllowed(false);
+      if (connection != null) {
+        logger.error("Connection is not null and isConnected:" + connection.isConnected(),new Exception("Trace possible duplicate connections"));
+      }
       connection=new XMPPConnection(confConn);
       try {
         CertificateVerificationService gvs=getCertificateVerificationService();
@@ -78,10 +81,11 @@ synchronized (initializationLock) {
       }
       connection.connect();
       registerServiceDiscoveryManager();
-      connection.addConnectionListener(new JabberConnectionListener());
+      if (connectionListener == null)       connectionListener=new JabberConnectionListener();
+      connection.addConnectionListener(connectionListener);
       if (abortConnecting) {
         abortConnecting=false;
-        connection.disconnect();
+        disconnectAndCleanConnection();
         return;
       }
       fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERING,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
@@ -101,10 +105,10 @@ synchronized (initializationLock) {
  catch (          Exception e) {
           }
           connection.connect();
-          connection.addConnectionListener(new JabberConnectionListener());
+          connection.addConnectionListener(connectionListener);
           if (abortConnecting) {
             abortConnecting=false;
-            connection.disconnect();
+            disconnectAndCleanConnection();
             return;
           }
           fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERING,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
