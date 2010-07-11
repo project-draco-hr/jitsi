@@ -4,13 +4,17 @@
   for (  Map.Entry<String,Object> entry : attributes.entrySet()) {
     bldr.append(" " + entry.getKey() + "="+ entry.getValue());
   }
-  List<PacketExtension> childElements=getChildElements();
-  if (childElements == null || childElements.size() == 0)   bldr.append("/>");
+  List<? extends PacketExtension> childElements=getChildElements();
+  if (childElements == null || childElements.size() == 0) {
+    bldr.append("/>");
+    return bldr.toString();
+  }
  else {
     for (    PacketExtension packExt : childElements) {
       bldr.append(packExt.toXML());
     }
-    bldr.append("</" + getElementName() + ">");
   }
+  if (getText() != null && getText().trim().length() > 0)   bldr.append(getText());
+  bldr.append("</" + getElementName() + ">");
   return bldr.toString();
 }
