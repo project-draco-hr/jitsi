@@ -1,4 +1,36 @@
 {
-  JingleIQ jingleIQ=null;
+  JingleIQ jingleIQ=new JingleIQ();
+  JingleAction action=JingleAction.parseString(parser.getAttributeValue("",JingleIQ.ACTION_ARG_NAME));
+  String initiator=parser.getAttributeValue("",JingleIQ.RESPONDER_ARG_NAME);
+  String responder=parser.getAttributeValue("",JingleIQ.INITIATOR_ARG_NAME);
+  String sid=parser.getAttributeValue("",JingleIQ.SID_ARG_NAME);
+  jingleIQ.setAction(action);
+  jingleIQ.setInitiator(initiator);
+  jingleIQ.setResponder(responder);
+  jingleIQ.setSid(sid);
+  boolean done=false;
+  ContentProvider contentProvider=new ContentProvider();
+  ReasonProvider reasonProvider=new ReasonProvider();
+  int eventType;
+  String elementName;
+  while (!done) {
+    eventType=parser.next();
+    elementName=parser.getName();
+    if (eventType == XmlPullParser.START_TAG) {
+      if (elementName.equals(ContentPacketExtension.ELEMENT_NAME)) {
+        ContentPacketExtension content=contentProvider.parseExtension(parser);
+        jingleIQ.addContent(content);
+      }
+      if (elementName.equals(ReasonPacketExtension.ELEMENT_NAME)) {
+        ReasonPacketExtension reason=reasonProvider.parseExtension(parser);
+        jingleIQ.setReason(reason);
+      }
+    }
+ else     if (eventType == XmlPullParser.END_TAG) {
+      if (parser.getName().equals(Jingle.getElementName())) {
+        done=true;
+      }
+    }
+  }
   return jingleIQ;
 }
