@@ -1,0 +1,31 @@
+{
+  C packetExtension=packetClass.newInstance();
+  int attrCount=parser.getAttributeCount();
+  for (int i=0; i < attrCount; i++) {
+    packetExtension.setAttribute(parser.getAttributeName(i),parser.getAttributeValue(i));
+  }
+  boolean done=false;
+  int eventType;
+  String elementName;
+  String namespace;
+  while (!done) {
+    eventType=parser.next();
+    elementName=parser.getName();
+    namespace=parser.getNamespace();
+    if (eventType == XmlPullParser.START_TAG) {
+      PacketExtensionProvider provider=(PacketExtensionProvider)ProviderManager.getInstance().getExtensionProvider(elementName,namespace);
+      if (provider == null) {
+        logger.fine("Could not add a provider for element " + elementName + " from namespace "+ namespace);
+        continue;
+      }
+      PacketExtension childExtension=provider.parseExtension(parser);
+      packetExtension.addChildExtension(childExtension);
+    }
+ else     if (eventType == XmlPullParser.END_TAG) {
+      if (parser.getName().equals(JingleIQ.ELEMENT_NAME)) {
+        done=true;
+      }
+    }
+  }
+  return packetExtension;
+}
