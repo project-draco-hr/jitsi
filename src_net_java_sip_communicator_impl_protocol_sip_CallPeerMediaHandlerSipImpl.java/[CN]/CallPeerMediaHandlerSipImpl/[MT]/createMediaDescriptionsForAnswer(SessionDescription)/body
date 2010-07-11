@@ -1,0 +1,32 @@
+{
+  List<MediaDescription> remoteDescriptions=SdpUtils.extractMediaDescriptions(offer);
+  Vector<MediaDescription> answerDescriptions=new Vector<MediaDescription>(remoteDescriptions.size());
+  this.setCallInfoURL(SdpUtils.getCallInfoURL(offer));
+  boolean atLeastOneValidDescription=false;
+  for (  MediaDescription mediaDescription : remoteDescriptions) {
+    MediaType mediaType=SdpUtils.getMediaType(mediaDescription);
+    List<MediaFormat> supportedFormats=SdpUtils.extractFormats(mediaDescription,getDynamicPayloadTypes());
+    MediaDevice dev=getDefaultDevice(mediaType);
+    MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
+    devDirection=devDirection.and(getDirectionUserPreference(mediaType));
+    MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,offer);
+    int targetDataPort=target.getDataAddress().getPort();
+    if (supportedFormats.isEmpty() || (devDirection == MediaDirection.INACTIVE) || (targetDataPort == 0)) {
+      answerDescriptions.add(SdpUtils.createDisablingAnswer(mediaDescription));
+      closeStream(mediaType);
+      continue;
+    }
+    List<MediaFormat> supportedAdvancedParameters=getAdvancedFormatParameters(supportedFormats,dev.getSupportedFormats());
+    StreamConnector connector=getStreamConnector(mediaType);
+    MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
+    MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
+    List<RTPExtension> offeredRTPExtensions=SdpUtils.extractRTPExtensions(mediaDescription,this.getRtpExtensionsRegistry());
+    List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
+    List<RTPExtension> rtpExtensions=intersectRTPExtensions(offeredRTPExtensions,supportedExtensions);
+    initStream(connector,dev,supportedFormats.get(0),target,direction,rtpExtensions);
+    answerDescriptions.add(createMediaDescription(supportedAdvancedParameters,connector,direction,rtpExtensions));
+    atLeastOneValidDescription=true;
+  }
+  if (!atLeastOneValidDescription)   throw new OperationFailedException("Offer contained no valid " + "media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT);
+  return answerDescriptions;
+}

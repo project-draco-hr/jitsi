@@ -1,0 +1,31 @@
+{
+  this.remoteSess=answer;
+  List<MediaDescription> remoteDescriptions=SdpUtils.extractMediaDescriptions(answer);
+  this.setCallInfoURL(SdpUtils.getCallInfoURL(answer));
+  for (  MediaDescription mediaDescription : remoteDescriptions) {
+    MediaType mediaType=SdpUtils.getMediaType(mediaDescription);
+    MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,answer);
+    if (target.getDataAddress().getPort() == 0) {
+      closeStream(mediaType);
+      continue;
+    }
+    List<MediaFormat> supportedFormats=SdpUtils.extractFormats(mediaDescription,getDynamicPayloadTypes());
+    MediaDevice dev=getDefaultDevice(mediaType);
+    if (dev == null) {
+      closeStream(mediaType);
+      continue;
+    }
+    MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
+    devDirection=devDirection.and(getDirectionUserPreference(mediaType));
+    if (supportedFormats.isEmpty()) {
+      ProtocolProviderServiceSipImpl.throwOperationFailedException("Remote party sent an invalid SDP answer.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
+    }
+    StreamConnector connector=getStreamConnector(mediaType);
+    MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
+    MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
+    List<RTPExtension> remoteRTPExtensions=SdpUtils.extractRTPExtensions(mediaDescription,getRtpExtensionsRegistry());
+    List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
+    List<RTPExtension> rtpExtensions=intersectRTPExtensions(remoteRTPExtensions,supportedExtensions);
+    initStream(connector,dev,supportedFormats.get(0),target,direction,rtpExtensions);
+  }
+}
