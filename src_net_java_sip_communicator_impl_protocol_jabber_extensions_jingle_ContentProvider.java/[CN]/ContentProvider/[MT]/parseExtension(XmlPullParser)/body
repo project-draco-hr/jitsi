@@ -6,5 +6,27 @@
   ContentPacketExtension.SendersEnum senders=null;
   if (sendersStr != null && sendersStr.trim().length() > 0)   senders=ContentPacketExtension.SendersEnum.valueOf(sendersStr);
   ContentPacketExtension content=new ContentPacketExtension(ContentPacketExtension.CreatorEnum.valueOf(creator),disposition,name,senders);
+  boolean done=false;
+  int eventType;
+  String elementName;
+  String namespace;
+  while (!done) {
+    eventType=parser.next();
+    elementName=parser.getName();
+    namespace=parser.getNamespace();
+    if (eventType == XmlPullParser.START_TAG) {
+      PacketExtensionProvider provider=(PacketExtensionProvider)ProviderManager.getInstance().getExtensionProvider(elementName,namespace);
+      if (provider == null) {
+        continue;
+      }
+      PacketExtension extension=provider.parseExtension(parser);
+      content.addExtensions(extension);
+    }
+ else     if (eventType == XmlPullParser.END_TAG) {
+      if (parser.getName().equals(JingleIQ.ELEMENT_NAME)) {
+        done=true;
+      }
+    }
+  }
   return content;
 }
