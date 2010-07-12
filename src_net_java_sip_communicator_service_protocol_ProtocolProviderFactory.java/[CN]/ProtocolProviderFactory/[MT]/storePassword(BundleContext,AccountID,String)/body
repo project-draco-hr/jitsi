@@ -1,9 +1,7 @@
 {
-  String accountPrefix=findAccountPrefix(bundleContext,accountID);
+  String accountPrefix=findAccountPrefix(bundleContext,accountID,getFactoryImplPackageName());
   if (accountPrefix == null)   throw new IllegalArgumentException("No previous records found for account ID: " + accountID.getAccountUniqueID() + " in package"+ getFactoryImplPackageName());
-  String mangledPassword=null;
-  if (password != null)   mangledPassword=new String(Base64.encode(password.getBytes()));
-  ServiceReference confReference=bundleContext.getServiceReference(ConfigurationService.class.getName());
-  ConfigurationService configurationService=(ConfigurationService)bundleContext.getService(confReference);
-  configurationService.setProperty(accountPrefix + "." + PASSWORD,mangledPassword);
+  ServiceReference credentialsReference=bundleContext.getServiceReference(CredentialsStorageService.class.getName());
+  CredentialsStorageService credentialsService=(CredentialsStorageService)bundleContext.getService(credentialsReference);
+  credentialsService.storePassword(accountPrefix,password);
 }

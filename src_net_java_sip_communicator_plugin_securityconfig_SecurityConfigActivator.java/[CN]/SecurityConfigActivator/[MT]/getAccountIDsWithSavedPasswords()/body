@@ -1,0 +1,14 @@
+{
+  Map<?,ProtocolProviderFactory> providerFactoriesMap=getProtocolProviderFactories();
+  if (providerFactoriesMap == null)   return null;
+  CredentialsStorageService credentialsStorageService=getCredentialsStorageService();
+  Map<AccountID,String> accountIDs=new HashMap<AccountID,String>();
+  for (  ProtocolProviderFactory providerFactory : providerFactoriesMap.values()) {
+    String sourcePackageName=getFactoryImplPackageName(providerFactory);
+    for (    AccountID accountID : providerFactory.getRegisteredAccounts()) {
+      String accountPrefix=ProtocolProviderFactory.findAccountPrefix(bundleContext,accountID,sourcePackageName);
+      if (credentialsStorageService.isStoredEncrypted(accountPrefix))       accountIDs.put(accountID,accountPrefix);
+    }
+  }
+  return accountIDs;
+}

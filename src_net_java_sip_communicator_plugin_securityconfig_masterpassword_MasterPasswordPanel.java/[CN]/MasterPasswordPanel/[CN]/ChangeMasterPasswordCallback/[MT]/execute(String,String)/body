@@ -1,0 +1,28 @@
+{
+  boolean remove=newMasterPassword == null;
+  boolean changed=SecurityConfigActivator.getCredentialsStorageService().changeMasterPassword(masterPassword,newMasterPassword);
+  if (!changed) {
+    String titleKey=remove ? "plugin.securityconfig.masterpassword.MP_REMOVE_FAILURE" : "plugin.securityconfig.masterpassword.MP_CHANGE_FAILURE";
+    SecurityConfigActivator.getUIService().getPopupDialog().showMessagePopupDialog(resources.getI18NString("plugin.securityconfig.masterpassword.MP_CHANGE_FAILURE_MSG"),resources.getI18NString(titleKey),PopupDialog.ERROR_MESSAGE);
+    return false;
+  }
+ else {
+    String title=null;
+    String msg=null;
+    if (remove) {
+      title="plugin.securityconfig.masterpassword.MP_REMOVE_SUCCESS";
+      msg="plugin.securityconfig.masterpassword.MP_REMOVE_SUCCESS_MSG";
+      useMasterPasswordCheckBox.setSelected(false);
+      changeMasterPasswordButton.setEnabled(false);
+    }
+ else {
+      title="plugin.securityconfig.masterpassword.MP_CHANGE_SUCCESS";
+      msg="plugin.securityconfig.masterpassword.MP_CHANGE_SUCCESS_MSG";
+      useMasterPasswordCheckBox.setSelected(true);
+      changeMasterPasswordButton.setEnabled(true);
+    }
+    logger.debug("Master password successfully changed");
+    SecurityConfigActivator.getUIService().getPopupDialog().showMessagePopupDialog(resources.getI18NString(msg),resources.getI18NString(title),PopupDialog.INFORMATION_MESSAGE);
+  }
+  return true;
+}

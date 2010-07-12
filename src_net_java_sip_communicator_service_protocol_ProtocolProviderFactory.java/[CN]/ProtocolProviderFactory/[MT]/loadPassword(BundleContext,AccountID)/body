@@ -1,9 +1,7 @@
 {
-  String accountPrefix=findAccountPrefix(bundleContext,accountID);
+  String accountPrefix=findAccountPrefix(bundleContext,accountID,getFactoryImplPackageName());
   if (accountPrefix == null)   return null;
-  ServiceReference confReference=bundleContext.getServiceReference(ConfigurationService.class.getName());
-  ConfigurationService configurationService=(ConfigurationService)bundleContext.getService(confReference);
-  String mangledPassword=configurationService.getString(accountPrefix + "." + PASSWORD);
-  if (mangledPassword == null)   return null;
-  return new String(Base64.decode(mangledPassword));
+  ServiceReference credentialsReference=bundleContext.getServiceReference(CredentialsStorageService.class.getName());
+  CredentialsStorageService credentialsService=(CredentialsStorageService)bundleContext.getService(credentialsReference);
+  return credentialsService.loadPassword(accountPrefix);
 }

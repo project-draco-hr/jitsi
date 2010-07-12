@@ -1,0 +1,27 @@
+{
+  List<String> encryptedAccountProps=configurationService.getPropertyNamesBySuffix(ACCOUNT_ENCRYPTED_PASSWORD);
+  Map<String,String> passwords=new HashMap<String,String>();
+  try {
+    setMasterPassword(oldPassword);
+    for (    String propName : encryptedAccountProps) {
+      String propValue=configurationService.getString(propName);
+      if (propValue != null) {
+        String decrypted=crypto.decrypt(propValue);
+        passwords.put(propName,decrypted);
+      }
+    }
+    setMasterPassword(newPassword);
+    for (    Map.Entry<String,String> entry : passwords.entrySet()) {
+      String encrypted=crypto.encrypt(entry.getValue());
+      configurationService.setProperty(entry.getKey(),encrypted);
+    }
+    writeVerificationValue(newPassword == null);
+  }
+ catch (  CryptoException ce) {
+    logger.debug(ce);
+    crypto=null;
+    passwords=null;
+    return false;
+  }
+  return true;
+}

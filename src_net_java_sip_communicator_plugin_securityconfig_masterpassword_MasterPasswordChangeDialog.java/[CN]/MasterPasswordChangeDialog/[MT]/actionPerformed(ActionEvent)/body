@@ -1,0 +1,31 @@
+{
+  JButton sourceButton=(JButton)e.getSource();
+  boolean close=false;
+  if (sourceButton.equals(okButton)) {
+    CredentialsStorageService credentialsStorageService=SecurityConfigActivator.getCredentialsStorageService();
+    String oldMasterPassword=null;
+    if (credentialsStorageService.isUsingMasterPassword()) {
+      oldMasterPassword=new String(((JPasswordField)currentPasswdField).getPassword());
+      if (oldMasterPassword.isEmpty()) {
+        displayPopupError(resources.getI18NString("plugin.securityconfig.masterpassword.MP_CURRENT_EMPTY"));
+        return;
+      }
+      boolean verified=credentialsStorageService.verifyMasterPassword(oldMasterPassword);
+      if (!verified) {
+        displayPopupError(resources.getI18NString("plugin.securityconfig.masterpassword.MP_VERIFICATION_FAILURE_MSG"));
+        return;
+      }
+    }
+    if (callback != null) {
+      String newPassword=new String(newPasswordField.getPassword());
+      close=callback.execute(oldMasterPassword,newPassword);
+    }
+  }
+ else {
+    close=true;
+  }
+  if (close) {
+    dialog=null;
+    dispose();
+  }
+}
