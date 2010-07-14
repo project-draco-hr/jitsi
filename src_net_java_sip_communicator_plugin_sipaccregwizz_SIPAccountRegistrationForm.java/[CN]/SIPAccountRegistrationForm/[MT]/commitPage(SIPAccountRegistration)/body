@@ -1,17 +1,39 @@
 {
-  String userID=accountPanel.getUserID();
+  String userID=null;
+  char[] password=null;
+  String serverAddress=null;
+  String proxyAddress=null;
+  if (accountPanel.isCreateAccount()) {
+    NewAccount newAccount=getCreateAccountService().createAccount();
+    if (newAccount != null) {
+      userID=newAccount.getUserName();
+      password=newAccount.getPassword();
+      serverAddress=newAccount.getServerAddress();
+      proxyAddress=newAccount.getProxyAddress();
+      if (serverAddress == null)       serverAddress=setServerFieldAccordingToUIN(userID);
+      if (proxyAddress == null)       proxyAddress=serverAddress;
+    }
+ else {
+      return;
+    }
+  }
+ else {
+    userID=accountPanel.getUserID();
+    password=accountPanel.getPassword();
+    serverAddress=connectionPanel.getServerAddress();
+    proxyAddress=connectionPanel.getProxy();
+  }
   if (userID == null || userID.trim().length() == 0)   throw new IllegalStateException("No user ID provided.");
   registration.setUserID(userID);
-  char[] password=accountPanel.getPassword();
   if (password != null)   registration.setPassword(new String(password));
   registration.setRememberPassword(accountPanel.isRememberPassword());
-  registration.setServerAddress(connectionPanel.getServerAddress());
+  registration.setServerAddress(serverAddress);
+  registration.setProxy(proxyAddress);
   String displayName=accountPanel.getDisplayName();
   registration.setDisplayName(displayName);
   String authName=connectionPanel.getAuthenticationName();
   if (authName != null && authName.length() > 0)   registration.setAuthorizationName(authName);
   registration.setServerPort(connectionPanel.getServerPort());
-  registration.setProxy(connectionPanel.getProxy());
   registration.setProxyPort(connectionPanel.getProxyPort());
   registration.setPreferredTransport(connectionPanel.getSelectedTransport());
   registration.setEnablePresence(presencePanel.isPresenceEnabled());

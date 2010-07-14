@@ -1,0 +1,30 @@
+{
+  NewAccount newAccount=null;
+  try {
+    registerLink+="email=" + emailField.getText() + "&password="+ new String(passField.getPassword())+ "&display_name="+ displayNameField.getText()+ "&username="+ usernameField.getText()+ "&user_agent=sip-communicator.org";
+    URL url=new URL(registerLink);
+    URLConnection conn=url.openConnection();
+    if (!(conn instanceof HttpURLConnection)) {
+      return null;
+    }
+    HttpURLConnection httpConn=(HttpURLConnection)conn;
+    int responseCode=httpConn.getResponseCode();
+    if (responseCode == HttpURLConnection.HTTP_OK) {
+      BufferedReader in=new BufferedReader(new InputStreamReader(conn.getInputStream()));
+      String str;
+      StringBuffer stringBuffer=new StringBuffer();
+      while ((str=in.readLine()) != null) {
+        stringBuffer.append(str);
+      }
+      if (logger.isInfoEnabled())       logger.info("JSON response to create account request: " + stringBuffer.toString());
+      newAccount=parseHttpResponse(stringBuffer.toString());
+    }
+  }
+ catch (  MalformedURLException e1) {
+    if (logger.isInfoEnabled())     logger.info("Failed to create URL with string: " + registerLink,e1);
+  }
+catch (  IOException e1) {
+    if (logger.isInfoEnabled())     logger.info("Failed to open connection.",e1);
+  }
+  return newAccount;
+}
