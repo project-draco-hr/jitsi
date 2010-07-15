@@ -10,9 +10,7 @@ synchronized (storedAccounts) {
   for (Iterator<String> storedAccountIter=storedAccounts.iterator(); storedAccountIter.hasNext(); ) {
     String storedAccount=storedAccountIter.next();
     String storedAccountUID=configurationService.getString(storedAccount + "." + ProtocolProviderFactory.ACCOUNT_UID);
-    if (storedAccountUID.equals(accountUID)) {
-      accountNodeName=configurationService.getString(storedAccount);
-    }
+    if (storedAccountUID.equals(accountUID))     accountNodeName=configurationService.getString(storedAccount);
   }
   Map<String,Object> configurationProperties=new HashMap<String,Object>();
   if (accountNodeName == null) {
@@ -24,8 +22,15 @@ synchronized (storedAccounts) {
   for (  Map.Entry<String,String> entry : accountProperties.entrySet()) {
     String property=entry.getKey();
     String value=entry.getValue();
-    if (property.equals(ProtocolProviderFactory.PASSWORD))     value=new String(Base64.encode(value.getBytes()));
-    configurationProperties.put(factoryPackage + "." + accountNodeName+ "."+ property,value);
+    if (property.equals(ProtocolProviderFactory.PASSWORD)) {
+      CredentialsStorageService credentialsStorage=ServiceUtils.getService(bundleContext,CredentialsStorageService.class);
+      if (!credentialsStorage.storePassword(factoryPackage + "." + accountNodeName,value)) {
+        throw new OperationFailedException("CredentialsStorageService failed to" + " storePassword",OperationFailedException.GENERAL_ERROR);
+      }
+    }
+ else {
+      configurationProperties.put(factoryPackage + "." + accountNodeName+ "."+ property,value);
+    }
   }
   if (configurationProperties.size() > 0)   configurationService.setProperties(configurationProperties);
   if (logger.isDebugEnabled())   logger.debug("Stored account for id " + accountID.getAccountUniqueID() + " for package "+ factoryPackage);

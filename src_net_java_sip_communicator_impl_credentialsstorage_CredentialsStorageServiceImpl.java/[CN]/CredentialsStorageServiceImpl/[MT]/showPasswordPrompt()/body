@@ -1,25 +1,11 @@
 {
-  String master=null;
-  JPasswordField passwordField=new JPasswordField();
-  String inputMsg=CredentialsStorageActivator.getString("plugin.securityconfig.masterpassword.MP_INPUT");
-  String errorMsg="<html><font color=\"red\">" + CredentialsStorageActivator.getString("plugin.securityconfig.masterpassword.MP_VERIFICATION_FAILURE_MSG") + "</font></html>";
+  String master;
+  UIService uiService=CredentialsStorageActivator.getUIService();
   boolean correct=true;
   do {
-    Object[] msg=null;
-    if (correct) {
-      msg=new Object[]{inputMsg,passwordField};
-    }
- else {
-      msg=new Object[]{errorMsg,inputMsg,passwordField};
-    }
-    passwordField.setText("");
-    if (JOptionPane.showOptionDialog(null,msg,CredentialsStorageActivator.getString("plugin.securityconfig.masterpassword.MP_TITLE"),JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE,null,new String[]{CredentialsStorageActivator.getString("service.gui.OK"),CredentialsStorageActivator.getString("service.gui.CANCEL")},CredentialsStorageActivator.getString("service.gui.OK")) == JOptionPane.YES_OPTION) {
-      master=new String(passwordField.getPassword());
-      correct=(master.length() != 0) && verifyMasterPassword(master);
-    }
- else {
-      return null;
-    }
+    master=uiService.getMasterPassword(correct);
+    if (master == null)     return null;
+    correct=((master.length() != 0) && verifyMasterPassword(master));
   }
  while (!correct);
   return master;

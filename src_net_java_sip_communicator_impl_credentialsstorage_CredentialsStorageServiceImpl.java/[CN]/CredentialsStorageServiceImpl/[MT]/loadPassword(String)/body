@@ -1,19 +1,16 @@
 {
-  String password=null;
+  String password;
   if (isStoredUnencrypted(accountPrefix)) {
     password=new String(Base64.decode(getUnencrypted(accountPrefix)));
-    movePasswordProperty(accountPrefix,password);
+    if (movePasswordProperty(accountPrefix,password))     password=null;
   }
-  if (password == null && isStoredEncrypted(accountPrefix)) {
-    boolean createdOrExisting=createCrypto();
-    if (createdOrExisting) {
-      try {
-        String ciphertext=getEncrypted(accountPrefix);
-        password=crypto.decrypt(ciphertext);
-      }
- catch (      Exception e) {
-        logger.warn("Decryption with master password failed",e);
-      }
+ else   password=null;
+  if ((password == null) && isStoredEncrypted(accountPrefix) && createCrypto()) {
+    try {
+      password=crypto.decrypt(getEncrypted(accountPrefix));
+    }
+ catch (    Exception ex) {
+      logger.error("Decryption with master password failed",ex);
     }
   }
   return password;

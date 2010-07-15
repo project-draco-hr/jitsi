@@ -1,7 +1,10 @@
 {
   String accountPrefix=findAccountPrefix(bundleContext,accountID,getFactoryImplPackageName());
-  if (accountPrefix == null)   throw new IllegalArgumentException("No previous records found for account ID: " + accountID.getAccountUniqueID() + " in package"+ getFactoryImplPackageName());
-  ServiceReference credentialsReference=bundleContext.getServiceReference(CredentialsStorageService.class.getName());
-  CredentialsStorageService credentialsService=(CredentialsStorageService)bundleContext.getService(credentialsReference);
-  credentialsService.storePassword(accountPrefix,password);
+  if (accountPrefix == null) {
+    throw new IllegalArgumentException("No previous records found for account ID: " + accountID.getAccountUniqueID() + " in package"+ getFactoryImplPackageName());
+  }
+  CredentialsStorageService credentialsStorage=ServiceUtils.getService(bundleContext,CredentialsStorageService.class);
+  if (!credentialsStorage.storePassword(accountPrefix,password)) {
+    throw new OperationFailedException("CredentialsStorageService failed to storePassword",OperationFailedException.GENERAL_ERROR);
+  }
 }
