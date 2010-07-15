@@ -1,16 +1,21 @@
 {
-  if (masterPassword == null) {
-    masterPassword=" ";
-  }
   try {
     decryptCipher=Cipher.getInstance(CIPHER_ALGORITHM);
     encryptCipher=Cipher.getInstance(CIPHER_ALGORITHM);
-    SecretKeyFactory factory=SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-    KeySpec spec=new PBEKeySpec(masterPassword.toCharArray(),SALT,ITERATION_COUNT,KEY_LENGTH);
-    SecretKey tmp=factory.generateSecret(spec);
-    key=new SecretKeySpec(tmp.getEncoded(),KEY_ALGORITHM);
+    for (int i=0; i < KEY_LENGTHS.length; i++) {
+      try {
+        initKey(masterPassword,KEY_LENGTHS[i]);
+        break;
+      }
+ catch (      InvalidKeyException e) {
+        if (i == KEY_LENGTHS.length - 1)         throw e;
+      }
+    }
   }
- catch (  InvalidKeySpecException e) {
+ catch (  InvalidKeyException e) {
+    throw new RuntimeException("Invalid key",e);
+  }
+catch (  InvalidKeySpecException e) {
     throw new RuntimeException("Invalid key specification",e);
   }
 catch (  NoSuchAlgorithmException e) {
