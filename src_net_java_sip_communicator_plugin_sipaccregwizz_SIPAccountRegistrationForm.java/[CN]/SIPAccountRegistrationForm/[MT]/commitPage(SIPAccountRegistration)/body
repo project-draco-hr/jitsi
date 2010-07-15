@@ -19,6 +19,10 @@
   }
  else {
     userID=accountPanel.getUserID();
+    if (getServerFromUserName(userID) == null && registration.getDefaultDomain() != null) {
+      userID=userID + "@" + registration.getDefaultDomain();
+      setServerFieldAccordingToUIN(userID);
+    }
     password=accountPanel.getPassword();
     serverAddress=connectionPanel.getServerAddress();
     proxyAddress=connectionPanel.getProxy();
@@ -28,7 +32,7 @@
   if (password != null)   registration.setPassword(new String(password));
   registration.setRememberPassword(accountPanel.isRememberPassword());
   registration.setServerAddress(serverAddress);
-  registration.setProxy(proxyAddress);
+  if (registration.getProxy() == null)   registration.setProxy(proxyAddress);
   String displayName=accountPanel.getDisplayName();
   registration.setDisplayName(displayName);
   String authName=connectionPanel.getAuthenticationName();
@@ -42,7 +46,7 @@
   registration.setSipZrtpAttribute(connectionPanel.isSipZrtpEnabled());
   registration.setPollingPeriod(presencePanel.getPollPeriod());
   registration.setSubscriptionExpiration(presencePanel.getSubscriptionExpiration());
-  registration.setKeepAliveMethod(connectionPanel.getKeepAliveMethod());
+  if (registration.getKeepAliveMethod() == null)   registration.setKeepAliveMethod(connectionPanel.getKeepAliveMethod());
   registration.setKeepAliveInterval(connectionPanel.getKeepAliveInterval());
   SIPAccRegWizzActivator.getUIService().getAccountRegWizardContainer().setBackButtonEnabled(true);
   return true;
