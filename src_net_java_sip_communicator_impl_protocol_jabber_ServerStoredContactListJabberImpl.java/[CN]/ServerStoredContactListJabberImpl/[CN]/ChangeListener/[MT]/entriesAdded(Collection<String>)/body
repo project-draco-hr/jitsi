@@ -3,9 +3,16 @@
   for (  String id : addresses) {
     RosterEntry entry=roster.getEntry(id);
     ContactJabberImpl contact=findContactById(entry.getUser());
-    if (contact != null) {
+    if (contact != null && contact.isPersistent()) {
       contact.setResolved(entry);
       continue;
+    }
+ else {
+      ContactGroup oldParentGroup=contact.getParentContactGroup();
+      if (oldParentGroup instanceof ContactGroupJabberImpl && !oldParentGroup.isPersistent()) {
+        ((ContactGroupJabberImpl)oldParentGroup).removeContact(contact);
+        fireContactRemoved(oldParentGroup,contact);
+      }
     }
     contact=new ContactJabberImpl(roster.getEntry(id),ServerStoredContactListJabberImpl.this,true,true);
     boolean isUnfiledEntry=true;

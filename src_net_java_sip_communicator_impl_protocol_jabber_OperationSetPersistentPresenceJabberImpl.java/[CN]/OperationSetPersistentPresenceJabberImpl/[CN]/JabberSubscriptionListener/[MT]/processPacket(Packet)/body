@@ -2,25 +2,30 @@
   Presence presence=(Presence)packet;
   if (presence == null)   return;
   Presence.Type presenceType=presence.getType();
-  String fromID=presence.getFrom();
+  final String fromID=presence.getFrom();
   if (presenceType == Presence.Type.subscribe) {
-    if (logger.isTraceEnabled())     logger.trace(fromID + " wants to add you to its contact list");
-    ContactJabberImpl srcContact=ssContactList.findContactById(fromID);
-    if (srcContact == null)     srcContact=createVolatileContact(fromID);
-    AuthorizationRequest req=new AuthorizationRequest();
-    AuthorizationResponse response=handler.processAuthorisationRequest(req,srcContact);
-    Presence.Type responsePresenceType;
-    if (response != null && response.getResponseCode().equals(AuthorizationResponse.ACCEPT)) {
-      responsePresenceType=Presence.Type.subscribed;
-      if (logger.isInfoEnabled())       logger.info("Sending Accepted Subscription");
-    }
+    new Thread(new Runnable(){
+      public void run(){
+        if (logger.isTraceEnabled())         logger.trace(fromID + " wants to add you to its contact list");
+        ContactJabberImpl srcContact=ssContactList.findContactById(fromID);
+        if (srcContact == null)         srcContact=createVolatileContact(fromID);
+        AuthorizationRequest req=new AuthorizationRequest();
+        AuthorizationResponse response=handler.processAuthorisationRequest(req,srcContact);
+        Presence.Type responsePresenceType;
+        if (response != null && response.getResponseCode().equals(AuthorizationResponse.ACCEPT)) {
+          responsePresenceType=Presence.Type.subscribed;
+          if (logger.isInfoEnabled())           logger.info("Sending Accepted Subscription");
+        }
  else {
-      responsePresenceType=Presence.Type.unsubscribed;
-      if (logger.isInfoEnabled())       logger.info("Sending Rejected Subscription");
+          responsePresenceType=Presence.Type.unsubscribed;
+          if (logger.isInfoEnabled())           logger.info("Sending Rejected Subscription");
+        }
+        Presence responsePacket=new Presence(responsePresenceType);
+        responsePacket.setTo(fromID);
+        parentProvider.getConnection().sendPacket(responsePacket);
+      }
     }
-    Presence responsePacket=new Presence(responsePresenceType);
-    responsePacket.setTo(fromID);
-    parentProvider.getConnection().sendPacket(responsePacket);
+).start();
   }
  else   if (presenceType == Presence.Type.unsubscribed) {
     if (logger.isTraceEnabled())     logger.trace(fromID + " does not allow your subscription");
