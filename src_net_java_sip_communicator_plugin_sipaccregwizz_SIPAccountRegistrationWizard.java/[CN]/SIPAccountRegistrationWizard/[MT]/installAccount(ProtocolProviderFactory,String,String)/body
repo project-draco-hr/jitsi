@@ -10,6 +10,10 @@
   }
   String serverAddress=null;
   if (registration.getServerAddress() != null)   serverAddress=registration.getServerAddress();
+  if (SIPAccountRegistrationForm.getServerFromUserName(userName) == null && registration.getDefaultDomain() != null) {
+    userName=userName + "@" + registration.getDefaultDomain();
+    if (serverAddress == null)     serverAddress=registration.getDefaultDomain();
+  }
   if (serverAddress != null) {
     accountProperties.put(ProtocolProviderFactory.SERVER_ADDRESS,serverAddress);
     if (userName.indexOf(serverAddress) < 0)     accountProperties.put(ProtocolProviderFactory.IS_SERVER_OVERRIDDEN,Boolean.toString(true));
@@ -33,7 +37,7 @@
   accountProperties.put(ProtocolProviderFactory.DEFAULT_SIPZRTP_ATTRIBUTE,Boolean.toString(registration.isSipZrtpAttribute()));
   accountProperties.put(ProtocolProviderFactory.POLLING_PERIOD,registration.getPollingPeriod());
   accountProperties.put(ProtocolProviderFactory.SUBSCRIPTION_EXPIRATION,registration.getSubscriptionExpiration());
-  accountProperties.put("KEEP_ALIVE_METHOD",registration.getKeepAliveMethod());
+  if (registration.getKeepAliveMethod() != null)   accountProperties.put("KEEP_ALIVE_METHOD",registration.getKeepAliveMethod());
   accountProperties.put("KEEP_ALIVE_INTERVAL",registration.getKeepAliveInterval());
   if (isModification) {
     accountProperties.put(ProtocolProviderFactory.USER_ID,userName);
