@@ -1,0 +1,12 @@
+{
+  if (isUsingMasterPassword())   return;
+  List<String> unencryptedProperties=configurationService.getPropertyNamesBySuffix(ACCOUNT_UNENCRYPTED_PASSWORD);
+  for (  String prop : unencryptedProperties) {
+    int idx=prop.lastIndexOf('.');
+    if (idx != -1) {
+      String prefix=prop.substring(0,idx);
+      String password=new String(Base64.decode(getUnencrypted(prefix)));
+      if (!movePasswordProperty(prefix,password))       logger.warn("Failed to move password for prefix " + prefix);
+    }
+  }
+}
