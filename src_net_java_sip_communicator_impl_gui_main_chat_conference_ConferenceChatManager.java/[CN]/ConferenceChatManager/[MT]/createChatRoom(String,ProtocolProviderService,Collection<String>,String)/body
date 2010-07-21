@@ -1,26 +1,3 @@
 {
-  ChatRoomWrapper chatRoomWrapper=null;
-  OperationSetMultiUserChat groupChatOpSet=protocolProvider.getOperationSet(OperationSetMultiUserChat.class);
-  if (groupChatOpSet == null)   return null;
-  ChatRoom chatRoom=null;
-  try {
-    chatRoom=groupChatOpSet.createChatRoom(roomName,null);
-    chatRoom.join();
-    for (    String contact : contacts)     chatRoom.invite(contact,reason);
-  }
- catch (  OperationFailedException ex) {
-    logger.error("Failed to create chat room.",ex);
-    new ErrorDialog(GuiActivator.getUIService().getMainFrame(),GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.CREATE_CHAT_ROOM_ERROR",new String[]{protocolProvider.getProtocolName()}),ex).showDialog();
-  }
-catch (  OperationNotSupportedException ex) {
-    logger.error("Failed to create chat room.",ex);
-    new ErrorDialog(GuiActivator.getUIService().getMainFrame(),GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.CREATE_CHAT_ROOM_ERROR",new String[]{protocolProvider.getProtocolName()}),ex).showDialog();
-  }
-  if (chatRoom != null) {
-    ChatRoomProviderWrapper parentProvider=chatRoomList.findServerWrapperFromProvider(protocolProvider);
-    chatRoomWrapper=new ChatRoomWrapper(parentProvider,chatRoom);
-    chatRoomList.addChatRoom(chatRoomWrapper);
-    fireChatRoomListChangedEvent(chatRoomWrapper,ChatRoomListChangeEvent.CHAT_ROOM_ADDED);
-  }
-  return chatRoomWrapper;
+  return createChatRoom(roomName,protocolProvider,contacts,reason,true,true);
 }

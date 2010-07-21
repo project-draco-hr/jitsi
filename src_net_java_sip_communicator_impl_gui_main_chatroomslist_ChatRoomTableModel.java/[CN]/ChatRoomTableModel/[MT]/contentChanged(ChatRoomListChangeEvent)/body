@@ -1,0 +1,26 @@
+{
+  ChatRoomWrapper chatRoomWrapper=evt.getSourceChatRoom();
+  if (evt.getEventID() == ChatRoomListChangeEvent.CHAT_ROOM_ADDED) {
+    rooms.add(chatRoomWrapper);
+    int index=rooms.indexOf(chatRoomWrapper);
+    if (index != -1) {
+      fireTableRowsInserted(index,index);
+      parentTable.setRowSelectionInterval(index,index);
+    }
+  }
+ else   if (evt.getEventID() == ChatRoomListChangeEvent.CHAT_ROOM_REMOVED) {
+    int ix=rooms.indexOf(chatRoomWrapper);
+    rooms.remove(chatRoomWrapper);
+    OperationSetPresence presence=chatRoomWrapper.getParentProvider().getProtocolProvider().getOperationSet(OperationSetPresence.class);
+    presence.removeProviderPresenceStatusListener(this);
+    if (ix != -1) {
+      fireTableRowsDeleted(ix,ix);
+    }
+  }
+ else   if (evt.getEventID() == ChatRoomListChangeEvent.CHAT_ROOM_CHANGED) {
+    int index=rooms.indexOf(chatRoomWrapper);
+    if (index != -1) {
+      fireTableRowsUpdated(index,index);
+    }
+  }
+}

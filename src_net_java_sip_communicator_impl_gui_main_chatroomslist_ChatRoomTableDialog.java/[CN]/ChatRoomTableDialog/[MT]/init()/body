@@ -1,0 +1,94 @@
+{
+  this.getContentPane().setLayout(new BorderLayout(5,5));
+  JPanel northPanel=new TransparentPanel(new BorderLayout(5,5));
+  northPanel.setBorder(BorderFactory.createEmptyBorder(15,15,5,15));
+  JPanel labels=new TransparentPanel(new GridLayout(3,2,5,5));
+  final JLabel jl_searchState=new JLabel(GuiActivator.getResources().getI18NString("service.gui.LOADING_ROOMS"),JLabel.LEFT);
+  jl_searchState.setBorder(BorderFactory.createEmptyBorder(3,7,0,0));
+  jl_searchState.setFont(jl_searchState.getFont().deriveFont(Font.ITALIC,11));
+  jl_searchState.setForeground(Color.DARK_GRAY);
+  jl_searchState.setVisible(false);
+  labels.add(new JLabel(GuiActivator.getResources().getI18NString("service.gui.ACCOUNT")));
+  labels.add(new JLabel(GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_NAME")));
+  labels.add(jl_searchState);
+  JPanel valuesPanel=new TransparentPanel(new GridLayout(3,2,5,5));
+  providersCombo=createProvidersCombobox();
+  roomsCombo=new JComboBox();
+  roomsCombo.setEditable(true);
+  roomsCombo.setPreferredSize(providersCombo.getPreferredSize());
+  editor=((JTextField)roomsCombo.getEditor().getEditorComponent());
+  editor.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      handleChange((JTextField)e.getSource());
+    }
+  }
+);
+  providersCombo.addItemListener(new ItemListener(){
+    public void itemStateChanged(    ItemEvent e){
+      if (e.getStateChange() == ItemEvent.SELECTED)       new Thread(){
+        @Override public void run(){
+          okButton.setEnabled(false);
+          roomsCombo.setEnabled(false);
+          jl_searchState.setVisible(true);
+          loadProviderRooms();
+          jl_searchState.setVisible(false);
+          roomsCombo.setEnabled(true);
+          okButton.setEnabled(true);
+        }
+      }
+.start();
+    }
+  }
+);
+  JLabel jl_indication=new JLabel(GuiActivator.getResources().getI18NString("service.gui.PRESS_ENTER_FOR_SUGGESTIONS"),SwingConstants.RIGHT);
+  jl_indication.setFont(jl_indication.getFont().deriveFont(Font.ITALIC,11));
+  jl_indication.setForeground(Color.DARK_GRAY);
+  valuesPanel.add(providersCombo);
+  valuesPanel.add(roomsCombo);
+  valuesPanel.add(jl_indication);
+  northPanel.add(labels,BorderLayout.WEST);
+  northPanel.add(valuesPanel,BorderLayout.CENTER);
+  JPanel buttonPanel=new TransparentPanel(new BorderLayout(5,5));
+  buttonPanel.setBorder(BorderFactory.createEmptyBorder(0,15,10,15));
+  JPanel westButtonPanel=new TransparentPanel();
+  JPanel eastButtonPanel=new TransparentPanel();
+  addButton.addActionListener(this);
+  removeButton.addActionListener(this);
+  okButton.addActionListener(this);
+  cancelButton.addActionListener(this);
+  westButtonPanel.add(addButton);
+  westButtonPanel.add(removeButton);
+  eastButtonPanel.add(cancelButton);
+  eastButtonPanel.add(okButton);
+  buttonPanel.add(westButtonPanel,BorderLayout.WEST);
+  buttonPanel.add(eastButtonPanel,BorderLayout.EAST);
+  chatRoomsTableUI=new ChatRoomTableUI(this);
+  chatRoomsTableUI.setOpaque(false);
+  chatRoomsTableUI.setBorder(BorderFactory.createEmptyBorder(5,15,5,15));
+  this.getContentPane().add(northPanel,BorderLayout.NORTH);
+  this.getContentPane().add(buttonPanel,BorderLayout.SOUTH);
+  this.getContentPane().add(chatRoomsTableUI,BorderLayout.CENTER);
+  loadProviderRooms();
+  editor.addKeyListener(new KeyListener(){
+    public void keyTyped(    KeyEvent e){
+      chatRoomsTableUI.clearSelection();
+    }
+    public void keyPressed(    KeyEvent e){
+    }
+    public void keyReleased(    KeyEvent e){
+    }
+  }
+);
+  chatRoomsTableUI.addSelectionListener(new ListSelectionListener(){
+    public void valueChanged(    ListSelectionEvent e){
+      if (!e.getValueIsAdjusting()) {
+        ChatRoomWrapper room=chatRoomsTableUI.getSelectedRoom();
+        if (room != null) {
+          editor.setText(room.getChatRoomName());
+          providersCombo.setSelectedItem(room.getParentProvider());
+        }
+      }
+    }
+  }
+);
+}
