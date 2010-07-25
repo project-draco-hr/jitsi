@@ -1,0 +1,34 @@
+{
+  for (  ContentPacketExtension content : ourAnswer) {
+    RtpDescriptionPacketExtension rtpDesc=(RtpDescriptionPacketExtension)content.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+    StreamConnector connector=mediaHandler.getStreamConnector(MediaType.parseString(rtpDesc.getMedia()));
+    IceUdpTransportPacketExtension ourTransport=new IceUdpTransportPacketExtension(RawUdpTransportPacketExtension.NAMESPACE,RawUdpTransportPacketExtension.ELEMENT_NAME);
+    CandidatePacketExtension rtpCand=new CandidatePacketExtension();
+    rtpCand.setComponent(1);
+    rtpCand.setFoundation(1);
+    rtpCand.setGeneration(0);
+    rtpCand.setID("2");
+    rtpCand.setIP(connector.getDataSocket().getLocalAddress().getHostAddress());
+    rtpCand.setNetwork(1);
+    rtpCand.setPort(connector.getDataSocket().getLocalPort());
+    rtpCand.setPriority(2013266431);
+    rtpCand.setProtocol("udp");
+    rtpCand.setType(CandidateType.host);
+    ourTransport.addCandidate(rtpCand);
+    CandidatePacketExtension rtcpCand=new CandidatePacketExtension();
+    rtcpCand.setComponent(2);
+    rtcpCand.setFoundation(2);
+    rtcpCand.setGeneration(0);
+    rtcpCand.setID("1");
+    rtcpCand.setIP(connector.getControlSocket().getLocalAddress().getHostAddress());
+    rtcpCand.setNetwork(1);
+    rtcpCand.setPort(connector.getControlSocket().getLocalPort());
+    rtcpCand.setPriority(2013266430);
+    rtcpCand.setProtocol("udp");
+    rtcpCand.setType(CandidateType.host);
+    ourTransport.addCandidate(rtcpCand);
+    ContentPacketExtension cpExt=findContentByName(ourAnswer,content.getName());
+    cpExt.addChildExtension(ourTransport);
+  }
+  this.cpeList=ourAnswer;
+}
