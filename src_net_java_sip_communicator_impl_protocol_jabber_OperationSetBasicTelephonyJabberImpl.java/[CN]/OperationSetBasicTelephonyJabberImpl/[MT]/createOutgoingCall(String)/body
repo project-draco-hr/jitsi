@@ -10,9 +10,6 @@
  else {
     fullCalleeURI=protocolProvider.getConnection().getRoster().getPresence(calleeAddress).getFrom();
   }
-  if (fullCalleeURI.indexOf('/') < 0) {
-    throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + "User " + calleeAddress + " is unknown to us.",OperationFailedException.INTERNAL_ERROR);
-  }
   try {
     DiscoverInfo di=protocolProvider.getDiscoveryManager().discoverInfo(fullCalleeURI);
     if (di.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE)) {
@@ -20,10 +17,18 @@
     }
  else {
       logger.info(calleeAddress + ": jingle not supported ??? ");
+      throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + fullCalleeURI + " does not support jingle",OperationFailedException.INTERNAL_ERROR);
     }
   }
  catch (  XMPPException ex) {
     logger.warn("could not retrieve info for " + fullCalleeURI,ex);
   }
-  return null;
+  CallJabberImpl call=new CallJabberImpl(this);
+  try {
+    call.initiateSession(fullCalleeURI);
+  }
+ catch (  Throwable t) {
+    t.printStackTrace();
+  }
+  return call;
 }

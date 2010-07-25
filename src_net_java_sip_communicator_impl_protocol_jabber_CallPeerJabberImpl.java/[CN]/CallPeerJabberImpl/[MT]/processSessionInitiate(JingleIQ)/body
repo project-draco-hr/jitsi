@@ -1,0 +1,17 @@
+{
+  this.sessionInitIQ=sessionInitIQ;
+  List<ContentPacketExtension> offer=sessionInitIQ.getContentList();
+  try {
+    getMediaHandler().processOffer(offer);
+  }
+ catch (  Exception exc) {
+    logger.info("Failed to process an incoming session initiate",exc);
+    JingleIQ errResp=JinglePacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getSID(),Reason.INCOMPATIBLE_PARAMETERS,exc.getMessage());
+    setState(CallPeerState.FAILED,"Error: " + exc.getMessage());
+    getProtocolProvider().getConnection().sendPacket(errResp);
+    return;
+  }
+  if (logger.isTraceEnabled())   logger.trace("will send ringing response: ");
+  JingleIQ ringing=JinglePacketFactory.createRinging(sessionInitIQ);
+  getProtocolProvider().getConnection().sendPacket(ringing);
+}

@@ -1,4 +1,16 @@
 {
+  if (jingleIQ.getType() == Type.ERROR) {
+    CallPeerJabberImpl callPeer=activeCallsRepository.findCallPeer(jingleIQ.getSID());
+    logger.error("Received error");
+    XMPPError error=jingleIQ.getError();
+    String message="Remote party returned an error!";
+    if (error != null) {
+      logger.error(" code=" + error.getCode() + " message="+ error.getMessage());
+      if (error.getMessage() != null)       message=error.getMessage();
+    }
+    if (callPeer != null)     callPeer.setState(CallPeerState.FAILED,message);
+    return;
+  }
   JingleAction action=jingleIQ.getAction();
   if (action == JingleAction.SESSION_INITIATE) {
     CallJabberImpl call=new CallJabberImpl(this);

@@ -49,7 +49,9 @@ case Response.REQUEST_TERMINATED:
 {
 CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(clientTransaction.getDialog());
 if (callPeer != null) {
-callPeer.setState(CallPeerState.FAILED);
+String reasonPhrase=response.getReasonPhrase();
+if (reasonPhrase == null || reasonPhrase.trim().length() == 0) reasonPhrase="Request terminated by server!";
+callPeer.setState(CallPeerState.FAILED,reasonPhrase);
 }
 processed=true;
 }
@@ -59,7 +61,7 @@ int responseStatusCodeRange=responseStatusCode / 100;
 if ((responseStatusCodeRange == 4) || (responseStatusCodeRange == 5) || (responseStatusCodeRange == 6)) {
 CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(clientTransaction.getDialog());
 logger.error("Received error: " + response.getStatusCode() + " "+ response.getReasonPhrase());
-if (callPeer != null) callPeer.setState(CallPeerState.FAILED);
+if (callPeer != null) callPeer.setState(CallPeerState.FAILED,response.getReasonPhrase());
 processed=true;
 }
 break;

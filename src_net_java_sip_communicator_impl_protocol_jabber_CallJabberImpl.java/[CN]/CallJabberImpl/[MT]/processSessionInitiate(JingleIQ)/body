@@ -1,16 +1,24 @@
 {
   String remoteParty=jingleIQ.getInitiator();
+  System.out.println("1");
   if (remoteParty == null)   remoteParty=jingleIQ.getFrom();
-  CallPeerJabberImpl peer=createCallPeerFor(remoteParty,true,jingleIQ);
+  System.out.println("2");
+  CallPeerJabberImpl callPeer;
   try {
-    if (logger.isTraceEnabled())     logger.trace("will send ringing response: ");
-    JingleIQ response=JinglePacketFactory.createRinging(jingleIQ);
-    parentOpSet.getProtocolProvider().getConnection().sendPacket(response);
+    callPeer=new CallPeerJabberImpl(remoteParty,this);
+    callPeer.processSessionInitiate(jingleIQ);
+    if (callPeer.getState() == CallPeerState.FAILED)     return null;
+    addCallPeer(callPeer);
+    callPeer.setState(CallPeerState.INCOMING_CALL);
+    if (this.getCallPeerCount() == 1) {
+      parentOpSet.fireCallEvent(CallEvent.CALL_RECEIVED,this);
+    }
+    System.out.println("3");
+    System.out.println("8");
   }
- catch (  Exception ex) {
-    logger.error("Error while trying to send a request",ex);
-    peer.setState(CallPeerState.FAILED,"Internal Error: " + ex.getMessage());
-    return peer;
+ catch (  Throwable t) {
+    t.printStackTrace();
+    throw new RuntimeException(t);
   }
-  return peer;
+  return callPeer;
 }

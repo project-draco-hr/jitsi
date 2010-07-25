@@ -1,0 +1,32 @@
+{
+  List<ContentPacketExtension> mediaDescs=new ArrayList<ContentPacketExtension>();
+  for (  MediaType mediaType : MediaType.values()) {
+    MediaDevice dev=getDefaultDevice(mediaType);
+    if (dev != null) {
+      MediaDirection direction=dev.getDirection().and(getDirectionUserPreference(mediaType));
+      if (isLocallyOnHold())       direction=direction.and(MediaDirection.SENDONLY);
+      if (direction != MediaDirection.INACTIVE) {
+        ContentPacketExtension content=createContentForOffer(initiator,dev.getSupportedFormats(),direction,dev.getSupportedExtensions());
+        if (peer.getCall().isSipZrtpAttribute()) {
+          ZrtpControl control=getZrtpControls().get(mediaType);
+          if (control == null) {
+            control=JabberActivator.getMediaService().createZrtpControl();
+            getZrtpControls().put(mediaType,control);
+          }
+          String helloHash=control.getHelloHash();
+          if (helloHash != null && helloHash.length() > 0) {
+            ZrtpHashPacketExtension hash=new ZrtpHashPacketExtension();
+            hash.setValue(helloHash);
+            content.addChildExtension(hash);
+          }
+        }
+        mediaDescs.add(content);
+      }
+    }
+  }
+  if (mediaDescs.isEmpty()) {
+    ProtocolProviderServiceJabberImpl.throwOperationFailedException("We couldn't find any active Audio/Video devices and " + "couldn't create a call",OperationFailedException.GENERAL_ERROR,null,logger);
+  }
+  transportManager.startCandidateHarvest(mediaDescs,this);
+  return transportManager.wrapupHarvest();
+}

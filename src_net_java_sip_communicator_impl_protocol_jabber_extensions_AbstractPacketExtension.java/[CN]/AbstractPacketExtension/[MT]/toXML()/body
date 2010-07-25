@@ -1,18 +1,20 @@
 {
   StringBuilder bldr=new StringBuilder("<" + getElementName() + " ");
   if (getNamespace() != null)   bldr.append("xmlns='" + getNamespace() + "'");
-  for (  Map.Entry<String,Object> entry : attributes.entrySet()) {
+  for (  Map.Entry<String,String> entry : attributes.entrySet()) {
     bldr.append(" " + entry.getKey() + "='"+ entry.getValue()+ "'");
   }
   List<? extends PacketExtension> childElements=getChildExtensions();
-  if (childElements == null || childElements.size() == 0) {
-    bldr.append("/>");
-    return bldr.toString();
-  }
+synchronized (childElements) {
+    if ((childElements == null || childElements.size() == 0) && (getText() == null || getText().length() == 0)) {
+      bldr.append("/>");
+      return bldr.toString();
+    }
  else {
-    bldr.append(">");
-    for (    PacketExtension packExt : childElements) {
-      bldr.append(packExt.toXML());
+      bldr.append(">");
+      for (      PacketExtension packExt : childElements) {
+        bldr.append(packExt.toXML());
+      }
     }
   }
   if (getText() != null && getText().trim().length() > 0)   bldr.append(getText());

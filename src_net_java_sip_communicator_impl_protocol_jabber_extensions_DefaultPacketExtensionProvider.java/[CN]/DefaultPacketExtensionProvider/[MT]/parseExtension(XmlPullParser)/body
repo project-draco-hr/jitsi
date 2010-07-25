@@ -17,15 +17,20 @@
       PacketExtensionProvider provider=(PacketExtensionProvider)ProviderManager.getInstance().getExtensionProvider(elementName,namespace);
       if (provider == null) {
         logger.fine("Could not add a provider for element " + elementName + " from namespace "+ namespace);
-        continue;
       }
-      PacketExtension childExtension=provider.parseExtension(parser);
-      packetExtension.addChildExtension(childExtension);
+ else {
+        PacketExtension childExtension=provider.parseExtension(parser);
+        packetExtension.addChildExtension(childExtension);
+      }
     }
     if (eventType == XmlPullParser.END_TAG) {
       if (parser.getName().equals(packetExtension.getElementName())) {
         done=true;
       }
+    }
+    if (eventType == XmlPullParser.TEXT) {
+      String text=parser.getText();
+      packetExtension.setText(text);
     }
     if (logger.isLoggable(Level.FINEST))     logger.finest("Done parsing " + elementName);
   }

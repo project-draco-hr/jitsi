@@ -1,9 +1,9 @@
 {
-  List<ContentPacketExtension> answerDescriptions=new ArrayList<ContentPacketExtension>(offer.size());
+  List<ContentPacketExtension> answerContentList=new ArrayList<ContentPacketExtension>(offer.size());
   boolean atLeastOneValidDescription=false;
   for (  ContentPacketExtension content : offer) {
     RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(content);
-    MediaType mediaType=MediaType.valueOf(description.getMedia());
+    MediaType mediaType=MediaType.parseString(description.getMedia());
     List<MediaFormat> supportedFormats=JingleUtils.extractFormats(description,getDynamicPayloadTypes());
     MediaDevice dev=getDefaultDevice(mediaType);
     MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
@@ -22,9 +22,9 @@
     }
     StreamConnector connector=getStreamConnector(mediaType);
     initStream(connector,dev,supportedFormats.get(0),target,direction,rtpExtensions);
-    answerDescriptions.add(JingleUtils.createDescription(content.getCreator(),content.getName(),content.getSenders(),mutuallySupportedFormats,rtpExtensions,getDynamicPayloadTypes(),getRtpExtensionsRegistry()));
+    answerContentList.add(JingleUtils.createDescription(content.getCreator(),content.getName(),content.getSenders(),mutuallySupportedFormats,rtpExtensions,getDynamicPayloadTypes(),getRtpExtensionsRegistry()));
     atLeastOneValidDescription=true;
   }
-  if (!atLeastOneValidDescription)   throw new OperationFailedException("Offer contained no media " + " formats or no valid media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT);
-  return answerDescriptions;
+  if (!atLeastOneValidDescription)   ProtocolProviderServiceJabberImpl.throwOperationFailedException("Offer contained no media " + " formats or no valid media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
+  this.localContentList=answerContentList;
 }
