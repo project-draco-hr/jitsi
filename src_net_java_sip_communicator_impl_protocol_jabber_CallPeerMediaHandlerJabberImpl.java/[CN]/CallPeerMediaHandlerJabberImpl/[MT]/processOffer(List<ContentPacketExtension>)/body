@@ -1,0 +1,30 @@
+{
+  List<ContentPacketExtension> answerDescriptions=new ArrayList<ContentPacketExtension>(offer.size());
+  boolean atLeastOneValidDescription=false;
+  for (  ContentPacketExtension content : offer) {
+    RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(content);
+    MediaType mediaType=MediaType.valueOf(description.getMedia());
+    List<MediaFormat> supportedFormats=JingleUtils.extractFormats(description,getDynamicPayloadTypes());
+    MediaDevice dev=getDefaultDevice(mediaType);
+    MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
+    devDirection=devDirection.and(getDirectionUserPreference(mediaType));
+    MediaDirection remoteDirection=JingleUtils.getDirection(content);
+    MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
+    List<MediaFormat> mutuallySupportedFormats=intersectFormats(supportedFormats,dev.getSupportedFormats());
+    List<RTPExtension> offeredRTPExtensions=JingleUtils.extractRTPExtensions(description,this.getRtpExtensionsRegistry());
+    List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
+    List<RTPExtension> rtpExtensions=intersectRTPExtensions(offeredRTPExtensions,supportedExtensions);
+    MediaStreamTarget target=JingleUtils.extractDefaultTarget(content);
+    int targetDataPort=target.getDataAddress().getPort();
+    if (supportedFormats.isEmpty() || (devDirection == MediaDirection.INACTIVE) || (targetDataPort == 0)) {
+      answerDescriptions.add(JingleUtils.createDisablingAnswer(mediaDescription));
+      closeStream(mediaType);
+      continue;
+    }
+    StreamConnector connector=getStreamConnector(mediaType);
+    initStream(connector,dev,supportedFormats.get(0),target,direction,rtpExtensions);
+    answerDescriptions.add(createMediaDescription(mutuallySupportedFormats,connector,direction,rtpExtensions));
+    atLeastOneValidDescription=true;
+  }
+  return null;
+}

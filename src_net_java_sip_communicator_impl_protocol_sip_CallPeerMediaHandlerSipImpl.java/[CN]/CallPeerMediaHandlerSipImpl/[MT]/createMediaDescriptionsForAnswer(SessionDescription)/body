@@ -9,6 +9,12 @@
     MediaDevice dev=getDefaultDevice(mediaType);
     MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
     devDirection=devDirection.and(getDirectionUserPreference(mediaType));
+    MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
+    MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
+    List<MediaFormat> mutuallySupportedFormats=intersectFormats(supportedFormats,dev.getSupportedFormats());
+    List<RTPExtension> offeredRTPExtensions=SdpUtils.extractRTPExtensions(mediaDescription,this.getRtpExtensionsRegistry());
+    List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
+    List<RTPExtension> rtpExtensions=intersectRTPExtensions(offeredRTPExtensions,supportedExtensions);
     MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,offer);
     int targetDataPort=target.getDataAddress().getPort();
     if (supportedFormats.isEmpty() || (devDirection == MediaDirection.INACTIVE) || (targetDataPort == 0)) {
@@ -16,15 +22,9 @@
       closeStream(mediaType);
       continue;
     }
-    List<MediaFormat> supportedAdvancedParameters=getAdvancedFormatParameters(supportedFormats,dev.getSupportedFormats());
     StreamConnector connector=getStreamConnector(mediaType);
-    MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
-    MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
-    List<RTPExtension> offeredRTPExtensions=SdpUtils.extractRTPExtensions(mediaDescription,this.getRtpExtensionsRegistry());
-    List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
-    List<RTPExtension> rtpExtensions=intersectRTPExtensions(offeredRTPExtensions,supportedExtensions);
     initStream(connector,dev,supportedFormats.get(0),target,direction,rtpExtensions);
-    answerDescriptions.add(createMediaDescription(supportedAdvancedParameters,connector,direction,rtpExtensions));
+    answerDescriptions.add(createMediaDescription(mutuallySupportedFormats,connector,direction,rtpExtensions));
     atLeastOneValidDescription=true;
   }
   if (!atLeastOneValidDescription)   throw new OperationFailedException("Offer contained no valid " + "media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT);

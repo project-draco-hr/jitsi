@@ -1,0 +1,15 @@
+{
+  List<MediaFormat> mediaFmts=new ArrayList<MediaFormat>();
+  List<PayloadTypePacketExtension> payloadTypes=description.getPayloadTypes();
+  for (  PayloadTypePacketExtension ptExt : payloadTypes) {
+    byte pt=(byte)ptExt.getID();
+    List<ParameterPacketExtension> params=ptExt.getParameters();
+    Map<String,String> paramsMap=new Hashtable<String,String>();
+    for (    ParameterPacketExtension param : params)     paramsMap.put(param.getName(),param.getValue());
+    MediaFormat format=JabberActivator.getMediaService().getFormatFactory().createMediaFormat(pt,ptExt.getName(),(double)ptExt.getClockrate(),ptExt.getChannels(),paramsMap,null);
+    if (format == null)     continue;
+    if ((pt >= MediaFormat.MIN_DYNAMIC_PAYLOAD_TYPE) && (pt <= MediaFormat.MAX_DYNAMIC_PAYLOAD_TYPE) && (ptRegistry.findFormat(pt) == null))     ptRegistry.addMapping(format,pt);
+    mediaFmts.add(format);
+  }
+  return mediaFmts;
+}
