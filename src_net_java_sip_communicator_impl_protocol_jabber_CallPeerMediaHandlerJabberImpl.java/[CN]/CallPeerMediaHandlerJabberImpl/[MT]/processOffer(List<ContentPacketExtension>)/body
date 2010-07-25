@@ -17,14 +17,14 @@
     MediaStreamTarget target=JingleUtils.extractDefaultTarget(content);
     int targetDataPort=target.getDataAddress().getPort();
     if (supportedFormats.isEmpty() || (devDirection == MediaDirection.INACTIVE) || (targetDataPort == 0)) {
-      answerDescriptions.add(JingleUtils.createDisablingAnswer(mediaDescription));
       closeStream(mediaType);
       continue;
     }
     StreamConnector connector=getStreamConnector(mediaType);
     initStream(connector,dev,supportedFormats.get(0),target,direction,rtpExtensions);
-    answerDescriptions.add(createMediaDescription(mutuallySupportedFormats,connector,direction,rtpExtensions));
+    answerDescriptions.add(JingleUtils.createDescription(content.getCreator(),content.getName(),content.getSenders(),mutuallySupportedFormats,rtpExtensions,getDynamicPayloadTypes(),getRtpExtensionsRegistry()));
     atLeastOneValidDescription=true;
   }
-  return null;
+  if (!atLeastOneValidDescription)   throw new OperationFailedException("Offer contained no media " + " formats or no valid media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT);
+  return answerDescriptions;
 }
