@@ -1,15 +1,15 @@
 {
   if (!(packet instanceof ThumbnailIQ))   return;
   ThumbnailIQ thumbnailIQ=(ThumbnailIQ)packet;
-  if (thumbnailIQ.getCid() != null && thumbnailIQ.getCid().equals(thumbnailElement.getCid())) {
+  String thumbnailIQCid=thumbnailIQ.getCid();
+  XMPPConnection connection=protocolProvider.getConnection();
+  if ((thumbnailIQCid != null) && thumbnailIQCid.equals(thumbnailElement.getCid())) {
     ThumbnailedFile thumbnailedFile=(ThumbnailedFile)file;
-    ThumbnailIQ thumbnailResponse=new ThumbnailIQ(thumbnailIQ.getTo(),thumbnailIQ.getFrom(),thumbnailIQ.getCid(),thumbnailedFile.getThumbnailMimeType(),thumbnailedFile.getThumbnailData(),IQ.Type.RESULT);
+    ThumbnailIQ thumbnailResponse=new ThumbnailIQ(thumbnailIQ.getTo(),thumbnailIQ.getFrom(),thumbnailIQCid,thumbnailedFile.getThumbnailMimeType(),thumbnailedFile.getThumbnailData(),IQ.Type.RESULT);
     if (logger.isDebugEnabled())     logger.debug("Send thumbnail response to the receiver: " + thumbnailResponse.toXML());
-    protocolProvider.getConnection().sendPacket(thumbnailResponse);
+    connection.sendPacket(thumbnailResponse);
   }
  else {
   }
-  if (protocolProvider.getConnection() != null) {
-    protocolProvider.getConnection().removePacketListener(this);
-  }
+  if (connection != null)   connection.removePacketListener(this);
 }
