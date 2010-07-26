@@ -24,7 +24,8 @@ synchronized (storedAccounts) {
     String value=entry.getValue();
     if (property.equals(ProtocolProviderFactory.PASSWORD)) {
       CredentialsStorageService credentialsStorage=ServiceUtils.getService(bundleContext,CredentialsStorageService.class);
-      if (!credentialsStorage.storePassword(factoryPackage + "." + accountNodeName,value)) {
+      String accountPrefix=factoryPackage + "." + accountNodeName;
+      if ((value != null) && (value.length() != 0) && !credentialsStorage.isStoredEncrypted(accountPrefix)&& !credentialsStorage.storePassword(accountPrefix,value)) {
         throw new OperationFailedException("CredentialsStorageService failed to" + " storePassword",OperationFailedException.GENERAL_ERROR);
       }
     }
