@@ -2,17 +2,25 @@
   this.assertConnected();
   this.nickname=StringUtils.parseName(nickname);
   try {
-    multiUserChat.join(nickname,new String(password));
-    ChatRoomMemberRole role=null;
-    if (this.getUserRole() == null)     role=ChatRoomMemberRole.GUEST;
- else     role=this.getUserRole();
-    ChatRoomMemberJabberImpl member=new ChatRoomMemberJabberImpl(this,nickname,provider.getAccountID().getAccountAddress(),role);
+    if (multiUserChat.isJoined()) {
+      if (!multiUserChat.getNickname().equals(nickname))       multiUserChat.changeNickname(nickname);
+    }
+ else {
+      if (password == null)       multiUserChat.join(nickname);
+ else       multiUserChat.join(nickname,new String(password));
+    }
+    ChatRoomMemberJabberImpl member=new ChatRoomMemberJabberImpl(this,nickname,provider.getAccountID().getAccountAddress());
     members.put(nickname,member);
     opSetMuc.fireLocalUserPresenceEvent(this,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
   }
  catch (  XMPPException ex) {
     String errorMessage;
-    if (ex.getXMPPError().getCode() == 401) {
+    if (ex.getXMPPError() == null) {
+      errorMessage="Failed to join room " + getName() + " with nickname: "+ nickname;
+      logger.error(errorMessage,ex);
+      throw new OperationFailedException(errorMessage,OperationFailedException.GENERAL_ERROR,ex);
+    }
+ else     if (ex.getXMPPError().getCode() == 401) {
       errorMessage="Failed to join chat room " + getName() + " with nickname: "+ nickname+ ". The chat room requests a password.";
       logger.error(errorMessage,ex);
       throw new OperationFailedException(errorMessage,OperationFailedException.AUTHENTICATION_FAILED,ex);
@@ -27,5 +35,10 @@
       logger.error(errorMessage,ex);
       throw new OperationFailedException(errorMessage,OperationFailedException.GENERAL_ERROR,ex);
     }
+  }
+catch (  Throwable ex) {
+    String errorMessage="Failed to join room " + getName() + " with nickname: "+ nickname;
+    logger.error(errorMessage,ex);
+    throw new OperationFailedException(errorMessage,OperationFailedException.GENERAL_ERROR,ex);
   }
 }
