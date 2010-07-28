@@ -1,3 +1,15 @@
 {
-  return localContentList;
+  List<ContentPacketExtension> sessAccept=getTransportManager().wrapupHarvest();
+  for (  ContentPacketExtension content : sessAccept) {
+    RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(content);
+    MediaType type=MediaType.parseString(description.getMedia());
+    StreamConnector connector=getTransportManager().getStreamConnector(type);
+    MediaDevice dev=getDefaultDevice(type);
+    MediaStreamTarget target=JingleUtils.extractDefaultTarget(content);
+    MediaDirection direction=JingleUtils.getDirection(content,!peer.isInitiator());
+    MediaFormat format=JingleUtils.payloadTypeToMediaFormat(description.getPayloadTypes().get(0),getDynamicPayloadTypes());
+    List<RTPExtension> rtpExtensions=JingleUtils.extractRTPExtensions(description,this.getRtpExtensionsRegistry());
+    initStream(connector,dev,format,target,direction,rtpExtensions);
+  }
+  return sessAccept;
 }
