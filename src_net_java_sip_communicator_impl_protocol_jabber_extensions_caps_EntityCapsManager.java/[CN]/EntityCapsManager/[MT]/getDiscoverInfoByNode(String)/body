@@ -1,3 +1,34 @@
 {
-  return caps.get(node);
+synchronized (caps) {
+    DiscoverInfo discoverInfo=caps.get(node);
+    if (discoverInfo == null) {
+      String xml=JabberActivator.getConfigurationService().getString(CAPS_PROPERTY_NAME_PREFIX + node);
+      if ((xml != null) && (xml.length() != 0)) {
+        IQProvider discoverInfoProvider=(IQProvider)ProviderManager.getInstance().getIQProvider("query","http://jabber.org/protocol/disco#info");
+        if (discoverInfoProvider != null) {
+          XmlPullParser parser=new MXParser();
+          try {
+            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES,true);
+            parser.setInput(new StringReader(xml));
+            parser.next();
+          }
+ catch (          XmlPullParserException xppex) {
+            parser=null;
+          }
+catch (          IOException ioex) {
+            parser=null;
+          }
+          if (parser != null) {
+            try {
+              discoverInfo=(DiscoverInfo)discoverInfoProvider.parseIQ(parser);
+            }
+ catch (            Exception ex) {
+            }
+            if (discoverInfo != null)             caps.put(node,discoverInfo);
+          }
+        }
+      }
+    }
+    return discoverInfo;
+  }
 }

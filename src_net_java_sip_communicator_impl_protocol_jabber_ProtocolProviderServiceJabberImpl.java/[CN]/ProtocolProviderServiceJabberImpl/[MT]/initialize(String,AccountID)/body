@@ -2,9 +2,7 @@
 synchronized (initializationLock) {
     this.accountID=accountID;
     String protocolIconPath=accountID.getAccountPropertyString(ProtocolProviderFactory.PROTOCOL_ICON_PATH);
-    if (protocolIconPath == null) {
-      protocolIconPath="resources/images/protocol/jabber";
-    }
+    if (protocolIconPath == null)     protocolIconPath="resources/images/protocol/jabber";
     jabberIcon=new ProtocolIconJabberImpl(protocolIconPath);
     jabberStatusEnum=JabberStatusEnum.getJabberStatusEnum(protocolIconPath);
     supportedFeatures.add("http://jabber.org/protocol/disco#info");
@@ -27,8 +25,7 @@ synchronized (initializationLock) {
     addSupportedOperationSet(OperationSetServerStoredContactInfo.class,new OperationSetServerStoredContactInfoJabberImpl(infoRetreiver));
     OperationSetServerStoredAccountInfo accountInfo=new OperationSetServerStoredAccountInfoJabberImpl(this,infoRetreiver,screenname);
     addSupportedOperationSet(OperationSetServerStoredAccountInfo.class,accountInfo);
-    OperationSetAvatar avatarOpSet=new OperationSetAvatarJabberImpl(this,accountInfo);
-    addSupportedOperationSet(OperationSetAvatar.class,avatarOpSet);
+    addSupportedOperationSet(OperationSetAvatar.class,new OperationSetAvatarJabberImpl(this,accountInfo));
     addSupportedOperationSet(OperationSetFileTransfer.class,new OperationSetFileTransferJabberImpl(this));
     addSupportedOperationSet(OperationSetInstantMessageTransform.class,new OperationSetInstantMessageTransformImpl());
     supportedFeatures.add("urn:xmpp:thumbs:0");
@@ -38,6 +35,9 @@ synchronized (initializationLock) {
     supportedFeatures.add("http://jabber.org/protocol/muc#traffic");
     ProviderManager providerManager=ProviderManager.getInstance();
     providerManager.addIQProvider(JingleIQ.ELEMENT_NAME,JingleIQ.NAMESPACE,new JingleIQProvider());
+    opsetContactCapabilities=new OperationSetContactCapabilitiesJabberImpl(this);
+    if (discoveryManager != null)     opsetContactCapabilities.setDiscoveryManager(discoveryManager);
+    addSupportedOperationSet(OperationSetContactCapabilities.class,opsetContactCapabilities);
     isInitialized=true;
   }
 }

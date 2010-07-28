@@ -1,3 +1,15 @@
 {
-  return discoveryManager.discoverInfo(entityID);
+  DiscoverInfo discoverInfo=capsManager.getDiscoverInfoByUser(entityID);
+  if (discoverInfo != null)   return discoverInfo;
+  String nodeVersion=capsManager.getNodeVersionByUser(entityID);
+  if (CACHE_NON_CAPS && (nodeVersion == null)) {
+    discoverInfo=nonCapsCache.get(entityID);
+    if (discoverInfo != null)     return discoverInfo;
+  }
+  discoverInfo=discoverInfo(entityID,nodeVersion);
+  if (nodeVersion == null) {
+    if (CACHE_NON_CAPS)     nonCapsCache.put(entityID,discoverInfo);
+  }
+ else   EntityCapsManager.addDiscoverInfoByNode(nodeVersion,discoverInfo);
+  return discoverInfo;
 }
