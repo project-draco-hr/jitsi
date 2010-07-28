@@ -10,8 +10,9 @@
  else {
     fullCalleeURI=protocolProvider.getConnection().getRoster().getPresence(calleeAddress).getFrom();
   }
+  DiscoverInfo di=null;
   try {
-    DiscoverInfo di=protocolProvider.getDiscoveryManager().discoverInfo(fullCalleeURI);
+    di=protocolProvider.getDiscoveryManager().discoverInfo(fullCalleeURI);
     if (di.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE)) {
       if (logger.isInfoEnabled())       logger.info(fullCalleeURI + ": jingle supported ");
     }
@@ -24,11 +25,6 @@
     logger.warn("could not retrieve info for " + fullCalleeURI,ex);
   }
   CallJabberImpl call=new CallJabberImpl(this);
-  try {
-    call.initiateSession(fullCalleeURI);
-  }
- catch (  Throwable t) {
-    t.printStackTrace();
-  }
+  call.initiateSession(fullCalleeURI,di);
   return call;
 }
