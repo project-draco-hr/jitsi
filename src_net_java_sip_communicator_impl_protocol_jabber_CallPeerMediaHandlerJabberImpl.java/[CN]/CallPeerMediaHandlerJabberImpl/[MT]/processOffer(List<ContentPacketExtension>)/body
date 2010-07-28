@@ -4,19 +4,19 @@
   for (  ContentPacketExtension content : offer) {
     RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(content);
     MediaType mediaType=MediaType.parseString(description.getMedia());
-    List<MediaFormat> supportedFormats=JingleUtils.extractFormats(description,getDynamicPayloadTypes());
+    List<MediaFormat> remoteFormats=JingleUtils.extractFormats(description,getDynamicPayloadTypes());
     MediaDevice dev=getDefaultDevice(mediaType);
     MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
     devDirection=devDirection.and(getDirectionUserPreference(mediaType));
     MediaDirection remoteDirection=JingleUtils.getDirection(content);
     MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
-    List<MediaFormat> mutuallySupportedFormats=intersectFormats(supportedFormats,dev.getSupportedFormats());
+    List<MediaFormat> mutuallySupportedFormats=intersectFormats(remoteFormats,dev.getSupportedFormats());
     List<RTPExtension> offeredRTPExtensions=JingleUtils.extractRTPExtensions(description,this.getRtpExtensionsRegistry());
     List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
     List<RTPExtension> rtpExtensions=intersectRTPExtensions(offeredRTPExtensions,supportedExtensions);
     MediaStreamTarget target=JingleUtils.extractDefaultTarget(content);
     int targetDataPort=target.getDataAddress().getPort();
-    if (supportedFormats.isEmpty() || (devDirection == MediaDirection.INACTIVE) || (targetDataPort == 0)) {
+    if (mutuallySupportedFormats.isEmpty() || (devDirection == MediaDirection.INACTIVE) || (targetDataPort == 0)) {
       closeStream(mediaType);
       continue;
     }

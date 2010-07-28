@@ -5,25 +5,25 @@
   boolean atLeastOneValidDescription=false;
   for (  MediaDescription mediaDescription : remoteDescriptions) {
     MediaType mediaType=SdpUtils.getMediaType(mediaDescription);
-    List<MediaFormat> supportedFormats=SdpUtils.extractFormats(mediaDescription,getDynamicPayloadTypes());
+    List<MediaFormat> remoteFormats=SdpUtils.extractFormats(mediaDescription,getDynamicPayloadTypes());
     MediaDevice dev=getDefaultDevice(mediaType);
     MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
     devDirection=devDirection.and(getDirectionUserPreference(mediaType));
     MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
     MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
-    List<MediaFormat> mutuallySupportedFormats=intersectFormats(supportedFormats,dev.getSupportedFormats());
+    List<MediaFormat> mutuallySupportedFormats=intersectFormats(remoteFormats,dev.getSupportedFormats());
     List<RTPExtension> offeredRTPExtensions=SdpUtils.extractRTPExtensions(mediaDescription,this.getRtpExtensionsRegistry());
     List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
     List<RTPExtension> rtpExtensions=intersectRTPExtensions(offeredRTPExtensions,supportedExtensions);
     MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,offer);
     int targetDataPort=target.getDataAddress().getPort();
-    if (supportedFormats.isEmpty() || (devDirection == MediaDirection.INACTIVE) || (targetDataPort == 0)) {
+    if (mutuallySupportedFormats.isEmpty() || (devDirection == MediaDirection.INACTIVE) || (targetDataPort == 0)) {
       answerDescriptions.add(SdpUtils.createDisablingAnswer(mediaDescription));
       closeStream(mediaType);
       continue;
     }
     StreamConnector connector=getTransportManager().getStreamConnector(mediaType);
-    initStream(connector,dev,supportedFormats.get(0),target,direction,rtpExtensions);
+    initStream(connector,dev,mutuallySupportedFormats.get(0),target,direction,rtpExtensions);
     answerDescriptions.add(createMediaDescription(mutuallySupportedFormats,connector,direction,rtpExtensions));
     atLeastOneValidDescription=true;
   }
