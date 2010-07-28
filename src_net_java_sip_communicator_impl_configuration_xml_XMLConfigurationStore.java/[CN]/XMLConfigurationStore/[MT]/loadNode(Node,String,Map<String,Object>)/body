@@ -1,0 +1,20 @@
+{
+  Node currentNode=null;
+  NodeList children=node.getChildNodes();
+  for (int i=0; i < children.getLength(); i++) {
+    currentNode=children.item(i);
+    if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
+      String newProp=propertyName + "." + DOMElementWriter.decodeName(currentNode.getNodeName());
+      String value=XMLConfUtils.getAttribute(currentNode,ATTRIBUTE_VALUE);
+      if (value != null) {
+        String propertyType=XMLConfUtils.getAttribute(currentNode,SYSTEM_ATTRIBUTE_NAME);
+        if ((propertyType != null) && propertyType.equals(SYSTEM_ATTRIBUTE_TRUE)) {
+          props.put(newProp,new PropertyReference(newProp));
+          System.setProperty(newProp,value);
+        }
+ else         props.put(newProp,value);
+      }
+      loadNode(currentNode,newProp,props);
+    }
+  }
+}

@@ -4,21 +4,21 @@
   for (int i=0; i < children.getLength(); i++) {
     currentNode=children.item(i);
     if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
-      StringBuffer newPropBuff=new StringBuffer(propertyNameBuff.toString()).append(".").append(currentNode.getNodeName());
+      String newProp=propertyName + "." + DOMElementWriter.decodeName(currentNode.getNodeName());
       Attr attr=((Element)currentNode).getAttributeNode(ATTRIBUTE_VALUE);
       if (attr != null) {
-        Object value=props.get(newPropBuff.toString());
+        Object value=props.get(newProp);
         if (value == null) {
           node.removeChild(currentNode);
           continue;
         }
-        boolean isSystem=value instanceof PropertyReference;
+        boolean isSystem=(value instanceof PropertyReference);
         String prop=isSystem ? ((PropertyReference)value).getValue().toString() : value.toString();
         attr.setNodeValue(prop);
         if (isSystem)         ((Element)currentNode).setAttribute(SYSTEM_ATTRIBUTE_NAME,SYSTEM_ATTRIBUTE_TRUE);
  else         ((Element)currentNode).removeAttribute(SYSTEM_ATTRIBUTE_NAME);
       }
-      updateNode(currentNode,newPropBuff,props);
+      updateNode(currentNode,newProp,props);
     }
   }
 }
