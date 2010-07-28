@@ -3,23 +3,22 @@
     if (logger.isDebugEnabled())     logger.debug("Ignoring a request to hangup a call peer " + "that is already DISCONNECTED");
     return;
   }
-  ProtocolProviderServiceJabberImpl provider=getProtocolProvider();
   CallPeerState prevPeerState=getState();
   setState(CallPeerState.DISCONNECTED);
   JingleIQ responseIQ=null;
   if (prevPeerState.equals(CallPeerState.CONNECTED) || CallPeerState.isOnHold(prevPeerState)) {
-    responseIQ=JinglePacketFactory.createBye(provider.getOurJID(),peerJID,getJingleSID());
+    responseIQ=JinglePacketFactory.createBye(getProtocolProvider().getOurJID(),peerJID,getJingleSID());
   }
  else   if (CallPeerState.CONNECTING.equals(prevPeerState) || CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(prevPeerState) || CallPeerState.ALERTING_REMOTE_SIDE.equals(prevPeerState)) {
-    responseIQ=JinglePacketFactory.createCancel(provider.getOurJID(),peerJID,getJingleSID());
+    responseIQ=JinglePacketFactory.createCancel(getProtocolProvider().getOurJID(),peerJID,getJingleSID());
   }
  else   if (prevPeerState.equals(CallPeerState.INCOMING_CALL)) {
-    responseIQ=JinglePacketFactory.createBusy(provider.getOurJID(),peerJID,getJingleSID());
+    responseIQ=JinglePacketFactory.createBusy(getProtocolProvider().getOurJID(),peerJID,getJingleSID());
   }
  else   if (prevPeerState.equals(CallPeerState.BUSY) || prevPeerState.equals(CallPeerState.FAILED)) {
   }
  else {
     logger.info("Could not determine call peer state!");
   }
-  if (responseIQ != null)   provider.getConnection().sendPacket(responseIQ);
+  if (responseIQ != null)   getProtocolProvider().getConnection().sendPacket(responseIQ);
 }
