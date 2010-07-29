@@ -1,12 +1,13 @@
 {
   List<ContentPacketExtension> sessAccept=getTransportManager().wrapupHarvest();
-  for (  ContentPacketExtension content : sessAccept) {
-    RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(content);
+  for (  ContentPacketExtension ourContent : sessAccept) {
+    RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(ourContent);
     MediaType type=MediaType.parseString(description.getMedia());
     StreamConnector connector=getTransportManager().getStreamConnector(type);
     MediaDevice dev=getDefaultDevice(type);
-    MediaStreamTarget target=JingleUtils.extractDefaultTarget(content);
-    MediaDirection direction=JingleUtils.getDirection(content,!peer.isInitiator());
+    ContentPacketExtension theirContent=this.remoteContentMap.get(ourContent.getName());
+    MediaStreamTarget target=JingleUtils.extractDefaultTarget(theirContent);
+    MediaDirection direction=JingleUtils.getDirection(ourContent,!peer.isInitiator());
     MediaFormat format=JingleUtils.payloadTypeToMediaFormat(description.getPayloadTypes().get(0),getDynamicPayloadTypes());
     List<RTPExtension> rtpExtensions=JingleUtils.extractRTPExtensions(description,this.getRtpExtensionsRegistry());
     initStream(connector,dev,format,target,direction,rtpExtensions);

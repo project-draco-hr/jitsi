@@ -2,6 +2,7 @@
   List<ContentPacketExtension> answerContentList=new ArrayList<ContentPacketExtension>(offer.size());
   boolean atLeastOneValidDescription=false;
   for (  ContentPacketExtension content : offer) {
+    remoteContentMap.put(content.getName(),content);
     RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(content);
     MediaType mediaType=MediaType.parseString(description.getMedia());
     List<MediaFormat> remoteFormats=JingleUtils.extractFormats(description,getDynamicPayloadTypes());
@@ -20,10 +21,11 @@
       closeStream(mediaType);
       continue;
     }
-    answerContentList.add(JingleUtils.createDescription(content.getCreator(),content.getName(),JingleUtils.getSenders(direction,!peer.isInitiator()),mutuallySupportedFormats,rtpExtensions,getDynamicPayloadTypes(),getRtpExtensionsRegistry()));
+    ContentPacketExtension ourContent=JingleUtils.createDescription(content.getCreator(),content.getName(),JingleUtils.getSenders(direction,!peer.isInitiator()),mutuallySupportedFormats,rtpExtensions,getDynamicPayloadTypes(),getRtpExtensionsRegistry());
+    answerContentList.add(ourContent);
+    localContentMap.put(content.getName(),ourContent);
     atLeastOneValidDescription=true;
   }
   if (!atLeastOneValidDescription)   ProtocolProviderServiceJabberImpl.throwOperationFailedException("Offer contained no media " + " formats or no valid media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
-  this.localContentList=answerContentList;
   getTransportManager().startCandidateHarvest(offer,answerContentList);
 }
