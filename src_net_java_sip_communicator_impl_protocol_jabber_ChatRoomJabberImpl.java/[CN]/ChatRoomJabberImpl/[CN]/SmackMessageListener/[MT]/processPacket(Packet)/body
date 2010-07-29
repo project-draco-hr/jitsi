@@ -1,6 +1,14 @@
 {
   if (!(packet instanceof org.jivesoftware.smack.packet.Message))   return;
   org.jivesoftware.smack.packet.Message msg=(org.jivesoftware.smack.packet.Message)packet;
+  long timeStamp;
+  DelayInformation delay=(DelayInformation)msg.getExtension("x","jabber:x:delay");
+  if (delay != null) {
+    timeStamp=delay.getStamp().getTime();
+  }
+ else {
+    timeStamp=System.currentTimeMillis();
+  }
   String msgBody=msg.getBody();
   if (msgBody == null)   return;
   int messageReceivedEventType=ChatRoomMessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED;
@@ -36,6 +44,6 @@
     fireMessageEvent(evt);
     return;
   }
-  ChatRoomMessageReceivedEvent msgReceivedEvt=new ChatRoomMessageReceivedEvent(ChatRoomJabberImpl.this,member,System.currentTimeMillis(),newMessage,messageReceivedEventType);
+  ChatRoomMessageReceivedEvent msgReceivedEvt=new ChatRoomMessageReceivedEvent(ChatRoomJabberImpl.this,member,timeStamp,newMessage,messageReceivedEventType);
   fireMessageEvent(msgReceivedEvt);
 }
