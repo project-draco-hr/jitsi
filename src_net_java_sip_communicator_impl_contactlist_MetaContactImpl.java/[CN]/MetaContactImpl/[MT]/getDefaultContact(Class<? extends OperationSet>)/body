@@ -1,24 +1,33 @@
 {
   Contact defaultOpSetContact=null;
   Contact defaultContact=getDefaultContact();
-  if (defaultContact != null && defaultContact.getProtocolProvider().getOperationSet(operationSet) != null) {
-    defaultOpSetContact=defaultContact;
+  if (defaultContact != null) {
+    ProtocolProviderService contactProvider=defaultContact.getProtocolProvider();
+    OperationSetContactCapabilities capOpSet=contactProvider.getOperationSet(OperationSetContactCapabilities.class);
+    if (capOpSet != null) {
+      if (capOpSet.getOperationSet(defaultContact,operationSet) != null)       defaultOpSetContact=defaultContact;
+    }
+ else     if (contactProvider.getOperationSet(operationSet) != null)     defaultOpSetContact=defaultContact;
   }
- else {
+  if (defaultOpSetContact == null) {
     PresenceStatus currentStatus=null;
     for (    Contact protoContact : protoContacts) {
-      if (protoContact.getProtocolProvider().getOperationSet(operationSet) != null) {
-        PresenceStatus contactStatus=protoContact.getPresenceStatus();
-        if (currentStatus != null) {
-          if (currentStatus.getStatus() < contactStatus.getStatus()) {
-            currentStatus=contactStatus;
-            defaultOpSetContact=protoContact;
-          }
-        }
- else {
+      ProtocolProviderService contactProvider=protoContact.getProtocolProvider();
+      OperationSetContactCapabilities capOpSet=contactProvider.getOperationSet(OperationSetContactCapabilities.class);
+      if (capOpSet != null) {
+        if (capOpSet.getOperationSet(defaultContact,operationSet) == null)         continue;
+      }
+ else       if (contactProvider.getOperationSet(operationSet) == null)       continue;
+      PresenceStatus contactStatus=protoContact.getPresenceStatus();
+      if (currentStatus != null) {
+        if (currentStatus.getStatus() < contactStatus.getStatus()) {
           currentStatus=contactStatus;
           defaultOpSetContact=protoContact;
         }
+      }
+ else {
+        currentStatus=contactStatus;
+        defaultOpSetContact=protoContact;
       }
     }
   }

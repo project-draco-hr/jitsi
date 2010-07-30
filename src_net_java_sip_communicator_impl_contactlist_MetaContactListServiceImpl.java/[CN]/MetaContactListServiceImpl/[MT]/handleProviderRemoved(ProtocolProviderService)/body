@@ -2,15 +2,18 @@
   if (logger.isDebugEnabled())   logger.debug("Removing protocol provider " + provider.getProtocolName());
   this.currentlyInstalledProviders.remove(provider.getAccountID().getAccountUniqueID());
   OperationSetPersistentPresence persPresOpSet=provider.getOperationSet(OperationSetPersistentPresence.class);
-  if (persPresOpSet == null)   return;
-  persPresOpSet.removeContactPresenceStatusListener(this);
-  persPresOpSet.removeSubscriptionListener(clSubscriptionEventHandler);
-  persPresOpSet.removeServerStoredGroupChangeListener(clGroupEventHandler);
-  ContactGroup rootGroup=persPresOpSet.getServerStoredContactListRoot();
-  Iterator<ContactGroup> subgroups=rootGroup.subgroups();
-  while (subgroups.hasNext()) {
-    ContactGroup group=subgroups.next();
-    this.removeContactGroupFromMetaContactGroup((MetaContactGroupImpl)findMetaContactGroupByContactGroup(group),group,provider);
+  if (persPresOpSet != null) {
+    persPresOpSet.removeContactPresenceStatusListener(this);
+    persPresOpSet.removeSubscriptionListener(clSubscriptionEventHandler);
+    persPresOpSet.removeServerStoredGroupChangeListener(clGroupEventHandler);
+    ContactGroup rootGroup=persPresOpSet.getServerStoredContactListRoot();
+    Iterator<ContactGroup> subgroups=rootGroup.subgroups();
+    while (subgroups.hasNext()) {
+      ContactGroup group=subgroups.next();
+      this.removeContactGroupFromMetaContactGroup((MetaContactGroupImpl)findMetaContactGroupByContactGroup(group),group,provider);
+    }
+    this.removeContactGroupFromMetaContactGroup(this.rootMetaGroup,rootGroup,provider);
   }
-  this.removeContactGroupFromMetaContactGroup(this.rootMetaGroup,rootGroup,provider);
+  OperationSetContactCapabilities capOpSet=provider.getOperationSet(OperationSetContactCapabilities.class);
+  if (capOpSet != null)   capOpSet.removeContactCapabilitiesListener(this);
 }
