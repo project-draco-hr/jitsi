@@ -1,2 +1,43 @@
 {
+synchronized (initializationLock) {
+    this.accountID=accountID;
+    String protocolIconPath=accountID.getAccountPropertyString(ProtocolProviderFactory.PROTOCOL_ICON_PATH);
+    if (protocolIconPath == null)     protocolIconPath="resources/images/protocol/jabber";
+    jabberIcon=new ProtocolIconJabberImpl(protocolIconPath);
+    jabberStatusEnum=JabberStatusEnum.getJabberStatusEnum(protocolIconPath);
+    supportedFeatures.add("http://jabber.org/protocol/disco#info");
+    String keepAliveStrValue=accountID.getAccountPropertyString("SEND_KEEP_ALIVE");
+    String resourcePriority=accountID.getAccountPropertyString(ProtocolProviderFactory.RESOURCE_PRIORITY);
+    OperationSetPersistentPresenceJabberImpl persistentPresence=new OperationSetPersistentPresenceJabberImpl(this);
+    if (resourcePriority != null) {
+      persistentPresence.setResourcePriority(Integer.parseInt(resourcePriority));
+      supportedFeatures.add("http://www.xmpp.org/extensions/xep-0168.html#ns");
+    }
+    addSupportedOperationSet(OperationSetPersistentPresence.class,persistentPresence);
+    addSupportedOperationSet(OperationSetPresence.class,persistentPresence);
+    OperationSetBasicInstantMessagingJabberImpl basicInstantMessaging=new OperationSetBasicInstantMessagingJabberImpl(this);
+    if (keepAliveStrValue != null)     basicInstantMessaging.setKeepAliveEnabled(Boolean.parseBoolean(keepAliveStrValue));
+    addSupportedOperationSet(OperationSetBasicInstantMessaging.class,basicInstantMessaging);
+    addSupportedOperationSet(OperationSetWhiteboarding.class,new OperationSetWhiteboardingJabberImpl(this));
+    addSupportedOperationSet(OperationSetTypingNotifications.class,new OperationSetTypingNotificationsJabberImpl(this));
+    addSupportedOperationSet(OperationSetMultiUserChat.class,new OperationSetMultiUserChatJabberImpl(this));
+    InfoRetreiver infoRetreiver=new InfoRetreiver(this,screenname);
+    addSupportedOperationSet(OperationSetServerStoredContactInfo.class,new OperationSetServerStoredContactInfoJabberImpl(infoRetreiver));
+    OperationSetServerStoredAccountInfo accountInfo=new OperationSetServerStoredAccountInfoJabberImpl(this,infoRetreiver,screenname);
+    addSupportedOperationSet(OperationSetServerStoredAccountInfo.class,accountInfo);
+    addSupportedOperationSet(OperationSetAvatar.class,new OperationSetAvatarJabberImpl(this,accountInfo));
+    addSupportedOperationSet(OperationSetFileTransfer.class,new OperationSetFileTransferJabberImpl(this));
+    addSupportedOperationSet(OperationSetInstantMessageTransform.class,new OperationSetInstantMessageTransformImpl());
+    supportedFeatures.add("urn:xmpp:thumbs:0");
+    supportedFeatures.add("urn:xmpp:bob");
+    addSupportedOperationSet(OperationSetThumbnailedFileFactory.class,new OperationSetThumbnailedFileFactoryImpl());
+    supportedFeatures.add("http://jabber.org/protocol/muc#rooms");
+    supportedFeatures.add("http://jabber.org/protocol/muc#traffic");
+    ProviderManager providerManager=ProviderManager.getInstance();
+    providerManager.addIQProvider(JingleIQ.ELEMENT_NAME,JingleIQ.NAMESPACE,new JingleIQProvider());
+    opsetContactCapabilities=new OperationSetContactCapabilitiesJabberImpl(this);
+    if (discoveryManager != null)     opsetContactCapabilities.setDiscoveryManager(discoveryManager);
+    addSupportedOperationSet(OperationSetContactCapabilities.class,opsetContactCapabilities);
+    isInitialized=true;
+  }
 }
