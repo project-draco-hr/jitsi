@@ -1,0 +1,49 @@
+{
+  StringBuilder bldr=new StringBuilder();
+{
+    Iterator<DiscoverInfo.Identity> identities=discoverInfo.getIdentities();
+    SortedSet<DiscoverInfo.Identity> is=new TreeSet<DiscoverInfo.Identity>(new Comparator<DiscoverInfo.Identity>(){
+      public int compare(      DiscoverInfo.Identity i1,      DiscoverInfo.Identity i2){
+        int category=i1.getCategory().compareTo(i2.getCategory());
+        if (category != 0)         return category;
+        int type=i1.getType().compareTo(i2.getType());
+        if (type != 0)         return type;
+        return type;
+      }
+    }
+);
+    if (identities != null)     while (identities.hasNext())     is.add(identities.next());
+    for (    DiscoverInfo.Identity i : is) {
+      bldr.append(i.getCategory()).append('/').append(i.getType()).append("//").append(i.getName()).append('<');
+    }
+  }
+{
+    Iterator<DiscoverInfo.Feature> features=getDiscoverInfoFeatures(discoverInfo);
+    SortedSet<String> fs=new TreeSet<String>();
+    if (features != null)     while (features.hasNext())     fs.add(features.next().getVar());
+    for (    String f : fs)     bldr.append(f).append('<');
+  }
+  DataForm extendedInfo=(DataForm)discoverInfo.getExtension("x","jabber:x:data");
+  if (extendedInfo != null) {
+synchronized (extendedInfo) {
+      SortedSet<FormField> fs=new TreeSet<FormField>(new Comparator<FormField>(){
+        public int compare(        FormField f1,        FormField f2){
+          return f1.getVariable().compareTo(f2.getVariable());
+        }
+      }
+);
+      FormField formType=null;
+      for (Iterator<FormField> fieldsIter=extendedInfo.getFields(); fieldsIter.hasNext(); ) {
+        FormField f=fieldsIter.next();
+        if (!f.getVariable().equals("FORM_TYPE"))         fs.add(f);
+ else         formType=f;
+      }
+      if (formType != null)       formFieldValuesToCaps(formType.getValues(),bldr);
+      for (      FormField f : fs) {
+        bldr.append(f.getVariable()).append('<');
+        formFieldValuesToCaps(f.getValues(),bldr);
+      }
+    }
+  }
+  return bldr.toString();
+}

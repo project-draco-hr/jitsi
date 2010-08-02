@@ -1,8 +1,10 @@
 {
-synchronized (caps) {
-    DiscoverInfo discoverInfo=caps.get(node);
+synchronized (caps2discoverInfo) {
+    DiscoverInfo discoverInfo=caps2discoverInfo.get(caps);
     if (discoverInfo == null) {
-      String xml=JabberActivator.getConfigurationService().getString(CAPS_PROPERTY_NAME_PREFIX + node);
+      ConfigurationService configurationService=JabberActivator.getConfigurationService();
+      String capsPropertyName=getCapsPropertyName(caps);
+      String xml=configurationService.getString(capsPropertyName);
       if ((xml != null) && (xml.length() != 0)) {
         IQProvider discoverInfoProvider=(IQProvider)ProviderManager.getInstance().getIQProvider("query","http://jabber.org/protocol/disco#info");
         if (discoverInfoProvider != null) {
@@ -24,7 +26,13 @@ catch (          IOException ioex) {
             }
  catch (            Exception ex) {
             }
-            if (discoverInfo != null)             caps.put(node,discoverInfo);
+            if (discoverInfo != null) {
+              if (caps.isValid(discoverInfo))               caps2discoverInfo.put(caps,discoverInfo);
+ else {
+                logger.error("Invalid DiscoverInfo for " + caps.getNodeVer() + ": "+ discoverInfo);
+                configurationService.removeProperty(capsPropertyName);
+              }
+            }
           }
         }
       }

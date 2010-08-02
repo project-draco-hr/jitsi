@@ -1,15 +1,19 @@
 {
   DiscoverInfo discoverInfo=capsManager.getDiscoverInfoByUser(entityID);
   if (discoverInfo != null)   return discoverInfo;
-  String nodeVersion=capsManager.getNodeVersionByUser(entityID);
-  if (CACHE_NON_CAPS && (nodeVersion == null)) {
+  EntityCapsManager.Caps caps=capsManager.getCapsByUser(entityID);
+  if (CACHE_NON_CAPS && (caps == null)) {
     discoverInfo=nonCapsCache.get(entityID);
     if (discoverInfo != null)     return discoverInfo;
   }
-  discoverInfo=discoverInfo(entityID,nodeVersion);
-  if (nodeVersion == null) {
+  discoverInfo=discoverInfo(entityID,(caps == null) ? null : caps.getNodeVer());
+  if ((caps != null) && !caps.isValid(discoverInfo)) {
+    logger.error("Invalid DiscoverInfo for " + caps.getNodeVer() + ": "+ discoverInfo);
+    caps=null;
+  }
+  if (caps == null) {
     if (CACHE_NON_CAPS)     nonCapsCache.put(entityID,discoverInfo);
   }
- else   EntityCapsManager.addDiscoverInfoByNode(nodeVersion,discoverInfo);
+ else   EntityCapsManager.addDiscoverInfoByCaps(caps,discoverInfo);
   return discoverInfo;
 }
