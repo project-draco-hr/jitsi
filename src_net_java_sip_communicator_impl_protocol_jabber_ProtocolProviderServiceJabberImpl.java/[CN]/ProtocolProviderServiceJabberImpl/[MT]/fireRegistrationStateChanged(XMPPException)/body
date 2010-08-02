@@ -2,7 +2,7 @@
   int reason=RegistrationStateChangeEvent.REASON_NOT_SPECIFIED;
   RegistrationState regState=RegistrationState.UNREGISTERED;
   Throwable wrappedEx=ex.getWrappedThrowable();
-  if (wrappedEx != null && (wrappedEx instanceof UnknownHostException || wrappedEx instanceof ConnectException)) {
+  if (wrappedEx != null && (wrappedEx instanceof UnknownHostException || wrappedEx instanceof ConnectException || wrappedEx instanceof SocketException)) {
     reason=RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND;
     regState=RegistrationState.CONNECTION_FAILED;
   }
@@ -22,4 +22,7 @@
     }
   }
   fireRegistrationStateChanged(getRegistrationState(),regState,reason,null);
+  if (regState == RegistrationState.UNREGISTERED) {
+    disconnectAndCleanConnection();
+  }
 }
