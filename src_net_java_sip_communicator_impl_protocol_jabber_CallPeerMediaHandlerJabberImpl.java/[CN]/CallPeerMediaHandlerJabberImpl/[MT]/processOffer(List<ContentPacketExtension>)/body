@@ -9,7 +9,7 @@
     MediaDevice dev=getDefaultDevice(mediaType);
     MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
     devDirection=devDirection.and(getDirectionUserPreference(mediaType));
-    MediaDirection remoteDirection=JingleUtils.getDirection(content);
+    MediaDirection remoteDirection=JingleUtils.getDirection(content,getPeer().isInitiator());
     MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
     List<MediaFormat> mutuallySupportedFormats=intersectFormats(remoteFormats,dev.getSupportedFormats());
     List<RTPExtension> offeredRTPExtensions=JingleUtils.extractRTPExtensions(description,this.getRtpExtensionsRegistry());
@@ -21,7 +21,7 @@
       closeStream(mediaType);
       continue;
     }
-    ContentPacketExtension ourContent=JingleUtils.createDescription(content.getCreator(),content.getName(),JingleUtils.getSenders(direction,!peer.isInitiator()),mutuallySupportedFormats,rtpExtensions,getDynamicPayloadTypes(),getRtpExtensionsRegistry());
+    ContentPacketExtension ourContent=JingleUtils.createDescription(content.getCreator(),content.getName(),JingleUtils.getSenders(direction,!getPeer().isInitiator()),mutuallySupportedFormats,rtpExtensions,getDynamicPayloadTypes(),getRtpExtensionsRegistry());
     answerContentList.add(ourContent);
     localContentMap.put(content.getName(),ourContent);
     atLeastOneValidDescription=true;

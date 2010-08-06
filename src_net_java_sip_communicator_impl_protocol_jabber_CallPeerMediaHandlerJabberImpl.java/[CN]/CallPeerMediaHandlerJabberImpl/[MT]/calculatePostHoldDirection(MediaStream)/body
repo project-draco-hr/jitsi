@@ -1,0 +1,12 @@
+{
+  MediaDirection deviceDir=stream.getDirection();
+  if (deviceDir.allowsSending())   return deviceDir;
+  ContentPacketExtension content=remoteContentMap.get(stream.getName());
+  MediaDirection remoteDirection=JingleUtils.getDirection(content,!getPeer().isInitiator());
+  deviceDir=deviceDir.and(remoteDirection);
+  MediaDevice device=stream.getDevice();
+  deviceDir=deviceDir.and(getDirectionUserPreference(device.getMediaType()));
+  if (isLocallyOnHold())   deviceDir.and(MediaDirection.SENDONLY);
+  deviceDir=deviceDir.and(device.getDirection());
+  return deviceDir;
+}
