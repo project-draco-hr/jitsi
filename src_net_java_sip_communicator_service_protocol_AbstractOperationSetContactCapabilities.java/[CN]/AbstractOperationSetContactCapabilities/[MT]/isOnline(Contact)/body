@@ -1,0 +1,30 @@
+{
+  OperationSetPresence opsetPresence=parentProvider.getOperationSet(OperationSetPresence.class);
+  if (opsetPresence == null) {
+    return true;
+  }
+ else {
+    PresenceStatus presenceStatus=null;
+    Throwable exception=null;
+    try {
+      presenceStatus=opsetPresence.queryContactStatus(contact.getAddress());
+    }
+ catch (    IllegalArgumentException iaex) {
+      exception=iaex;
+    }
+catch (    IllegalStateException isex) {
+      exception=isex;
+    }
+catch (    OperationFailedException ofex) {
+      exception=ofex;
+    }
+    if (presenceStatus == null)     presenceStatus=contact.getPresenceStatus();
+    if (presenceStatus == null) {
+      if ((exception != null) && logger.isDebugEnabled()) {
+        logger.debug("Failed to query PresenceStatus of Contact " + contact,exception);
+      }
+      return false;
+    }
+ else     return presenceStatus.isOnline();
+  }
+}
