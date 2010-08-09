@@ -1,9 +1,13 @@
 {
   super.deviceSessionChanged(oldValue,newValue);
-  if ((oldValue instanceof VideoMediaDeviceSession) && (deviceSessionVideoListener != null))   ((VideoMediaDeviceSession)oldValue).removeVideoListener(deviceSessionVideoListener);
+  if ((oldValue instanceof VideoMediaDeviceSession) && (deviceSessionVideoListener != null)) {
+    ((VideoMediaDeviceSession)oldValue).removeVideoListener(deviceSessionVideoListener);
+  }
   if (newValue instanceof VideoMediaDeviceSession) {
-    if (deviceSessionVideoListener == null)     deviceSessionVideoListener=new VideoListener(){
-      /** 
+    VideoMediaDeviceSession newVideoMediaDeviceSession=(VideoMediaDeviceSession)newValue;
+    if (deviceSessionVideoListener == null) {
+      deviceSessionVideoListener=new VideoListener(){
+        /** 
  * Notifies that a visual <tt>Component</tt> representing
  * video has been added to the provider this listener has
  * been added to.
@@ -12,10 +16,10 @@
  * provider it was added into
  * @see VideoListener#videoAdded(VideoEvent)
  */
-      public void videoAdded(      VideoEvent e){
-        if (fireVideoEvent(e.getType(),e.getVisualComponent(),e.getOrigin()))         e.consume();
-      }
-      /** 
+        public void videoAdded(        VideoEvent e){
+          if (fireVideoEvent(e.getType(),e.getVisualComponent(),e.getOrigin()))           e.consume();
+        }
+        /** 
  * Notifies that a visual <tt>Component</tt> representing
  * video has been removed from the provider this listener
  * has been added to.
@@ -24,14 +28,19 @@
  * provider it was removed from
  * @see VideoListener#videoRemoved(VideoEvent)
  */
-      public void videoRemoved(      VideoEvent e){
-        videoAdded(e);
+        public void videoRemoved(        VideoEvent e){
+          videoAdded(e);
+        }
+        public void videoUpdate(        VideoEvent e){
+          fireVideoEvent(e);
+        }
       }
-      public void videoUpdate(      VideoEvent e){
-        fireVideoEvent(e);
-      }
-    }
 ;
-    ((VideoMediaDeviceSession)newValue).addVideoListener(deviceSessionVideoListener);
+    }
+    newVideoMediaDeviceSession.addVideoListener(deviceSessionVideoListener);
+    newVideoMediaDeviceSession.setOutputSize(outputSize);
+    RTPTransformConnector rtpConnector=getRTPConnector();
+    if (rtpConnector != null)     newVideoMediaDeviceSession.setConnector(rtpConnector);
+    newVideoMediaDeviceSession.setRtcpFeedbackPLI(usePLI);
   }
 }

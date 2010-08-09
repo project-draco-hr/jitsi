@@ -1,0 +1,21 @@
+{
+  if (connector == null)   throw new NullPointerException("connector");
+  if (rtpConnector != null) {
+    if (rtpConnector.getConnector() == connector)     return;
+  }
+  RTPTransformConnector oldValue=rtpConnector;
+  rtpConnector=new RTPTransformConnector(connector){
+    @Override protected TransformOutputStream createDataOutputStream() throws IOException {
+      TransformOutputStream dataOutputStream=super.createDataOutputStream();
+      if (dataOutputStream != null)       configureDataOutputStream(dataOutputStream);
+      return dataOutputStream;
+    }
+    @Override protected TransformInputStream createDataInputStream() throws IOException {
+      TransformInputStream dataInputStream=super.createDataInputStream();
+      if (dataInputStream != null)       configureDataInputStream(dataInputStream);
+      return dataInputStream;
+    }
+  }
+;
+  rtpConnectorChanged(oldValue,rtpConnector);
+}
