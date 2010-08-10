@@ -1,0 +1,20 @@
+{
+  int httpCode=response.getHttpCode();
+  String contentType=response.getContentType();
+  try {
+    if (httpCode != HttpStatus.SC_CONFLICT || contentType == null || !contentType.startsWith(XCAP_ERROR_CONTENT_TYPE)) {
+      return null;
+    }
+    String content=new String(response.getContent());
+    XCapErrorType xCapError=XCapErrorParser.fromXml(content);
+    XCapError error=xCapError.getError();
+    if (error == null) {
+      return null;
+    }
+    return error.getPhrase();
+  }
+ catch (  ParsingException e) {
+    logger.error("XCapError cannot be parsed.");
+    return null;
+  }
+}

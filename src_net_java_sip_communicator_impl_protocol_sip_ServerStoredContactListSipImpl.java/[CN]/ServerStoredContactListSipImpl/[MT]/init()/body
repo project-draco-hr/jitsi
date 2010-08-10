@@ -1,0 +1,47 @@
+{
+  try {
+    XCapClient xCapClient=sipProvider.getXCapClient();
+    if (!xCapClient.isConnected() || !xCapClient.isResourceListsSupported()) {
+      return;
+    }
+    ResourceListsType resourceLists=xCapClient.getResourceLists();
+    ListType serverRootList=new ListType();
+    for (    ListType list : resourceLists.getList()) {
+      if (list.getName().equals(ROOT_GROUP_NAME)) {
+        serverRootList.setName(ROOT_GROUP_NAME);
+        serverRootList.setDisplayName(list.getDisplayName());
+        serverRootList.getEntries().addAll(list.getEntries());
+        serverRootList.getEntryRefs().addAll(list.getEntryRefs());
+        serverRootList.getExternals().addAll(list.getExternals());
+        serverRootList.setAny(list.getAny());
+        serverRootList.setAnyAttributes(list.getAnyAttributes());
+      }
+ else {
+        serverRootList.getLists().add(list);
+      }
+    }
+    resolveContactGroup(rootGroup,serverRootList);
+    if (xCapClient.isPresRulesSupported()) {
+      presRules=xCapClient.getPresRules();
+      for (      RuleType rule : presRules.getRule()) {
+        if (rule.getId().equals(WHITE_RULE_ID)) {
+          whiteRule=rule;
+          break;
+        }
+      }
+      if (whiteRule != null) {
+        presRules.getRule().remove(whiteRule);
+      }
+      whiteRule=createWhiteRule();
+      presRules.getRule().add(whiteRule);
+      List<ContactSipImpl> uniqueContacts=getUniqueContacts(rootGroup);
+      for (      ContactSipImpl contact : uniqueContacts) {
+        addContactToWhiteList(contact);
+      }
+      updatePresRules();
+    }
+  }
+ catch (  XCapException e) {
+    logger.error(e);
+  }
+}

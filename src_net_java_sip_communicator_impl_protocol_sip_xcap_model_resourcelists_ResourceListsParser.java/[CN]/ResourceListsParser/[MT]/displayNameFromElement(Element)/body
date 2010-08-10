@@ -1,0 +1,29 @@
+{
+  DisplayNameType displayName=new DisplayNameType();
+  if (!DISPALY_NAME_ELEMENT.equals(displayNameElement.getLocalName()) || !NAMESPACE.equals(getNamespaceUri(displayNameElement))) {
+    throw new Exception("display-name element is invalid");
+  }
+  NamedNodeMap attributes=displayNameElement.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("display-name element is invalid");
+    }
+    if (DISPALY_NAME_LANG_ATTR.equals(attribute.getLocalName()) && XML_NS_URI.equals(namespaceUri)) {
+      displayName.setLang(attribute.getValue());
+    }
+ else     if (!isStandartXmlNamespace(namespaceUri)) {
+      throw new Exception("display-name element is invalid");
+    }
+  }
+  NodeList childNodes=displayNameElement.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() == Node.ELEMENT_NODE) {
+      throw new Exception("display-name element is invalid");
+    }
+  }
+  displayName.setValue(displayNameElement.getTextContent());
+  return displayName;
+}

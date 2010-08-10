@@ -1,0 +1,43 @@
+{
+  NoParentType result=new NoParentType();
+  if (!NOPARENT_ELEMENT.equals(element.getLocalName()) || !NAMESPACE.equals(getNamespaceUri(element))) {
+    throw new Exception("no-parent element is invalid");
+  }
+  String phrase=null;
+  String ancestor=null;
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("no-parent element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    if (!NAMESPACE.equals(namespaceUri) || !PHRASE_ATTR.equals(attribute.getLocalName()) || phrase != null) {
+      throw new Exception("no-parent element is invalid");
+    }
+    phrase=attribute.getValue();
+  }
+  NodeList childNodes=element.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element childElement=(Element)node;
+    String namespaceUri=getNamespaceUri(childElement);
+    String localName=childElement.getLocalName();
+    if (namespaceUri == null) {
+      throw new Exception("no-parent element is invalid");
+    }
+    if (!NAMESPACE.equals(namespaceUri) || !NOPARENT_ANCESTOR_ELEMENT.equals(localName) || ancestor != null) {
+      throw new Exception("no-parent element is invalid");
+    }
+    ancestor=childElement.getTextContent();
+  }
+  result.setPhrase(phrase);
+  result.setAncestor(ancestor);
+  return result;
+}

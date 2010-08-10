@@ -1,0 +1,28 @@
+{
+  if (content == null) {
+    throw new IllegalArgumentException("pres-content cannot be null");
+  }
+  try {
+    Document document=createDocument();
+    Element presContentElement=document.createElementNS(NAMESPACE,CONTENT_ELEMENT);
+    if (content.getData() != null) {
+      presContentElement.appendChild(elementFromValue(document,DATA_ELEMENT,content.getData().getValue(),content.getData().getAnyAttributes()));
+    }
+    if (content.getEncoding() != null) {
+      presContentElement.appendChild(elementFromValue(document,ENCODING_ELEMENT,content.getEncoding().getValue(),content.getEncoding().getAnyAttributes()));
+    }
+    if (content.getMimeType() != null) {
+      presContentElement.appendChild(elementFromValue(document,MIMETYPE_ELEMENT,content.getMimeType().getValue(),content.getMimeType().getAnyAttributes()));
+    }
+    for (    DescriptionType description : content.getDescription()) {
+      presContentElement.appendChild(elementFromDescription(document,description));
+    }
+    processAnyAttributes(presContentElement,content.getAnyAttributes());
+    processAny(presContentElement,content.getAny());
+    document.appendChild(presContentElement);
+    return createXml(document);
+  }
+ catch (  Exception ex) {
+    throw new ParsingException(ex);
+  }
+}

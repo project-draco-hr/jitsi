@@ -1,0 +1,20 @@
+{
+  if (parentGroup == null) {
+    throw new IllegalArgumentException("Parent group cannot be null");
+  }
+  if (contactId == null || contactId.length() == 0) {
+    throw new IllegalArgumentException("Creating contact id name cannot be null or empty");
+  }
+  Address contactAddress;
+  try {
+    contactAddress=sipProvider.parseAddressString(contactId);
+  }
+ catch (  ParseException ex) {
+    throw new IllegalArgumentException(String.format("%1s is no a valid SIP identifier",contactId),ex);
+  }
+  logger.trace("createUnresolvedContact " + contactId);
+  ContactSipImpl newUnresolvedContact=new ContactSipImpl(contactAddress,sipProvider);
+  parentGroup.addContact(newUnresolvedContact);
+  fireContactAdded(parentGroup,newUnresolvedContact);
+  return newUnresolvedContact;
+}

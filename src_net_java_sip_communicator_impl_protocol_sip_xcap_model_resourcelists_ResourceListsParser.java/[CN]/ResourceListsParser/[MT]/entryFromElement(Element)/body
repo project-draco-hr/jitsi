@@ -1,0 +1,56 @@
+{
+  EntryType entry=new EntryType();
+  if (!ENTRY_ELEMENT.equals(entryElement.getNodeName()) || !NAMESPACE.equals(getNamespaceUri(entryElement))) {
+    throw new Exception("entry element is invalid");
+  }
+  String uri=null;
+  NamedNodeMap attributes=entryElement.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("entry element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    if (NAMESPACE.equals(namespaceUri)) {
+      if (ENTRY_URI_ATTR.equals(attribute.getLocalName())) {
+        uri=attribute.getValue();
+        continue;
+      }
+ else {
+        throw new Exception("entry element is invalid");
+      }
+    }
+    QName qName=new QName(namespaceUri,attribute.getLocalName(),attribute.getPrefix() == null ? "" : attribute.getPrefix());
+    entry.getAnyAttributes().put(qName,attribute.getValue());
+  }
+  if (uri == null) {
+    throw new Exception("entry uri attribute is missed");
+  }
+  entry.setUri(uri);
+  NodeList childNodes=entryElement.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element element=(Element)node;
+    String namespaceUri=getNamespaceUri(element);
+    if (namespaceUri == null) {
+      throw new Exception("entry element is invalid");
+    }
+    if (NAMESPACE.equals(namespaceUri)) {
+      if (DISPALY_NAME_ELEMENT.equals(element.getLocalName())) {
+        entry.setDisplayName(displayNameFromElement(element));
+        continue;
+      }
+ else {
+        throw new Exception("entry element is invalid");
+      }
+    }
+    entry.getAny().add(element);
+  }
+  return entry;
+}

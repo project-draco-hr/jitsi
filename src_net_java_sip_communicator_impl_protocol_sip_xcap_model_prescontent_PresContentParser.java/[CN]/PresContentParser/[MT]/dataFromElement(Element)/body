@@ -1,0 +1,31 @@
+{
+  DataType result=new DataType();
+  if (!DATA_ELEMENT.equals(element.getLocalName()) || !NAMESPACE.equals(getNamespaceUri(element))) {
+    throw new Exception("data element is invalid");
+  }
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("data element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    if (NAMESPACE.equals(namespaceUri)) {
+      throw new Exception("data element is invalid");
+    }
+    QName qName=new QName(namespaceUri,attribute.getLocalName(),attribute.getPrefix() == null ? "" : attribute.getPrefix());
+    result.getAnyAttributes().put(qName,attribute.getValue());
+  }
+  NodeList childNodes=element.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() == Node.ELEMENT_NODE) {
+      throw new Exception("data element is invalid");
+    }
+  }
+  result.setValue(element.getTextContent());
+  return result;
+}

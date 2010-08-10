@@ -1,0 +1,29 @@
+{
+  byte[] imageContent1=TestOperationSetServerStoredInfoData.IMAGE_CONTENT_1;
+  byte[] imageContent2=TestOperationSetServerStoredInfoData.IMAGE_CONTENT_2;
+  ServerStoredDetails.ImageDetail imageDetail1=new ServerStoredDetails.ImageDetail(null,imageContent1);
+  ServerStoredDetails.ImageDetail imageDetail2=new ServerStoredDetails.ImageDetail(null,imageContent2);
+  opSetServerStoredAccountInfo.addDetail(imageDetail1);
+  boolean replaceResult=opSetServerStoredAccountInfo.replaceDetail(imageDetail1,imageDetail2);
+  assertTrue("The result of replace operation cannot be false",replaceResult);
+  Iterator<ServerStoredDetails.GenericDetail> storedDetails=opSetServerStoredAccountInfo.getDetails(ServerStoredDetails.ImageDetail.class);
+  assertNotNull("Stored details cannot be null",storedDetails);
+  assertTrue("Stored details doesn't have ImageDetail",storedDetails.hasNext());
+  ServerStoredDetails.GenericDetail imageDetail=storedDetails.next();
+  assertTrue("Stored details is not ImageDetail",imageDetail instanceof ServerStoredDetails.ImageDetail);
+  byte[] savedContent=((ServerStoredDetails.ImageDetail)imageDetail).getBytes();
+  assertEquals("The ImageDetail we set is not set or not read properly",imageContent2.length,savedContent.length);
+  for (int i=0; i < imageContent2.length; i++) {
+    assertSame("The ImageDetail we set has not the same content",imageContent2[i],savedContent[i]);
+  }
+  ContentType presContent=xCapClient.getPresContent(ProtocolProviderServiceSipImpl.PRES_CONTENT_IMAGE_NAME);
+  assertNotNull("Pres-content cannot be null",presContent);
+  assertNotNull("Pres-content data cannot be null",presContent.getData());
+  assertNotNull("Pres-content data value cannot be null",presContent.getData().getValue());
+  byte[] serverContent=Base64.decode(presContent.getData().getValue());
+  assertEquals("The ImageDetail we set is not set or not read properly",imageContent2.length,serverContent.length);
+  for (int i=0; i < imageContent2.length; i++) {
+    assertSame("The ImageDetail we set has not the same content",imageContent2[i],serverContent[i]);
+  }
+  opSetServerStoredAccountInfo.removeDetail(imageDetail2);
+}

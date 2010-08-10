@@ -1,0 +1,37 @@
+{
+  NamespacesType namespaces=new NamespacesType();
+  if (!NAMESPACES_ELEMENT.equals(namespacesElement.getLocalName()) || !NAMESPACE.equals(getNamespaceUri(namespacesElement))) {
+    throw new Exception("namespaces element is invalid");
+  }
+  NamedNodeMap attributes=namespacesElement.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("namespaces element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    throw new Exception("namespaces element is invalid");
+  }
+  NodeList childNodes=namespacesElement.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element element=(Element)node;
+    String namespaceUri=getNamespaceUri(element);
+    if (namespaceUri == null) {
+      throw new Exception("namespaces element is invalid");
+    }
+    if (NAMESPACE.equals(namespaceUri) && NAMESPACE_ELEMENT.equals(element.getLocalName())) {
+      namespaces.getNamespace().add(element.getTextContent());
+    }
+ else {
+      throw new Exception("namespaces element is invalid");
+    }
+  }
+  return namespaces;
+}

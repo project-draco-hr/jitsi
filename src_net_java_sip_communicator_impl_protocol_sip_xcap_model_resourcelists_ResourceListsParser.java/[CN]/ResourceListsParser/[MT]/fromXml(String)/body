@@ -1,0 +1,39 @@
+{
+  if (isNullOrEmpty(xml)) {
+    throw new IllegalArgumentException("XML cannot be null or empty");
+  }
+  try {
+    ResourceListsType resourceLists=new ResourceListsType();
+    Document document=createDocument(xml);
+    Element resourceListsElement=document.getDocumentElement();
+    String localName=resourceListsElement.getLocalName();
+    if (RESOURCE_LISTS_ELEMENT.equals(localName) && !NAMESPACE.equals(resourceListsElement.getNamespaceURI())) {
+      throw new Exception("Document doesn't contain resource-lists " + "element");
+    }
+    NamedNodeMap attributes=resourceListsElement.getAttributes();
+    for (int i=0; i < attributes.getLength(); i++) {
+      Attr attribute=(Attr)attributes.item(i);
+      String namespaceUri=getNamespaceUri(attribute);
+      if (namespaceUri == null) {
+        throw new Exception("resource-lists element is invalid");
+      }
+      if (isStandartXmlNamespace(namespaceUri)) {
+        continue;
+      }
+      throw new Exception("resource-lists element is invalid");
+    }
+    NodeList childNodes=resourceListsElement.getChildNodes();
+    for (int i=0; i < childNodes.getLength(); i++) {
+      Node node=childNodes.item(i);
+      if (node.getNodeType() != Node.ELEMENT_NODE) {
+        continue;
+      }
+      Element listElement=(Element)node;
+      resourceLists.getList().add(listFromElement(listElement));
+    }
+    return resourceLists;
+  }
+ catch (  Exception ex) {
+    throw new ParsingException(ex);
+  }
+}

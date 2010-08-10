@@ -1,0 +1,23 @@
+{
+  if (group == null) {
+    throw new IllegalArgumentException("Removing group cannot be null");
+  }
+  if (rootGroup.equals(group)) {
+    throw new IllegalArgumentException("Root group cannot be deleted");
+  }
+  if (logger.isTraceEnabled()) {
+    logger.trace("removeGroup " + group.getGroupName());
+  }
+  ContactGroupSipImpl parentGroup=(ContactGroupSipImpl)group.getParentContactGroup();
+  parentGroup.removeSubGroup(group);
+  if (group.isPersistent()) {
+    try {
+      updateResourceLists();
+    }
+ catch (    XCapException e) {
+      parentGroup.addSubgroup(group);
+      throw new IllegalStateException("Error while removing XCAP group",e);
+    }
+  }
+  fireGroupEvent(group,ServerStoredGroupEvent.GROUP_REMOVED_EVENT);
+}

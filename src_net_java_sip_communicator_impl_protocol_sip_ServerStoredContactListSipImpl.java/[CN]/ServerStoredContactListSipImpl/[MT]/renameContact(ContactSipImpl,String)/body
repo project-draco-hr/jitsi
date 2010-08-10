@@ -1,0 +1,20 @@
+{
+  if (contact == null) {
+    throw new IllegalArgumentException("Renaming contact cannot be null");
+  }
+  String oldName=contact.getDisplayName();
+  if (oldName.equals(newName)) {
+    return;
+  }
+  contact.setDisplayName(newName);
+  if (contact.isPersistent()) {
+    try {
+      updateResourceLists();
+    }
+ catch (    XCapException e) {
+      contact.setDisplayName(oldName);
+      throw new OperationFailedException("Error while renaming XCAP group",OperationFailedException.NETWORK_FAILURE,e);
+    }
+  }
+  parentOperationSet.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_DISPLAY_NAME,contact,oldName,newName);
+}

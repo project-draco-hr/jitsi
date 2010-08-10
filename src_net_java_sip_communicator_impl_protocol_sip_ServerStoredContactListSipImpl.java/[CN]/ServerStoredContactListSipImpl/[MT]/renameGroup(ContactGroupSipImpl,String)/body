@@ -1,0 +1,27 @@
+{
+  if (group == null) {
+    throw new IllegalArgumentException("Renaming group cannot be null");
+  }
+  if (rootGroup.equals(group)) {
+    throw new IllegalArgumentException("Root group cannot be renamed");
+  }
+  String oldName=group.getGroupName();
+  if (oldName.equals(newName)) {
+    return;
+  }
+  ContactGroupSipImpl parentGroup=(ContactGroupSipImpl)group.getParentContactGroup();
+  if (parentGroup.getGroup(newName) != null) {
+    throw new IllegalStateException(String.format("Group with name %1s already exists",newName));
+  }
+  group.setName(newName);
+  if (group.isPersistent()) {
+    try {
+      updateResourceLists();
+    }
+ catch (    XCapException e) {
+      group.setName(oldName);
+      throw new IllegalStateException("Error while renaming XCAP group",e);
+    }
+  }
+  fireGroupEvent(group,ServerStoredGroupEvent.GROUP_RENAMED_EVENT);
+}

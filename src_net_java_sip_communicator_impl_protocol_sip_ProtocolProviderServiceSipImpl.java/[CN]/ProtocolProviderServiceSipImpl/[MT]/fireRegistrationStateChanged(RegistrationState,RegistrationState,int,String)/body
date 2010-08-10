@@ -1,0 +1,33 @@
+{
+  if (newState.equals(RegistrationState.REGISTERED)) {
+    try {
+      boolean enableXCap=accountID.getAccountPropertyBoolean(XCAP_ENABLE,true);
+      boolean useSipCredetials=accountID.getAccountPropertyBoolean(XCAP_USE_SIP_CREDETIALS,true);
+      String serverUri=accountID.getAccountPropertyString(XCAP_SERVER_URI);
+      String user;
+      String password;
+      if (useSipCredetials) {
+        user=accountID.getAccountPropertyString(ProtocolProviderFactory.USER_ID);
+        password=SipActivator.getProtocolProviderFactory().loadPassword(accountID);
+      }
+ else {
+        user=accountID.getAccountPropertyString(XCAP_USER);
+        password=accountID.getAccountPropertyString(XCAP_PASSWORD);
+      }
+      Address userAddress=parseAddressString(user);
+      if (enableXCap && serverUri != null) {
+        URI uri=new URI(serverUri.trim());
+        if (uri.getHost() != null && uri.getPath() != null) {
+          xCapClient.connect(uri,userAddress,password);
+        }
+      }
+    }
+ catch (    Exception e) {
+      logger.error("Error while connecting to XCAP server. " + "Contact list won't be saved",e);
+    }
+  }
+ else   if (newState.equals(RegistrationState.UNREGISTERING) || newState.equals(RegistrationState.CONNECTION_FAILED)) {
+    xCapClient.dicsonnect();
+  }
+  super.fireRegistrationStateChanged(oldState,newState,reasonCode,reason);
+}

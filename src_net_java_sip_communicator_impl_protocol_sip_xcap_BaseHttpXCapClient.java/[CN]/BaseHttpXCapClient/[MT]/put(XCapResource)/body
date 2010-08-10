@@ -1,0 +1,27 @@
+{
+  DefaultHttpClient httpClient=createHttpClient();
+  try {
+    URI resourceUri=getResourceURI(resource.getId());
+    HttpPut putMethod=new HttpPut(resourceUri);
+    putMethod.setHeader("Connection","close");
+    StringEntity stringEntity=new StringEntity(resource.getContent());
+    stringEntity.setContentType(resource.getContentType());
+    stringEntity.setContentEncoding("UTF-8");
+    putMethod.setEntity(stringEntity);
+    Credentials credentials=new UsernamePasswordCredentials(getUserName(),password);
+    httpClient.getCredentialsProvider().setCredentials(AuthScope.ANY,credentials);
+    if (logger.isDebugEnabled()) {
+      String logMessage=String.format("Puting resource %1s to the server %2s",resource.getId().toString(),resource.getContent());
+      logger.debug(logMessage);
+    }
+    HttpResponse response=httpClient.execute(putMethod);
+    return createResponse(response);
+  }
+ catch (  IOException e) {
+    String errorMessage=String.format("%1s resource cannot be put",resource.getId().toString());
+    throw new XCapException(errorMessage,e);
+  }
+ finally {
+    httpClient.getConnectionManager().shutdown();
+  }
+}

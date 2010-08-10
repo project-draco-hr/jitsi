@@ -1,0 +1,24 @@
+{
+  ServerStoredGroupEvent event=new ServerStoredGroupEvent(group,eventID,parentOperationSet.getServerStoredContactListRoot(),sipProvider,parentOperationSet);
+  if (logger.isTraceEnabled()) {
+    logger.trace("Will dispatch the following group event: " + event);
+  }
+  Iterable<ServerStoredGroupListener> listeners;
+synchronized (serverStoredGroupListeners) {
+    listeners=new ArrayList<ServerStoredGroupListener>(serverStoredGroupListeners);
+  }
+  for (  ServerStoredGroupListener listener : listeners) {
+    if (eventID == ServerStoredGroupEvent.GROUP_REMOVED_EVENT) {
+      listener.groupRemoved(event);
+    }
+ else     if (eventID == ServerStoredGroupEvent.GROUP_RENAMED_EVENT) {
+      listener.groupNameChanged(event);
+    }
+ else     if (eventID == ServerStoredGroupEvent.GROUP_CREATED_EVENT) {
+      listener.groupCreated(event);
+    }
+ else     if (eventID == ServerStoredGroupEvent.GROUP_RESOLVED_EVENT) {
+      listener.groupResolved(event);
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  assertConnected();
+  DefaultHttpClient httpClient=createHttpClient();
+  try {
+    URI resourceUri=getResourceURI(resourceId);
+    HttpDelete deleteMethod=new HttpDelete(resourceUri);
+    deleteMethod.setHeader("Connection","close");
+    Credentials credentials=new UsernamePasswordCredentials(getUserName(),password);
+    httpClient.getCredentialsProvider().setCredentials(AuthScope.ANY,credentials);
+    if (logger.isDebugEnabled()) {
+      String logMessage=String.format("Deleting resource %1s from the server",resourceId.toString());
+      logger.debug(logMessage);
+    }
+    HttpResponse response=httpClient.execute(deleteMethod);
+    return createResponse(response);
+  }
+ catch (  IOException e) {
+    String errorMessage=String.format("%1s resource cannot be deleted",resourceId.toString());
+    throw new XCapException(errorMessage,e);
+  }
+ finally {
+    httpClient.getConnectionManager().shutdown();
+  }
+}

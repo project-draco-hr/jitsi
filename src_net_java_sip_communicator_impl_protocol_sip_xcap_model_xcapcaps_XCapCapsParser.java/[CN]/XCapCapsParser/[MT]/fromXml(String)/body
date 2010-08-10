@@ -1,0 +1,69 @@
+{
+  if (isNullOrEmpty(xml)) {
+    throw new IllegalArgumentException("XML cannot be null or empty");
+  }
+  try {
+    XCapCapsType xCapCaps=new XCapCapsType();
+    Document document=XmlUtils.createDocument(xml);
+    Element xCapCapsElement=document.getDocumentElement();
+    if (XCAPCAPS_ELEMENT.equals(xCapCapsElement.getLocalName()) && !NAMESPACE.equals(xCapCapsElement.getNamespaceURI())) {
+      throw new Exception("Document doesn't contain xcap-caps element");
+    }
+    boolean auidsFound=false;
+    boolean namespacesFound=false;
+    NamedNodeMap attributes=xCapCapsElement.getAttributes();
+    for (int i=0; i < attributes.getLength(); i++) {
+      Attr attribute=(Attr)attributes.item(i);
+      String namespaceUri=getNamespaceUri(attribute);
+      if (namespaceUri == null) {
+        throw new Exception("xcap-caps element is invalid");
+      }
+      if (isStandartXmlNamespace(namespaceUri)) {
+        continue;
+      }
+      throw new Exception("xcap-caps element is invalid");
+    }
+    NodeList childNodes=xCapCapsElement.getChildNodes();
+    for (int i=0; i < childNodes.getLength(); i++) {
+      Node node=childNodes.item(i);
+      if (node.getNodeType() != Node.ELEMENT_NODE) {
+        continue;
+      }
+      Element element=(Element)node;
+      String namespaceUri=getNamespaceUri(element);
+      if (namespaceUri == null) {
+        throw new Exception("xcap-caps element is invalid");
+      }
+      String localName=node.getLocalName();
+      if (NAMESPACE.equals(namespaceUri)) {
+        if (AUIDS_ELEMENT.equals(localName)) {
+          xCapCaps.setAuids(auidsFromElement(element));
+          auidsFound=true;
+        }
+ else         if (NAMESPACES_ELEMENT.equals(localName)) {
+          xCapCaps.setNamespaces(namespacesFromElement(element));
+          namespacesFound=true;
+        }
+ else         if (EXTENSIONS_ELEMENT.equals(localName)) {
+          xCapCaps.setExtensions(extensionsFromElement(element));
+        }
+ else {
+          throw new Exception("xcap-caps element is invalid");
+        }
+      }
+ else {
+        xCapCaps.getAny().add(element);
+      }
+    }
+    if (!auidsFound) {
+      throw new ParsingException("xcap-caps auids element is missed");
+    }
+    if (!namespacesFound) {
+      throw new ParsingException("xcap-caps namespaces element is missed");
+    }
+    return xCapCaps;
+  }
+ catch (  Exception ex) {
+    throw new ParsingException(ex);
+  }
+}

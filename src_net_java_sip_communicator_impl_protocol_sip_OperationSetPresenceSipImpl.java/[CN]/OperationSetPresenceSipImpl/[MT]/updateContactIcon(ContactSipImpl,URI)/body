@@ -1,0 +1,25 @@
+{
+  if (isEquals(contact.getImageUri(),imageUri)) {
+    return;
+  }
+  byte[] oldImage=contact.getImage();
+  byte[] newImage=new byte[0];
+  if (imageUri != null) {
+    XCapClient xCapClient=parentProvider.getXCapClient();
+    if (xCapClient.isConnected()) {
+      try {
+        newImage=xCapClient.getImage(imageUri);
+      }
+ catch (      XCapException e) {
+        String errorMessage=String.format("Error while getting icon %1s for the contact %2s",imageUri,contact.getUri());
+        logger.error(errorMessage,e);
+      }
+    }
+ else {
+      return;
+    }
+  }
+  contact.setImageUri(imageUri);
+  contact.setImage(newImage);
+  fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_IMAGE,contact,oldImage,newImage);
+}

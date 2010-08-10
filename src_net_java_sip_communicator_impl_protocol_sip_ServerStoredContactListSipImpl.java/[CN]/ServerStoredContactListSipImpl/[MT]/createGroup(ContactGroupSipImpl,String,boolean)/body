@@ -1,0 +1,28 @@
+{
+  if (parentGroup == null) {
+    throw new IllegalArgumentException("Parent group cannot be null");
+  }
+  if (groupName == null || groupName.length() == 0) {
+    throw new IllegalArgumentException("Creating group name cannot be null or empry");
+  }
+  if (logger.isTraceEnabled()) {
+    logger.trace("createGroup " + parentGroup.getGroupName() + ","+ groupName+ ","+ persistent);
+  }
+  if (parentGroup.getGroup(groupName) != null) {
+    throw new OperationFailedException(String.format("Group %1s already exists.",groupName),OperationFailedException.CONTACT_GROUP_ALREADY_EXISTS);
+  }
+  ContactGroupSipImpl subGroup=new ContactGroupSipImpl(groupName,sipProvider);
+  subGroup.setPersistent(persistent);
+  parentGroup.addSubgroup(subGroup);
+  if (subGroup.isPersistent()) {
+    try {
+      updateResourceLists();
+    }
+ catch (    XCapException e) {
+      parentGroup.removeSubGroup(subGroup);
+      throw new OperationFailedException("Error while creating XCAP group",OperationFailedException.NETWORK_FAILURE,e);
+    }
+  }
+  fireGroupEvent(subGroup,ServerStoredGroupEvent.GROUP_CREATED_EVENT);
+  return subGroup;
+}

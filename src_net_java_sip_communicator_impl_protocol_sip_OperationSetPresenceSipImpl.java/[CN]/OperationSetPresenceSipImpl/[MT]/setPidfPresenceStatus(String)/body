@@ -20,6 +20,7 @@
   }
   Element presence=(Element)presNode;
   PresenceStatus personStatus=null;
+  URI personStatusIcon=null;
   NodeList personList=presence.getElementsByTagNameNS(ANY_NS,PERSON_ELEMENT);
   if (personList.getLength() > 0) {
     Node personNode=personList.item(0);
@@ -57,6 +58,31 @@
         if (personStatus != null)         break;
       }
     }
+    NodeList statusIconList=person.getElementsByTagNameNS(ANY_NS,STATUS_ICON_ELEMENT);
+    if (statusIconList.getLength() > 0) {
+      Element statusIcon;
+      Node statusIconNode=statusIconList.item(0);
+      if (statusIconNode.getNodeType() == Node.ELEMENT_NODE) {
+        statusIcon=(Element)statusIconNode;
+        String content=getTextContent(statusIcon);
+        if (content != null && content.trim().length() != 0) {
+          try {
+            personStatusIcon=URI.create(content);
+          }
+ catch (          IllegalArgumentException ex) {
+            logger.error("Person's status icon uri: " + content + " is invalid");
+          }
+        }
+      }
+    }
+  }
+  if (personStatusIcon != null) {
+    String contactID=XMLUtils.getAttribute(presNode,ENTITY_ATTRIBUTE);
+    if (contactID.startsWith("pres:")) {
+      contactID=contactID.substring("pres:".length());
+    }
+    Contact contact=resolveContactID(contactID);
+    updateContactIcon((ContactSipImpl)contact,personStatusIcon);
   }
   List<Object[]> newPresenceStates=new Vector<Object[]>(3,2);
   NodeList tupleList=getPidfChilds(presence,TUPLE_ELEMENT);

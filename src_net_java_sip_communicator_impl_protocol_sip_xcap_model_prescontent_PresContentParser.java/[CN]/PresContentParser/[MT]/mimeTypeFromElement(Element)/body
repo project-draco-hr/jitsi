@@ -1,0 +1,29 @@
+{
+  MimeType result=new MimeType();
+  if (!MIMETYPE_ELEMENT.equals(element.getLocalName()) || !NAMESPACE.equals(getNamespaceUri(element))) {
+    throw new Exception("mime-type element is invalid");
+  }
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("mime-type element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    if (NAMESPACE.equals(namespaceUri)) {
+      throw new Exception("mime-type element is invalid");
+    }
+  }
+  NodeList childNodes=element.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() == Node.ELEMENT_NODE) {
+      throw new Exception("encoding element is invalid");
+    }
+  }
+  result.setValue(element.getTextContent());
+  return result;
+}

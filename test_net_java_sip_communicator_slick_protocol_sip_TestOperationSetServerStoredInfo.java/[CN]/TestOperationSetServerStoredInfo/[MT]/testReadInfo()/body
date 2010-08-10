@@ -1,0 +1,24 @@
+{
+  byte[] imageContent=TestOperationSetServerStoredInfoData.IMAGE_CONTENT_1;
+  ServerStoredDetails.ImageDetail imageDetail1=new ServerStoredDetails.ImageDetail(null,imageContent);
+  opSetServerStoredAccountInfo.addDetail(imageDetail1);
+  Iterator<ServerStoredDetails.GenericDetail> storedDetails=opSetServerStoredAccountInfo.getDetails(ServerStoredDetails.ImageDetail.class);
+  assertNotNull("Stored details cannot be null",storedDetails);
+  assertTrue("Stored details doesn't have ImageDetail",storedDetails.hasNext());
+  ServerStoredDetails.GenericDetail storedImageDetail=storedDetails.next();
+  assertTrue("Stored details is not ImageDetail",storedImageDetail instanceof ServerStoredDetails.ImageDetail);
+  byte[] savedContent=((ServerStoredDetails.ImageDetail)storedImageDetail).getBytes();
+  assertEquals("The ImageDetail we set is not set or not read properly",imageContent.length,savedContent.length);
+  for (int i=0; i < imageContent.length; i++) {
+    assertSame("The ImageDetail we set has not the same content",imageContent[i],savedContent[i]);
+  }
+  ContentType presContent=xCapClient.getPresContent(ProtocolProviderServiceSipImpl.PRES_CONTENT_IMAGE_NAME);
+  assertNotNull("Pres-content cannot be null",presContent);
+  assertNotNull("Pres-content data cannot be null",presContent.getData());
+  assertNotNull("Pres-content data value cannot be null",presContent.getData().getValue());
+  byte[] serverContent=Base64.decode(presContent.getData().getValue());
+  assertEquals("The ImageDetail we set is not set or not read properly",imageContent.length,serverContent.length);
+  for (int i=0; i < imageContent.length; i++) {
+    assertSame("The ImageDetail we set has not the same content",imageContent[i],serverContent[i]);
+  }
+}

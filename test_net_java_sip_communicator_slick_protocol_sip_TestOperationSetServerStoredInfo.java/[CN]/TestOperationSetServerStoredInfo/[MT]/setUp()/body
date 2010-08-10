@@ -1,0 +1,30 @@
+{
+  super.setUp();
+  fixture.setUp();
+  Map<String,OperationSet> supportedOperationSets=fixture.provider1.getSupportedOperationSets();
+  if (supportedOperationSets == null || supportedOperationSets.size() < 1) {
+    throw new NullPointerException("No OperationSet implementations are supported by this " + "SIP implementation.");
+  }
+  opSetServerStoredAccountInfo=(OperationSetServerStoredAccountInfo)supportedOperationSets.get(OperationSetServerStoredAccountInfo.class.getName());
+  if (opSetServerStoredAccountInfo == null) {
+    throw new NullPointerException("No implementation for Account Info was found");
+  }
+  if (!opSetServerStoredAccountInfo.isDetailClassSupported(ServerStoredDetails.ImageDetail.class)) {
+    throw new NullPointerException("OperationSet does't support avatars");
+  }
+  xCapClient=createXCapClient();
+  if (!xCapClient.isConnected()) {
+    throw new NullPointerException("XCAP client is not connected");
+  }
+  if (!xCapClient.isPresContentSupported()) {
+    throw new NullPointerException("XCAP server doesn't support pres-content");
+  }
+  List<ServerStoredDetails.GenericDetail> details=new ArrayList<ServerStoredDetails.GenericDetail>();
+  Iterator<ServerStoredDetails.GenericDetail> detailIterator=opSetServerStoredAccountInfo.getAllAvailableDetails();
+  while (detailIterator.hasNext()) {
+    details.add(detailIterator.next());
+  }
+  for (  ServerStoredDetails.GenericDetail detail : details) {
+    opSetServerStoredAccountInfo.removeDetail(detail);
+  }
+}

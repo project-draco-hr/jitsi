@@ -1,0 +1,62 @@
+{
+  ListType list=new ListType();
+  if (!LIST_ELEMENT.equals(listElement.getLocalName()) || !NAMESPACE.equals(getNamespaceUri(listElement))) {
+    throw new Exception("list element is invalid");
+  }
+  NamedNodeMap attributes=listElement.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("list element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    if (NAMESPACE.equals(namespaceUri)) {
+      if (LIST_NAME_ATTR.equals(attribute.getLocalName())) {
+        list.setName(attribute.getValue());
+        continue;
+      }
+ else {
+        throw new Exception("list element is invalid");
+      }
+    }
+    QName qName=new QName(namespaceUri,attribute.getLocalName(),attribute.getPrefix() == null ? "" : attribute.getPrefix());
+    list.getAnyAttributes().put(qName,attribute.getValue());
+  }
+  NodeList childNodes=listElement.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element element=(Element)node;
+    String localName=element.getLocalName();
+    String namespaceUri=getNamespaceUri(element);
+    if (NAMESPACE.equals(namespaceUri)) {
+      if (DISPALY_NAME_ELEMENT.equals(localName)) {
+        list.setDisplayName(displayNameFromElement(element));
+      }
+ else       if (ENTRY_ELEMENT.equals(localName)) {
+        list.getEntries().add(entryFromElement(element));
+      }
+ else       if (ENTRYREF_ELEMENT.equals(localName)) {
+        list.getEntryRefs().add(entryRefFromElement(element));
+      }
+ else       if (LIST_ELEMENT.equals(localName)) {
+        list.getLists().add(listFromElement(element));
+      }
+ else       if (EXTERNAL_ELEMENT.equals(localName)) {
+        list.getExternals().add(externalFromElement(element));
+      }
+ else {
+        throw new Exception("list element is invalid");
+      }
+    }
+ else {
+      list.getAny().add(element);
+    }
+  }
+  return list;
+}

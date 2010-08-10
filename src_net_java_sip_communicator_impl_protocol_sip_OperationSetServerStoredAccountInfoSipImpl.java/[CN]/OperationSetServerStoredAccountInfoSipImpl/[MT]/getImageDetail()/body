@@ -1,0 +1,23 @@
+{
+  ImageDetail imageDetail;
+  XCapClient xCapClient=provider.getXCapClient();
+  try {
+    ContentType presContent=xCapClient.getPresContent(ProtocolProviderServiceSipImpl.PRES_CONTENT_IMAGE_NAME);
+    if (presContent == null) {
+      return null;
+    }
+    String description=null;
+    byte[] content=null;
+    if (presContent.getDescription().size() > 0) {
+      description=presContent.getDescription().get(0).getValue();
+    }
+    if (presContent.getData() != null) {
+      content=Base64.decode(presContent.getData().getValue());
+    }
+    imageDetail=new ImageDetail(description,content);
+  }
+ catch (  XCapException e) {
+    throw new OperationFailedException("Cannot get image detail",OperationFailedException.NETWORK_FAILURE);
+  }
+  return imageDetail;
+}

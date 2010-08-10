@@ -1,0 +1,22 @@
+{
+  DefaultHttpClient httpClient=createHttpClient();
+  try {
+    HttpGet getMethod=new HttpGet(uri);
+    getMethod.setHeader("Connection","close");
+    Credentials credentials=new UsernamePasswordCredentials(getUserName(),password);
+    httpClient.getCredentialsProvider().setCredentials(AuthScope.ANY,credentials);
+    if (logger.isDebugEnabled()) {
+      String logMessage=String.format("Getting resource %1s from the server",uri.toString());
+      logger.debug(logMessage);
+    }
+    HttpResponse response=httpClient.execute(getMethod);
+    return createResponse(response);
+  }
+ catch (  IOException e) {
+    String errorMessage=String.format("%1s resource cannot be read",uri.toString());
+    throw new XCapException(errorMessage,e);
+  }
+ finally {
+    httpClient.getConnectionManager().shutdown();
+  }
+}

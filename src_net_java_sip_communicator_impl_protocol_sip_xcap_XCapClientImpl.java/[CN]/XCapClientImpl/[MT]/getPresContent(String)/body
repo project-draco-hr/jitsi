@@ -1,0 +1,40 @@
+{
+  assertConnected();
+  assertPresContentSupported();
+  String presContentDocument=getPresContentDocument(imageName);
+  XCapResourceId resourceId=new XCapResourceId(presContentDocument);
+  try {
+    XCapHttpResponse response=this.get(resourceId);
+    int httpCode=response.getHttpCode();
+    String contentType=response.getContentType();
+    byte[] content=response.getContent();
+    if (httpCode != HttpStatus.SC_OK) {
+      if (httpCode == HttpStatus.SC_NOT_FOUND) {
+        return null;
+      }
+      String errorMessage=String.format("Error %1s while getting %1s PresContent from XCAP server",httpCode,resourceId.toString());
+      throw new XCapException(errorMessage);
+    }
+    if (!contentType.equals(PresContentClient.CONTENT_TYPE)) {
+      String errorMessage=String.format("XCAP server returns invalid PresContent content type: %1s",contentType);
+      throw new XCapException(errorMessage);
+    }
+    if (content == null || content.length == 0) {
+      throw new XCapException("XCAP server returns invalid PresContent content");
+    }
+    try {
+      return PresContentParser.fromXml(new String(content,"UTF-8"));
+    }
+ catch (    ParsingException e) {
+      ContentType presContent=new ContentType();
+      DataType data=new DataType();
+      data.setValue(new String(Base64.encode(content)));
+      presContent.setData(data);
+      return presContent;
+    }
+  }
+ catch (  IOException e) {
+    String errorMessage=String.format("%1s resource cannot be read",resourceId.toString());
+    throw new XCapException(errorMessage,e);
+  }
+}

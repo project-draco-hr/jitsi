@@ -1,0 +1,44 @@
+{
+  UniquenessFailureType.ExistsType result=new UniquenessFailureType.ExistsType();
+  if (!UNIQUENESS_FAILURE_EXISTS_ELEMENT.equals(element.getLocalName()) || !NAMESPACE.equals(getNamespaceUri(element))) {
+    throw new Exception("exists element is invalid");
+  }
+  String field=null;
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("exists element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    if (!NAMESPACE.equals(namespaceUri) || !UNIQUENESS_FAILURE_EXISTS_FIELD_ATTR.equals(attribute.getLocalName()) || field != null) {
+      throw new Exception("exists element is invalid");
+    }
+    field=attribute.getValue();
+  }
+  NodeList childNodes=element.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element childElement=(Element)node;
+    String namespaceUri=getNamespaceUri(childElement);
+    String localName=childElement.getLocalName();
+    if (namespaceUri == null) {
+      throw new Exception("exists element is invalid");
+    }
+    if (!NAMESPACE.equals(namespaceUri) || !UNIQUENESS_FAILURE_EXISTS_ALT_VALUE_ELEMENT.equals(localName)) {
+      throw new Exception("exists element is invalid");
+    }
+    result.getAltValue().add(childElement.getTextContent());
+  }
+  if (field == null) {
+    throw new Exception("exists element is invalid");
+  }
+  result.setField(field);
+  return result;
+}

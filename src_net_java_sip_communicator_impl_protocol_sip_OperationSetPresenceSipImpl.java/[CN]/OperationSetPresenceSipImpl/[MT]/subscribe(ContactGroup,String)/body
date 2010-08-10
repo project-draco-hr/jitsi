@@ -1,27 +1,20 @@
 {
-  if (logger.isDebugEnabled())   logger.debug("let's subscribe " + contactIdentifier);
+  assertConnected();
+  if (!(parentGroup instanceof ContactGroupSipImpl)) {
+    String errorMessage=String.format("Group %1s does not seem to belong to this protocol's " + "contact list",parentGroup.getGroupName());
+    throw new IllegalArgumentException(errorMessage);
+  }
   ContactSipImpl contact=resolveContactID(contactIdentifier);
   if (contact != null) {
     if (contact.isPersistent()) {
       throw new OperationFailedException("Contact " + contactIdentifier + " already exists.",OperationFailedException.SUBSCRIPTION_ALREADY_EXISTS);
     }
  else {
-      ContactGroupSipImpl oldParentGroup=(ContactGroupSipImpl)contact.getParentContactGroup();
-      oldParentGroup.removeContact(contact);
-      fireSubscriptionEvent(contact,oldParentGroup,SubscriptionEvent.SUBSCRIPTION_REMOVED);
+      ssContactList.removeContact(contact);
     }
   }
-  Address contactAddress;
-  try {
-    contactAddress=parentProvider.parseAddressString(contactIdentifier);
+  contact=ssContactList.createContact((ContactGroupSipImpl)parentGroup,contactIdentifier,true);
+  if (this.presenceEnabled) {
+    subscriber.subscribe(new PresenceSubscriberSubscription(contact));
   }
- catch (  ParseException exc) {
-    throw new IllegalArgumentException(contactIdentifier + " is not a valid string.",exc);
-  }
-  contact=new ContactSipImpl(contactAddress,this.parentProvider);
-  ((ContactGroupSipImpl)parentGroup).addContact(contact);
-  fireSubscriptionEvent(contact,parentGroup,SubscriptionEvent.SUBSCRIPTION_CREATED);
-  if (this.presenceEnabled == false)   return;
-  assertConnected();
-  subscriber.subscribe(new PresenceSubscriberSubscription(contact));
 }

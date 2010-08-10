@@ -1,0 +1,42 @@
+{
+  if (isNullOrEmpty(xml)) {
+    throw new IllegalArgumentException("XML cannot be null or empty");
+  }
+  try {
+    XCapErrorType error=new XCapErrorType();
+    Document document=createDocument(xml);
+    Element xCapErrorElement=document.getDocumentElement();
+    if (XCAP_ERROR_ELEMENT.equals(xCapErrorElement.getLocalName()) && !NAMESPACE.equals(xCapErrorElement.getNamespaceURI())) {
+      throw new Exception("Document doesn't contain xcap-error " + "element");
+    }
+    NamedNodeMap attributes=xCapErrorElement.getAttributes();
+    for (int i=0; i < attributes.getLength(); i++) {
+      Attr attribute=(Attr)attributes.item(i);
+      String namespaceUri=getNamespaceUri(attribute);
+      if (namespaceUri == null) {
+        throw new Exception("xcap-error element is invalid");
+      }
+      if (isStandartXmlNamespace(namespaceUri)) {
+        continue;
+      }
+      throw new Exception("xcap-error element is invalid");
+    }
+    NodeList childNodes=xCapErrorElement.getChildNodes();
+    for (int i=0; i < childNodes.getLength(); i++) {
+      Node node=childNodes.item(i);
+      if (node.getNodeType() != Node.ELEMENT_NODE) {
+        continue;
+      }
+      Element element=(Element)node;
+      String namespaceUri=getNamespaceUri(element);
+      if (!NAMESPACE.equals(namespaceUri)) {
+        throw new Exception("xcap-error element is invalid");
+      }
+      error.setError(errorFromElement(element));
+    }
+    return error;
+  }
+ catch (  Exception ex) {
+    throw new ParsingException(ex);
+  }
+}

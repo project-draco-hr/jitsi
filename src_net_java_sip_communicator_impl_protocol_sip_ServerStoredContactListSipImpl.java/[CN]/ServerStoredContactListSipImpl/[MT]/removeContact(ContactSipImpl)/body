@@ -1,0 +1,27 @@
+{
+  if (contact == null) {
+    throw new IllegalArgumentException("Removing contact cannot be null");
+  }
+  logger.trace("removeContact " + contact.getUri());
+  ContactGroupSipImpl parentGroup=(ContactGroupSipImpl)contact.getParentContactGroup();
+  parentGroup.removeContact(contact);
+  if (contact.isPersistent()) {
+    try {
+      updateResourceLists();
+    }
+ catch (    XCapException e) {
+      parentGroup.removeContact(contact);
+      throw new OperationFailedException("Error while removing XCAP contact",OperationFailedException.NETWORK_FAILURE,e);
+    }
+    if (!isContactPersistent(contact.getUri())) {
+      removeContactFromWhiteList(contact);
+      try {
+        updatePresRules();
+      }
+ catch (      XCapException e) {
+        logger.error("Error while removing XCAP contact",e);
+      }
+    }
+  }
+  fireContactRemoved(parentGroup,contact);
+}

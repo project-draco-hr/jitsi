@@ -1,0 +1,37 @@
+{
+  AuidsType auidsType=new AuidsType();
+  if (!AUIDS_ELEMENT.equals(auidsElement.getLocalName()) || !NAMESPACE.equals(getNamespaceUri(auidsElement))) {
+    throw new Exception("auids element is invalid");
+  }
+  NamedNodeMap attributes=auidsElement.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("auids element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    throw new Exception("auids element is invalid");
+  }
+  NodeList childNodes=auidsElement.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element element=(Element)node;
+    String namespaceUri=getNamespaceUri(element);
+    if (namespaceUri == null) {
+      throw new Exception("auids element is invalid");
+    }
+    if (NAMESPACE.equals(namespaceUri) && AUID_ELEMENT.equals(element.getLocalName())) {
+      auidsType.getAuid().add(element.getTextContent());
+    }
+ else {
+      throw new Exception("auids element is invalid");
+    }
+  }
+  return auidsType;
+}

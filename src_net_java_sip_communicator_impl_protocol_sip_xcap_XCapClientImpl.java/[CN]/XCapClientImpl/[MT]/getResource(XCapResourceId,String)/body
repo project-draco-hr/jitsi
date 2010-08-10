@@ -1,0 +1,33 @@
+{
+  try {
+    XCapHttpResponse response=this.get(resourceId);
+    int httpCode=response.getHttpCode();
+    byte[] content=response.getContent();
+    if (httpCode != HttpStatus.SC_OK) {
+      if (httpCode == HttpStatus.SC_NOT_FOUND) {
+        return null;
+      }
+      String errorMessage;
+      String xCapErrorMessage=getXCapErrorMessage(response);
+      if (xCapErrorMessage != null) {
+        errorMessage=String.format("Error %1s while getting %2s from XCAP server. %3s",httpCode,resourceId.toString(),xCapErrorMessage);
+      }
+ else {
+        errorMessage=String.format("Error %1s while getting %2s from XCAP server",httpCode,resourceId.toString());
+      }
+      throw new XCapException(errorMessage);
+    }
+    if (!contentType.equals(response.getContentType())) {
+      String errorMessage=String.format("XCAP server returns invalid content type: %1s",contentType);
+      throw new XCapException(errorMessage);
+    }
+    if (content == null || content.length == 0) {
+      return null;
+    }
+    return new String(content,"UTF-8");
+  }
+ catch (  IOException e) {
+    String errorMessage=String.format("%1s resource cannot be read",resourceId.toString());
+    throw new XCapException(errorMessage,e);
+  }
+}

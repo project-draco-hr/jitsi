@@ -1,0 +1,25 @@
+{
+  if (contact == null) {
+    throw new IllegalArgumentException("Moving contact cannot be null");
+  }
+  if (newParentGroup == null) {
+    throw new IllegalArgumentException("New contact's parent group  be null");
+  }
+  if (newParentGroup.getContact(contact.getUri()) != null) {
+    throw new OperationFailedException("Contact " + contact.getUri() + " already exists.",OperationFailedException.SUBSCRIPTION_ALREADY_EXISTS);
+  }
+  ContactGroupSipImpl oldParentGroup=(ContactGroupSipImpl)contact.getParentContactGroup();
+  oldParentGroup.removeContact(contact);
+  newParentGroup.addContact(contact);
+  if (contact.isPersistent()) {
+    try {
+      updateResourceLists();
+    }
+ catch (    XCapException e) {
+      newParentGroup.removeContact(contact);
+      oldParentGroup.addContact(contact);
+      throw new OperationFailedException("Error while moving XCAP contact",OperationFailedException.NETWORK_FAILURE,e);
+    }
+  }
+  fireContactMoved(oldParentGroup,newParentGroup,contact);
+}
