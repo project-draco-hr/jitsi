@@ -7,20 +7,7 @@
       if (isLocallyOnHold())       direction=direction.and(MediaDirection.SENDONLY);
       if (direction != MediaDirection.INACTIVE) {
         MediaDescription md=createMediaDescription(dev.getSupportedFormats(),getTransportManager().getStreamConnector(mediaType),direction,dev.getSupportedExtensions());
-        if (getPeer().getCall().isSipZrtpAttribute()) {
-          try {
-            ZrtpControl control=getZrtpControls().get(mediaType);
-            if (control == null) {
-              control=SipActivator.getMediaService().createZrtpControl();
-              getZrtpControls().put(mediaType,control);
-            }
-            String helloHash=control.getHelloHash();
-            if (helloHash != null && helloHash.length() > 0)             md.setAttribute("zrtp-hash",helloHash);
-          }
- catch (          SdpException ex) {
-            logger.error("Cannot add zrtp-hash to sdp",ex);
-          }
-        }
+        updateMediaDescriptionForZrtp(mediaType,md);
         mediaDescs.add(md);
       }
     }
