@@ -1,0 +1,25 @@
+{
+  if (call != null) {
+    OperationSetBasicTelephony<?> telephony=call.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
+    boolean isRecordSelected=isSelected();
+    if (isRecordSelected) {
+      if (!isCallDirSet) {
+        int status=JOptionPane.showConfirmDialog(this,inputPanel,resources.getI18NString("plugin.callrecordingconfig.SAVE_CALL"),JOptionPane.OK_CANCEL_OPTION,JOptionPane.QUESTION_MESSAGE);
+        if (status == JOptionPane.OK_OPTION) {
+          callFilename=inputPanel.getSelectedFilename();
+          configurationService.setProperty(Recorder.CALL_FORMAT,inputPanel.getSelectedFormat());
+        }
+ else {
+          setSelected(false);
+          return;
+        }
+      }
+ else       callFilename=createDefaultFilename();
+      telephony.startRecording(call,callFilename);
+    }
+ else {
+      telephony.stopRecording(call);
+      JOptionPane.showMessageDialog(this,resources.getI18NString("plugin.callrecordingconfig.CALL_SAVED_TO",new String[]{callFilename}),resources.getI18NString("plugin.callrecordingconfig.CALL_SAVED"),JOptionPane.INFORMATION_MESSAGE);
+    }
+  }
+}

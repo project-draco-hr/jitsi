@@ -1,17 +1,16 @@
 {
   if (call != null) {
-    OperationSetBasicTelephony telephony=call.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
     Iterator<? extends CallPeer> peers=call.getCallPeers();
-    boolean isHoldSelected=isSelected();
+    boolean on=isSelected();
+    OperationSetBasicTelephony telephony=call.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
     while (peers.hasNext()) {
       CallPeer callPeer=peers.next();
       try {
-        if (isHoldSelected)         telephony.putOnHold(callPeer);
+        if (on)         telephony.putOnHold(callPeer);
  else         telephony.putOffHold(callPeer);
       }
- catch (      OperationFailedException ex) {
-        if (isHoldSelected)         logger.error("Failed to put on hold.",ex);
- else         logger.error("Failed to put off hold.",ex);
+ catch (      OperationFailedException ofex) {
+        logger.error("Failed to put " + (on ? "on" : "off") + " hold.",ofex);
       }
     }
   }
