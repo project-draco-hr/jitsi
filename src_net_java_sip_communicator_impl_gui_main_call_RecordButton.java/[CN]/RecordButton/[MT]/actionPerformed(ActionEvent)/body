@@ -4,10 +4,10 @@
     boolean isRecordSelected=isSelected();
     if (isRecordSelected) {
       if (!isCallDirSet) {
-        int status=JOptionPane.showConfirmDialog(this,inputPanel,resources.getI18NString("plugin.callrecordingconfig.SAVE_CALL"),JOptionPane.OK_CANCEL_OPTION,JOptionPane.QUESTION_MESSAGE);
-        if (status == JOptionPane.OK_OPTION) {
-          callFilename=inputPanel.getSelectedFilename();
-          configurationService.setProperty(Recorder.CALL_FORMAT,inputPanel.getSelectedFormat());
+        File selectedFile=callFileChooser.getFileFromDialog();
+        if (selectedFile != null) {
+          callFilename=selectedFile.getAbsolutePath();
+          configuration.setProperty(Recorder.CALL_FORMAT,SoundFileUtils.getExtension(selectedFile));
         }
  else {
           setSelected(false);
@@ -19,7 +19,7 @@
     }
  else {
       telephony.stopRecording(call);
-      JOptionPane.showMessageDialog(this,resources.getI18NString("plugin.callrecordingconfig.CALL_SAVED_TO",new String[]{callFilename}),resources.getI18NString("plugin.callrecordingconfig.CALL_SAVED"),JOptionPane.INFORMATION_MESSAGE);
+      NotificationManager.fireNotification(NotificationManager.CALL_SAVED,resources.getI18NString("plugin.callrecordingconfig.CALL_SAVED"),resources.getI18NString("plugin.callrecordingconfig.CALL_SAVED_TO",new String[]{callFilename}));
     }
   }
 }

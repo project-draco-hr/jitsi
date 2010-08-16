@@ -1,11 +1,20 @@
 {
   super(call,fullScreen,selected,ImageLoader.RECORD_BUTTON,null);
-  inputPanel=new InputPanel();
+  callFileChooser=GenericFileDialog.create(null,resources.getI18NString("plugin.callrecordingconfig.SAVE_CALL"),SipCommFileChooser.SAVE_FILE_OPERATION);
+  callFileChooser.addFilter(new SipCommFileFilter(){
+    public boolean accept(    File f){
+      return f.isDirectory() || SoundFileUtils.isRecordedCall(f);
+    }
+    public String getDescription(){
+      return "Recorded call (*.mp2, *.wav, *.au, *.aif, *.gsm)";
+    }
+  }
+);
   String toolTip=resources.getI18NString("service.gui.RECORD_BUTTON_TOOL_TIP");
-  String saveDir=configurationService.getString(Recorder.SAVED_CALLS_PATH);
-  if (saveDir != null) {
+  String saveDir=configuration.getString(Recorder.SAVED_CALLS_PATH);
+  if ((saveDir != null) && (saveDir.length() != 0)) {
     isCallDirSet=true;
-    toolTip=toolTip + " (" + saveDir+ ")";
+    toolTip+=" (" + saveDir + ")";
   }
   setToolTipText(toolTip);
 }
