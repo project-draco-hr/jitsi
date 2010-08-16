@@ -1,0 +1,32 @@
+{
+  pluginPanelSouth.setLayout(new BoxLayout(pluginPanelSouth,BoxLayout.Y_AXIS));
+  pluginPanelNorth.setLayout(new BoxLayout(pluginPanelNorth,BoxLayout.Y_AXIS));
+  pluginPanelEast.setLayout(new BoxLayout(pluginPanelEast,BoxLayout.Y_AXIS));
+  pluginPanelWest.setLayout(new BoxLayout(pluginPanelWest,BoxLayout.Y_AXIS));
+  java.awt.Container contentPane=getContentPane();
+  contentPane.add(pluginPanelNorth,BorderLayout.NORTH);
+  contentPane.add(pluginPanelEast,BorderLayout.EAST);
+  contentPane.add(pluginPanelWest,BorderLayout.WEST);
+  this.mainPanel.add(pluginPanelSouth,BorderLayout.SOUTH);
+  ServiceReference[] serRefs=null;
+  try {
+    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponent.class.getName(),"(|(" + Container.CONTAINER_ID + "="+ Container.CONTAINER_MAIN_WINDOW.getID()+ ")("+ Container.CONTAINER_ID+ "="+ Container.CONTAINER_STATUS_BAR.getID()+ "))");
+  }
+ catch (  InvalidSyntaxException exc) {
+    logger.error("Could not obtain plugin reference.",exc);
+  }
+  if (serRefs != null) {
+    for (    ServiceReference serRef : serRefs) {
+      PluginComponent c=(PluginComponent)GuiActivator.bundleContext.getService(serRef);
+      if (c.isNativeComponent())       nativePluginsTable.put(c,new JPanel());
+ else {
+        String pluginConstraints=c.getConstraints();
+        Object constraints;
+        if (pluginConstraints != null)         constraints=UIServiceImpl.getBorderLayoutConstraintsFromContainer(pluginConstraints);
+ else         constraints=BorderLayout.SOUTH;
+        this.addPluginComponent((Component)c.getComponent(),c.getContainer(),constraints);
+      }
+    }
+  }
+  GuiActivator.getUIService().addPluginComponentListener(this);
+}
