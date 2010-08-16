@@ -1,0 +1,41 @@
+{
+  ValidityType validity=new ValidityType();
+  if (!NAMESPACE.equals(getNamespaceUri(element)) || !VALIDITY_ELEMENT.equals(element.getLocalName())) {
+    throw new Exception("validity element is invalid");
+  }
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("sphere element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    throw new Exception("validity element is invalid");
+  }
+  NodeList childNodes=element.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element childElement=(Element)node;
+    String localName=childElement.getLocalName();
+    String namespaceUri=getNamespaceUri(childElement);
+    if (!NAMESPACE.equals(namespaceUri)) {
+      throw new Exception("sphere element is invalid");
+    }
+    if (VALIDITY_FROM_ELEMENT.equals(localName)) {
+      validity.getFromList().add(childElement.getTextContent());
+    }
+ else     if (VALIDITY_UNTIL_ELEMENT.equals(localName)) {
+      validity.getUntilList().add(childElement.getTextContent());
+    }
+ else {
+      throw new Exception("sphere element is invalid");
+    }
+  }
+  return validity;
+}

@@ -1,0 +1,67 @@
+{
+  ProvideServicePermissionType servicePermission=new ProvideServicePermissionType();
+  if (!NAMESPACE.equals(getNamespaceUri(element)) || !PROVIDE_SERVICES_ELEMENT.equals(element.getLocalName())) {
+    throw new Exception("provide-services element is invalid");
+  }
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("provide-services element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    throw new Exception("provide-services element is invalid");
+  }
+  NodeList childNodes=element.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element childElement=(Element)node;
+    String localName=childElement.getLocalName();
+    String namespaceUri=getNamespaceUri(childElement);
+    if (NAMESPACE.equals(namespaceUri)) {
+      if (PROVIDE_SERVICES_ALL_ELEMENT.equals(localName)) {
+        if (hasChildElements(childElement)) {
+          throw new Exception("all-services element is invalid");
+        }
+        servicePermission.setAllServices(new ProvideServicePermissionType.AllServicesType());
+      }
+ else       if (PROVIDE_SERVICES_SERBICE_URI_ELEMENT.equals(localName)) {
+        if (hasChildElements(childElement)) {
+          throw new Exception("service-uri element is invalid");
+        }
+        servicePermission.getServiceUriList().add(new ProvideServicePermissionType.ServiceUriType(childElement.getTextContent()));
+      }
+ else       if (PROVIDE_SERVICES_SERBICE_URI_SCHEME_ELEMENT.equals(localName)) {
+        if (hasChildElements(childElement)) {
+          throw new Exception("service-scheme-uri element is invalid");
+        }
+        servicePermission.getServiceUriSchemeList().add(new ProvideServicePermissionType.ServiceUriSchemeType(childElement.getTextContent()));
+      }
+ else       if (OCCURRENCE_ID_ELEMENT.equals(localName)) {
+        if (hasChildElements(childElement)) {
+          throw new Exception("occurrence-id element is invalid");
+        }
+        servicePermission.getOccurrences().add(new OccurrenceIdType(childElement.getTextContent()));
+      }
+ else       if (CLASS_ELEMENT.equals(localName)) {
+        if (hasChildElements(childElement)) {
+          throw new Exception("class element is invalid");
+        }
+        servicePermission.getClasses().add(new ClassType(childElement.getTextContent()));
+      }
+ else {
+        throw new Exception("provide-services element is invalid");
+      }
+    }
+ else {
+      servicePermission.getAny().add(childElement);
+    }
+  }
+  return servicePermission;
+}

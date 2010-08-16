@@ -1,26 +1,26 @@
 {
   logger.trace(" --=== beginning state transition test ===--");
-  PresenceStatus oldStatus=this.operationSetPresence1.getPresenceStatus();
-  String oldStatusMessage=this.operationSetPresence1.getCurrentStatusMessage();
+  PresenceStatus oldStatus=this.operationSetPresence2.getPresenceStatus();
+  String oldStatusMessage=this.operationSetPresence2.getCurrentStatusMessage();
   String newStatusMessage=this.statusMessageRoot + newStatus;
   logger.debug("old status is=" + oldStatus.getStatusName() + " new status="+ newStatus.getStatusName());
   PresenceStatusEventCollector statusEventCollector=new PresenceStatusEventCollector();
-  this.operationSetPresence1.addProviderPresenceStatusListener(statusEventCollector);
-  this.operationSetPresence1.publishPresenceStatus(newStatus,newStatusMessage);
+  this.operationSetPresence2.addProviderPresenceStatusListener(statusEventCollector);
+  this.operationSetPresence2.publishPresenceStatus(newStatus,newStatusMessage);
   pauseAfterStateChanges();
   statusEventCollector.waitForPresEvent(10000);
   statusEventCollector.waitForStatMsgEvent(10000);
-  this.operationSetPresence1.removeProviderPresenceStatusListener(statusEventCollector);
+  this.operationSetPresence2.removeProviderPresenceStatusListener(statusEventCollector);
   assertEquals("Events dispatched during an event transition.",1,statusEventCollector.collectedPresEvents.size());
   assertEquals("A status changed event contained wrong old status.",oldStatus,((ProviderPresenceStatusChangeEvent)statusEventCollector.collectedPresEvents.get(0)).getOldStatus());
   assertEquals("A status changed event contained wrong new status.",newStatus,((ProviderPresenceStatusChangeEvent)statusEventCollector.collectedPresEvents.get(0)).getNewStatus());
-  assertEquals("opSet.getPresenceStatus() did not return properly.",newStatus,this.operationSetPresence1.getPresenceStatus());
+  assertEquals("opSet.getPresenceStatus() did not return properly.",newStatus,this.operationSetPresence2.getPresenceStatus());
   Object lock=new Object();
 synchronized (lock) {
     logger.trace("Will wait status to be received from the other side!");
     lock.wait(5000);
   }
-  PresenceStatus actualStatus=this.operationSetPresence2.queryContactStatus(this.fixture.userID1);
+  PresenceStatus actualStatus=this.operationSetPresence1.queryContactStatus(this.fixture.userID2);
   if (newStatus.getStatus() != 0) {
     assertEquals("The underlying implementation did not switch to the " + "requested presence status.",newStatus,actualStatus);
   }
@@ -32,6 +32,6 @@ synchronized (lock) {
   assertEquals("No status message event.",1,statusEventCollector.collectedStatMsgEvents.size());
   assertEquals("A status message event contained wrong old value.",oldStatusMessage,((PropertyChangeEvent)statusEventCollector.collectedStatMsgEvents.get(0)).getOldValue());
   assertEquals("A status message event contained wrong new value.",newStatusMessage,((PropertyChangeEvent)statusEventCollector.collectedStatMsgEvents.get(0)).getNewValue());
-  assertEquals("opSet.getCurrentStatusMessage() did not return properly.",newStatusMessage,this.operationSetPresence1.getCurrentStatusMessage());
+  assertEquals("opSet.getCurrentStatusMessage() did not return properly.",newStatusMessage,this.operationSetPresence2.getCurrentStatusMessage());
   logger.trace(" --=== finished test ===--");
 }

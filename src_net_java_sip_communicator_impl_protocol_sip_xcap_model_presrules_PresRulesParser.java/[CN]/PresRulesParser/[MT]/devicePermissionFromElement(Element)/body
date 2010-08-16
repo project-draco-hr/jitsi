@@ -1,0 +1,61 @@
+{
+  ProvideDevicePermissionType devicePermission=new ProvideDevicePermissionType();
+  if (!NAMESPACE.equals(getNamespaceUri(element)) || !PROVIDE_DEVICES_ELEMENT.equals(element.getLocalName())) {
+    throw new Exception("provide-devices element is invalid");
+  }
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("provide-devices element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    throw new Exception("provide-devices element is invalid");
+  }
+  NodeList childNodes=element.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element childElement=(Element)node;
+    String localName=childElement.getLocalName();
+    String namespaceUri=getNamespaceUri(childElement);
+    if (NAMESPACE.equals(namespaceUri)) {
+      if (PROVIDE_DEVICES_ALL_ELEMENT.equals(localName)) {
+        if (hasChildElements(childElement)) {
+          throw new Exception("all-devices element is invalid");
+        }
+        devicePermission.setAllDevices(new ProvideDevicePermissionType.AllDevicesType());
+      }
+ else       if (PROVIDE_DEVICES_DEVICEID_ELEMENT.equals(localName)) {
+        if (hasChildElements(childElement)) {
+          throw new Exception("deviceID element is invalid");
+        }
+        devicePermission.getDevices().add(new ProvideDevicePermissionType.DeviceIdType(childElement.getTextContent()));
+      }
+ else       if (OCCURRENCE_ID_ELEMENT.equals(localName)) {
+        if (hasChildElements(childElement)) {
+          throw new Exception("occurrence-id element is invalid");
+        }
+        devicePermission.getOccurrences().add(new OccurrenceIdType(childElement.getTextContent()));
+      }
+ else       if (CLASS_ELEMENT.equals(localName)) {
+        if (hasChildElements(childElement)) {
+          throw new Exception("class element is invalid");
+        }
+        devicePermission.getClasses().add(new ClassType(childElement.getTextContent()));
+      }
+ else {
+        throw new Exception("provide-devices element is invalid");
+      }
+    }
+ else {
+      devicePermission.getAny().add(childElement);
+    }
+  }
+  return devicePermission;
+}

@@ -1,0 +1,52 @@
+{
+  RuleType rule=new RuleType();
+  if (!NAMESPACE.equals(getNamespaceUri(element)) || !RULE_ELEMENT.equals(element.getLocalName())) {
+    throw new Exception("rule element is invalid");
+  }
+  String id=null;
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("rule element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    if (!NAMESPACE.equals(namespaceUri) || !RULE_ID_ATTR.equals(attribute.getLocalName()) || id != null) {
+      throw new Exception("rule element is invalid");
+    }
+    id=attribute.getValue();
+  }
+  NodeList childNodes=element.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element childElement=(Element)node;
+    String localName=childElement.getLocalName();
+    String namespaceUri=getNamespaceUri(childElement);
+    if (!NAMESPACE.equals(namespaceUri)) {
+      throw new Exception("rule element is invalid");
+    }
+    if (CONDITIONS_ELEMENT.equals(localName)) {
+      rule.setConditions(conditionsFromElement(childElement));
+    }
+ else     if (ACTIONS_ELEMENT.equals(localName)) {
+      rule.setActions(PresRulesParser.actionsFromElement(childElement));
+    }
+ else     if (TRANSFORMATIONS_ELEMENT.equals(localName)) {
+      rule.setTransformations(PresRulesParser.transformationsFromElement(childElement));
+    }
+ else {
+      throw new Exception("rule element is invalid");
+    }
+  }
+  if (id == null) {
+    throw new Exception("rule id attribute is missed");
+  }
+  rule.setId(id);
+  return rule;
+}

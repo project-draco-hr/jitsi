@@ -1,0 +1,49 @@
+{
+  TransfomationsType transfomations=new TransfomationsType();
+  if (!CommonPolicyParser.NAMESPACE.equals(getNamespaceUri(element)) || !CommonPolicyParser.TRANSFORMATIONS_ELEMENT.equals(element.getLocalName())) {
+    throw new Exception("transfomations element is invalid");
+  }
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("transfomations element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    throw new Exception("transfomations element is invalid");
+  }
+  NodeList childNodes=element.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element childElement=(Element)node;
+    String localName=childElement.getLocalName();
+    String namespaceUri=getNamespaceUri(childElement);
+    if (CommonPolicyParser.NAMESPACE.equals(namespaceUri)) {
+      throw new Exception("transfomations element is invalid");
+    }
+ else     if (NAMESPACE.equals(namespaceUri)) {
+      if (PROVIDE_DEVICES_ELEMENT.equals(localName)) {
+        transfomations.setDevicePermission(devicePermissionFromElement(childElement));
+      }
+ else       if (PROVIDE_SERVICES_ELEMENT.equals(localName)) {
+        transfomations.setServicePermission(servicePermissionFromElement(childElement));
+      }
+ else       if (PROVIDE_PERSONS_ELEMENT.equals(localName)) {
+        transfomations.setPersonPermission(personPermissionFromElement(childElement));
+      }
+ else {
+        transfomations.getAny().add(childElement);
+      }
+    }
+ else {
+      transfomations.getAny().add(childElement);
+    }
+  }
+  return transfomations;
+}

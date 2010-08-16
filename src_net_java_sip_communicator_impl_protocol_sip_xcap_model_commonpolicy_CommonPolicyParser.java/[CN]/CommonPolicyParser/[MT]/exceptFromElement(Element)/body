@@ -1,0 +1,42 @@
+{
+  ExceptType except=new ExceptType();
+  if (!NAMESPACE.equals(getNamespaceUri(element)) || !EXCEPT_ELEMENT.equals(element.getLocalName())) {
+    throw new Exception("except element is invalid");
+  }
+  String id=null;
+  String domain=null;
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("except element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    if (!NAMESPACE.equals(namespaceUri)) {
+      throw new Exception("except element is invalid");
+    }
+    if (EXCEPT_ID_ATTR.equals(attribute.getLocalName()) && id == null) {
+      id=attribute.getValue();
+      continue;
+    }
+ else     if (EXCEPT_DOMAIN_ATTR.equals(attribute.getLocalName()) && domain == null) {
+      domain=attribute.getValue();
+      continue;
+    }
+    throw new Exception("except element is invalid");
+  }
+  NodeList childNodes=element.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    throw new Exception("except element is invalid");
+  }
+  except.setId(id);
+  except.setDomain(domain);
+  return except;
+}

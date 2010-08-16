@@ -1,0 +1,38 @@
+{
+  if (isNullOrEmpty(xml)) {
+    throw new IllegalArgumentException("XML cannot be null or empty");
+  }
+  try {
+    RulesetType ruleset=new RulesetType();
+    Document document=createDocument(xml);
+    Element rulesetElement=document.getDocumentElement();
+    if (!NAMESPACE.equals(getNamespaceUri(rulesetElement)) || !RULESET_ELEMENT.equals(rulesetElement.getLocalName())) {
+      throw new Exception("Document doesn't contain ruleset " + "element");
+    }
+    NamedNodeMap attributes=rulesetElement.getAttributes();
+    for (int i=0; i < attributes.getLength(); i++) {
+      Attr attribute=(Attr)attributes.item(i);
+      String namespaceUri=getNamespaceUri(attribute);
+      if (namespaceUri == null) {
+        throw new Exception("ruleset element is invalid");
+      }
+      if (isStandartXmlNamespace(namespaceUri)) {
+        continue;
+      }
+      throw new Exception("ruleset element is invalid");
+    }
+    NodeList childNodes=rulesetElement.getChildNodes();
+    for (int i=0; i < childNodes.getLength(); i++) {
+      Node node=childNodes.item(i);
+      if (node.getNodeType() != Node.ELEMENT_NODE) {
+        continue;
+      }
+      Element childElement=(Element)node;
+      ruleset.getRules().add(ruleFromElement(childElement));
+    }
+    return ruleset;
+  }
+ catch (  Exception ex) {
+    throw new ParsingException(ex);
+  }
+}

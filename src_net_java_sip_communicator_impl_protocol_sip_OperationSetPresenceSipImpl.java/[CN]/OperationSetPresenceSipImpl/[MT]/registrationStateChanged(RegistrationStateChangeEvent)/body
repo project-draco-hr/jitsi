@@ -1,5 +1,8 @@
 {
   if (evt.getNewState().equals(RegistrationState.UNREGISTERING)) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Enter unregistering state");
+    }
     cancelTimer();
     ssContactList.destroy();
     try {
@@ -15,68 +18,37 @@
       logger.debug("enter registered state");
     }
     ssContactList.init();
-    if ((presenceEnabled == false) || (pollingTask != null)) {
+    if ((!presenceEnabled) || (pollingTask != null)) {
       return;
     }
-    Iterator<ContactGroup> groupsIter=getServerStoredContactListRoot().subgroups();
-    while (groupsIter.hasNext()) {
-      ContactGroup group=groupsIter.next();
-      Iterator<Contact> contactsIter=group.contacts();
-      while (contactsIter.hasNext()) {
-        ContactSipImpl contact=(ContactSipImpl)contactsIter.next();
-        if (contact.isResolved()) {
-          if (logger.isDebugEnabled())           logger.debug("contact " + contact + " already resolved");
-          continue;
-        }
-        forcePollContact(contact);
-      }
-    }
-    Iterator<Contact> rootContactsIter=getServerStoredContactListRoot().contacts();
-    while (rootContactsIter.hasNext()) {
-      ContactSipImpl contact=(ContactSipImpl)rootContactsIter.next();
-      if (contact.isResolved()) {
-        if (logger.isDebugEnabled())         logger.debug("contact " + contact + " already resolved");
-        continue;
-      }
+    for (    ContactSipImpl contact : ssContactList.getAllContacts(ssContactList.getRootGroup())) {
       forcePollContact(contact);
     }
     pollingTask=new PollOfflineContactsTask();
     timer.schedule(pollingTask,pollingTaskPeriod,pollingTaskPeriod);
   }
- else   if (evt.getNewState() == RegistrationState.CONNECTION_FAILED) {
-    Iterator<Contact> rootcontactsIter=getServerStoredContactListRoot().contacts();
-    while (rootcontactsIter.hasNext()) {
-      ContactSipImpl contact=(ContactSipImpl)rootcontactsIter.next();
-      PresenceStatus oldContactStatus=contact.getPresenceStatus();
-      contact.setResolved(false);
-      if (subscriber != null)       try {
-        subscriber.removeSubscription(getAddress(contact));
-      }
- catch (      OperationFailedException ex) {
-        if (logger.isDebugEnabled())         logger.debug("Failed to remove subscription to contact " + contact);
-      }
-      if (!oldContactStatus.isOnline())       continue;
-      contact.setPresenceStatus(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE));
-      fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldContactStatus);
+ else   if (evt.getNewState().equals(RegistrationState.CONNECTION_FAILED)) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Enter connction failed state");
     }
-    Iterator<ContactGroup> groupsIter=getServerStoredContactListRoot().subgroups();
-    while (groupsIter.hasNext()) {
-      ContactGroup group=groupsIter.next();
-      Iterator<Contact> contactsIter=group.contacts();
-      while (contactsIter.hasNext()) {
-        ContactSipImpl contact=(ContactSipImpl)contactsIter.next();
-        PresenceStatus oldContactStatus=contact.getPresenceStatus();
-        contact.setResolved(false);
-        if (subscriber != null)         try {
+    ssContactList.destroy();
+    for (    ContactSipImpl contact : ssContactList.getAllContacts(ssContactList.getRootGroup())) {
+      PresenceStatus oldContactStatus=contact.getPresenceStatus();
+      if (subscriber != null) {
+        try {
           subscriber.removeSubscription(getAddress(contact));
         }
  catch (        OperationFailedException ex) {
-          if (logger.isDebugEnabled())           logger.debug("Failed to remove subscription to contact " + contact);
+          if (logger.isDebugEnabled()) {
+            logger.debug("Failed to remove subscription to contact " + contact);
+          }
         }
-        if (!oldContactStatus.isOnline())         continue;
-        contact.setPresenceStatus(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE));
-        fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldContactStatus);
       }
+      if (!oldContactStatus.isOnline()) {
+        continue;
+      }
+      contact.setPresenceStatus(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE));
+      fireContactPresenceStatusChangeEvent(contact,contact.getParentContactGroup(),oldContactStatus);
     }
     cancelTimer();
     waitedCallIds.clear();

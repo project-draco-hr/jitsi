@@ -1,5 +1,6 @@
 {
   logger.debug("Testing Subscription and Subscription Event Dispatch.");
+  this.operationSetPresence2.subscribe(this.fixture.userID1);
   SubscriptionEventCollector subEvtCollector=new SubscriptionEventCollector();
   this.operationSetPresence1.addSubscriptionListener(subEvtCollector);
 synchronized (subEvtCollector) {
@@ -45,19 +46,6 @@ synchronized (contactPresEvtCollector) {
   PresenceStatus reportedOldStatus=presEvt.getOldStatus();
   assertEquals("Reported new PresenceStatus: ",newStatus,reportedNewStatus);
   assertNotNull("Reported old PresenceStatus: ",reportedOldStatus);
-  try {
-    subEvtCollector.collectedEvents.clear();
-    this.operationSetPresence2.addSubscriptionListener(subEvtCollector);
-synchronized (subEvtCollector) {
-      this.operationSetPresence2.subscribe(this.fixture.userID1);
-      subEvtCollector.waitForEvent(10000);
-      subEvtCollector.collectedEvents.clear();
-      subEvtCollector.waitForEvent(10000);
-      this.operationSetPresence2.removeSubscriptionListener(subEvtCollector);
-    }
-  }
- catch (  OperationFailedException ex) {
-  }
 synchronized (lock) {
     logger.info("Will wait all subscription events to be received by" + " lib");
     lock.wait(3000);

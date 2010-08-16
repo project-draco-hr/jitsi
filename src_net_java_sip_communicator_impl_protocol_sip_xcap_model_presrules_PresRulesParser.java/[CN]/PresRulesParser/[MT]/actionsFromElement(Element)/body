@@ -1,0 +1,43 @@
+{
+  ActionsType actions=new ActionsType();
+  if (!CommonPolicyParser.NAMESPACE.equals(getNamespaceUri(element)) || !CommonPolicyParser.ACTIONS_ELEMENT.equals(element.getLocalName())) {
+    throw new Exception("actions element is invalid");
+  }
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("actions element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    throw new Exception("actions element is invalid");
+  }
+  SubHandlingType subHandling=null;
+  NodeList childNodes=element.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element childElement=(Element)node;
+    String localName=childElement.getLocalName();
+    String namespaceUri=getNamespaceUri(childElement);
+    if (CommonPolicyParser.NAMESPACE.equals(namespaceUri)) {
+      throw new Exception("actions element is invalid");
+    }
+ else     if (NAMESPACE.equals(namespaceUri)) {
+      if (!SUBHANDLING_ELEMENT.equals(localName) || subHandling != null) {
+        throw new Exception("actions element is invalid");
+      }
+      subHandling=SubHandlingType.fromString(childElement.getTextContent().toLowerCase());
+    }
+ else {
+      actions.getAny().add(childElement);
+    }
+  }
+  actions.setSubHandling(subHandling);
+  return actions;
+}

@@ -20,23 +20,47 @@
         serverRootList.getLists().add(list);
       }
     }
-    resolveContactGroup(rootGroup,serverRootList);
+    boolean firstRun=false;
+    boolean updateResourceLists=false;
+    resolveContactGroup(rootGroup,serverRootList,!firstRun);
+    if (firstRun) {
+      for (      ContactSipImpl contact : getAllContacts(rootGroup)) {
+        if (!contact.isResolved() && contact.isPersistent()) {
+          updateResourceLists=true;
+          contact.setResolved(true);
+          fireContactResolved((ContactGroupSipImpl)contact.getParentContactGroup(),contact);
+        }
+      }
+      for (      ContactGroupSipImpl group : getAllGroups(rootGroup)) {
+        if (!group.isResolved() && group.isPersistent()) {
+          updateResourceLists=true;
+          group.setResolved(true);
+          fireGroupEvent(group,ServerStoredGroupEvent.GROUP_RESOLVED_EVENT);
+        }
+      }
+      firstRun=false;
+    }
+    if (updateResourceLists) {
+      updateResourceLists();
+    }
     if (xCapClient.isPresRulesSupported()) {
       presRules=xCapClient.getPresRules();
-      for (      RuleType rule : presRules.getRule()) {
+      for (      RuleType rule : presRules.getRules()) {
         if (rule.getId().equals(WHITE_RULE_ID)) {
           whiteRule=rule;
           break;
         }
       }
       if (whiteRule != null) {
-        presRules.getRule().remove(whiteRule);
+        presRules.getRules().remove(whiteRule);
       }
       whiteRule=createWhiteRule();
-      presRules.getRule().add(whiteRule);
+      presRules.getRules().add(whiteRule);
       List<ContactSipImpl> uniqueContacts=getUniqueContacts(rootGroup);
       for (      ContactSipImpl contact : uniqueContacts) {
-        addContactToWhiteList(contact);
+        if (contact.isPersistent()) {
+          addContactToWhiteList(contact);
+        }
       }
       updatePresRules();
     }

@@ -1,0 +1,55 @@
+{
+  ProvidePersonPermissionType personPermission=new ProvidePersonPermissionType();
+  if (!NAMESPACE.equals(getNamespaceUri(element)) || !PROVIDE_PERSONS_ELEMENT.equals(element.getLocalName())) {
+    throw new Exception("provide-persons element is invalid");
+  }
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("provide-persons element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    throw new Exception("provide-persons element is invalid");
+  }
+  NodeList childNodes=element.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element childElement=(Element)node;
+    String localName=childElement.getLocalName();
+    String namespaceUri=getNamespaceUri(childElement);
+    if (NAMESPACE.equals(namespaceUri)) {
+      if (PROVIDE_PERSONS_ALL_ELEMENT.equals(localName)) {
+        if (hasChildElements(childElement)) {
+          throw new Exception("all-persons element is invalid");
+        }
+        personPermission.setAllPersons(new ProvidePersonPermissionType.AllPersonsType());
+      }
+ else       if (OCCURRENCE_ID_ELEMENT.equals(localName)) {
+        if (hasChildElements(childElement)) {
+          throw new Exception("occurrence-id element is invalid");
+        }
+        personPermission.getOccurrences().add(new OccurrenceIdType(childElement.getTextContent()));
+      }
+ else       if (CLASS_ELEMENT.equals(localName)) {
+        if (hasChildElements(childElement)) {
+          throw new Exception("class element is invalid");
+        }
+        personPermission.getClasses().add(new ClassType(childElement.getTextContent()));
+      }
+ else {
+        throw new Exception("provide-persons element is invalid");
+      }
+    }
+ else {
+      personPermission.getAny().add(childElement);
+    }
+  }
+  return personPermission;
+}

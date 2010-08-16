@@ -1,0 +1,45 @@
+{
+  ManyType many=new ManyType();
+  if (!NAMESPACE.equals(getNamespaceUri(element)) || !MANY_ELEMENT.equals(element.getLocalName())) {
+    throw new Exception("many element is invalid");
+  }
+  String domain=null;
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("many element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    if (!NAMESPACE.equals(namespaceUri) || !MANY_DOMAIN_ATTR.equals(attribute.getLocalName()) || domain != null) {
+      throw new Exception("many element is invalid");
+    }
+    domain=attribute.getValue();
+  }
+  NodeList childNodes=element.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element childElement=(Element)node;
+    String namespaceUri=getNamespaceUri(childElement);
+    String localName=childElement.getLocalName();
+    if (NAMESPACE.equals(namespaceUri)) {
+      if (EXCEPT_ELEMENT.equals(localName)) {
+        many.getExcepts().add(exceptFromElement(childElement));
+      }
+ else {
+        throw new Exception("many element is invalid");
+      }
+    }
+ else {
+      many.getAny().add(childElement);
+    }
+  }
+  many.setDomain(domain);
+  return many;
+}

@@ -1,0 +1,46 @@
+{
+  ConditionsType conditions=new ConditionsType();
+  if (!NAMESPACE.equals(getNamespaceUri(element)) || !CONDITIONS_ELEMENT.equals(element.getLocalName())) {
+    throw new Exception("conditions element is invalid");
+  }
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    Attr attribute=(Attr)attributes.item(i);
+    String namespaceUri=getNamespaceUri(attribute);
+    if (namespaceUri == null) {
+      throw new Exception("conditions element is invalid");
+    }
+    if (isStandartXmlNamespace(namespaceUri)) {
+      continue;
+    }
+    throw new Exception("conditions element is invalid");
+  }
+  NodeList childNodes=element.getChildNodes();
+  for (int i=0; i < childNodes.getLength(); i++) {
+    Node node=childNodes.item(i);
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
+      continue;
+    }
+    Element childElement=(Element)node;
+    String localName=childElement.getLocalName();
+    String namespaceUri=getNamespaceUri(childElement);
+    if (NAMESPACE.equals(namespaceUri)) {
+      if (IDENTITY_ELEMENT.equals(localName)) {
+        conditions.getIdentities().add(identityFromElement(childElement));
+      }
+ else       if (SPHERE_ELEMENT.equals(localName)) {
+        conditions.getSpheres().add(sphereFromElement(childElement));
+      }
+ else       if (VALIDITY_ELEMENT.equals(localName)) {
+        conditions.getValidities().add(validityFromElement(childElement));
+      }
+ else {
+        throw new Exception("conditions element is invalid");
+      }
+    }
+ else {
+      conditions.getAny().add(childElement);
+    }
+  }
+  return conditions;
+}

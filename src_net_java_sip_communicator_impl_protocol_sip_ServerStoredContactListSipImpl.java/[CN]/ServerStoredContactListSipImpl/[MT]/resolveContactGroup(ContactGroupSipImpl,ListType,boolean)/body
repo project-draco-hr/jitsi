@@ -1,0 +1,85 @@
+{
+  List<ContactGroupSipImpl> unresolvedGroups=new ArrayList<ContactGroupSipImpl>();
+  Iterator<ContactGroup> groupIterator=clientGroup.subgroups();
+  while (groupIterator.hasNext()) {
+    ContactGroupSipImpl group=(ContactGroupSipImpl)groupIterator.next();
+    unresolvedGroups.add(group);
+  }
+  List<ContactSipImpl> unresolvedContacts=new ArrayList<ContactSipImpl>();
+  Iterator<Contact> contactIterator=clientGroup.contacts();
+  while (contactIterator.hasNext()) {
+    ContactSipImpl contact=(ContactSipImpl)contactIterator.next();
+    unresolvedContacts.add(contact);
+  }
+  for (  ListType serverList : serverGroup.getLists()) {
+    ContactGroupSipImpl newGroup=(ContactGroupSipImpl)clientGroup.getGroup(serverList.getName());
+    if (newGroup == null) {
+      newGroup=new ContactGroupSipImpl(serverList.getName(),sipProvider);
+      newGroup.setOtherAttributes(serverList.getAnyAttributes());
+      newGroup.setAny(serverList.getAny());
+      newGroup.setResolved(true);
+      clientGroup.addSubgroup(newGroup);
+      fireGroupEvent(newGroup,ServerStoredGroupEvent.GROUP_CREATED_EVENT);
+      resolveContactGroup(newGroup,serverList,deleteUnresolved);
+    }
+ else {
+      newGroup.setResolved(true);
+      newGroup.setOtherAttributes(serverList.getAnyAttributes());
+      newGroup.setAny(serverList.getAny());
+      unresolvedGroups.remove(newGroup);
+      fireGroupEvent(newGroup,ServerStoredGroupEvent.GROUP_RESOLVED_EVENT);
+      resolveContactGroup(newGroup,serverList,deleteUnresolved);
+    }
+  }
+  for (  EntryType serverEntry : serverGroup.getEntries()) {
+    ContactSipImpl newContact=(ContactSipImpl)clientGroup.getContact(serverEntry.getUri());
+    if (newContact == null) {
+      Address sipAddress;
+      try {
+        sipAddress=sipProvider.parseAddressString(serverEntry.getUri());
+      }
+ catch (      ParseException e) {
+        logger.error(e);
+        continue;
+      }
+      newContact=new ContactSipImpl(sipAddress,sipProvider);
+      newContact.setDisplayName(serverEntry.getDisplayName());
+      newContact.setOtherAttributes(serverEntry.getAnyAttributes());
+      newContact.setAny(serverEntry.getAny());
+      newContact.setResolved(true);
+      clientGroup.addContact(newContact);
+      fireContactAdded(clientGroup,newContact);
+    }
+ else {
+      newContact.setDisplayName(serverEntry.getDisplayName());
+      newContact.setOtherAttributes(serverEntry.getAnyAttributes());
+      newContact.setAny(serverEntry.getAny());
+      newContact.setResolved(true);
+      unresolvedContacts.remove(newContact);
+      fireContactResolved(clientGroup,newContact);
+    }
+  }
+  clientGroup.getList().getExternals().addAll(serverGroup.getExternals());
+  clientGroup.getList().getEntryRefs().addAll(serverGroup.getEntryRefs());
+  clientGroup.getList().getAny().addAll(serverGroup.getAny());
+  if (deleteUnresolved) {
+    for (    ContactSipImpl unresolvedContact : unresolvedContacts) {
+      if (!unresolvedContact.isPersistent()) {
+        continue;
+      }
+      unresolvedContact.setResolved(true);
+      clientGroup.removeContact(unresolvedContact);
+      fireContactRemoved(clientGroup,unresolvedContact);
+    }
+  }
+  if (deleteUnresolved) {
+    for (    ContactGroupSipImpl unresolvedGroup : unresolvedGroups) {
+      if (!unresolvedGroup.isPersistent()) {
+        continue;
+      }
+      unresolvedGroup.setResolved(true);
+      clientGroup.removeSubGroup(unresolvedGroup);
+      fireGroupEvent(unresolvedGroup,ServerStoredGroupEvent.GROUP_REMOVED_EVENT);
+    }
+  }
+}
