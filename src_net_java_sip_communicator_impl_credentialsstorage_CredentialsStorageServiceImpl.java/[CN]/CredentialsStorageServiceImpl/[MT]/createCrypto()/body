@@ -2,6 +2,18 @@
   if (crypto == null) {
     logger.debug("Crypto instance is null, creating.");
     if (isUsingMasterPassword()) {
+      boolean interrupted=false;
+synchronized (uiReadyLock) {
+        while (!uiReady) {
+          try {
+            uiReadyLock.wait();
+          }
+ catch (          InterruptedException iex) {
+            interrupted=true;
+          }
+        }
+      }
+      if (interrupted)       Thread.currentThread().interrupt();
       String master=showPasswordPrompt();
       if (master == null) {
         crypto=null;
