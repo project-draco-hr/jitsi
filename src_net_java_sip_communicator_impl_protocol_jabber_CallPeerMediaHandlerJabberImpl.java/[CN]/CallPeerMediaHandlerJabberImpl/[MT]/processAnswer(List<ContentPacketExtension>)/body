@@ -1,30 +1,6 @@
 {
   for (  ContentPacketExtension content : answer) {
     remoteContentMap.put(content.getName(),content);
-    RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(content);
-    MediaType mediaType=MediaType.parseString(description.getMedia());
-    MediaStreamTarget target=JingleUtils.extractDefaultTarget(content);
-    if (target.getDataAddress().getPort() == 0) {
-      closeStream(mediaType);
-      continue;
-    }
-    List<MediaFormat> supportedFormats=JingleUtils.extractFormats(description,getDynamicPayloadTypes());
-    MediaDevice dev=getDefaultDevice(mediaType);
-    if (dev == null) {
-      closeStream(mediaType);
-      continue;
-    }
-    MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
-    devDirection=devDirection.and(getDirectionUserPreference(mediaType));
-    if (supportedFormats.isEmpty()) {
-      ProtocolProviderServiceJabberImpl.throwOperationFailedException("Remote party sent an invalid SDP answer.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
-    }
-    StreamConnector connector=getTransportManager().getStreamConnector(mediaType);
-    MediaDirection remoteDirection=JingleUtils.getDirection(content,getPeer().isInitiator());
-    MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
-    List<RTPExtension> remoteRTPExtensions=JingleUtils.extractRTPExtensions(description,getRtpExtensionsRegistry());
-    List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
-    List<RTPExtension> rtpExtensions=intersectRTPExtensions(remoteRTPExtensions,supportedExtensions);
-    initStream(content.getName(),connector,dev,supportedFormats.get(0),target,direction,rtpExtensions);
+    processContent(content);
   }
 }

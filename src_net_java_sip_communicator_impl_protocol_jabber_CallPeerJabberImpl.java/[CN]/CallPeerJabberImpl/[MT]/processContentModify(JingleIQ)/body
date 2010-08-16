@@ -1,0 +1,14 @@
+{
+  ContentPacketExtension ext=content.getContentList().get(0);
+  SendersEnum senders=ext.getSenders();
+  try {
+    getMediaHandler().reinitContent(ext.getName(),senders);
+  }
+ catch (  Exception exc) {
+    logger.info("Failed to process an incoming content-modify",exc);
+    JingleIQ errResp=JinglePacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getSID(),Reason.INCOMPATIBLE_PARAMETERS,"Error: " + exc.getMessage());
+    setState(CallPeerState.FAILED,"Error: " + exc.getMessage());
+    getProtocolProvider().getConnection().sendPacket(errResp);
+    return;
+  }
+}

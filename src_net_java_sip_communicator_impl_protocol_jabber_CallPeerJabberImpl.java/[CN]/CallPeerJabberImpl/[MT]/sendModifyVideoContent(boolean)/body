@@ -1,0 +1,34 @@
+{
+  ContentPacketExtension ext=new ContentPacketExtension();
+  SendersEnum senders=getMediaHandler().getDirection("video");
+  if (allowed) {
+    if (senders != SendersEnum.none) {
+      senders=SendersEnum.both;
+    }
+ else     if (senders == SendersEnum.none && !isInitiator) {
+      senders=SendersEnum.initiator;
+    }
+ else     if (senders == SendersEnum.none && isInitiator) {
+      senders=SendersEnum.responder;
+    }
+  }
+ else {
+    if (senders == SendersEnum.both) {
+      senders=!isInitiator ? SendersEnum.responder : SendersEnum.initiator;
+    }
+ else {
+      senders=SendersEnum.none;
+    }
+  }
+  ext.setSenders(senders);
+  ext.setCreator(isInitiator ? CreatorEnum.initiator : CreatorEnum.responder);
+  ext.setName("video");
+  JingleIQ contentIQ=JinglePacketFactory.createContentModify(getProtocolProvider().getOurJID(),this.peerJID,getJingleSID(),ext);
+  getProtocolProvider().getConnection().sendPacket(contentIQ);
+  try {
+    getMediaHandler().reinitContent("video",senders);
+  }
+ catch (  Exception e) {
+    logger.warn("Exception occurred when media reinitialization",e);
+  }
+}
