@@ -1,18 +1,21 @@
 {
-  if (!recording) {
+  if (this.sink == null) {
     if (filename == null)     throw new NullPointerException("filename");
+    int extensionBeginIndex=filename.lastIndexOf('.');
+    if (extensionBeginIndex < 0)     filename+='.' + this.format;
+ else     if (extensionBeginIndex == filename.length() - 1)     filename+=this.format;
     DataSource outputDataSource=deviceSession.getOutputDataSource();
     try {
-      sink=Manager.createDataSink(outputDataSource,new MediaLocator("file:" + filename));
+      DataSink sink=Manager.createDataSink(outputDataSource,new MediaLocator("file:" + filename));
       sink.open();
       sink.start();
+      this.sink=sink;
     }
  catch (    NoDataSinkException ndsex) {
-      logger.error("No datasink can be found",ndsex);
+      logger.error("No DataSink found",ndsex);
     }
 catch (    IOException ioex) {
-      logger.error("Writing to datasink failed",ioex);
+      logger.error("Failed to write to DataSink",ioex);
     }
-    recording=true;
   }
 }
