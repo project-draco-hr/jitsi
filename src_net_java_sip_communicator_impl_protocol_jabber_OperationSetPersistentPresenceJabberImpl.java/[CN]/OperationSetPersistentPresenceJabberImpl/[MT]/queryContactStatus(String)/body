@@ -1,5 +1,12 @@
 {
-  Presence presence=parentProvider.getConnection().getRoster().getPresence(contactIdentifier);
+  assertConnected();
+  XMPPConnection xmppConnection=parentProvider.getConnection();
+  if (xmppConnection == null) {
+    throw new IllegalArgumentException("The provider/account must be signed on in order to" + " query the status of a contact in its roster");
+  }
+  Presence presence=xmppConnection.getRoster().getPresence(contactIdentifier);
   if (presence != null)   return jabberStatusToPresenceStatus(presence,parentProvider);
- else   return parentProvider.getJabberStatusEnum().getStatus(JabberStatusEnum.OFFLINE);
+ else {
+    return parentProvider.getJabberStatusEnum().getStatus(JabberStatusEnum.OFFLINE);
+  }
 }
