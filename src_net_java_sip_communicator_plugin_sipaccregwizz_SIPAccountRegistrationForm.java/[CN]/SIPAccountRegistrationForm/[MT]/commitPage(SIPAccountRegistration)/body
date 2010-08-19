@@ -3,6 +3,7 @@
   char[] password=null;
   String serverAddress=null;
   String proxyAddress=null;
+  String xcapRoot=null;
   if (accountPanel.isCreateAccount()) {
     NewAccount newAccount=getCreateAccountService().createAccount();
     if (newAccount != null) {
@@ -10,6 +11,7 @@
       password=newAccount.getPassword();
       serverAddress=newAccount.getServerAddress();
       proxyAddress=newAccount.getProxyAddress();
+      xcapRoot=newAccount.getXcapRoot();
       if (serverAddress == null)       serverAddress=setServerFieldAccordingToUIN(userID);
       if (proxyAddress == null)       proxyAddress=serverAddress;
     }
@@ -49,9 +51,15 @@
   if (registration.getKeepAliveMethod() == null)   registration.setKeepAliveMethod(connectionPanel.getKeepAliveMethod());
   registration.setKeepAliveInterval(connectionPanel.getKeepAliveInterval());
   SIPAccRegWizzActivator.getUIService().getAccountRegWizardContainer().setBackButtonEnabled(true);
-  registration.setXCapEnable(presencePanel.isXCapEnable());
+  if (xcapRoot != null) {
+    registration.setXCapEnable(true);
+    registration.setXCapServerUri(xcapRoot);
+  }
+ else {
+    registration.setXCapEnable(presencePanel.isXCapEnable());
+    registration.setXCapServerUri(presencePanel.getXCapServerUri());
+  }
   registration.setXCapUseSipCredetials(presencePanel.isXCapUseSipCredetials());
-  registration.setXCapServerUri(presencePanel.getXCapServerUri());
   registration.setXCapUser(presencePanel.getXCapUser());
   registration.setXCapPassword(new String(presencePanel.getXCapPassword()));
   return true;
