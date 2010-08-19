@@ -26,8 +26,7 @@
       }
     }
     if (sourceFactory != null && currentlyInstalledProviders.containsKey(provider.getAccountID().getAccountUniqueID())) {
-      if (logger.isDebugEnabled())       logger.debug("Ignoing an already installed account: " + provider.getAccountID());
-      return;
+      if (logger.isDebugEnabled())       logger.debug("An already installed account: " + provider.getAccountID() + ". Modifying it.");
     }
     this.handleProviderAdded((ProtocolProviderService)sService);
   }
@@ -37,6 +36,11 @@
     }
     AccountID accountID=provider.getAccountID();
     if (sourceFactory.getRegisteredAccounts().contains(accountID)) {
+synchronized (this) {
+        this.removeMetaContactListListener(storageManager);
+        this.handleProviderRemoved((ProtocolProviderService)sService);
+        this.addMetaContactListListener(storageManager);
+      }
       return;
     }
     if (logger.isDebugEnabled())     logger.debug("Account uninstalled. acc.id=" + provider.getAccountID() + ". Removing from meta "+ "contact list.");
