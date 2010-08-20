@@ -1,5 +1,6 @@
 {
   ServiceReference serRef=getProviderForAccount(accountID);
+  boolean wasAccountExisting=false;
   if (serRef != null) {
     BundleContext bundleContext=getBundleContext();
     ProtocolProviderService protocolProvider=(ProtocolProviderService)bundleContext.getService(serRef);
@@ -13,9 +14,10 @@
 synchronized (registeredAccounts) {
       registration=registeredAccounts.remove(accountID);
     }
+    wasAccountExisting=removeStoredAccount(accountID);
     if (registration != null) {
       registration.unregister();
     }
   }
-  return removeStoredAccount(accountID);
+  return wasAccountExisting;
 }
