@@ -3,10 +3,34 @@
   callFileChooser=GenericFileDialog.create(null,resources.getI18NString("plugin.callrecordingconfig.SAVE_CALL"),SipCommFileChooser.SAVE_FILE_OPERATION);
   callFileChooser.addFilter(new SipCommFileFilter(){
     public boolean accept(    File f){
-      return f.isDirectory() || SoundFileUtils.isRecordedCall(f);
+      return f.isDirectory() || isSupportedFormat(f);
     }
     public String getDescription(){
-      return "Recorded call (*.wav, *.gsm, *.au, *.aif)";
+      StringBuilder description=new StringBuilder();
+      description.append("Recorded call");
+      Recorder recorder;
+      try {
+        recorder=getRecorder();
+      }
+ catch (      OperationFailedException ofex) {
+        logger.error("Failed to get Recorder",ofex);
+        recorder=null;
+      }
+      if (recorder != null) {
+        List<String> supportedFormats=recorder.getSupportedFormats();
+        if (supportedFormats != null) {
+          description.append(" (");
+          boolean firstSupportedFormat=true;
+          for (          String supportedFormat : supportedFormats) {
+            if (firstSupportedFormat)             firstSupportedFormat=false;
+ else             description.append(", ");
+            description.append("*.");
+            description.append(supportedFormat);
+          }
+          description.append(')');
+        }
+      }
+      return description.toString();
     }
   }
 );

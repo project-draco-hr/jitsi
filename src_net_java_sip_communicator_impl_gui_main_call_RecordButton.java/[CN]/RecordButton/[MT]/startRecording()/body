@@ -1,0 +1,61 @@
+{
+  String savedCallsPath=configuration.getString(Recorder.SAVED_CALLS_PATH);
+  if ((savedCallsPath == null) || (savedCallsPath.length() == 0)) {
+    callFileChooser.setStartPath(createDefaultFilename(null));
+    File selectedFile=callFileChooser.getFileFromDialog();
+    if (selectedFile != null) {
+      callFilename=selectedFile.getAbsolutePath();
+      String callFormat=SoundFileUtils.getExtension(selectedFile);
+      if ((callFormat != null) && (callFormat.length() != 0)) {
+        if (!isSupportedFormat(selectedFile)) {
+          if (SoundFileUtils.isSoundFile(selectedFile)) {
+            callFilename=callFilename.substring(0,callFilename.lastIndexOf('.'));
+          }
+          callFormat=SoundFileUtils.DEFAULT_CALL_RECORDING_FORMAT;
+          callFilename+='.' + callFormat;
+        }
+        configuration.setProperty(Recorder.CALL_FORMAT,callFormat);
+      }
+    }
+ else {
+      setSelected(false);
+      if (recorder != null) {
+        try {
+          recorder.stop();
+        }
+  finally {
+          recorder=null;
+        }
+      }
+      return;
+    }
+  }
+ else   callFilename=createDefaultFilename(savedCallsPath);
+  Throwable exception=null;
+  try {
+    Recorder recorder=getRecorder();
+    if (recorder != null)     recorder.start(callFilename);
+    this.recorder=recorder;
+  }
+ catch (  IOException ioex) {
+    exception=ioex;
+  }
+catch (  MediaException mex) {
+    exception=mex;
+  }
+catch (  OperationFailedException ofex) {
+    exception=ofex;
+  }
+  if ((recorder == null) || (exception != null)) {
+    logger.error("Failed to start recording call " + call + " into file "+ callFilename,exception);
+    if (recorder != null) {
+      try {
+        recorder.stop();
+      }
+  finally {
+        recorder=null;
+      }
+    }
+  }
+  setSelected(recorder != null);
+}

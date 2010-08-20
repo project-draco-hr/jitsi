@@ -1,36 +1,16 @@
 {
   if (call != null) {
-    OperationSetBasicTelephony<?> telephony=call.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
     if (isSelected()) {
-      String savedCallsPath=configuration.getString(Recorder.SAVED_CALLS_PATH);
-      if ((savedCallsPath == null) || (savedCallsPath.length() == 0)) {
-        callFileChooser.setStartPath(createDefaultFilename(null));
-        File selectedFile=callFileChooser.getFileFromDialog();
-        if (selectedFile != null) {
-          callFilename=selectedFile.getAbsolutePath();
-          String callFormat=SoundFileUtils.getExtension(selectedFile);
-          if ((callFormat != null) && (callFormat.length() != 0)) {
-            if (!SoundFileUtils.isRecordedCall(selectedFile)) {
-              if (SoundFileUtils.isSoundFile(selectedFile)) {
-                callFilename=callFilename.substring(0,callFilename.lastIndexOf('.'));
-              }
-              callFormat=SoundFileUtils.DEFAULT_CALL_RECORDING_FORMAT;
-              callFilename+='.' + callFormat;
-            }
-            configuration.setProperty(Recorder.CALL_FORMAT,callFormat);
-          }
-        }
- else {
-          setSelected(false);
-          return;
-        }
-      }
- else       callFilename=createDefaultFilename(savedCallsPath);
-      telephony.startRecording(call,callFilename);
+      startRecording();
     }
- else {
-      telephony.stopRecording(call);
-      NotificationManager.fireNotification(NotificationManager.CALL_SAVED,resources.getI18NString("plugin.callrecordingconfig.CALL_SAVED"),resources.getI18NString("plugin.callrecordingconfig.CALL_SAVED_TO",new String[]{callFilename}));
+ else     if (recorder != null) {
+      try {
+        recorder.stop();
+        NotificationManager.fireNotification(NotificationManager.CALL_SAVED,resources.getI18NString("plugin.callrecordingconfig.CALL_SAVED"),resources.getI18NString("plugin.callrecordingconfig.CALL_SAVED_TO",new String[]{callFilename}));
+      }
+  finally {
+        recorder=null;
+      }
     }
   }
 }
