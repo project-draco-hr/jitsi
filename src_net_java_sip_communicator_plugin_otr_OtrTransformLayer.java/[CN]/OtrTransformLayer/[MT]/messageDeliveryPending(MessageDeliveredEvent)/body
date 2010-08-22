@@ -1,6 +1,9 @@
 {
-  if (OtrActivator.scOtrEngine.isMessageUIDInjected(evt.getSourceMessage().getMessageUID()))   return evt;
   Contact contact=evt.getDestinationContact();
+  OtrPolicy policy=OtrActivator.scOtrEngine.getContactPolicy(contact);
+  SessionStatus sessionStatus=OtrActivator.scOtrEngine.getSessionStatus(contact);
+  if (!policy.getEnableManual() && sessionStatus == SessionStatus.PLAINTEXT)   return evt;
+  if (OtrActivator.scOtrEngine.isMessageUIDInjected(evt.getSourceMessage().getMessageUID()))   return evt;
   String msgContent=evt.getSourceMessage().getContent();
   String processedMessageContent=OtrActivator.scOtrEngine.transformSending(contact,msgContent);
   if (processedMessageContent == null || processedMessageContent.length() < 1)   return null;
