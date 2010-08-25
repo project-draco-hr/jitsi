@@ -2,13 +2,12 @@
   ArrayList<ViaHeader> viaHeaders=new ArrayList<ViaHeader>();
   ListeningPoint srcListeningPoint=getListeningPoint(intendedDestination.getTransportParam());
   try {
-    InetAddress localAddress=SipActivator.getNetworkAddressManagerService().getLocalHost(getIntendedDestination(intendedDestination));
+    InetSocketAddress targetAddress=getIntendedDestination(intendedDestination);
+    InetAddress localAddress=SipActivator.getNetworkAddressManagerService().getLocalHost(targetAddress.getAddress());
     int localPort=srcListeningPoint.getPort();
     String transport=srcListeningPoint.getTransport();
     if (ListeningPoint.TCP.equalsIgnoreCase(transport)) {
-      int dstPort=intendedDestination.getPort();
-      if (dstPort == -1)       dstPort=5060;
-      InetSocketAddress localSockAddr=sipStackSharing.obtainLocalAddress(NetworkUtils.getInetAddress(intendedDestination.getHost()),dstPort,localAddress);
+      InetSocketAddress localSockAddr=sipStackSharing.obtainLocalAddress(targetAddress.getAddress(),targetAddress.getPort(),localAddress);
       localPort=localSockAddr.getPort();
     }
     ViaHeader viaHeader=headerFactory.createViaHeader(localAddress.getHostAddress(),localPort,transport,null);
@@ -26,6 +25,6 @@ catch (  InvalidArgumentException ex) {
   }
 catch (  java.io.IOException ex) {
     logger.error("Unable to create a via header for port " + sipStackSharing.getLP(ListeningPoint.UDP).getPort(),ex);
-    throw new OperationFailedException("Unable to create a via header for port " + sipStackSharing.getLP(ListeningPoint.UDP).getPort(),OperationFailedException.INTERNAL_ERROR,ex);
+    throw new OperationFailedException("Unable to create a via header for port " + sipStackSharing.getLP(ListeningPoint.UDP).getPort(),OperationFailedException.NETWORK_FAILURE,ex);
   }
 }

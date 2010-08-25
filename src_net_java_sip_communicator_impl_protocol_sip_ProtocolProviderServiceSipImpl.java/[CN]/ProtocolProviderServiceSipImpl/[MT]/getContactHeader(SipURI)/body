@@ -1,19 +1,15 @@
 {
   ContactHeader registrationContactHeader=null;
   ListeningPoint srcListeningPoint=getListeningPoint(intendedDestination);
-  InetAddress targetAddress=getIntendedDestination(intendedDestination);
+  InetSocketAddress targetAddress=getIntendedDestination(intendedDestination);
   try {
-    InetAddress localAddress=SipActivator.getNetworkAddressManagerService().getLocalHost(targetAddress);
+    InetAddress localAddress=SipActivator.getNetworkAddressManagerService().getLocalHost(targetAddress.getAddress());
     SipURI contactURI=addressFactory.createSipURI(getAccountID().getUserID(),localAddress.getHostAddress());
     String transport=srcListeningPoint.getTransport();
     contactURI.setTransportParam(transport);
     int localPort=srcListeningPoint.getPort();
     if (ListeningPoint.TCP.equalsIgnoreCase(transport)) {
-      InetAddress intendedDestinationAddress=NetworkUtils.getInetAddress(intendedDestination.getHost());
-      int dstPort=intendedDestination.getPort();
-      if (!targetAddress.equals(intendedDestinationAddress) && getOutboundProxy() != null)       dstPort=getOutboundProxy().getPort();
-      if (dstPort == -1)       dstPort=5060;
-      InetSocketAddress localSockAddr=sipStackSharing.obtainLocalAddress(targetAddress,dstPort,localAddress);
+      InetSocketAddress localSockAddr=sipStackSharing.obtainLocalAddress(targetAddress.getAddress(),targetAddress.getPort(),localAddress);
       localPort=localSockAddr.getPort();
     }
     contactURI.setPort(localPort);
