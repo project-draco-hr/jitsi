@@ -1,0 +1,52 @@
+{
+  super(new BorderLayout());
+  this.parentPage=parentPage;
+  labelsPanel.setLayout(new BoxLayout(labelsPanel,BoxLayout.Y_AXIS));
+  valuesPanel.setLayout(new BoxLayout(valuesPanel,BoxLayout.Y_AXIS));
+  userIDField.getDocument().addDocumentListener(this);
+  rememberPassBox.setSelected(true);
+  userIDExampleLabel.setForeground(Color.GRAY);
+  userIDExampleLabel.setFont(userIDExampleLabel.getFont().deriveFont(8));
+  emptyPanel.setMaximumSize(new Dimension(40,35));
+  userIDExampleLabel.setBorder(BorderFactory.createEmptyBorder(0,0,8,0));
+  labelsPanel.add(userIDLabel);
+  labelsPanel.add(emptyPanel);
+  labelsPanel.add(passLabel);
+  valuesPanel.add(userIDField);
+  valuesPanel.add(userIDExampleLabel);
+  valuesPanel.add(passField);
+  userIDPassPanel.add(labelsPanel,BorderLayout.WEST);
+  userIDPassPanel.add(valuesPanel,BorderLayout.CENTER);
+  userIDPassPanel.add(rememberPassBox,BorderLayout.SOUTH);
+  registerButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent evt){
+      if (logger.isDebugEnabled())       logger.debug("Reg OK");
+      jabberNewAccountDialog=new JabberNewAccountDialog();
+      if (jabberNewAccountDialog.isOK == true) {
+        ConnectionPanel connectionPanel=parentPage.getConnectionPanel();
+        if (connectionPanel != null) {
+          connectionPanel.setServerAddress(jabberNewAccountDialog.server);
+          connectionPanel.setServerPort(jabberNewAccountDialog.port);
+        }
+        userIDField.setText(jabberNewAccountDialog.userID + "@" + jabberNewAccountDialog.server);
+        passField.setText(jabberNewAccountDialog.password);
+      }
+      if (logger.isDebugEnabled())       logger.debug("Reg End");
+    }
+  }
+);
+  buttonPanel.add(registerButton);
+  registerArea.setEditable(false);
+  registerArea.setOpaque(false);
+  registerArea.setLineWrap(true);
+  registerArea.setWrapStyleWord(true);
+  registerPanel.add(registerArea);
+  registerPanel.add(buttonPanel);
+  registerPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("plugin.jabberaccregwizz.NEW_ACCOUNT_TITLE")));
+  JPanel mainPanel=new TransparentPanel();
+  mainPanel.setLayout(new BoxLayout(mainPanel,BoxLayout.Y_AXIS));
+  mainPanel.add(userIDPassPanel);
+  mainPanel.add(Box.createVerticalStrut(10));
+  mainPanel.add(registerPanel);
+  add(mainPanel,BorderLayout.NORTH);
+}

@@ -2,23 +2,33 @@
   AccountID accountID=protocolProvider.getAccountID();
   Map<String,String> accountProperties=accountID.getAccountProperties();
   String password=accountProperties.get(ProtocolProviderFactory.PASSWORD);
-  this.userIDField.setEnabled(false);
-  this.userIDField.setText(accountID.getUserID());
+  accountPanel.setRememberPassword(false);
+  accountPanel.setUsername(accountID.getUserID());
   if (password != null) {
-    this.passField.setText(password);
-    this.rememberPassBox.setSelected(true);
+    accountPanel.setPassword(password);
+    accountPanel.setRememberPassword(true);
   }
   String serverAddress=accountProperties.get(ProtocolProviderFactory.SERVER_ADDRESS);
-  serverField.setText(serverAddress);
+  connectionPanel.setServerAddress(serverAddress);
   String serverPort=accountProperties.get(ProtocolProviderFactory.SERVER_PORT);
-  portField.setText(serverPort);
+  connectionPanel.setServerPort(serverPort);
   boolean keepAlive=Boolean.parseBoolean(accountProperties.get("SEND_KEEP_ALIVE"));
-  sendKeepAliveBox.setSelected(keepAlive);
+  connectionPanel.setSendKeepAlive(keepAlive);
   boolean gmailNotificationEnabled=Boolean.parseBoolean(accountProperties.get("GMAIL_NOTIFICATIONS_ENABLED"));
-  gmailNotificationsBox.setSelected(gmailNotificationEnabled);
+  connectionPanel.setGmailNotificationsEnabled(gmailNotificationEnabled);
   String resource=accountProperties.get(ProtocolProviderFactory.RESOURCE);
-  resourceField.setText(resource);
+  connectionPanel.setResource(resource);
   String priority=accountProperties.get(ProtocolProviderFactory.RESOURCE_PRIORITY);
-  priorityField.setText(priority);
+  connectionPanel.setPriority(priority);
+  for (int i=0; i < 100; i++) {
+    String stunAddress=accountProperties.get(ProtocolProviderFactory.STUN_ADDRESS + i);
+    if (stunAddress == null)     break;
+    String stunPort=accountProperties.get(ProtocolProviderFactory.STUN_PORT + i);
+    String stunUsername=accountProperties.get(ProtocolProviderFactory.STUN_USERNAME + i);
+    String stunPassword=accountProperties.get(ProtocolProviderFactory.STUN_PASSWORD + i);
+    boolean stunIsTurnSupported=Boolean.parseBoolean(accountProperties.get(ProtocolProviderFactory.STUN_IS_TURN_SUPPORTED + i));
+    StunServer stunServer=new StunServer(stunAddress,stunPort,stunIsTurnSupported,stunUsername,stunPassword.toCharArray(),i);
+    iceConfigPanel.addStunServer(stunServer);
+  }
   this.isServerOverridden=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_SERVER_OVERRIDDEN,false);
 }

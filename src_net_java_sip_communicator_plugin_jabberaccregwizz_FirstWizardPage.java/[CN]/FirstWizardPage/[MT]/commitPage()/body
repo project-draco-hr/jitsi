@@ -1,16 +1,24 @@
 {
   JabberAccountRegistration registration=wizard.getRegistration();
-  String userID=userIDField.getText();
+  String userID=accountPanel.getUsername();
   if (userID == null || userID.trim().length() == 0)   throw new IllegalStateException("No user ID provided.");
   registration.setUserID(userID);
-  registration.setPassword(new String(passField.getPassword()));
-  registration.setRememberPassword(rememberPassBox.isSelected());
-  registration.setServerAddress(serverField.getText());
-  registration.setSendKeepAlive(sendKeepAliveBox.isSelected());
-  registration.setGmailNotificationEnabled(this.gmailNotificationsBox.isSelected());
-  registration.setResource(resourceField.getText());
-  if (portField.getText() != null)   registration.setPort(Integer.parseInt(portField.getText()));
-  if (priorityField.getText() != null)   registration.setPriority(Integer.parseInt(priorityField.getText()));
+  registration.setPassword(new String(accountPanel.getPassword()));
+  registration.setRememberPassword(accountPanel.isRememberPassword());
+  registration.setServerAddress(connectionPanel.getServerAddress());
+  registration.setSendKeepAlive(connectionPanel.isSendKeepAlive());
+  registration.setGmailNotificationEnabled(connectionPanel.isGmailNotificationsEnabled());
+  registration.setResource(connectionPanel.getResource());
+  String serverPort=connectionPanel.getServerPort();
+  if (serverPort != null)   registration.setPort(Integer.parseInt(serverPort));
+  String priority=connectionPanel.getPriority();
+  if (priority != null)   registration.setPriority(Integer.parseInt(priority));
+  registration.setUseIce(iceConfigPanel.isUseIce());
+  registration.setAutoDiscoverStun(iceConfigPanel.isAutoDiscoverStun());
+  Iterator<StunServer> stunServers=iceConfigPanel.getAdditionalStunServers().iterator();
+  while (stunServers.hasNext()) {
+    registration.addStunServer(stunServers.next());
+  }
   nextPageIdentifier=SUMMARY_PAGE_IDENTIFIER;
   this.isCommitted=true;
 }

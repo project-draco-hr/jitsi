@@ -1,0 +1,58 @@
+{
+  super(false);
+  setTitle(Resources.getString("plugin.jabberaccregwizz.ADD_STUN_SERVER"));
+  JLabel addressLabel=new JLabel(Resources.getString("plugin.jabberaccregwizz.IP_ADDRESS"));
+  JLabel portLabel=new JLabel(Resources.getString("plugin.jabberaccregwizz.PORT"));
+  JLabel usernameLabel=new JLabel(Resources.getString("plugin.jabberaccregwizz.USERNAME"));
+  JLabel passwordLabel=new JLabel(Resources.getString("service.gui.PASSWORD"));
+  TransparentPanel labelsPanel=new TransparentPanel(new GridLayout(0,1));
+  labelsPanel.add(new JLabel());
+  labelsPanel.add(addressLabel);
+  labelsPanel.add(portLabel);
+  labelsPanel.add(usernameLabel);
+  labelsPanel.add(passwordLabel);
+  TransparentPanel valuesPanel=new TransparentPanel(new GridLayout(0,1));
+  valuesPanel.add(supportTurnCheckBox);
+  valuesPanel.add(addressField);
+  valuesPanel.add(portField);
+  valuesPanel.add(usernameField);
+  valuesPanel.add(passwordField);
+  JButton addButton=new JButton(Resources.getString("service.gui.ADD"));
+  JButton cancelButton=new JButton(Resources.getString("service.gui.CANCEL"));
+  addButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      String address=addressField.getText();
+      String port=portField.getText();
+      String username=usernameField.getText();
+      char[] password=passwordField.getPassword();
+      String errorMessage=null;
+      if (address == null || address.length() <= 0)       errorMessage=Resources.getString("plugin.jabberaccregwizz.NO_STUN_ADDRESS");
+      if (username == null || username.length() <= 0)       errorMessage=Resources.getString("plugin.jabberaccregwizz.NO_STUN_USERNAME");
+      if (port == null || port.length() <= 0)       port=JabberAccountRegistration.DEFAULT_STUN_PORT;
+      if (containsStunServer(address,port))       errorMessage=Resources.getString("plugin.jabberaccregwizz.STUN_ALREADY_EXIST");
+      if (errorMessage != null) {
+        loadErrorMessage(errorMessage);
+        return;
+      }
+      StunServer stunServer=new StunServer(address,port,supportTurnCheckBox.isSelected(),username,password,table.getRowCount());
+      addStunServer(stunServer);
+      dispose();
+    }
+  }
+);
+  cancelButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      dispose();
+    }
+  }
+);
+  TransparentPanel buttonsPanel=new TransparentPanel(new FlowLayout(FlowLayout.RIGHT));
+  buttonsPanel.add(addButton);
+  buttonsPanel.add(cancelButton);
+  mainPanel.add(labelsPanel,BorderLayout.WEST);
+  mainPanel.add(valuesPanel,BorderLayout.CENTER);
+  mainPanel.add(buttonsPanel,BorderLayout.SOUTH);
+  mainPanel.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
+  getContentPane().add(mainPanel,BorderLayout.NORTH);
+  pack();
+}
