@@ -24,10 +24,19 @@
     resolveContactGroup(rootGroup,serverRootList,false);
     for (    ContactSipImpl contact : getAllContacts(rootGroup)) {
       if (!contact.isResolved() && contact.isPersistent()) {
-        updateResourceLists=true;
         contact.setResolved(true);
-        contact.setXCapResolved(true);
-        fireContactResolved((ContactGroupSipImpl)contact.getParentContactGroup(),contact);
+        ContactGroupSipImpl parentGroup=((ContactGroupSipImpl)contact.getParentContactGroup());
+        if (contact.isXCapResolved()) {
+          parentGroup.removeContact(contact);
+          fireContactRemoved(parentGroup,contact);
+        }
+ else {
+          updateResourceLists=true;
+          String oldValue=contact.getPersistentData();
+          contact.setXCapResolved(true);
+          fireContactResolved(parentGroup,contact);
+          parentOperationSet.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_PERSISTENT_DATA,contact,oldValue,contact.getPersistentData());
+        }
       }
     }
     for (    ContactGroupSipImpl group : getAllGroups(rootGroup)) {
