@@ -1,25 +1,32 @@
 {
   this.cachedAvatar=avatarBytes;
   this.avatarFileCacheAlreadyQueried=true;
-  String accountUID=protoContact.getProtocolProvider().getAccountID().getAccountUniqueID();
-  accountUID=escapeSpecialCharacters(accountUID);
-  String avatarDirPath=AVATAR_DIR + File.separator + accountUID;
-  String escapedProtocolId=escapeSpecialCharacters(protoContact.getAddress());
+  String avatarDirPath=AVATAR_DIR + File.separator + escapeSpecialCharacters(protoContact.getProtocolProvider().getAccountID().getAccountUniqueID());
+  String avatarFileName=escapeSpecialCharacters(protoContact.getAddress());
   File avatarDir=null;
   File avatarFile=null;
   try {
-    avatarDir=ContactlistActivator.getFileAccessService().getPrivatePersistentDirectory(avatarDirPath);
-    avatarFile=ContactlistActivator.getFileAccessService().getPrivatePersistentFile(avatarDirPath + File.separator + escapedProtocolId);
+    FileAccessService fileAccessService=ContactlistActivator.getFileAccessService();
+    avatarDir=fileAccessService.getPrivatePersistentDirectory(avatarDirPath);
+    avatarFile=fileAccessService.getPrivatePersistentFile(avatarDirPath + File.separator + avatarFileName);
     if (!avatarFile.exists()) {
-      if (!avatarDir.exists())       if (!avatarDir.mkdirs())       throw new IOException("Failed to create directory: " + avatarDir.getAbsolutePath());
-      if (!avatarFile.createNewFile())       throw new IOException("Failed to create file" + avatarFile.getAbsolutePath());
+      if (!avatarDir.exists() && !avatarDir.mkdirs()) {
+        throw new IOException("Failed to create directory: " + avatarDir.getAbsolutePath());
+      }
+      if (!avatarFile.createNewFile()) {
+        throw new IOException("Failed to create file" + avatarFile.getAbsolutePath());
+      }
     }
     FileOutputStream fileOutStream=new FileOutputStream(avatarFile);
-    fileOutStream.write(avatarBytes);
-    fileOutStream.flush();
-    fileOutStream.close();
+    try {
+      fileOutStream.write(avatarBytes);
+      fileOutStream.flush();
+    }
+  finally {
+      fileOutStream.close();
+    }
   }
- catch (  Exception e) {
-    logger.error("Failed to store avatar. dir =" + avatarDir + " file="+ avatarFile,e);
+ catch (  Exception ex) {
+    logger.error("Failed to store avatar. dir =" + avatarDir + " file="+ avatarFile,ex);
   }
 }

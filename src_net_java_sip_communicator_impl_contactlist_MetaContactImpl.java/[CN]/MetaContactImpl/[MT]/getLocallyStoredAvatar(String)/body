@@ -2,15 +2,23 @@
   try {
     File avatarFile=ContactlistActivator.getFileAccessService().getPrivatePersistentFile(avatarPath);
     if (avatarFile.exists()) {
-      FileInputStream fileInStream=new FileInputStream(avatarFile);
-      byte[] bs=new byte[fileInStream.available()];
-      fileInStream.read(bs);
-      fileInStream.close();
-      return bs;
+      FileInputStream avatarInputStream=new FileInputStream(avatarFile);
+      byte[] bs=null;
+      try {
+        int available=avatarInputStream.available();
+        if (available > 0) {
+          bs=new byte[available];
+          avatarInputStream.read(bs);
+        }
+      }
+  finally {
+        avatarInputStream.close();
+      }
+      if (bs != null)       return bs;
     }
   }
- catch (  Exception e) {
-    logger.error("Could not read avatar image",e);
+ catch (  Exception ex) {
+    logger.error("Could not read avatar image from file " + avatarPath,ex);
   }
   return null;
 }
