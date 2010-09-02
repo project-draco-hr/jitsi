@@ -14,6 +14,15 @@
  else     alreadySetDetails.add(item);
   }
   if (!isFound)   return false;
+  if (newDetailValue instanceof ImageDetail) {
+    if (iconListener == null) {
+      iconListener=new IconUpdateListener();
+      this.icqProvider.getAimConnection().getExternalServiceManager().getIconServiceArbiter().addIconRequestListener(new IconUpdateListener());
+    }
+    icqProvider.getAimConnection().getMyBuddyIconManager().requestSetIcon(ByteBlock.wrap(((ServerStoredDetails.ImageDetail)newDetailValue).getBytes()));
+    infoRetreiver.detailsChanged(uin);
+    return true;
+  }
   SuccessResponseListener responseListener=new SuccessResponseListener();
   MetaFullInfoSetCmd cmd=new MetaFullInfoSetCmd(Integer.parseInt(uin),reqID++);
   int typeOfDetail=supportedTypes.get(newDetailValue.getClass())[1];

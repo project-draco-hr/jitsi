@@ -1,0 +1,26 @@
+{
+  JButton src=(JButton)e.getSource();
+  if (src instanceof SIPCommButton) {
+    int index=Integer.parseInt(src.getName());
+    BufferedImage image=AvatarStackManager.loadImage(index);
+    setNewImage(image);
+    setVisible(false);
+  }
+ else   if (src.getName().equals("chooseButton")) {
+    Image currentImage=this.avatarImage.getAvatar();
+    ImagePickerDialog dialog=new ImagePickerDialog(96,96);
+    setVisible(false);
+    byte[] bimage=dialog.showDialog(currentImage);
+    if (bimage == null)     return;
+    BufferedImage image=ImageUtils.getBufferedImage(new ImageIcon(bimage).getImage());
+    if (this.nextImageIndex == MAX_STORED_IMAGES) {
+      AvatarStackManager.popFirstImage(MAX_STORED_IMAGES);
+      this.nextImageIndex=MAX_STORED_IMAGES - 1;
+    }
+    AvatarStackManager.storeImage(image,this.nextImageIndex);
+    setNewImage(image);
+  }
+ else   if (src.getName().equals("clearButton")) {
+    clearRecentImages();
+  }
+}

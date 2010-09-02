@@ -1,0 +1,25 @@
+{
+  assertConnected();
+  Iterator iter=getDetails(detail.getClass());
+  int currentDetailsSize=0;
+  while (iter.hasNext()) {
+    currentDetailsSize++;
+  }
+  if (currentDetailsSize >= getMaxDetailInstances(detail.getClass())) {
+    throw new ArrayIndexOutOfBoundsException("Max count for this detail is already reached");
+  }
+  MsnOwner owner=msnProvider.getMessenger().getOwner();
+  if (detail instanceof ImageDetail) {
+    try {
+      String path=storePicture(((ImageDetail)detail).getBytes());
+      FileInputStream in=new FileInputStream(path);
+      byte[] b=new byte[in.available()];
+      in.read(b);
+      in.close();
+      owner.setDisplayPicture(MsnObject.getInstance(owner.getEmail().getEmailAddress(),b));
+    }
+ catch (    Exception e) {
+      logger.error("Error setting own avatar.",e);
+    }
+  }
+}

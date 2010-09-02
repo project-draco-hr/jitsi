@@ -7,6 +7,15 @@
     alreadySetDetails.add(iter.next());
   }
   if (alreadySetDetails.size() >= getMaxDetailInstances(detail.getClass()))   throw new ArrayIndexOutOfBoundsException("Max count for this detail is already reached");
+  if (detail instanceof ImageDetail) {
+    if (iconListener == null) {
+      iconListener=new IconUpdateListener();
+      this.icqProvider.getAimConnection().getExternalServiceManager().getIconServiceArbiter().addIconRequestListener(new IconUpdateListener());
+    }
+    icqProvider.getAimConnection().getMyBuddyIconManager().requestSetIcon(ByteBlock.wrap(((ServerStoredDetails.ImageDetail)detail).getBytes()));
+    infoRetreiver.detailsChanged(uin);
+    return;
+  }
   alreadySetDetails.add(detail);
   SuccessResponseListener responseListener=new SuccessResponseListener();
   MetaFullInfoSetCmd cmd=new MetaFullInfoSetCmd(Integer.parseInt(uin),reqID++);

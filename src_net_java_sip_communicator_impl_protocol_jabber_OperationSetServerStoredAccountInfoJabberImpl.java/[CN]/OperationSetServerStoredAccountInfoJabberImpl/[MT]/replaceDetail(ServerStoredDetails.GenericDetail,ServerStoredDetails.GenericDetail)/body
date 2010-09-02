@@ -1,3 +1,34 @@
 {
+  assertConnected();
+  if (!newDetailValue.getClass().equals(currentDetailValue.getClass())) {
+    throw new ClassCastException("New value to be replaced is not as the current one");
+  }
+  if (currentDetailValue.equals(newDetailValue)) {
+    return true;
+  }
+  boolean isFound=false;
+  Iterator iter=infoRetreiver.getDetails(uin,currentDetailValue.getClass());
+  while (iter.hasNext()) {
+    GenericDetail item=(GenericDetail)iter.next();
+    if (item.equals(currentDetailValue)) {
+      isFound=true;
+      break;
+    }
+  }
+  if (!isFound) {
+    return false;
+  }
+  if (newDetailValue instanceof ImageDetail) {
+    try {
+      VCard v1=new VCard();
+      v1.load(jabberProvider.getConnection());
+      v1.setAvatar(((ImageDetail)newDetailValue).getBytes());
+      v1.save(jabberProvider.getConnection());
+      return true;
+    }
+ catch (    XMPPException xmppe) {
+      xmppe.printStackTrace();
+    }
+  }
   return false;
 }

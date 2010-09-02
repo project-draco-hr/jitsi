@@ -1,0 +1,41 @@
+{
+  List<GenericDetail> result=retrievedDetails.get(contactAddress);
+  if (result == null) {
+    result=new LinkedList<GenericDetail>();
+    try {
+      MsnMessenger messenger=msnProvider.getMessenger();
+      if (messenger == null) {
+        return null;
+      }
+      Email email=Email.parseStr(contactAddress);
+      String tmp=null;
+      byte[] imageBytes;
+      if (messenger.getOwner().getEmail().equals(email)) {
+        MsnOwner owner=messenger.getOwner();
+        tmp=owner.getDisplayName();
+        result.add(new ServerStoredDetails.DisplayNameDetail(tmp));
+        MsnObject image=owner.getDisplayPicture();
+        if (image != null) {
+          imageBytes=image.getMsnObj();
+          if (imageBytes != null && imageBytes.length > 0) {
+            result.add(new ServerStoredDetails.ImageDetail("Image",imageBytes));
+          }
+        }
+      }
+ else {
+        MsnContact contact=messenger.getContactList().getContactByEmail(email);
+        tmp=contact.getDisplayName();
+        result.add(new ServerStoredDetails.DisplayNameDetail(tmp));
+        imageBytes=contact.getAvatar().getMsnObj();
+        if (imageBytes != null && imageBytes.length > 0) {
+          result.add(new ServerStoredDetails.ImageDetail("Image",imageBytes));
+        }
+      }
+    }
+ catch (    Exception exc) {
+      logger.error("Cannot load details for contact " + this + " : "+ exc.getMessage(),exc);
+    }
+  }
+  retrievedDetails.put(contactAddress,result);
+  return new LinkedList<GenericDetail>(result);
+}

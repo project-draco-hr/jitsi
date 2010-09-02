@@ -1,0 +1,37 @@
+{
+  assertConnected();
+  if (!newDetailValue.getClass().equals(currentDetailValue.getClass())) {
+    throw new ClassCastException("New value to be replaced is not " + "as the current one");
+  }
+  if (currentDetailValue.equals(newDetailValue)) {
+    return true;
+  }
+  boolean isFound=false;
+  Iterator iter=getDetails(uin,currentDetailValue.getClass());
+  while (iter.hasNext()) {
+    GenericDetail item=(GenericDetail)iter.next();
+    if (item.equals(currentDetailValue)) {
+      isFound=true;
+      break;
+    }
+  }
+  if (!isFound) {
+    return false;
+  }
+  MsnOwner owner=msnProvider.getMessenger().getOwner();
+  if (newDetailValue instanceof ImageDetail) {
+    try {
+      String path=storePicture(((ImageDetail)newDetailValue).getBytes());
+      FileInputStream in=new FileInputStream(path);
+      byte[] b=new byte[in.available()];
+      in.read(b);
+      in.close();
+      owner.setDisplayPicture(MsnObject.getInstance(owner.getEmail().getEmailAddress(),b));
+      return true;
+    }
+ catch (    Exception e) {
+      logger.error("Error setting own avatar.",e);
+    }
+  }
+  return false;
+}
