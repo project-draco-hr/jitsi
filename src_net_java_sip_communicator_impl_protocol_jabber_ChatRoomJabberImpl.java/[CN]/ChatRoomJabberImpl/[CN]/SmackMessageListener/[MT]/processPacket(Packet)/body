@@ -32,15 +32,17 @@
   Message newMessage=createMessage(msgBody);
   if (msg.getType() == org.jivesoftware.smack.packet.Message.Type.error) {
     if (logger.isInfoEnabled())     logger.info("Message error received from " + fromUserName);
-    int errorCode=packet.getError().getCode();
+    XMPPError error=packet.getError();
+    int errorCode=error.getCode();
     int errorResultCode=ChatRoomMessageDeliveryFailedEvent.UNKNOWN_ERROR;
+    String errorReason=error.getMessage();
     if (errorCode == 503) {
       org.jivesoftware.smackx.packet.MessageEvent msgEvent=(org.jivesoftware.smackx.packet.MessageEvent)packet.getExtension("x","jabber:x:event");
       if (msgEvent != null && msgEvent.isOffline()) {
         errorResultCode=ChatRoomMessageDeliveryFailedEvent.OFFLINE_MESSAGES_NOT_SUPPORTED;
       }
     }
-    ChatRoomMessageDeliveryFailedEvent evt=new ChatRoomMessageDeliveryFailedEvent(ChatRoomJabberImpl.this,member,errorResultCode,new Date(),newMessage);
+    ChatRoomMessageDeliveryFailedEvent evt=new ChatRoomMessageDeliveryFailedEvent(ChatRoomJabberImpl.this,member,errorResultCode,errorReason,new Date(),newMessage);
     fireMessageEvent(evt);
     return;
   }

@@ -17,13 +17,17 @@
  catch (  IllegalStateException ex) {
     logger.error("Failed to send message.",ex);
     this.addMessage(chatSession.getCurrentChatTransport().getName(),System.currentTimeMillis(),Chat.OUTGOING_MESSAGE,messageText,mimeType);
-    this.addErrorMessage(chatSession.getCurrentChatTransport().getName(),GuiActivator.getResources().getI18NString("service.gui.MSG_SEND_CONNECTION_PROBLEM"));
+    String protocolError="";
+    if (ex.getMessage() != null)     protocolError=" " + GuiActivator.getResources().getI18NString("service.gui.ERROR_WAS",new String[]{ex.getMessage()});
+    this.addErrorMessage(chatSession.getCurrentChatTransport().getName(),GuiActivator.getResources().getI18NString("service.gui.MSG_SEND_CONNECTION_PROBLEM") + protocolError);
   }
 catch (  Exception ex) {
     logger.error("Failed to send message.",ex);
     this.refreshWriteArea();
     this.addMessage(chatSession.getCurrentChatTransport().getName(),System.currentTimeMillis(),Chat.OUTGOING_MESSAGE,messageText,mimeType);
-    this.addErrorMessage(chatSession.getCurrentChatTransport().getName(),GuiActivator.getResources().getI18NString("service.gui.MSG_DELIVERY_ERROR",new String[]{ex.getMessage()}));
+    String protocolError="";
+    if (ex.getMessage() != null)     protocolError=" " + GuiActivator.getResources().getI18NString("service.gui.ERROR_WAS",new String[]{ex.getMessage()});
+    this.addErrorMessage(chatSession.getCurrentChatTransport().getName(),GuiActivator.getResources().getI18NString("service.gui.MSG_DELIVERY_ERROR",new String[]{protocolError}));
   }
   if (chatSession.getCurrentChatTransport().allowsTypingNotifications()) {
     getChatWritePanel().stopTypingTimer();
