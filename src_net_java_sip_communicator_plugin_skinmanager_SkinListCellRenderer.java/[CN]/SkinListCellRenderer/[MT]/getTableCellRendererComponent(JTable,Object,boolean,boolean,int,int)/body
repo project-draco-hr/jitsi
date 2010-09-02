@@ -1,0 +1,63 @@
+{
+  Bundle bundle=(Bundle)value;
+  URL res=bundle.getResource("info.properties");
+  Dictionary<Object,Object> headers=bundle.getHeaders();
+  Object bundleName=headers.get(Constants.BUNDLE_NAME);
+  Object bundleVersion=headers.get(Constants.BUNDLE_VERSION);
+  Object bundleDescription=headers.get(Constants.BUNDLE_DESCRIPTION);
+  if (res != null) {
+    Properties props=new Properties();
+    try {
+      props.load(res.openStream());
+      String disp=props.getProperty("display_name");
+      if (disp != null) {
+        bundleName=disp;
+      }
+      disp=props.getProperty("version");
+      if (disp != null) {
+        bundleVersion=disp;
+      }
+      disp=props.getProperty("author");
+      String desc=props.getProperty("description");
+      String bundString="";
+      if (disp != null) {
+        bundString=disp;
+      }
+      if (desc != null) {
+        if (disp != null) {
+          bundString+=" - ";
+        }
+        bundString+=desc;
+      }
+      if (!bundString.equals("")) {
+        bundleDescription=bundString;
+      }
+    }
+ catch (    IOException ex) {
+    }
+  }
+  Icon stateIcon=getStateIcon(bundle.getState());
+  if (bundleName != null) {
+    this.nameLabel.setText(bundleName.toString());
+  }
+ else {
+    this.nameLabel.setText("unknown");
+  }
+  if (bundleVersion != null) {
+    this.versionLabel.setText(bundleVersion.toString());
+  }
+ else {
+    this.versionLabel.setText("");
+  }
+  if (bundleDescription != null) {
+    this.descriptionLabel.setText(bundleDescription.toString());
+  }
+ else {
+    this.descriptionLabel.setText("");
+  }
+  if (stateIcon != null) {
+    this.stateLabel.setIcon(stateIcon);
+  }
+  this.isSelected=isSelected;
+  return this;
+}

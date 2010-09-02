@@ -1,0 +1,79 @@
+{
+  JButton sourceButton=(JButton)e.getSource();
+  if (sourceButton.equals(installButton)) {
+    if (bundlePathField.getText().length() > 0) {
+      try {
+        File jar=null;
+        try {
+          jar=Resources.getResources().prepareSkinBundleFromZip(new File(bundlePathField.getText()));
+        }
+ catch (        Exception ex) {
+          logger.info("Failed to load skin from zip.",ex);
+          SkinManagerActivator.getUIService().getPopupDialog().showMessagePopupDialog(ex.getMessage(),"Error",PopupDialog.ERROR_MESSAGE);
+        }
+        if (jar != null) {
+          try {
+            Bundle newBundle=SkinManagerActivator.bundleContext.installBundle(jar.toURI().toURL().toString());
+            for (int i=0; i < skinTable.getModel().getRowCount(); i++) {
+              try {
+                ((Bundle)skinTable.getModel().getValueAt(i,0)).stop();
+              }
+ catch (              BundleException ex) {
+                logger.info("Failed to stop bundle.",ex);
+              }
+            }
+            newBundle.start();
+          }
+ catch (          MalformedURLException ex) {
+            logger.info("Failed to load skin from zip.",ex);
+          }
+        }
+      }
+ catch (      BundleException ex) {
+        logger.info("Failed to install bundle.",ex);
+        SkinManagerActivator.getUIService().getPopupDialog().showMessagePopupDialog(ex.getMessage(),"Error",PopupDialog.ERROR_MESSAGE);
+      }
+catch (      Throwable ex) {
+        logger.info("Failed to install bundle.",ex);
+      }
+ finally {
+        dispose();
+      }
+    }
+  }
+ else   if (sourceButton.equals(fileChooserButton)) {
+    SipCommFileChooser chooser=GenericFileDialog.create(null,"New bundle...",SipCommFileChooser.LOAD_FILE_OPERATION);
+    chooser.addFilter(new SipCommFileFilter(){
+      @Override public boolean accept(      File f){
+        if (f.isDirectory())         return true;
+        boolean good=true;
+        try {
+          ZipFile zip=new ZipFile(f);
+        }
+ catch (        IOException ex) {
+          good=false;
+        }
+        if (!f.getName().toLowerCase().endsWith(".zip")) {
+          good=false;
+        }
+        return good;
+      }
+      @Override public String getDescription(){
+        return "Zip files (*.zip)";
+      }
+    }
+);
+    File newBundleFile=chooser.getFileFromDialog();
+    if (newBundleFile != null) {
+      try {
+        bundlePathField.setText(newBundleFile.getCanonicalPath());
+      }
+ catch (      Exception ex) {
+        bundlePathField.setText(newBundleFile.getAbsolutePath());
+      }
+    }
+  }
+ else {
+    dispose();
+  }
+}

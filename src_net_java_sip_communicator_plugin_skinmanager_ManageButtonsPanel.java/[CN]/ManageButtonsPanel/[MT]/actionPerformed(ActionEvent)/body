@@ -1,0 +1,55 @@
+{
+  JButton sourceButton=(JButton)e.getSource();
+  if (sourceButton.equals(newButton)) {
+    NewBundleDialog dialog=new NewBundleDialog(skinTable);
+    dialog.pack();
+    dialog.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - dialog.getWidth() / 2,Toolkit.getDefaultToolkit().getScreenSize().height / 2 - dialog.getHeight() / 2);
+    dialog.setVisible(true);
+  }
+ else   if (sourceButton.equals(activateButton)) {
+    int[] selectedRows=skinTable.getSelectedRows();
+    for (int i=0; i < skinTable.getModel().getRowCount(); i++) {
+      try {
+        ((Bundle)skinTable.getModel().getValueAt(i,0)).stop();
+      }
+ catch (      BundleException ex) {
+      }
+    }
+    for (int i=0; i < selectedRows.length; i++) {
+      try {
+        ((Bundle)skinTable.getModel().getValueAt(selectedRows[i],0)).start();
+      }
+ catch (      BundleException ex) {
+        logger.error("Failed to activate bundle.",ex);
+        SkinManagerActivator.getUIService().getPopupDialog().showMessagePopupDialog(ex.getMessage(),"Error",PopupDialog.ERROR_MESSAGE);
+      }
+    }
+    defaultButtonState();
+  }
+ else   if (sourceButton.equals(deactivateButton)) {
+    int[] selectedRows=skinTable.getSelectedRows();
+    for (int i=0; i < selectedRows.length; i++) {
+      try {
+        ((Bundle)skinTable.getModel().getValueAt(selectedRows[i],0)).stop();
+      }
+ catch (      BundleException ex) {
+        logger.error("Failed to desactivate bundle.",ex);
+        SkinManagerActivator.getUIService().getPopupDialog().showMessagePopupDialog(ex.getMessage(),"Error",PopupDialog.ERROR_MESSAGE);
+      }
+    }
+    defaultButtonState();
+  }
+ else   if (sourceButton.equals(uninstallButton)) {
+    int[] selectedRows=skinTable.getSelectedRows();
+    for (int i=selectedRows.length - 1; i >= 0; i--) {
+      try {
+        ((Bundle)skinTable.getModel().getValueAt(selectedRows[i],0)).uninstall();
+      }
+ catch (      BundleException ex) {
+        logger.error("Failed to uninstall bundle.",ex);
+        SkinManagerActivator.getUIService().getPopupDialog().showMessagePopupDialog(ex.getMessage(),"Error",PopupDialog.ERROR_MESSAGE);
+      }
+    }
+    defaultButtonState();
+  }
+}
