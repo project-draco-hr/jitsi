@@ -1,0 +1,27 @@
+{
+  String startPlainTextTag=START_PLAINTEXT_TAG;
+  String endPlainTextTag=END_PLAINTEXT_TAG;
+  Collection<Smiley> smileys=ImageLoader.getDefaultSmileyPack();
+  Matcher m=getSmileyPattern(smileys).matcher(chatString);
+  StringBuffer msgBuffer=new StringBuffer();
+  int prevEnd=0;
+  while (m.find()) {
+    msgBuffer.append(chatString.substring(prevEnd,m.start()));
+    prevEnd=m.end();
+    String smileyString=m.group().trim();
+    msgBuffer.append(endPlainTextTag);
+    msgBuffer.append("<IMG SRC=\"");
+    try {
+      msgBuffer.append(ImageLoader.getSmiley(smileyString).getImagePath(SmileyActivator.getResources()));
+    }
+ catch (    Exception e) {
+      e.printStackTrace();
+    }
+    msgBuffer.append("\" ALT=\"");
+    msgBuffer.append(smileyString);
+    msgBuffer.append("\"></IMG>");
+    msgBuffer.append(startPlainTextTag);
+  }
+  msgBuffer.append(chatString.substring(prevEnd));
+  return msgBuffer.toString();
+}

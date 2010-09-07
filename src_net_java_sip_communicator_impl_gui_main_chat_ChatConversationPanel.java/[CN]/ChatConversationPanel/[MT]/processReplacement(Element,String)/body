@@ -1,0 +1,29 @@
+{
+  final String chatFinal=chatString;
+  SwingWorker worker=new SwingWorker(){
+    public Object construct() throws Exception {
+      String temp="", msgStore=chatFinal;
+      boolean isEnabled=GuiActivator.getConfigurationService().getBoolean(ReplacementProperty.REPLACEMENT_ENABLE,true);
+      Map<Object,ReplacementService> listSources=GuiActivator.getReplacementSources();
+      Iterator<Entry<Object,ReplacementService>> entrySetIter=listSources.entrySet().iterator();
+      for (int i=0; i < listSources.size(); i++) {
+        Map.Entry<Object,ReplacementService> entry=entrySetIter.next();
+        ReplacementService source=entry.getValue();
+        if (!(GuiActivator.getConfigurationService().getBoolean(ReplacementProperty.getPropertyName((String)entry.getKey()),true) && (isEnabled || entry.getKey().equals("SMILEY"))))         continue;
+        temp=source.getReplacedMessage(msgStore);
+        if (!temp.equals(msgStore)) {
+          msgStore=temp;
+        }
+      }
+      if (!temp.equals(chatFinal)) {
+synchronized (scrollToBottomRunnable) {
+          scrollToBottomIsPending=true;
+          document.setOuterHTML(elem,temp.toString().substring(temp.indexOf("<DIV")));
+        }
+      }
+      return "";
+    }
+  }
+;
+  worker.start();
+}
