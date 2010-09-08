@@ -1,5 +1,5 @@
 {
-  final Container preview;
+  final JComponent preview;
   if (type == DeviceConfigurationComboBoxModel.VIDEO) {
     JLabel noPreview=new JLabel(NeomediaActivator.getResources().getI18NString("impl.media.configform.NO_PREVIEW"));
     noPreview.setHorizontalAlignment(SwingConstants.CENTER);
@@ -35,7 +35,17 @@ catch (        MediaException ex) {
     comboBox.addActionListener(comboBoxListener);
     comboBox.addHierarchyListener(new HierarchyListener(){
       public void hierarchyChanged(      HierarchyEvent event){
-        if (((event.getChangeFlags() & HierarchyEvent.DISPLAYABILITY_CHANGED) != 0) && comboBox.isDisplayable())         comboBoxListener.actionPerformed(null);
+        if (((event.getChangeFlags() & HierarchyEvent.DISPLAYABILITY_CHANGED) != 0) && comboBox.isDisplayable()) {
+          SwingUtilities.invokeLater(new Runnable(){
+            public void run(){
+              comboBoxListener.actionPerformed(null);
+            }
+          }
+);
+        }
+ else {
+          if (!comboBox.isDisplayable())           videoDeviceInPreview=null;
+        }
       }
     }
 );

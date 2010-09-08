@@ -1,0 +1,33 @@
+{
+  JLabel noPreview=new JLabel(NeomediaActivator.getResources().getI18NString("impl.media.configform.NO_PREVIEW"));
+  noPreview.setHorizontalAlignment(SwingConstants.CENTER);
+  noPreview.setVerticalAlignment(SwingConstants.CENTER);
+  final JComponent videoContainer=new VideoContainer(noPreview);
+  videoContainer.setPreferredSize(new Dimension(preferredWidth,preferredHeight));
+  videoContainer.setMaximumSize(new Dimension(preferredWidth,preferredHeight));
+  try {
+    if (device == null || ((MediaDeviceImpl)device).getCaptureDeviceInfo() == null) {
+      return videoContainer;
+    }
+    DataSource dataSource=Manager.createDataSource(((MediaDeviceImpl)device).getCaptureDeviceInfo().getLocator());
+    if ((preferredWidth < 128) || (preferredHeight < 96)) {
+      preferredHeight=128;
+      preferredWidth=96;
+    }
+    VideoMediaStreamImpl.selectVideoSize(dataSource,preferredWidth,preferredHeight);
+    dataSource.connect();
+    Processor player=Manager.createProcessor(dataSource);
+    player.addControllerListener(new ControllerListener(){
+      public void controllerUpdate(      ControllerEvent event){
+        controllerUpdateForPreview(event,videoContainer);
+      }
+    }
+);
+    player.configure();
+    return videoContainer;
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+  }
+  return null;
+}
