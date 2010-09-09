@@ -1,14 +1,15 @@
 {
   if (device == null)   throw new NullPointerException("device");
-  String format=NeomediaActivator.getConfigurationService().getString(Recorder.CALL_FORMAT);
+  ConfigurationService configuration=NeomediaActivator.getConfigurationService();
+  String format=configuration.getString(Recorder.CALL_FORMAT);
   if (format == null)   format=SoundFileUtils.DEFAULT_CALL_RECORDING_FORMAT;
   try {
     deviceSession=device.createRecordingSession(getContentDescriptor(format));
   }
- catch (  IllegalArgumentException exc) {
+ catch (  IllegalArgumentException iaex) {
     logger.debug("Unable to crate a " + format + " record. Will retry default format");
     format=SoundFileUtils.DEFAULT_CALL_RECORDING_FORMAT;
-    NeomediaActivator.getConfigurationService().setProperty(Recorder.CALL_FORMAT,null);
+    configuration.setProperty(Recorder.CALL_FORMAT,null);
     deviceSession=device.createRecordingSession(getContentDescriptor(format));
   }
   this.format=format;

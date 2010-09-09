@@ -1,0 +1,46 @@
+{
+  byte[] input=(byte[])inputBuffer.getData();
+  int inputLength=inputBuffer.getLength();
+  int inputOffset=inputBuffer.getOffset();
+  if ((prevInputLength > 0) || (inputLength < frameSizeInBytes)) {
+    int newPrevInputLength=Math.min(frameSizeInBytes - prevInputLength,inputLength);
+    if (newPrevInputLength > 0) {
+      if (prevInput == null) {
+        prevInput=new byte[frameSizeInBytes];
+        prevInputLength=0;
+      }
+      System.arraycopy(input,inputOffset,prevInput,prevInputLength,newPrevInputLength);
+      inputBuffer.setLength(inputLength - newPrevInputLength);
+      inputBuffer.setOffset(inputOffset + newPrevInputLength);
+      prevInputLength+=newPrevInputLength;
+      if (prevInputLength == frameSizeInBytes) {
+        input=prevInput;
+        inputLength=prevInputLength;
+        inputOffset=0;
+        prevInputLength=0;
+      }
+ else       return OUTPUT_BUFFER_NOT_FILLED;
+    }
+  }
+ else {
+    inputBuffer.setLength(inputLength - frameSizeInBytes);
+    inputBuffer.setOffset(inputOffset + frameSizeInBytes);
+  }
+  Object outputData=outputBuffer.getData();
+  byte[] output=(outputData instanceof byte[]) ? (byte[])outputData : null;
+  int outputOffset=outputBuffer.getOffset();
+  int minOutputLength=Math.max(FFmpeg.FF_MIN_BUFFER_SIZE,inputLength);
+  if ((output == null) || ((output.length - outputOffset) < minOutputLength)) {
+    output=new byte[minOutputLength];
+    outputBuffer.setData(output);
+    outputOffset=0;
+    outputBuffer.setOffset(outputOffset);
+  }
+  int outputLength=FFmpeg.avcodec_encode_audio(avctx,output,outputOffset,output.length - outputOffset,input,inputOffset);
+  if (outputLength < 0)   return BUFFER_PROCESSED_FAILED;
+ else {
+    outputBuffer.setLength(outputLength);
+    if (inputBuffer.getLength() > 0)     return BUFFER_PROCESSED_OK | INPUT_BUFFER_NOT_CONSUMED;
+ else     return BUFFER_PROCESSED_OK;
+  }
+}
