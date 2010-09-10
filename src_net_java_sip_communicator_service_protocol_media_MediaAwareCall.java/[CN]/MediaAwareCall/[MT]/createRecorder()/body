@@ -1,3 +1,19 @@
 {
-  return ProtocolMediaActivator.getMediaService().createRecorder(getDefaultDevice(MediaType.AUDIO));
+  final Recorder recorder=ProtocolMediaActivator.getMediaService().createRecorder(getDefaultDevice(MediaType.AUDIO));
+  if (recorder != null) {
+    final CallChangeListener callChangeListener=new CallChangeAdapter(){
+      @Override public void callStateChanged(      CallChangeEvent evt){
+        if (CallState.CALL_ENDED.equals(evt.getNewValue()))         recorder.stop();
+      }
+    }
+;
+    addCallChangeListener(callChangeListener);
+    recorder.addListener(new Recorder.Listener(){
+      public void recorderStopped(      Recorder recorder){
+        removeCallChangeListener(callChangeListener);
+      }
+    }
+);
+  }
+  return recorder;
 }

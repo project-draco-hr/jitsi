@@ -1,5 +1,6 @@
 {
   String savedCallsPath=configuration.getString(Recorder.SAVED_CALLS_PATH);
+  String callFormat;
   if ((savedCallsPath == null) || (savedCallsPath.length() == 0)) {
     if (callFileChooser == null) {
       callFileChooser=GenericFileDialog.create(null,resources.getI18NString("plugin.callrecordingconfig.SAVE_CALL"),SipCommFileChooser.SAVE_FILE_OPERATION);
@@ -41,7 +42,7 @@
     File selectedFile=callFileChooser.getFileFromDialog();
     if (selectedFile != null) {
       callFilename=selectedFile.getAbsolutePath();
-      String callFormat=SoundFileUtils.getExtension(selectedFile);
+      callFormat=SoundFileUtils.getExtension(selectedFile);
       if ((callFormat != null) && (callFormat.length() != 0)) {
         if (!isSupportedFormat(selectedFile)) {
           if (SoundFileUtils.isSoundFile(selectedFile)) {
@@ -50,18 +51,24 @@
           callFormat=SoundFileUtils.DEFAULT_CALL_RECORDING_FORMAT;
           callFilename+='.' + callFormat;
         }
-        configuration.setProperty(Recorder.CALL_FORMAT,callFormat);
+        configuration.setProperty(Recorder.FORMAT,callFormat);
       }
     }
  else {
       return false;
     }
   }
- else   callFilename=createDefaultFilename(savedCallsPath);
+ else {
+    callFilename=createDefaultFilename(savedCallsPath);
+    callFormat=SoundFileUtils.getExtension(new File(callFilename));
+  }
   Throwable exception=null;
   try {
     Recorder recorder=getRecorder();
-    if (recorder != null)     recorder.start(callFilename);
+    if (recorder != null) {
+      if ((callFormat == null) || (callFormat.length() <= 0))       callFormat=SoundFileUtils.DEFAULT_CALL_RECORDING_FORMAT;
+      recorder.start(callFormat,callFilename);
+    }
     this.recorder=recorder;
   }
  catch (  IOException ioex) {
