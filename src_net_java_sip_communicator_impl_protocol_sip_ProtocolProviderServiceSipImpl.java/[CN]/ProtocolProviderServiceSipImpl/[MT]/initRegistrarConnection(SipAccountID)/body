@@ -9,14 +9,12 @@
     initRegistrarlessConnection(accountID);
     return;
   }
-  InetAddress registrarAddress=null;
+  InetSocketAddress[] registrarSocketAddresses=null;
   int registrarPort=ListeningPoint.PORT_5060;
   try {
     String registrarTransport=accountID.getAccountPropertyString(ProtocolProviderFactory.PREFERRED_TRANSPORT);
     if (registrarTransport == null)     registrarTransport=getDefaultTransport();
-    InetSocketAddress registrarSocketAddress=resolveSipAddress(registrarAddressStr,registrarTransport);
-    registrarAddress=registrarSocketAddress.getAddress();
-    registrarPort=registrarSocketAddress.getPort();
+    registrarSocketAddresses=resolveSipAddress(registrarAddressStr,registrarTransport);
     accountID.putAccountProperty(ProtocolProviderFactory.SERVER_ADDRESS_VALIDATED,Boolean.toString(true));
   }
  catch (  UnknownHostException ex) {
@@ -26,7 +24,7 @@
       throw new IllegalArgumentException(registrarAddressStr + " appears to be an either invalid" + " or inaccessible address.",ex);
     }
   }
-  if (registrarAddress == null) {
+  if (registrarSocketAddresses == null || registrarSocketAddresses.length == 0) {
     fireRegistrationStateChanged(RegistrationState.UNREGISTERED,RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,"Invalid or inaccessible server address.");
     return;
   }
@@ -45,10 +43,10 @@
   }
   int expires=SipActivator.getConfigurationService().getInt(REGISTRATION_EXPIRATION,SipRegistrarConnection.DEFAULT_REGISTRATION_EXPIRATION);
   try {
-    this.sipRegistrarConnection=new SipRegistrarConnection(registrarAddress,registrarPort,registrarTransport,expires,this);
+    this.sipRegistrarConnection=new SipRegistrarConnection(registrarSocketAddresses,registrarTransport,expires,this);
   }
  catch (  ParseException ex) {
-    logger.error("Failed to create a registrar connection with " + registrarAddress.getHostAddress(),ex);
-    throw new IllegalArgumentException("Failed to create a registrar connection with " + registrarAddress.getHostAddress() + ": "+ ex.getMessage());
+    logger.error("Failed to create a registrar connection with " + registrarSocketAddresses[0].getAddress().getHostAddress(),ex);
+    throw new IllegalArgumentException("Failed to create a registrar connection with " + registrarSocketAddresses[0].getAddress().getHostAddress() + ": "+ ex.getMessage());
   }
 }

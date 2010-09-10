@@ -1,10 +1,11 @@
 {
+  ArrayList<InetSocketAddress> resultAddresses=new ArrayList<InetSocketAddress>();
   InetSocketAddress sockAddr=null;
   if (NetworkUtils.isValidIPAddress(address)) {
     InetAddress addressObj=NetworkUtils.getInetAddress(address);
     int port=ListeningPoint.PORT_5060;
     if (transport.equalsIgnoreCase(ListeningPoint.TLS))     port=ListeningPoint.PORT_5061;
-    return new InetSocketAddress(addressObj,port);
+    resultAddresses.add(new InetSocketAddress(addressObj,port));
   }
   try {
     if (transport.equalsIgnoreCase(ListeningPoint.TLS)) {
@@ -18,9 +19,30 @@
  catch (  ParseException e) {
     throw new UnknownHostException(address);
   }
-  if (sockAddr != null)   return sockAddr;
-  InetAddress addressObj=InetAddress.getByName(address);
+  if (sockAddr != null)   resultAddresses.add(sockAddr);
   int defaultPort=ListeningPoint.PORT_5060;
   if (transport.equalsIgnoreCase(ListeningPoint.TLS))   defaultPort=ListeningPoint.PORT_5061;
-  return new InetSocketAddress(addressObj,defaultPort);
+  InetSocketAddress addressObj4=null;
+  InetSocketAddress addressObj6=null;
+  try {
+    addressObj4=NetworkUtils.getARecord(address,defaultPort);
+  }
+ catch (  ParseException ex) {
+    logger.error("Error parsing dns record.",ex);
+  }
+  try {
+    addressObj6=NetworkUtils.getAAAARecord(address,defaultPort);
+  }
+ catch (  ParseException ex) {
+    logger.error("Error parsing dns record.",ex);
+  }
+  if (Boolean.getBoolean("java.net.preferIPv6Addresses")) {
+    if (addressObj6 != null)     resultAddresses.add(addressObj6);
+    if (addressObj4 != null)     resultAddresses.add(addressObj4);
+  }
+ else {
+    if (addressObj4 != null)     resultAddresses.add(addressObj4);
+    if (addressObj6 != null)     resultAddresses.add(addressObj6);
+  }
+  return resultAddresses.toArray(new InetSocketAddress[]{});
 }

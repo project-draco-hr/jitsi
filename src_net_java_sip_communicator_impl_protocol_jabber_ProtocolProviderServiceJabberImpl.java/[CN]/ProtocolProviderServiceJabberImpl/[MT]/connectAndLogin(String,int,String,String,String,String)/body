@@ -1,0 +1,44 @@
+{
+  ConnectionConfiguration confConn=new ConnectionConfiguration(address,serverPort,serviceName,proxy);
+  confConn.setReconnectionAllowed(false);
+  if (connection != null) {
+    logger.error("Connection is not null and isConnected:" + connection.isConnected(),new Exception("Trace possible duplicate connections"));
+  }
+  connection=new XMPPConnection(confConn);
+  try {
+    CertificateVerificationService gvs=getCertificateVerificationService();
+    if (gvs != null) {
+      connection.setCustomTrustManager(new HostTrustManager(gvs.getTrustManager(address,serverPort)));
+    }
+  }
+ catch (  GeneralSecurityException e) {
+    logger.error("Error creating custom trust manager",e);
+  }
+  connection.connect();
+  registerServiceDiscoveryManager();
+  if (connectionListener == null) {
+    connectionListener=new JabberConnectionListener();
+  }
+  connection.addConnectionListener(connectionListener);
+  if (abortConnecting) {
+    abortConnecting=false;
+    disconnectAndCleanConnection();
+    return ConnectState.ABORT_CONNECTING;
+  }
+  fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERING,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
+  SASLAuthentication.supportSASLMechanism("PLAIN",0);
+  SASLAuthentication.unregisterSASLMechanism("DIGEST-MD5");
+  SASLAuthentication.registerSASLMechanism("DIGEST-MD5",SASLDigestMD5Mechanism.class);
+  SASLAuthentication.supportSASLMechanism("DIGEST-MD5");
+  connection.login(userName,password,resource);
+  if (connection.isAuthenticated()) {
+    connection.getRoster().setSubscriptionMode(Roster.SubscriptionMode.manual);
+    fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
+    return ConnectState.STOP_TRYING;
+  }
+ else {
+    fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
+    disconnectAndCleanConnection();
+    return ConnectState.CONTINUE_TRYING;
+  }
+}

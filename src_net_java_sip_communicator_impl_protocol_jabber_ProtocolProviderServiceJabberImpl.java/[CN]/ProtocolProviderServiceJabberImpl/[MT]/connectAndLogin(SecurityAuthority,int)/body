@@ -31,12 +31,50 @@ synchronized (initializationLock) {
         userID=StringUtils.parseName(getAccountID().getUserID());
       }
       String serviceName=StringUtils.parseServer(getAccountID().getUserID());
-      String serverAddress=getAccountID().getAccountPropertyString(ProtocolProviderFactory.SERVER_ADDRESS);
-      String serverPort=getAccountID().getAccountPropertyString(ProtocolProviderFactory.SERVER_PORT);
+      List<String> serverAddresses=new ArrayList<String>();
+      String serverAddressUserSetting=getAccountID().getAccountPropertyString(ProtocolProviderFactory.SERVER_ADDRESS);
+      int serverPort=getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SERVER_PORT,5222);
       String accountResource=getAccountID().getAccountPropertyString(ProtocolProviderFactory.RESOURCE);
+      if (accountResource == null || accountResource.equals(""))       accountResource="sip-comm";
       try {
-        InetSocketAddress srvAddress=NetworkUtils.getSRVRecord("xmpp-client","tcp",serviceName);
-        if (srvAddress != null)         serverAddress=srvAddress.getHostName();
+        InetSocketAddress[] srvAddresses=NetworkUtils.getSRVRecords("xmpp-client","tcp",serviceName);
+        if (srvAddresses != null) {
+          for (int i=0; i < srvAddresses.length; i++) {
+            String addr=srvAddresses[i].getAddress().getHostAddress();
+            serverAddresses.add(addr);
+          }
+        }
+        InetSocketAddress addressObj4=null;
+        InetSocketAddress addressObj6=null;
+        try {
+          addressObj4=NetworkUtils.getARecord(serverAddressUserSetting,serverPort);
+        }
+ catch (        ParseException ex) {
+          logger.error("Cannot obtain A record for " + serverAddressUserSetting,ex);
+        }
+        try {
+          addressObj6=NetworkUtils.getAAAARecord(serverAddressUserSetting,serverPort);
+        }
+ catch (        ParseException ex) {
+          logger.error("Cannot obtain AAAA record for " + serverAddressUserSetting,ex);
+        }
+        if (Boolean.getBoolean("java.net.preferIPv6Addresses")) {
+          if (addressObj6 != null) {
+            serverAddresses.add(addressObj6.getAddress().getHostAddress());
+          }
+          if (addressObj4 != null) {
+            serverAddresses.add(addressObj4.getAddress().getHostAddress());
+          }
+        }
+ else {
+          if (addressObj4 != null) {
+            serverAddresses.add(addressObj4.getAddress().getHostAddress());
+          }
+          if (addressObj6 != null) {
+            serverAddresses.add(addressObj6.getAddress().getHostAddress());
+          }
+        }
+        serverAddresses.add(serverAddressUserSetting);
       }
  catch (      ParseException ex1) {
         logger.error("Domain not resolved " + ex1.getMessage());
@@ -72,65 +110,31 @@ synchronized (initializationLock) {
           proxy=org.jivesoftware.smack.proxy.ProxyInfo.forSocks5Proxy(globalProxyAddress,globalProxyPort,globalProxyUsername,globalProxyPassword);
         }
       }
-      ConnectionConfiguration confConn=new ConnectionConfiguration(serverAddress,Integer.parseInt(serverPort),serviceName,proxy);
-      confConn.setReconnectionAllowed(false);
-      if (connection != null) {
-        logger.error("Connection is not null and isConnected:" + connection.isConnected(),new Exception("Trace possible duplicate connections"));
-      }
-      connection=new XMPPConnection(confConn);
-      try {
-        CertificateVerificationService gvs=getCertificateVerificationService();
-        if (gvs != null)         connection.setCustomTrustManager(new HostTrustManager(gvs.getTrustManager(serverAddress,Integer.parseInt(serverPort))));
-      }
- catch (      GeneralSecurityException e) {
-        logger.error("Error creating custom trust manager",e);
-      }
-      connection.connect();
-      registerServiceDiscoveryManager();
-      if (connectionListener == null)       connectionListener=new JabberConnectionListener();
-      connection.addConnectionListener(connectionListener);
-      if (abortConnecting) {
-        abortConnecting=false;
-        disconnectAndCleanConnection();
-        return;
-      }
-      fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERING,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
-      if (accountResource == null || accountResource.equals(""))       accountResource="sip-comm";
-      SASLAuthentication.supportSASLMechanism("PLAIN",0);
-      SASLAuthentication.unregisterSASLMechanism("DIGEST-MD5");
-      SASLAuthentication.registerSASLMechanism("DIGEST-MD5",SASLDigestMD5Mechanism.class);
-      SASLAuthentication.supportSASLMechanism("DIGEST-MD5");
-      try {
-        connection.login(userID,password,accountResource);
-      }
- catch (      XMPPException e1) {
+      for (int i=0; i < serverAddresses.size(); i++) {
+        String currentAddress=serverAddresses.get(i);
         try {
+          ConnectState state=connectAndLogin(currentAddress,serverPort,serviceName,userID,password,accountResource);
+          if (state == ConnectState.ABORT_CONNECTING)           return;
+ else           if (state == ConnectState.CONTINUE_TRYING)           continue;
+ else           if (state == ConnectState.STOP_TRYING)           break;
+        }
+ catch (        XMPPException ex) {
+          if (isAuthenticationFailed(ex))           throw ex;
+          disconnectAndCleanConnection();
           try {
-            connection.disconnect();
+            ConnectState state=connectAndLogin(currentAddress,serverPort,serviceName,userID + "@" + serviceName,password,accountResource);
+            if (state == ConnectState.ABORT_CONNECTING)             return;
+ else             if (state == ConnectState.CONTINUE_TRYING)             continue;
+ else             if (state == ConnectState.STOP_TRYING)             break;
           }
- catch (          Exception e) {
-          }
-          connection.connect();
-          connection.addConnectionListener(connectionListener);
-          if (abortConnecting) {
-            abortConnecting=false;
+ catch (          XMPPException e) {
+            if (isAuthenticationFailed(ex))             throw ex;
             disconnectAndCleanConnection();
-            return;
+            if (i == serverAddresses.size()) {
+              throw ex;
+            }
           }
-          fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERING,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
-          connection.login(userID + "@" + serviceName,password,accountResource);
         }
- catch (        XMPPException e2) {
-          throw e1;
-        }
-      }
-      if (connection.isAuthenticated()) {
-        connection.getRoster().setSubscriptionMode(Roster.SubscriptionMode.manual);
-        fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
-      }
- else {
-        fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
-        disconnectAndCleanConnection();
       }
     }
  catch (    NumberFormatException ex) {

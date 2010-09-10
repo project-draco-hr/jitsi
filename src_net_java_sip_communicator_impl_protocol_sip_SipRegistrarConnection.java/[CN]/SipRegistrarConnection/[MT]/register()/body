@@ -6,6 +6,9 @@
     request=sipProvider.getMessageFactory().createRegisterRequest(getAddressOfRecord(),registrationsExpiration,callIdHeader,getNextCSeqValue());
   }
  catch (  Exception exc) {
+    if (exc.getCause() instanceof SocketException) {
+      if (registerUsingNextAddress())       return;
+    }
     logger.error("Failed to create a Register request.",exc);
     setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,exc.getMessage());
     if (exc instanceof OperationFailedException)     throw (OperationFailedException)exc;
@@ -24,6 +27,9 @@
     if (logger.isDebugEnabled())     logger.debug("sent request=\n" + request);
   }
  catch (  Exception ex) {
+    if (ex.getCause() instanceof SocketException) {
+      if (registerUsingNextAddress())       return;
+    }
     logger.error("Could not send out the register request!",ex);
     setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,ex.getMessage());
     throw new OperationFailedException("Could not send out the register request!",OperationFailedException.NETWORK_FAILURE,ex);

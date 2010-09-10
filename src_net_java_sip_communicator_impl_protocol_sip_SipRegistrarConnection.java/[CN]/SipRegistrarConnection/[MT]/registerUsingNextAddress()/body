@@ -1,0 +1,27 @@
+{
+  int i=0;
+  for (; i < registrarAddresses.length; i++) {
+    if (registrarAddresses[i].equals(currentRegistrarAddress))     break;
+  }
+  if (i + 1 < registrarAddresses.length) {
+    this.currentRegistrarAddress=registrarAddresses[i + 1];
+    sipProvider.initOutboundProxy((SipAccountID)sipProvider.getAccountID(),i + 1);
+    try {
+      registrarURI=sipProvider.getAddressFactory().createSipURI(null,this.currentRegistrarAddress.getHostName());
+      if (this.currentRegistrarAddress.getPort() != ListeningPoint.PORT_5060)       registrarURI.setPort(this.currentRegistrarAddress.getPort());
+      registrarURI.setTransportParam(registrationTransport);
+    }
+ catch (    Throwable e) {
+      logger.error("Cannot create register URI",e);
+    }
+    try {
+      register();
+    }
+ catch (    Throwable e) {
+      logger.error("Cannot send register!",e);
+      setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,"A timeout occurred while trying to connect to the server.");
+    }
+    return true;
+  }
+  return false;
+}
