@@ -9,7 +9,15 @@
     MediaStreamTarget target=JingleUtils.extractDefaultTarget(theirContent);
     RtpDescriptionPacketExtension theirDescription=JingleUtils.getRtpDescription(theirContent);
     MediaDirection direction=JingleUtils.getDirection(ourContent,!getPeer().isInitiator());
-    MediaFormat format=JingleUtils.payloadTypeToMediaFormat(theirDescription.getPayloadTypes().get(0),getDynamicPayloadTypes());
+    MediaFormat format=null;
+    List<PayloadTypePacketExtension> payloadTypes=theirDescription.getPayloadTypes();
+    for (    PayloadTypePacketExtension payload : payloadTypes) {
+      format=JingleUtils.payloadTypeToMediaFormat(payload,getDynamicPayloadTypes());
+      if (format != null)       break;
+    }
+    if (format == null) {
+      ProtocolProviderServiceJabberImpl.throwOperationFailedException("No matching codec.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
+    }
     List<RTPExtension> rtpExtensions=JingleUtils.extractRTPExtensions(description,this.getRtpExtensionsRegistry());
     initStream(ourContent.getName(),connector,dev,format,target,direction,rtpExtensions);
   }

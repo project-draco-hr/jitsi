@@ -1,2 +1,18 @@
 {
+  List<ContentPacketExtension> contents=content.getContentList();
+  JingleIQ contentIQ=null;
+  List<ContentPacketExtension> answerContents=new ArrayList<ContentPacketExtension>();
+  try {
+    getMediaHandler().processOffer(contents);
+    answerContents=getMediaHandler().generateSessionAccept();
+  }
+ catch (  Exception e) {
+    logger.warn("Exception occurred",e);
+    contentIQ=JinglePacketFactory.createContentReject(getProtocolProvider().getOurJID(),this.peerJID,getJingleSID(),answerContents);
+  }
+  if (contentIQ == null) {
+    contentIQ=JinglePacketFactory.createContentAccept(getProtocolProvider().getOurJID(),this.peerJID,getJingleSID(),answerContents);
+  }
+  getProtocolProvider().getConnection().sendPacket(contentIQ);
+  getMediaHandler().start();
 }

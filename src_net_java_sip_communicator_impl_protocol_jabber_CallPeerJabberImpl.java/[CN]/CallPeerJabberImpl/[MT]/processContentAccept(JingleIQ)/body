@@ -1,2 +1,14 @@
 {
+  List<ContentPacketExtension> contents=content.getContentList();
+  try {
+    getMediaHandler().processAnswer(contents);
+  }
+ catch (  Exception exc) {
+    logger.warn("Exception occurred",exc);
+    JingleIQ errResp=JinglePacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getSID(),Reason.INCOMPATIBLE_PARAMETERS,"Error: " + exc.getMessage());
+    setState(CallPeerState.FAILED,"Error: " + exc.getMessage());
+    getProtocolProvider().getConnection().sendPacket(errResp);
+    return;
+  }
+  getMediaHandler().start();
 }
