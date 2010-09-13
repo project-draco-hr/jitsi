@@ -1,48 +1,30 @@
 {
   ArrayList<InetSocketAddress> resultAddresses=new ArrayList<InetSocketAddress>();
-  InetSocketAddress sockAddr=null;
   if (NetworkUtils.isValidIPAddress(address)) {
     InetAddress addressObj=NetworkUtils.getInetAddress(address);
     int port=ListeningPoint.PORT_5060;
     if (transport.equalsIgnoreCase(ListeningPoint.TLS))     port=ListeningPoint.PORT_5061;
     resultAddresses.add(new InetSocketAddress(addressObj,port));
+    return resultAddresses.toArray(new InetSocketAddress[]{});
   }
+  boolean preferIPv6Addresses=Boolean.getBoolean("java.net.preferIPv6Addresses");
   try {
-    if (transport.equalsIgnoreCase(ListeningPoint.TLS)) {
-      sockAddr=NetworkUtils.getSRVRecord("sips",ListeningPoint.TCP,address);
+    InetSocketAddress[] sockAddrs=NetworkUtils.getSRVRecords(transport.equalsIgnoreCase(ListeningPoint.TLS) ? "sips" : "sip",ListeningPoint.TCP,address);
+    for (    InetSocketAddress s : sockAddrs) {
+      resolveAddresses(s.getHostName(),resultAddresses,preferIPv6Addresses,s.getPort());
+      resultAddresses.add(s);
+      if (logger.isTraceEnabled())       logger.trace("Returned SRV " + s);
     }
- else {
-      sockAddr=NetworkUtils.getSRVRecord("sip",transport,address);
-    }
-    if (logger.isTraceEnabled())     logger.trace("Returned SRV " + sockAddr);
   }
  catch (  ParseException e) {
-    throw new UnknownHostException(address);
+    logger.error("Error parsing dns record.",e);
   }
-  if (sockAddr != null)   resultAddresses.add(sockAddr);
   int defaultPort=ListeningPoint.PORT_5060;
   if (transport.equalsIgnoreCase(ListeningPoint.TLS))   defaultPort=ListeningPoint.PORT_5061;
-  InetSocketAddress addressObj4=null;
-  InetSocketAddress addressObj6=null;
-  try {
-    addressObj4=NetworkUtils.getARecord(address,defaultPort);
-  }
- catch (  ParseException ex) {
-    logger.error("Error parsing dns record.",ex);
-  }
-  try {
-    addressObj6=NetworkUtils.getAAAARecord(address,defaultPort);
-  }
- catch (  ParseException ex) {
-    logger.error("Error parsing dns record.",ex);
-  }
-  if (Boolean.getBoolean("java.net.preferIPv6Addresses")) {
-    if (addressObj6 != null)     resultAddresses.add(addressObj6);
-    if (addressObj4 != null)     resultAddresses.add(addressObj4);
-  }
- else {
-    if (addressObj4 != null)     resultAddresses.add(addressObj4);
-    if (addressObj6 != null)     resultAddresses.add(addressObj6);
+  resolveAddresses(address,resultAddresses,preferIPv6Addresses,defaultPort);
+  if (resultAddresses.size() == 0) {
+    resultAddresses.add(new InetSocketAddress(address,defaultPort));
+    InetAddress addressObj=InetAddress.getByName(address);
   }
   return resultAddresses.toArray(new InetSocketAddress[]{});
 }
