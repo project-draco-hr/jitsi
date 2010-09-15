@@ -1,5 +1,14 @@
 {
   Object sService=ResourceManagementActivator.bundleContext.getService(event.getServiceReference());
+  if (sService instanceof UIService && uiService == null && event.getType() == ServiceEvent.REGISTERED) {
+    uiService=(UIService)sService;
+    uiService.repaintUI();
+  }
+ else   if (sService instanceof UIService && event.getType() == ServiceEvent.UNREGISTERING) {
+    if (uiService != null && uiService.equals(sService)) {
+      uiService=null;
+    }
+  }
   if (!(sService instanceof ResourcePack)) {
     return;
   }
@@ -39,6 +48,10 @@
       skinResources=resources;
       imageResources.putAll(skinPack.getImageResources());
       colorResources.putAll(skinPack.getColorResources());
+      UIService serv=getUIService();
+      if (serv != null) {
+        serv.repaintUI();
+      }
     }
   }
  else   if (event.getType() == ServiceEvent.UNREGISTERING) {
@@ -73,6 +86,10 @@
         skinResources=getResources(skinPack);
         imageResources.putAll(skinPack.getImageResources());
         colorResources.putAll(skinPack.getColorResources());
+      }
+      UIService serv=getUIService();
+      if (serv != null) {
+        serv.repaintUI();
       }
     }
   }
