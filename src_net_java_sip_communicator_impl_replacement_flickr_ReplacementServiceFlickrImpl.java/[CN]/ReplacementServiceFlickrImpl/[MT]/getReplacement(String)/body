@@ -1,0 +1,30 @@
+{
+  final Pattern p=Pattern.compile("\\/photos\\/[0-9a-zA-Z_\\-\\@]+\\/([0-9]+)(\\/[^\"\\<]*)*",Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  Matcher m=p.matcher(sourceString);
+  String thumbUrl=sourceString;
+  while (m.find()) {
+    try {
+      String url="http://api.flickr.com/services/rest/" + "?method=flickr.photos.getInfo&api_key=" + API_KEY + "&photo_id="+ m.group(1)+ "&format=json&nojsoncallback=1";
+      URL flickrURL=new URL(url);
+      URLConnection conn=flickrURL.openConnection();
+      BufferedReader in=new BufferedReader(new InputStreamReader(conn.getInputStream()));
+      String inputLine, holder="";
+      while ((inputLine=in.readLine()) != null)       holder=inputLine;
+      in.close();
+      JSONObject wrapper=new JSONObject(holder);
+      if (wrapper.getString("stat").equals("ok")) {
+        JSONObject result=wrapper.getJSONObject("photo");
+        if (!(result.length() == 0)) {
+          String farmID=result.getString("farm");
+          String serverID=result.getString("server");
+          String secret=result.getString("secret");
+          thumbUrl="http://farm" + farmID + ".static.flickr.com/"+ serverID+ "/"+ m.group(1)+ "_"+ secret+ "_t.jpg";
+        }
+      }
+    }
+ catch (    Exception e) {
+      e.printStackTrace();
+    }
+  }
+  return thumbUrl;
+}

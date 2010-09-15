@@ -1,0 +1,24 @@
+{
+  final Pattern p=Pattern.compile(".+\\.com\\/([a-zA-Z0-9_\\-]+)",Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  Matcher m=p.matcher(sourceString);
+  String thumbUrl=sourceString;
+  while (m.find()) {
+    try {
+      String url="http://vimeo.com/api/v2/video/" + m.group(1) + ".json";
+      URL vimeoURL=new URL(url);
+      URLConnection conn=vimeoURL.openConnection();
+      BufferedReader in=new BufferedReader(new InputStreamReader(conn.getInputStream()));
+      String inputLine, holder="";
+      while ((inputLine=in.readLine()) != null)       holder=inputLine;
+      in.close();
+      JSONArray result=new JSONArray(holder);
+      if (!(result.length() == 0)) {
+        thumbUrl=result.getJSONObject(0).getString("thumbnail_medium");
+      }
+    }
+ catch (    Exception e) {
+      e.printStackTrace();
+    }
+  }
+  return thumbUrl;
+}
