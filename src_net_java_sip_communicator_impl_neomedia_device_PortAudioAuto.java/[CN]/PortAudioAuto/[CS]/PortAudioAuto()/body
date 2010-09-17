@@ -25,18 +25,19 @@
   try {
     ConfigurationService config=NeomediaActivator.getConfigurationService();
     boolean echoCancelEnabled=config.getBoolean(DeviceConfiguration.PROP_AUDIO_ECHOCANCEL_ENABLED,PortAudioManager.isEnabledEchoCancel());
+    long echoCancelFilterLengthInMillis=PortAudioManager.getFilterLengthInMillis();
     if (echoCancelEnabled) {
-      long echoCancelFilterLengthInMillis=config.getLong(DeviceConfiguration.PROP_AUDIO_ECHOCANCEL_FILTER_LENGTH_IN_MILLIS,PortAudioManager.getFilterLengthInMillis());
-      PortAudioManager.setEchoCancel(echoCancelEnabled,echoCancelFilterLengthInMillis);
+      echoCancelFilterLengthInMillis=config.getLong(DeviceConfiguration.PROP_AUDIO_ECHOCANCEL_FILTER_LENGTH_IN_MILLIS,echoCancelFilterLengthInMillis);
     }
+    PortAudioManager.setEchoCancel(echoCancelEnabled,echoCancelFilterLengthInMillis);
     boolean denoiseEnabled=config.getBoolean(DeviceConfiguration.PROP_AUDIO_DENOISE_ENABLED,PortAudioManager.isEnabledDeNoise());
     PortAudioManager.setDeNoise(denoiseEnabled);
     int defaultAudioLatency=(int)(PortAudioManager.getSuggestedLatency() * 1000);
     int audioLatency=config.getInt(DeviceConfiguration.PROP_AUDIO_LATENCY,defaultAudioLatency);
     if (audioLatency != defaultAudioLatency)     PortAudioManager.setSuggestedLatency((double)audioLatency / 1000d);
   }
- catch (  Exception e) {
-    logger.error("Error parsing audio config",e);
+ catch (  Exception ex) {
+    logger.error("Error parsing audio config",ex);
   }
   supported=true;
 }
