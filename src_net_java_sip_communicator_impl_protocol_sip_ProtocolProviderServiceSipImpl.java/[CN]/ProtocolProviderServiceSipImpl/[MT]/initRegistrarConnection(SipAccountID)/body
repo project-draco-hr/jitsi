@@ -10,12 +10,26 @@
     return;
   }
   InetSocketAddress[] registrarSocketAddresses=null;
+  String registrarTransport=accountID.getAccountPropertyString(ProtocolProviderFactory.PREFERRED_TRANSPORT);
+  if (registrarTransport != null && registrarTransport.length() > 0) {
+    if (!registrarTransport.equals(ListeningPoint.UDP) && !registrarTransport.equals(ListeningPoint.TCP) && !registrarTransport.equals(ListeningPoint.TLS)) {
+      throw new IllegalArgumentException(registrarTransport + " is not a valid transport protocol. Transport must be " + "left blanc or set to TCP, UDP or TLS.");
+    }
+  }
+ else {
+    registrarTransport=getDefaultTransport();
+  }
   int registrarPort=ListeningPoint.PORT_5060;
   try {
-    String registrarTransport=accountID.getAccountPropertyString(ProtocolProviderFactory.PREFERRED_TRANSPORT);
-    if (registrarTransport == null)     registrarTransport=getDefaultTransport();
-    registrarSocketAddresses=resolveSipAddress(registrarAddressStr,registrarTransport);
-    accountID.putAccountProperty(ProtocolProviderFactory.SERVER_ADDRESS_VALIDATED,Boolean.toString(true));
+    if (accountID.getAccountProperty(ProtocolProviderFactory.SERVER_PORT) != null) {
+      ArrayList<InetSocketAddress> registrarSocketAddressesList=new ArrayList<InetSocketAddress>();
+      resolveAddresses(registrarAddressStr,registrarSocketAddressesList,Boolean.getBoolean("java.net.preferIPv6Addresses"),registrarPort);
+      registrarSocketAddresses=registrarSocketAddressesList.toArray(new InetSocketAddress[0]);
+    }
+ else {
+      registrarSocketAddresses=resolveSipAddress(registrarAddressStr,registrarTransport);
+    }
+    if (registrarSocketAddresses != null && registrarSocketAddresses.length > 0)     accountID.putAccountProperty(ProtocolProviderFactory.SERVER_ADDRESS_VALIDATED,Boolean.toString(true));
   }
  catch (  UnknownHostException ex) {
     if (logger.isDebugEnabled())     logger.debug(registrarAddressStr + " appears to be an either invalid" + " or inaccessible address.",ex);
@@ -31,15 +45,6 @@
   registrarPort=accountID.getAccountPropertyInt(ProtocolProviderFactory.SERVER_PORT,registrarPort);
   if (registrarPort > NetworkUtils.MAX_PORT_NUMBER) {
     throw new IllegalArgumentException(registrarPort + " is larger than " + NetworkUtils.MAX_PORT_NUMBER+ " and does not therefore represent a valid port number.");
-  }
-  String registrarTransport=accountID.getAccountPropertyString(ProtocolProviderFactory.PREFERRED_TRANSPORT);
-  if (registrarTransport != null && registrarTransport.length() > 0) {
-    if (!registrarTransport.equals(ListeningPoint.UDP) && !registrarTransport.equals(ListeningPoint.TCP) && !registrarTransport.equals(ListeningPoint.TLS)) {
-      throw new IllegalArgumentException(registrarTransport + " is not a valid transport protocol. Transport must be " + "left blanc or set to TCP, UDP or TLS.");
-    }
-  }
- else {
-    registrarTransport=ListeningPoint.UDP;
   }
   int expires=SipActivator.getConfigurationService().getInt(REGISTRATION_EXPIRATION,SipRegistrarConnection.DEFAULT_REGISTRATION_EXPIRATION);
   try {
