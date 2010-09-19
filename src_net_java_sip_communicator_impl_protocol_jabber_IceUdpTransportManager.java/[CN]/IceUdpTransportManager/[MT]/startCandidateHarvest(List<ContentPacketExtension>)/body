@@ -1,2 +1,20 @@
 {
+  for (  ContentPacketExtension content : ourOffer) {
+    RtpDescriptionPacketExtension rtpDesc=(RtpDescriptionPacketExtension)content.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+    IceMediaStream stream;
+    try {
+      stream=getNetAddrMgr().createIceStream(nextMediaPortToTry,rtpDesc.getMedia(),iceAgent);
+    }
+ catch (    Exception exc) {
+      throw new OperationFailedException("Failed to initialize stream " + rtpDesc.getMedia(),OperationFailedException.INTERNAL_ERROR);
+    }
+    try {
+      nextMediaPortToTry=stream.getComponent(Component.RTCP).getLocalCandidates().get(0).getTransportAddress().getPort() + 1;
+    }
+ catch (    Throwable t) {
+      logger.debug("Determining next port didn't work: ",t);
+    }
+    content.addChildExtension(JingleUtils.createTransport(stream));
+  }
+  this.cpeList=ourOffer;
 }
