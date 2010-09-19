@@ -1,0 +1,14 @@
+{
+  ProtocolProviderServiceJabberImpl provider=getCallPeer().getProtocolProvider();
+  NetworkAddressManagerService namSer=JabberActivator.getNetworkAddressManagerService();
+  Agent agent=namSer.createIceAgent();
+  JabberAccountID accID=(JabberAccountID)provider.getAccountID();
+  List<StunServerDescriptor> stunServers=new ArrayList<StunServerDescriptor>();
+  if (accID.isStunServerDiscoveryEnabled()) {
+    String username=provider.getOurJID();
+    String password=JabberActivator.getProtocolProviderFactory().loadPassword(accID);
+    StunCandidateHarvester autoHarvester=namSer.discoverStunServer(accID.getService(),username.getBytes("UTF-8"),password.getBytes("UTF-8"));
+  }
+  List<StunServerDescriptor> additionalStunServers=accID.getStunServers();
+  return agent;
+}
