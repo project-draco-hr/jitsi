@@ -20,14 +20,13 @@
   connectionPanel.setResource(resource);
   String priority=accountProperties.get(ProtocolProviderFactory.RESOURCE_PRIORITY);
   connectionPanel.setPriority(priority);
-  for (int i=0; i < 100; i++) {
-    String stunAddress=accountProperties.get(ProtocolProviderFactory.STUN_ADDRESS + i);
-    if (stunAddress == null)     break;
-    String stunPort=accountProperties.get(ProtocolProviderFactory.STUN_PORT + i);
-    String stunUsername=accountProperties.get(ProtocolProviderFactory.STUN_USERNAME + i);
-    String stunPassword=accountProperties.get(ProtocolProviderFactory.STUN_PASSWORD + i);
-    boolean stunIsTurnSupported=Boolean.parseBoolean(accountProperties.get(ProtocolProviderFactory.STUN_IS_TURN_SUPPORTED + i));
-    StunServer stunServer=new StunServer(stunAddress,stunPort,stunIsTurnSupported,stunUsername,stunPassword.toCharArray(),i);
+  boolean isUseIce=Boolean.parseBoolean(accountProperties.get(ProtocolProviderFactory.IS_USE_ICE));
+  iceConfigPanel.setUseIce(isUseIce);
+  boolean isAutoDiscoverStun=Boolean.parseBoolean(accountProperties.get(ProtocolProviderFactory.AUTO_DISCOVER_STUN));
+  iceConfigPanel.setAutoDiscoverStun(isAutoDiscoverStun);
+  for (int i=0; i < StunServerDescriptor.MAX_STUN_SERVER_COUNT; i++) {
+    StunServerDescriptor stunServer=StunServerDescriptor.loadDescriptor(accountProperties,ProtocolProviderFactory.STUN_PREFIX + i);
+    if (stunServer == null)     break;
     iceConfigPanel.addStunServer(stunServer);
   }
   this.isServerOverridden=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_SERVER_OVERRIDDEN,false);

@@ -21,19 +21,14 @@
   accountProperties.put(ProtocolProviderFactory.SERVER_PORT,String.valueOf(registration.getPort()));
   accountProperties.put(ProtocolProviderFactory.RESOURCE,registration.getResource());
   accountProperties.put(ProtocolProviderFactory.RESOURCE_PRIORITY,String.valueOf(registration.getPriority()));
-  Iterator<StunServer> stunServers=registration.getAdditionalStunServers();
+  accountProperties.put(ProtocolProviderFactory.IS_USE_ICE,String.valueOf(registration.isUseIce()));
+  accountProperties.put(ProtocolProviderFactory.AUTO_DISCOVER_STUN,String.valueOf(registration.isAutoDiscoverStun()));
+  Iterator<StunServerDescriptor> stunServers=registration.getAdditionalStunServers();
+  int serverIndex=-1;
   while (stunServers != null && stunServers.hasNext()) {
-    StunServer stunServer=stunServers.next();
-    int stunIndex=stunServer.getIndex();
-    String stunPort=stunServer.getPort();
-    String stunUsername=stunServer.getUsername();
-    String stunPassword=stunServer.getPassword().toString();
-    boolean isSupportTurn=stunServer.isSupportTurn();
-    accountProperties.put(ProtocolProviderFactory.STUN_ADDRESS + stunIndex,stunServer.getIpAddress());
-    if (stunPort != null && stunPort.length() > 0)     accountProperties.put(ProtocolProviderFactory.STUN_PORT + stunIndex,stunPort);
-    if (stunUsername != null && stunUsername.length() > 0)     accountProperties.put(ProtocolProviderFactory.STUN_USERNAME + stunIndex,stunUsername);
-    if (stunPassword != null && stunPassword.length() > 0)     accountProperties.put(ProtocolProviderFactory.STUN_PASSWORD + stunIndex,stunPassword);
-    accountProperties.put(ProtocolProviderFactory.STUN_IS_TURN_SUPPORTED + stunIndex,new Boolean(isSupportTurn).toString());
+    serverIndex++;
+    StunServerDescriptor stunServer=stunServers.next();
+    stunServer.storeDescriptor(accountProperties,ProtocolProviderFactory.STUN_PREFIX + serverIndex);
   }
   if (isModification) {
     providerFactory.modifyAccount(protocolProvider,accountProperties);

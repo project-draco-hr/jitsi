@@ -17,24 +17,26 @@
   valuesPanel.add(portField);
   valuesPanel.add(usernameField);
   valuesPanel.add(passwordField);
+  portField.setInputVerifier(portVerifier);
   JButton addButton=new JButton(Resources.getString("service.gui.ADD"));
   JButton cancelButton=new JButton(Resources.getString("service.gui.CANCEL"));
   addButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
       String address=addressField.getText();
-      String port=portField.getText();
+      String portStr=portField.getText();
+      int port=-1;
+      if (portStr != null && portStr.trim().length() > 0)       port=Integer.parseInt(portField.getText());
       String username=usernameField.getText();
       char[] password=passwordField.getPassword();
       String errorMessage=null;
       if (address == null || address.length() <= 0)       errorMessage=Resources.getString("plugin.jabberaccregwizz.NO_STUN_ADDRESS");
       if (username == null || username.length() <= 0)       errorMessage=Resources.getString("plugin.jabberaccregwizz.NO_STUN_USERNAME");
-      if (port == null || port.length() <= 0)       port=JabberAccountRegistration.DEFAULT_STUN_PORT;
       if (containsStunServer(address,port))       errorMessage=Resources.getString("plugin.jabberaccregwizz.STUN_ALREADY_EXIST");
       if (errorMessage != null) {
         loadErrorMessage(errorMessage);
         return;
       }
-      StunServer stunServer=new StunServer(address,port,supportTurnCheckBox.isSelected(),username,password,table.getRowCount());
+      StunServerDescriptor stunServer=new StunServerDescriptor(address,port,supportTurnCheckBox.isSelected(),username,password);
       addStunServer(stunServer);
       dispose();
     }
