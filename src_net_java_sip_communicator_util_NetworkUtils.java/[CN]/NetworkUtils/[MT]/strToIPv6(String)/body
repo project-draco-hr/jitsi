@@ -1,0 +1,86 @@
+{
+  if (ipv6AddrStr.length() < 2)   return null;
+  int colonIndex;
+  char currentChar;
+  boolean sawtDigit;
+  int currentTkn;
+  char[] addrBuff=ipv6AddrStr.toCharArray();
+  byte[] dst=new byte[IN6_ADDR_SIZE];
+  int srcb_length=addrBuff.length;
+  int scopeID=ipv6AddrStr.indexOf("%");
+  if (scopeID == srcb_length - 1)   return null;
+  if (scopeID != -1)   srcb_length=scopeID;
+  colonIndex=-1;
+  int i=0, j=0;
+  if (addrBuff[i] == ':')   if (addrBuff[++i] != ':')   return null;
+  int curtok=i;
+  sawtDigit=false;
+  currentTkn=0;
+  while (i < srcb_length) {
+    currentChar=addrBuff[i++];
+    int chval=Character.digit(currentChar,16);
+    if (chval != -1) {
+      currentTkn<<=4;
+      currentTkn|=chval;
+      if (currentTkn > 0xffff)       return null;
+      sawtDigit=true;
+      continue;
+    }
+    if (currentChar == ':') {
+      curtok=i;
+      if (!sawtDigit) {
+        if (colonIndex != -1)         return null;
+        colonIndex=j;
+        continue;
+      }
+ else       if (i == srcb_length) {
+        return null;
+      }
+      if (j + IN6_ADDR_TOKEN_SIZE > IN6_ADDR_SIZE)       return null;
+      dst[j++]=(byte)((currentTkn >> 8) & 0xff);
+      dst[j++]=(byte)(currentTkn & 0xff);
+      sawtDigit=false;
+      currentTkn=0;
+      continue;
+    }
+    if (currentChar == '.' && ((j + IN4_ADDR_SIZE) <= IN6_ADDR_SIZE)) {
+      String ia4=ipv6AddrStr.substring(curtok,srcb_length);
+      int dot_count=0, index=0;
+      while ((index=ia4.indexOf('.',index)) != -1) {
+        dot_count++;
+        index++;
+      }
+      if (dot_count != 3)       return null;
+      byte[] v4addr=strToIPv4(ia4);
+      if (v4addr == null)       return null;
+      for (int k=0; k < IN4_ADDR_SIZE; k++) {
+        dst[j++]=v4addr[k];
+      }
+      sawtDigit=false;
+      break;
+    }
+    return null;
+  }
+  if (sawtDigit) {
+    if (j + IN6_ADDR_TOKEN_SIZE > IN6_ADDR_SIZE)     return null;
+    dst[j++]=(byte)((currentTkn >> 8) & 0xff);
+    dst[j++]=(byte)(currentTkn & 0xff);
+  }
+  if (colonIndex != -1) {
+    int n=j - colonIndex;
+    if (j == IN6_ADDR_SIZE)     return null;
+    for (i=1; i <= n; i++) {
+      dst[IN6_ADDR_SIZE - i]=dst[colonIndex + n - i];
+      dst[colonIndex + n - i]=0;
+    }
+    j=IN6_ADDR_SIZE;
+  }
+  if (j != IN6_ADDR_SIZE)   return null;
+  byte[] newdst=mappedIPv4ToRealIPv4(dst);
+  if (newdst != null) {
+    return newdst;
+  }
+ else {
+    return dst;
+  }
+}

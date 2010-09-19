@@ -1,0 +1,52 @@
+{
+  if (ipv4AddrStr.length() == 0)   return null;
+  byte[] address=new byte[IN4_ADDR_SIZE];
+  String[] tokens=ipv4AddrStr.split("\\.",-1);
+  long currentTkn;
+  try {
+switch (tokens.length) {
+case 1:
+      currentTkn=Long.parseLong(tokens[0]);
+    if (currentTkn < 0 || currentTkn > 0xffffffffL)     return null;
+  address[0]=(byte)((currentTkn >> 24) & 0xff);
+address[1]=(byte)(((currentTkn & 0xffffff) >> 16) & 0xff);
+address[2]=(byte)(((currentTkn & 0xffff) >> 8) & 0xff);
+address[3]=(byte)(currentTkn & 0xff);
+break;
+case 2:
+currentTkn=Integer.parseInt(tokens[0]);
+if (currentTkn < 0 || currentTkn > 0xff) return null;
+address[0]=(byte)(currentTkn & 0xff);
+currentTkn=Integer.parseInt(tokens[1]);
+if (currentTkn < 0 || currentTkn > 0xffffff) return null;
+address[1]=(byte)((currentTkn >> 16) & 0xff);
+address[2]=(byte)(((currentTkn & 0xffff) >> 8) & 0xff);
+address[3]=(byte)(currentTkn & 0xff);
+break;
+case 3:
+for (int i=0; i < 2; i++) {
+currentTkn=Integer.parseInt(tokens[i]);
+if (currentTkn < 0 || currentTkn > 0xff) return null;
+address[i]=(byte)(currentTkn & 0xff);
+}
+currentTkn=Integer.parseInt(tokens[2]);
+if (currentTkn < 0 || currentTkn > 0xffff) return null;
+address[2]=(byte)((currentTkn >> 8) & 0xff);
+address[3]=(byte)(currentTkn & 0xff);
+break;
+case 4:
+for (int i=0; i < 4; i++) {
+currentTkn=Integer.parseInt(tokens[i]);
+if (currentTkn < 0 || currentTkn > 0xff) return null;
+address[i]=(byte)(currentTkn & 0xff);
+}
+break;
+default :
+return null;
+}
+}
+ catch (NumberFormatException e) {
+return null;
+}
+return address;
+}
