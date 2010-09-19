@@ -1,30 +1,3 @@
 {
-  ConfigurationService configurationService=NetaddrActivator.getConfigurationService();
-  String stunAddressStr=configurationService.getString(PROP_STUN_SERVER_ADDRESS);
-  String portStr=configurationService.getString(PROP_STUN_SERVER_PORT);
   this.localHostFinderSocket=initRandomPortSocket();
-  if ((stunAddressStr == null) || (portStr == null)) {
-    useStun=false;
-    if (logger.isInfoEnabled())     logger.info("Stun server address(" + stunAddressStr + ")/port("+ portStr+ ") not set (or invalid). Disabling STUN.");
-  }
- else {
-    int port=-1;
-    try {
-      port=Integer.parseInt(portStr);
-    }
- catch (    NumberFormatException ex) {
-      if (logger.isInfoEnabled())       logger.info(portStr + " is not a valid port number. " + "Defaulting to 3478",ex);
-      port=DEFAULT_STUN_SERVER_PORT;
-    }
-    stunServerAddress=new StunAddress(stunAddressStr,port);
-    detector=new SimpleAddressDetector(stunServerAddress);
-    if (logger.isDebugEnabled()) {
-      logger.debug("Created a STUN Address detector for the following " + "STUN server: " + stunAddressStr + ":"+ port);
-    }
-    detector.start();
-    if (logger.isDebugEnabled())     logger.debug("STUN server detector started;");
-    configurationService.addVetoableChangeListener(PROP_STUN_SERVER_ADDRESS,this);
-    configurationService.addVetoableChangeListener(PROP_STUN_SERVER_PORT,this);
-    launchStunServerTest();
-  }
 }
