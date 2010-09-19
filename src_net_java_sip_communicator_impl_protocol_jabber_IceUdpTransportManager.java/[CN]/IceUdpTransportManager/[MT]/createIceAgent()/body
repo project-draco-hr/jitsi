@@ -3,12 +3,27 @@
   NetworkAddressManagerService namSer=JabberActivator.getNetworkAddressManagerService();
   Agent agent=namSer.createIceAgent();
   JabberAccountID accID=(JabberAccountID)provider.getAccountID();
-  List<StunServerDescriptor> stunServers=new ArrayList<StunServerDescriptor>();
   if (accID.isStunServerDiscoveryEnabled()) {
     String username=provider.getOurJID();
     String password=JabberActivator.getProtocolProviderFactory().loadPassword(accID);
-    StunCandidateHarvester autoHarvester=namSer.discoverStunServer(accID.getService(),username.getBytes("UTF-8"),password.getBytes("UTF-8"));
+    StunCandidateHarvester autoHarvester=null;
+    try {
+      autoHarvester=namSer.discoverStunServer(accID.getService(),username.getBytes("UTF-8"),password.getBytes("UTF-8"));
+    }
+ catch (    UnsupportedEncodingException exc) {
+    }
+    if (autoHarvester != null)     agent.addCandidateHarvester(autoHarvester);
   }
-  List<StunServerDescriptor> additionalStunServers=accID.getStunServers();
+  for (  StunServerDescriptor desc : accID.getStunServers()) {
+    TransportAddress addr=new TransportAddress(desc.getAddress(),desc.getPort(),Transport.UDP);
+    StunCandidateHarvester harvester;
+    if (desc.isTurnSupported()) {
+      harvester=new TurnCandidateHarvester(addr,new LongTermCredential(desc.getUsername(),desc.getPassword()));
+    }
+ else {
+      harvester=new StunCandidateHarvester(addr);
+    }
+    agent.addCandidateHarvester(harvester);
+  }
   return agent;
 }
