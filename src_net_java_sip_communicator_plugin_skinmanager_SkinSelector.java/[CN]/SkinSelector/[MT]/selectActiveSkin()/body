@@ -1,0 +1,28 @@
+{
+  if (!SwingUtilities.isEventDispatchThread())   SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
+      selectActiveSkin();
+    }
+  }
+);
+  if (listener != null)   listener.suppressAction(true);
+synchronized (lock) {
+    boolean found=false;
+    for (int i=0; i < dataModel.getSize(); i++) {
+      Object o=dataModel.getElementAt(i);
+      if (!(o instanceof Bundle))       continue;
+      Bundle b=(Bundle)o;
+      if (b.getState() == Bundle.ACTIVE || b.getState() == Bundle.STARTING) {
+        setSelectedItem(b);
+        found=true;
+      }
+    }
+    if (!found)     setSelectedIndex(0);
+  }
+  SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
+      if (listener != null)       listener.suppressAction(false);
+    }
+  }
+);
+}

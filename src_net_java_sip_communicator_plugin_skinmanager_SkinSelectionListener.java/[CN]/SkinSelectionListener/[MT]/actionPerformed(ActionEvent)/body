@@ -1,0 +1,74 @@
+{
+  SkinSelector selector=(SkinSelector)e.getSource();
+  if (current != null && current.equals(selector.getSelectedItem()))   return;
+  if (suppressed) {
+    current=selector.getSelectedItem();
+    return;
+  }
+  if (selector.getSelectedItem() instanceof String) {
+    String selectedItem=(String)selector.getSelectedItem();
+    if (selectedItem.equals(SkinSelector.ADD_TEXT)) {
+      selector.hidePopup();
+      SipCommFileChooser chooser=createFileChooser();
+      File newBundleFile=chooser.getFileFromDialog();
+      if (newBundleFile != null) {
+        try {
+          File jar=null;
+          try {
+            jar=Resources.getResources().prepareSkinBundleFromZip(newBundleFile);
+          }
+ catch (          Exception ex) {
+            logger.info("Failed to load skin from zip.",ex);
+            SkinManagerActivator.getUIService().getPopupDialog().showMessagePopupDialog(ex.getClass() + ": " + ex.getMessage(),"Error",PopupDialog.ERROR_MESSAGE);
+          }
+          if (jar != null) {
+            try {
+              Bundle newBundle=SkinManagerActivator.bundleContext.installBundle(jar.toURI().toURL().toString());
+              selector.selectNoSkin();
+              newBundle.start();
+            }
+ catch (            MalformedURLException ex) {
+              logger.info("Failed to load skin from zip.",ex);
+            }
+          }
+        }
+ catch (        BundleException ex) {
+          logger.info("Failed to install bundle.",ex);
+          SkinManagerActivator.getUIService().getPopupDialog().showMessagePopupDialog(ex.getMessage(),"Error",PopupDialog.ERROR_MESSAGE);
+        }
+catch (        Throwable ex) {
+          logger.info("Failed to install bundle.",ex);
+        }
+      }
+ else {
+        if (current != null) {
+          selector.setSelectedItem(current);
+        }
+ else {
+          selector.setSelectedIndex(0);
+        }
+      }
+    }
+ else     if (selectedItem.equals(SkinSelector.DEFAULT_TEXT)) {
+      selector.selectNoSkin();
+    }
+ else     if (selectedItem.equals(SkinSelectorRenderer.SEPARATOR)) {
+      if (current != null) {
+        selector.setSelectedItem(current);
+      }
+ else {
+        selector.setSelectedIndex(0);
+      }
+    }
+  }
+ else   if (selector.getSelectedItem() instanceof Bundle) {
+    Bundle select=(Bundle)selector.getSelectedItem();
+    selector.selectNoSkin();
+    try {
+      select.start();
+    }
+ catch (    BundleException ex) {
+    }
+  }
+  current=selector.getSelectedItem();
+}

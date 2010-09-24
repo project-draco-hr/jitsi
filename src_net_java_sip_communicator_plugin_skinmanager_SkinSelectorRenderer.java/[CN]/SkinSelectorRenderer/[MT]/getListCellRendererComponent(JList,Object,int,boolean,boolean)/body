@@ -1,0 +1,72 @@
+{
+  this.removeAll();
+  if (value.equals(SEPARATOR)) {
+    add(separator,BorderLayout.CENTER);
+    this.setBackground(list.getBackground());
+    this.setForeground(list.getForeground());
+    return this;
+  }
+ else   if (value.equals(SkinSelector.ADD_TEXT)) {
+    add(new JLabel(SkinSelector.ADD_TEXT));
+  }
+ else   if (value.equals(SkinSelector.DEFAULT_TEXT)) {
+    initBundleView();
+    nameLabel.setText(SkinSelector.DEFAULT_TEXT);
+    descriptionLabel.setText(SkinSelector.DEFAULT_DESCRIPTION_TEXT);
+  }
+ else   if (value instanceof Bundle) {
+    initBundleView();
+    Bundle bundle=(Bundle)value;
+    URL res;
+    try {
+      res=bundle.getResource("info.properties");
+    }
+ catch (    Throwable ex) {
+      res=null;
+    }
+    String bundleName="unknown";
+    String bundleDescription="";
+    if (res != null) {
+      Properties props=new Properties();
+      try {
+        props.load(res.openStream());
+        String disp=props.getProperty("display_name");
+        if (disp != null) {
+          bundleName=disp;
+        }
+        disp=props.getProperty("version");
+        if (disp != null) {
+          bundleName+=" " + disp;
+        }
+        disp=props.getProperty("author");
+        String desc=props.getProperty("description");
+        String bundString="";
+        if (disp != null) {
+          bundString=disp;
+        }
+        if (desc != null) {
+          if (disp != null) {
+            bundString+=" - ";
+          }
+          bundString+=desc;
+        }
+        if (!bundString.equals("")) {
+          bundleDescription=bundString;
+        }
+      }
+ catch (      IOException ex) {
+      }
+    }
+    this.nameLabel.setText(bundleName.toString());
+    this.descriptionLabel.setText(bundleDescription);
+  }
+  if (isSelected) {
+    this.setBackground(list.getSelectionBackground());
+    this.setForeground(list.getSelectionForeground());
+  }
+ else {
+    this.setBackground(list.getBackground());
+    this.setForeground(list.getForeground());
+  }
+  return this;
+}
