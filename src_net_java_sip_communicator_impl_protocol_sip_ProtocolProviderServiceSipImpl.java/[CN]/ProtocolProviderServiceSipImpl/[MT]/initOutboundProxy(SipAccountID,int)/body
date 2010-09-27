@@ -29,13 +29,26 @@
       throw new IllegalArgumentException(proxyPort + " is larger than " + NetworkUtils.MAX_PORT_NUMBER+ " and does not therefore represent a valid port number.");
     }
     InetSocketAddress proxySocketAddress=null;
-    if (proxyAddressAndPortEntered) {
-      ArrayList<InetSocketAddress> addresses=new ArrayList<InetSocketAddress>();
-      resolveAddresses(proxyAddressStr,addresses,Boolean.getBoolean("java.net.preferIPv6Addresses"),proxyPort);
-      if (addresses.size() > ix)       proxySocketAddress=addresses.get(ix);
+    if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.PROXY_AUTO_CONFIG,false)) {
+      ArrayList<InetSocketAddress> proxySocketAddressesList=new ArrayList<InetSocketAddress>();
+      ArrayList<String> proxyTransportsList=new ArrayList<String>();
+      resolveSipAddress(proxyAddressStr,proxyTransport,proxySocketAddressesList,proxyTransportsList,true);
+      proxyTransport=proxyTransportsList.get(ix);
+      proxySocketAddress=proxySocketAddressesList.get(ix);
     }
  else {
-      proxySocketAddress=resolveSipAddress(proxyAddressStr,proxyTransport)[ix];
+      if (proxyAddressAndPortEntered) {
+        ArrayList<InetSocketAddress> addresses=new ArrayList<InetSocketAddress>();
+        resolveAddresses(proxyAddressStr,addresses,Boolean.getBoolean("java.net.preferIPv6Addresses"),proxyPort);
+        if (addresses.size() > ix)         proxySocketAddress=addresses.get(ix);
+      }
+ else {
+        ArrayList<InetSocketAddress> proxySocketAddressesList=new ArrayList<InetSocketAddress>();
+        ArrayList<String> proxyTransportsList=new ArrayList<String>();
+        resolveSipAddress(proxyAddressStr,proxyTransport,proxySocketAddressesList,proxyTransportsList,false);
+        proxyTransport=proxyTransportsList.get(ix);
+        proxySocketAddress=proxySocketAddressesList.get(ix);
+      }
     }
     proxyAddress=proxySocketAddress.getAddress();
     proxyPort=proxySocketAddress.getPort();

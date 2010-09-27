@@ -1,0 +1,47 @@
+{
+  if (NetworkUtils.isValidIPAddress(address)) {
+    InetAddress addressObj=NetworkUtils.getInetAddress(address);
+    int port=ListeningPoint.PORT_5060;
+    if (transport.equalsIgnoreCase(ListeningPoint.TLS))     port=ListeningPoint.PORT_5061;
+    resultTransports.add(transport);
+    resultAddresses.add(new InetSocketAddress(addressObj,port));
+    return;
+  }
+  boolean preferIPv6Addresses=Boolean.getBoolean("java.net.preferIPv6Addresses");
+  if (resolveProtocol) {
+    try {
+      String[][] naptrRecords=NetworkUtils.getNAPTRRecords(address);
+      if (naptrRecords != null && naptrRecords.length > 0) {
+        for (        String[] rec : naptrRecords) {
+          resolveSRV(address,rec[1],resultAddresses,resultTransports,preferIPv6Addresses);
+        }
+        if (logger.isInfoEnabled())         logger.info("Found NAPRT record and using it:" + resultAddresses);
+        return;
+      }
+    }
+ catch (    ParseException e) {
+      logger.error("Error parsing dns record.",e);
+    }
+  }
+  try {
+    resolveSRV(address,transport,resultAddresses,resultTransports,preferIPv6Addresses);
+  }
+ catch (  ParseException e) {
+    logger.error("Error parsing dns record.",e);
+  }
+  int defaultPort=ListeningPoint.PORT_5060;
+  if (transport.equalsIgnoreCase(ListeningPoint.TLS))   defaultPort=ListeningPoint.PORT_5061;
+  ArrayList<InetSocketAddress> tempResultAddresses=new ArrayList<InetSocketAddress>();
+  resolveAddresses(address,tempResultAddresses,preferIPv6Addresses,defaultPort);
+  for (  InetSocketAddress a : tempResultAddresses) {
+    if (!resultAddresses.contains(a)) {
+      resultAddresses.add(a);
+      resultTransports.add(transport);
+    }
+  }
+  if (resultAddresses.size() == 0) {
+    resultAddresses.add(new InetSocketAddress(address,defaultPort));
+    resultTransports.add(transport);
+    InetAddress addressObj=InetAddress.getByName(address);
+  }
+}

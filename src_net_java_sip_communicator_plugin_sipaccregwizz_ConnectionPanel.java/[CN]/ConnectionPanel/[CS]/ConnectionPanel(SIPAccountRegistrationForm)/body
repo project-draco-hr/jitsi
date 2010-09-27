@@ -1,33 +1,65 @@
 {
-  super(new BorderLayout());
+  super(new BorderLayout(10,10));
   this.regform=regform;
   enableDefaultEncryption=new SIPCommCheckBox(Resources.getString("plugin.sipaccregwizz.ENABLE_DEFAULT_ENCRYPTION"),regform.getRegistration().isDefaultEncryption());
   enableSipZrtpAttribute=new SIPCommCheckBox(Resources.getString("plugin.sipaccregwizz.ENABLE_SIPZRTP_ATTRIBUTE"),regform.getRegistration().isSipZrtpAttribute());
+  proxyAutoCheckBox=new SIPCommCheckBox(Resources.getString("plugin.sipaccregwizz.PROXY_AUTO"),regform.getRegistration().isProxyAutoConfigure());
+  proxyAutoCheckBox.addActionListener(new ActionListener(){
+    /** 
+ * Invoked when an action occurs.
+ */
+    public void actionPerformed(    ActionEvent e){
+      enablesProxyAutoConfigure(proxyAutoCheckBox.isSelected());
+    }
+  }
+);
   this.transportCombo.addItemListener(this);
   transportCombo.setSelectedItem(regform.getRegistration().getDefaultTransport());
-  JPanel mainPanel=new TransparentPanel(new BorderLayout(10,10));
+  JPanel mainPanel=new TransparentPanel();
+  mainPanel.setLayout(new BoxLayout(mainPanel,BoxLayout.Y_AXIS));
+  JPanel registrarMainPanel=new TransparentPanel(new BorderLayout(10,10));
   JPanel labelsPanel=new TransparentPanel(new GridLayout(0,1,10,10));
   JPanel valuesPanel=new TransparentPanel(new GridLayout(0,1,10,10));
   JLabel serverLabel=new JLabel(Resources.getString("plugin.sipaccregwizz.REGISTRAR"));
-  JLabel proxyLabel=new JLabel(Resources.getString("plugin.sipaccregwizz.PROXY"));
   JLabel authNameLabel=new JLabel(Resources.getString("plugin.sipaccregwizz.AUTH_NAME"));
-  JLabel serverPortLabel=new JLabel(Resources.getString("plugin.sipaccregwizz.SERVER_PORT"));
-  JLabel proxyPortLabel=new JLabel(Resources.getString("plugin.sipaccregwizz.PROXY_PORT"));
-  JLabel transportLabel=new JLabel(Resources.getString("plugin.sipaccregwizz.PREFERRED_TRANSPORT"));
+  JLabel serverPortLabel=new JLabel(Resources.getString("service.gui.PORT"));
   labelsPanel.add(serverLabel);
-  labelsPanel.add(serverPortLabel);
   labelsPanel.add(authNameLabel);
-  labelsPanel.add(proxyLabel);
-  labelsPanel.add(proxyPortLabel);
-  labelsPanel.add(transportLabel);
-  valuesPanel.add(serverField);
-  valuesPanel.add(serverPortField);
+  JPanel serverPanel=new TransparentPanel(new BorderLayout(5,5));
+  serverPanel.add(serverField,BorderLayout.CENTER);
+  JPanel serverPortPanel=new TransparentPanel(new BorderLayout(5,5));
+  serverPortPanel.add(serverPortLabel,BorderLayout.WEST);
+  serverPortPanel.add(serverPortField,BorderLayout.EAST);
+  serverPanel.add(serverPortPanel,BorderLayout.EAST);
+  valuesPanel.add(serverPanel);
   valuesPanel.add(authNameField);
-  valuesPanel.add(proxyField);
-  valuesPanel.add(proxyPortField);
+  registrarMainPanel.add(labelsPanel,BorderLayout.WEST);
+  registrarMainPanel.add(valuesPanel,BorderLayout.CENTER);
+  registrarMainPanel.setBorder(BorderFactory.createEmptyBorder(10,5,10,5));
+  mainPanel.add(registrarMainPanel);
+  JLabel proxyLabel=new JLabel(Resources.getString("plugin.sipaccregwizz.PROXY"));
+  JLabel proxyPortLabel=new JLabel(Resources.getString("service.gui.PORT"));
+  JLabel transportLabel=new JLabel(Resources.getString("plugin.sipaccregwizz.PREFERRED_TRANSPORT"));
+  JPanel proxyMainPanel=new TransparentPanel(new BorderLayout(10,10));
+  JPanel proxyPanel=new TransparentPanel(new BorderLayout(5,5));
+  proxyPanel.add(proxyField,BorderLayout.CENTER);
+  JPanel proxyPortPanel=new TransparentPanel(new BorderLayout(5,5));
+  proxyPortPanel.add(proxyPortLabel,BorderLayout.WEST);
+  proxyPortPanel.add(proxyPortField,BorderLayout.EAST);
+  proxyPanel.add(proxyPortPanel,BorderLayout.EAST);
+  labelsPanel=new TransparentPanel(new GridLayout(0,1,10,10));
+  valuesPanel=new TransparentPanel(new GridLayout(0,1,10,10));
+  labelsPanel.add(proxyLabel);
+  labelsPanel.add(transportLabel);
+  valuesPanel.add(proxyPanel);
   valuesPanel.add(transportCombo);
-  mainPanel.add(labelsPanel,BorderLayout.WEST);
-  mainPanel.add(valuesPanel,BorderLayout.CENTER);
+  proxyMainPanel.add(proxyAutoCheckBox,BorderLayout.NORTH);
+  proxyMainPanel.add(labelsPanel,BorderLayout.WEST);
+  proxyMainPanel.add(valuesPanel,BorderLayout.CENTER);
+  proxyMainPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("plugin.sipaccregwizz.PROXY_OPTIONS")));
+  mainPanel.add(proxyMainPanel);
+  mainPanel.add(Box.createVerticalStrut(5));
+  mainPanel.add(createKeepAlivePanel());
   JPanel encryptionPanel=new TransparentPanel(new GridLayout(1,2,2,2));
   encryptionPanel.add(enableDefaultEncryption,BorderLayout.WEST);
   encryptionPanel.add(enableSipZrtpAttribute,BorderLayout.EAST);
@@ -38,8 +70,7 @@
     }
   }
 );
-  mainPanel.add(encryptionPanel,BorderLayout.SOUTH);
-  mainPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("plugin.sipaccregwizz.ADVANCED_OPTIONS")));
+  mainPanel.add(Box.createVerticalStrut(5));
+  mainPanel.add(encryptionPanel);
   this.add(mainPanel,BorderLayout.NORTH);
-  this.add(createKeepAlivePanel(),BorderLayout.SOUTH);
 }
