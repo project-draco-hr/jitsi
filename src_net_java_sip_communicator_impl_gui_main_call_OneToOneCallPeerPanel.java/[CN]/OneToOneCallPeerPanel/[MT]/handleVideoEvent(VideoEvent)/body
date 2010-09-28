@@ -1,14 +1,27 @@
 {
 synchronized (videoContainers) {
-    if ((event != null) && !event.isConsumed() && (event.getOrigin() == VideoEvent.LOCAL)) {
+    if ((event != null) && !event.isConsumed()) {
       Component video=event.getVisualComponent();
 switch (event.getType()) {
 case VideoEvent.VIDEO_ADDED:
-        this.localVideo=video;
+        if (event.getOrigin() == VideoEvent.LOCAL) {
+          this.localVideo=video;
+        }
+ else         if (event.getOrigin() == VideoEvent.REMOTE) {
+          this.remoteVideo=video;
+          if (allowRemoteControl) {
+            addMouseAndKeyListeners();
+          }
+        }
       event.consume();
     break;
 case VideoEvent.VIDEO_REMOVED:
-  if (this.localVideo == video)   this.localVideo=null;
+  if (event.getOrigin() == VideoEvent.LOCAL && localVideo == video) {
+    this.localVideo=null;
+  }
+ else   if (event.getOrigin() == VideoEvent.REMOTE && remoteVideo == video) {
+    this.remoteVideo=video;
+  }
 break;
 }
 }

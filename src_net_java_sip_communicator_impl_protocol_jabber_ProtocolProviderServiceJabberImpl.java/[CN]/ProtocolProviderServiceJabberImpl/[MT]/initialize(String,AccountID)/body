@@ -35,18 +35,22 @@ synchronized (initializationLock) {
     supportedFeatures.add("http://jabber.org/protocol/muc#traffic");
     ProviderManager providerManager=ProviderManager.getInstance();
     providerManager.addIQProvider(JingleIQ.ELEMENT_NAME,JingleIQ.NAMESPACE,new JingleIQProvider());
+    providerManager.addIQProvider(InputEvtIQ.ELEMENT_NAME,InputEvtIQ.NAMESPACE,new InputEvtIQProvider());
     if (Boolean.getBoolean("enableJingle")) {
       OperationSetBasicTelephonyJabberImpl basicTelephony=new OperationSetBasicTelephonyJabberImpl(this);
       addSupportedOperationSet(OperationSetBasicTelephony.class,basicTelephony);
       addSupportedOperationSet(OperationSetSecureTelephony.class,basicTelephony);
       addSupportedOperationSet(OperationSetVideoTelephony.class,new OperationSetVideoTelephonyJabberImpl(basicTelephony));
       addSupportedOperationSet(OperationSetDesktopStreaming.class,new OperationSetDesktopStreamingJabberImpl(basicTelephony));
+      addSupportedOperationSet(OperationSetDesktopSharingServer.class,new OperationSetDesktopSharingServerJabberImpl(basicTelephony));
+      addSupportedOperationSet(OperationSetDesktopSharingClient.class,new OperationSetDesktopSharingClientJabberImpl(this));
       supportedFeatures.add(URN_XMPP_JINGLE);
       supportedFeatures.add(URN_XMPP_JINGLE_RTP);
       supportedFeatures.add(URN_XMPP_JINGLE_RAW_UDP_0);
       supportedFeatures.add(URN_XMPP_JINGLE_RTP_AUDIO);
       supportedFeatures.add(URN_XMPP_JINGLE_RTP_VIDEO);
       supportedFeatures.add(URN_XMPP_JINGLE_RTP_ZRTP);
+      supportedFeatures.add(InputEvtIQ.NAMESPACE);
     }
     opsetContactCapabilities=new OperationSetContactCapabilitiesJabberImpl(this);
     if (discoveryManager != null)     opsetContactCapabilities.setDiscoveryManager(discoveryManager);

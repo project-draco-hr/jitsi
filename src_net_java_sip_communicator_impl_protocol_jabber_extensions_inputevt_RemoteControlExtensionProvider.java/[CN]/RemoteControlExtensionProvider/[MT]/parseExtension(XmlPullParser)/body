@@ -1,0 +1,82 @@
+{
+  RemoteControlExtension result=null;
+  boolean done=false;
+  while (!done) {
+    try {
+      int eventType=parser.next();
+      if (eventType == XmlPullParser.START_TAG) {
+        if (parser.getName().equals(ELEMENT_MOUSE_MOVE)) {
+          String attr=parser.getAttributeValue("","x");
+          String attr2=parser.getAttributeValue("","y");
+          if (attr != null && attr2 != null) {
+            int x=(int)(Double.parseDouble(attr) * 1000);
+            int y=(int)(Double.parseDouble(attr2) * 1000);
+            MouseEvent me=new MouseEvent(component,MouseEvent.MOUSE_MOVED,System.currentTimeMillis(),0,x,y,0,false,0);
+            result=new RemoteControlExtension(me);
+            continue;
+          }
+        }
+        if (parser.getName().equals(ELEMENT_MOUSE_WHEEL)) {
+          String attr=parser.getAttributeValue("","notch");
+          if (attr != null) {
+            MouseWheelEvent me=new MouseWheelEvent(component,MouseEvent.MOUSE_WHEEL,System.currentTimeMillis(),0,0,0,0,false,0,0,Integer.parseInt(attr));
+            result=new RemoteControlExtension(me);
+            continue;
+          }
+        }
+        if (parser.getName().equals(ELEMENT_MOUSE_PRESS)) {
+          String attr=parser.getAttributeValue("","btns");
+          if (attr != null) {
+            MouseEvent me=new MouseEvent(component,MouseEvent.MOUSE_PRESSED,System.currentTimeMillis(),Integer.parseInt(attr),0,0,0,false,0);
+            result=new RemoteControlExtension(me);
+            continue;
+          }
+        }
+        if (parser.getName().equals(ELEMENT_MOUSE_RELEASE)) {
+          String attr=parser.getAttributeValue("","btns");
+          if (attr != null) {
+            MouseEvent me=new MouseEvent(component,MouseEvent.MOUSE_RELEASED,System.currentTimeMillis(),Integer.parseInt(attr),0,0,0,false,0);
+            result=new RemoteControlExtension(me);
+            continue;
+          }
+        }
+        if (parser.getName().equals(ELEMENT_KEY_PRESS)) {
+          String attr=parser.getAttributeValue("","keycode");
+          if (attr != null) {
+            KeyEvent ke=new KeyEvent(component,KeyEvent.KEY_PRESSED,System.currentTimeMillis(),0,Integer.parseInt(attr),(char)0);
+            result=new RemoteControlExtension(ke);
+            continue;
+          }
+        }
+        if (parser.getName().equals(ELEMENT_KEY_RELEASE)) {
+          String attr=parser.getAttributeValue("","keycode");
+          if (attr != null) {
+            KeyEvent ke=new KeyEvent(component,KeyEvent.KEY_RELEASED,System.currentTimeMillis(),0,Integer.parseInt(attr),(char)0);
+            result=new RemoteControlExtension(ke);
+            continue;
+          }
+        }
+        if (parser.getName().equals(ELEMENT_KEY_TYPE)) {
+          String attr=parser.getAttributeValue("","keychar");
+          if (attr != null) {
+            KeyEvent ke=new KeyEvent(component,KeyEvent.KEY_TYPED,System.currentTimeMillis(),0,0,(char)Integer.parseInt(attr));
+            result=new RemoteControlExtension(ke);
+            continue;
+          }
+        }
+      }
+ else       if (eventType == XmlPullParser.END_TAG) {
+        if (parser.getName().equals(RemoteControlExtensionProvider.ELEMENT_REMOTE_CONTROL)) {
+          done=true;
+        }
+      }
+    }
+ catch (    Exception e) {
+      e.printStackTrace();
+    }
+  }
+  if (result == null) {
+    result=new RemoteControlExtension(new ComponentEvent(component,0));
+  }
+  return result;
+}

@@ -1,0 +1,60 @@
+{
+  String ret=null;
+  if (event == null) {
+    return null;
+  }
+  if (event instanceof MouseEvent) {
+    MouseEvent e=(MouseEvent)event;
+switch (e.getID()) {
+case MouseEvent.MOUSE_DRAGGED:
+case MouseEvent.MOUSE_MOVED:
+      if (videoPanelSize != null) {
+        Point p=e.getPoint();
+        double x=(p.getX() / videoPanelSize.width);
+        double y=(p.getY() / videoPanelSize.height);
+        ret=RemoteControlExtensionProvider.getMouseMovedXML(x,y);
+      }
+    break;
+case MouseEvent.MOUSE_WHEEL:
+  MouseWheelEvent ew=(MouseWheelEvent)e;
+ret=RemoteControlExtensionProvider.getMouseWheelXML(ew.getWheelRotation());
+break;
+case MouseEvent.MOUSE_PRESSED:
+ret=RemoteControlExtensionProvider.getMousePressedXML(e.getModifiers());
+break;
+case MouseEvent.MOUSE_RELEASED:
+ret=RemoteControlExtensionProvider.getMouseReleasedXML(e.getModifiers());
+break;
+default :
+break;
+}
+}
+ else if (event instanceof KeyEvent) {
+KeyEvent e=(KeyEvent)event;
+int keycode=e.getKeyCode();
+int key=e.getKeyChar();
+if (key != KeyEvent.CHAR_UNDEFINED) {
+keycode=e.getKeyChar();
+}
+ else {
+keycode=e.getKeyCode();
+}
+if (keycode == 0) {
+return null;
+}
+switch (e.getID()) {
+case KeyEvent.KEY_PRESSED:
+ret=RemoteControlExtensionProvider.getKeyPressedXML(keycode);
+break;
+case KeyEvent.KEY_RELEASED:
+ret=RemoteControlExtensionProvider.getKeyReleasedXML(keycode);
+break;
+case KeyEvent.KEY_TYPED:
+ret=RemoteControlExtensionProvider.getKeyTypedXML(keycode);
+break;
+default :
+break;
+}
+}
+return ret;
+}

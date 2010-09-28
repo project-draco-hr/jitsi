@@ -1,0 +1,32 @@
+{
+  boolean supported=false;
+  String fullCalleeURI=null;
+  if (calleeAddress.indexOf('/') > 0) {
+    fullCalleeURI=calleeAddress;
+  }
+ else {
+    fullCalleeURI=parentProvider.getConnection().getRoster().getPresence(calleeAddress).getFrom();
+  }
+  if (logger.isInfoEnabled())   logger.info("creating outgoing desktop sharing call...");
+  DiscoverInfo di=null;
+  try {
+    di=parentProvider.getDiscoveryManager().discoverInfo(fullCalleeURI);
+    if (di.containsFeature(InputEvtIQ.NAMESPACE)) {
+      if (logger.isInfoEnabled())       logger.info(fullCalleeURI + ": remote-control supported");
+      supported=true;
+    }
+ else {
+      if (logger.isInfoEnabled())       logger.info(fullCalleeURI + ": remote-control not supported!");
+    }
+  }
+ catch (  XMPPException ex) {
+    logger.warn("could not retrieve info for " + fullCalleeURI,ex);
+  }
+  if (parentProvider.getConnection() == null) {
+    throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + "we don't have a valid XMPPConnection.",OperationFailedException.INTERNAL_ERROR);
+  }
+  CallJabberImpl call=new CallJabberImpl(basicTelephony);
+  call.setLocalVideoAllowed(true,getMediaUseCase());
+  call.setLocalInputEvtAware(supported);
+  return basicTelephony.createOutgoingCall(call,calleeAddress);
+}

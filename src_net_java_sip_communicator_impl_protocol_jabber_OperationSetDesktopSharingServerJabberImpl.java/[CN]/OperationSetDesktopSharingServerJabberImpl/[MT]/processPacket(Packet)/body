@@ -1,0 +1,21 @@
+{
+  if (!(packet instanceof InputEvtIQ))   return;
+  InputEvtIQ inputIQ=(InputEvtIQ)packet;
+  if (inputIQ.getAction() != InputEvtAction.NOTIFY) {
+    return;
+  }
+  if (!remoteControlEnabled) {
+    return;
+  }
+  if (inputIQ.getType() == IQ.Type.SET) {
+    IQ ack=IQ.createResultIQ(inputIQ);
+    parentProvider.getConnection().sendPacket(ack);
+  }
+  if (!callPeers.contains(inputIQ.getFrom())) {
+    return;
+  }
+  for (  RemoteControlExtension p : inputIQ.getRemoteControls()) {
+    ComponentEvent evt=p.getEvent();
+    processComponentEvent(evt);
+  }
+}

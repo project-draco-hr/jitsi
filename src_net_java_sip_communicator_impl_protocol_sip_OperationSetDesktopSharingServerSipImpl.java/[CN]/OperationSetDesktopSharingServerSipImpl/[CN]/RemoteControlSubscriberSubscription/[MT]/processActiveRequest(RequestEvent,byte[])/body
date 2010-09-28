@@ -1,0 +1,37 @@
+{
+  if (requestEvent.getDialog() != callPeer.getDialog()) {
+    return;
+  }
+  if (rawContent != null) {
+    Document document=null;
+    Throwable exception=null;
+    try {
+      document=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(rawContent));
+    }
+ catch (    IOException ioe) {
+      exception=ioe;
+    }
+catch (    ParserConfigurationException pce) {
+      exception=pce;
+    }
+catch (    SAXException saxe) {
+      exception=saxe;
+    }
+    if (exception != null) {
+      logger.error("Failed to parse remote-info XML",exception);
+    }
+ else {
+      Element root=document.getDocumentElement();
+      List<ComponentEvent> events=null;
+      events=DesktopSharingProtocolSipImpl.parse(root,size);
+      for (      ComponentEvent evt : events) {
+        if (evt instanceof MouseEvent) {
+          processMouseEvent((MouseEvent)evt);
+        }
+ else         if (evt instanceof KeyEvent) {
+          processKeyboardEvent((KeyEvent)evt);
+        }
+      }
+    }
+  }
+}
