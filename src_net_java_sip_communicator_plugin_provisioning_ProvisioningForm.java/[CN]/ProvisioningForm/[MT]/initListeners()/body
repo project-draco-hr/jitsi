@@ -1,0 +1,71 @@
+{
+  enableCheckBox.addChangeListener(new ChangeListener(){
+    public void stateChanged(    ChangeEvent e){
+      boolean isSelected=enableCheckBox.isSelected();
+      dhcpButton.setEnabled(isSelected);
+      manualButton.setEnabled(isSelected);
+      String provisioningMethod=null;
+      if (isSelected) {
+        if (dhcpButton.isSelected()) {
+          provisioningMethod="DHCP";
+        }
+ else         if (dnsButton.isSelected()) {
+          provisioningMethod="DNS";
+        }
+ else         if (bonjourButton.isSelected()) {
+          provisioningMethod="Bonjour";
+        }
+ else         if (manualButton.isSelected()) {
+          provisioningMethod="Manual";
+        }
+ else {
+          dhcpButton.setSelected(true);
+          provisioningMethod="DHCP";
+        }
+      }
+      ProvisioningActivator.setProvisioningMethod(provisioningMethod);
+    }
+  }
+);
+  dhcpButton.addChangeListener(new ChangeListener(){
+    public void stateChanged(    ChangeEvent e){
+      if (dhcpButton.isSelected())       ProvisioningActivator.setProvisioningMethod("DHCP");
+    }
+  }
+);
+  dnsButton.addChangeListener(new ChangeListener(){
+    public void stateChanged(    ChangeEvent e){
+      if (dnsButton.isSelected())       ProvisioningActivator.setProvisioningMethod("DNS");
+    }
+  }
+);
+  bonjourButton.addChangeListener(new ChangeListener(){
+    public void stateChanged(    ChangeEvent e){
+      if (bonjourButton.isSelected())       ProvisioningActivator.setProvisioningMethod("Bonjour");
+    }
+  }
+);
+  manualButton.addChangeListener(new ChangeListener(){
+    public void stateChanged(    ChangeEvent e){
+      boolean isSelected=manualButton.isSelected();
+      uriField.setEnabled(isSelected);
+      if (isSelected) {
+        ProvisioningActivator.setProvisioningMethod("Manual");
+        String uriText=uriField.getText();
+        if (uriText != null && uriText.length() > 0)         ProvisioningActivator.setProvisioningUri(uriText);
+      }
+ else       ProvisioningActivator.setProvisioningUri(null);
+    }
+  }
+);
+  uriField.addFocusListener(new FocusListener(){
+    public void focusLost(    FocusEvent e){
+      if (!manualButton.isSelected())       return;
+      String uriText=uriField.getText();
+      if (uriText != null && uriText.length() > 0)       ProvisioningActivator.setProvisioningUri(uriText);
+    }
+    public void focusGained(    FocusEvent e){
+    }
+  }
+);
+}
