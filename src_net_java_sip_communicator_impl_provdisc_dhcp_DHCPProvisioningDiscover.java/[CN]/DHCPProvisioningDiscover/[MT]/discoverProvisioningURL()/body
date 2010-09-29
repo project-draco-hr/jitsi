@@ -1,0 +1,71 @@
+{
+  DHCPPacket inform=new DHCPPacket();
+  byte macAddress[]=null;
+  byte zeroIPAddress[]={0x00,0x00,0x00,0x00};
+  byte broadcastIPAddr[]={(byte)255,(byte)255,(byte)255,(byte)255};
+  DHCPOption dhcpOpts[]=new DHCPOption[1];
+  int xid=new Random().nextInt();
+  try {
+    inform.setOp(DHCPConstants.BOOTREQUEST);
+    inform.setHtype(DHCPConstants.HTYPE_ETHER);
+    inform.setHlen((byte)6);
+    inform.setHops((byte)0);
+    inform.setXid(xid);
+    inform.setSecs((short)0);
+    inform.setFlags((short)0);
+    inform.setYiaddr(InetAddress.getByAddress(zeroIPAddress));
+    inform.setSiaddr(InetAddress.getByAddress(zeroIPAddress));
+    inform.setGiaddr(InetAddress.getByAddress(zeroIPAddress));
+    inform.setChaddr(macAddress);
+    inform.setDhcp(true);
+    inform.setDHCPMessageType(DHCPConstants.DHCPINFORM);
+    dhcpOpts[0]=new DHCPOption(DHCPConstants.DHO_DHCP_PARAMETER_REQUEST_LIST,new byte[]{option});
+    inform.setOptions(dhcpOpts);
+    Enumeration<NetworkInterface> en=NetworkInterface.getNetworkInterfaces();
+    while (en.hasMoreElements()) {
+      NetworkInterface iface=en.nextElement();
+      Enumeration<InetAddress> enAddr=iface.getInetAddresses();
+      while (enAddr.hasMoreElements()) {
+        InetAddress addr=enAddr.nextElement();
+        if (addr instanceof Inet4Address) {
+          NetworkAddressManagerService netaddr=ProvisioningDiscoveryDHCPActivator.getNetworkAddressManagerService();
+          if (!addr.isLoopbackAddress()) {
+            macAddress=netaddr.getHardwareAddress(iface);
+            DHCPPacket p=inform.clone();
+            p.setCiaddr(addr);
+            p.setChaddr(macAddress);
+            byte msg[]=inform.serialize();
+            DatagramPacket pkt=new DatagramPacket(msg,msg.length,InetAddress.getByAddress(broadcastIPAddr),port - 1);
+            socket.send(pkt);
+            msg=null;
+            pkt=null;
+            p=null;
+          }
+        }
+      }
+    }
+    boolean found=false;
+    try {
+      DatagramPacket pkt2=new DatagramPacket(new byte[1500],1500);
+      while (!found) {
+        socket.receive(pkt2);
+        DHCPPacket dhcp=DHCPPacket.getPacket(pkt2);
+        if (dhcp.getXid() != xid) {
+          continue;
+        }
+        DHCPOption optProvisioning=dhcp.getOption(option);
+        if (optProvisioning != null) {
+          found=true;
+          return new String(optProvisioning.getValue());
+        }
+      }
+    }
+ catch (    SocketTimeoutException est) {
+      logger.warn("Timeout, no DHCP answer received",est);
+    }
+  }
+ catch (  Exception e) {
+    logger.warn("Exception occurred during DHCP discover",e);
+  }
+  return null;
+}
