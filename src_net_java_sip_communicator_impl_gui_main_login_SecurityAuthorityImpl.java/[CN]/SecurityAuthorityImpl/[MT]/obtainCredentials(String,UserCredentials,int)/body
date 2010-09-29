@@ -4,9 +4,21 @@
     errorMessage=GuiActivator.getResources().getI18NString("service.gui.AUTHENTICATION_FAILED",new String[]{userCredentials.getUserName(),realm});
   }
   AuthenticationWindow loginWindow=null;
-  if (errorMessage == null)   loginWindow=new AuthenticationWindow(mainFrame,protocolProvider,realm,userCredentials,isUserNameEditable);
- else   loginWindow=new AuthenticationWindow(mainFrame,protocolProvider,realm,userCredentials,isUserNameEditable,errorMessage);
+  String userName=userCredentials.getUserName();
+  char[] password=userCredentials.getPassword();
+  ImageIcon icon=ImageLoader.getAuthenticationWindowIcon(protocolProvider);
+  if (errorMessage == null)   loginWindow=new AuthenticationWindow(userName,password,realm,isUserNameEditable,icon);
+ else   loginWindow=new AuthenticationWindow(userName,password,realm,isUserNameEditable,icon,errorMessage);
   loginWindow.pack();
   loginWindow.setVisible(true);
+  if (!loginWindow.isCanceled()) {
+    userCredentials.setUserName(loginWindow.getUserName());
+    userCredentials.setPassword(loginWindow.getPassword());
+    userCredentials.setPasswordPersistent(loginWindow.isRememberPassword());
+  }
+ else {
+    userCredentials.setUserName(null);
+    userCredentials=null;
+  }
   return userCredentials;
 }
