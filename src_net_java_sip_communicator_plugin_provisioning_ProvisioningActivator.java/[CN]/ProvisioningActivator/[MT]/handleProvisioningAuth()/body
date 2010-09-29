@@ -1,0 +1,27 @@
+{
+  ConfigurationService configService=getConfigurationService();
+  CredentialsStorageService credService=getCredentialsStorageService();
+  String username=configService.getString(PROPERTY_PROVISIONING_USERNAME);
+  String password=credService.loadPassword(PROPERTY_PROVISIONING_PASSWORD);
+  if (username != null && password != null) {
+    provCredentials=new UserCredentials();
+    provCredentials.setUserName(username);
+    provCredentials.setPassword(password.toCharArray());
+    provCredentials.setPasswordPersistent(true);
+    return;
+  }
+  AuthenticationWindow authWindow=new AuthenticationWindow("provisioning",true,null);
+  authWindow.setVisible(true);
+  if (!authWindow.isCanceled()) {
+    provCredentials=new UserCredentials();
+    provCredentials.setUserName(authWindow.getUserName());
+    provCredentials.setPassword(authWindow.getPassword());
+    provCredentials.setPasswordPersistent(authWindow.isRememberPassword());
+    if (provCredentials.getUserName() == null) {
+      provCredentials=null;
+    }
+  }
+ else {
+    provCredentials=null;
+  }
+}

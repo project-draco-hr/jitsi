@@ -1,0 +1,30 @@
+{
+  String url=null;
+  if (logger.isDebugEnabled())   logger.debug("Provisioning discovery [STARTED]");
+  ProvisioningActivator.bundleContext=bundleContext;
+  String method=getConfigurationService().getString(PROVISIONING_METHOD_PROP);
+  if (method == null || method.equals("NONE")) {
+    return;
+  }
+  ServiceReference serviceReferences[]=bundleContext.getServiceReferences(ProvisioningDiscoveryService.class.getName(),null);
+  if (serviceReferences != null) {
+    for (    ServiceReference ref : serviceReferences) {
+      ProvisioningDiscoveryService provdisc=(ProvisioningDiscoveryService)bundleContext.getService(ref);
+      if (provdisc.getMethodName().equals(method)) {
+        url=provdisc.discoverURL();
+        break;
+      }
+    }
+  }
+  if (url == null) {
+    url=getConfigurationService().getString(PROPERTY_PROVISIONING_URL);
+  }
+  if (url != null) {
+    File file=retrieveConfigurationFile(url);
+    if (file != null) {
+      updateConfiguration(file);
+      getConfigurationService().setProperty(PROPERTY_PROVISIONING_URL,url);
+    }
+  }
+  if (logger.isDebugEnabled())   logger.debug("Provisioning discovery [REGISTERED]");
+}
