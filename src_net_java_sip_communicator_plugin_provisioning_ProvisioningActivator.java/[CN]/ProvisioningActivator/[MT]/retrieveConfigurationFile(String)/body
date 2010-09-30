@@ -26,22 +26,16 @@
       if (args != null && args.length > 0) {
         for (        String s : args) {
           if (s.equals("username")) {
-            if (provCredentials == null) {
+            if (userCredentials == null) {
               handleProvisioningAuth();
             }
-            if (provCredentials == null) {
-              return null;
-            }
-            content.append("username=" + URLEncoder.encode(provCredentials.getUserName(),"UTF-8"));
+            content.append("username=" + URLEncoder.encode(userCredentials.getUserName(),"UTF-8"));
           }
  else           if (s.equals("password")) {
-            if (provCredentials == null) {
+            if (userCredentials == null) {
               handleProvisioningAuth();
             }
-            if (provCredentials == null) {
-              return null;
-            }
-            content.append("&password=" + URLEncoder.encode(provCredentials.getPasswordAsString(),"UTF-8"));
+            content.append("&password=" + URLEncoder.encode(userCredentials.getPasswordAsString(),"UTF-8"));
           }
  else           if (s.equals("osname")) {
             content.append("&osname=" + URLEncoder.encode(System.getProperty("os.name"),"UTF-8"));
@@ -69,7 +63,7 @@
                       String t=new String((hi <= 0xf) ? "0" : "");
                       t+=Integer.toHexString(hi);
                       buf.append(t);
-                      buf.append("-");
+                      buf.append(":");
                     }
                     buf.deleteCharAt(buf.length() - 1);
                     hwaddr=buf.toString();
@@ -109,12 +103,8 @@
       }
  else       if (responseCode == HttpURLConnection.HTTP_OK) {
         if (userCredentials != null && userCredentials.getUserName() != null && userCredentials.isPasswordPersistent()) {
-          getConfigurationService().setProperty(PROPERTY_HTTP_USERNAME,userCredentials.getUserName());
-          getCredentialsStorageService().storePassword(PROPERTY_HTTP_PASSWORD,userCredentials.getPasswordAsString());
-        }
-        if (provCredentials != null && provCredentials.getUserName() != null && provCredentials.isPasswordPersistent()) {
-          getConfigurationService().setProperty(PROPERTY_PROVISIONING_USERNAME,provCredentials.getUserName());
-          getCredentialsStorageService().storePassword(PROPERTY_PROVISIONING_PASSWORD,provCredentials.getPasswordAsString());
+          getConfigurationService().setProperty(PROPERTY_PROVISIONING_USERNAME,userCredentials.getUserName());
+          getCredentialsStorageService().storePassword(PROPERTY_PROVISIONING_PASSWORD,userCredentials.getPasswordAsString());
         }
       }
     }
