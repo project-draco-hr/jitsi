@@ -4,7 +4,7 @@
   byte zeroIPAddress[]={0x00,0x00,0x00,0x00};
   byte broadcastIPAddr[]={(byte)255,(byte)255,(byte)255,(byte)255};
   DHCPOption dhcpOpts[]=new DHCPOption[1];
-  int xid=new Random().nextInt();
+  List<DHCPTransaction> transactions=new ArrayList<DHCPTransaction>();
   try {
     inform.setOp(DHCPConstants.BOOTREQUEST);
     inform.setHtype(DHCPConstants.HTYPE_ETHER);
@@ -36,7 +36,9 @@
             p.setChaddr(macAddress);
             byte msg[]=inform.serialize();
             DatagramPacket pkt=new DatagramPacket(msg,msg.length,InetAddress.getByAddress(broadcastIPAddr),port - 1);
-            socket.send(pkt);
+            DHCPTransaction transaction=new DHCPTransaction(socket,pkt);
+            transaction.schedule();
+            transactions.add(transaction);
             msg=null;
             pkt=null;
             p=null;
@@ -56,6 +58,9 @@
         DHCPOption optProvisioning=dhcp.getOption(option);
         if (optProvisioning != null) {
           found=true;
+          for (          DHCPTransaction t : transactions) {
+            t.cancel();
+          }
           return new String(optProvisioning.getValue());
         }
       }
@@ -66,6 +71,9 @@
   }
  catch (  Exception e) {
     logger.warn("Exception occurred during DHCP discover",e);
+  }
+  for (  DHCPTransaction t : transactions) {
+    t.cancel();
   }
   return null;
 }
