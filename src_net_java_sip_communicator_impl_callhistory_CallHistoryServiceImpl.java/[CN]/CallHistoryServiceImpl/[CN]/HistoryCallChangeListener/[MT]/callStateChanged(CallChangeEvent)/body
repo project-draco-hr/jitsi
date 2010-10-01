@@ -2,7 +2,12 @@
   CallRecordImpl callRecord=findCallRecord(evt.getSourceCall());
   if (callRecord == null)   return;
   if (evt.getNewValue().equals(CallState.CALL_ENDED)) {
-    if (evt.getOldValue().equals(CallState.CALL_INITIALIZATION))     callRecord.setEndTime(callRecord.getStartTime());
+    if (evt.getOldValue().equals(CallState.CALL_INITIALIZATION)) {
+      callRecord.setEndTime(callRecord.getStartTime());
+      if (evt.getCause() != null && evt.getCause().getReasonCode() == CallPeerChangeEvent.NORMAL_CALL_CLEARING) {
+        callRecord.setEndReason(evt.getCause().getReasonCode());
+      }
+    }
  else     callRecord.setEndTime(new Date());
     writeCall(callRecord,null,null);
     currentCallRecords.remove(callRecord);
