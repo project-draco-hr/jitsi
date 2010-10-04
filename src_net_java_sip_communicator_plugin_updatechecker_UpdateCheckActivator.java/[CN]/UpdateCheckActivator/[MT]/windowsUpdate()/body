@@ -6,6 +6,19 @@
     URL u=new URL(downloadLink);
     URLConnection uc=u.openConnection();
     if (uc instanceof HttpURLConnection) {
+      if (uc instanceof HttpsURLConnection) {
+        CertificateVerificationService vs=getCertificateVerificationService();
+        int port=u.getPort();
+        if (port == -1) {
+          if (u.getProtocol().equals("http")) {
+            port=80;
+          }
+ else           if (u.getProtocol().equals("https")) {
+            port=443;
+          }
+        }
+        ((HttpsURLConnection)uc).setSSLSocketFactory(vs.getSSLContext(u.getHost(),port).getSocketFactory());
+      }
       int responseCode=((HttpURLConnection)uc).getResponseCode();
       if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
         new Thread(new Runnable(){
