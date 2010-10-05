@@ -5,12 +5,17 @@
     getMethod.setHeader("Connection","close");
     Credentials credentials=new UsernamePasswordCredentials(getUserName(),password);
     httpClient.getCredentialsProvider().setCredentials(AuthScope.ANY,credentials);
+    HttpResponse response=httpClient.execute(getMethod);
+    XCapHttpResponse result=createResponse(response);
     if (logger.isDebugEnabled()) {
-      String logMessage=String.format("Getting resource %1s from the server",uri.toString());
+      byte[] contentBytes=result.getContent();
+      String contenString;
+      if (contentBytes != null && result.getContentType() != null && !result.getContentType().equalsIgnoreCase(PresContentClient.CONTENT_TYPE))       contenString=new String(contentBytes);
+ else       contenString="";
+      String logMessage=String.format("Getting resource %1s from the server content:%2s",uri.toString(),contenString);
       logger.debug(logMessage);
     }
-    HttpResponse response=httpClient.execute(getMethod);
-    return createResponse(response);
+    return result;
   }
  catch (  IOException e) {
     String errorMessage=String.format("%1s resource cannot be read",uri.toString());
