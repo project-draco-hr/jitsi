@@ -1,17 +1,13 @@
 {
-  XCapClient xCapClient=sipProvider.getXCapClient();
-  if (!xCapClient.isConnected() || !xCapClient.isPresRulesSupported()) {
-    return;
+  RuleType whiteRule=getRule(SubHandlingType.Allow);
+  RuleType blockRule=getRule(SubHandlingType.Block);
+  RuleType politeBlockRule=getRule(SubHandlingType.PoliteBlock);
+  if (whiteRule == null) {
+    whiteRule=createWhiteRule();
+    presRules.getRules().add(whiteRule);
   }
-  IdentityType identity;
-  if (whiteRule.getConditions().getIdentities().size() == 0) {
-    identity=new IdentityType();
-    whiteRule.getConditions().getIdentities().add(identity);
-  }
- else {
-    identity=whiteRule.getConditions().getIdentities().get(0);
-  }
-  OneType one=new OneType();
-  one.setId(contact.getUri());
-  identity.getOneList().add(one);
+  boolean updateRule=addContactToRule(whiteRule,contact);
+  if (blockRule != null)   updateRule=removeContactFromRule(blockRule,contact) || updateRule;
+  if (politeBlockRule != null)   updateRule=removeContactFromRule(politeBlockRule,contact) || updateRule;
+  return updateRule;
 }

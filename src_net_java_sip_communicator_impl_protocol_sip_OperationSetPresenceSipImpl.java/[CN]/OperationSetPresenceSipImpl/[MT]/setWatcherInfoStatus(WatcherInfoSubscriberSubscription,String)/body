@@ -1,0 +1,94 @@
+{
+  if (this.authorizationHandler == null) {
+    logger.warn("AuthorizationHandler missing!");
+    return;
+  }
+  Document doc=convertDocument(watcherInfoDoc);
+  if (doc == null)   return;
+  if (logger.isDebugEnabled())   logger.debug("parsing:\n" + watcherInfoDoc);
+  NodeList watchList=doc.getElementsByTagNameNS(WATCHERINFO_NS_VALUE,WATCHERINFO_ELEMENT);
+  if (watchList.getLength() == 0) {
+    watchList=doc.getElementsByTagNameNS(ANY_NS,WATCHERINFO_ELEMENT);
+    if (watchList.getLength() == 0) {
+      logger.error("no watcherinfo element in this document");
+      return;
+    }
+  }
+  if (watchList.getLength() > 1) {
+    logger.warn("more than one watcherinfo element in this document");
+  }
+  Node watcherInfoNode=watchList.item(0);
+  if (watcherInfoNode.getNodeType() != Node.ELEMENT_NODE) {
+    logger.error("the watcherinfo node is not an element");
+    return;
+  }
+  Element watcherInfo=(Element)watcherInfoNode;
+  if (logger.isDebugEnabled())   logger.debug("Watcherinfo is with state: " + watcherInfo.getAttribute(STATE_ATTRIBUTE));
+  int currentVersion=-1;
+  try {
+    currentVersion=Integer.parseInt(watcherInfo.getAttribute(VERSION_ATTRIBUTE));
+  }
+ catch (  Throwable t) {
+    logger.error("Cannot parse version!",t);
+  }
+  if (currentVersion != -1 && currentVersion <= subscriber.version) {
+    logger.warn("Document version is old, ignore it.");
+    return;
+  }
+ else   subscriber.version=currentVersion;
+  Element wlist=XMLUtils.locateElement(watcherInfo,WATCHERLIST_ELEMENT,RESOURCE_ATTRIBUTE,parentProvider.getRegistrarConnection().getAddressOfRecord().getURI().toString());
+  if (wlist == null || !wlist.getAttribute(PACKAGE_ATTRIBUTE).equals(PRESENCE_ELEMENT)) {
+    logger.error("Watcher list for us is missing in this document!");
+    return;
+  }
+  NodeList watcherList=wlist.getElementsByTagNameNS(ANY_NS,WATCHER_ELEMENT);
+  for (int i=0; i < watcherList.getLength(); i++) {
+    Node watcherNode=watcherList.item(i);
+    if (watcherNode.getNodeType() != Node.ELEMENT_NODE) {
+      logger.error("the watcher node is not an element");
+      return;
+    }
+    Element watcher=(Element)watcherNode;
+    String status=watcher.getAttribute(STATUS_ELEMENT);
+    String contactID=getTextContent(watcher);
+    if (status == null || contactID == null) {
+      logger.warn("Status or contactID missing for watcher!");
+      continue;
+    }
+    if (status.equals("waiting") || status.equals("pending")) {
+      ContactSipImpl contact=resolveContactID(contactID);
+      if (contact != null) {
+        logger.warn("We are not supposed to have this contact in our " + "list or its just rerequest of authorization!");
+      }
+ else {
+        contact=createVolatileContact(contactID);
+      }
+      AuthorizationRequest req=new AuthorizationRequest();
+      AuthorizationResponse response=authorizationHandler.processAuthorisationRequest(req,contact);
+      if (response.getResponseCode() == AuthorizationResponse.ACCEPT) {
+        try {
+          if (ssContactList.addContactToWhiteList(contact))           ssContactList.updatePresRules();
+        }
+ catch (        XCapException ex) {
+          logger.error("Cannot save presence rules!",ex);
+        }
+      }
+ else       if (response.getResponseCode() == AuthorizationResponse.REJECT) {
+        try {
+          if (ssContactList.addContactToBlockList(contact))           ssContactList.updatePresRules();
+        }
+ catch (        XCapException ex) {
+          logger.error("Cannot save presence rules!",ex);
+        }
+      }
+ else       if (response.getResponseCode() == AuthorizationResponse.IGNORE) {
+        try {
+          if (ssContactList.addContactToPoliteBlockList(contact))           ssContactList.updatePresRules();
+        }
+ catch (        XCapException ex) {
+          logger.error("Cannot save presence rules!",ex);
+        }
+      }
+    }
+  }
+}

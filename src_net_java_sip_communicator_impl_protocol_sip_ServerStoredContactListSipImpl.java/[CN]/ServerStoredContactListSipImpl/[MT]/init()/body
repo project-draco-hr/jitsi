@@ -50,25 +50,20 @@
       updateResourceLists();
     }
     if (xCapClient.isPresRulesSupported()) {
-      presRules=xCapClient.getPresRules();
-      for (      RuleType rule : presRules.getRules()) {
-        if (rule.getId().equals(WHITE_RULE_ID)) {
-          whiteRule=rule;
-          break;
-        }
+      RuleType whiteRule=getRule(SubHandlingType.Allow);
+      boolean updateRules=false;
+      if (whiteRule == null) {
+        whiteRule=createWhiteRule();
+        presRules.getRules().add(whiteRule);
       }
-      if (whiteRule != null) {
-        presRules.getRules().remove(whiteRule);
-      }
-      whiteRule=createWhiteRule();
-      presRules.getRules().add(whiteRule);
       List<ContactSipImpl> uniqueContacts=getUniqueContacts(rootGroup);
       for (      ContactSipImpl contact : uniqueContacts) {
-        if (contact.isPersistent()) {
-          addContactToWhiteList(contact);
+        if (contact.isPersistent() && !isContactInRule(whiteRule,contact.getUri())) {
+          addContactToRule(whiteRule,contact);
+          updateRules=true;
         }
       }
-      updatePresRules();
+      if (updateRules)       updatePresRules();
     }
   }
  catch (  XCapException e) {

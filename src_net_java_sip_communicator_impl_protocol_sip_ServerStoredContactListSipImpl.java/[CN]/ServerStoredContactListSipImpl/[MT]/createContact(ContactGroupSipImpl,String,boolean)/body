@@ -18,7 +18,13 @@
  catch (  ParseException ex) {
     throw new IllegalArgumentException(contactId + " is not a valid string.",ex);
   }
-  ContactSipImpl newContact=new ContactSipImpl(contactAddress,sipProvider);
+  ContactSipImpl newContact=parentOperationSet.resolveContactID(contactAddress.getURI().toString());
+  if (newContact != null && !newContact.isPersistent() && !newContact.getParentContactGroup().isPersistent()) {
+    ContactGroupSipImpl oldParentGroup=(ContactGroupSipImpl)newContact.getParentContactGroup();
+    oldParentGroup.removeContact(newContact);
+    fireContactRemoved(oldParentGroup,newContact);
+  }
+  newContact=new ContactSipImpl(contactAddress,sipProvider);
   newContact.setPersistent(persistent);
   String name=((SipURI)contactAddress.getURI()).getUser();
   newContact.setDisplayName(name);
@@ -35,14 +41,13 @@
     XCapClient xCapClient=sipProvider.getXCapClient();
     if (xCapClient.isConnected() && xCapClient.isResourceListsSupported()) {
       newContact.setXCapResolved(true);
-    }
-    if (!isContactExistsInWhiteRule(contactId)) {
-      addContactToWhiteList(newContact);
       try {
-        updatePresRules();
+        if (!isContactInWhiteRule(contactId)) {
+          if (addContactToWhiteList(newContact))           updatePresRules();
+        }
       }
  catch (      XCapException e) {
-        logger.error("Error while creating XCAP contact",e);
+        logger.error("Cannot add contact to white list while " + "creating it",e);
       }
     }
   }

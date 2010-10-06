@@ -1,3 +1,15 @@
 {
   if (rawContent != null)   setPidfPresenceStatus(new String(rawContent));
+  SubscriptionStateHeader stateHeader=(SubscriptionStateHeader)requestEvent.getRequest().getHeader(SubscriptionStateHeader.NAME);
+  if (stateHeader != null) {
+    if (SubscriptionStateHeader.PENDING.equals(stateHeader.getState())) {
+      contact.setSubscriptionState(SubscriptionStateHeader.PENDING);
+    }
+ else     if (SubscriptionStateHeader.ACTIVE.equals(stateHeader.getState())) {
+      if (SubscriptionStateHeader.PENDING.equals(contact.getSubscriptionState()) && authorizationHandler != null) {
+        authorizationHandler.processAuthorizationResponse(new AuthorizationResponse(AuthorizationResponse.ACCEPT,""),contact);
+      }
+      contact.setSubscriptionState(SubscriptionStateHeader.ACTIVE);
+    }
+  }
 }

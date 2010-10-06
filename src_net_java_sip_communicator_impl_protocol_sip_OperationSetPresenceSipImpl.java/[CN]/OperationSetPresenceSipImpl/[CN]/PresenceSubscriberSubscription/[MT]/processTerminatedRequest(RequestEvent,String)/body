@@ -1,4 +1,14 @@
 {
   terminateSubscription(contact);
   if (SubscriptionStateHeader.DEACTIVATED.equals(reasonCode))   forcePollContact(contact);
+  SubscriptionStateHeader stateHeader=(SubscriptionStateHeader)requestEvent.getRequest().getHeader(SubscriptionStateHeader.NAME);
+  if (stateHeader != null && SubscriptionStateHeader.TERMINATED.equals(stateHeader.getState())) {
+    if (SubscriptionStateHeader.REJECTED.equals(stateHeader.getReasonCode())) {
+      if (SubscriptionStateHeader.PENDING.equals(contact.getSubscriptionState())) {
+        authorizationHandler.processAuthorizationResponse(new AuthorizationResponse(AuthorizationResponse.REJECT,""),contact);
+      }
+      contact.setResolvable(false);
+    }
+    contact.setSubscriptionState(SubscriptionStateHeader.TERMINATED);
+  }
 }
