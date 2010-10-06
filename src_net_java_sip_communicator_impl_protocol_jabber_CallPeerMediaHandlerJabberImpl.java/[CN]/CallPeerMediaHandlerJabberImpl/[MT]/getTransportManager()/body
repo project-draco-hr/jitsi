@@ -1,3 +1,22 @@
 {
+  if (transportManager == null) {
+    CallPeerJabberImpl peer=getPeer();
+    if (peer.isInitiator()) {
+      throw new IllegalStateException("The initiator is expected to specify the transport" + " in their offer.");
+    }
+ else {
+      ScServiceDiscoveryManager discoveryManager=peer.getProtocolProvider().getDiscoveryManager();
+      DiscoverInfo peerDiscoverInfo=peer.getDiscoverInfo();
+      if (discoveryManager.includesFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1) && ((peerDiscoverInfo == null) || peerDiscoverInfo.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1))) {
+        transportManager=new IceUdpTransportManager(peer);
+      }
+ else       if (discoveryManager.includesFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0) && ((peerDiscoverInfo == null) || peerDiscoverInfo.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0))) {
+        transportManager=new RawUdpTransportManager(peer);
+      }
+ else       if (logger.isDebugEnabled()) {
+        logger.debug("No known Jingle transport supported" + " by Jabber call peer " + peer);
+      }
+    }
+  }
   return transportManager;
 }

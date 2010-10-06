@@ -5,10 +5,11 @@
   try {
     getMediaHandler().processOffer(offer);
   }
- catch (  Exception exc) {
-    logger.info("Failed to process an incoming session initiate",exc);
-    JingleIQ errResp=JinglePacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getSID(),Reason.INCOMPATIBLE_PARAMETERS,"Error: " + exc.getMessage());
-    setState(CallPeerState.FAILED,"Error: " + exc.getMessage());
+ catch (  Exception ex) {
+    logger.info("Failed to process an incoming session initiate",ex);
+    String reasonText="Error: " + ex.getMessage();
+    JingleIQ errResp=JinglePacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getSID(),Reason.INCOMPATIBLE_PARAMETERS,reasonText);
+    setState(CallPeerState.FAILED,reasonText);
     getProtocolProvider().getConnection().sendPacket(errResp);
     return;
   }

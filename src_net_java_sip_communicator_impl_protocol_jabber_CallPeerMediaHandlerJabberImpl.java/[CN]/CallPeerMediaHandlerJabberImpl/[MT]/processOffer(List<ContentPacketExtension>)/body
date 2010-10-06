@@ -17,6 +17,8 @@
     List<RTPExtension> rtpExtensions=intersectRTPExtensions(offeredRTPExtensions,supportedExtensions);
     MediaStreamTarget target=JingleUtils.extractDefaultTarget(content);
     int targetDataPort=target.getDataAddress().getPort();
+    IceUdpTransportPacketExtension transport=content.getFirstChildOfType(IceUdpTransportPacketExtension.class);
+    setTransportManager(transport.getNamespace());
     if (mutuallySupportedFormats.isEmpty() || (devDirection == MediaDirection.INACTIVE) || (targetDataPort == 0)) {
       closeStream(mediaType);
       continue;
@@ -43,6 +45,8 @@
     localContentMap.put(content.getName(),ourContent);
     atLeastOneValidDescription=true;
   }
-  if (!atLeastOneValidDescription)   ProtocolProviderServiceJabberImpl.throwOperationFailedException("Offer contained no media " + " formats or no valid media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
+  if (!atLeastOneValidDescription) {
+    ProtocolProviderServiceJabberImpl.throwOperationFailedException("Offer contained no media formats" + " or no valid media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
+  }
   getTransportManager().startCandidateHarvest(offer,answerContentList);
 }

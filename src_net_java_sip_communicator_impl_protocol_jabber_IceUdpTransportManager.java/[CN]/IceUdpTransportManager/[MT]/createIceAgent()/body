@@ -1,13 +1,15 @@
 {
-  ProtocolProviderServiceJabberImpl provider=getCallPeer().getProtocolProvider();
+  CallPeerJabberImpl peer=getCallPeer();
+  ProtocolProviderServiceJabberImpl provider=peer.getProtocolProvider();
   NetworkAddressManagerService namSer=getNetAddrMgr();
   Agent agent=namSer.createIceAgent();
+  agent.setControlling(!peer.isInitiator());
   JabberAccountID accID=(JabberAccountID)provider.getAccountID();
   if (accID.isStunServerDiscoveryEnabled()) {
     String username=provider.getOurJID();
     String password=JabberActivator.getProtocolProviderFactory().loadPassword(accID);
     StunCandidateHarvester autoHarvester=namSer.discoverStunServer(accID.getService(),StringUtils.getUTF8Bytes(username),StringUtils.getUTF8Bytes(password));
-    logger.info("Auto discovered harvester is " + autoHarvester);
+    if (logger.isInfoEnabled())     logger.info("Auto discovered harvester is " + autoHarvester);
     if (autoHarvester != null)     agent.addCandidateHarvester(autoHarvester);
   }
   for (  StunServerDescriptor desc : accID.getStunServers()) {
@@ -19,7 +21,7 @@
  else {
       harvester=new StunCandidateHarvester(addr);
     }
-    logger.info("Adding pre-conficugred harvester " + harvester);
+    if (logger.isInfoEnabled())     logger.info("Adding pre-configured harvester " + harvester);
     agent.addCandidateHarvester(harvester);
   }
   return agent;

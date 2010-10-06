@@ -1,14 +1,14 @@
 {
-  MediaStream stream=null;
-  if (device.getMediaType() == MediaType.AUDIO)   stream=this.audioStream;
- else {
-    stream=this.videoStream;
-  }
+  MediaType mediaType=device.getMediaType();
+  MediaStream stream=getStream(mediaType);
   if (stream == null) {
-    ZrtpControl control=zrtpControls.get(format.getMediaType());
+    if (logger.isTraceEnabled() && (mediaType != format.getMediaType()))     logger.trace("The media types of device and format differ.");
+    ZrtpControl control=zrtpControls.get(mediaType);
     MediaService mediaService=ProtocolMediaActivator.getMediaService();
     if (control == null)     stream=mediaService.createMediaStream(connector,device);
- else     stream=mediaService.createMediaStream(connector,device,control);
+ else {
+      stream=mediaService.createMediaStream(connector,device,control);
+    }
   }
  else {
   }

@@ -1,14 +1,16 @@
 {
-  List<ContentPacketExtension> sessAccept=getTransportManager().wrapupHarvest();
+  TransportManagerJabberImpl transportManager=getTransportManager();
+  List<ContentPacketExtension> sessAccept=transportManager.wrapupHarvest();
+  CallPeerJabberImpl peer=getPeer();
   for (  ContentPacketExtension ourContent : sessAccept) {
     RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(ourContent);
     MediaType type=MediaType.parseString(description.getMedia());
-    StreamConnector connector=getTransportManager().getStreamConnector(type);
+    StreamConnector connector=transportManager.getStreamConnector(type);
     MediaDevice dev=getDefaultDevice(type);
     ContentPacketExtension theirContent=this.remoteContentMap.get(ourContent.getName());
     MediaStreamTarget target=JingleUtils.extractDefaultTarget(theirContent);
     RtpDescriptionPacketExtension theirDescription=JingleUtils.getRtpDescription(theirContent);
-    MediaDirection direction=JingleUtils.getDirection(ourContent,!getPeer().isInitiator());
+    MediaDirection direction=JingleUtils.getDirection(ourContent,!peer.isInitiator());
     MediaFormat format=null;
     List<PayloadTypePacketExtension> payloadTypes=theirDescription.getPayloadTypes();
     for (    PayloadTypePacketExtension payload : payloadTypes) {
@@ -21,10 +23,8 @@
     List<RTPExtension> rtpExtensions=JingleUtils.extractRTPExtensions(description,this.getRtpExtensionsRegistry());
     initStream(ourContent.getName(),connector,dev,format,target,direction,rtpExtensions);
     if (ourContent.getChildExtensionsOfType(InputEvtPacketExtension.class) != null) {
-      OperationSetDesktopSharingClientJabberImpl client=(OperationSetDesktopSharingClientJabberImpl)this.getPeer().getProtocolProvider().getOperationSet(OperationSetDesktopSharingClient.class);
-      if (client != null) {
-        client.fireRemoteControlGranted();
-      }
+      OperationSetDesktopSharingClientJabberImpl client=(OperationSetDesktopSharingClientJabberImpl)peer.getProtocolProvider().getOperationSet(OperationSetDesktopSharingClient.class);
+      if (client != null)       client.fireRemoteControlGranted();
     }
   }
   return sessAccept;
