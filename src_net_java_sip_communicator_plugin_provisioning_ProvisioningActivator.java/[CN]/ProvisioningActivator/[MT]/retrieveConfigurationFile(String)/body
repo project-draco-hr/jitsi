@@ -25,28 +25,28 @@
       InetAddress ipaddr=getNetworkAddressManagerService().getLocalHost(InetAddress.getByName(u.getHost()));
       if (args != null && args.length > 0) {
         for (        String s : args) {
-          if (s.equals("username")) {
+          if (s.equals("username=$username") || s.equals("username")) {
             if (userCredentials == null) {
               handleProvisioningAuth();
             }
             content.append("username=" + URLEncoder.encode(userCredentials.getUserName(),"UTF-8"));
           }
- else           if (s.equals("password")) {
+ else           if (s.equals("password=$password") || s.equals("password")) {
             if (userCredentials == null) {
               handleProvisioningAuth();
             }
-            content.append("&password=" + URLEncoder.encode(userCredentials.getPasswordAsString(),"UTF-8"));
+            content.append("password=" + URLEncoder.encode(userCredentials.getPasswordAsString(),"UTF-8"));
           }
- else           if (s.equals("osname")) {
-            content.append("&osname=" + URLEncoder.encode(System.getProperty("os.name"),"UTF-8"));
+ else           if (s.equals("osname=$osname") || s.equals("osname")) {
+            content.append("osname=" + URLEncoder.encode(System.getProperty("os.name"),"UTF-8"));
           }
- else           if (s.equals("build")) {
-            content.append("&build=" + URLEncoder.encode(System.getProperty("sip-communicator.version"),"UTF-8"));
+ else           if (s.equals("build=$build") || s.equals("build")) {
+            content.append("build=" + URLEncoder.encode(System.getProperty("sip-communicator.version"),"UTF-8"));
           }
- else           if (s.equals("ipaddr")) {
-            content.append("&ipaddr=" + URLEncoder.encode(ipaddr.getHostAddress(),"UTF-8"));
+ else           if (s.equals("ipaddr=$ipaddr") || s.equals("ipaddr")) {
+            content.append("ipaddr=" + URLEncoder.encode(ipaddr.getHostAddress(),"UTF-8"));
           }
- else           if (s.equals("hwaddr")) {
+ else           if (s.equals("hwaddr=$hwaddr") || s.equals("hwaddr")) {
             String hwaddr=null;
             if (ipaddr != null) {
               Enumeration<NetworkInterface> en=NetworkInterface.getNetworkInterfaces();
@@ -67,13 +67,14 @@
                     }
                     buf.deleteCharAt(buf.length() - 1);
                     hwaddr=buf.toString();
-                    content.append("&hwaddr=" + URLEncoder.encode(hwaddr,"UTF-8"));
+                    content.append("hwaddr=" + URLEncoder.encode(hwaddr,"UTF-8"));
                     break;
                   }
                 }
               }
             }
           }
+          content.append("&");
         }
       }
       out.write(content.toString());

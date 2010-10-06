@@ -1,0 +1,28 @@
+{
+  StringBuffer url=new StringBuffer();
+  ServiceInfo info=jmdns.getServiceInfo("_https._tcp.local","Provisioning URL",MDNS_TIMEOUT);
+  if (info == null) {
+    info=jmdns.getServiceInfo("_http._tcp.local","Provisioning URL",MDNS_TIMEOUT);
+  }
+  if (info != null && info.getName().equals("Provisioning URL")) {
+    String protocol=info.getApplication();
+    url.append(info.getURL(protocol));
+    Enumeration<String> en=info.getPropertyNames();
+    if (en.hasMoreElements()) {
+      url.append("?");
+    }
+    while (en.hasMoreElements()) {
+      String tmp=en.nextElement();
+      if (tmp.equals("path")) {
+        continue;
+      }
+      url.append(tmp);
+      url.append("=");
+      url.append(info.getPropertyString(tmp));
+      if (en.hasMoreElements()) {
+        url.append("&");
+      }
+    }
+  }
+  return (url.toString().length() > 0) ? url.toString() : null;
+}
