@@ -1,5 +1,12 @@
 {
   StringBuffer url=new StringBuffer();
+  try {
+    jmdns=JmDNS.create();
+  }
+ catch (  IOException e) {
+    logger.info("Failed to create JmDNS",e);
+    return null;
+  }
   ServiceInfo info=jmdns.getServiceInfo("_https._tcp.local","Provisioning URL",MDNS_TIMEOUT);
   if (info == null) {
     info=jmdns.getServiceInfo("_http._tcp.local","Provisioning URL",MDNS_TIMEOUT);
@@ -23,6 +30,13 @@
         url.append("&");
       }
     }
+  }
+  try {
+    jmdns.close();
+    jmdns=null;
+  }
+ catch (  Exception e) {
+    logger.warn("Failed to close JmDNS",e);
   }
   return (url.toString().length() > 0) ? url.toString() : null;
 }
