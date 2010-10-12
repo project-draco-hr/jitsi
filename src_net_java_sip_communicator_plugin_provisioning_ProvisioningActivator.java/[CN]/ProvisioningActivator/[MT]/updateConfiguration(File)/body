@@ -1,6 +1,8 @@
 {
   Properties fileProps=new OrderedProperties();
   InputStream in=null;
+  String allowPrefix=getConfigurationService().getString(PROVISIONING_ALLOW_PREFIX_PROP);
+  String prefixes[]=(allowPrefix != null) ? allowPrefix.split("\\|") : null;
   try {
     in=new BufferedInputStream(new FileInputStream(file));
     fileProps.load(in);
@@ -9,6 +11,18 @@
       Map.Entry<Object,Object> entry=it.next();
       String key=(String)entry.getKey();
       Object value=entry.getValue();
+      if (prefixes != null) {
+        boolean isValid=false;
+        for (        String s : prefixes) {
+          if (key.startsWith(s)) {
+            isValid=true;
+            break;
+          }
+        }
+        if (!isValid) {
+          continue;
+        }
+      }
       if (value instanceof String) {
         if (((String)value).equals("${null}")) {
           getConfigurationService().removeProperty(key);

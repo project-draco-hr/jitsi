@@ -1,0 +1,28 @@
+{
+  String enforcePrefix=getString(ENFORCE_PREFIX_PROPERTY);
+  String prefixes[]=null;
+  if (enforcePrefix == null) {
+    return;
+  }
+  prefixes=enforcePrefix.split("\\|");
+  for (  String key : store.getPropertyNames()) {
+    boolean isValid=false;
+    for (    String k : prefixes) {
+      if (key.startsWith(k)) {
+        isValid=true;
+        break;
+      }
+    }
+    if (!isValid) {
+      store.removeProperty(key);
+    }
+  }
+  try {
+    storeConfiguration();
+  }
+ catch (  Exception e) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Save configuration failed!",e);
+    }
+  }
+}
