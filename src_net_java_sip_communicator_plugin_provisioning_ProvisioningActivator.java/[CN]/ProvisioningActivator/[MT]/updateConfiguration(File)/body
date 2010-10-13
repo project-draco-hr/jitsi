@@ -1,8 +1,6 @@
 {
   Properties fileProps=new OrderedProperties();
   InputStream in=null;
-  String allowPrefix=getConfigurationService().getString(PROVISIONING_ALLOW_PREFIX_PROP);
-  String prefixes[]=(allowPrefix != null) ? allowPrefix.split("\\|") : null;
   try {
     in=new BufferedInputStream(new FileInputStream(file));
     fileProps.load(in);
@@ -11,33 +9,24 @@
       Map.Entry<Object,Object> entry=it.next();
       String key=(String)entry.getKey();
       Object value=entry.getValue();
-      if (prefixes != null) {
-        boolean isValid=false;
+      if (key.equals(PROVISIONING_ALLOW_PREFIX_PROP)) {
+        String prefixes[]=((String)value).split("\\|");
         for (        String s : prefixes) {
-          if (key.startsWith(s)) {
-            isValid=true;
-            break;
-          }
+          allowedPrefixes.add(s);
         }
-        if (!isValid) {
-          continue;
-        }
+        continue;
       }
-      if (value instanceof String) {
-        if (((String)value).equals("${null}")) {
-          getConfigurationService().removeProperty(key);
-          continue;
-        }
+ else       if (key.equals(PROVISIONING_ENFORCE_PREFIX_PROP)) {
+        checkEnforcePrefix((String)value);
+        continue;
       }
-      if (key.endsWith(".PASSWORD")) {
-        getCredentialsStorageService().storePassword(key.substring(0,key.lastIndexOf(".")),(String)value);
+      if (!isPrefixAllowed(key)) {
+        continue;
       }
- else {
-        getConfigurationService().setProperty(key,value);
-      }
+      processProperty(key,value);
     }
-    getConfigurationService().storeConfiguration();
     try {
+      getConfigurationService().storeConfiguration();
       getConfigurationService().reloadConfiguration();
     }
  catch (    Exception e) {
