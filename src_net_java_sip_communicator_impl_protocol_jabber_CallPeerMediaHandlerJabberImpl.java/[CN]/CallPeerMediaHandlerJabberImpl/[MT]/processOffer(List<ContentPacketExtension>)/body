@@ -1,5 +1,5 @@
 {
-  List<ContentPacketExtension> answerContentList=new ArrayList<ContentPacketExtension>(offer.size());
+  List<ContentPacketExtension> answer=new ArrayList<ContentPacketExtension>(offer.size());
   boolean atLeastOneValidDescription=false;
   for (  ContentPacketExtension content : offer) {
     remoteContentMap.put(content.getName(),content);
@@ -41,12 +41,14 @@
     if (content.getChildExtensionsOfType(InputEvtPacketExtension.class) != null) {
       ourContent.addChildExtension(new InputEvtPacketExtension());
     }
-    answerContentList.add(ourContent);
+    answer.add(ourContent);
     localContentMap.put(content.getName(),ourContent);
     atLeastOneValidDescription=true;
   }
   if (!atLeastOneValidDescription) {
     ProtocolProviderServiceJabberImpl.throwOperationFailedException("Offer contained no media formats" + " or no valid media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
   }
-  getTransportManager().startCandidateHarvest(offer,answerContentList);
+  List<ContentPacketExtension> candidates=harvestCandidates(offer,answer);
+  sendTransportInfo(candidates);
+  establishConnectivity(offer);
 }

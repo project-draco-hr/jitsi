@@ -1,12 +1,13 @@
 {
-  List<ContentPacketExtension> answer;
+  Iterable<ContentPacketExtension> answer;
   try {
     answer=getMediaHandler().generateSessionAccept();
   }
  catch (  Exception exc) {
     logger.info("Failed to answer an incoming call",exc);
-    JingleIQ errResp=JinglePacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getSID(),Reason.FAILED_APPLICATION,"Error: " + exc.getMessage());
-    setState(CallPeerState.FAILED,"Error: " + exc.getMessage());
+    String reasonText="Error: " + exc.getMessage();
+    JingleIQ errResp=JinglePacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getSID(),Reason.FAILED_APPLICATION,reasonText);
+    setState(CallPeerState.FAILED,reasonText);
     getProtocolProvider().getConnection().sendPacket(errResp);
     return;
   }

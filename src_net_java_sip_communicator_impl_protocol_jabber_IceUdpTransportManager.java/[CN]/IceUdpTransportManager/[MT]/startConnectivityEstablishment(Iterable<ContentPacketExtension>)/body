@@ -1,5 +1,7 @@
 {
+  if (!IceProcessingState.WAITING.equals(iceAgent.getState()))   return;
   int generation=iceAgent.getGeneration();
+  boolean startConnectivityEstablishment=false;
   for (  ContentPacketExtension content : remote) {
     IceUdpTransportPacketExtension transport=content.getFirstChildOfType(IceUdpTransportPacketExtension.class);
     String ufrag=transport.getUfrag();
@@ -13,38 +15,8 @@
       if (candidate.getGeneration() != generation)       continue;
       Component component=stream.getComponent(candidate.getComponent());
       component.addRemoteCandidate(new RemoteCandidate(new TransportAddress(candidate.getIP(),candidate.getPort(),Transport.parse(candidate.getProtocol())),component,org.ice4j.ice.CandidateType.parse(candidate.getType().toString()),Integer.toString(candidate.getFoundation()),candidate.getPriority()));
+      startConnectivityEstablishment=true;
     }
   }
-  final Object[] iceProcessingState=new Object[1];
-  PropertyChangeListener stateChangeListener=new PropertyChangeListener(){
-    public void propertyChange(    PropertyChangeEvent evt){
-      Object newValue=evt.getNewValue();
-      if (IceProcessingState.COMPLETED.equals(newValue) || IceProcessingState.FAILED.equals(newValue) || IceProcessingState.TERMINATED.equals(newValue)) {
-        if (logger.isTraceEnabled())         logger.trace("ICE " + newValue);
-        Agent iceAgent=(Agent)evt.getSource();
-        iceAgent.removeStateChangeListener(this);
-        if (iceAgent == IceUdpTransportManager.this.iceAgent) {
-synchronized (iceProcessingState) {
-            iceProcessingState[0]=newValue;
-            iceProcessingState.notify();
-          }
-        }
-      }
-    }
-  }
-;
-  iceAgent.addStateChangeListener(stateChangeListener);
-  iceAgent.startConnectivityEstablishment();
-  boolean interrupted=false;
-synchronized (iceProcessingState) {
-    while (iceProcessingState[0] == null) {
-      try {
-        iceProcessingState.wait();
-      }
- catch (      InterruptedException ie) {
-        interrupted=true;
-      }
-    }
-  }
-  if (interrupted)   Thread.currentThread().interrupt();
+  if (startConnectivityEstablishment)   iceAgent.startConnectivityEstablishment();
 }
