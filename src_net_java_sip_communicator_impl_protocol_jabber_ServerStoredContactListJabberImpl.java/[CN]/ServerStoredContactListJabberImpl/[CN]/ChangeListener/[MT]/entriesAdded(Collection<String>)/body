@@ -17,17 +17,23 @@
       }
     }
     contact=new ContactJabberImpl(roster.getEntry(id),ServerStoredContactListJabberImpl.this,true,true);
-    boolean isUnfiledEntry=true;
-    for (    RosterGroup group : entry.getGroups()) {
-      ContactGroupJabberImpl parentGroup=findContactGroup(group.getName());
-      if (parentGroup != null)       parentGroup.addContact(contact);
-      isUnfiledEntry=false;
-    }
-    ContactGroup parentGroup=findContactGroup(contact);
-    if (parentGroup != null && !isUnfiledEntry)     fireContactAdded(findContactGroup(contact),contact);
-    if (parentGroup == null && isUnfiledEntry) {
+    if (entry.getGroups() == null || entry.getGroups().size() == 0) {
       rootGroup.addContact(contact);
       fireContactAdded(rootGroup,contact);
+      return;
+    }
+    for (    RosterGroup group : entry.getGroups()) {
+      ContactGroupJabberImpl parentGroup=findContactGroup(group.getName());
+      if (parentGroup != null) {
+        parentGroup.addContact(contact);
+        fireContactAdded(findContactGroup(contact),contact);
+      }
+ else {
+        ContactGroupJabberImpl newGroup=new ContactGroupJabberImpl(group,group.getEntries().iterator(),ServerStoredContactListJabberImpl.this,true);
+        rootGroup.addSubGroup(newGroup);
+        fireGroupEvent(newGroup,ServerStoredGroupEvent.GROUP_CREATED_EVENT);
+      }
+      return;
     }
   }
 }
