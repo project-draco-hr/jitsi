@@ -3,52 +3,60 @@
   String itemName=menuItem.getName();
   Contact contact;
   if (itemName.equals(addContactItem.getName())) {
-    AddContactDialog dialog=new AddContactDialog(mainFrame,contactItem);
+    AddContactDialog dialog=new AddContactDialog(mainFrame,metaContact);
     dialog.setVisible(true);
   }
  else   if (itemName.equalsIgnoreCase("sendMessage")) {
-    GuiActivator.getUIService().getChatWindowManager().startChat(contactItem);
+    GuiActivator.getUIService().getChatWindowManager().startChat(metaContact);
   }
  else   if (itemName.equalsIgnoreCase("sendSms")) {
-    Contact defaultSmsContact=contactItem.getDefaultContact(OperationSetSmsMessaging.class);
-    GuiActivator.getUIService().getChatWindowManager().startChat(contactItem,defaultSmsContact,true);
+    Contact defaultSmsContact=metaContact.getDefaultContact(OperationSetSmsMessaging.class);
+    GuiActivator.getUIService().getChatWindowManager().startChat(metaContact,defaultSmsContact,true);
   }
- else   if (itemName.equalsIgnoreCase("call")) {
-    contact=contactItem.getDefaultContact(OperationSetBasicTelephony.class);
-    callContact(contact);
+ else   if (itemName.equals("call")) {
+    contact=metaContact.getDefaultContact(OperationSetBasicTelephony.class);
+    CallManager.createCall(contact.getProtocolProvider(),contact);
   }
- else   if (itemName.equalsIgnoreCase("sendFile")) {
+ else   if (itemName.equals("videoCall")) {
+    contact=metaContact.getDefaultContact(OperationSetVideoTelephony.class);
+    CallManager.createVideoCall(contact.getProtocolProvider(),contact.getAddress());
+  }
+ else   if (itemName.equals("desktopSharing")) {
+    contact=metaContact.getDefaultContact(OperationSetVideoTelephony.class);
+    CallManager.createDesktopSharing(contact.getProtocolProvider(),contact.getAddress());
+  }
+ else   if (itemName.equals("sendFile")) {
     SipCommFileChooser scfc=GenericFileDialog.create(null,"Send file...",SipCommFileChooser.LOAD_FILE_OPERATION,ConfigurationManager.getSendFileLastDir());
     File selectedFile=scfc.getFileFromDialog();
     if (selectedFile != null) {
       ConfigurationManager.setSendFileLastDir(selectedFile.getParent());
-      ChatPanel chatPanel=GuiActivator.getUIService().getChatWindowManager().getContactChat(contactItem,true);
+      ChatPanel chatPanel=GuiActivator.getUIService().getChatWindowManager().getContactChat(metaContact,true);
       chatPanel.sendFile(selectedFile);
       GuiActivator.getUIService().getChatWindowManager().openChat(chatPanel,true);
     }
-    GuiActivator.getUIService().getChatWindowManager().startChat(contactItem);
+    GuiActivator.getUIService().getChatWindowManager().startChat(metaContact);
   }
- else   if (itemName.equalsIgnoreCase("renameContact")) {
-    RenameContactDialog dialog=new RenameContactDialog(mainFrame,contactItem);
+ else   if (itemName.equals("renameContact")) {
+    RenameContactDialog dialog=new RenameContactDialog(mainFrame,metaContact);
     dialog.setVisible(true);
     dialog.requestFocusInFiled();
   }
- else   if (itemName.equalsIgnoreCase("viewHistory")) {
+ else   if (itemName.equals("viewHistory")) {
     HistoryWindow history;
     HistoryWindowManager historyWindowManager=GuiActivator.getUIService().getHistoryWindowManager();
-    if (historyWindowManager.containsHistoryWindowForContact(contactItem)) {
-      history=historyWindowManager.getHistoryWindowForContact(contactItem);
+    if (historyWindowManager.containsHistoryWindowForContact(metaContact)) {
+      history=historyWindowManager.getHistoryWindowForContact(metaContact);
       if (history.getState() == JFrame.ICONIFIED)       history.setState(JFrame.NORMAL);
       history.toFront();
     }
  else {
-      history=new HistoryWindow(this.contactItem);
-      historyWindowManager.addHistoryWindowForContact(contactItem,history);
+      history=new HistoryWindow(this.metaContact);
+      historyWindowManager.addHistoryWindowForContact(metaContact,history);
       history.setVisible(true);
     }
   }
  else   if (itemName.startsWith(moveToPrefix)) {
-    MetaContactListManager.moveMetaContactToGroup(contactItem,itemName.substring(moveToPrefix.length()));
+    MetaContactListManager.moveMetaContactToGroup(metaContact,itemName.substring(moveToPrefix.length()));
   }
  else   if (itemName.startsWith(removeContactPrefix)) {
     contact=getContactFromMetaContact(itemName.substring(removeContactPrefix.length()));
@@ -56,7 +64,7 @@
       MetaContactListManager.removeContact(contact);
     }
  else {
-      MetaContactListManager.removeMetaContact(contactItem);
+      MetaContactListManager.removeMetaContact(metaContact);
     }
   }
  else   if (itemName.startsWith(moveSubcontactPrefix)) {
@@ -80,6 +88,14 @@
   }
  else   if (itemName.startsWith(callContactPrefix)) {
     contact=getContactFromMetaContact(itemName.substring(callContactPrefix.length()));
-    callContact(contact);
+    CallManager.createCall(contact.getProtocolProvider(),contact);
+  }
+ else   if (itemName.startsWith(videoCallPrefix)) {
+    contact=getContactFromMetaContact(itemName.substring(videoCallPrefix.length()));
+    CallManager.createVideoCall(contact.getProtocolProvider(),contact.getAddress());
+  }
+ else   if (itemName.startsWith(desktopSharingPrefix)) {
+    contact=getContactFromMetaContact(itemName.substring(desktopSharingPrefix.length()));
+    CallManager.createDesktopSharing(contact.getProtocolProvider(),contact.getAddress());
   }
 }

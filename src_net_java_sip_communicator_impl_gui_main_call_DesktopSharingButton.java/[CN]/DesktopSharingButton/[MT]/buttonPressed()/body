@@ -1,0 +1,18 @@
+{
+  if (call != null) {
+    OperationSetDesktopStreaming desktopOpSet=call.getProtocolProvider().getOperationSet(OperationSetDesktopStreaming.class);
+    if (desktopOpSet == null)     return;
+    boolean isDesktopSharing=desktopOpSet.isLocalVideoAllowed(call);
+    if (isDesktopSharing)     CallManager.enableDesktopSharing(call,false);
+ else {
+      MediaService mediaService=GuiActivator.getMediaService();
+      List<MediaDevice> desktopDevices=mediaService.getDevices(MediaType.VIDEO,MediaUseCase.DESKTOP);
+      int deviceNumber=desktopDevices.size();
+      if (deviceNumber == 1)       CallManager.enableDesktopSharing(call,true);
+ else       if (deviceNumber > 1) {
+        SelectScreenDialog selectDialog=new SelectScreenDialog(call,desktopDevices);
+        selectDialog.setVisible(true);
+      }
+    }
+  }
+}

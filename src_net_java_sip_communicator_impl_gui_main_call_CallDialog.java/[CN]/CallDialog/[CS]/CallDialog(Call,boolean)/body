@@ -1,0 +1,23 @@
+{
+  super(false);
+  this.call=call;
+  this.isDesktopSharing=isDesktopSharing;
+  this.callDurationTimer=new Timer(1000,new CallTimerListener());
+  this.callDurationTimer.setRepeats(true);
+  this.setCallTitle(null);
+  this.isLastConference=isConference();
+  if (isLastConference) {
+    this.callPanel=new ConferenceCallPanel(this,call);
+  }
+ else {
+    CallPeer callPeer=null;
+    if (call.getCallPeers().hasNext())     callPeer=call.getCallPeers().next();
+    if (callPeer != null)     this.callPanel=new OneToOneCallPanel(this,call,callPeer);
+  }
+  call.addCallChangeListener(this);
+  Iterator<? extends CallPeer> callPeers=call.getCallPeers();
+  while (callPeers.hasNext()) {
+    callPeers.next().addCallPeerConferenceListener(this);
+  }
+  init();
+}

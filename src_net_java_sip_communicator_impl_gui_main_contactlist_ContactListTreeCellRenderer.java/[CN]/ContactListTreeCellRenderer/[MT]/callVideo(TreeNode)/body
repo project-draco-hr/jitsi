@@ -1,0 +1,40 @@
+{
+  List<UIContactDetail> videoContacts=((ContactNode)treeNode).getContactDescriptor().getContactDetailsForOperationSet(OperationSetVideoTelephony.class);
+  ChooseCallAccountPopupMenu chooseAccountDialog=null;
+  if (videoContacts.size() == 1) {
+    UIContactDetail detail=videoContacts.get(0);
+    ProtocolProviderService preferredProvider=detail.getPreferredProtocolProvider(OperationSetVideoTelephony.class);
+    List<ProtocolProviderService> providers=null;
+    String protocolName=null;
+    if (preferredProvider != null) {
+      if (preferredProvider.isRegistered())       CallManager.createVideoCall(preferredProvider,detail.getAddress());
+ else {
+        protocolName=preferredProvider.getProtocolName();
+        providers=CallManager.getRegisteredProviders(protocolName,OperationSetVideoTelephony.class);
+      }
+    }
+ else {
+      protocolName=detail.getPreferredProtocol(OperationSetVideoTelephony.class);
+      providers=CallManager.getRegisteredProviders(protocolName,OperationSetVideoTelephony.class);
+    }
+    if (providers != null) {
+      int providersCount=providers.size();
+      if (providersCount <= 0) {
+        new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.CALL_FAILED"),GuiActivator.getResources().getI18NString("service.gui.NO_ONLINE_TEL_PROTOCOL_ACCOUNT",new String[]{protocolName})).showDialog();
+      }
+ else       if (providersCount == 1) {
+        CallManager.createVideoCall(providers.get(0),detail.getAddress());
+      }
+ else       if (providersCount > 1)       chooseAccountDialog=new ChooseCallAccountPopupMenu(tree,detail.getAddress(),providers,OperationSetVideoTelephony.class);
+    }
+  }
+ else   if (videoContacts.size() > 1) {
+    chooseAccountDialog=new ChooseCallAccountPopupMenu(tree,videoContacts,OperationSetVideoTelephony.class);
+  }
+  if (chooseAccountDialog != null) {
+    Point location=new Point(callVideoButton.getX(),callVideoButton.getY() + callVideoButton.getHeight());
+    SwingUtilities.convertPointToScreen(location,tree);
+    location.y=location.y + tree.getPathBounds(tree.getSelectionPath()).y;
+    chooseAccountDialog.showPopupMenu(location.x + 8,location.y - 8);
+  }
+}

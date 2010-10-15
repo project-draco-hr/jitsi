@@ -1,0 +1,40 @@
+{
+  List<UIContactDetail> desktopContacts=((ContactNode)treeNode).getContactDescriptor().getContactDetailsForOperationSet(OperationSetDesktopStreaming.class);
+  ChooseCallAccountPopupMenu chooseAccountDialog=null;
+  if (desktopContacts.size() == 1) {
+    UIContactDetail detail=desktopContacts.get(0);
+    ProtocolProviderService preferredProvider=detail.getPreferredProtocolProvider(OperationSetDesktopStreaming.class);
+    List<ProtocolProviderService> providers=null;
+    String protocolName=null;
+    if (preferredProvider != null) {
+      if (preferredProvider.isRegistered())       shareDesktop(preferredProvider,detail.getAddress());
+ else {
+        protocolName=preferredProvider.getProtocolName();
+        providers=CallManager.getRegisteredProviders(protocolName,OperationSetDesktopStreaming.class);
+      }
+    }
+ else {
+      protocolName=detail.getPreferredProtocol(OperationSetDesktopStreaming.class);
+      providers=CallManager.getRegisteredProviders(protocolName,OperationSetDesktopStreaming.class);
+    }
+    if (providers != null) {
+      int providersCount=providers.size();
+      if (providersCount <= 0) {
+        new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.CALL_FAILED"),GuiActivator.getResources().getI18NString("service.gui.NO_ONLINE_TEL_PROTOCOL_ACCOUNT",new String[]{protocolName})).showDialog();
+      }
+ else       if (providersCount == 1) {
+        shareDesktop(providers.get(0),detail.getAddress());
+      }
+ else       if (providersCount > 1)       chooseAccountDialog=new ChooseCallAccountPopupMenu(tree,detail.getAddress(),providers,OperationSetDesktopStreaming.class);
+    }
+  }
+ else   if (desktopContacts.size() > 1) {
+    chooseAccountDialog=new ChooseCallAccountPopupMenu(tree,desktopContacts,OperationSetDesktopStreaming.class);
+  }
+  if (chooseAccountDialog != null) {
+    Point location=new Point(desktopSharingButton.getX(),desktopSharingButton.getY() + desktopSharingButton.getHeight());
+    SwingUtilities.convertPointToScreen(location,tree);
+    location.y=location.y + tree.getPathBounds(tree.getSelectionPath()).y;
+    chooseAccountDialog.showPopupMenu(location.x + 8,location.y - 8);
+  }
+}

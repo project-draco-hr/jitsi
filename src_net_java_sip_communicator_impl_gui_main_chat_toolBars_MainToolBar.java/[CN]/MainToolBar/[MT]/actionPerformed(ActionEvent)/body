@@ -56,6 +56,23 @@
       }
     }
   }
+ else   if (buttonText.equals("desktop")) {
+    ChatSession chatSession=chatPanel.getChatSession();
+    List<ChatTransport> desktopTransports=null;
+    if (chatSession != null)     desktopTransports=chatSession.getTransportsForOperationSet(OperationSetDesktopSharingServer.class);
+    if (desktopTransports != null) {
+      if (desktopTransports.size() == 1) {
+        ChatTransport transport=desktopTransports.get(0);
+        CallManager.createDesktopSharing(transport.getProtocolProvider(),transport.getName());
+      }
+ else       if (desktopTransports.size() > 1) {
+        ChooseCallAccountPopupMenu chooseAccountDialog=new ChooseCallAccountPopupMenu(desktopSharingButton,desktopTransports,OperationSetDesktopSharingServer.class);
+        Point location=new Point(callButton.getX(),desktopSharingButton.getY() + desktopSharingButton.getHeight());
+        SwingUtilities.convertPointToScreen(location,this);
+        chooseAccountDialog.showPopupMenu(location.x,location.y);
+      }
+    }
+  }
  else   if (buttonText.equals("options")) {
     GuiActivator.getUIService().setConfigurationWindowVisible(true);
   }

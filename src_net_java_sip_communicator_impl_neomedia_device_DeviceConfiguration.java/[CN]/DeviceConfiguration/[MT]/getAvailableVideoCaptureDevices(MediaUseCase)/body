@@ -3,7 +3,19 @@
   Set<CaptureDeviceInfo> videoCaptureDevices=new HashSet<CaptureDeviceInfo>();
   for (  Format format : formats) {
     Vector<CaptureDeviceInfo> captureDeviceInfos=CaptureDeviceManager.getDeviceList(format);
-    videoCaptureDevices.addAll(captureDeviceInfos);
+    if (useCase != MediaUseCase.ANY) {
+      for (      CaptureDeviceInfo dev : captureDeviceInfos) {
+        if (useCase == MediaUseCase.CALL && !dev.getLocator().getProtocol().equals(ImageStreamingAuto.LOCATOR_PROTOCOL)) {
+          videoCaptureDevices.add(dev);
+        }
+ else         if (useCase == MediaUseCase.DESKTOP && dev.getLocator().getProtocol().equals(ImageStreamingAuto.LOCATOR_PROTOCOL)) {
+          videoCaptureDevices.add(dev);
+        }
+      }
+    }
+ else {
+      videoCaptureDevices.addAll(captureDeviceInfos);
+    }
   }
   return videoCaptureDevices.toArray(NO_CAPTURE_DEVICES);
 }

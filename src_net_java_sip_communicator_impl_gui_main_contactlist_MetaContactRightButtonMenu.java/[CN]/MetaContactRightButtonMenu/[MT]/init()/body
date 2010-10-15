@@ -1,5 +1,5 @@
 {
-  addContactItem.setText(GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_TO") + " " + contactItem.getDisplayName());
+  addContactItem.setText(GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_TO") + " " + metaContact.getDisplayName());
   Iterator<MetaContactGroup> groups=GuiActivator.getContactListService().getRoot().getSubgroups();
   if (groups.hasNext()) {
     JLabel infoLabel=new JLabel(GuiActivator.getResources().getI18NString("service.gui.SELECT_GROUP"));
@@ -15,8 +15,8 @@
     menuItem.addActionListener(this);
     this.moveToMenu.add(menuItem);
   }
-  Iterator<Contact> contacts=contactItem.getContacts();
-  if (contactItem.getContactCount() > 1) {
+  Iterator<Contact> contacts=metaContact.getContacts();
+  if (metaContact.getContactCount() > 1) {
     JMenuItem allItem=new JMenuItem(allContactsString);
     JMenuItem allItem1=new JMenuItem(allContactsString);
     allItem.addActionListener(this);
@@ -32,25 +32,20 @@
     Contact contact=contacts.next();
     ProtocolProviderService protocolProvider=contact.getProtocolProvider();
     String contactDisplayName=contact.getDisplayName();
-    JMenuItem contactItem=new JMenuItem(contactDisplayName);
-    JMenuItem contactItem1=new JMenuItem(contactDisplayName);
     Icon protocolIcon=new ImageIcon(createContactStatusImage(contact));
-    contactItem.setIcon(protocolIcon);
-    contactItem1.setIcon(protocolIcon);
-    contactItem.setName(removeContactPrefix + contact.getAddress() + protocolProvider.getProtocolName());
-    contactItem1.setName(moveSubcontactPrefix + contact.getAddress() + protocolProvider.getProtocolName());
-    contactItem.addActionListener(this);
-    contactItem1.addActionListener(this);
-    this.removeContactMenu.add(contactItem);
-    this.moveSubcontactMenu.add(contactItem1);
-    if (contact.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class) != null) {
-      JMenuItem callContactItem=new JMenuItem(contactDisplayName);
-      callContactItem.setIcon(protocolIcon);
-      callContactItem.setName(callContactPrefix + contact.getAddress() + protocolProvider.getProtocolName());
-      callContactItem.addActionListener(this);
-      this.callContactMenu.add(callContactItem);
+    this.removeContactMenu.add(createMenuItem(contactDisplayName,removeContactPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
+    this.moveSubcontactMenu.add(createMenuItem(contactDisplayName,moveSubcontactPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
+    if (metaContact.getContactCount() > 1) {
+      if (protocolProvider.getOperationSet(OperationSetBasicTelephony.class) != null) {
+        callContactMenu.add(createMenuItem(contactDisplayName,callContactPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
+      }
+      if (protocolProvider.getOperationSet(OperationSetVideoTelephony.class) != null) {
+        videoCallMenu.add(createMenuItem(contactDisplayName,videoCallPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
+      }
+      if (protocolProvider.getOperationSet(OperationSetDesktopStreaming.class) != null) {
+        desktopSharingMenu.add(createMenuItem(contactDisplayName,desktopSharingPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
+      }
     }
-    protocolProvider.getOperationSet(OperationSetWebContactInfo.class);
   }
   this.add(sendMessageItem);
   this.add(sendSmsItem);
@@ -59,6 +54,24 @@
   }
  else {
     this.add(callItem);
+    this.callItem.setName("call");
+    this.callItem.addActionListener(this);
+  }
+  if (videoCallMenu.getItemCount() > 1) {
+    this.add(videoCallMenu);
+  }
+ else {
+    this.add(videoCallItem);
+    this.videoCallItem.setName("videoCall");
+    this.videoCallItem.addActionListener(this);
+  }
+  if (desktopSharingMenu.getItemCount() > 1) {
+    this.add(desktopSharingMenu);
+  }
+ else {
+    this.add(desktopSharingItem);
+    this.desktopSharingItem.setName("desktopSharing");
+    this.desktopSharingItem.addActionListener(this);
   }
   this.add(sendFileItem);
   this.addSeparator();
@@ -73,7 +86,6 @@
   this.add(viewHistoryItem);
   this.initPluginComponents();
   this.sendMessageItem.setName("sendMessage");
-  this.callItem.setName("call");
   this.sendSmsItem.setName("sendSms");
   this.sendFileItem.setName("sendFile");
   this.moveToMenu.setName("moveToGroup");
@@ -81,14 +93,13 @@
   this.renameContactItem.setName("renameContact");
   this.viewHistoryItem.setName("viewHistory");
   this.sendMessageItem.addActionListener(this);
-  this.callItem.addActionListener(this);
   this.sendSmsItem.addActionListener(this);
   this.sendFileItem.addActionListener(this);
   this.renameContactItem.addActionListener(this);
   this.viewHistoryItem.addActionListener(this);
   this.addContactItem.addActionListener(this);
-  if (contactItem.getDefaultContact(OperationSetFileTransfer.class) == null)   this.sendFileItem.setEnabled(false);
-  if (contactItem.getDefaultContact(OperationSetBasicTelephony.class) == null)   this.callItem.setEnabled(false);
-  if (contactItem.getDefaultContact(OperationSetBasicInstantMessaging.class) == null)   this.sendMessageItem.setEnabled(false);
-  if (contactItem.getDefaultContact(OperationSetSmsMessaging.class) == null)   this.sendSmsItem.setEnabled(false);
+  if (metaContact.getDefaultContact(OperationSetFileTransfer.class) == null)   this.sendFileItem.setEnabled(false);
+  if (metaContact.getDefaultContact(OperationSetBasicTelephony.class) == null)   this.callItem.setEnabled(false);
+  if (metaContact.getDefaultContact(OperationSetBasicInstantMessaging.class) == null)   this.sendMessageItem.setEnabled(false);
+  if (metaContact.getDefaultContact(OperationSetSmsMessaging.class) == null)   this.sendSmsItem.setEnabled(false);
 }
