@@ -1,0 +1,23 @@
+{
+  RosterEntry entry=roster.getEntry(rosterEntryID);
+  ContactJabberImpl contact=new ContactJabberImpl(entry,ServerStoredContactListJabberImpl.this,true,true);
+  if (entry.getGroups() == null || entry.getGroups().size() == 0) {
+    rootGroup.addContact(contact);
+    fireContactAdded(rootGroup,contact);
+    return contact;
+  }
+  for (  RosterGroup group : entry.getGroups()) {
+    ContactGroupJabberImpl parentGroup=findContactGroup(group.getName());
+    if (parentGroup != null) {
+      parentGroup.addContact(contact);
+      fireContactAdded(findContactGroup(contact),contact);
+    }
+ else {
+      ContactGroupJabberImpl newGroup=new ContactGroupJabberImpl(group,group.getEntries().iterator(),ServerStoredContactListJabberImpl.this,true);
+      rootGroup.addSubGroup(newGroup);
+      fireGroupEvent(newGroup,ServerStoredGroupEvent.GROUP_CREATED_EVENT);
+    }
+    return contact;
+  }
+  return contact;
+}

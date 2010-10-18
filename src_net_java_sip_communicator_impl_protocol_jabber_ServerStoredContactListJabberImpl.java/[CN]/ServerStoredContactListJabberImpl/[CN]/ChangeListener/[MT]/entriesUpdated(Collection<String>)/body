@@ -2,6 +2,10 @@
   if (logger.isTraceEnabled())   logger.trace("entriesUpdated  " + addresses);
   for (  String contactID : addresses) {
     RosterEntry entry=roster.getEntry(contactID);
+    ContactJabberImpl contact=findContactById(contactID);
+    if (contact == null && isEntryDisplayable(entry)) {
+      contact=addEntryToContactList(contactID);
+    }
     for (    RosterGroup gr : entry.getGroups()) {
       if (findContactGroup(gr.getName()) == null) {
         ContactGroupJabberImpl group=findContactGroupByNameCopy(gr.getName());
@@ -13,7 +17,6 @@
         }
       }
  else {
-        ContactJabberImpl contact=findContactById(contactID);
         ContactGroup contactGroup=contact.getParentContactGroup();
         if (!gr.getName().equals(contactGroup.getGroupName())) {
           if (contactGroup instanceof ContactGroupJabberImpl)           ((ContactGroupJabberImpl)contactGroup).removeContact(contact);

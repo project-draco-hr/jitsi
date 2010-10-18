@@ -1,6 +1,13 @@
 {
-  List<ContactJabberImpl> contactsToMove=new ArrayList<ContactJabberImpl>();
-  contactsToMove.add(contact);
+  if (!contact.isPersistent()) {
+    try {
+      addContact(newParent,contact.getAddress());
+      return;
+    }
+ catch (    OperationFailedException ex) {
+      logger.error("Cannot move contact! ",ex);
+    }
+  }
   newParent.addContact(contact);
   try {
     roster.createEntry(contact.getSourceEntry().getUser(),contact.getDisplayName(),new String[]{newParent.getGroupName()});

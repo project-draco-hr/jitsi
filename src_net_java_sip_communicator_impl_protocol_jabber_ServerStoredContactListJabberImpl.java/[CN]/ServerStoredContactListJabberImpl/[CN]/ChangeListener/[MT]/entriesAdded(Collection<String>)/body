@@ -2,6 +2,7 @@
   if (logger.isTraceEnabled())   logger.trace("entriesAdded " + addresses);
   for (  String id : addresses) {
     RosterEntry entry=roster.getEntry(id);
+    if (!isEntryDisplayable(entry))     continue;
     ContactJabberImpl contact=findContactById(entry.getUser());
     if (contact != null) {
       if (contact.isPersistent()) {
@@ -16,24 +17,6 @@
         }
       }
     }
-    contact=new ContactJabberImpl(roster.getEntry(id),ServerStoredContactListJabberImpl.this,true,true);
-    if (entry.getGroups() == null || entry.getGroups().size() == 0) {
-      rootGroup.addContact(contact);
-      fireContactAdded(rootGroup,contact);
-      return;
-    }
-    for (    RosterGroup group : entry.getGroups()) {
-      ContactGroupJabberImpl parentGroup=findContactGroup(group.getName());
-      if (parentGroup != null) {
-        parentGroup.addContact(contact);
-        fireContactAdded(findContactGroup(contact),contact);
-      }
- else {
-        ContactGroupJabberImpl newGroup=new ContactGroupJabberImpl(group,group.getEntries().iterator(),ServerStoredContactListJabberImpl.this,true);
-        rootGroup.addSubGroup(newGroup);
-        fireGroupEvent(newGroup,ServerStoredGroupEvent.GROUP_CREATED_EVENT);
-      }
-      return;
-    }
+    contact=addEntryToContactList(id);
   }
 }
