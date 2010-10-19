@@ -1,0 +1,24 @@
+{
+  Collection<ContentPacketExtension> transportInfoContents=(transportInfoSender == null) ? null : new LinkedList<ContentPacketExtension>();
+  for (  ContentPacketExtension theirContent : theirOffer) {
+    ContentPacketExtension ourContent=findContentByName(ourAnswer,theirContent.getName());
+    if (ourContent == null)     continue;
+    RtpDescriptionPacketExtension rtpDesc=ourContent.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+    IceMediaStream stream=createIceStream(rtpDesc.getMedia());
+    if (transportInfoSender == null) {
+      ourContent.addChildExtension(JingleUtils.createTransport(stream));
+    }
+ else {
+      ourContent.addChildExtension(new IceUdpTransportPacketExtension());
+      ContentPacketExtension transportInfoContent=new ContentPacketExtension();
+      for (      String name : ourContent.getAttributeNames()) {
+        Object value=ourContent.getAttribute(name);
+        if (value != null)         transportInfoContent.setAttribute(name,value);
+      }
+      transportInfoContent.addChildExtension(JingleUtils.createTransport(stream));
+      transportInfoContents.add(transportInfoContent);
+    }
+  }
+  if (transportInfoSender != null)   transportInfoSender.sendTransportInfo(transportInfoContents);
+  this.cpeList=ourAnswer;
+}

@@ -1,10 +1,12 @@
 {
+  CallPeerMediaHandlerJabberImpl mediaHandler=getMediaHandler();
   List<ContentPacketExtension> contents=content.getContentList();
-  JingleIQ contentIQ=null;
   Iterable<ContentPacketExtension> answerContents;
+  JingleIQ contentIQ;
   try {
-    getMediaHandler().processOffer(contents);
-    answerContents=getMediaHandler().generateSessionAccept();
+    mediaHandler.processOffer(contents);
+    answerContents=mediaHandler.generateSessionAccept();
+    contentIQ=null;
   }
  catch (  Exception e) {
     logger.warn("Exception occurred",e);
@@ -15,5 +17,5 @@
     contentIQ=JinglePacketFactory.createContentAccept(getProtocolProvider().getOurJID(),this.peerJID,getJingleSID(),answerContents);
   }
   getProtocolProvider().getConnection().sendPacket(contentIQ);
-  getMediaHandler().start();
+  mediaHandler.start();
 }

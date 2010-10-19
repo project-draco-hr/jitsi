@@ -1,19 +1,18 @@
 {
   TransportManagerJabberImpl transportManager=getTransportManager();
-  Iterable<ContentPacketExtension> sessAccept=transportManager.wrapupConnectivityEstablishment();
+  Iterable<ContentPacketExtension> sessAccept=transportManager.wrapupCandidateHarvest();
   CallPeerJabberImpl peer=getPeer();
   for (  ContentPacketExtension ourContent : sessAccept) {
     RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(ourContent);
     MediaType type=MediaType.parseString(description.getMedia());
     StreamConnector connector=transportManager.getStreamConnector(type);
     MediaDevice dev=getDefaultDevice(type);
-    ContentPacketExtension theirContent=this.remoteContentMap.get(ourContent.getName());
-    MediaStreamTarget target=JingleUtils.extractDefaultTarget(theirContent);
-    RtpDescriptionPacketExtension theirDescription=JingleUtils.getRtpDescription(theirContent);
+    MediaStreamTarget target=transportManager.getStreamTarget(type);
     MediaDirection direction=JingleUtils.getDirection(ourContent,!peer.isInitiator());
+    ContentPacketExtension theirContent=this.remoteContentMap.get(ourContent.getName());
+    RtpDescriptionPacketExtension theirDescription=JingleUtils.getRtpDescription(theirContent);
     MediaFormat format=null;
-    List<PayloadTypePacketExtension> payloadTypes=theirDescription.getPayloadTypes();
-    for (    PayloadTypePacketExtension payload : payloadTypes) {
+    for (    PayloadTypePacketExtension payload : theirDescription.getPayloadTypes()) {
       format=JingleUtils.payloadTypeToMediaFormat(payload,getDynamicPayloadTypes());
       if (format != null)       break;
     }

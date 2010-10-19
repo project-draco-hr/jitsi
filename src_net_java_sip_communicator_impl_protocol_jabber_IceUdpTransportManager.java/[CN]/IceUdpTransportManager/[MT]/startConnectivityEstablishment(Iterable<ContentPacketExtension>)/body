@@ -1,5 +1,5 @@
 {
-  if (!IceProcessingState.WAITING.equals(iceAgent.getState()))   return;
+  if (!IceProcessingState.WAITING.equals(iceAgent.getState()))   return false;
   int generation=iceAgent.getGeneration();
   boolean startConnectivityEstablishment=false;
   for (  ContentPacketExtension content : remote) {
@@ -10,6 +10,13 @@
     if (password != null)     iceAgent.setRemotePassword(password);
     List<CandidatePacketExtension> candidates=transport.getChildExtensionsOfType(CandidatePacketExtension.class);
     RtpDescriptionPacketExtension description=content.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+    if ((description == null) && (cpeList != null)) {
+      ContentPacketExtension localContent=findContentByName(cpeList,content.getName());
+      if (localContent != null) {
+        description=localContent.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+      }
+    }
+    if (description == null)     continue;
     IceMediaStream stream=iceAgent.getStream(description.getMedia());
     for (    CandidatePacketExtension candidate : candidates) {
       if (candidate.getGeneration() != generation)       continue;
@@ -18,5 +25,20 @@
       startConnectivityEstablishment=true;
     }
   }
-  if (startConnectivityEstablishment)   iceAgent.startConnectivityEstablishment();
+  if (startConnectivityEstablishment) {
+    for (    IceMediaStream stream : iceAgent.getStreams()) {
+      for (      Component component : stream.getComponents()) {
+        if (component.getRemoteCandidateCount() < 1) {
+          startConnectivityEstablishment=false;
+          break;
+        }
+      }
+      if (!startConnectivityEstablishment)       break;
+    }
+    if (startConnectivityEstablishment) {
+      iceAgent.startConnectivityEstablishment();
+      return true;
+    }
+  }
+  return false;
 }

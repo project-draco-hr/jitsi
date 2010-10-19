@@ -1,12 +1,12 @@
 {
+  CallPeerMediaHandlerJabberImpl mediaHandler=getMediaHandler();
   ContentPacketExtension content=new ContentPacketExtension();
-  ContentPacketExtension remoteContent=getMediaHandler().getRemoteContent(MediaType.VIDEO.toString());
-  List<ContentPacketExtension> contents=new ArrayList<ContentPacketExtension>();
+  ContentPacketExtension remoteContent=mediaHandler.getRemoteContent(MediaType.VIDEO.toString());
   content.setName(remoteContent.getName());
   content.setCreator(remoteContent.getCreator());
   content.setSenders(remoteContent.getSenders());
-  contents.add(content);
-  JingleIQ contentIQ=JinglePacketFactory.createContentRemove(getProtocolProvider().getOurJID(),this.peerJID,getJingleSID(),contents);
-  getProtocolProvider().getConnection().sendPacket(contentIQ);
-  getMediaHandler().removeRemoteContent(remoteContent.getName());
+  ProtocolProviderServiceJabberImpl protocolProvider=getProtocolProvider();
+  JingleIQ contentIQ=JinglePacketFactory.createContentRemove(protocolProvider.getOurJID(),this.peerJID,getJingleSID(),Arrays.asList(content));
+  protocolProvider.getConnection().sendPacket(contentIQ);
+  mediaHandler.removeContent(remoteContent.getName());
 }

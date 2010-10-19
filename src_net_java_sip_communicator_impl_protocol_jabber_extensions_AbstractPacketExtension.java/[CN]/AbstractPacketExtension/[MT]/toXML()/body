@@ -1,23 +1,32 @@
 {
-  StringBuilder bldr=new StringBuilder("<" + getElementName() + " ");
-  if (getNamespace() != null)   bldr.append("xmlns='" + getNamespace() + "'");
+  StringBuilder bldr=new StringBuilder();
+  bldr.append("<").append(getElementName()).append(" ");
+  if (getNamespace() != null)   bldr.append("xmlns='").append(getNamespace()).append("'");
   for (  Map.Entry<String,String> entry : attributes.entrySet()) {
-    bldr.append(" " + entry.getKey() + "='"+ entry.getValue()+ "'");
+    bldr.append(" ").append(entry.getKey()).append("='").append(entry.getValue()).append("'");
   }
   List<? extends PacketExtension> childElements=getChildExtensions();
-synchronized (childElements) {
-    if ((childElements == null || childElements.size() == 0) && (getText() == null || getText().length() == 0)) {
+  String text=getText();
+  if (childElements == null) {
+    if ((text == null) || (text.length() == 0)) {
       bldr.append("/>");
       return bldr.toString();
     }
+ else     bldr.append('>');
+  }
  else {
-      bldr.append(">");
-      for (      PacketExtension packExt : childElements) {
-        bldr.append(packExt.toXML());
+synchronized (childElements) {
+      if (childElements.isEmpty() && ((text == null) || (text.length() == 0))) {
+        bldr.append("/>");
+        return bldr.toString();
+      }
+ else {
+        bldr.append(">");
+        for (        PacketExtension packExt : childElements)         bldr.append(packExt.toXML());
       }
     }
   }
-  if (getText() != null && getText().trim().length() > 0)   bldr.append(getText());
-  bldr.append("</" + getElementName() + ">");
+  if ((text != null) && (text.trim().length() > 0))   bldr.append(text);
+  bldr.append("</").append(getElementName()).append(">");
   return bldr.toString();
 }

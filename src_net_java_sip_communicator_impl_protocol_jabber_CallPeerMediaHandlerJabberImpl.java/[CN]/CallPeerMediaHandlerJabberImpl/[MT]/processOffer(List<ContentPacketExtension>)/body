@@ -48,7 +48,11 @@
   if (!atLeastOneValidDescription) {
     ProtocolProviderServiceJabberImpl.throwOperationFailedException("Offer contained no media formats" + " or no valid media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
   }
-  List<ContentPacketExtension> candidates=harvestCandidates(offer,answer);
-  sendTransportInfo(candidates);
-  establishConnectivity(offer);
+  harvestCandidates(offer,answer,new TransportInfoSender(){
+    public void sendTransportInfo(    Iterable<ContentPacketExtension> contents){
+      getPeer().sendTransportInfo(contents);
+    }
+  }
+);
+  getTransportManager().startConnectivityEstablishment(offer);
 }

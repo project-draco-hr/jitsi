@@ -30,5 +30,17 @@ synchronized (iceProcessingStateSyncRoot) {
   }
   if (interrupted)   Thread.currentThread().interrupt();
   iceAgent.removeStateChangeListener(stateChangeListener);
-  return cpeList;
+  if (cpeList != null) {
+    for (    ContentPacketExtension content : cpeList) {
+      IceUdpTransportPacketExtension transport=content.getFirstChildOfType(IceUdpTransportPacketExtension.class);
+      if (transport != null) {
+        for (        CandidatePacketExtension candidate : transport.getCandidateList())         transport.removeCandidate(candidate);
+        Collection<?> childExtensions=transport.getChildExtensions();
+        if ((childExtensions == null) || childExtensions.isEmpty()) {
+          transport.removeAttribute(IceUdpTransportPacketExtension.UFRAG_ATTR_NAME);
+          transport.removeAttribute(IceUdpTransportPacketExtension.PWD_ATTR_NAME);
+        }
+      }
+    }
+  }
 }
