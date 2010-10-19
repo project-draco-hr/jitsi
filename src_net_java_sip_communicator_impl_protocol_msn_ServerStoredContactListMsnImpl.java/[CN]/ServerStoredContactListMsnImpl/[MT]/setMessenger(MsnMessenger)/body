@@ -1,15 +1,20 @@
 {
-  if (messenger == null) {
-    if (contactListModManager != null)     contactListModManager.removeModificationListener(contactListModListenerImpl);
-    this.contactListModManager=null;
-    if (contactListListener != null)     this.messenger.removeContactListListener(contactListListener);
-    this.contactListListener=null;
-    this.messenger=null;
-    return;
+  if (this.messenger == messenger)   return;
+  if (this.messenger != null) {
+    if (contactListModManager != null) {
+      contactListModManager.removeModificationListener(contactListModListenerImpl);
+      contactListModManager=null;
+    }
+    if (contactListListener != null) {
+      this.messenger.removeContactListListener(contactListListener);
+      contactListListener=null;
+    }
   }
   this.messenger=messenger;
-  contactListModManager=new EventManager(msnProvider,(BasicMessenger)messenger);
-  contactListModManager.addModificationListener(contactListModListenerImpl);
-  contactListListener=new ContactListListener();
-  messenger.addContactListListener(contactListListener);
+  if (this.messenger != null) {
+    contactListModManager=new EventManager(msnProvider,(BasicMessenger)this.messenger);
+    contactListModManager.addModificationListener(contactListModListenerImpl);
+    contactListListener=new ContactListListener();
+    this.messenger.addContactListListener(contactListListener);
+  }
 }
