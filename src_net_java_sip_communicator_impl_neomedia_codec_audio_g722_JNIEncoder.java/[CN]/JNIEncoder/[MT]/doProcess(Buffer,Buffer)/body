@@ -1,9 +1,16 @@
 {
+  int inputOffset=inputBuffer.getOffset();
+  int inputLength=inputBuffer.getLength();
   byte[] input=(byte[])inputBuffer.getData();
   int outputOffset=outputBuffer.getOffset();
-  int outputLength=inputBuffer.getLength() / 4;
+  int outputLength=inputLength / 4;
   byte[] output=validateByteArraySize(outputBuffer,outputOffset + outputLength);
-  g722_encoder_process(encoder,input,inputBuffer.getOffset(),output,outputOffset,outputLength);
+  for (int i=inputOffset; i < inputLength; i+=2) {
+    short sample=ArrayIOUtils.readShort(input,i);
+    sample>>>=2;
+    ArrayIOUtils.writeShort(sample,input,i);
+  }
+  g722_encoder_process(encoder,input,inputOffset,output,outputOffset,outputLength);
   outputBuffer.setDuration(computeDuration(outputLength));
   outputBuffer.setFormat(getOutputFormat());
   outputBuffer.setLength(outputLength);
