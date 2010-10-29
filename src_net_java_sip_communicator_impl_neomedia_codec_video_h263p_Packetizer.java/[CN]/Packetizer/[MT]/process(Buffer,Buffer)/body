@@ -1,0 +1,52 @@
+{
+  int inLength=inBuffer.getLength();
+  byte inData[]=(byte[])inBuffer.getData();
+  int inOffset=inBuffer.getOffset();
+  boolean pktAdded=false;
+  if (videoPkts.size() > 0) {
+    byte[] pktData=videoPkts.remove(0);
+    outBuffer.setData(pktData);
+    outBuffer.setLength(pktData.length);
+    outBuffer.setOffset(0);
+    outBuffer.setTimeStamp(timeStamp);
+    outBuffer.setSequenceNumber(sequenceNumber++);
+    if (videoPkts.size() > 0) {
+      return (BUFFER_PROCESSED_OK | INPUT_BUFFER_NOT_CONSUMED);
+    }
+ else {
+      outBuffer.setFlags(outBuffer.getFlags() | Buffer.FLAG_RTP_MARKER);
+      return BUFFER_PROCESSED_OK;
+    }
+  }
+  if (isEOM(inBuffer)) {
+    propagateEOM(outBuffer);
+    reset();
+    return BUFFER_PROCESSED_OK;
+  }
+  if (inBuffer.isDiscard()) {
+    outBuffer.setDiscard(true);
+    reset();
+    return BUFFER_PROCESSED_OK;
+  }
+  Format inFormat=inBuffer.getFormat();
+  if ((inFormat != inputFormat) && !inFormat.matches(inputFormat))   setInputFormat(inFormat);
+  int endIndex=inOffset + inLength;
+  int beginIndex=findStartcode(inData,inOffset,endIndex);
+  if (beginIndex < endIndex) {
+    for (int nextBeginIndex; beginIndex < endIndex; beginIndex=nextBeginIndex + 3) {
+      nextBeginIndex=findStartcode(inData,beginIndex + 3,endIndex);
+      int length=nextBeginIndex - beginIndex;
+      if (length > 0) {
+        pktAdded=packetize(inData,beginIndex,length) || pktAdded;
+        beginIndex+=length;
+      }
+    }
+  }
+  timeStamp=inBuffer.getTimeStamp();
+  if (pktAdded) {
+    return process(inBuffer,outBuffer);
+  }
+ else {
+    return BUFFER_PROCESSED_FAILED;
+  }
+}

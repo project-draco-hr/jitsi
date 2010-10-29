@@ -1,0 +1,44 @@
+{
+  if (opened)   return;
+  if (inputFormat == null)   throw new ResourceUnavailableException("No input format selected");
+  if (outputFormat == null)   throw new ResourceUnavailableException("No output format selected");
+  VideoFormat outputVideoFormat=(VideoFormat)outputFormat;
+  Dimension size=outputVideoFormat.getSize();
+  int width=size.width;
+  int height=size.height;
+  long avcodec=FFmpeg.avcodec_find_encoder(FFmpeg.CODEC_ID_H263P);
+  avcontext=FFmpeg.avcodec_alloc_context();
+  System.out.println("transmit " + width + "x"+ height);
+  FFmpeg.avcodeccontext_set_pix_fmt(avcontext,FFmpeg.PIX_FMT_YUV420P);
+  FFmpeg.avcodeccontext_set_size(avcontext,width,height);
+  FFmpeg.avcodeccontext_set_qcompress(avcontext,0.6f);
+  int bitRate=256000;
+  int frameRate=(int)outputVideoFormat.getFrameRate();
+  if (frameRate == Format.NOT_SPECIFIED)   frameRate=DEFAULT_FRAME_RATE;
+  FFmpeg.avcodeccontext_set_bit_rate(avcontext,bitRate);
+  FFmpeg.avcodeccontext_set_bit_rate_tolerance(avcontext,bitRate / (frameRate - 1));
+  FFmpeg.avcodeccontext_set_time_base(avcontext,1,frameRate);
+  FFmpeg.avcodeccontext_set_mb_decision(avcontext,FFmpeg.FF_MB_DECISION_SIMPLE);
+  FFmpeg.avcodeccontext_add_flags(avcontext,FFmpeg.CODEC_FLAG_LOOP_FILTER);
+  FFmpeg.avcodeccontext_add_flags(avcontext,FFmpeg.CODEC_FLAG_AC_PRED);
+  FFmpeg.avcodeccontext_add_flags(avcontext,FFmpeg.CODEC_FLAG_H263P_UMV);
+  FFmpeg.avcodeccontext_add_flags(avcontext,FFmpeg.CODEC_FLAG_H263P_SLICE_STRUCT);
+  FFmpeg.avcodeccontext_set_me_method(avcontext,6);
+  FFmpeg.avcodeccontext_set_me_subpel_quality(avcontext,2);
+  FFmpeg.avcodeccontext_set_me_range(avcontext,18);
+  FFmpeg.avcodeccontext_set_me_cmp(avcontext,FFmpeg.FF_CMP_CHROMA);
+  FFmpeg.avcodeccontext_set_scenechange_threshold(avcontext,40);
+  FFmpeg.avcodeccontext_set_gop_size(avcontext,IFRAME_INTERVAL);
+  if (FFmpeg.avcodec_open(avcontext,avcodec) < 0) {
+    throw new ResourceUnavailableException("Could not open codec. (size= " + width + "x"+ height+ ")");
+  }
+  encFrameLen=(width * height * 3) / 2;
+  rawFrameBuffer=FFmpeg.av_malloc(encFrameLen);
+  avframe=FFmpeg.avcodec_alloc_frame();
+  int sizeInBytes=width * height;
+  FFmpeg.avframe_set_data(avframe,rawFrameBuffer,sizeInBytes,sizeInBytes / 4);
+  FFmpeg.avframe_set_linesize(avframe,width,width / 2,width / 2);
+  encFrameBuffer=new byte[encFrameLen];
+  opened=true;
+  super.open();
+}

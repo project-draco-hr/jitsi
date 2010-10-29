@@ -1,0 +1,43 @@
+{
+  if (isEOM(inBuffer)) {
+    propagateEOM(outBuffer);
+    reset();
+    return BUFFER_PROCESSED_OK;
+  }
+  if (inBuffer.isDiscard()) {
+    outBuffer.setDiscard(true);
+    reset();
+    return BUFFER_PROCESSED_OK;
+  }
+  Format inFormat=inBuffer.getFormat();
+  if ((inFormat != inputFormat) && !inFormat.matches(inputFormat))   setInputFormat(inFormat);
+  if (inBuffer.getLength() < 3) {
+    outBuffer.setDiscard(true);
+    reset();
+    return BUFFER_PROCESSED_OK;
+  }
+  FFmpeg.memcpy(rawFrameBuffer,(byte[])inBuffer.getData(),inBuffer.getOffset(),encFrameLen);
+  if (framesSinceLastIFrame >= IFRAME_INTERVAL) {
+    FFmpeg.avframe_set_key_frame(avframe,true);
+    framesSinceLastIFrame=0;
+  }
+ else {
+    framesSinceLastIFrame++;
+    FFmpeg.avframe_set_key_frame(avframe,false);
+  }
+  int encLen=FFmpeg.avcodec_encode_video(avcontext,encFrameBuffer,encFrameLen,avframe);
+  Object outData=outBuffer.getData();
+  byte[] out;
+  if (outData instanceof byte[]) {
+    out=(byte[])outData;
+    if (out.length < encLen)     out=null;
+  }
+ else   out=null;
+  if (out == null)   out=new byte[encLen];
+  System.arraycopy(encFrameBuffer,0,out,0,encLen);
+  outBuffer.setData(out);
+  outBuffer.setLength(encLen);
+  outBuffer.setOffset(0);
+  outBuffer.setTimeStamp(inBuffer.getTimeStamp());
+  return BUFFER_PROCESSED_OK;
+}

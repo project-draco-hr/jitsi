@@ -1,0 +1,40 @@
+{
+  if (!checkInputBuffer(inBuffer))   return BUFFER_PROCESSED_FAILED;
+  if (isEOM(inBuffer) || !opened) {
+    propagateEOM(outBuffer);
+    return BUFFER_PROCESSED_OK;
+  }
+  if (inBuffer.isDiscard()) {
+    outBuffer.setDiscard(true);
+    return BUFFER_PROCESSED_OK;
+  }
+  got_picture[0]=false;
+  FFmpeg.avcodec_decode_video(avcontext,avframe,got_picture,(byte[])inBuffer.getData(),inBuffer.getLength());
+  if (!got_picture[0]) {
+    outBuffer.setDiscard(true);
+    return BUFFER_PROCESSED_OK;
+  }
+  int width=FFmpeg.avcodeccontext_get_width(avcontext);
+  int height=FFmpeg.avcodeccontext_get_height(avcontext);
+  if ((width > 0) && (height > 0) && ((this.width != width) || (this.height != height))) {
+    this.width=width;
+    this.height=height;
+    Dimension outSize=new Dimension(this.width,this.height);
+    VideoFormat inFormat=(VideoFormat)inBuffer.getFormat();
+    float outFrameRate=ensureFrameRate(inFormat.getFrameRate());
+    outputFormat=new AVFrameFormat(outSize,outFrameRate,FFmpeg.PIX_FMT_YUV420P,Format.NOT_SPECIFIED);
+  }
+  outBuffer.setFormat(outputFormat);
+  Object out=outBuffer.getData();
+  if (!(out instanceof AVFrame) || (((AVFrame)out).getPtr() != avframe))   outBuffer.setData(new AVFrame(avframe));
+  long pts=FFmpeg.AV_NOPTS_VALUE;
+  if (pts == FFmpeg.AV_NOPTS_VALUE)   outBuffer.setTimeStamp(Buffer.TIME_UNKNOWN);
+ else {
+    outBuffer.setTimeStamp(pts);
+    int outFlags=outBuffer.getFlags();
+    outFlags|=Buffer.FLAG_RELATIVE_TIME;
+    outFlags&=~(Buffer.FLAG_RTP_TIME | Buffer.FLAG_SYSTEM_TIME);
+    outBuffer.setFlags(outFlags);
+  }
+  return BUFFER_PROCESSED_OK;
+}

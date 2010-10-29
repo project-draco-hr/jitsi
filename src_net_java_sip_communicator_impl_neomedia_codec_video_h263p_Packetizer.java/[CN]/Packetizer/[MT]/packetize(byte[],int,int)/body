@@ -1,0 +1,31 @@
+{
+  boolean pktAdded=false;
+  while (length > 0) {
+    boolean isPsc=false;
+    int pos=0;
+    int maxPayloadLength=MAX_PAYLOAD_SIZE;
+    byte pkt[]=null;
+    int payloadLength=0;
+    if (data.length > 3 && data[offset] == 0x00 && data[offset + 1] == 0x00) {
+      isPsc=true;
+      pos=2;
+    }
+ else {
+      maxPayloadLength-=2;
+    }
+    if (length > maxPayloadLength) {
+      payloadLength=maxPayloadLength;
+    }
+ else {
+      payloadLength=length;
+    }
+    pkt=new byte[payloadLength + (isPsc ? 0 : 2)];
+    pkt[0]=(byte)(isPsc ? 0x04 : 0x00);
+    pkt[1]=0x00;
+    System.arraycopy(data,offset + pos,pkt,2,payloadLength - pos);
+    pktAdded=videoPkts.add(pkt) || pktAdded;
+    offset+=payloadLength;
+    length-=payloadLength;
+  }
+  return pktAdded;
+}

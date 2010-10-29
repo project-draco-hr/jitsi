@@ -1,0 +1,14 @@
+{
+  if (!(in instanceof VideoFormat) || (null == AbstractCodecExt.matches(in,inputFormats)))   return null;
+  YUVFormat yuv=(YUVFormat)in;
+  if (yuv.getOffsetU() > yuv.getOffsetV())   return null;
+  Dimension size=yuv.getSize();
+  if (size == null)   size=new Dimension(Constants.VIDEO_WIDTH,Constants.VIDEO_HEIGHT);
+  int strideY=size.width;
+  int strideUV=strideY / 2;
+  int offsetU=strideY * size.height;
+  int offsetV=offsetU + strideUV * size.height / 2;
+  int yuvMaxDataLength=(strideY + strideUV) * size.height;
+  inputFormat=new YUVFormat(size,yuvMaxDataLength + FFmpeg.FF_INPUT_BUFFER_PADDING_SIZE,Format.byteArray,yuv.getFrameRate(),YUVFormat.YUV_420,strideY,strideUV,0,offsetU,offsetV);
+  return inputFormat;
+}
