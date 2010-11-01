@@ -1,0 +1,20 @@
+{
+synchronized (this.locale) {
+    String path=locale.getDictUrl().getFile();
+    int filenameStart=path.lastIndexOf('/') + 1;
+    String filename=path.substring(filenameStart);
+    File dictLocation=SpellCheckActivator.getFileAccessService().getPrivatePersistentFile(DICT_DIR + filename);
+    if (!dictLocation.exists())     copyDictionary(locale.getDictUrl().openStream(),dictLocation);
+synchronized (this.attachedChats) {
+      InputStream dictInput=new FileInputStream(dictLocation);
+      SpellDictionary dict=new OpenOfficeSpellDictionary(dictInput,this.personalDictLocation);
+      this.dict=dict;
+      this.dictLocation=dictLocation;
+      this.locale=locale;
+      SpellCheckActivator.getConfigService().setProperty(LOCALE_CONFIG_PARAM,locale.getIsoCode());
+      for (      ChatAttachments chat : this.attachedChats) {
+        chat.setDictionary(this.dict);
+      }
+    }
+  }
+}

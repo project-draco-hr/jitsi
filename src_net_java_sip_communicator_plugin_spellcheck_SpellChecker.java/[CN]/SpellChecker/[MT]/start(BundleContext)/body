@@ -1,0 +1,35 @@
+{
+  FileAccessService faService=SpellCheckActivator.getFileAccessService();
+  File dictionaryDir=faService.getPrivatePersistentFile(DICT_DIR);
+  if (!dictionaryDir.exists()) {
+    dictionaryDir.mkdir();
+    URL dictURL=SpellCheckActivator.bundleContext.getBundle().getResource(DEFAULT_DICT_PATH);
+    if (dictURL != null) {
+      InputStream source=dictURL.openStream();
+      int filenameStart=DEFAULT_DICT_PATH.lastIndexOf('/') + 1;
+      String filename=DEFAULT_DICT_PATH.substring(filenameStart);
+      File dictLocation=faService.getPrivatePersistentFile(DICT_DIR + filename);
+      copyDictionary(source,dictLocation);
+    }
+  }
+  this.personalDictLocation=faService.getPrivatePersistentFile(DICT_DIR + PERSONAL_DICT_NAME);
+  if (!personalDictLocation.exists())   personalDictLocation.createNewFile();
+  String localeIso=SpellCheckActivator.getConfigService().getString(LOCALE_CONFIG_PARAM);
+  if (localeIso == null) {
+    localeIso=Parameters.getDefault(Parameters.Default.LOCALE);
+    if (localeIso == null)     throw new Exception("No default locale provided for spell checker");
+  }
+  Parameters.Locale tmp=Parameters.getLocale(localeIso);
+  if (tmp == null)   throw new Exception("No dictionary resources defined for locale: " + localeIso);
+  this.locale=tmp;
+  setLocale(tmp);
+synchronized (this.attachedChats) {
+    SpellCheckActivator.getUIService().addChatListener(this);
+    for (    Chat chat : SpellCheckActivator.getUIService().getAllChats()) {
+      ChatAttachments wrapper=new ChatAttachments(chat,this.dict);
+      wrapper.attachListeners();
+      this.attachedChats.add(wrapper);
+    }
+  }
+  if (logger.isInfoEnabled())   logger.info("Spell Checker loaded.");
+}

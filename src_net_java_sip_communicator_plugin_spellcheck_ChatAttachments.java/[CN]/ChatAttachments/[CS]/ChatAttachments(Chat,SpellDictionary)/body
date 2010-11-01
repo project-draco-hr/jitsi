@@ -1,0 +1,36 @@
+{
+  this.chat=chat;
+  this.dict=dict;
+  this.docListener=new DocUnderliner(chat.getHighlighter()){
+    boolean getFormatting(    String word){
+      try {
+        return !ChatAttachments.this.dict.isCorrect(word);
+      }
+ catch (      NullPointerException exc) {
+        logger.error("Spell checker dictionary failed to be accessed",exc);
+        return false;
+      }
+    }
+    int getCaretPosition(){
+      return ChatAttachments.this.chat.getCaretPosition();
+    }
+    void promptRepaint(){
+      ChatAttachments.this.chat.promptRepaint();
+    }
+  }
+;
+  this.caretListener=this.docListener.getEndChecker();
+  this.menuListener=new ChatMenuListener(){
+    public List<JMenuItem> getMenuElements(    Chat chat,    MouseEvent event){
+      if (isEnabled && event.getSource() instanceof JTextComponent) {
+        JTextComponent comp=(JTextComponent)event.getSource();
+        int index=comp.viewToModel(event.getPoint());
+        if (index != -1 && comp.getText().length() != 0) {
+          return getCorrections(Word.getWord(comp.getText(),index,false));
+        }
+      }
+      return new ArrayList<JMenuItem>();
+    }
+  }
+;
+}

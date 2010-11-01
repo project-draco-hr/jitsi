@@ -1,0 +1,30 @@
+{
+  ArrayList<JMenuItem> correctionEntries=new ArrayList<JMenuItem>();
+synchronized (this.dict) {
+    if (!this.dict.isCorrect(clickedWord.getText())) {
+      List<String> corrections=this.dict.getSuggestions(clickedWord.getText());
+      for (      String correction : corrections) {
+        JMenuItem newEntry=new JMenuItem(correction);
+        newEntry.addActionListener(new CorrectionListener(clickedWord,correction));
+        correctionEntries.add(newEntry);
+      }
+      JMenuItem addWord=new JMenuItem("Add Word",ADD_WORD_ICON);
+      addWord.addActionListener(new ActionListener(){
+        public void actionPerformed(        ActionEvent event){
+          try {
+            dict.addWord(clickedWord.getText());
+            docListener.format(clickedWord);
+            chat.promptRepaint();
+          }
+ catch (          SpellDictionaryException exc) {
+            String msg="Unable to add word to personal dictionary";
+            logger.error(msg,exc);
+          }
+        }
+      }
+);
+      correctionEntries.add(addWord);
+    }
+  }
+  return correctionEntries;
+}
