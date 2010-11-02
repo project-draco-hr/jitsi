@@ -58,12 +58,9 @@ processed=true;
 break;
 default :
 int responseStatusCodeRange=responseStatusCode / 100;
-if (responseStatusCode == 500 && responseEvent.getClientTransaction().getRequest().getMethod().equals(Request.NOTIFY)) {
-byte raw[]=responseEvent.getClientTransaction().getRequest().getRawContent();
-String content=new String(raw);
-if (content.startsWith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" + "<remote-control>")) {
+Request request=responseEvent.getClientTransaction().getRequest();
+if (responseStatusCode == 500 && request.getMethod().equals(Request.NOTIFY) && isDesktopSharing(request)) {
 return true;
-}
 }
 if ((responseStatusCodeRange == 4) || (responseStatusCodeRange == 5) || (responseStatusCodeRange == 6)) {
 CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(clientTransaction.getDialog());
