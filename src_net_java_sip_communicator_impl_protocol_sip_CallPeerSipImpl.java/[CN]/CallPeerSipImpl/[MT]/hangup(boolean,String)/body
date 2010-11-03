@@ -1,0 +1,33 @@
+{
+  if (CallPeerState.DISCONNECTED.equals(getState()) || CallPeerState.FAILED.equals(getState())) {
+    if (logger.isDebugEnabled())     logger.debug("Ignoring a request to hangup a call peer " + "that is already DISCONNECTED");
+    return;
+  }
+  CallPeerState peerState=getState();
+  if (peerState.equals(CallPeerState.CONNECTED) || CallPeerState.isOnHold(peerState)) {
+    boolean dialogIsAlive=sayBye();
+    if (!dialogIsAlive) {
+      setDisconnectedState(failed,reason);
+    }
+  }
+ else   if (CallPeerState.CONNECTING.equals(getState()) || CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(getState()) || CallPeerState.ALERTING_REMOTE_SIDE.equals(getState())) {
+    if (getLatestInviteTransaction() != null) {
+      sayCancel();
+    }
+    setDisconnectedState(failed,reason);
+  }
+ else   if (peerState.equals(CallPeerState.INCOMING_CALL)) {
+    setDisconnectedState(failed,reason);
+    sayBusyHere();
+  }
+ else   if (peerState.equals(CallPeerState.BUSY)) {
+    setDisconnectedState(failed,reason);
+  }
+ else   if (peerState.equals(CallPeerState.FAILED)) {
+    setDisconnectedState(failed,reason);
+  }
+ else {
+    setDisconnectedState(failed,reason);
+    logger.error("Could not determine call peer state!");
+  }
+}

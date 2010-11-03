@@ -12,9 +12,14 @@
     return false;
   }
   Request request=timeoutEvent.getClientTransaction().getRequest();
-  if (request.getMethod().equals(Request.NOTIFY) && isDesktopSharing(request)) {
+  if (isRemoteControlNotification(request)) {
     return true;
   }
-  callPeer.setState(CallPeerState.FAILED,"The remote party has not replied!" + "The call will be disconnected");
+  try {
+    hangupCallPeer(callPeer,true,"The remote party has not replied!" + "The call will be disconnected");
+  }
+ catch (  Throwable e) {
+    callPeer.setState(CallPeerState.FAILED,"The remote party has not replied!" + "The call will be disconnected");
+  }
   return true;
 }
