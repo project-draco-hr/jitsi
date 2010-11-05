@@ -4,11 +4,10 @@
   final MessageDeliveredEvent msgDeliveryPendingEvt=messageDeliveryPendingTransform(new MessageDeliveredEvent(message,to));
   if (msgDeliveryPendingEvt == null)   return;
   MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(message,to);
-  if (msgDeliveredEvt != null)   fireMessageEvent(msgDeliveredEvt);
-  new Thread(){
-    @Override public void run(){
-      msnProvider.getMessenger().sendText(((ContactMsnImpl)to).getSourceContact().getEmail(),msgDeliveryPendingEvt.getSourceMessage().getContent());
-    }
+  fireMessageEvent(msgDeliveredEvt);
+  if (senderThread == null) {
+    senderThread=new SenderThread();
+    senderThread.start();
   }
-.start();
+  senderThread.sendMessage((ContactMsnImpl)to,msgDeliveryPendingEvt.getSourceMessage().getContent());
 }

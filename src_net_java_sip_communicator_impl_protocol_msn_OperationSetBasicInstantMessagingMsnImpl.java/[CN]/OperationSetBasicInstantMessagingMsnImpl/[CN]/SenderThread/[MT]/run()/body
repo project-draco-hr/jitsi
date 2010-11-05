@@ -1,0 +1,24 @@
+{
+  stopped=false;
+  while (!stopped) {
+    MessageToSend msgToSend=null;
+synchronized (this) {
+      if (messagesToSend.isEmpty()) {
+        try {
+          wait();
+        }
+ catch (        InterruptedException iex) {
+        }
+      }
+      if (!messagesToSend.isEmpty())       msgToSend=messagesToSend.remove(0);
+    }
+    if (msgToSend != null) {
+      try {
+        msnProvider.getMessenger().sendText(msgToSend.to.getSourceContact().getEmail(),msgToSend.content);
+      }
+ catch (      Throwable t) {
+        fireMessageDeliveryFailed(createMessage(msgToSend.content,DEFAULT_MIME_TYPE,DEFAULT_MIME_ENCODING,null),msgToSend.to,MessageDeliveryFailedEvent.UNKNOWN_ERROR);
+      }
+    }
+  }
+}
