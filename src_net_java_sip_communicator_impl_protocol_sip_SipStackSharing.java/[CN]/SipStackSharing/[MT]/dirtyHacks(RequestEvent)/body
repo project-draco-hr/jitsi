@@ -1,0 +1,21 @@
+{
+  Request request=event.getRequest();
+  try {
+    if (request.getHeader(MaxForwardsHeader.NAME) == null) {
+      if (Request.INVITE.equals(request.getMethod())) {
+        MaxForwardsHeader maxForwards=SipFactory.getInstance().createHeaderFactory().createMaxForwardsHeader(70);
+        request.setHeader(maxForwards);
+      }
+ else {
+        if (logger.isTraceEnabled())         logger.trace("Ignoring request without Max-Forwards header: " + event);
+        return;
+      }
+    }
+    if (request.getMethod().equals(Request.NOTIFY) && request.getHeader(EventHeader.NAME) != null && ((EventHeader)request.getHeader(EventHeader.NAME)).getEventType().equals(OperationSetMessageWaitingSipImpl.EVENT_PACKAGE) && request.getHeader(SubscriptionStateHeader.NAME) == null) {
+      request.addHeader(new HeaderFactoryImpl().createSubscriptionStateHeader(SubscriptionStateHeader.ACTIVE));
+    }
+  }
+ catch (  Throwable ex) {
+    logger.warn("Cannot apply incoming request modification!",ex);
+  }
+}

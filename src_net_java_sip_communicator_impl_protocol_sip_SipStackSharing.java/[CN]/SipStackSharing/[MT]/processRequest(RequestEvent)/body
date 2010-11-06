@@ -4,16 +4,7 @@
     if (logger.isTraceEnabled())     logger.trace("received request: " + request.getMethod());
     if (event.getServerTransaction() == null) {
       try {
-        if (request.getHeader(MaxForwardsHeader.NAME) == null) {
-          if (Request.INVITE.equals(request.getMethod())) {
-            MaxForwardsHeader maxForwards=SipFactory.getInstance().createHeaderFactory().createMaxForwardsHeader(70);
-            request.setHeader(maxForwards);
-          }
- else {
-            if (logger.isTraceEnabled())             logger.trace("Ignoring request without Max-Forwards header: " + event);
-            return;
-          }
-        }
+        dirtyHacks(event);
         SipProvider source=(SipProvider)event.getSource();
         ServerTransaction transaction=source.getNewServerTransaction(request);
         event=new RequestEvent(source,transaction,transaction.getDialog(),request);

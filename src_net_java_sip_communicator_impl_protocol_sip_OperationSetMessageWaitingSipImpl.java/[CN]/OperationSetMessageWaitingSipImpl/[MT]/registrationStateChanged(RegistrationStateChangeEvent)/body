@@ -1,0 +1,33 @@
+{
+  if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
+    messageWaitingSubscriber=new EventPackageSubscriber(provider,EVENT_PACKAGE,SUBSCRIPTION_DURATION,CONTENT_SUB_TYPE,timer,REFRESH_MARGIN){
+      /** 
+ * We may receive some message-waiting notifications
+ * out of dialog but we still want to process them, as
+ * the server is just not rfc compliant.
+ * This happens with asterisk when using qualify option
+ * for configured user(user is behind nat and we * ping it),
+ * as the sent packet pings delete our subscription dialog.
+ * @param callId the CallId associated with the
+ * <tt>Subscription</tt> to be retrieved
+ * @return the Subscription.
+ */
+      @Override protected Subscription getSubscription(      String callId){
+        Subscription resultSub=super.getSubscription(callId);
+        if (resultSub != null)         return resultSub;
+        return (Subscription)getSubscriptionByEventID(OperationSetMessageWaitingSipImpl.EVENT_PACKAGE);
+      }
+    }
+;
+    try {
+      Address subscribeAddress;
+      String vmAddressURI=(String)provider.getAccountID().getAccountProperty(ProtocolProviderFactory.VOICEMAIL_URI);
+      if (StringUtils.isNullOrEmpty(vmAddressURI))       subscribeAddress=provider.getRegistrarConnection().getAddressOfRecord();
+ else       subscribeAddress=provider.parseAddressString(vmAddressURI);
+      messageWaitingSubscriber.subscribe(new MessageSummarySubscriber(subscribeAddress));
+    }
+ catch (    Exception e) {
+      e.printStackTrace();
+    }
+  }
+}
