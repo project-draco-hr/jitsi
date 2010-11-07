@@ -15,12 +15,18 @@
       @Override protected Subscription getSubscription(      String callId){
         Subscription resultSub=super.getSubscription(callId);
         if (resultSub != null)         return resultSub;
-        return (Subscription)getSubscriptionByEventID(OperationSetMessageWaitingSipImpl.EVENT_PACKAGE);
+        Object[] subs=getSubscriptions();
+        for (        Object s : subs) {
+          if (s instanceof MessageSummarySubscriber) {
+            return (MessageSummarySubscriber)s;
+          }
+        }
+        return null;
       }
     }
 ;
     try {
-      Address subscribeAddress;
+      final Address subscribeAddress;
       String vmAddressURI=(String)provider.getAccountID().getAccountProperty(ProtocolProviderFactory.VOICEMAIL_URI);
       if (StringUtils.isNullOrEmpty(vmAddressURI))       subscribeAddress=provider.getRegistrarConnection().getAddressOfRecord();
  else       subscribeAddress=provider.parseAddressString(vmAddressURI);
