@@ -1,35 +1,3 @@
 {
-  if (logger.isInfoEnabled())   logger.info("creating outgoing call...");
-  if (protocolProvider.getConnection() == null || call == null) {
-    throw new OperationFailedException("Failed to create OutgoingJingleSession." + " We don't have a valid XMPPConnection.",OperationFailedException.INTERNAL_ERROR);
-  }
-  String fullCalleeURI=null;
-  if (calleeAddress.indexOf('/') > 0) {
-    fullCalleeURI=calleeAddress;
-  }
- else {
-    fullCalleeURI=protocolProvider.getConnection().getRoster().getPresence(calleeAddress).getFrom();
-  }
-  DiscoverInfo di=null;
-  try {
-    di=protocolProvider.getDiscoveryManager().discoverInfo(fullCalleeURI);
-    if (di.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE)) {
-      if (logger.isInfoEnabled())       logger.info(fullCalleeURI + ": jingle supported ");
-    }
- else {
-      if (logger.isInfoEnabled())       logger.info(calleeAddress + ": jingle not supported ??? ");
-      throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + fullCalleeURI + " does not support jingle",OperationFailedException.INTERNAL_ERROR);
-    }
-  }
- catch (  XMPPException ex) {
-    logger.warn("could not retrieve info for " + fullCalleeURI,ex);
-  }
-  try {
-    call.initiateSession(fullCalleeURI,di);
-  }
- catch (  Throwable t) {
-    if (t instanceof ThreadDeath)     throw (ThreadDeath)t;
-    throw new OperationFailedException("Failed to create a call",OperationFailedException.INTERNAL_ERROR,t);
-  }
-  return call;
+  return createOutgoingCall(call,calleeAddress,null);
 }

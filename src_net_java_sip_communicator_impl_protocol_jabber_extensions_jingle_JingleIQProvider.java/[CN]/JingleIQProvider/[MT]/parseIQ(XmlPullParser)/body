@@ -11,6 +11,7 @@
   boolean done=false;
   DefaultPacketExtensionProvider<ContentPacketExtension> contentProvider=new DefaultPacketExtensionProvider<ContentPacketExtension>(ContentPacketExtension.class);
   ReasonProvider reasonProvider=new ReasonProvider();
+  DefaultPacketExtensionProvider<TransferPacketExtension> transferProvider=new DefaultPacketExtensionProvider<TransferPacketExtension>(TransferPacketExtension.class);
   int eventType;
   String elementName;
   String namespace;
@@ -23,9 +24,12 @@
         ContentPacketExtension content=contentProvider.parseExtension(parser);
         jingleIQ.addContent(content);
       }
-      if (elementName.equals(ReasonPacketExtension.ELEMENT_NAME)) {
+ else       if (elementName.equals(ReasonPacketExtension.ELEMENT_NAME)) {
         ReasonPacketExtension reason=reasonProvider.parseExtension(parser);
         jingleIQ.setReason(reason);
+      }
+ else       if (elementName.equals(TransferPacketExtension.ELEMENT_NAME) && namespace.equals(TransferPacketExtension.NAMESPACE)) {
+        jingleIQ.addExtension(transferProvider.parseExtension(parser));
       }
       if (namespace.equals(SessionInfoPacketExtension.NAMESPACE)) {
         SessionInfoType type=SessionInfoType.valueOf(elementName);

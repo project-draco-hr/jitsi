@@ -1,6 +1,7 @@
 {
   CallPeerJabberImpl callPeer=activeCallsRepository.findCallPeer(jingleIQ.getSID());
-  if (jingleIQ.getType() == Type.ERROR) {
+  IQ.Type type=jingleIQ.getType();
+  if (type == Type.ERROR) {
     logger.error("Received error");
     XMPPError error=jingleIQ.getError();
     String message="Remote party returned an error!";
@@ -31,6 +32,19 @@
     SessionInfoPacketExtension info=jingleIQ.getSessionInfo();
     if (info != null) {
       callPeer.processSessionInfo(info);
+    }
+ else {
+      PacketExtension packetExtension=jingleIQ.getExtension(TransferPacketExtension.ELEMENT_NAME,TransferPacketExtension.NAMESPACE);
+      if (packetExtension instanceof TransferPacketExtension) {
+        TransferPacketExtension transfer=(TransferPacketExtension)packetExtension;
+        if (transfer.getFrom() == null)         transfer.setFrom(jingleIQ.getFrom());
+        try {
+          callPeer.processTransfer(transfer);
+        }
+ catch (        OperationFailedException ofe) {
+          logger.error("Failed to transfer to " + transfer.getTo(),ofe);
+        }
+      }
     }
   }
  else   if (action == JingleAction.CONTENT_ACCEPT) {

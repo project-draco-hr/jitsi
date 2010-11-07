@@ -1,11 +1,18 @@
 {
-  if (info.getType() == SessionInfoType.ringing)   setState(CallPeerState.ALERTING_REMOTE_SIDE);
-  if (info.getType() == SessionInfoType.hold) {
-    getMediaHandler().setRemotelyOnHold(true);
-    reevalRemoteHoldStatus();
-  }
- else   if (info.getType() == SessionInfoType.unhold || info.getType() == SessionInfoType.active) {
-    getMediaHandler().setRemotelyOnHold(false);
-    reevalRemoteHoldStatus();
-  }
+switch (info.getType()) {
+case ringing:
+    setState(CallPeerState.ALERTING_REMOTE_SIDE);
+  break;
+case hold:
+getMediaHandler().setRemotelyOnHold(true);
+reevalRemoteHoldStatus();
+break;
+case unhold:
+case active:
+getMediaHandler().setRemotelyOnHold(false);
+reevalRemoteHoldStatus();
+break;
+default :
+logger.warn("Received SessionInfoPacketExtension of unknown type");
+}
 }

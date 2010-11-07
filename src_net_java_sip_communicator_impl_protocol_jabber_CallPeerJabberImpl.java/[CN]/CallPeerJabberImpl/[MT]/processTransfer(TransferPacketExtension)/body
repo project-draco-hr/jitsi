@@ -1,0 +1,22 @@
+{
+  String attendantAddress=transfer.getFrom();
+  if (attendantAddress == null) {
+    throw new OperationFailedException("Session transfer must contain a \'from\' attribute value.",OperationFailedException.ILLEGAL_ARGUMENT);
+  }
+  String calleeAddress=transfer.getTo();
+  if (calleeAddress == null) {
+    throw new OperationFailedException("Session transfer must contain a \'to\' attribute value.",OperationFailedException.ILLEGAL_ARGUMENT);
+  }
+  putOnHold(true);
+  OperationSetBasicTelephonyJabberImpl basicTelephony=(OperationSetBasicTelephonyJabberImpl)getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
+  CallJabberImpl calleeCall=new CallJabberImpl(basicTelephony);
+  TransferPacketExtension calleeTransfer=new TransferPacketExtension();
+  String sid=transfer.getSID();
+  calleeTransfer.setFrom(attendantAddress);
+  if (sid != null) {
+    calleeTransfer.setSID(sid);
+    calleeTransfer.setTo(calleeAddress);
+  }
+  basicTelephony.createOutgoingCall(calleeCall,calleeAddress,Arrays.asList(new PacketExtension[]{calleeTransfer}));
+  hangup(((sid == null) ? "Unattended" : "Attended") + " transfer success",new TransferredPacketExtension());
+}
