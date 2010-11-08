@@ -1,5 +1,27 @@
 {
-  if (controllerEvent instanceof RealizeCompleteEvent) {
+  if (controllerEvent instanceof ConfigureCompleteEvent) {
+    Processor player=(Processor)controllerEvent.getSourceController();
+    TrackControl[] trackControls=player.getTrackControls();
+    if ((trackControls != null) && (trackControls.length != 0))     try {
+      for (      TrackControl trackControl : trackControls) {
+        VideoFlipEffect flipEffect=new VideoFlipEffect();
+        SwScaler scaler=new SwScaler();
+        trackControl.setCodecChain(new Codec[]{flipEffect,scaler});
+        break;
+      }
+    }
+ catch (    UnsupportedPlugInException upiex) {
+      logger.warn("Failed to add SwScaler/VideoFlipEffect to " + "codec chain",upiex);
+    }
+    try {
+      player.setContentDescriptor(null);
+    }
+ catch (    NotConfiguredError nce) {
+      logger.error("Failed to set ContentDescriptor of Processor",nce);
+    }
+    player.realize();
+  }
+ else   if (controllerEvent instanceof RealizeCompleteEvent) {
     Player player=(Player)controllerEvent.getSourceController();
     Component visualComponent=player.getVisualComponent();
     if (visualComponent != null) {
@@ -13,5 +35,6 @@
         player.close();
       }
     }
+    player.start();
   }
 }
