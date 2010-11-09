@@ -1,0 +1,51 @@
+{
+  Map<String,OperationSet> supportedOperationSets=protocolProvider.getSupportedOperationSets();
+  String ppOpSetClassName=OperationSetPersistentPresence.class.getName();
+  String pOpSetClassName=OperationSetPresence.class.getName();
+  if (supportedOperationSets.containsKey(ppOpSetClassName) || supportedOperationSets.containsKey(pOpSetClassName)) {
+    OperationSetPresence presence=(OperationSetPresence)supportedOperationSets.get(ppOpSetClassName);
+    if (presence == null) {
+      presence=(OperationSetPresence)supportedOperationSets.get(pOpSetClassName);
+    }
+    if (uiProviderPresenceListener != null)     presence.removeProviderPresenceStatusListener(uiProviderPresenceListener);
+    presence.removeContactPresenceStatusListener(GuiActivator.getContactList());
+  }
+  String imOpSetClassName=OperationSetBasicInstantMessaging.class.getName();
+  if (supportedOperationSets.containsKey(imOpSetClassName)) {
+    OperationSetBasicInstantMessaging im=(OperationSetBasicInstantMessaging)supportedOperationSets.get(imOpSetClassName);
+    im.removeMessageListener(getContactListPanel());
+  }
+  String tnOpSetClassName=OperationSetTypingNotifications.class.getName();
+  if (supportedOperationSets.containsKey(tnOpSetClassName)) {
+    OperationSetTypingNotifications tn=(OperationSetTypingNotifications)supportedOperationSets.get(tnOpSetClassName);
+    tn.removeTypingNotificationsListener(this.getContactListPanel());
+  }
+  String telOpSetClassName=OperationSetBasicTelephony.class.getName();
+  if (supportedOperationSets.containsKey(telOpSetClassName)) {
+    OperationSetBasicTelephony<?> telephony=(OperationSetBasicTelephony<?>)supportedOperationSets.get(telOpSetClassName);
+    if (uiCallListener != null)     telephony.removeCallListener(uiCallListener);
+  }
+  String multiChatClassName=OperationSetMultiUserChat.class.getName();
+  if (supportedOperationSets.containsKey(multiChatClassName)) {
+    OperationSetMultiUserChat multiUserChat=(OperationSetMultiUserChat)supportedOperationSets.get(multiChatClassName);
+    ConferenceChatManager conferenceManager=GuiActivator.getUIService().getConferenceChatManager();
+    multiUserChat.removeInvitationListener(conferenceManager);
+    multiUserChat.removeInvitationRejectionListener(conferenceManager);
+    multiUserChat.removePresenceListener(conferenceManager);
+  }
+  OperationSetAdHocMultiUserChat adHocMultiChatOpSet=protocolProvider.getOperationSet(OperationSetAdHocMultiUserChat.class);
+  if (adHocMultiChatOpSet != null) {
+    ConferenceChatManager conferenceManager=GuiActivator.getUIService().getConferenceChatManager();
+    adHocMultiChatOpSet.removeInvitationListener(conferenceManager);
+    adHocMultiChatOpSet.removeInvitationRejectionListener(conferenceManager);
+    adHocMultiChatOpSet.removePresenceListener(conferenceManager);
+  }
+  OperationSetFileTransfer fileTransferOpSet=protocolProvider.getOperationSet(OperationSetFileTransfer.class);
+  if (fileTransferOpSet != null) {
+    fileTransferOpSet.removeFileTransferListener(getContactListPanel());
+  }
+  OperationSetMessageWaiting messageWaiting=protocolProvider.getOperationSet(OperationSetMessageWaiting.class);
+  if (messageWaiting != null) {
+    messageWaiting.removeMessageWaitingNotificationListener(MessageType.VOICE,TreeContactList.getNotificationContactSource());
+  }
+}

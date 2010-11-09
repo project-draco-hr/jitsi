@@ -8,9 +8,17 @@
   NotificationManager.fireNotification(NotificationManager.INCOMING_CALL,"",GuiActivator.getResources().getI18NString("service.gui.INCOMING_CALL",new String[]{peerName}));
   sourceCall.addCallChangeListener(new CallChangeAdapter(){
     @Override public void callStateChanged(    CallChangeEvent evt){
-      if (evt.getNewValue().equals(CallState.CALL_ENDED) && evt.getOldValue().equals(CallState.CALL_INITIALIZATION)) {
-        if (evt.getCause() == null || (evt.getCause().getReasonCode() != CallPeerChangeEvent.NORMAL_CALL_CLEARING))         addMissedCall(new MissedCall(peerName,callDate));
-        evt.getSourceCall().removeCallChangeListener(this);
+      if (evt.getNewValue().equals(CallState.CALL_ENDED)) {
+        if (evt.getOldValue().equals(CallState.CALL_INITIALIZATION)) {
+          if (evt.getCause() == null || (evt.getCause().getReasonCode() != CallPeerChangeEvent.NORMAL_CALL_CLEARING)) {
+            addMissedCallNotification(peerName,callDate);
+          }
+          evt.getSourceCall().removeCallChangeListener(this);
+        }
+        TreeContactList contactList=GuiActivator.getContactList();
+        if (contactList.getCurrentFilter().equals(TreeContactList.historyFilter)) {
+          contactList.applyFilter(TreeContactList.historyFilter);
+        }
       }
     }
   }

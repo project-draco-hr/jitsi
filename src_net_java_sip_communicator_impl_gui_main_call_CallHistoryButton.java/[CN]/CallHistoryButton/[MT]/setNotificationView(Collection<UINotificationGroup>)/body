@@ -1,0 +1,23 @@
+{
+  int notificationCount=0;
+  isNotificationsView=true;
+  this.setBgImage(null);
+  Iterator<UINotificationGroup> groupsIter=notificationGroups.iterator();
+  String tooltipText="<html>";
+  while (groupsIter.hasNext()) {
+    UINotificationGroup group=groupsIter.next();
+    tooltipText+="<b>" + group.getGroupDisplayName() + "</b><br/>";
+    notificationCount+=group.getUnreadNotificationsCount();
+    int visibleNotifsPerGroup=5;
+    Iterator<UINotification> notifsIter=group.getUnreadNotifications();
+    while (notifsIter.hasNext() && visibleNotifsPerGroup > 0) {
+      UINotification missedCall=notifsIter.next();
+      tooltipText+=GuiUtils.formatTime(missedCall.getTime()) + "   " + missedCall.getDisplayName()+ "<br/>";
+      visibleNotifsPerGroup--;
+      if (visibleNotifsPerGroup == 0 && notifsIter.hasNext())       tooltipText+=GuiActivator.getResources().getI18NString("service.gui.MISSED_CALLS_MORE_TOOL_TIP",new String[]{new Integer(notificationCount - 5).toString()});
+    }
+  }
+  this.setToolTipText(tooltipText + "</html>");
+  this.setBackground(new Color(200,0,0));
+  this.setText(new Integer(notificationCount).toString());
+}

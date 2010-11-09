@@ -7,7 +7,8 @@
     if (presence == null) {
       presence=(OperationSetPresence)supportedOperationSets.get(pOpSetClassName);
     }
-    presence.addProviderPresenceStatusListener(new GUIProviderPresenceStatusListener());
+    uiProviderPresenceListener=new GUIProviderPresenceStatusListener();
+    presence.addProviderPresenceStatusListener(uiProviderPresenceListener);
     presence.addContactPresenceStatusListener(GuiActivator.getContactList());
   }
   String imOpSetClassName=OperationSetBasicInstantMessaging.class.getName();
@@ -23,7 +24,8 @@
   String telOpSetClassName=OperationSetBasicTelephony.class.getName();
   if (supportedOperationSets.containsKey(telOpSetClassName)) {
     OperationSetBasicTelephony<?> telephony=(OperationSetBasicTelephony<?>)supportedOperationSets.get(telOpSetClassName);
-    telephony.addCallListener(new CallManager.GuiCallListener());
+    uiCallListener=new CallManager.GuiCallListener();
+    telephony.addCallListener(uiCallListener);
   }
   String multiChatClassName=OperationSetMultiUserChat.class.getName();
   if (supportedOperationSets.containsKey(multiChatClassName)) {
@@ -43,5 +45,9 @@
   OperationSetFileTransfer fileTransferOpSet=protocolProvider.getOperationSet(OperationSetFileTransfer.class);
   if (fileTransferOpSet != null) {
     fileTransferOpSet.addFileTransferListener(getContactListPanel());
+  }
+  OperationSetMessageWaiting messageWaiting=protocolProvider.getOperationSet(OperationSetMessageWaiting.class);
+  if (messageWaiting != null) {
+    messageWaiting.addMessageWaitingNotificationListener(MessageType.VOICE,TreeContactList.getNotificationContactSource());
   }
 }
