@@ -1,15 +1,18 @@
 {
   super(new BorderLayout(10,10));
   this.regform=regform;
+  this.regform.addValidatingPanel(this);
   enableDefaultEncryption=new SIPCommCheckBox(Resources.getString("plugin.sipaccregwizz.ENABLE_DEFAULT_ENCRYPTION"),regform.getRegistration().isDefaultEncryption());
   enableSipZrtpAttribute=new SIPCommCheckBox(Resources.getString("plugin.sipaccregwizz.ENABLE_SIPZRTP_ATTRIBUTE"),regform.getRegistration().isSipZrtpAttribute());
   proxyAutoCheckBox=new SIPCommCheckBox(Resources.getString("plugin.sipaccregwizz.PROXY_AUTO"),regform.getRegistration().isProxyAutoConfigure());
+  enablesProxyAutoConfigure(proxyAutoCheckBox.isSelected());
   proxyAutoCheckBox.addActionListener(new ActionListener(){
     /** 
  * Invoked when an action occurs.
  */
     public void actionPerformed(    ActionEvent e){
       enablesProxyAutoConfigure(proxyAutoCheckBox.isSelected());
+      ConnectionPanel.this.regform.reValidateInput();
     }
   }
 );
@@ -41,6 +44,8 @@
   JLabel proxyPortLabel=new JLabel(Resources.getString("service.gui.PORT"));
   JLabel transportLabel=new JLabel(Resources.getString("plugin.sipaccregwizz.PREFERRED_TRANSPORT"));
   JPanel proxyMainPanel=new TransparentPanel(new BorderLayout(10,10));
+  proxyField.getDocument().addDocumentListener(this);
+  proxyPortField.getDocument().addDocumentListener(this);
   JPanel proxyPanel=new TransparentPanel(new BorderLayout(5,5));
   proxyPanel.add(proxyField,BorderLayout.CENTER);
   JPanel proxyPortPanel=new TransparentPanel(new BorderLayout(5,5));
