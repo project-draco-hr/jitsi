@@ -11,7 +11,7 @@
     long deviceInfo=PortAudio.Pa_GetDeviceInfo(deviceIndex);
     int maxInputChannels=PortAudio.PaDeviceInfo_getMaxInputChannels(deviceInfo);
     int maxOutputChannels=PortAudio.PaDeviceInfo_getMaxOutputChannels(deviceInfo);
-    String devName=PortAudio.PaDeviceInfo_getCharsetAwareName(deviceInfo);
+    String devName=PortAudio.PaDeviceInfo_getName(deviceInfo);
     if (devName != null)     devName=devName.trim();
     CaptureDeviceInfo jmfInfo=new CaptureDeviceInfo(devName,new MediaLocator(LOCATOR_PROTOCOL + ":#" + deviceIndex),new Format[]{new AudioFormat(AudioFormat.LINEAR,(maxInputChannels > 0) ? getSupportedSampleRate(true,deviceIndex,channels,sampleFormat) : PortAudio.DEFAULT_SAMPLE_RATE,sampleSizeInBits,channels,AudioFormat.LITTLE_ENDIAN,AudioFormat.SIGNED,Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,Format.byteArray)});
     if (maxInputChannels > 0)     CaptureDeviceManager.addDevice(jmfInfo);
@@ -22,22 +22,5 @@
   playbackDevices=playbackDevVector.toArray(new CaptureDeviceInfo[0]);
   CaptureDeviceManager.commit();
   DeviceConfiguration.addAudioSystem(DeviceConfiguration.AUDIO_SYSTEM_PORTAUDIO);
-  try {
-    ConfigurationService config=NeomediaActivator.getConfigurationService();
-    boolean echoCancelEnabled=config.getBoolean(DeviceConfiguration.PROP_AUDIO_ECHOCANCEL_ENABLED,PortAudioManager.isEnabledEchoCancel());
-    long echoCancelFilterLengthInMillis=PortAudioManager.getFilterLengthInMillis();
-    if (echoCancelEnabled) {
-      echoCancelFilterLengthInMillis=config.getLong(DeviceConfiguration.PROP_AUDIO_ECHOCANCEL_FILTER_LENGTH_IN_MILLIS,echoCancelFilterLengthInMillis);
-    }
-    PortAudioManager.setEchoCancel(echoCancelEnabled,echoCancelFilterLengthInMillis);
-    boolean denoiseEnabled=config.getBoolean(DeviceConfiguration.PROP_AUDIO_DENOISE_ENABLED,PortAudioManager.isEnabledDeNoise());
-    PortAudioManager.setDeNoise(denoiseEnabled);
-    int defaultAudioLatency=(int)(PortAudioManager.getSuggestedLatency() * 1000);
-    int audioLatency=config.getInt(DeviceConfiguration.PROP_AUDIO_LATENCY,defaultAudioLatency);
-    if (audioLatency != defaultAudioLatency)     PortAudioManager.setSuggestedLatency((double)audioLatency / 1000d);
-  }
- catch (  Exception ex) {
-    logger.error("Error parsing audio config",ex);
-  }
   supported=true;
 }

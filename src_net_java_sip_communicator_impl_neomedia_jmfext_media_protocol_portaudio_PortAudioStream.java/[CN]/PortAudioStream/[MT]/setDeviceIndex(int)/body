@@ -28,7 +28,7 @@
     double sampleRate=format.getSampleRate();
     int framesPerBuffer=(int)((sampleRate * PortAudio.DEFAULT_MILLIS_PER_BUFFER) / (channels * 1000));
     try {
-      inputParameters=PortAudio.PaStreamParameters_new(this.deviceIndex,channels,sampleFormat,PortAudioManager.getSuggestedLatency());
+      inputParameters=PortAudio.PaStreamParameters_new(this.deviceIndex,channels,sampleFormat,PortAudio.getSuggestedLatency());
       stream=PortAudio.Pa_OpenStream(inputParameters,0,sampleRate,PortAudio.FRAMES_PER_BUFFER_UNSPECIFIED,PortAudio.STREAM_FLAGS_CLIP_OFF | PortAudio.STREAM_FLAGS_DITHER_OFF,null);
     }
  catch (    PortAudioException paex) {
@@ -47,7 +47,8 @@
     this.framesPerBuffer=framesPerBuffer;
     bytesPerBuffer=PortAudio.Pa_GetSampleSize(sampleFormat) * channels * framesPerBuffer;
     this.format=new AudioFormat(AudioFormat.LINEAR,sampleRate,sampleSizeInBits,channels,AudioFormat.LITTLE_ENDIAN,AudioFormat.SIGNED,Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,Format.byteArray);
-    PortAudio.setDenoise(stream,audioQualityImprovement && PortAudioManager.isEnabledDeNoise());
-    PortAudio.setEchoFilterLengthInMillis(stream,(audioQualityImprovement && PortAudioManager.isEnabledEchoCancel()) ? PortAudioManager.getFilterLengthInMillis() : 0);
+    DeviceConfiguration deviceConfig=NeomediaActivator.getMediaServiceImpl().getDeviceConfiguration();
+    PortAudio.setDenoise(stream,audioQualityImprovement && deviceConfig.isDenoise());
+    PortAudio.setEchoFilterLengthInMillis(stream,(audioQualityImprovement && deviceConfig.isEchoCancel()) ? deviceConfig.getEchoCancelFilterLengthInMillis() : 0);
   }
 }
