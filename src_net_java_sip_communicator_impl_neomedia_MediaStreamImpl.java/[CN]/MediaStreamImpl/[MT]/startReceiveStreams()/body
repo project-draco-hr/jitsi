@@ -1,6 +1,6 @@
 {
   RTPManager rtpManager=getRTPManager();
-  Iterable<ReceiveStream> receiveStreams;
+  List<ReceiveStream> receiveStreams;
   try {
     receiveStreams=rtpManager.getReceiveStreams();
   }
@@ -9,13 +9,26 @@
     receiveStreams=null;
   }
   if (receiveStreams != null) {
-    for (    ReceiveStream receiveStream : receiveStreams) {
-      try {
-        DataSource receiveStreamDataSource=receiveStream.getDataSource();
-        if (receiveStreamDataSource != null)         receiveStreamDataSource.start();
+    if (receiveStreams.size() == 0) {
+      if (receiveStream != null) {
+        try {
+          DataSource receiveStreamDataSource=receiveStream.getDataSource();
+          if (receiveStreamDataSource != null)           receiveStreamDataSource.start();
+        }
+ catch (        IOException ioex) {
+          logger.warn("Failed to start stream " + receiveStream,ioex);
+        }
       }
- catch (      IOException ioex) {
-        logger.warn("Failed to start stream " + receiveStream,ioex);
+    }
+ else {
+      for (      ReceiveStream receiveStream : receiveStreams) {
+        try {
+          DataSource receiveStreamDataSource=receiveStream.getDataSource();
+          if (receiveStreamDataSource != null)           receiveStreamDataSource.start();
+        }
+ catch (        IOException ioex) {
+          logger.warn("Failed to start stream " + receiveStream,ioex);
+        }
       }
     }
   }

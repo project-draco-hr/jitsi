@@ -1,5 +1,5 @@
 {
-  Iterable<ReceiveStream> receiveStreams;
+  List<ReceiveStream> receiveStreams;
   try {
     receiveStreams=rtpManager.getReceiveStreams();
   }
@@ -8,13 +8,26 @@
     receiveStreams=null;
   }
   if (receiveStreams != null) {
-    for (    ReceiveStream receiveStream : receiveStreams) {
-      try {
-        DataSource receiveStreamDataSource=receiveStream.getDataSource();
-        if (receiveStreamDataSource != null)         receiveStreamDataSource.stop();
+    if (receiveStreams.size() == 0) {
+      if (receiveStream != null) {
+        try {
+          DataSource receiveStreamDataSource=receiveStream.getDataSource();
+          if (receiveStreamDataSource != null)           receiveStreamDataSource.stop();
+        }
+ catch (        IOException ioex) {
+          logger.warn("Failed to stop stream " + receiveStream,ioex);
+        }
       }
- catch (      IOException ioex) {
-        logger.warn("Failed to stop stream " + receiveStream,ioex);
+    }
+ else {
+      for (      ReceiveStream receiveStream : receiveStreams) {
+        try {
+          DataSource receiveStreamDataSource=receiveStream.getDataSource();
+          if (receiveStreamDataSource != null)           receiveStreamDataSource.stop();
+        }
+ catch (        IOException ioex) {
+          logger.warn("Failed to stop stream " + receiveStream,ioex);
+        }
       }
     }
   }
