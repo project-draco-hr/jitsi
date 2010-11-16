@@ -42,13 +42,17 @@ synchronized (initializationLock) {
         throw new OperationFailedException("Missing Proxy Address",OperationFailedException.INVALID_ACCOUNT_PROPERTIES);
       }
       AimConnectionProperties connProps=new AimConnectionProperties(new Screenname(getAccountID().getUserID()),password);
-      connProps.setLoginHost("login.icq.com");
+      if (USING_ICQ)       connProps.setLoginHost(ICQ_DEFAULT_LOGIN_SERVER);
+ else       connProps.setLoginHost(AIM_DEFAULT_LOGIN_SERVER);
       connProps.setLoginPort(443);
       aimConnection=aimSession.openConnection(connProps);
       aimConnection.setProxy(AimProxyInfo.forHttp(globalProxyAddress,proxyPort,globalProxyUsername,globalProxyPassword));
     }
  else {
-      aimConnection=aimSession.openConnection(new AimConnectionProperties(new Screenname(getAccountID().getUserID()),password));
+      AimConnectionProperties connProps=new AimConnectionProperties(new Screenname(getAccountID().getUserID()),password);
+      if (USING_ICQ)       connProps.setLoginHost(ICQ_DEFAULT_LOGIN_SERVER);
+ else       connProps.setLoginHost(AIM_DEFAULT_LOGIN_SERVER);
+      aimConnection=aimSession.openConnection(connProps);
     }
     aimConnStateListener=new AimConnStateListener();
     aimConnection.addStateListener(aimConnStateListener);
