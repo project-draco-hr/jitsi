@@ -1,6 +1,6 @@
 {
   Call sourceCall=event.getSourceCall();
-  ReceivedCallDialog receivedCallDialog=new ReceivedCallDialog(sourceCall);
+  final ReceivedCallDialog receivedCallDialog=new ReceivedCallDialog(sourceCall);
   receivedCallDialog.pack();
   receivedCallDialog.setVisible(true);
   final String peerName=sourceCall.getCallPeers().next().getDisplayName();
@@ -8,6 +8,7 @@
   NotificationManager.fireNotification(NotificationManager.INCOMING_CALL,"",GuiActivator.getResources().getI18NString("service.gui.INCOMING_CALL",new String[]{peerName}));
   sourceCall.addCallChangeListener(new CallChangeAdapter(){
     @Override public void callStateChanged(    CallChangeEvent evt){
+      if (receivedCallDialog.isVisible())       receivedCallDialog.setVisible(false);
       if (evt.getNewValue().equals(CallState.CALL_ENDED)) {
         if (evt.getOldValue().equals(CallState.CALL_INITIALIZATION)) {
           if (evt.getCause() == null || (evt.getCause().getReasonCode() != CallPeerChangeEvent.NORMAL_CALL_CLEARING)) {
