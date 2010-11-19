@@ -11,13 +11,13 @@
     devDirection=devDirection.and(getDirectionUserPreference(mediaType));
     MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
     MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
-    List<MediaFormat> mutuallySupportedFormats=intersectFormats(remoteFormats,dev.getSupportedFormats());
+    List<MediaFormat> mutuallySupportedFormats=(dev == null) ? null : intersectFormats(remoteFormats,dev.getSupportedFormats());
     List<RTPExtension> offeredRTPExtensions=SdpUtils.extractRTPExtensions(mediaDescription,this.getRtpExtensionsRegistry());
     List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
     List<RTPExtension> rtpExtensions=intersectRTPExtensions(offeredRTPExtensions,supportedExtensions);
     MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,offer);
     int targetDataPort=target.getDataAddress().getPort();
-    if (mutuallySupportedFormats.isEmpty() || (devDirection == MediaDirection.INACTIVE) || (targetDataPort == 0)) {
+    if ((mutuallySupportedFormats == null) || mutuallySupportedFormats.isEmpty() || (devDirection == MediaDirection.INACTIVE)|| (targetDataPort == 0)) {
       answerDescriptions.add(SdpUtils.createDisablingAnswer(mediaDescription));
       closeStream(mediaType);
       continue;
