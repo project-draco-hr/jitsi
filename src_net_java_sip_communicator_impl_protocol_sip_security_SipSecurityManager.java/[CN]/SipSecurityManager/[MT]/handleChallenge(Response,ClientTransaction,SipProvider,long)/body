@@ -13,6 +13,7 @@
     CredentialsCacheEntry ccEntry=cachedCredentials.remove(realm);
     boolean ccEntryHasSeenTran=false;
     if (ccEntry != null)     ccEntryHasSeenTran=ccEntry.popBranchID(branchID);
+    long authenticationDuration=System.currentTimeMillis();
     String storedPassword=SipActivator.getProtocolProviderFactory().loadPassword(accountID);
     if (ccEntry == null) {
       if (storedPassword != null) {
@@ -38,8 +39,9 @@
     if (ccEntry.userCredentials == null) {
       throw new OperationFailedException("Unable to authenticate with realm " + realm + ". User did not provide credentials.",OperationFailedException.AUTHENTICATION_FAILED);
     }
+    boolean authDurTooLong=(System.currentTimeMillis() - authenticationDuration) > 25 * 1000;
     AuthorizationHeader authorization=this.createAuthorizationHeader(reoriginatedRequest.getMethod(),reoriginatedRequest.getRequestURI().toString(),(reoriginatedRequest.getContent() == null) ? "" : reoriginatedRequest.getContent().toString(),authHeader,ccEntry.userCredentials);
-    ccEntry.pushBranchID(retryTran.getBranchId());
+    if (!authDurTooLong)     ccEntry.pushBranchID(retryTran.getBranchId());
     cachedCredentials.cacheEntry(realm,ccEntry);
     if (logger.isDebugEnabled())     logger.debug("Created authorization header: " + authorization.toString());
     CallIdHeader call=(CallIdHeader)reoriginatedRequest.getHeader(CallIdHeader.NAME);
