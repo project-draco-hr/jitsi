@@ -12,16 +12,16 @@
     MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
     MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
     List<MediaFormat> mutuallySupportedFormats=(dev == null) ? null : intersectFormats(remoteFormats,dev.getSupportedFormats());
-    List<RTPExtension> offeredRTPExtensions=SdpUtils.extractRTPExtensions(mediaDescription,this.getRtpExtensionsRegistry());
-    List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
-    List<RTPExtension> rtpExtensions=intersectRTPExtensions(offeredRTPExtensions,supportedExtensions);
     MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,offer);
     int targetDataPort=target.getDataAddress().getPort();
-    if ((mutuallySupportedFormats == null) || mutuallySupportedFormats.isEmpty() || (devDirection == MediaDirection.INACTIVE)|| (targetDataPort == 0)) {
+    if ((devDirection == MediaDirection.INACTIVE) || (mutuallySupportedFormats == null) || mutuallySupportedFormats.isEmpty()|| (targetDataPort == 0)) {
       answerDescriptions.add(SdpUtils.createDisablingAnswer(mediaDescription));
       closeStream(mediaType);
       continue;
     }
+    List<RTPExtension> offeredRTPExtensions=SdpUtils.extractRTPExtensions(mediaDescription,this.getRtpExtensionsRegistry());
+    List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
+    List<RTPExtension> rtpExtensions=intersectRTPExtensions(offeredRTPExtensions,supportedExtensions);
     StreamConnector connector=getTransportManager().getStreamConnector(mediaType);
     MediaFormat fmt=findMediaFormat(remoteFormats,mutuallySupportedFormats.get(0));
     initStream(connector,dev,fmt,target,direction,rtpExtensions);
