@@ -20,9 +20,12 @@ synchronized (redemptionLock) {
   resolution.sendBackupQueries();
   resolution.waitForResponse(0);
 synchronized (redemptionLock) {
-    if (resolution.primaryResolverRespondedFirst && redemptionStatus > 0) {
+    if (!resolution.primaryResolverRespondedFirst) {
+      redemptionStatus=currentDnsRedemption;
+    }
+ else {
       redemptionStatus--;
-      if (redemptionStatus == 0) {
+      if (redemptionStatus <= 0) {
         redundantMode=false;
         logger.info("Primary DNS seems back in biz. " + "Disabling redundant mode.");
       }
