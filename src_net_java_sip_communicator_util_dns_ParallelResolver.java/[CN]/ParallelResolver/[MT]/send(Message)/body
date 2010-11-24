@@ -12,7 +12,8 @@ synchronized (redemptionLock) {
  else {
 synchronized (redemptionLock) {
         redundantMode=true;
-        redemptionStatus=DNS_REDEMPTION;
+        redemptionStatus=currentDnsRedemption;
+        logger.info("Primary DNS seems laggy as we got no " + "response for " + currentDnsPatience + "ms. "+ "Enabling redundant mode.");
       }
     }
   }
@@ -21,7 +22,10 @@ synchronized (redemptionLock) {
 synchronized (redemptionLock) {
     if (resolution.primaryResolverRespondedFirst && redemptionStatus > 0) {
       redemptionStatus--;
-      if (currentDnsPatience == 0)       redundantMode=false;
+      if (redemptionStatus == 0) {
+        redundantMode=false;
+        logger.info("Primary DNS seems back in biz. " + "Disabling redundant mode.");
+      }
     }
   }
   return resolution.returnResponseOrThrowUp();
