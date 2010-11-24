@@ -1,0 +1,27 @@
+{
+  Lookup lookup=new Lookup(domain,Type.SRV);
+  if (parallelResolver == null) {
+    try {
+      String customRslvrAddr=System.getProperty(PNAME_BACKUP_RESOLVER);
+      String rslvrAddrStr=DEFAULT_BACKUP_RESOLVER;
+      if (!StringUtils.isNullOrEmpty(customRslvrAddr))       rslvrAddrStr=customRslvrAddr;
+      InetAddress resolverAddress=getInetAddress(rslvrAddrStr);
+      int rslvrPort=SimpleResolver.DEFAULT_PORT;
+      try {
+        rslvrPort=Integer.getInteger(PNAME_BACKUP_RESOLVER_PORT);
+      }
+ catch (      Throwable t) {
+        logger.info("Ignoring invalid resolver port.");
+      }
+      InetSocketAddress resolverSockAddr=new InetSocketAddress(resolverAddress,rslvrPort);
+      parallelResolver=new ParallelResolver(new InetSocketAddress[]{resolverSockAddr});
+    }
+ catch (    Throwable t) {
+      logger.info("failed to initialize parallel resolver. we will " + "be using dnsjava's default one instead");
+      if (logger.isDebugEnabled())       logger.debug("exception was: ",t);
+      parallelResolver=Lookup.getDefaultResolver();
+    }
+  }
+  lookup.setResolver(parallelResolver);
+  return lookup;
+}

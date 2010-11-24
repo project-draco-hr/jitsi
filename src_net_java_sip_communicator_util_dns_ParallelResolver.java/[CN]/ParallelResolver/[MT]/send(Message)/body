@@ -1,5 +1,28 @@
 {
   ParallelResolution resolution=new ParallelResolution(query);
   resolution.sendFirstQuery();
-  return null;
+  boolean redundantModeCopy;
+synchronized (redemptionLock) {
+    redundantModeCopy=redundantMode;
+  }
+  if (!redundantModeCopy) {
+    if (resolution.waitForResponse(currentDnsPatience)) {
+      return resolution.returnResponseOrThrowUp();
+    }
+ else {
+synchronized (redemptionLock) {
+        redundantMode=true;
+        redemptionStatus=DNS_REDEMPTION;
+      }
+    }
+  }
+  resolution.sendBackupQueries();
+  resolution.waitForResponse(0);
+synchronized (redemptionLock) {
+    if (resolution.primaryResolverRespondedFirst && redemptionStatus > 0) {
+      redemptionStatus--;
+      if (currentDnsPatience == 0)       redundantMode=false;
+    }
+  }
+  return resolution.returnResponseOrThrowUp();
 }
