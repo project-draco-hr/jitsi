@@ -1,0 +1,15 @@
+{
+  String sourceUserID=org.jivesoftware.smack.util.StringUtils.parseBareAddress(source);
+  Contact sourceContact=opSetPersPresence.findContactByID(sourceUserID);
+  if (sourceContact == null)   sourceContact=opSetPersPresence.createVolatileContact(sourceUserID);
+  GenericEvent event=new GenericEvent(jabberProvider,from,eventName,eventValue,sourceContact);
+  Iterable<GenericEventListener> listeners;
+synchronized (genericEventListeners) {
+    List<GenericEventListener> ls=genericEventListeners.get(eventName);
+    if (ls == null)     return;
+    listeners=new ArrayList<GenericEventListener>(ls);
+  }
+  for (  GenericEventListener listener : listeners) {
+    listener.notify(event);
+  }
+}
