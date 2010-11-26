@@ -2,6 +2,7 @@
   CallPeerJabberImpl peer=getCallPeer();
   ProtocolProviderServiceJabberImpl provider=peer.getProtocolProvider();
   NetworkAddressManagerService namSer=getNetAddrMgr();
+  boolean atLeastOneStunServer=false;
   Agent agent=namSer.createIceAgent();
   agent.setControlling(!peer.isInitiator());
   JabberAccountID accID=(JabberAccountID)provider.getAccountID();
@@ -10,7 +11,10 @@
     String password=JabberActivator.getProtocolProviderFactory().loadPassword(accID);
     StunCandidateHarvester autoHarvester=namSer.discoverStunServer(accID.getService(),StringUtils.getUTF8Bytes(username),StringUtils.getUTF8Bytes(password));
     if (logger.isInfoEnabled())     logger.info("Auto discovered harvester is " + autoHarvester);
-    if (autoHarvester != null)     agent.addCandidateHarvester(autoHarvester);
+    if (autoHarvester != null) {
+      atLeastOneStunServer=true;
+      agent.addCandidateHarvester(autoHarvester);
+    }
   }
   for (  StunServerDescriptor desc : accID.getStunServers()) {
     TransportAddress addr=new TransportAddress(desc.getAddress(),desc.getPort(),Transport.UDP);
@@ -22,7 +26,17 @@
       harvester=new StunCandidateHarvester(addr);
     }
     if (logger.isInfoEnabled())     logger.info("Adding pre-configured harvester " + harvester);
+    atLeastOneStunServer=true;
     agent.addCandidateHarvester(harvester);
+  }
+  if (!atLeastOneStunServer) {
+    if (accID.isUseDefaultStunServer()) {
+      TransportAddress addr=new TransportAddress(DEFAULT_STUN_SERVER_ADDRESS,DEFAULT_STUN_SERVER_PORT,Transport.UDP);
+      StunCandidateHarvester harvester=new StunCandidateHarvester(addr);
+      if (harvester != null) {
+        agent.addCandidateHarvester(harvester);
+      }
+    }
   }
   return agent;
 }
