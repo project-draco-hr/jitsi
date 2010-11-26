@@ -5,7 +5,10 @@
     ProtocolProviderService contactProvider=defaultContact.getProtocolProvider();
     OperationSetContactCapabilities capOpSet=contactProvider.getOperationSet(OperationSetContactCapabilities.class);
     if (capOpSet != null) {
-      if (capOpSet.getOperationSet(defaultContact,operationSet) != null)       defaultOpSetContact=defaultContact;
+      List<Contact> capContacts=capabilities.get(operationSet.getName());
+      if (capContacts != null && capContacts.contains(defaultContact)) {
+        defaultOpSetContact=defaultContact;
+      }
     }
  else     if (contactProvider.getOperationSet(operationSet) != null)     defaultOpSetContact=defaultContact;
   }
@@ -15,7 +18,10 @@
       ProtocolProviderService contactProvider=protoContact.getProtocolProvider();
       OperationSetContactCapabilities capOpSet=contactProvider.getOperationSet(OperationSetContactCapabilities.class);
       if (capOpSet != null) {
-        if (capOpSet.getOperationSet(defaultContact,operationSet) == null)         continue;
+        List<Contact> capContacts=capabilities.get(operationSet.getName());
+        if (capContacts == null || !capContacts.contains(defaultContact)) {
+          continue;
+        }
       }
  else       if (contactProvider.getOperationSet(operationSet) == null)       continue;
       PresenceStatus contactStatus=protoContact.getPresenceStatus();

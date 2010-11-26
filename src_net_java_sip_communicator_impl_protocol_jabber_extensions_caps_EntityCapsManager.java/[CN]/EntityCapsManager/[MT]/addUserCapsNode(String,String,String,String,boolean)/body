@@ -1,0 +1,18 @@
+{
+  if ((user != null) && (node != null) && (hash != null)&& (ver != null)) {
+    Caps caps=userCaps.get(user);
+    if ((caps == null) || !caps.node.equals(node) || !caps.hash.equals(hash)|| !caps.ver.equals(ver)) {
+      caps=new Caps(node,hash,ver);
+      userCaps.put(user,caps);
+    }
+ else     return;
+    UserCapsNodeListener[] listeners;
+synchronized (userCapsNodeListeners) {
+      listeners=userCapsNodeListeners.toArray(NO_USER_CAPS_NODE_LISTENERS);
+    }
+    if (listeners.length != 0) {
+      String nodeVer=caps.getNodeVer();
+      for (      UserCapsNodeListener listener : listeners)       listener.userCapsNodeAdded(user,nodeVer,online);
+    }
+  }
+}

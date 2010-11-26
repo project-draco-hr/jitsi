@@ -1,7 +1,15 @@
 {
   LinkedList<Contact> opSetContacts=new LinkedList<Contact>();
   for (  Contact contact : protoContacts) {
-    if (contact.getProtocolProvider().getOperationSet(opSetClass) != null)     opSetContacts.add(contact);
+    ProtocolProviderService contactProvider=contact.getProtocolProvider();
+    OperationSetContactCapabilities capOpSet=contactProvider.getOperationSet(OperationSetContactCapabilities.class);
+    if (capOpSet != null) {
+      List<Contact> capContacts=capabilities.get(opSetClass.getName());
+      if (capContacts != null && capContacts.contains(contact)) {
+        opSetContacts.add(contact);
+      }
+    }
+ else     if (contactProvider.getOperationSet(opSetClass) != null)     opSetContacts.add(contact);
   }
   return opSetContacts;
 }
