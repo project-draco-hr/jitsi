@@ -19,27 +19,6 @@
         }
         ((HttpsURLConnection)uc).setSSLSocketFactory(vs.getSSLContext(u.getHost(),port).getSocketFactory());
       }
-      int responseCode=((HttpURLConnection)uc).getResponseCode();
-      if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
-        new Thread(new Runnable(){
-          public void run(){
-            ExportedWindow authWindow=getUIService().getExportedWindow(ExportedWindow.AUTHENTICATION_WINDOW);
-            UserCredentials cred=new UserCredentials();
-            authWindow.setParams(new Object[]{cred});
-            authWindow.setVisible(true);
-            userCredentials=cred;
-            if (cred.getUserName() == null) {
-              userCredentials=null;
-            }
- else             windowsUpdate();
-          }
-        }
-).start();
-      }
- else       if (responseCode == HttpURLConnection.HTTP_OK && userCredentials != null && userCredentials.getUserName() != null && userCredentials.isPasswordPersistent()) {
-        getConfigurationService().setProperty(UPDATE_USERNAME_CONFIG,userCredentials.getUserName());
-        getConfigurationService().setProperty(UPDATE_PASSWORD_CONFIG,new String(Base64.encode(userCredentials.getPasswordAsString().getBytes())));
-      }
     }
     InputStream in=uc.getInputStream();
     final ProgressMonitorInputStream pin=new ProgressMonitorInputStream(null,u.toString(),in);

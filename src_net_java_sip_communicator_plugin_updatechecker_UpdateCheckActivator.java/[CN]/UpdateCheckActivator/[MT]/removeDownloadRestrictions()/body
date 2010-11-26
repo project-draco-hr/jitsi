@@ -9,16 +9,40 @@
   HttpsURLConnection.setDefaultHostnameVerifier(hv);
   Authenticator.setDefault(new Authenticator(){
     protected PasswordAuthentication getPasswordAuthentication(){
-      ConfigurationService config=getConfigurationService();
-      String uName=(String)config.getProperty(UPDATE_USERNAME_CONFIG);
-      if (uName != null) {
-        String pass=(String)config.getProperty(UPDATE_PASSWORD_CONFIG);
-        if (pass != null)         return new PasswordAuthentication(uName,new String(Base64.decode(pass)).toCharArray());
+      if (userCredentials == null) {
+        ConfigurationService config=getConfigurationService();
+        String uName=(String)config.getProperty(UPDATE_USERNAME_CONFIG);
+        if (uName != null) {
+          String pass=(String)config.getProperty(UPDATE_PASSWORD_CONFIG);
+          if (pass != null) {
+            userCredentials=new UserCredentials();
+            userCredentials.setUserName(uName);
+            userCredentials.setPassword(pass.toCharArray());
+            userCredentials.setPasswordPersistent(true);
+          }
+        }
       }
       if (userCredentials != null) {
         return new PasswordAuthentication(userCredentials.getUserName(),userCredentials.getPassword());
       }
  else {
+        AuthenticationWindow authWindow=new AuthenticationWindow("host",true,null);
+        userCredentials=new UserCredentials();
+        authWindow.setVisible(true);
+        if (!authWindow.isCanceled()) {
+          userCredentials.setUserName(authWindow.getUserName());
+          userCredentials.setPassword(authWindow.getPassword());
+          userCredentials.setPasswordPersistent(authWindow.isRememberPassword());
+          if (authWindow.isRememberPassword()) {
+            getConfigurationService().setProperty(UPDATE_USERNAME_CONFIG,userCredentials.getUserName());
+            getConfigurationService().setProperty(UPDATE_PASSWORD_CONFIG,new String(Base64.encode(userCredentials.getPasswordAsString().getBytes())));
+          }
+          return new PasswordAuthentication(userCredentials.getUserName(),userCredentials.getPassword());
+        }
+ else {
+          userCredentials.setUserName(null);
+          userCredentials=null;
+        }
         return null;
       }
     }
