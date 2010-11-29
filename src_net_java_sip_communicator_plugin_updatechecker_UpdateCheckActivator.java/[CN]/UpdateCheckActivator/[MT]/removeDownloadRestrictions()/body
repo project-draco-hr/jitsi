@@ -17,7 +17,7 @@
           if (pass != null) {
             userCredentials=new UserCredentials();
             userCredentials.setUserName(uName);
-            userCredentials.setPassword(pass.toCharArray());
+            userCredentials.setPassword(new String(Base64.decode(pass)).toCharArray());
             userCredentials.setPasswordPersistent(true);
           }
         }
@@ -26,10 +26,19 @@
         return new PasswordAuthentication(userCredentials.getUserName(),userCredentials.getPassword());
       }
  else {
-        AuthenticationWindow authWindow=new AuthenticationWindow(getRequestingHost(),true,null);
+        host=getRequestingHost();
+        AuthenticationWindow authWindow=null;
+        if (errorMessage == null) {
+          authWindow=new AuthenticationWindow(host,true,null);
+        }
+ else {
+          authWindow=new AuthenticationWindow(null,null,host,true,null,errorMessage);
+          errorMessage=null;
+        }
         userCredentials=new UserCredentials();
         authWindow.setVisible(true);
         if (!authWindow.isCanceled()) {
+          isAuthenticationCanceled=false;
           userCredentials.setUserName(authWindow.getUserName());
           userCredentials.setPassword(authWindow.getPassword());
           userCredentials.setPasswordPersistent(authWindow.isRememberPassword());
@@ -40,8 +49,11 @@
           return new PasswordAuthentication(userCredentials.getUserName(),userCredentials.getPassword());
         }
  else {
+          isAuthenticationCanceled=true;
           userCredentials.setUserName(null);
           userCredentials=null;
+          getConfigurationService().removeProperty(UPDATE_USERNAME_CONFIG);
+          getConfigurationService().removeProperty(UPDATE_PASSWORD_CONFIG);
         }
         return null;
       }
