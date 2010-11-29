@@ -27,15 +27,17 @@
     NotificationManager.stopSound(NotificationManager.OUTGOING_CALL);
   }
  else   if (newState == CallPeerState.CONNECTED) {
+    System.out.println("CONNECTED" + CallPeerState.isOnHold(oldState));
     if (!CallPeerState.isOnHold(oldState)) {
       NotificationManager.stopSound(NotificationManager.OUTGOING_CALL);
       NotificationManager.stopSound(NotificationManager.INCOMING_CALL);
       if (!renderer.getCallDialog().isCallTimerStarted())       renderer.getCallDialog().startCallTimer();
-      renderer.getCallDialog().enableButtons();
+      renderer.getCallDialog().enableButtons(true);
     }
  else {
       renderer.setOnHold(false);
       renderer.getCallDialog().updateHoldButtonState();
+      renderer.getCallDialog().enableButtons(true);
     }
   }
  else   if (newState == CallPeerState.DISCONNECTED) {
@@ -44,6 +46,7 @@
   }
  else   if (CallPeerState.isOnHold(newState)) {
     renderer.setOnHold(true);
+    renderer.getCallDialog().enableButtons(false);
     renderer.getCallDialog().updateHoldButtonState();
   }
   renderer.setPeerState(newStateString);
