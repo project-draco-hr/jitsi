@@ -1,11 +1,15 @@
 {
 synchronized (cache) {
     boolean interrupted=false;
-    while (!canWriteInCache())     try {
-      cache.wait();
-    }
- catch (    InterruptedException iex) {
-      interrupted=true;
+    while (true) {
+      if (this.transferHandler != transferHandler)       return;
+      if (canWriteInCache())       break;
+      try {
+        cache.wait();
+      }
+ catch (      InterruptedException iex) {
+        interrupted=true;
+      }
     }
     if (interrupted)     Thread.currentThread().interrupt();
     Buffer buffer=new Buffer();

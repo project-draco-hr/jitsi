@@ -1,13 +1,14 @@
 {
   InputStreamDesc[] oldValue;
-  InputStreamDesc[] newValue=inputStreams.toArray(new InputStreamDesc[inputStreams.size()]);
+  InputStreamDesc[] newValue=(null == inputStreams) ? null : inputStreams.toArray(new InputStreamDesc[inputStreams.size()]);
 synchronized (inputStreamsSyncRoot) {
     oldValue=this.inputStreams;
     this.inputStreams=newValue;
   }
   boolean valueIsChanged=!Arrays.equals(oldValue,newValue);
   if (valueIsChanged) {
-    setTransferHandler(oldValue,null);
+    if (oldValue != null)     setTransferHandler(oldValue,null);
+    if (newValue == null)     return;
     boolean skippedForTransferHandler=false;
     for (    InputStreamDesc inputStreamDesc : newValue) {
       SourceStream inputStream=inputStreamDesc.getInputStream();
