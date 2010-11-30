@@ -1,5 +1,21 @@
 {
-  if (!(packet instanceof JingleIQ))   return false;
+  if (!(packet instanceof JingleIQ)) {
+    CallPeerJabberImpl callPeer=activeCallsRepository.findCallPeerBySessInitPacketID(packet.getPacketID());
+    if (callPeer != null) {
+      XMPPError error=packet.getError();
+      if (error != null) {
+        logger.error("Received an error: code=" + error.getCode() + " message="+ error.getMessage());
+        String message="Service unavailable";
+        Roster roster=getProtocolProvider().getConnection().getRoster();
+        if (!roster.contains(packet.getFrom())) {
+          message+=": try adding the contact to your contact " + "list first.";
+        }
+        if (error.getMessage() != null)         message=error.getMessage();
+        callPeer.setState(CallPeerState.FAILED,message);
+      }
+    }
+    return false;
+  }
   JingleIQ jingleIQ=(JingleIQ)packet;
   if (jingleIQ.getAction() == JingleAction.SESSION_INITIATE) {
     return jingleIQ.containsContentChildOfType(RtpDescriptionPacketExtension.class);
