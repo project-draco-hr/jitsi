@@ -3,22 +3,39 @@
   if (protocolProvider.getConnection() == null || call == null) {
     throw new OperationFailedException("Failed to create OutgoingJingleSession." + " We don't have a valid XMPPConnection.",OperationFailedException.INTERNAL_ERROR);
   }
-  String fullCalleeURI=getFullCalleeURI(calleeAddress);
+  String fullCalleeURI=null;
   DiscoverInfo di=null;
-  try {
-    di=protocolProvider.getDiscoveryManager().discoverInfo(fullCalleeURI);
-    if (di.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE)) {
-      if (logger.isInfoEnabled())       logger.info(fullCalleeURI + ": jingle supported ");
+  int bestPriority=0;
+  Iterator<Presence> it=getProtocolProvider().getConnection().getRoster().getPresences(calleeAddress);
+  while (it.hasNext()) {
+    Presence presence=it.next();
+    String calleeURI=presence.getFrom();
+    int priority=(presence.getPriority() == Integer.MIN_VALUE) ? 0 : presence.getPriority();
+    try {
+      DiscoverInfo discoverInfo=protocolProvider.getDiscoveryManager().discoverInfo(calleeURI);
+      if (discoverInfo.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE)) {
+        if (priority > bestPriority) {
+          bestPriority=priority;
+          di=discoverInfo;
+          fullCalleeURI=calleeURI;
+        }
+      }
     }
+ catch (    XMPPException ex) {
+      logger.warn("could not retrieve info for " + fullCalleeURI,ex);
+    }
+  }
+  if (di != null) {
+    if (logger.isInfoEnabled())     logger.info(fullCalleeURI + ": jingle supported ");
+  }
  else {
-      if (logger.isInfoEnabled())       logger.info(calleeAddress + ": jingle not supported ??? ");
-      throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + fullCalleeURI + " does not support jingle",OperationFailedException.INTERNAL_ERROR);
-    }
+    if (logger.isInfoEnabled())     logger.info(calleeAddress + ": jingle not supported ?");
+    throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + fullCalleeURI + " does not support jingle",OperationFailedException.INTERNAL_ERROR);
   }
- catch (  XMPPException ex) {
-    logger.warn("could not retrieve info for " + fullCalleeURI,ex);
+  if (logger.isInfoEnabled()) {
+    logger.info("Choose one is: " + fullCalleeURI + " "+ bestPriority);
   }
-  CallPeerJabberImpl peer;
+  CallPeerJabberImpl peer=null;
   try {
     peer=call.initiateSession(fullCalleeURI,di,sessionInitiateExtensions);
   }
