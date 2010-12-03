@@ -14,10 +14,22 @@
     String devName=PortAudio.PaDeviceInfo_getName(deviceInfo);
     if (devName != null)     devName=devName.trim();
     CaptureDeviceInfo jmfInfo=new CaptureDeviceInfo(devName,new MediaLocator(LOCATOR_PROTOCOL + ":#" + deviceIndex),new Format[]{new AudioFormat(AudioFormat.LINEAR,(maxInputChannels > 0) ? getSupportedSampleRate(true,deviceIndex,channels,sampleFormat) : PortAudio.DEFAULT_SAMPLE_RATE,sampleSizeInBits,channels,AudioFormat.LITTLE_ENDIAN,AudioFormat.SIGNED,Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,Format.byteArray)});
-    if (maxInputChannels > 0)     CaptureDeviceManager.addDevice(jmfInfo);
-    if (maxOutputChannels > 0)     playbackDevVector.add(jmfInfo);
-    if (deviceIndex == defaultInputDeviceIx)     defaultCaptureDevice=jmfInfo;
-    if (deviceIndex == defaultOutputDeviceIx)     defaultPlaybackDevice=jmfInfo;
+    if (maxInputChannels > 0) {
+      CaptureDeviceManager.addDevice(jmfInfo);
+      if (logger.isDebugEnabled())       logger.debug("Adding capture device: [" + devName + "]");
+    }
+    if (maxOutputChannels > 0) {
+      playbackDevVector.add(jmfInfo);
+      if (logger.isDebugEnabled())       logger.debug("Adding playback device: [" + devName + "]");
+    }
+    if (deviceIndex == defaultInputDeviceIx) {
+      defaultCaptureDevice=jmfInfo;
+      if (logger.isDebugEnabled())       logger.debug("Default capture device: [" + devName + "]");
+    }
+    if (deviceIndex == defaultOutputDeviceIx) {
+      defaultPlaybackDevice=jmfInfo;
+      if (logger.isDebugEnabled())       logger.debug("Default playback device: [" + devName + "]");
+    }
   }
   playbackDevices=playbackDevVector.toArray(new CaptureDeviceInfo[0]);
   CaptureDeviceManager.commit();
