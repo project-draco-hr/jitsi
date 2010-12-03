@@ -7,10 +7,11 @@
   DiscoverInfo di=null;
   int bestPriority=-1;
   Iterator<Presence> it=getProtocolProvider().getConnection().getRoster().getPresences(calleeAddress);
+  String calleeURI=null;
   while (it.hasNext()) {
     Presence presence=it.next();
-    String calleeURI=presence.getFrom();
     int priority=(presence.getPriority() == Integer.MIN_VALUE) ? 0 : presence.getPriority();
+    calleeURI=presence.getFrom();
     try {
       DiscoverInfo discoverInfo=protocolProvider.getDiscoveryManager().discoverInfo(calleeURI);
       if (discoverInfo.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE)) {
@@ -26,11 +27,11 @@
     }
   }
   if (di != null) {
-    if (logger.isInfoEnabled())     logger.info(calleeAddress + ": jingle supported ");
+    if (logger.isInfoEnabled())     logger.info(fullCalleeURI + ": jingle supported ");
   }
  else {
-    if (logger.isInfoEnabled())     logger.info(calleeAddress + ": jingle not supported ?");
-    throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + calleeAddress + " does not support jingle",OperationFailedException.INTERNAL_ERROR);
+    if (logger.isInfoEnabled())     logger.info(calleeURI + ": jingle not supported ?");
+    throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + calleeURI + " does not support jingle",OperationFailedException.INTERNAL_ERROR);
   }
   if (logger.isInfoEnabled()) {
     logger.info("Choose one is: " + fullCalleeURI + " "+ bestPriority);
