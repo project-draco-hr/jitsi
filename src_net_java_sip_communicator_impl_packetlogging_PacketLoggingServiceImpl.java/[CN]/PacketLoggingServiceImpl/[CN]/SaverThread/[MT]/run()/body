@@ -1,0 +1,24 @@
+{
+  stopped=false;
+  while (!stopped) {
+    Packet pktToSave=null;
+synchronized (this) {
+      if (packetsToDump.isEmpty()) {
+        try {
+          wait();
+        }
+ catch (        InterruptedException iex) {
+        }
+      }
+      if (!packetsToDump.isEmpty())       pktToSave=packetsToDump.remove(0);
+    }
+    if (pktToSave != null) {
+      try {
+        savePacket(pktToSave);
+      }
+ catch (      Throwable t) {
+        logger.error("Error writing packet to file",t);
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  try {
+    if (!SipActivator.getPacketLogging().isLoggingEnabled(PacketLoggingService.ProtocolName.SIP))     return;
+    boolean isTransportUDP=message.getTopmostVia().getTransport().equalsIgnoreCase("UDP");
+    byte[] srcAddr;
+    int srcPort;
+    byte[] dstAddr;
+    int dstPort;
+    if (sender) {
+      srcAddr=message.getLocalAddress().getAddress();
+      srcPort=message.getLocalPort();
+      dstAddr=message.getRemoteAddress().getAddress();
+      dstPort=message.getRemotePort();
+    }
+ else {
+      dstPort=message.getLocalPort();
+      dstAddr=message.getLocalAddress().getAddress();
+      srcAddr=message.getRemoteAddress().getAddress();
+      srcPort=message.getRemotePort();
+    }
+    byte[] msg=message.toString().getBytes("UTF-8");
+    SipActivator.getPacketLogging().logPacket(PacketLoggingService.ProtocolName.SIP,srcAddr,srcPort,dstAddr,dstPort,isTransportUDP ? PacketLoggingService.TransportName.UDP : PacketLoggingService.TransportName.TCP,sender,msg);
+  }
+ catch (  UnsupportedEncodingException e) {
+    logger.error("Cannot obtain message body",e);
+  }
+}

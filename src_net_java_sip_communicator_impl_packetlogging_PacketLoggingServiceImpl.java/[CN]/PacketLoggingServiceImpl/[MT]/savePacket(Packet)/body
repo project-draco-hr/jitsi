@@ -1,0 +1,93 @@
+{
+  boolean isIPv4=packet.sourceAddress.length == 4 || packet.destinationAddress.length == 4;
+  byte[] ipHeader;
+  if (isIPv4) {
+    ipHeader=new byte[ipHeaderTemplate.length];
+    System.arraycopy(ipHeaderTemplate,0,ipHeader,0,ipHeader.length);
+    System.arraycopy(packet.sourceAddress,0,ipHeader,12,4);
+    System.arraycopy(packet.destinationAddress,0,ipHeader,16,4);
+  }
+ else {
+    ipHeader=new byte[ip6HeaderTemplate.length];
+    System.arraycopy(ip6HeaderTemplate,0,ipHeader,0,ipHeader.length);
+    System.arraycopy(packet.sourceAddress,0,ipHeader,8,16);
+    System.arraycopy(packet.destinationAddress,0,ipHeader,24,16);
+  }
+  byte[] transportHeader;
+  short len;
+  if (packet.transport == TransportName.UDP) {
+    byte[] udpHeader=new byte[udpHeaderTemplate.length];
+    transportHeader=udpHeader;
+    System.arraycopy(udpHeaderTemplate,0,udpHeader,0,udpHeader.length);
+    writeShort(packet.sourcePort,udpHeader,0);
+    writeShort(packet.destinationPort,udpHeader,2);
+    len=(short)(packet.packetLength + udpHeader.length);
+    writeShort(len,udpHeader,4);
+  }
+ else {
+    transportHeader=new byte[tcpHeaderTemplate.length];
+    System.arraycopy(tcpHeaderTemplate,0,transportHeader,0,transportHeader.length);
+    writeShort(packet.sourcePort,transportHeader,0);
+    writeShort(packet.destinationPort,transportHeader,2);
+    len=(short)(packet.packetLength + transportHeader.length);
+    if (packet.sender) {
+      long seqnum;
+      long acknum;
+synchronized (tcpCounterLock) {
+        seqnum=srcCount;
+        srcCount+=packet.packetLength;
+        acknum=dstCount;
+      }
+      intToBytes((int)(seqnum & 0xffffffff),transportHeader,4);
+      intToBytes((int)(acknum & 0xffffffff),transportHeader,8);
+    }
+ else {
+      long seqnum;
+      long acknum;
+synchronized (tcpCounterLock) {
+        seqnum=dstCount;
+        dstCount+=packet.packetLength;
+        acknum=srcCount;
+      }
+      intToBytes((int)(seqnum & 0xffffffff),transportHeader,4);
+      intToBytes((int)(acknum & 0xffffffff),transportHeader,8);
+    }
+  }
+  if (isIPv4) {
+    short ipTotalLen=(short)(len + ipHeader.length);
+    writeShort(ipTotalLen,ipHeader,2);
+    if (packet.transport == TransportName.UDP)     ipHeader[9]=(byte)0x11;
+ else     ipHeader[9]=(byte)0x06;
+    int chk2=computeChecksum(ipHeader);
+    ipHeader[10]=(byte)(chk2 >> 8);
+    ipHeader[11]=(byte)(chk2 & 0xff);
+  }
+ else {
+    writeShort(len,ipHeader,4);
+    if (packet.transport == TransportName.UDP)     ipHeader[6]=(byte)0x11;
+ else     ipHeader[6]=(byte)0x06;
+  }
+  long current=System.currentTimeMillis();
+  int tsSec=(int)(current / 1000);
+  int tsUsec=(int)((current % 1000) * 1000);
+  int feakHeaderLen=fakeEthernetHeader.length + ipHeader.length + transportHeader.length;
+  int inclLen=packet.packetLength + feakHeaderLen;
+  int origLen=inclLen;
+synchronized (this) {
+    if (outputStream == null) {
+      getFileNames();
+      rotateFiles();
+    }
+    if (getLimit() > 0 && written > getLimit())     rotateFiles();
+    addInt(tsSec);
+    addInt(tsUsec);
+    addInt(inclLen);
+    addInt(origLen);
+    outputStream.write(fakeEthernetHeader);
+    outputStream.write(ipHeader);
+    outputStream.write(transportHeader);
+    outputStream.write(packet.packetContent,packet.packetOffset,packet.packetLength);
+    outputStream.flush();
+    written+=inclLen + 16;
+  }
+}

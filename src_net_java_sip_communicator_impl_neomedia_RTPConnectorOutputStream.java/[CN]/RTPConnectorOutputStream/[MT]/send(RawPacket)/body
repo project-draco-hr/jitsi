@@ -1,7 +1,11 @@
 {
+  numberOfPackets++;
   for (  InetSocketAddress target : targets) {
     try {
       socket.send(new DatagramPacket(packet.getBuffer(),packet.getOffset(),packet.getLength(),target.getAddress(),target.getPort()));
+      if (logPacket(numberOfPackets) && NeomediaActivator.getPacketLogging().isLoggingEnabled(PacketLoggingService.ProtocolName.RTP)) {
+        NeomediaActivator.getPacketLogging().logPacket(PacketLoggingService.ProtocolName.RTP,socket.getLocalAddress().getAddress(),socket.getLocalPort(),target.getAddress().getAddress(),target.getPort(),PacketLoggingService.TransportName.UDP,true,packet.getBuffer(),packet.getOffset(),packet.getLength());
+      }
     }
  catch (    IOException ex) {
       availRawPackets.offer(packet);

@@ -3,10 +3,14 @@
     DatagramPacket p=new DatagramPacket(buffer,0,PACKET_RECEIVE_BUFFER);
     try {
       socket.receive(p);
+      numberOfPackets++;
     }
  catch (    IOException e) {
       ioError=true;
       break;
+    }
+    if (RTPConnectorOutputStream.logPacket(numberOfPackets) && NeomediaActivator.getPacketLogging().isLoggingEnabled(PacketLoggingService.ProtocolName.RTP)) {
+      NeomediaActivator.getPacketLogging().logPacket(PacketLoggingService.ProtocolName.RTP,p.getAddress().getAddress(),p.getPort(),socket.getLocalAddress().getAddress(),socket.getLocalPort(),PacketLoggingService.TransportName.UDP,false,p.getData(),p.getOffset(),p.getLength());
     }
     pkt=createRawPacket(p);
     if ((pkt != null) && (transferHandler != null) && !closed)     transferHandler.transferData(this);
