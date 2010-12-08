@@ -4,19 +4,20 @@
   CaptureDeviceInfo[] audioCaptureDevices=getAvailableAudioCaptureDevices();
   if (config.getBoolean(PROP_AUDIO_DEVICE_IS_DISABLED,false)) {
     audioCaptureDevice=null;
-    audioSystem=AUDIO_SYSTEM_NONE;
+    audioSystem=AUDIO_NONE;
   }
  else   if (audioCaptureDevices.length < 1) {
     logger.warn("No Audio Device was found.");
     audioCaptureDevice=null;
-    audioSystem=AUDIO_SYSTEM_NONE;
+    audioSystem=AUDIO_NONE;
   }
  else {
     if (logger.isDebugEnabled())     logger.debug("Found " + audioCaptureDevices.length + " capture devices: "+ audioCaptureDevices);
     String audioDevName=config.getString(PROP_AUDIO_DEVICE);
-    if (audioDevName == null) {
+    if (audioDevName == null || audioDevName.equals(AUDIO_NONE)) {
       if (PortAudioAuto.isSupported()) {
         setAudioSystem(AUDIO_SYSTEM_PORTAUDIO,null,false);
+        if (audioDevName != null && audioDevName.equals(AUDIO_NONE))         setAudioCaptureDevice(null,false);
       }
  else {
         setAudioPlaybackDevice(null,false);
