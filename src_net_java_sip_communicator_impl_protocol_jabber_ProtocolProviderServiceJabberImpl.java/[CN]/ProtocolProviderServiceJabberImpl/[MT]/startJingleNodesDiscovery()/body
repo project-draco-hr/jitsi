@@ -1,0 +1,25 @@
+{
+  JabberAccountID accID=(JabberAccountID)getAccountID();
+  jingleNodesServiceNode=new SmackServiceNode(connection,60000);
+  for (  JingleNodeDescriptor desc : accID.getJingleNodes()) {
+    TrackerEntry entry=new TrackerEntry(desc.isRelaySupported() ? TrackerEntry.Type.relay : TrackerEntry.Type.tracker,TrackerEntry.Policy._public,desc.getJID(),JingleChannelIQ.UDP);
+    jingleNodesServiceNode.addTrackerEntry(entry);
+  }
+  final SmackServiceNode service=jingleNodesServiceNode;
+  final boolean autoDiscover=accID.isJingleNodesAutoDiscoveryEnabled();
+  new Thread(){
+    public void run(){
+synchronized (jingleNodesSyncRoot) {
+        if (logger.isInfoEnabled()) {
+          logger.info("Start Jingle Nodes discovery!");
+        }
+        final SmackServiceNode.MappedNodes nodes=service.searchServices(connection,6,3,20,JingleChannelIQ.UDP,autoDiscover);
+        if (logger.isInfoEnabled()) {
+          logger.info("Jingle Nodes discovery terminated!");
+        }
+        service.addEntries(nodes);
+      }
+    }
+  }
+.start();
+}

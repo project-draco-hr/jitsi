@@ -1,0 +1,37 @@
+{
+  logger.info("harvest Jingle Nodes");
+  Collection<LocalCandidate> candidates=new HashSet<LocalCandidate>();
+  String ip=null;
+  int port=-1;
+  if (localAddressSecond != null && relayedAddressSecond != null) {
+    LocalCandidate candidate=createJingleNodesCandidate(relayedAddressSecond,component,localAddressSecond);
+    candidates.add(candidate);
+    component.addLocalCandidate(candidate);
+    localAddressSecond=null;
+    relayedAddressSecond=null;
+    return candidates;
+  }
+  XMPPConnection conn=serviceNode.getConnection();
+  JingleChannelIQ ciq=null;
+  if (serviceNode != null) {
+    final TrackerEntry preferred=serviceNode.getPreferedRelay();
+    if (preferred != null) {
+      ciq=SmackServiceNode.getChannel(conn,preferred.getJid());
+    }
+  }
+  if (ciq != null && ciq.getRemoteport() > 0) {
+    ip=ciq.getHost();
+    port=ciq.getRemoteport();
+    if (logger.isInfoEnabled()) {
+      logger.info("JN relay: " + ip + " remote port:"+ port+ " local port: "+ ciq.getLocalport());
+    }
+    TransportAddress relayedAddress=new TransportAddress(ip,port,Transport.UDP);
+    TransportAddress localAddress=new TransportAddress(ip,ciq.getLocalport(),Transport.UDP);
+    LocalCandidate local=createJingleNodesCandidate(relayedAddress,component,localAddress);
+    relayedAddressSecond=new TransportAddress(ip,port + 1,Transport.UDP);
+    localAddressSecond=new TransportAddress(ip,ciq.getLocalport() + 1,Transport.UDP);
+    candidates.add(local);
+    component.addLocalCandidate(local);
+  }
+  return candidates;
+}
