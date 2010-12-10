@@ -6,6 +6,18 @@
   if (OSUtils.IS_MAC) {
     Application application=Application.getApplication();
     if (application != null) {
+      try {
+        Method method=application.getClass().getMethod("setOpenURIHandler",OpenURIHandler.class);
+        OpenURIHandler handler=new OpenURIHandler(){
+          public void openURI(          com.apple.eawt.AppEvent.OpenURIEvent evt){
+            delegationPeer.handleUri(evt.getURI().toString());
+          }
+        }
+;
+        method.invoke(application,handler);
+      }
+ catch (      Throwable ex) {
+      }
     }
   }
 }
