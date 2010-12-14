@@ -15,9 +15,9 @@
     List<RTPExtension> offeredRTPExtensions=JingleUtils.extractRTPExtensions(description,this.getRtpExtensionsRegistry());
     List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
     List<RTPExtension> rtpExtensions=intersectRTPExtensions(offeredRTPExtensions,supportedExtensions);
-    MediaStreamTarget target=JingleUtils.extractDefaultTarget(content);
-    int targetDataPort=target.getDataAddress().getPort();
     IceUdpTransportPacketExtension transport=content.getFirstChildOfType(IceUdpTransportPacketExtension.class);
+    MediaStreamTarget target=JingleUtils.extractDefaultTarget(content);
+    int targetDataPort=(target == null && transport != null) ? -1 : (target != null) ? target.getDataAddress().getPort() : 0;
     setTransportManager(transport.getNamespace());
     if (mutuallySupportedFormats.isEmpty() || (devDirection == MediaDirection.INACTIVE) || (targetDataPort == 0)) {
       closeStream(mediaType);
