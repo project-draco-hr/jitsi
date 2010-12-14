@@ -1,0 +1,20 @@
+{
+  if (!logger.isTraceEnabled())   return;
+  if (remoteEvent instanceof SenderReportEvent) {
+    SenderReport report=((SenderReportEvent)remoteEvent).getReport();
+    if (report.getFeedbackReports().size() > 0) {
+      Iterator iter=report.getFeedbackReports().iterator();
+      while (iter.hasNext()) {
+        Feedback feedback=(Feedback)iter.next();
+        StringBuilder buff=new StringBuilder("SenderReport (for stream ").append(hashCode()).append(") [packetCount:");
+        buff.append(report.getSenderPacketCount()).append(", bytes:").append(report.getSenderByteCount()).append(", interarrival jitter:").append(feedback.getJitter()).append(", lost:").append(feedback.getNumLost()).append(", lastSRBefore:").append((int)(feedback.getDLSR() / 65.536)).append("ms ]");
+        logger.trace(buff.toString());
+      }
+    }
+ else {
+      StringBuilder buff=new StringBuilder("SenderReport (for stream ").append(hashCode()).append(") [packetCount:");
+      buff.append(report.getSenderPacketCount()).append(", bytes:").append(report.getSenderByteCount());
+      logger.trace(buff.toString());
+    }
+  }
+}
