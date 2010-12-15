@@ -1,12 +1,21 @@
 {
   int range=1;
-  if (maxSoundLevel > -1 && minSoundLevel > -1 && maxSoundLevel >= minSoundLevel)   range=maxSoundLevel - minSoundLevel;
-  int activeBarNumber=soundLevel * soundBarNumber / range;
-  for (int i=0; i < getComponentCount(); i++) {
+  if ((minSoundLevel > -1) && (maxSoundLevel > -1) && (minSoundLevel < maxSoundLevel)) {
+    range=maxSoundLevel - minSoundLevel;
+    if (soundLevel < 40)     soundLevel=minSoundLevel;
+ else     if (soundLevel > 85)     soundLevel=maxSoundLevel;
+ else {
+      soundLevel=(int)(((soundLevel - 40.0) / 45.0) * range);
+      if (soundLevel < minSoundLevel)       soundLevel=minSoundLevel;
+ else       if (soundLevel > maxSoundLevel)       soundLevel=maxSoundLevel;
+    }
+  }
+  this.soundLevel=(int)(this.soundLevel * 0.8 + soundLevel * 0.2);
+  int activeBarNumber=Math.round(this.soundLevel * soundBarNumber / (float)range);
+  for (int i=0, count=getComponentCount(); i < count; i++) {
     Component c=getComponent(i);
     if (c instanceof JLabel) {
-      if (i < activeBarNumber)       ((JLabel)c).setIcon(soundLevelActiveImage);
- else       ((JLabel)c).setIcon(soundLevelInactiveImage);
+      ((JLabel)c).setIcon((i < activeBarNumber) ? soundLevelActiveImage : soundLevelInactiveImage);
     }
   }
   this.repaint();
