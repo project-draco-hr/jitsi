@@ -1,24 +1,30 @@
 {
-  Object data=outputBuffer.getData();
-  byte[] bufferData;
-  if (data instanceof byte[] && ((byte[])data).length >= inputBuffer.getLength()) {
-    bufferData=(byte[])data;
+  if (COPY_DATA_FROM_INPUT_TO_OUTPUT) {
+    Object data=outputBuffer.getData();
+    int inputBufferLength=inputBuffer.getLength();
+    byte[] bufferData;
+    if ((data instanceof byte[]) && (((byte[])data).length >= inputBufferLength)) {
+      bufferData=(byte[])data;
+    }
+ else {
+      bufferData=new byte[inputBufferLength];
+      outputBuffer.setData(bufferData);
+    }
+    outputBuffer.setLength(inputBufferLength);
+    outputBuffer.setOffset(0);
+    System.arraycopy(inputBuffer.getData(),inputBuffer.getOffset(),bufferData,0,inputBufferLength);
+    outputBuffer.setFormat(inputBuffer.getFormat());
+    outputBuffer.setHeader(inputBuffer.getHeader());
+    outputBuffer.setSequenceNumber(inputBuffer.getSequenceNumber());
+    outputBuffer.setTimeStamp(inputBuffer.getTimeStamp());
+    outputBuffer.setFlags(inputBuffer.getFlags());
+    outputBuffer.setDiscard(inputBuffer.isDiscard());
+    outputBuffer.setEOM(inputBuffer.isEOM());
+    outputBuffer.setDuration(inputBuffer.getDuration());
   }
  else {
-    bufferData=new byte[inputBuffer.getLength()];
-    outputBuffer.setData(bufferData);
+    outputBuffer.copy(inputBuffer);
   }
-  outputBuffer.setLength(inputBuffer.getLength());
-  outputBuffer.setOffset(0);
-  System.arraycopy(inputBuffer.getData(),inputBuffer.getOffset(),bufferData,0,inputBuffer.getLength());
   eventDispatcher.addData(outputBuffer);
-  outputBuffer.setFormat(inputBuffer.getFormat());
-  outputBuffer.setHeader(inputBuffer.getHeader());
-  outputBuffer.setSequenceNumber(inputBuffer.getSequenceNumber());
-  outputBuffer.setTimeStamp(inputBuffer.getTimeStamp());
-  outputBuffer.setFlags(inputBuffer.getFlags());
-  outputBuffer.setDiscard(inputBuffer.isDiscard());
-  outputBuffer.setEOM(inputBuffer.isEOM());
-  outputBuffer.setDuration(inputBuffer.getDuration());
   return BUFFER_PROCESSED_OK;
 }
