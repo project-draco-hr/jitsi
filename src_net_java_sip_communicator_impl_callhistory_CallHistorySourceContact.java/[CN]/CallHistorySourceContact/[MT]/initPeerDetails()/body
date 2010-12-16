@@ -11,7 +11,17 @@
       ProtocolProviderService preferredProvider=callRecord.getProtocolProvider();
       if (preferredProvider != null) {
         preferredProviders=new Hashtable<Class<? extends OperationSet>,ProtocolProviderService>();
-        preferredProviders.put(OperationSetBasicTelephony.class,preferredProvider);
+        OperationSetContactCapabilities opSetCaps=preferredProvider.getOperationSet(OperationSetContactCapabilities.class);
+        OperationSetPresence opSetPres=preferredProvider.getOperationSet(OperationSetPresence.class);
+        if (opSetCaps != null && opSetPres != null) {
+          Contact contact=opSetPres.findContactByID(peerAddress);
+          if (contact != null && opSetCaps.getOperationSet(contact,OperationSetBasicTelephony.class) != null) {
+            preferredProviders.put(OperationSetBasicTelephony.class,preferredProvider);
+          }
+        }
+ else {
+          preferredProviders.put(OperationSetBasicTelephony.class,preferredProvider);
+        }
         contactDetail.setPreferredProviders(preferredProviders);
       }
  else {
@@ -20,7 +30,9 @@
         contactDetail.setPreferredProtocols(preferredProtocols);
       }
       LinkedList<Class<? extends OperationSet>> supportedOpSets=new LinkedList<Class<? extends OperationSet>>();
-      supportedOpSets.add(OperationSetBasicTelephony.class);
+      if ((preferredProviders != null && preferredProviders.containsKey(OperationSetBasicTelephony.class)) || (preferredProtocols != null)) {
+        supportedOpSets.add(OperationSetBasicTelephony.class);
+      }
       contactDetail.setSupportedOpSets(supportedOpSets);
       contactDetails.add(contactDetail);
     }
