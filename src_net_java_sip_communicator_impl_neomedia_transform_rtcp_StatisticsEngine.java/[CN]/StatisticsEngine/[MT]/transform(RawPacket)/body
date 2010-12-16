@@ -1,0 +1,28 @@
+{
+  if (!logger.isTraceEnabled())   return pkt;
+  try {
+    numberOfSenderReports++;
+    byte[] data=pkt.getBuffer();
+    int offset=pkt.getOffset();
+    int length=pkt.getLength();
+    RTCPHeader header=new RTCPHeader(data,offset,length);
+    if (header.getPacketType() == RTCPPacket.SR) {
+      RTCPSenderReport report=new RTCPSenderReport(data,offset,length);
+      if (report.getFeedbackReports().size() > 0) {
+        RTCPFeedback feedback=(RTCPFeedback)report.getFeedbackReports().get(0);
+        long jitter=feedback.getJitter();
+        if (jitter < getMinInterArrivalJitter() || getMinInterArrivalJitter() == -1)         minInterArrivalJitter=jitter;
+        if (getMaxInterArrivalJitter() < jitter)         maxInterArrivalJitter=jitter;
+        lost=feedback.getNumLost();
+        if (numberOfSenderReports % 4 != 1)         return pkt;
+        StringBuilder buff=new StringBuilder("Sending report to remote party [packetCount:");
+        buff.append(report.getSenderPacketCount()).append(", bytes:").append(report.getSenderByteCount()).append(", interarrival jitter:").append(jitter).append(", lost:").append(feedback.getNumLost()).append(", lastSRBefore:").append((int)(feedback.getDLSR() / 65.536)).append("ms ]");
+        logger.trace(buff.toString());
+      }
+    }
+  }
+ catch (  Throwable t) {
+    t.printStackTrace();
+  }
+  return pkt;
+}
