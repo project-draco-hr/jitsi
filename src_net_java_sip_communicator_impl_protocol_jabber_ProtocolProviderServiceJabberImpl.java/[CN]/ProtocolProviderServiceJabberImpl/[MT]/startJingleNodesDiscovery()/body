@@ -1,11 +1,10 @@
 {
   JabberAccountID accID=(JabberAccountID)getAccountID();
-  jingleNodesServiceNode=new SmackServiceNode(connection,60000);
+  final SmackServiceNode service=new SmackServiceNode(connection,60000);
   for (  JingleNodeDescriptor desc : accID.getJingleNodes()) {
     TrackerEntry entry=new TrackerEntry(desc.isRelaySupported() ? TrackerEntry.Type.relay : TrackerEntry.Type.tracker,TrackerEntry.Policy._public,desc.getJID(),JingleChannelIQ.UDP);
-    jingleNodesServiceNode.addTrackerEntry(entry);
+    service.addTrackerEntry(entry);
   }
-  final SmackServiceNode service=jingleNodesServiceNode;
   final boolean autoDiscover=accID.isJingleNodesAutoDiscoveryEnabled();
   new Thread(){
     public void run(){
@@ -18,6 +17,7 @@ synchronized (jingleNodesSyncRoot) {
           logger.info("Jingle Nodes discovery terminated!");
         }
         service.addEntries(nodes);
+        jingleNodesServiceNode=service;
       }
     }
   }
