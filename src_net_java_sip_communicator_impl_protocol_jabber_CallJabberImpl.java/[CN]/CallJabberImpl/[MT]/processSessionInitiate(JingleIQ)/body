@@ -1,11 +1,51 @@
 {
   String remoteParty=jingleIQ.getInitiator();
+  boolean autoAnswer=false;
+  CallPeerJabberImpl attendant=null;
+  OperationSetBasicTelephonyJabberImpl basicTelephony=null;
   if (remoteParty == null)   remoteParty=jingleIQ.getFrom();
   CallPeerJabberImpl callPeer=new CallPeerJabberImpl(remoteParty,this);
+  addCallPeer(callPeer);
+  try {
+    TransferPacketExtension transfer=(TransferPacketExtension)jingleIQ.getExtension(TransferPacketExtension.ELEMENT_NAME,TransferPacketExtension.NAMESPACE);
+    if (transfer != null) {
+      String sid=transfer.getSID();
+      if (sid != null) {
+        ProtocolProviderServiceJabberImpl protocolProvider=getProtocolProvider();
+        basicTelephony=(OperationSetBasicTelephonyJabberImpl)protocolProvider.getOperationSet(OperationSetBasicTelephony.class);
+        CallJabberImpl attendantCall=basicTelephony.getActiveCallsRepository().findJingleSID(sid);
+        if (attendantCall != null) {
+          attendant=attendantCall.getPeer(sid);
+          if ((attendant != null) && basicTelephony.getFullCalleeURI(attendant.getAddress()).equals(transfer.getFrom()) && protocolProvider.getOurJID().equals(transfer.getTo())) {
+            autoAnswer=true;
+          }
+        }
+      }
+    }
+  }
+ catch (  Throwable t) {
+    logger.error("Failed to hang up on attendant" + " as part of session transfer",t);
+    if (t instanceof ThreadDeath)     throw (ThreadDeath)t;
+  }
   callPeer.processSessionInitiate(jingleIQ);
   if (callPeer.getState() == CallPeerState.FAILED)   return null;
-  addCallPeer(callPeer);
   callPeer.setState(CallPeerState.INCOMING_CALL);
+  if (autoAnswer) {
+    try {
+      callPeer.answer();
+    }
+ catch (    Exception e) {
+      logger.info("Exception occurred while answer transferred call",e);
+      callPeer=null;
+    }
+    try {
+      basicTelephony.hangupCallPeer(attendant);
+    }
+ catch (    OperationFailedException e) {
+      logger.error("Failed to hang up on attendant as part of " + "session transfer",e);
+    }
+    return callPeer;
+  }
   if (this.getCallPeerCount() == 1)   parentOpSet.fireCallEvent(CallEvent.CALL_RECEIVED,this);
   return callPeer;
 }
