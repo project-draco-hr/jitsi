@@ -1,3 +1,19 @@
 {
-  return null;
+  MsOutlookAddressBookContactQuery msoabcq=new MsOutlookAddressBookContactQuery(this,query);
+synchronized (queries) {
+    queries.add(msoabcq);
+  }
+  boolean msoabcqHasStarted=false;
+  try {
+    msoabcq.start();
+    msoabcqHasStarted=true;
+  }
+  finally {
+    if (!msoabcqHasStarted) {
+synchronized (queries) {
+        if (queries.remove(msoabcq))         queries.notify();
+      }
+    }
+  }
+  return msoabcq;
 }
