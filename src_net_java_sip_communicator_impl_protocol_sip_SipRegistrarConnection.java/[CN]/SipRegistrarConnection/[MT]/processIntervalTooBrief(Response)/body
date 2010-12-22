@@ -1,0 +1,19 @@
+{
+  MinExpiresHeader header=(MinExpiresHeader)response.getHeader(MinExpiresHeader.NAME);
+  if (header != null) {
+    int expires=header.getExpires();
+    if (expires > registrationsExpiration) {
+      registrationsExpiration=expires;
+      try {
+        register();
+        return;
+      }
+ catch (      Throwable e) {
+        logger.error("Cannot send register!",e);
+        setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,"A timeout occurred while trying to " + "connect to the server.");
+        return;
+      }
+    }
+  }
+  this.setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,"Received an error while trying to register. " + "Server returned error:" + response.getReasonPhrase());
+}
