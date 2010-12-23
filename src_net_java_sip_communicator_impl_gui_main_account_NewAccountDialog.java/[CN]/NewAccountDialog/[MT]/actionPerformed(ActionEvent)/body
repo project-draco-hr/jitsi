@@ -10,33 +10,8 @@
     this.dispose();
   }
  else   if (sourceButton.equals(addAccountButton)) {
-    ProtocolProviderService protocolProvider;
-    try {
-      if (wizard == emptyWizard) {
-        loadErrorMessage(GuiActivator.getResources().getI18NString("service.gui.CHOOSE_NETWORK"));
-      }
-      protocolProvider=wizard.signin();
-      if (protocolProvider != null) {
-        wizardContainer.saveAccountWizard(protocolProvider,wizard);
-        this.dispose();
-      }
-    }
- catch (    OperationFailedException e) {
-      if (logger.isDebugEnabled())       logger.debug("The sign in operation has failed.");
-      if (e.getErrorCode() == OperationFailedException.ILLEGAL_ARGUMENT) {
-        loadErrorMessage(GuiActivator.getResources().getI18NString("service.gui.USERNAME_NULL"));
-      }
- else       if (e.getErrorCode() == OperationFailedException.IDENTIFICATION_CONFLICT) {
-        loadErrorMessage(GuiActivator.getResources().getI18NString("service.gui.USER_EXISTS_ERROR"));
-      }
- else {
-        loadErrorMessage(GuiActivator.getResources().getI18NString("service.gui.ACCOUNT_CREATION_FAILED",new String[]{e.getMessage()}));
-      }
-    }
-catch (    Exception e) {
-      if (logger.isDebugEnabled())       logger.debug("The sign in operation has failed.");
-      loadErrorMessage(GuiActivator.getResources().getI18NString("service.gui.ACCOUNT_CREATION_FAILED",new String[]{e.getMessage()}));
-    }
+    startConnecting(wizardContainer);
+    new Thread(new ProtocolSignInThread(wizard,wizardContainer)).start();
   }
  else   if (sourceButton.equals(cancelButton)) {
     this.dispose();

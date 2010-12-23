@@ -1,0 +1,47 @@
+{
+  ProtocolProviderService protocolProvider;
+  try {
+    if (wizard == emptyWizard) {
+      loadErrorMessage(GuiActivator.getResources().getI18NString("service.gui.CHOOSE_NETWORK"));
+    }
+    protocolProvider=wizard.signin();
+    if (protocolProvider != null) {
+      wizardContainer.saveAccountWizard(protocolProvider,wizard);
+      SwingUtilities.invokeLater(new Runnable(){
+        public void run(){
+          stopConnecting(wizardContainer);
+          NewAccountDialog.this.dispose();
+        }
+      }
+);
+    }
+  }
+ catch (  OperationFailedException e) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        stopConnecting(wizardContainer);
+      }
+    }
+);
+    if (logger.isDebugEnabled())     logger.debug("The sign in operation has failed.");
+    if (e.getErrorCode() == OperationFailedException.ILLEGAL_ARGUMENT) {
+      loadErrorMessage(GuiActivator.getResources().getI18NString("service.gui.USERNAME_NULL"));
+    }
+ else     if (e.getErrorCode() == OperationFailedException.IDENTIFICATION_CONFLICT) {
+      loadErrorMessage(GuiActivator.getResources().getI18NString("service.gui.USER_EXISTS_ERROR"));
+    }
+ else {
+      loadErrorMessage(GuiActivator.getResources().getI18NString("service.gui.ACCOUNT_CREATION_FAILED",new String[]{e.getMessage()}));
+    }
+  }
+catch (  Exception e) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        stopConnecting(wizardContainer);
+      }
+    }
+);
+    if (logger.isDebugEnabled())     logger.debug("The sign in operation has failed.");
+    loadErrorMessage(GuiActivator.getResources().getI18NString("service.gui.ACCOUNT_CREATION_FAILED",new String[]{e.getMessage()}));
+  }
+}

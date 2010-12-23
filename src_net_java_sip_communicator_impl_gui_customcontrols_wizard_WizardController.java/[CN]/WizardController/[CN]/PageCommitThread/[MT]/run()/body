@@ -1,0 +1,24 @@
+{
+  WizardModel model=wizard.getModel();
+  final WizardPage page=model.getCurrentWizardPage();
+  try {
+    page.commitPage();
+  }
+ catch (  Exception ex) {
+    new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),ex.getMessage(),ex).showDialog();
+    return;
+  }
+  wizard.stopCommittingPage();
+  SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
+      Object nextPageIdentifier=page.getNextPageIdentifier();
+      if (nextPageIdentifier.equals(WizardPage.FINISH_PAGE_IDENTIFIER)) {
+        wizard.close(Wizard.FINISH_RETURN_CODE);
+      }
+ else {
+        wizard.setCurrentPage(nextPageIdentifier);
+      }
+    }
+  }
+);
+}
