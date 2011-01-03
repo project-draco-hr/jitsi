@@ -8,12 +8,20 @@
     label=0x01;
     computeIv(label,index);
     cipherCtr.getCipherStream(AEScipher,authKey,policy.getAuthKeyLength(),ivStore);
-    KeyParameter key=new KeyParameter(authKey);
-    hmacSha1.init(key);
-  }
-  label=0x02;
-  computeIv(label,index);
-  cipherCtr.getCipherStream(AEScipher,saltKey,policy.getSaltKeyLength(),ivStore);
-  encryptionKey=new KeyParameter(encKey);
-  AEScipher.init(true,encryptionKey);
+switch ((policy.getAuthType())) {
+case SRTPPolicy.HMACSHA1_AUTHENTICATION:
+      KeyParameter key=new KeyParameter(authKey);
+    mac.init(key);
+  break;
+case SRTPPolicy.SKEIN_AUTHENTICATION:
+ParametersForSkein pfs=new ParametersForSkein(new KeyParameter(authKey),ParametersForSkein.Skein512,tagStore.length * 8);
+mac.init(pfs);
+break;
+}
+}
+label=0x02;
+computeIv(label,index);
+cipherCtr.getCipherStream(AEScipher,saltKey,policy.getSaltKeyLength(),ivStore);
+encryptionKey=new KeyParameter(encKey);
+AEScipher.init(true,encryptionKey);
 }

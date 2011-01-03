@@ -11,7 +11,7 @@
   System.arraycopy(masterK,0,masterKey,0,policy.getEncKeyLength());
   masterSalt=new byte[policy.getSaltKeyLength()];
   System.arraycopy(masterS,0,masterSalt,0,policy.getSaltKeyLength());
-  hmacSha1=new HMac(new SHA1Digest());
+  mac=new HMac(new SHA1Digest());
   AEScipher=new AESFastEngine();
 switch (policy.getEncType()) {
 case SRTPPolicy.NULL_ENCRYPTION:
@@ -31,8 +31,14 @@ authKey=null;
 tagStore=null;
 break;
 case SRTPPolicy.HMACSHA1_AUTHENTICATION:
+mac=new HMac(new SHA1Digest());
 authKey=new byte[policy.getAuthKeyLength()];
-tagStore=new byte[hmacSha1.getMacSize()];
+tagStore=new byte[mac.getMacSize()];
+break;
+case SRTPPolicy.SKEIN_AUTHENTICATION:
+mac=new SkeinMac();
+authKey=new byte[policy.getAuthKeyLength()];
+tagStore=new byte[policy.getAuthTagLength()];
 break;
 default :
 tagStore=null;
