@@ -1,0 +1,20 @@
+{
+  String cssClassName;
+  if (OSUtils.IS_WINDOWS) {
+    cssClassName="net.java.sip.communicator.plugin.addrbook" + ".msoutlook.MsOutlookAddrBookContactSourceService";
+  }
+ else   if (OSUtils.IS_MAC) {
+    cssClassName="net.java.sip.communicator.plugin.addrbook" + ".macosx.MacOSXAddrBookContactSourceService";
+  }
+ else   return;
+  css=(ContactSourceService)Class.forName(cssClassName).newInstance();
+  try {
+    cssServiceRegistration=bundleContext.registerService(ContactSourceService.class.getName(),css,null);
+  }
+  finally {
+    if (cssServiceRegistration == null) {
+      if (css instanceof AsyncContactSourceService)       ((AsyncContactSourceService)css).stop();
+      css=null;
+    }
+  }
+}
