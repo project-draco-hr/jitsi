@@ -1,0 +1,15 @@
+{
+  if (!jabberProvider.isRegistered()) {
+    if (logger.isTraceEnabled())     logger.trace("provider not registered. " + "won't send keep alive. acc.id=" + jabberProvider.getAccountID().getAccountUniqueID());
+    return;
+  }
+  String fullJid=jabberProvider.getFullJid(jid);
+  if (fullJid != null)   jid=fullJid;
+  NotificationEventIQ newEvent=new NotificationEventIQ();
+  newEvent.setEventName(eventName);
+  newEvent.setEventValue(eventValue);
+  newEvent.setTo(jid);
+  if (source != null)   newEvent.setEventSource(source);
+ else   newEvent.setEventSource(jabberProvider.getOurJID());
+  jabberProvider.getConnection().sendPacket(newEvent);
+}
