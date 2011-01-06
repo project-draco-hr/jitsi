@@ -7,16 +7,22 @@
     byte[] dstAddr;
     int dstPort;
     if (sender) {
-      srcAddr=message.getLocalAddress().getAddress();
       srcPort=message.getLocalPort();
-      dstAddr=message.getRemoteAddress().getAddress();
+      if (message.getLocalAddress() != null)       srcAddr=message.getLocalAddress().getAddress();
+ else       if (message.getRemoteAddress() != null)       srcAddr=new byte[message.getRemoteAddress().getAddress().length];
+ else       srcAddr=new byte[4];
       dstPort=message.getRemotePort();
+      if (message.getRemoteAddress() != null)       dstAddr=message.getRemoteAddress().getAddress();
+ else       dstAddr=new byte[srcAddr.length];
     }
  else {
       dstPort=message.getLocalPort();
-      dstAddr=message.getLocalAddress().getAddress();
-      srcAddr=message.getRemoteAddress().getAddress();
+      if (message.getLocalAddress() != null)       dstAddr=message.getLocalAddress().getAddress();
+ else       if (message.getRemoteAddress() != null)       dstAddr=new byte[message.getRemoteAddress().getAddress().length];
+ else       dstAddr=new byte[4];
       srcPort=message.getRemotePort();
+      if (message.getRemoteAddress() != null)       srcAddr=message.getRemoteAddress().getAddress();
+ else       srcAddr=new byte[dstAddr.length];
     }
     byte[] msg=message.toString().getBytes("UTF-8");
     SipActivator.getPacketLogging().logPacket(PacketLoggingService.ProtocolName.SIP,srcAddr,srcPort,dstAddr,dstPort,isTransportUDP ? PacketLoggingService.TransportName.UDP : PacketLoggingService.TransportName.TCP,sender,msg);
