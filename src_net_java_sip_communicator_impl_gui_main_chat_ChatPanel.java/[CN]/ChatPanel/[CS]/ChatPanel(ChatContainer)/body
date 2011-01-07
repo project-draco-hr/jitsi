@@ -1,0 +1,26 @@
+{
+  super(new BorderLayout());
+  this.chatContainer=chatContainer;
+  this.conversationPanel=new ChatConversationPanel(this);
+  this.conversationPanel.setPreferredSize(new Dimension(400,200));
+  this.conversationPanel.getChatTextPane().setTransferHandler(new ChatTransferHandler(this));
+  this.sendPanel=new ChatSendPanel(this);
+  this.writeMessagePanel=new ChatWritePanel(this);
+  int chatAreaSize=ConfigurationManager.getChatWriteAreaSize();
+  Dimension writeMessagePanelDefaultSize=new Dimension(500,(chatAreaSize > 0) ? chatAreaSize : 100);
+  Dimension writeMessagePanelMinSize=new Dimension(500,45);
+  this.writeMessagePanel.setMinimumSize(writeMessagePanelMinSize);
+  this.writeMessagePanel.setPreferredSize(writeMessagePanelDefaultSize);
+  this.messagePane.setBorder(null);
+  this.messagePane.setOpaque(false);
+  this.messagePane.addPropertyChangeListener(new DividerLocationListener());
+  this.messagePane.setResizeWeight(1.0D);
+  this.messagePane.setBottomComponent(writeMessagePanel);
+  this.add(messagePane,BorderLayout.CENTER);
+  this.add(sendPanel,BorderLayout.SOUTH);
+  if (OSUtils.IS_MAC) {
+    setOpaque(true);
+    setBackground(new Color(GuiActivator.getResources().getColor("service.gui.MAC_PANEL_BACKGROUND")));
+  }
+  this.addComponentListener(new TabSelectionComponentListener());
+}

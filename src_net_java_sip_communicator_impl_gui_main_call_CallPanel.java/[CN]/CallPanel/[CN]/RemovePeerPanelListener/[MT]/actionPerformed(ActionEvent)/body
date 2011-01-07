@@ -1,0 +1,29 @@
+{
+  SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
+      if (isLastConference) {
+        if (call.getCallPeerCount() == 1) {
+          remove(callPanel);
+          CallPeer singlePeer=call.getCallPeers().next();
+          if (singlePeer != null && !singlePeer.isConferenceFocus())           updateCurrentCallPanel(new OneToOneCallPanel(CallPanel.this,call,singlePeer));
+ else           if (singlePeer.isConferenceFocus()) {
+            ((ConferenceCallPanel)callPanel).removeCallPeerPanel(peer);
+          }
+          add(callPanel,BorderLayout.CENTER);
+          isLastConference=false;
+        }
+ else         if (call.getCallPeerCount() > 1) {
+          ((ConferenceCallPanel)callPanel).removeCallPeerPanel(peer);
+        }
+ else {
+          callWindow.close(CallPanel.this);
+        }
+        refreshContainer();
+      }
+ else {
+        if (call.getCallPeerCount() < 1)         callWindow.close(CallPanel.this);
+      }
+    }
+  }
+);
+}

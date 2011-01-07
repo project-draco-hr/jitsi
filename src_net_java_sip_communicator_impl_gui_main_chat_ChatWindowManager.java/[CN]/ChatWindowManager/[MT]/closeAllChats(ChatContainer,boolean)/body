@@ -1,0 +1,42 @@
+{
+synchronized (syncChat) {
+    if (!warningEnabled) {
+      closeAllChats(chatContainer);
+      return;
+    }
+    ChatPanel activePanel=null;
+    for (    ChatPanel chatPanel : chatPanels) {
+      if (chatPanel.getChatSession() instanceof AdHocConferenceChatSession) {
+        AdHocConferenceChatSession adHocSession=(AdHocConferenceChatSession)chatPanel.getChatSession();
+        GuiActivator.getUIService().getConferenceChatManager().leaveChatRoom((AdHocChatRoomWrapper)adHocSession.getDescriptor());
+      }
+      long lastMsgTimestamp=chatPanel.getChatConversationPanel().getLastIncomingMsgTimestamp();
+      if (!chatPanel.isWriteAreaEmpty() || chatPanel.containsActiveFileTransfers() || System.currentTimeMillis() - lastMsgTimestamp < 2 * 1000) {
+        activePanel=chatPanel;
+      }
+    }
+    if (activePanel == null) {
+      this.closeAllChats(chatContainer);
+      return;
+    }
+    long lastMsgTimestamp=activePanel.getChatConversationPanel().getLastIncomingMsgTimestamp();
+    if (!activePanel.isWriteAreaEmpty()) {
+      SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(GuiActivator.getResources().getI18NString("service.gui.NON_EMPTY_CHAT_WINDOW_CLOSE"));
+      int answer=JOptionPane.showConfirmDialog(chatContainer.getFrame(),msgText,GuiActivator.getResources().getI18NString("service.gui.WARNING"),JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
+      if (answer == JOptionPane.OK_OPTION)       this.closeAllChats(chatContainer);
+    }
+ else     if (System.currentTimeMillis() - lastMsgTimestamp < 2 * 1000) {
+      SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(GuiActivator.getResources().getI18NString("service.gui.CLOSE_CHAT_AFTER_NEW_MESSAGE"));
+      int answer=JOptionPane.showConfirmDialog(chatContainer.getFrame(),msgText,GuiActivator.getResources().getI18NString("service.gui.WARNING"),JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
+      if (answer == JOptionPane.OK_OPTION)       this.closeAllChats(chatContainer);
+    }
+ else     if (activePanel.containsActiveFileTransfers()) {
+      SIPCommMsgTextArea msgText=new SIPCommMsgTextArea(GuiActivator.getResources().getI18NString("service.gui.CLOSE_CHAT_ACTIVE_FILE_TRANSFER"));
+      int answer=JOptionPane.showConfirmDialog(chatContainer.getFrame(),msgText,GuiActivator.getResources().getI18NString("service.gui.WARNING"),JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
+      if (answer == JOptionPane.OK_OPTION) {
+        for (        ChatPanel chatPanel : chatPanels)         chatPanel.cancelActiveFileTransfers();
+        this.closeAllChats(chatContainer);
+      }
+    }
+  }
+}
