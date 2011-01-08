@@ -1,19 +1,17 @@
 {
   Object[] values=ABRecord_valuesForProperties(person,ABPERSON_PROPERTIES);
-  if (matches(values)) {
-    String displayName=getDisplayName(values);
-    if (displayName.length() != 0) {
-      List<ContactDetail> contactDetails=getContactDetails(values);
-      if (!contactDetails.isEmpty()) {
-        AddrBookSourceContact sourceContact=new AddrBookSourceContact(getContactSource(),displayName,contactDetails);
-        try {
-          byte[] image=ABPerson_imageData(person);
-          if (image != null)           sourceContact.setImage(image);
-        }
- catch (        OutOfMemoryError oome) {
-        }
-        addQueryResult(sourceContact);
+  String displayName=getDisplayName(values);
+  if ((displayName.length() != 0) && (query.matcher(displayName).find() || matches(values))) {
+    List<ContactDetail> contactDetails=getContactDetails(values);
+    if (!contactDetails.isEmpty()) {
+      AddrBookSourceContact sourceContact=new AddrBookSourceContact(getContactSource(),displayName,contactDetails);
+      try {
+        byte[] image=ABPerson_imageData(person);
+        if (image != null)         sourceContact.setImage(image);
       }
+ catch (      OutOfMemoryError oome) {
+      }
+      addQueryResult(sourceContact);
     }
   }
   return (getStatus() == QUERY_IN_PROGRESS);
