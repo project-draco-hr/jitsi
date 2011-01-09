@@ -3,11 +3,26 @@
   Iterator<ExternalContactSource> contactSources=TreeContactList.getContactSources().iterator();
   final Vector<ContactQuery> loadedQueries=new Vector<ContactQuery>();
   while (contactSources.hasNext()) {
-    if (imageSeachCanceled)     return;
-    final ExternalContactSource contactSource=contactSources.next();
+    if (imageSearchCanceled)     return;
+    ContactSourceService contactSource=contactSources.next().getContactSourceService();
     if (contactSource instanceof ExtendedContactSourceService) {
       ContactQuery query=((ExtendedContactSourceService)contactSource).queryContactSource(filterPattern);
       loadedQueries.add(query);
+      query.addContactQueryListener(new ContactQueryListener(){
+        public void queryStatusChanged(        ContactQueryStatusEvent event){
+        }
+        public void contactReceived(        ContactReceivedEvent event){
+          SourceContact sourceContact=event.getContact();
+          byte[] image=sourceContact.getImage();
+          if (image != null && image.length > 0) {
+            setCallImage(image);
+            cancelImageQueries(loadedQueries);
+            imageSearchCanceled=true;
+          }
+        }
+      }
+);
+      if (imageSearchCanceled)       return;
       List<SourceContact> results=query.getQueryResults();
       if (results != null && !results.isEmpty()) {
         Iterator<SourceContact> resultsIter=results.iterator();
@@ -20,20 +35,6 @@
           }
         }
       }
-      query.addContactQueryListener(new ContactQueryListener(){
-        public void queryStatusChanged(        ContactQueryStatusEvent event){
-        }
-        public void contactReceived(        ContactReceivedEvent event){
-          SourceContact sourceContact=event.getContact();
-          byte[] image=sourceContact.getImage();
-          if (image != null && image.length > 0) {
-            setCallImage(image);
-            cancelImageQueries(loadedQueries);
-            imageSeachCanceled=true;
-          }
-        }
-      }
-);
     }
   }
 }
