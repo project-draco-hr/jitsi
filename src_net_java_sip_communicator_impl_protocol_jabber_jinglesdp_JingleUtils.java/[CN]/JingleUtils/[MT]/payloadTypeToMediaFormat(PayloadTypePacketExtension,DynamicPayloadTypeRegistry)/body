@@ -1,12 +1,14 @@
 {
   byte pt=(byte)payloadType.getID();
+  boolean unknown=false;
   List<ParameterPacketExtension> params=payloadType.getParameters();
   Map<String,String> paramsMap=new HashMap<String,String>();
   for (  ParameterPacketExtension param : params)   paramsMap.put(param.getName(),param.getValue());
   MediaFormat format=JabberActivator.getMediaService().getFormatFactory().createMediaFormat(pt,payloadType.getName(),(double)payloadType.getClockrate(),payloadType.getChannels(),paramsMap,null);
   if (format == null) {
+    unknown=true;
     format=JabberActivator.getMediaService().getFormatFactory().createUnknownMediaFormat(MediaType.AUDIO);
   }
   if ((pt >= MediaFormat.MIN_DYNAMIC_PAYLOAD_TYPE) && (pt <= MediaFormat.MAX_DYNAMIC_PAYLOAD_TYPE) && (ptRegistry.findFormat(pt) == null))   ptRegistry.addMapping(format,pt);
-  return format;
+  return (unknown == false) ? format : null;
 }
