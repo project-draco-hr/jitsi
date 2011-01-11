@@ -1,0 +1,34 @@
+{
+  this.iconImageID=iconImageID;
+  if (fullScreen) {
+    bgImage=ImageLoader.FULL_SCREEN_BUTTON_BG;
+    pressedImage=ImageLoader.FULL_SCREEN_BUTTON_BG_PRESSED;
+  }
+ else {
+    if (inSettingsPanel) {
+      bgImage=ImageLoader.CALL_SETTING_BUTTON_BG;
+      pressedImage=ImageLoader.CALL_SETTING_BUTTON_PRESSED_BG;
+    }
+ else {
+      bgImage=ImageLoader.SOUND_SETTING_BUTTON_BG;
+      pressedImage=ImageLoader.SOUND_SETTING_BUTTON_PRESSED;
+    }
+  }
+  loadSkin();
+  if (toolTipTextKey != null) {
+    setToolTipText(GuiActivator.getResources().getI18NString(toolTipTextKey));
+  }
+  final VolumeControl volumeControl=GuiActivator.getMediaService().getOutputVolumeControl();
+  final VolumeControlSlider sliderMenu=new VolumeControlSlider(volumeControl);
+  sliderMenu.setInvoker(this);
+  this.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent arg0){
+      Point location=new Point(getX(),getY() + getHeight());
+      SwingUtilities.convertPointToScreen(location,OutputVolumeControlButton.this.getParent());
+      if (fullScreen)       location.setLocation(location.getX(),location.getY() - sliderMenu.getPreferredSize().getHeight() - getHeight());
+      sliderMenu.setLocation(location);
+      sliderMenu.setVisible(!sliderMenu.isVisible());
+    }
+  }
+);
+}

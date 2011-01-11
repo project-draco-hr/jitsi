@@ -9,32 +9,36 @@
       g.drawImage(this.bgImage,0,0,this);
     }
   }
-  if (this.getModel().isRollover() && this.bgRolloverImage != null) {
-    g.drawImage(this.bgRolloverImage,0,0,this);
+  if (getModel().isRollover() && bgRolloverImage != null) {
+    g.drawImage(bgRolloverImage,0,0,this);
   }
-  if (this.getModel().isSelected() && this.pressedImage != null) {
-    g.drawImage(this.pressedImage,0,0,this);
+  if (getModel().isSelected() && pressedImage != null) {
+    g.drawImage(pressedImage,0,0,this);
   }
   FadeTracker fadeTracker=FadeTracker.getInstance();
-  float visibility=this.getModel().isRollover() ? 1.0f : 0.0f;
+  float visibility=getModel().isRollover() ? 1.0f : 0.0f;
   if (fadeTracker.isTracked(this,FadeKind.ROLLOVER)) {
     visibility=fadeTracker.getFade(this,FadeKind.ROLLOVER);
   }
   visibility/=2;
   g.setColor(new Color(1.0f,1.0f,1.0f,visibility));
-  if (this.bgImage != null) {
+  if (bgImage != null) {
     g.fillRoundRect(this.getWidth() / 2 - this.bgImage.getWidth(null) / 2,this.getHeight() / 2 - this.bgImage.getHeight(null) / 2,bgImage.getWidth(null),bgImage.getHeight(null),10,10);
   }
  else   if (isContentAreaFilled() || (visibility != 0.0f)) {
     g.fillRoundRect(0,0,this.getWidth(),this.getHeight(),10,10);
   }
-  if (this.iconImage != null) {
+  Image iconImageFinal=null;
+  if (getModel().isSelected() && pressedIconImage != null) {
+    iconImageFinal=pressedIconImage;
+  }
+ else   if (iconImage != null) {
     if (!isEnabled()) {
-      Image disabledImage=new ImageIcon(LightGrayFilter.createDisabledImage(iconImage)).getImage();
-      g.drawImage(disabledImage,(this.bgImage.getWidth(null) - disabledImage.getWidth(null)) / 2,(this.bgImage.getHeight(null) - disabledImage.getHeight(null)) / 2,this);
+      iconImageFinal=new ImageIcon(LightGrayFilter.createDisabledImage(iconImage)).getImage();
     }
  else {
-      g.drawImage(this.iconImage,(this.bgImage.getWidth(null) - this.iconImage.getWidth(null)) / 2,(this.bgImage.getHeight(null) - this.iconImage.getHeight(null)) / 2,this);
+      iconImageFinal=iconImage;
     }
   }
+  if (iconImageFinal != null)   g.drawImage(iconImageFinal,(this.bgImage.getWidth(null) - iconImageFinal.getWidth(null)) / 2,(this.bgImage.getHeight(null) - iconImageFinal.getHeight(null)) / 2,this);
 }
