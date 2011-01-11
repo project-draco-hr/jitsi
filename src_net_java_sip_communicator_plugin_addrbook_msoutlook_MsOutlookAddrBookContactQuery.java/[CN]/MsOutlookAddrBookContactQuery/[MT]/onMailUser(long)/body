@@ -2,22 +2,26 @@
   Object[] props=IMAPIProp_GetProps(iUnknown,MAPI_MAILUSER_PROP_IDS,MAPI_UNICODE);
   long objType=(props[PR_OBJECT_TYPE] instanceof Long) ? ((Long)props[PR_OBJECT_TYPE]).longValue() : 0;
   if ((MAPI_MAILUSER == objType) && (mapiMessageCount != 0))   return false;
+  int propIndex=0;
   boolean matches=false;
   for (  Object prop : props) {
-    if ((prop instanceof String) && query.matcher((String)prop).find()) {
+    if ((prop instanceof String) && (query.matcher((String)prop).find() || (isPhoneNumber(propIndex) && query.matcher(normalizePhoneNumber((String)prop)).find()))) {
       matches=true;
       break;
     }
+    propIndex++;
   }
   if (matches) {
     List<Class<? extends OperationSet>> supportedOpSets=new ArrayList<Class<? extends OperationSet>>(1);
     supportedOpSets.add(OperationSetBasicTelephony.class);
     List<ContactDetail> contactDetails=new LinkedList<ContactDetail>();
     for (int i=0; i < CONTACT_DETAIL_PROP_INDEXES.length; i++) {
-      Object prop=props[CONTACT_DETAIL_PROP_INDEXES[i]];
+      propIndex=CONTACT_DETAIL_PROP_INDEXES[i];
+      Object prop=props[propIndex];
       if (prop instanceof String) {
         String stringProp=(String)prop;
         if (stringProp.length() != 0) {
+          if (isPhoneNumber(propIndex))           stringProp=normalizePhoneNumber(stringProp);
           ContactDetail contactDetail=new ContactDetail(stringProp);
           contactDetail.setSupportedOpSets(supportedOpSets);
           contactDetails.add(contactDetail);
