@@ -33,6 +33,15 @@
           return candidate;
         }
       }
+      Iterator<ProtocolProviderServiceSipImpl> iterPP=candidates.iterator();
+      while (iterPP.hasNext()) {
+        ProtocolProviderServiceSipImpl candidate=iterPP.next();
+        if (!candidate.getRegistrarConnection().isRegistrarless() && !candidate.getRegistrarConnection().isRequestFromSameConnection(request))         iterPP.remove();
+      }
+      if (candidates.size() == 0) {
+        logger.error("no listeners, or message not fo us");
+        return null;
+      }
       for (      ProtocolProviderServiceSipImpl candidate : candidates) {
         URI fromURI=((FromHeader)request.getHeader(FromHeader.NAME)).getAddress().getURI();
         if (fromURI.isSipURI() == false)         continue;
