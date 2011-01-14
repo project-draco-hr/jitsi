@@ -8,9 +8,18 @@
     callContactItem.setText(detail.getContactAddress());
     callContactItem.addActionListener(new ActionListener(){
       public void actionPerformed(      ActionEvent e){
-        ProtocolProviderService protocolProvider=detail.getPreferredProtocolProvider(OperationSetBasicTelephony.class);
-        if (protocolProvider != null)         CallManager.createCall(protocolProvider,detail.getContactAddress());
- else         CallManager.createCall(detail.getContactAddress());
+        List<ProtocolProviderService> providers=GuiActivator.getOpSetRegisteredProviders(OperationSetBasicTelephony.class,detail.getPreferredProtocolProvider(OperationSetBasicTelephony.class),detail.getPreferredProtocol(OperationSetBasicTelephony.class));
+        int providersCount=providers.size();
+        if (providers == null || providersCount <= 0) {
+          new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.CALL_FAILED"),GuiActivator.getResources().getI18NString("service.gui.NO_ONLINE_TELEPHONY_ACCOUNT")).showDialog();
+          return;
+        }
+ else         if (providersCount > 1) {
+          new ChooseCallAccountDialog(detail.getContactAddress(),OperationSetBasicTelephony.class,providers).setVisible(true);
+        }
+ else {
+          CallManager.createCall(providers.get(0),detail.getContactAddress());
+        }
       }
     }
 );
