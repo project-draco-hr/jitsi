@@ -1,23 +1,23 @@
 {
-  JMenuItem addContactMenu=TreeContactList.createAddContactMenu((SourceContact)contact.getDescriptor());
-  JPopupMenu popupMenu;
-  if (addContactMenu instanceof JMenu) {
-    JMenu menu=((JMenu)addContactMenu);
-    popupMenu=menu.getPopupMenu();
+  SourceContact sourceContact=(SourceContact)contact.getDescriptor();
+  List<ContactDetail> details=sourceContact.getContactDetails();
+  int detailsCount=details.size();
+  if (detailsCount > 1) {
+    JMenuItem addContactMenu=TreeContactList.createAddContactMenu((SourceContact)contact.getDescriptor());
+    JPopupMenu popupMenu=((JMenu)addContactMenu).getPopupMenu();
+    JLabel infoLabel=new JLabel();
+    infoLabel.setText("<html><b>" + GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT") + "</b></html>");
+    popupMenu.insert(infoLabel,0);
+    popupMenu.insert(new Separator(),1);
+    popupMenu.setFocusable(true);
+    popupMenu.setInvoker(tree);
+    Point location=new Point(addContactButton.getX(),addContactButton.getY() + addContactButton.getHeight());
+    SwingUtilities.convertPointToScreen(location,tree);
+    location.y=location.y + tree.getPathBounds(tree.getSelectionPath()).y;
+    popupMenu.setLocation(location.x + 8,location.y - 8);
+    popupMenu.setVisible(true);
   }
- else {
-    popupMenu=new JPopupMenu();
-    popupMenu.add(addContactMenu);
+ else   if (details.size() == 1) {
+    TreeContactList.showAddContactDialog(details.get(0));
   }
-  JLabel infoLabel=new JLabel();
-  infoLabel.setText("<html><b>" + GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT") + "</b></html>");
-  popupMenu.insert(infoLabel,0);
-  popupMenu.insert(new Separator(),1);
-  popupMenu.setFocusable(true);
-  popupMenu.setInvoker(tree);
-  Point location=new Point(addContactButton.getX(),addContactButton.getY() + addContactButton.getHeight());
-  SwingUtilities.convertPointToScreen(location,tree);
-  location.y=location.y + tree.getPathBounds(tree.getSelectionPath()).y;
-  popupMenu.setLocation(location.x + 8,location.y - 8);
-  popupMenu.setVisible(true);
 }
