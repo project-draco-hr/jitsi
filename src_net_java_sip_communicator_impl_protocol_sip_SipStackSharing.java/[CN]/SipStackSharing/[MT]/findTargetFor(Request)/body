@@ -3,8 +3,9 @@
     logger.error("request shouldn't be null.");
     return null;
   }
-  Set<ProtocolProviderServiceSipImpl> currentListeners=this.getSipListeners();
-  if (currentListeners.size() == 0) {
+  List<ProtocolProviderServiceSipImpl> currentListenersCopy=new ArrayList<ProtocolProviderServiceSipImpl>(this.getSipListeners());
+  filterByAddress(currentListenersCopy,request);
+  if (currentListenersCopy.size() == 0) {
     logger.error("no listeners");
     return null;
   }
@@ -12,7 +13,7 @@
   if (requestURI.isSipURI()) {
     String requestUser=((SipURI)requestURI).getUser();
     List<ProtocolProviderServiceSipImpl> candidates=new ArrayList<ProtocolProviderServiceSipImpl>();
-    for (    ProtocolProviderServiceSipImpl listener : currentListeners) {
+    for (    ProtocolProviderServiceSipImpl listener : currentListenersCopy) {
       String ourUserID=listener.getAccountID().getUserID();
       if (ourUserID.equals(requestUser)) {
         if (logger.isTraceEnabled())         logger.trace("suitable candidate found: " + listener.getAccountID());
@@ -33,15 +34,6 @@
           return candidate;
         }
       }
-      Iterator<ProtocolProviderServiceSipImpl> iterPP=candidates.iterator();
-      while (iterPP.hasNext()) {
-        ProtocolProviderServiceSipImpl candidate=iterPP.next();
-        if (!candidate.getRegistrarConnection().isRegistrarless() && !candidate.getRegistrarConnection().isRequestFromSameConnection(request))         iterPP.remove();
-      }
-      if (candidates.size() == 0) {
-        logger.error("no listeners, or message not fo us");
-        return null;
-      }
       for (      ProtocolProviderServiceSipImpl candidate : candidates) {
         URI fromURI=((FromHeader)request.getHeader(FromHeader.NAME)).getAddress().getURI();
         if (fromURI.isSipURI() == false)         continue;
@@ -60,7 +52,7 @@
       if (logger.isTraceEnabled())       logger.trace("\n" + request);
       return target;
     }
-    ProtocolProviderServiceSipImpl target=currentListeners.iterator().next();
+    ProtocolProviderServiceSipImpl target=currentListenersCopy.iterator().next();
     if (logger.isInfoEnabled())     logger.info("Will randomly dispatch to \"" + target.getAccountID() + "\" because the username in the Request-URI "+ "is unknown or empty");
     if (logger.isTraceEnabled())     logger.trace("\n" + request);
     return target;
