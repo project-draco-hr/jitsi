@@ -10,6 +10,44 @@
     return;
   }
   final Dialog dialog=serverTransaction.getDialog();
+  CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(dialog);
+  if (callPeer == null) {
+    if (transferAuthority == null) {
+      logger.warn("Ignoring REFER request without call for request:" + referRequest);
+      try {
+        serverTransaction.terminate();
+      }
+ catch (      Throwable e) {
+        logger.warn("Failed to properly terminate transaction for " + "a rogue request. Well ... so be it " + "Request:"+ referRequest);
+      }
+      return;
+    }
+    FromHeader fromHeader=(FromHeader)referRequest.getHeader(FromHeader.NAME);
+    OperationSetPresenceSipImpl opSetPersPresence=(OperationSetPresenceSipImpl)protocolProvider.getOperationSet(OperationSetPersistentPresence.class);
+    Contact from=opSetPersPresence.resolveContactID(fromHeader.getAddress().getURI().toString());
+    if (from == null) {
+      if (logger.isDebugEnabled())       logger.debug("received a message from an unknown contact: " + fromHeader.getAddress().getURI().toString());
+      from=opSetPersPresence.createVolatileContact(fromHeader.getAddress().getURI().toString());
+    }
+    if (!transferAuthority.processTransfer(from,referToAddress.getURI().toString())) {
+      Response declineResponse;
+      try {
+        declineResponse=protocolProvider.getMessageFactory().createResponse(Response.DECLINE,referRequest);
+      }
+ catch (      ParseException e) {
+        logger.error("Error while creating 603 response",e);
+        return;
+      }
+      try {
+        serverTransaction.sendResponse(declineResponse);
+      }
+ catch (      Exception e) {
+        logger.error("Error while sending the response 603",e);
+        return;
+      }
+      return;
+    }
+  }
   Response accepted=null;
   try {
     accepted=protocolProvider.getMessageFactory().createResponse(Response.ACCEPTED,referRequest);
@@ -47,7 +85,6 @@ catch (    SipException ex) {
       }
     }
   }
-  CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(serverTransaction.getDialog());
   if (callPeer != null)   callPeer.setState(CallPeerState.REFERRED);
   CallSipImpl referToCall;
   try {
