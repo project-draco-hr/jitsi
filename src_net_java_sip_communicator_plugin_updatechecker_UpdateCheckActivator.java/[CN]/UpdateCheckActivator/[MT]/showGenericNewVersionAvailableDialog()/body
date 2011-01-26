@@ -1,7 +1,11 @@
 {
+  final boolean[] exitCheckForUpdates=new boolean[]{false};
   final JDialog dialog=new SIPCommDialog(){
     private static final long serialVersionUID=0L;
-    protected void close(    boolean isEscaped){
+    protected void close(    boolean escaped){
+synchronized (exitCheckForUpdates) {
+        if (exitCheckForUpdates[0])         exitCheckForUpdates(this);
+      }
     }
   }
 ;
@@ -17,10 +21,11 @@
   contentPane.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
   contentPane.add(contentMessage,BorderLayout.CENTER);
   JPanel buttonPanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER,10,10));
-  JButton closeButton=new JButton(getResources().getI18NString("plugin.updatechecker.BUTTON_CLOSE"));
+  final JButton closeButton=new JButton(getResources().getI18NString("plugin.updatechecker.BUTTON_CLOSE"));
   closeButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
-      dialog.setVisible(false);
+      dialog.dispose();
+      if (exitCheckForUpdates[0])       exitCheckForUpdates(dialog);
     }
   }
 );
@@ -30,7 +35,7 @@
       public void actionPerformed(      ActionEvent e){
         if (OSUtils.IS_LINUX64)         downloadLink=downloadLink.replace("i386","amd64");
         getBrowserLauncher().openURL(downloadLink);
-        dialog.dispose();
+        closeButton.doClick();
       }
     }
 );
@@ -42,5 +47,16 @@
   dialog.pack();
   Dimension screenSize=Toolkit.getDefaultToolkit().getScreenSize();
   dialog.setLocation(screenSize.width / 2 - dialog.getWidth() / 2,screenSize.height / 2 - dialog.getHeight() / 2);
-  dialog.setVisible(true);
+synchronized (exitCheckForUpdates) {
+    enterCheckForUpdates(dialog);
+    exitCheckForUpdates[0]=true;
+  }
+  try {
+    dialog.setVisible(true);
+  }
+  finally {
+synchronized (exitCheckForUpdates) {
+      if (exitCheckForUpdates[0] && dialog.isModal())       exitCheckForUpdates(dialog);
+    }
+  }
 }

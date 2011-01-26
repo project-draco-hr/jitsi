@@ -1,72 +1,74 @@
 {
-  File tempF=null;
+  final File[] tempFile=new File[1];
+  FileOutputStream tempFileOutputStream=null;
+  boolean deleteTempFile=false;
   try {
-    final File temp=File.createTempFile("sc-install",".exe");
-    tempF=temp;
     URL u=new URL(downloadLink);
+    tempFileOutputStream=createTempFileOutputStream(u,tempFile);
     URLConnection uc=u.openConnection();
     if (uc instanceof HttpURLConnection) {
       if (uc instanceof HttpsURLConnection) {
-        CertificateVerificationService vs=getCertificateVerificationService();
+        CertificateVerificationService cvs=getCertificateVerification();
         int port=u.getPort();
         if (port == -1) {
-          if (u.getProtocol().equals("http")) {
-            port=80;
-          }
- else           if (u.getProtocol().equals("https")) {
-            port=443;
-          }
+          if (u.getProtocol().equals("http"))           port=80;
+ else           if (u.getProtocol().equals("https"))           port=443;
         }
-        ((HttpsURLConnection)uc).setSSLSocketFactory(vs.getSSLContext(u.getHost(),port).getSocketFactory());
+        ((HttpsURLConnection)uc).setSSLSocketFactory(cvs.getSSLContext(u.getHost(),port).getSocketFactory());
       }
     }
-    InputStream in=uc.getInputStream();
-    final ProgressMonitorInputStream pin=new ProgressMonitorInputStream(null,u.toString(),in);
-    ProgressMonitor pm=pin.getProgressMonitor();
-    pm.setMaximum(uc.getContentLength());
-    final BufferedOutputStream out=new BufferedOutputStream(new FileOutputStream(temp));
-    new Thread(new Runnable(){
-      public void run(){
-        try {
-          int read=-1;
-          byte[] buff=new byte[1024];
-          while ((read=pin.read(buff)) != -1) {
-            out.write(buff,0,read);
-          }
-          pin.close();
-          out.flush();
-          out.close();
-          if (getUIService().getPopupDialog().showConfirmPopupDialog(getResources().getI18NString("plugin.updatechecker.DIALOG_WARN"),getResources().getI18NString("plugin.updatechecker.DIALOG_TITLE"),PopupDialog.YES_NO_OPTION,PopupDialog.QUESTION_MESSAGE) != PopupDialog.YES_OPTION) {
-            return;
-          }
-          String packageName=getResources().getSettingsString("plugin.updatechecker.package.name");
-          String workingDir=System.getProperty("user.dir");
-          String updateFileLocation=workingDir + File.separator;
-          if (packageName != null)           updateFileLocation+=packageName + "-up2date.exe";
- else           updateFileLocation+="up2date.exe";
-          ProcessBuilder processBuilder=new ProcessBuilder(new String[]{updateFileLocation,"--wait-parent","--allow-elevation",temp.getCanonicalPath(),workingDir});
-          processBuilder.start();
-          getShutdownService().beginShutdown();
-        }
- catch (        Exception e) {
-          logger.error("Error saving",e);
-          try {
-            pin.close();
-            out.close();
-          }
- catch (          Exception e1) {
-          }
-        }
+    final ProgressMonitorInputStream input=new ProgressMonitorInputStream(null,u.toString(),uc.getInputStream());
+    input.getProgressMonitor().setMaximum(uc.getContentLength());
+    final BufferedOutputStream output=new BufferedOutputStream(tempFileOutputStream);
+    try {
+      int read=-1;
+      byte[] buff=new byte[1024];
+      while ((read=input.read(buff)) != -1)       output.write(buff,0,read);
+      try {
+        input.close();
+      }
+ catch (      IOException ioe) {
+      }
+      output.close();
+      if (getUIService().getPopupDialog().showConfirmPopupDialog(getResources().getI18NString("plugin.updatechecker.DIALOG_WARN"),getResources().getI18NString("plugin.updatechecker.DIALOG_TITLE"),PopupDialog.YES_NO_OPTION,PopupDialog.QUESTION_MESSAGE) != PopupDialog.YES_OPTION)       return;
+      new ProcessBuilder(tempFile[0].getCanonicalPath(),"--wait-parent","SIP_COMMUNICATOR_AUTOUPDATE_INSTALLDIR=\"" + System.getProperty("user.dir") + "\"").start();
+      getShutdownService().beginShutdown();
+    }
+ catch (    Exception e) {
+      logger.error("Error saving",e);
+    }
+ finally {
+      try {
+        input.close();
+      }
+ catch (      IOException ioe) {
+      }
+      try {
+        output.close();
+      }
+ catch (      IOException ioe) {
       }
     }
-).start();
   }
- catch (  FileNotFoundException e) {
+ catch (  FileNotFoundException fnfe) {
+    deleteTempFile=true;
     getUIService().getPopupDialog().showMessagePopupDialog(getResources().getI18NString("plugin.updatechecker.DIALOG_MISSING_UPDATE"),getResources().getI18NString("plugin.updatechecker.DIALOG_NOUPDATE_TITLE"),PopupDialog.INFORMATION_MESSAGE);
-    tempF.delete();
   }
 catch (  Exception e) {
+    deleteTempFile=true;
     if (logger.isInfoEnabled())     logger.info("Error starting update process!",e);
-    tempF.delete();
+    ;
+  }
+ finally {
+    if (deleteTempFile) {
+      if (tempFileOutputStream != null) {
+        try {
+          tempFileOutputStream.close();
+        }
+ catch (        IOException ioe) {
+        }
+      }
+      if (tempFile[0] != null)       tempFile[0].delete();
+    }
   }
 }

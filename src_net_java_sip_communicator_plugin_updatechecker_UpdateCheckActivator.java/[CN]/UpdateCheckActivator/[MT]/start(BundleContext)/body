@@ -1,14 +1,12 @@
 {
   if (logger.isDebugEnabled())   logger.debug("Update checker [STARTED]");
-  try {
-    logger.logEntry();
-    UpdateCheckActivator.bundleContext=bundleContext;
+  UpdateCheckActivator.bundleContext=bundleContext;
+  if (OSUtils.IS_WINDOWS) {
+    checkForUpdatesMenuItemComponent=new CheckForUpdatesMenuItemComponent(Container.CONTAINER_HELP_MENU);
+    Hashtable<String,String> toolsMenuFilter=new Hashtable<String,String>();
+    toolsMenuFilter.put(Container.CONTAINER_ID,Container.CONTAINER_HELP_MENU.getID());
+    bundleContext.registerService(PluginComponent.class.getName(),checkForUpdatesMenuItemComponent,toolsMenuFilter);
+    if (getConfiguration().getBoolean(UPDATECHECKER_ENABLED,true))     checkForUpdates(false);
   }
-  finally {
-    logger.logExit();
-  }
-  Thread updateThread=new Thread(new UpdateCheckThread());
-  updateThread.setDaemon(true);
-  updateThread.start();
   if (logger.isDebugEnabled())   logger.debug("Update checker [REGISTERED]");
 }
