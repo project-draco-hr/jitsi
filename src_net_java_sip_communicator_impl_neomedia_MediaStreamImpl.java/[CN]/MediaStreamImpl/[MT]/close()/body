@@ -15,8 +15,14 @@
     rtpManager.removeSendStreamListener(this);
     rtpManager.removeSessionListener(this);
     rtpManager.removeRemoteListener(this);
-    rtpManager.dispose();
-    rtpManager=null;
+    try {
+      rtpManager.dispose();
+      rtpManager=null;
+    }
+ catch (    Throwable t) {
+      if (t instanceof ThreadDeath)       throw (ThreadDeath)t;
+      logger.error("Failed to dispose of RTPManager",t);
+    }
   }
   if (deviceSession != null)   deviceSession.close();
 }
