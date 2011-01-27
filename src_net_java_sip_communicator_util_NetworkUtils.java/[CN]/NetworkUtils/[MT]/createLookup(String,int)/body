@@ -15,6 +15,7 @@
       }
       InetSocketAddress resolverSockAddr=new InetSocketAddress(resolverAddress,rslvrPort);
       parallelResolver=new ParallelResolver(new InetSocketAddress[]{resolverSockAddr});
+      UtilActivator.getNetworkAddressManagerService().addNetworkConfigurationChangeListener(new NetworkListener());
     }
  catch (    Throwable t) {
       logger.info("failed to initialize parallel resolver. we will " + "be using dnsjava's default one instead");
@@ -22,6 +23,8 @@
       parallelResolver=Lookup.getDefaultResolver();
     }
   }
-  lookup.setResolver(parallelResolver);
+synchronized (parallelResolver) {
+    lookup.setResolver(parallelResolver);
+  }
   return lookup;
 }
