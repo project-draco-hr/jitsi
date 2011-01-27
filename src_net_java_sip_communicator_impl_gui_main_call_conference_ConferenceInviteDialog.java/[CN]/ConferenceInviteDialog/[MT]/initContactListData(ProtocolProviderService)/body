@@ -4,6 +4,17 @@
   Iterator<MetaContact> contactListIter=metaContactListService.findAllMetaContactsForProvider(protocolProvider);
   while (contactListIter.hasNext()) {
     MetaContact metaContact=contactListIter.next();
-    if (!containsContact(metaContact))     this.addMetaContact(metaContact);
+    if (!containsContact(metaContact)) {
+      boolean supportsTelephony=false;
+      Iterator<Contact> contacts=metaContact.getContacts();
+      while (contacts.hasNext()) {
+        Contact contact=contacts.next();
+        if (protocolProvider.getOperationSet(OperationSetBasicTelephony.class) != null && hasContactCapabilities(contact,OperationSetBasicTelephony.class)) {
+          supportsTelephony=true;
+          break;
+        }
+      }
+      if (supportsTelephony)       this.addMetaContact(metaContact);
+    }
   }
 }
