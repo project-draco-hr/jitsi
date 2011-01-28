@@ -1,0 +1,48 @@
+{
+  GridBagConstraints constraints=new GridBagConstraints();
+  constraints.anchor=GridBagConstraints.NORTHWEST;
+  constraints.fill=GridBagConstraints.NONE;
+  constraints.gridx=1;
+  constraints.gridy=0;
+  constraints.gridheight=1;
+  constraints.weightx=0f;
+  constraints.weighty=0f;
+  constraints.insets=new Insets(0,3,0,0);
+  final Icon smsIcon=GuiActivator.getResources().getImage("service.gui.icons.SEND_SMS");
+  final Icon selectedIcon=GuiActivator.getResources().getImage("service.gui.icons.SEND_SMS_SELECTED");
+  smsLabel=new JLabel(smsIcon);
+  smsLabel.setVisible(true);
+  smsMenuItem=new JCheckBoxMenuItem(GuiActivator.getResources().getI18NString("service.gui.VIA_SMS"));
+  smsMenuItem.addChangeListener(new ChangeListener(){
+    public void stateChanged(    ChangeEvent e){
+      smsMode=smsMenuItem.isSelected();
+      Color bgColor;
+      if (smsMode) {
+        smsLabel.setIcon(selectedIcon);
+        bgColor=new Color(GuiActivator.getResources().getColor("service.gui.LIST_SELECTION_COLOR"));
+      }
+ else {
+        smsLabel.setIcon(smsIcon);
+        bgColor=Color.WHITE;
+      }
+      centerPanel.setBackground(bgColor);
+      editorPane.setBackground(bgColor);
+      smsLabel.repaint();
+    }
+  }
+);
+  smsLabel.addMouseListener(new MouseAdapter(){
+    public void mousePressed(    MouseEvent mouseevent){
+      Point location=new Point(smsLabel.getX(),smsLabel.getY() + smsLabel.getHeight());
+      SwingUtilities.convertPointToScreen(location,smsLabel);
+      JPopupMenu smsPopupMenu=new JPopupMenu();
+      smsPopupMenu.setFocusable(true);
+      smsPopupMenu.setInvoker(ChatWritePanel.this);
+      smsPopupMenu.add(smsMenuItem);
+      smsPopupMenu.setLocation(location.x,location.y);
+      smsPopupMenu.setVisible(true);
+    }
+  }
+);
+  centerPanel.add(smsLabel,constraints);
+}

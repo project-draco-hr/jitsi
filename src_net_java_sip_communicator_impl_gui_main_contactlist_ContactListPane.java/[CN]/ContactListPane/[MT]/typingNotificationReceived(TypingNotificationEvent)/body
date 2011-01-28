@@ -7,27 +7,24 @@
     contactName=GuiActivator.getResources().getI18NString("service.gui.UNKNOWN") + " ";
   }
   int typingState=evt.getTypingState();
+  ChatPanel chatPanel=chatWindowManager.getContactChat(metaContact,false);
   if (typingState == OperationSetTypingNotifications.STATE_TYPING) {
     notificationMsg=GuiActivator.getResources().getI18NString("service.gui.CONTACT_TYPING",new String[]{contactName});
-    typingTimer.setMetaContact(metaContact);
-    typingTimer.start();
     if (!chatWindowManager.isChatOpenedFor(metaContact)) {
       this.fireProactiveNotification(evt.getSourceContact());
       return;
     }
-  }
- else   if (typingState == OperationSetTypingNotifications.STATE_PAUSED) {
-    notificationMsg=GuiActivator.getResources().getI18NString("service.gui.CONTACT_PAUSED_TYPING",new String[]{contactName});
+    if (chatPanel != null)     chatPanel.addTypingNotification(notificationMsg);
     typingTimer.setMetaContact(metaContact);
     typingTimer.start();
   }
- else   if (typingState == OperationSetTypingNotifications.STATE_STOPPED) {
-    notificationMsg="";
+ else   if (typingState == OperationSetTypingNotifications.STATE_PAUSED) {
+    notificationMsg=GuiActivator.getResources().getI18NString("service.gui.CONTACT_PAUSED_TYPING",new String[]{contactName});
+    if (chatPanel != null)     chatPanel.addTypingNotification(notificationMsg);
+    typingTimer.setMetaContact(metaContact);
+    typingTimer.start();
   }
- else   if (typingState == OperationSetTypingNotifications.STATE_STALE) {
-    notificationMsg=GuiActivator.getResources().getI18NString("service.gui.CONTACT_TYPING_STATE_STALE");
+ else {
+    if (chatPanel != null)     chatPanel.removeTypingNotification();
   }
- else   if (typingState == OperationSetTypingNotifications.STATE_UNKNOWN) {
-  }
-  this.setChatNotificationMsg(metaContact,notificationMsg);
 }
