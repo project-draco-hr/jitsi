@@ -1,0 +1,23 @@
+{
+  if (destination == null)   return null;
+  if (!destination.isDirectory()) {
+    if (!destination.getName().endsWith("zip"))     destination=new File(destination.getParentFile(),destination.getName() + ".zip");
+  }
+ else {
+    destination=new File(destination,getDefaultFileName());
+  }
+  try {
+    ZipOutputStream out=new ZipOutputStream(new FileOutputStream(destination));
+    collectHomeFolderLogs(out);
+    collectJavaCrashLogs(out);
+    out.close();
+    return destination;
+  }
+ catch (  FileNotFoundException ex) {
+    logger.error("Error creating logs file archive",ex);
+  }
+catch (  IOException ex) {
+    logger.error("Error closing archive file",ex);
+  }
+  return null;
+}

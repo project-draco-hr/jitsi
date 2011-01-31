@@ -1,0 +1,22 @@
+{
+  ResourceManagementService resources=LoggingUtilsActivator.getResourceService();
+  SipCommFileChooser fileChooser=GenericFileDialog.create(null,resources.getI18NString("plugin.callrecordingconfig.CHOOSE_DIR"),SipCommFileChooser.LOAD_FILE_OPERATION);
+  fileChooser.setSelectionMode(SipCommFileChooser.SAVE_FILE_OPERATION);
+  String defaultDir="";
+  try {
+    defaultDir=LoggingUtilsActivator.getFileAccessService().getDefaultDownloadDirectory().getAbsolutePath() + File.separator;
+  }
+ catch (  IOException ex) {
+  }
+  fileChooser.setStartPath(defaultDir + LogsCollector.getDefaultFileName());
+  File dest=fileChooser.getFileFromDialog();
+  if (dest == null)   return;
+  dest=LogsCollector.collectLogs(dest);
+  NotificationService notificationService=LoggingUtilsActivator.getNotificationService();
+  if (notificationService != null) {
+    String bodyMsgKey=null;
+    if (dest != null)     bodyMsgKey="plugin.loggingutils.ARCHIVE_MESSAGE_OK";
+ else     bodyMsgKey="plugin.loggingutils.ARCHIVE_MESSAGE_NOTOK";
+    notificationService.fireNotification(LOGFILES_ARCHIVED,resources.getI18NString("plugin.loggingutils.ARCHIVE_BUTTON"),resources.getI18NString(bodyMsgKey,new String[]{dest.getAbsolutePath()}),null,null);
+  }
+}

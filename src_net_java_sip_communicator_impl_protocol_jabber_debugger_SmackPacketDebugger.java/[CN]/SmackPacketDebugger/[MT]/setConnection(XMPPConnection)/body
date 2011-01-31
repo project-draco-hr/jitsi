@@ -1,7 +1,14 @@
 {
   this.connection=connection;
   try {
-    remoteAddress=InetAddress.getByName(connection.getHost()).getAddress();
+    InetSocketAddress inetAddress;
+    if (Boolean.getBoolean("java.net.preferIPv6Addresses")) {
+      inetAddress=NetworkUtils.getAAAARecord(connection.getHost(),0);
+    }
+ else {
+      inetAddress=NetworkUtils.getARecord(connection.getHost(),0);
+    }
+    if (inetAddress != null)     remoteAddress=inetAddress.getAddress().getAddress();
     if (remoteAddress.length != localAddress.length)     localAddress=new byte[remoteAddress.length];
   }
  catch (  Throwable t) {
