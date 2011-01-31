@@ -1,80 +1,107 @@
 {
-  try {
-    File tempDir=LoggingUtilsActivator.getFileAccessService().getTemporaryDirectory();
-    File newDest=new File(tempDir,LogsCollector.getDefaultFileName());
-    newDest=LogsCollector.collectLogs(newDest);
-    String uploadLocation=LoggingUtilsActivator.getResourceService().getSettingsString("plugin.loggingutils.uploadlocation");
-    if (uploadLocation == null)     return;
-    URL url=new URL(uploadLocation);
-    URLConnection urlConn=url.openConnection();
-    if (!(urlConn instanceof HttpURLConnection))     return;
-    HttpURLConnection conn=(HttpURLConnection)urlConn;
-    if (urlConn instanceof HttpsURLConnection) {
-      CertificateVerificationService vs=LoggingUtilsActivator.getCertificateVerificationService();
-      int port=url.getPort();
-      if (port == -1) {
-        if (url.getProtocol().equals("http")) {
-          port=80;
-        }
- else         if (url.getProtocol().equals("https")) {
-          port=443;
-        }
-      }
-      ((HttpsURLConnection)urlConn).setSSLSocketFactory(vs.getSSLContext(url.getHost(),port).getSocketFactory());
-    }
-    Random random=new Random();
-    String boundary="---------------------------" + Long.toString(random.nextLong(),36) + Long.toString(random.nextLong(),36)+ Long.toString(random.nextLong(),36);
-    conn.setDoOutput(true);
-    conn.setRequestProperty("Content-Type","multipart/form-data; boundary=" + boundary);
-    OutputStream out=conn.getOutputStream();
-    out.write("--".getBytes());
-    out.write(boundary.getBytes());
-    out.write("\r\n".getBytes());
-    out.write("Content-Disposition: form-data; name=\"".getBytes());
-    out.write("logs".getBytes());
-    out.write('"');
-    out.write("; filename=\"".getBytes());
-    out.write(newDest.getPath().getBytes());
-    out.write('"');
-    out.write("\r\n".getBytes());
-    out.write("Content-Type: ".getBytes());
-    String type=conn.guessContentTypeFromName(newDest.getPath());
-    if (type == null)     type="application/octet-stream";
-    out.write(type.getBytes());
-    out.write("\r\n".getBytes());
-    out.write("\r\n".getBytes());
-    byte[] buf=new byte[4096];
-    int nread;
-    FileInputStream in=new FileInputStream(newDest);
-    while ((nread=in.read(buf,0,buf.length)) >= 0) {
-      out.write(buf,0,nread);
-    }
-    out.flush();
-    buf=null;
-    out.write("\r\n".getBytes());
-    out.write("--".getBytes());
-    out.write(boundary.getBytes());
-    out.write("--".getBytes());
-    out.write("\r\n".getBytes());
-    out.close();
-    InputStream serverInput=conn.getInputStream();
-    BufferedReader input=new BufferedReader(new InputStreamReader(serverInput));
-    if (logger.isDebugEnabled()) {
-      logger.debug("Log files uploaded result:");
-      String str;
-      while ((str=input.readLine()) != null) {
-        logger.debug(str);
-      }
-    }
-    input.close();
-    NotificationService notificationService=LoggingUtilsActivator.getNotificationService();
-    if (notificationService != null) {
-      String bodyMsgKey="plugin.loggingutils.ARCHIVE_MESSAGE_OK";
-      ResourceManagementService resources=LoggingUtilsActivator.getResourceService();
-      notificationService.fireNotification(LOGFILES_ARCHIVED,resources.getI18NString("plugin.loggingutils.ARCHIVE_BUTTON"),resources.getI18NString(bodyMsgKey,new String[]{uploadLocation}),null,null);
+  ResourceManagementService resources=LoggingUtilsActivator.getResourceService();
+  final SIPCommDialog dialog=new SIPCommDialog(false){
+    /** 
+ * Dialog is closed. Do nothing.
+ * @param escaped <tt>true</tt> if this dialog has been
+ * closed by pressing
+ */
+    protected void close(    boolean escaped){
     }
   }
- catch (  Throwable e) {
-    logger.error("Cannot upload file",e);
+;
+  dialog.setModal(true);
+  dialog.setTitle(resources.getI18NString("plugin.loggingutils.UPLOAD_LOGS_BUTTON"));
+  Container container=dialog.getContentPane();
+  container.setLayout(new GridBagLayout());
+  JLabel descriptionLabel=new JLabel("Add a comment:");
+  final JTextArea commentTextArea=new JTextArea();
+  commentTextArea.setRows(4);
+  final JButton uploadButton=new JButton(resources.getI18NString("plugin.loggingutils.UPLOAD_BUTTON"));
+  final SIPCommTextField emailField=new SIPCommTextField(resources.getI18NString("plugin.loggingutils.ARCHIVE_UPREPORT_EMAIL"));
+  final JCheckBox emailCheckBox=new SIPCommCheckBox("Email me when more information is available");
+  emailCheckBox.setSelected(true);
+  emailCheckBox.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      if (!emailCheckBox.isSelected()) {
+        uploadButton.setEnabled(true);
+        emailField.setEnabled(false);
+      }
+ else {
+        emailField.setEnabled(true);
+        if (emailField.getText() != null && emailField.getText().trim().length() > 0)         uploadButton.setEnabled(true);
+ else         uploadButton.setEnabled(false);
+      }
+    }
   }
+);
+  emailField.getDocument().addDocumentListener(new DocumentListener(){
+    public void insertUpdate(    DocumentEvent e){
+      updateButtonsState();
+    }
+    public void removeUpdate(    DocumentEvent e){
+      updateButtonsState();
+    }
+    public void changedUpdate(    DocumentEvent e){
+    }
+    /** 
+ * Check whether we should enable upload button.
+ */
+    private void updateButtonsState(){
+      if (emailCheckBox.isSelected() && emailField.getText() != null && emailField.getText().trim().length() > 0)       uploadButton.setEnabled(true);
+ else       uploadButton.setEnabled(false);
+    }
+  }
+);
+  GridBagConstraints c=new GridBagConstraints();
+  c.fill=GridBagConstraints.HORIZONTAL;
+  c.insets=new Insets(10,10,3,10);
+  c.weightx=1.0;
+  c.gridx=0;
+  c.gridy=0;
+  container.add(descriptionLabel,c);
+  c.insets=new Insets(0,10,10,10);
+  c.gridy=1;
+  container.add(new JScrollPane(commentTextArea),c);
+  c.insets=new Insets(0,10,0,10);
+  c.gridy=2;
+  container.add(emailCheckBox,c);
+  c.insets=new Insets(0,10,10,10);
+  c.gridy=3;
+  container.add(emailField,c);
+  JButton cancelButton=new JButton(resources.getI18NString("service.gui.CANCEL"));
+  cancelButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      dialog.dispose();
+    }
+  }
+);
+  uploadButton.setEnabled(false);
+  uploadButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      try {
+        ArrayList<String> paramNames=new ArrayList<String>();
+        ArrayList<String> paramValues=new ArrayList<String>();
+        if (emailCheckBox.isSelected()) {
+          paramNames.add("Email");
+          paramValues.add(emailField.getText());
+        }
+        paramNames.add("Description");
+        paramValues.add(commentTextArea.getText());
+        uploadLogs(paramNames.toArray(new String[]{}),paramValues.toArray(new String[]{}));
+      }
+  finally {
+        dialog.dispose();
+      }
+    }
+  }
+);
+  JPanel buttonsPanel=new TransparentPanel(new FlowLayout(FlowLayout.RIGHT));
+  buttonsPanel.add(uploadButton);
+  buttonsPanel.add(cancelButton);
+  c.anchor=GridBagConstraints.LINE_END;
+  c.weightx=0;
+  c.gridy=4;
+  container.add(buttonsPanel,c);
+  dialog.setVisible(true);
 }
