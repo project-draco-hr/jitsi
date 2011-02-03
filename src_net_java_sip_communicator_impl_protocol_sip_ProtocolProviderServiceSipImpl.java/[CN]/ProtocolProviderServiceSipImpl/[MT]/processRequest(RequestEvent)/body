@@ -54,12 +54,32 @@ catch (      InvalidArgumentException e) {
   }
   String method=request.getMethod();
   List<MethodProcessor> processors=methodProcessors.get(method);
+  boolean processedAtLeastOnce=false;
   if (processors != null) {
     if (logger.isDebugEnabled())     logger.debug("Found " + processors.size() + " processor(s) for method "+ method);
     for (    MethodProcessor processor : processors) {
       if (processor.processRequest(requestEvent)) {
+        processedAtLeastOnce=true;
         break;
       }
+    }
+  }
+  if (!processedAtLeastOnce) {
+    ServerTransaction serverTransaction;
+    try {
+      serverTransaction=SipStackSharing.getOrCreateServerTransaction(requestEvent);
+      if (serverTransaction == null) {
+        logger.warn("Could not create a transaction for a " + "non-supported method " + request.getMethod());
+        return;
+      }
+      TransactionState state=serverTransaction.getState();
+      if (TransactionState.TRYING.equals(state) || TransactionState.PROCEEDING.equals(state)) {
+        Response response=this.getMessageFactory().createResponse(Response.NOT_IMPLEMENTED,request);
+        serverTransaction.sendResponse(response);
+      }
+    }
+ catch (    Throwable exc) {
+      logger.warn("Could not respond to a non-supported method " + request.getMethod(),exc);
     }
   }
 }
