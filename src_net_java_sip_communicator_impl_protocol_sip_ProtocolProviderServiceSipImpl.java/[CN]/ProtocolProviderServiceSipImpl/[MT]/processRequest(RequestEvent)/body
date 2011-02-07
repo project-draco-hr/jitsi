@@ -12,6 +12,16 @@
     }
     return;
   }
+synchronized (earlyProcessors) {
+    for (    SipMessageProcessor listener : earlyProcessors) {
+      try {
+        if (!listener.processMessage(requestEvent))         return;
+      }
+ catch (      Throwable t) {
+        logger.error("Error pre-processing message",t);
+      }
+    }
+  }
   EventHeader eventHeader=(EventHeader)request.getHeader(EventHeader.NAME);
   if (eventHeader != null) {
     boolean eventKnown;

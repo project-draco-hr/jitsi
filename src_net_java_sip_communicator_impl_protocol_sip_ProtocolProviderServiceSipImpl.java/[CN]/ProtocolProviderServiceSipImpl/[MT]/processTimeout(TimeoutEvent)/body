@@ -6,6 +6,16 @@
     if (logger.isDebugEnabled())     logger.debug("ignoring a transactionless timeout event");
     return;
   }
+synchronized (earlyProcessors) {
+    for (    SipMessageProcessor listener : earlyProcessors) {
+      try {
+        if (!listener.processTimeout(timeoutEvent,null))         return;
+      }
+ catch (      Throwable t) {
+        logger.error("Error pre-processing message",t);
+      }
+    }
+  }
   Request request=transaction.getRequest();
   if (logger.isDebugEnabled())   logger.debug("received timeout for req=" + request);
   String method=request.getMethod();
