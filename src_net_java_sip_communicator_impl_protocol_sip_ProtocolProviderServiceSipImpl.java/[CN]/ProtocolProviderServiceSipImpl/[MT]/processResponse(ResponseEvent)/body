@@ -5,16 +5,7 @@
     return;
   }
   Response response=responseEvent.getResponse();
-synchronized (earlyProcessors) {
-    for (    SipMessageProcessor listener : earlyProcessors) {
-      try {
-        if (!listener.processResponse(responseEvent,null))         return;
-      }
- catch (      Throwable t) {
-        logger.error("Error pre-processing message",t);
-      }
-    }
-  }
+  earlyProcessMessage(responseEvent);
   String method=((CSeqHeader)response.getHeader(CSeqHeader.NAME)).getMethod();
   List<MethodProcessor> processors=methodProcessors.get(method);
   if (processors != null) {
