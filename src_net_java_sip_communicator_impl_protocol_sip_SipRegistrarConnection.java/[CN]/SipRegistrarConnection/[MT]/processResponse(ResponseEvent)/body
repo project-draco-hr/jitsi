@@ -23,7 +23,9 @@
   }
  else   if (response.getStatusCode() >= 400) {
     logger.error("Received an error response.");
-    this.setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,"Received an error while trying to register. " + "Server returned error:" + response.getReasonPhrase());
+    int registrationStateReason=RegistrationStateChangeEvent.REASON_NOT_SPECIFIED;
+    if (response.getStatusCode() == Response.NOT_FOUND)     registrationStateReason=RegistrationStateChangeEvent.REASON_NON_EXISTING_USER_ID;
+    this.setRegistrationState(RegistrationState.CONNECTION_FAILED,registrationStateReason,"Received an error while trying to register. " + "Server returned error:" + response.getReasonPhrase());
     processed=true;
   }
   return processed;
