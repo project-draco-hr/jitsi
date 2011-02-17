@@ -4,25 +4,21 @@ synchronized (videoContainers) {
     if (isVisible != callRenderer.getCallContainer().isShowHideVideoButtonSelected()) {
       callRenderer.getCallContainer().setShowHideVideoButtonSelected(isVisible);
     }
+    if (localVideo == null && isVisible) {
+      try {
+        videoTelephony.createLocalVisualComponent(callPeer,null);
+      }
+ catch (      OperationFailedException e) {
+      }
+    }
     int videoContainerCount;
     if ((videoTelephony != null) && ((videoContainerCount=videoContainers.size()) > 0)) {
       Container videoContainer=videoContainers.get(videoContainerCount - 1);
       if (localVideo != null) {
-        if (isVisible) {
-          Container parent=localVideo.getParent();
-          if (parent != null) {
-            parent.remove(parent);
-            parent.remove(closeButton);
-          }
-          videoContainer.add(closeButton,VideoLayout.CLOSE_LOCAL_BUTTON,0);
-          videoContainer.add(localVideo,VideoLayout.LOCAL,1);
-        }
- else {
-          if (localVideo != null) {
-            videoContainer.remove(localVideo);
-            videoContainer.remove(closeButton);
-          }
-        }
+        videoContainer.remove(localVideo);
+        videoContainer.remove(closeButton);
+        videoTelephony.disposeLocalVisualComponent(callPeer,localVideo);
+        localVideo=null;
       }
     }
   }
