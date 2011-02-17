@@ -4,7 +4,31 @@
   boolean incomingCall=(containingTransaction instanceof ServerTransaction);
   callPeer.setState(incomingCall ? CallPeerState.INCOMING_CALL : CallPeerState.INITIATING_CALL);
   if (this.getCallPeerCount() == 1) {
-    getParentOperationSet().fireCallEvent((incomingCall ? CallEvent.CALL_RECEIVED : CallEvent.CALL_INITIATED),this);
+    ArrayList<MediaType> mediaTypes=null;
+    try {
+      Request inviteReq=containingTransaction.getRequest();
+      if (inviteReq != null && inviteReq.getRawContent() != null) {
+        mediaTypes=new ArrayList<MediaType>();
+        String sdpStr=SdpUtils.getContentAsString(inviteReq);
+        SessionDescription sesDescr=SdpUtils.parseSdpString(sdpStr);
+        List<MediaDescription> remoteDescriptions=SdpUtils.extractMediaDescriptions(sesDescr);
+        for (        MediaDescription mediaDescription : remoteDescriptions) {
+          MediaType mediaType=SdpUtils.getMediaType(mediaDescription);
+          if (mediaType.equals(MediaType.VIDEO)) {
+            MediaDirection videoDirection=SdpUtils.getDirection(mediaDescription);
+            if (videoDirection.allowsSending()) {
+              mediaTypes.add(mediaType);
+              continue;
+            }
+          }
+ else           mediaTypes.add(mediaType);
+        }
+      }
+    }
+ catch (    Throwable t) {
+      logger.warn("Error getting media types",t);
+    }
+    getParentOperationSet().fireCallEvent((incomingCall ? CallEvent.CALL_RECEIVED : CallEvent.CALL_INITIATED),this,mediaTypes);
   }
   return callPeer;
 }
