@@ -1,4 +1,17 @@
 {
-  enableDesktopSharing(call,null,enable);
+  if (!enable)   enableDesktopSharing(call,null,enable);
+ else   if (showDesktopSharingWarning()) {
+    MediaService mediaService=GuiActivator.getMediaService();
+    List<MediaDevice> desktopDevices=mediaService.getDevices(MediaType.VIDEO,MediaUseCase.DESKTOP);
+    int deviceNumber=desktopDevices.size();
+    if (deviceNumber == 1) {
+      enableDesktopSharing(call,null,enable);
+    }
+ else     if (deviceNumber > 1) {
+      SelectScreenDialog selectDialog=new SelectScreenDialog(desktopDevices);
+      selectDialog.setVisible(true);
+      enableDesktopSharing(call,selectDialog.getSelectedDevice(),enable);
+    }
+  }
   enableDesktopRemoteControl(call.getCallPeers().next(),false);
 }

@@ -1,3 +1,14 @@
 {
-  createDesktopSharing(protocolProvider,contact,null);
+  if (!showDesktopSharingWarning())   return;
+  MediaService mediaService=GuiActivator.getMediaService();
+  List<MediaDevice> desktopDevices=mediaService.getDevices(MediaType.VIDEO,MediaUseCase.DESKTOP);
+  int deviceNumber=desktopDevices.size();
+  if (deviceNumber == 1) {
+    createDesktopSharing(protocolProvider,contact,desktopDevices.get(0));
+  }
+ else   if (deviceNumber > 1) {
+    SelectScreenDialog selectDialog=new SelectScreenDialog(desktopDevices);
+    selectDialog.setVisible(true);
+    createDesktopSharing(protocolProvider,contact,selectDialog.getSelectedDevice());
+  }
 }

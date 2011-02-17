@@ -1,0 +1,21 @@
+{
+  isTranslucencySupported=AWTUtilitiesWrapper.isTranslucencySupported(AWTUtilitiesWrapper.PERPIXEL_TRANSLUCENT);
+  GraphicsConfiguration translucencyCapableGC=GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
+  if (!AWTUtilitiesWrapper.isTranslucencyCapable(translucencyCapableGC)) {
+    translucencyCapableGC=null;
+    GraphicsEnvironment env=GraphicsEnvironment.getLocalGraphicsEnvironment();
+    GraphicsDevice[] devices=env.getScreenDevices();
+    for (int i=0; i < devices.length && translucencyCapableGC == null; i++) {
+      GraphicsConfiguration[] configs=devices[i].getConfigurations();
+      for (int j=0; j < configs.length && translucencyCapableGC == null; j++) {
+        if (AWTUtilitiesWrapper.isTranslucencyCapable(configs[j])) {
+          translucencyCapableGC=configs[j];
+        }
+      }
+    }
+    if (translucencyCapableGC == null) {
+      isTranslucencySupported=false;
+    }
+  }
+  return new TransparentFrame(translucencyCapableGC);
+}
