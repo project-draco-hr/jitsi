@@ -3,14 +3,6 @@
   int deviceCount=PortAudio.Pa_GetDeviceCount();
   int defaultInputDeviceIx=PortAudio.Pa_GetDefaultInputDevice();
   int defaultOutputDeviceIx=PortAudio.Pa_GetDefaultOutputDevice();
-  PortAudio.PaHostApiTypeId defaultInputHostApi=PortAudio.PaHostApiTypeId.undefined;
-  PortAudio.PaHostApiTypeId defaultOutputHostApi=PortAudio.PaHostApiTypeId.undefined;
-  if (defaultInputDeviceIx != PortAudio.paNoDevice) {
-    defaultInputHostApi=PortAudio.PaHostApiTypeId.valueOf(PortAudio.PaDeviceInfo_getHostApi(PortAudio.Pa_GetDeviceInfo(defaultInputDeviceIx)));
-  }
-  if (defaultOutputDeviceIx != PortAudio.paNoDevice) {
-    defaultOutputHostApi=PortAudio.PaHostApiTypeId.valueOf(PortAudio.PaDeviceInfo_getHostApi(PortAudio.Pa_GetDeviceInfo(defaultOutputDeviceIx)));
-  }
   Vector<CaptureDeviceInfo> playbackDevVector=new Vector<CaptureDeviceInfo>();
   int channels=1;
   int sampleSizeInBits=16;
@@ -19,20 +11,9 @@
     long deviceInfo=PortAudio.Pa_GetDeviceInfo(deviceIndex);
     int maxInputChannels=PortAudio.PaDeviceInfo_getMaxInputChannels(deviceInfo);
     int maxOutputChannels=PortAudio.PaDeviceInfo_getMaxOutputChannels(deviceInfo);
-    PortAudio.PaHostApiTypeId hostApi=PortAudio.PaHostApiTypeId.valueOf(PortAudio.PaDeviceInfo_getHostApi(deviceInfo));
     String devName=PortAudio.PaDeviceInfo_getName(deviceInfo);
     if (devName != null)     devName=devName.trim();
     CaptureDeviceInfo jmfInfo=new CaptureDeviceInfo(devName,new MediaLocator(LOCATOR_PROTOCOL + ":#" + deviceIndex),new Format[]{new AudioFormat(AudioFormat.LINEAR,(maxInputChannels > 0) ? getSupportedSampleRate(true,deviceIndex,channels,sampleFormat) : PortAudio.DEFAULT_SAMPLE_RATE,sampleSizeInBits,channels,AudioFormat.LITTLE_ENDIAN,AudioFormat.SIGNED,Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,Format.byteArray)});
-    if (OSUtils.IS_WINDOWS) {
-      if (defaultInputHostApi != PortAudio.PaHostApiTypeId.paDirectSound && hostApi == PortAudio.PaHostApiTypeId.paDirectSound && maxInputChannels > 0) {
-        defaultInputHostApi=hostApi;
-        defaultInputDeviceIx=deviceIndex;
-      }
-      if (defaultOutputHostApi != PortAudio.PaHostApiTypeId.paDirectSound && hostApi == PortAudio.PaHostApiTypeId.paDirectSound && maxOutputChannels > 0) {
-        defaultOutputHostApi=hostApi;
-        defaultOutputDeviceIx=deviceIndex;
-      }
-    }
     if (maxInputChannels > 0) {
       CaptureDeviceManager.addDevice(jmfInfo);
       if (logger.isDebugEnabled())       logger.debug("Adding capture device: [" + devName + "]");
