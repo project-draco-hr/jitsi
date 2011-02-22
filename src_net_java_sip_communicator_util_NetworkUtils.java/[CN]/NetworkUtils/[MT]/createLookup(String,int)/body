@@ -6,7 +6,13 @@
       String rslvrAddrStr=DEFAULT_BACKUP_RESOLVER;
       String customRslvrIP=UtilActivator.getResources().getSettingsString(PNAME_BACKUP_RESOLVER_IP);
       if (!StringUtils.isNullOrEmpty(customRslvrAddr))       rslvrAddrStr=customRslvrAddr;
-      InetAddress resolverAddress=getInetAddress(rslvrAddrStr);
+      InetAddress resolverAddress=null;
+      try {
+        resolverAddress=getInetAddress(rslvrAddrStr);
+      }
+ catch (      UnknownHostException exc) {
+        logger.warn("Oh! Seems like our primary DNS is down!" + "Don't panic! We'll try to fall back to " + customRslvrIP);
+      }
       if (resolverAddress == null) {
         resolverAddress=getInetAddress(customRslvrIP);
       }

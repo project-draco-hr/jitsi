@@ -1,9 +1,23 @@
 {
   logger.info("Send DNS queries to backup resolvers");
-synchronized (this) {
-    for (    Resolver resolver : backupResolvers) {
-      if (done)       return;
-      resolver.sendAsync(query,this);
+  new Thread(){
+    public void run(){
+synchronized (ParallelResolution.this) {
+        if (done)         return;
+        Message localResponse=null;
+        try {
+          localResponse=backupResolver.send(query);
+        }
+ catch (        Throwable exc) {
+          logger.info("Exception occurred during backup " + "DNS resolving" + exc);
+          exception=exc;
+        }
+        if (done)         return;
+        response=localResponse;
+        done=true;
+        ParallelResolution.this.notify();
+      }
     }
   }
+.start();
 }

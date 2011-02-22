@@ -4,13 +4,15 @@
     localResponse=defaultResolver.send(query);
   }
  catch (  Throwable exc) {
-    logger.info("Exception occurred during parallel DNS resolving" + exc);
+    logger.info("Exception occurred during parallel DNS resolving" + exc,exc);
     this.exception=exc;
   }
 synchronized (this) {
     if (done)     return;
-    response=localResponse;
-    done=true;
+    if (localResponse == null || isResponseSatisfactory(localResponse)) {
+      response=localResponse;
+      done=true;
+    }
     notify();
   }
 }

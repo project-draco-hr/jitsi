@@ -1,13 +1,13 @@
 {
-  for (  InetSocketAddress server : backupServers) {
-    SimpleResolver resolver;
-    try {
-      resolver=new SimpleResolver();
+  try {
+    backupResolver=new ExtendedResolver(new SimpleResolver[]{});
+    for (    InetSocketAddress backupServer : backupServers) {
+      SimpleResolver sr=new SimpleResolver();
+      sr.setAddress(backupServer);
+      backupResolver.addResolver(sr);
     }
- catch (    UnknownHostException e) {
-      return;
-    }
-    resolver.setAddress(server);
-    backupResolvers.add(resolver);
+  }
+ catch (  UnknownHostException e) {
+    throw new IllegalStateException("The impossible just happened: " + "we could not initialize our backup DNS resolver");
   }
 }
