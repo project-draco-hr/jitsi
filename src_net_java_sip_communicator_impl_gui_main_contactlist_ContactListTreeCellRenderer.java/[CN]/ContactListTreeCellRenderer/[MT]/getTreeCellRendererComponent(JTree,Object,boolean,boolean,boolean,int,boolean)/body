@@ -17,7 +17,7 @@
   if (value instanceof ContactNode) {
     UIContact contact=((ContactNode)value).getContactDescriptor();
     String displayName=contact.getDisplayName();
-    if (displayName == null || displayName.trim().length() < 1) {
+    if ((displayName == null || displayName.trim().length() < 1) && !(contact instanceof ShowMoreContact)) {
       displayName=GuiActivator.getResources().getI18NString("service.gui.UNKNOWN");
     }
     this.nameLabel.setText(displayName);
@@ -25,7 +25,13 @@
  else     statusIcon=contact.getStatusIcon();
     this.statusLabel.setIcon(statusIcon);
     this.nameLabel.setFont(this.getFont().deriveFont(Font.PLAIN));
-    if (contactForegroundColor != null)     this.nameLabel.setForeground(contactForegroundColor);
+    if (contactForegroundColor != null)     nameLabel.setForeground(contactForegroundColor);
+    if (contact instanceof ShowMoreContact) {
+      rightLabel.setFont(rightLabel.getFont().deriveFont(12f));
+      rightLabel.setForeground(Color.GRAY);
+      rightLabel.setText((String)contact.getDescriptor());
+    }
+ else     rightLabel.setText("");
     this.initDisplayDetails(contact);
     this.initButtonsPanel(contact);
     int avatarWidth, avatarHeight;
@@ -41,7 +47,6 @@
     if (avatar != null) {
       this.rightLabel.setIcon(avatar);
     }
-    this.rightLabel.setText("");
     this.setToolTipText(contact.getDescriptor().toString());
   }
  else   if (value instanceof GroupNode) {
@@ -57,7 +62,12 @@
     this.remove(addContactButton);
     this.statusLabel.setIcon(expanded ? openedGroupIcon : closedGroupIcon);
     this.rightLabel.setIcon(null);
-    if (groupItem.countChildContacts() >= 0)     this.rightLabel.setText(groupItem.countOnlineChildContacts() + "/" + groupItem.countChildContacts());
+    this.rightLabel.setText("");
+    if (groupItem.countChildContacts() >= 0) {
+      rightLabel.setFont(rightLabel.getFont().deriveFont(9f));
+      this.rightLabel.setForeground(Color.BLACK);
+      this.rightLabel.setText(groupItem.countOnlineChildContacts() + "/" + groupItem.countChildContacts());
+    }
     this.setToolTipText(groupItem.getDescriptor().toString());
   }
   return this;

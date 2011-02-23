@@ -4,9 +4,17 @@ synchronized (filterQueries) {
       cancelQuery(contactQuery);
       return;
     }
-    filterQueries.add(contactQuery);
+    List<SourceContact> queryResults=new ArrayList<SourceContact>();
+    if (contactQuery instanceof ContactQuery) {
+      ContactQuery externalQuery=(ContactQuery)contactQuery;
+      List<SourceContact> externalResults=externalQuery.getQueryResults();
+      if (externalResults != null && externalResults.size() > 0)       queryResults=new ArrayList<SourceContact>(externalResults);
+      externalQuery.addContactQueryListener(this);
+    }
+ else     if (contactQuery instanceof MetaContactQuery) {
+      ((MetaContactQuery)contactQuery).addContactQueryListener(this);
+    }
+    filterQueries.put(contactQuery,queryResults);
     runningQueries++;
-    if (contactQuery instanceof ContactQuery)     ((ContactQuery)contactQuery).addContactQueryListener(this);
- else     if (contactQuery instanceof MetaContactQuery)     ((MetaContactQuery)contactQuery).addContactQueryListener(this);
   }
 }
