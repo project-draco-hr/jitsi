@@ -1,0 +1,21 @@
+{
+  String osgiFilter="(" + ConfigurationForm.FORM_TYPE + "="+ ConfigurationForm.ADVANCED_TYPE+ ")";
+  ServiceReference[] confFormsRefs=null;
+  try {
+    confFormsRefs=bundleContext.getServiceReferences(ConfigurationForm.class.getName(),osgiFilter);
+  }
+ catch (  InvalidSyntaxException ex) {
+  }
+  if (confFormsRefs != null) {
+    for (int i=0; i < confFormsRefs.length; i++) {
+      ConfigurationForm form=(ConfigurationForm)bundleContext.getService(confFormsRefs[i]);
+      if (form instanceof LazyConfigurationForm) {
+        LazyConfigurationForm lazyConfigForm=(LazyConfigurationForm)form;
+        if (lazyConfigForm.getFormClassName().equals(provisioningFormClassName)) {
+          return form;
+        }
+      }
+    }
+  }
+  return null;
+}
