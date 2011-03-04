@@ -4,11 +4,18 @@
   for (  CaptureDeviceInfo dev : devInfos) {
     Format fmts[]=dev.getFormats();
     if (fmts.length > 0 && fmts[0] instanceof VideoFormat) {
-      copyDevInfos.add(dev);
+      if (dev.getName().startsWith("Desktop Streaming")) {
+        copyDevInfos.add(dev);
+      }
     }
   }
   for (  CaptureDeviceInfo dev : copyDevInfos) {
     CaptureDeviceManager.removeDevice(dev);
   }
-  initializeVideo();
+  try {
+    new ImageStreamingAuto();
+  }
+ catch (  Throwable exc) {
+    logger.debug("No desktop streaming available: " + exc.getMessage(),exc);
+  }
 }
