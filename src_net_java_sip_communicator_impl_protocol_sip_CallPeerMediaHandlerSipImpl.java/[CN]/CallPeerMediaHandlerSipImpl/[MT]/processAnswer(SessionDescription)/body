@@ -3,7 +3,14 @@
   List<MediaDescription> remoteDescriptions=SdpUtils.extractMediaDescriptions(answer);
   this.setCallInfoURL(SdpUtils.getCallInfoURL(answer));
   for (  MediaDescription mediaDescription : remoteDescriptions) {
-    MediaType mediaType=SdpUtils.getMediaType(mediaDescription);
+    MediaType mediaType;
+    try {
+      mediaType=SdpUtils.getMediaType(mediaDescription);
+    }
+ catch (    IllegalArgumentException iae) {
+      logger.info("Remote party added to answer a media type that " + "we don't understand. Ignoring stream.");
+      continue;
+    }
     MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,answer);
     if (target.getDataAddress().getPort() == 0) {
       closeStream(mediaType);
@@ -18,7 +25,7 @@
     MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
     devDirection=devDirection.and(getDirectionUserPreference(mediaType));
     if (supportedFormats.isEmpty()) {
-      ProtocolProviderServiceSipImpl.throwOperationFailedException("Remote party sent an invalid SDP answer.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
+      ProtocolProviderServiceSipImpl.throwOperationFailedException("Remote party sent an invalid SDP answer. The codecs in " + "the answer are either not present or not " + "supported",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
     }
     StreamConnector connector=getTransportManager().getStreamConnector(mediaType);
     MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);

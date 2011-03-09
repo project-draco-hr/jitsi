@@ -4,7 +4,13 @@
   this.setCallInfoURL(SdpUtils.getCallInfoURL(offer));
   boolean atLeastOneValidDescription=false;
   for (  MediaDescription mediaDescription : remoteDescriptions) {
-    MediaType mediaType=SdpUtils.getMediaType(mediaDescription);
+    MediaType mediaType=null;
+    try {
+      mediaType=SdpUtils.getMediaType(mediaDescription);
+    }
+ catch (    IllegalArgumentException iae) {
+      answerDescriptions.add(SdpUtils.createDisablingAnswer(mediaDescription));
+    }
     List<MediaFormat> remoteFormats=SdpUtils.extractFormats(mediaDescription,getDynamicPayloadTypes());
     MediaDevice dev=getDefaultDevice(mediaType);
     MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
