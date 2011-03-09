@@ -1,0 +1,53 @@
+{
+  final Vector<String> nodes=new Vector<String>();
+  InitialDirContext dirContext=null;
+  if (dn.equals("")) {
+    String[] returningAttributes={"namingContexts"};
+    final SearchControls searchCtl=new SearchControls();
+    searchCtl.setSearchScope(SearchControls.OBJECT_SCOPE);
+    searchCtl.setReturningAttributes(returningAttributes);
+    searchCtl.setTimeLimit(5000);
+    logger.trace("starting search...");
+    try {
+      dirContext=connect();
+      NamingEnumeration<?> result=dirContext.search(dn,"(objectClass=*)",searchCtl);
+      while (result.hasMore()) {
+        SearchResult searchResult=(SearchResult)result.next();
+        Attributes attributes=searchResult.getAttributes();
+        Attribute attribute=attributes.get("namingContexts");
+        NamingEnumeration<?> values=attribute.getAll();
+        while (values.hasMore()) {
+          nodes.add((String)values.next());
+        }
+      }
+    }
+ catch (    NamingException e) {
+      logger.trace("error when performing ldap search query" + e);
+    }
+ finally {
+      if (dirContext != null)       disconnect(dirContext);
+    }
+  }
+ else {
+    final SearchControls searchCtl=new SearchControls();
+    searchCtl.setSearchScope(SearchControls.ONELEVEL_SCOPE);
+    logger.trace("starting search...");
+    try {
+      dirContext=connect();
+      NamingEnumeration<?> result=dirContext.search(dn,"(objectClass=*)",searchCtl);
+      while (result.hasMore()) {
+        SearchResult sr=(SearchResult)result.next();
+        nodes.add(sr.getName());
+        logger.trace(sr.getName());
+      }
+    }
+ catch (    NamingException e) {
+      logger.trace("error when performing ldap search query" + e);
+      e.printStackTrace();
+    }
+ finally {
+      if (dirContext != null)       disconnect(dirContext);
+    }
+  }
+  return nodes;
+}

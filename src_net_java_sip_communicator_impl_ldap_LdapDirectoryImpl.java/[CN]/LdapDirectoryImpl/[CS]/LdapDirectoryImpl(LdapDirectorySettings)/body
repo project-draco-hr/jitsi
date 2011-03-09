@@ -1,0 +1,34 @@
+{
+  String portText;
+  if (!textHasContent(settings.getName()))   throw new IllegalArgumentException("name has no content.");
+  if (!textHasContent(settings.getHostname()))   throw new IllegalArgumentException("Hostname has no content.");
+  if (settings.getAuth() != Auth.NONE && !textHasContent(settings.getBindDN()))   throw new IllegalArgumentException("Bind DN has no content.");
+  if (settings.getAuth() != Auth.NONE && settings.getPassword() == null)   throw new IllegalArgumentException("password is null.");
+  if (settings.getPort() < 0 || settings.getPort() > 65535)   throw new IllegalArgumentException("Illegal port number.");
+  if (settings.getBaseDN() == null)   throw new IllegalArgumentException("Base DN has no content.");
+  this.settings=settings.clone();
+  if (this.settings.getPort() == 0)   portText=":" + this.settings.getEncryption().defaultPort();
+  portText=":" + this.settings.getPort();
+  this.env.put(Context.INITIAL_CONTEXT_FACTORY,"com.sun.jndi.ldap.LdapCtxFactory");
+  this.env.put("com.sun.jndi.ldap.connect.timeout",LDAP_CONNECT_TIMEOUT);
+  this.env.put("com.sun.jndi.ldap.read.timeout",LDAP_READ_TIMEOUT);
+  this.env.put(Context.PROVIDER_URL,settings.getEncryption().protocolString() + settings.getHostname() + portText+ "/");
+  this.env.put("com.sun.jndi.ldap.connect.pool","true");
+switch (this.settings.getEncryption()) {
+case CLEAR:
+    break;
+case SSL:
+  this.env.put(Context.SECURITY_PROTOCOL,"ssl");
+break;
+}
+switch (this.settings.getAuth()) {
+case NONE:
+this.env.put(Context.SECURITY_AUTHENTICATION,"none");
+break;
+case SIMPLE:
+this.env.put(Context.SECURITY_AUTHENTICATION,"simple");
+this.env.put(Context.SECURITY_PRINCIPAL,this.settings.getBindDN());
+this.env.put(Context.SECURITY_CREDENTIALS,this.settings.getPassword());
+break;
+}
+}

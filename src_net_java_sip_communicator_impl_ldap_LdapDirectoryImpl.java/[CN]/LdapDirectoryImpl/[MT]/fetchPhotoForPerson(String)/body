@@ -1,0 +1,35 @@
+{
+  byte[] photo=null;
+  InitialDirContext dirContext=null;
+  final SearchControls searchCtl=new SearchControls();
+  searchCtl.setSearchScope(SearchControls.OBJECT_SCOPE);
+  String[] returningAttributes={PHOTO_ATTRIBUTE};
+  searchCtl.setReturningAttributes(returningAttributes);
+  logger.trace("starting photo retrieval...");
+  try {
+    dirContext=connect();
+    String newBaseDN;
+    if (settings.getBaseDN().equals(""))     newBaseDN=dn;
+ else     newBaseDN=dn + "," + this.settings.getBaseDN();
+    NamingEnumeration<?> result=dirContext.search(newBaseDN,"(objectClass=*)",searchCtl);
+    if (result.hasMore()) {
+      SearchResult searchResult=(SearchResult)result.next();
+      Attributes attributes=searchResult.getAttributes();
+      Attribute attribute=attributes.get(PHOTO_ATTRIBUTE);
+      if (attribute != null) {
+        NamingEnumeration<?> values=attribute.getAll();
+        if (values.hasMore()) {
+          photo=(byte[])values.next();
+        }
+      }
+    }
+  }
+ catch (  NamingException e) {
+    logger.trace("error when performing photo retrieval" + e);
+    e.printStackTrace();
+  }
+ finally {
+    if (dirContext != null)     disconnect(dirContext);
+  }
+  return photo;
+}

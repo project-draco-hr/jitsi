@@ -1,0 +1,62 @@
+{
+  Thread searchThread=new Thread(){
+    int cancelState=0;
+    public void run(){
+      logger.trace("starting search for " + realQueryString + " (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\"");
+      SearchControls searchControls=buildSearchControls(searchSettings);
+      LdapEvent endEvent=null;
+      InitialDirContext dirContext=null;
+      try {
+        if (searchSettings.isDelaySet())         Thread.sleep(searchSettings.getDelay());
+        checkCancel();
+        dirContext=connect();
+        checkCancel();
+        long time0=System.currentTimeMillis();
+        NamingEnumeration<?> results=dirContext.search(LdapDirectoryImpl.this.settings.getBaseDN(),buildSearchFilter(realQueryString),searchControls);
+        checkCancel();
+        while (results.hasMore()) {
+          checkCancel();
+          SearchResult searchResult=(SearchResult)results.next();
+          Map<String,Set<String>> retrievedAttributes=retrieveAttributes(searchResult);
+          LdapPersonFound person=buildPerson(query,searchResult.getName(),retrievedAttributes);
+          LdapEvent resultEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.NEW_SEARCH_RESULT,(Object)person);
+          fireLdapEvent(resultEvent,caller);
+        }
+        long time1=System.currentTimeMillis();
+        logger.trace("search for real query \"" + realQueryString + "\" (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\" took "+ (time1 - time0)+ "ms");
+        endEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.SEARCH_ACHIEVED,query);
+      }
+ catch (      NamingException e) {
+        logger.trace("an external exception was thrown during search" + " for real query \"" + realQueryString + "\" (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\": "+ e);
+        endEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.SEARCH_ERROR,query);
+      }
+catch (      LdapQueryCancelledException e) {
+        logger.trace("search for real query \"" + realQueryString + "\" (initial query: \""+ query.toString()+ "\") on "+ LdapDirectoryImpl.this+ " cancelled at state "+ cancelState);
+        endEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.SEARCH_CANCELLED,query);
+      }
+catch (      InterruptedException e) {
+      }
+ finally {
+        fireLdapEvent(endEvent,caller);
+        if (dirContext != null)         disconnect(dirContext);
+      }
+    }
+    /** 
+ * Checks if the query that triggered this search has
+ * been marked as cancelled. If that's the case, the
+ * search thread should be stopped and this method will
+ * send a search cancelled event to the search initiator.
+ * This method should be called by the search thread as
+ * often as possible to quickly interrupt when needed.
+ */
+    private void checkCancel() throws LdapQueryCancelledException {
+      if (query.getState() == LdapQuery.State.CANCELLED) {
+        throw new LdapQueryCancelledException();
+      }
+      this.cancelState++;
+    }
+  }
+;
+  searchThread.setDaemon(true);
+  searchThread.start();
+}

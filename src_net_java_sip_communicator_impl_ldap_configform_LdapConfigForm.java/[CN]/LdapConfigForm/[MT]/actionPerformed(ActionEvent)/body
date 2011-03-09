@@ -1,0 +1,31 @@
+{
+  int row=this.directoryTable.getSelectedRow();
+  LdapFactory factory=LdapActivator.getLdapService().getFactory();
+  LdapDirectorySet serverSet=LdapActivator.getLdapService().getServerSet();
+  if (e.getActionCommand().equals("new")) {
+    LdapDirectorySettings settings=factory.createServerSettings();
+    settingsForm.loadData(settings);
+    int ret=settingsForm.showDialog();
+    if (ret == 1) {
+      LdapDirectory server=factory.createServer(settingsForm.getSettings());
+      serverSet.addServer(server);
+      refresh();
+    }
+  }
+  if (e.getActionCommand().equals("modify") && row != -1) {
+    LdapDirectory oldServer=this.tableModel.getServerAt(row);
+    LdapDirectorySettings settings=oldServer.getSettings();
+    settingsForm.loadData(settings);
+    int ret=settingsForm.showDialog();
+    if (ret == 1) {
+      LdapDirectory newServer=factory.createServer(settingsForm.getSettings());
+      serverSet.removeServerWithName(oldServer.getSettings().getName());
+      serverSet.addServer(newServer);
+      refresh();
+    }
+  }
+  if (e.getActionCommand().equals("remove") && row != -1) {
+    serverSet.removeServerWithName(this.tableModel.getServerAt(row).getSettings().getName());
+    refresh();
+  }
+}

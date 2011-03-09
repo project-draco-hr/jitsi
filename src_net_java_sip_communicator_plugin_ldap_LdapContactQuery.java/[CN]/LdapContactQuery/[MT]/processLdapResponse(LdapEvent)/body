@@ -1,0 +1,30 @@
+{
+  if (evt.getCause() == LdapEvent.LdapEventCause.SEARCH_ACHIEVED || evt.getCause() == LdapEvent.LdapEventCause.SEARCH_CANCELLED) {
+synchronized (objLock) {
+      objLock.notify();
+    }
+  }
+  if (evt.getCause() == LdapEvent.LdapEventCause.NEW_SEARCH_RESULT) {
+    LdapPersonFound person=(LdapPersonFound)evt.getContent();
+    String displayName=null;
+    if (person == null) {
+      return;
+    }
+    if (person.getDisplayName() != null) {
+      displayName=person.getDisplayName();
+    }
+ else {
+      displayName=person.getFirstName() + " " + person.getSurname();
+    }
+    List<ContactDetail> contactDetails=getContactDetails(person);
+    if (!contactDetails.isEmpty()) {
+      GenericSourceContact sourceContact=new GenericSourceContact(getContactSource(),displayName,contactDetails);
+      try {
+        sourceContact.setImage(person.fetchPhoto());
+      }
+ catch (      OutOfMemoryError oome) {
+      }
+      addQueryResult(sourceContact);
+    }
+  }
+}
