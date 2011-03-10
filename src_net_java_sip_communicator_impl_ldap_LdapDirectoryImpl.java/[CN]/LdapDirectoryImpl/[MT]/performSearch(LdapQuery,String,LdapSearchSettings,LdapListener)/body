@@ -26,7 +26,11 @@
         logger.trace("search for real query \"" + realQueryString + "\" (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\" took "+ (time1 - time0)+ "ms");
         endEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.SEARCH_ACHIEVED,query);
       }
- catch (      AuthenticationException e) {
+ catch (      OperationNotSupportedException e) {
+        logger.trace("use bind DN without password during search" + " for real query \"" + realQueryString + "\" (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\": "+ e);
+        endEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.SEARCH_AUTH_ERROR,query);
+      }
+catch (      AuthenticationException e) {
         logger.trace("authentication failed during search" + " for real query \"" + realQueryString + "\" (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\": "+ e);
         endEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.SEARCH_AUTH_ERROR,query);
       }
