@@ -1,5 +1,6 @@
 {
   ConfigurationService configService=LdapServiceImpl.getConfigService();
+  CredentialsStorageService credentialsService=LdapServiceImpl.getCredentialsService();
   String node="dir" + Math.abs(name.hashCode());
   if (configService.getProperty(directoriesPath + "." + node) == null)   this.setName("");
  else   this.setName((String)configService.getProperty(directoriesPath + "." + node));
@@ -15,8 +16,13 @@
  else   this.setAuth(Auth.valueOf((String)configService.getProperty(directoriesPath + "." + node+ ".auth")));
   if (configService.getProperty(directoriesPath + "." + node+ ".bindDN") == null)   this.setBindDN("");
  else   this.setBindDN((String)configService.getProperty(directoriesPath + "." + node+ ".bindDN"));
-  if (configService.getProperty(directoriesPath + "." + node+ ".password") == null)   this.setPassword("");
- else   this.setPassword((String)configService.getProperty(directoriesPath + "." + node+ ".password"));
+  String password=credentialsService.loadPassword(directoriesPath + "." + node);
+  if (password == null) {
+    this.setPassword("");
+  }
+ else {
+    this.setPassword(password);
+  }
   if (configService.getProperty(directoriesPath + "." + node+ ".scope") == null)   this.setScope(Scope.defaultValue());
  else   this.setScope(Scope.valueOf((String)configService.getProperty(directoriesPath + "." + node+ ".scope")));
   if (configService.getProperty(directoriesPath + "." + node+ ".baseDN") == null)   this.setBaseDN("");

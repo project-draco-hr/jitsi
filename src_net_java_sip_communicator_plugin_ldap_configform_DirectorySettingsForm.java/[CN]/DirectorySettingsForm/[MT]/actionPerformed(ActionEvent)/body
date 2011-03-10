@@ -1,0 +1,37 @@
+{
+  Object src=e.getSource();
+  if (src == encryptionBox) {
+    int port=((Integer)portSpinner.getValue()).intValue();
+    if (encryptionBox.isSelected()) {
+      if (port == LdapConstants.Encryption.CLEAR.defaultPort()) {
+        portSpinner.setValue(new Integer(LdapConstants.Encryption.SSL.defaultPort()));
+      }
+    }
+ else {
+      if (port == LdapConstants.Encryption.SSL.defaultPort()) {
+        portSpinner.setValue(new Integer(LdapConstants.Encryption.CLEAR.defaultPort()));
+      }
+    }
+  }
+ else   if (src == saveBtn) {
+    if (this.nameField.isEnabled()) {
+      for (      LdapDirectory s : LdapActivator.getLdapService().getServerSet()) {
+        if (s.getSettings().getName().equals(this.nameField.getText())) {
+          JOptionPane.showMessageDialog(this,Resources.getString("impl.ldap.SERVER_EXIST"),Resources.getString("impl.ldap.SERVER_EXIST"),JOptionPane.WARNING_MESSAGE);
+          return;
+        }
+      }
+    }
+    this.saveData(settings);
+    retCode=1;
+    dispose();
+  }
+ else   if (src == cancelBtn) {
+    retCode=0;
+    dispose();
+  }
+ else   if (src == authList) {
+    bindDNField.setEnabled(authList.getSelectedIndex() == 1);
+    passwordField.setEnabled(authList.getSelectedIndex() == 1);
+  }
+}

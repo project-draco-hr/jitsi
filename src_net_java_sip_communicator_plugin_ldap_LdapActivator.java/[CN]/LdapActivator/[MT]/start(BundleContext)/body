@@ -1,13 +1,15 @@
 {
   LdapActivator.bundleContext=bundleContext;
-  css=new LdapContactSourceService();
-  try {
-    cssServiceRegistration=bundleContext.registerService(ContactSourceService.class.getName(),css,null);
+  Dictionary<String,String> properties=new Hashtable<String,String>();
+  properties.put(ConfigurationForm.FORM_TYPE,ConfigurationForm.ADVANCED_TYPE);
+  bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm("net.java.sip.communicator.plugin.ldap.configform.LdapConfigForm",getClass().getClassLoader(),"impl.ldap.PLUGIN_ICON","impl.ldap.CONFIG_FORM_TITLE",2000,true),properties);
+  if (getLdapService().getServerSet().size() == 0) {
+    return;
   }
-  finally {
-    if (cssServiceRegistration == null) {
-      css.stop();
-      css=null;
+  for (  LdapDirectory ldapDir : getLdapService().getServerSet()) {
+    if (!ldapDir.getSettings().isEnabled()) {
+      continue;
     }
+    enableContactSource(ldapDir);
   }
 }

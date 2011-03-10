@@ -27,4 +27,35 @@ synchronized (objLock) {
       addQueryResult(sourceContact);
     }
   }
+ else   if (evt.getCause() == LdapEvent.LdapEventCause.SEARCH_AUTH_ERROR) {
+synchronized (objLock) {
+      objLock.notify();
+    }
+    new Thread(){
+      public void run(){
+        DirectorySettingsForm settingsForm=new DirectorySettingsForm();
+        LdapDirectorySettings ldapSettings=getContactSource().getLdapDirectory().getSettings();
+        settingsForm.setModal(true);
+        settingsForm.loadData(ldapSettings);
+        settingsForm.setNameFieldEnabled(false);
+        settingsForm.setHostnameFieldEnabled(false);
+        settingsForm.setBaseDNFieldEnabled(false);
+        settingsForm.setPortFieldEnabled(false);
+        JOptionPane.showMessageDialog(null,Resources.getString("impl.ldap.WRONG_CREDENTIALS",new String[]{ldapSettings.getName()}),Resources.getString("impl.ldap.WRONG_CREDENTIALS",new String[]{ldapSettings.getName()}),JOptionPane.WARNING_MESSAGE);
+        int ret=settingsForm.showDialog();
+        if (ret == 1) {
+          LdapService ldapService=LdapActivator.getLdapService();
+          LdapFactory factory=ldapService.getFactory();
+          LdapDirectory ldapDir=getContactSource().getLdapDirectory();
+          LdapDirectorySettings settings=ldapDir.getSettings();
+          LdapActivator.disableContactSource(ldapDir);
+          ldapService.getServerSet().removeServerWithName(settings.getName());
+          ldapDir=factory.createServer(settingsForm.getSettings());
+          ldapService.getServerSet().addServer(ldapDir);
+          LdapActivator.enableContactSource(ldapDir);
+        }
+      }
+    }
+.start();
+  }
 }
