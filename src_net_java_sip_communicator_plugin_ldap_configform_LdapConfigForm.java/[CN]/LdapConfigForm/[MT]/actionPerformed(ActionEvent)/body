@@ -9,8 +9,8 @@
     int ret=settingsForm.showDialog();
     if (ret == 1) {
       LdapDirectory server=factory.createServer(settingsForm.getSettings());
+      new RefreshContactSourceThread(null,server).start();
       serverSet.addServer(server);
-      LdapActivator.enableContactSource(server);
       refresh();
     }
   }
@@ -21,16 +21,15 @@
     settingsForm.setNameFieldEnabled(false);
     int ret=settingsForm.showDialog();
     if (ret == 1) {
-      LdapActivator.disableContactSource(oldServer);
       LdapDirectory newServer=factory.createServer(settingsForm.getSettings());
+      new RefreshContactSourceThread(oldServer,newServer).start();
       serverSet.removeServerWithName(oldServer.getSettings().getName());
       serverSet.addServer(newServer);
-      LdapActivator.enableContactSource(newServer);
       refresh();
     }
   }
   if (e.getActionCommand().equals("remove") && row != -1) {
-    LdapActivator.disableContactSource(this.tableModel.getServerAt(row));
+    new RefreshContactSourceThread(this.tableModel.getServerAt(row),null).start();
     serverSet.removeServerWithName(this.tableModel.getServerAt(row).getSettings().getName());
     refresh();
   }

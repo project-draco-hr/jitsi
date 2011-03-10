@@ -23,11 +23,10 @@
           settingsForm.setNameFieldEnabled(false);
           int ret=settingsForm.showDialog();
           if (ret == 1) {
-            LdapActivator.disableContactSource(oldServer);
             LdapDirectory newServer=factory.createServer(settingsForm.getSettings());
             serverSet.removeServerWithName(oldServer.getSettings().getName());
+            new RefreshContactSourceThread(oldServer,newServer).start();
             serverSet.addServer(newServer);
-            LdapActivator.enableContactSource(newServer);
             refresh();
           }
         }
