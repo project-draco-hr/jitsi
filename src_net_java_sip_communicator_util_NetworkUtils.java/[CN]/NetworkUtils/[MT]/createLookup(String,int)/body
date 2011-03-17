@@ -1,39 +1,33 @@
 {
   Lookup lookup=new Lookup(domain,type);
-  if (parallelResolver == null) {
-    try {
-      String customRslvrAddr=System.getProperty(PNAME_BACKUP_RESOLVER);
-      String rslvrAddrStr=DEFAULT_BACKUP_RESOLVER;
-      String customRslvrIP=UtilActivator.getResources().getSettingsString(PNAME_BACKUP_RESOLVER_IP);
-      if (!StringUtils.isNullOrEmpty(customRslvrAddr))       rslvrAddrStr=customRslvrAddr;
-      InetAddress resolverAddress=null;
+  if (!UtilActivator.getConfigurationService().getBoolean(PNAME_BACKUP_RESOLVER_ENABLED,PDEFAULT_BACKUP_RESOLVER_ENABLED))   return lookup;
+synchronized (parallelResolverLock) {
+    if (parallelResolver == null) {
       try {
-        resolverAddress=getInetAddress(rslvrAddrStr);
-      }
- catch (      UnknownHostException exc) {
-        logger.warn("Oh! Seems like our primary DNS is down!" + "Don't panic! We'll try to fall back to " + customRslvrIP);
-      }
-      if (resolverAddress == null) {
-        resolverAddress=getInetAddress(customRslvrIP);
-      }
-      int rslvrPort=SimpleResolver.DEFAULT_PORT;
-      try {
-        rslvrPort=Integer.getInteger(PNAME_BACKUP_RESOLVER_PORT);
+        String rslvrAddrStr=UtilActivator.getConfigurationService().getString(PNAME_BACKUP_RESOLVER,DEFAULT_BACKUP_RESOLVER);
+        String customRslvrIP=UtilActivator.getConfigurationService().getString(PNAME_BACKUP_RESOLVER_FALLBACK_IP,UtilActivator.getResources().getSettingsString(PNAME_BACKUP_RESOLVER_FALLBACK_IP));
+        InetAddress resolverAddress=null;
+        try {
+          resolverAddress=getInetAddress(rslvrAddrStr);
+        }
+ catch (        UnknownHostException exc) {
+          logger.warn("Oh! Seems like our primary DNS is down!" + "Don't panic! We'll try to fall back to " + customRslvrIP);
+        }
+        if (resolverAddress == null) {
+          resolverAddress=getInetAddress(customRslvrIP);
+        }
+        int rslvrPort=UtilActivator.getConfigurationService().getInt(PNAME_BACKUP_RESOLVER_PORT,SimpleResolver.DEFAULT_PORT);
+        InetSocketAddress resolverSockAddr=new InetSocketAddress(resolverAddress,rslvrPort);
+        parallelResolver=new ParallelResolver(new InetSocketAddress[]{resolverSockAddr});
+        UtilActivator.getNetworkAddressManagerService().addNetworkConfigurationChangeListener(new NetworkListener());
+        UtilActivator.getConfigurationService().addPropertyChangeListener(new DnsConfigurationChangeListener());
       }
  catch (      Throwable t) {
-        logger.info("Ignoring invalid resolver port.");
+        logger.info("failed to initialize parallel resolver. we will " + "be using dnsjava's default one instead");
+        if (logger.isDebugEnabled())         logger.debug("exception was: ",t);
+        parallelResolver=Lookup.getDefaultResolver();
       }
-      InetSocketAddress resolverSockAddr=new InetSocketAddress(resolverAddress,rslvrPort);
-      parallelResolver=new ParallelResolver(new InetSocketAddress[]{resolverSockAddr});
-      UtilActivator.getNetworkAddressManagerService().addNetworkConfigurationChangeListener(new NetworkListener());
     }
- catch (    Throwable t) {
-      logger.info("failed to initialize parallel resolver. we will " + "be using dnsjava's default one instead");
-      if (logger.isDebugEnabled())       logger.debug("exception was: ",t);
-      parallelResolver=Lookup.getDefaultResolver();
-    }
-  }
-synchronized (parallelResolver) {
     lookup.setResolver(parallelResolver);
   }
   return lookup;
