@@ -1,11 +1,17 @@
 {
-  InetSocketAddress srvrAddress;
+  InetSocketAddress srvrAddress=null;
   try {
-    srvrAddress=NetworkUtils.getSRVRecord(TURN_SRV_NAME,Transport.UDP.toString(),domainName);
+    SRVRecord srvRecord=NetworkUtils.getSRVRecord(TURN_SRV_NAME,Transport.UDP.toString(),domainName);
+    if (srvRecord != null) {
+      srvrAddress=srvRecord.getInetSocketAddress();
+    }
     if (srvrAddress != null) {
       return new TurnCandidateHarvester(new TransportAddress(srvrAddress,Transport.UDP),new LongTermCredential(userName,password));
     }
-    srvrAddress=NetworkUtils.getSRVRecord(STUN_SRV_NAME,Transport.UDP.toString(),domainName);
+    srvRecord=NetworkUtils.getSRVRecord(STUN_SRV_NAME,Transport.UDP.toString(),domainName);
+    if (srvRecord != null) {
+      srvrAddress=srvRecord.getInetSocketAddress();
+    }
   }
  catch (  ParseException e) {
     logger.info(domainName + " seems to be causing parse problems",e);

@@ -1,7 +1,18 @@
 {
-  InetSocketAddress[] socketAddresses;
-  if (srvQueryString)   socketAddresses=NetworkUtils.getSRVRecords(address);
- else   socketAddresses=NetworkUtils.getSRVRecords(transport.equalsIgnoreCase(ListeningPoint.TLS) ? "sips" : "sip",transport.equalsIgnoreCase(ListeningPoint.UDP) ? ListeningPoint.UDP : ListeningPoint.TCP,address);
+  InetSocketAddress[] socketAddresses=null;
+  SRVRecord srvRecords[]=null;
+  if (srvQueryString) {
+    srvRecords=NetworkUtils.getSRVRecords(address);
+  }
+ else {
+    srvRecords=NetworkUtils.getSRVRecords(transport.equalsIgnoreCase(ListeningPoint.TLS) ? "sips" : "sip",transport.equalsIgnoreCase(ListeningPoint.UDP) ? ListeningPoint.UDP : ListeningPoint.TCP,address);
+  }
+  if (srvRecords != null) {
+    socketAddresses=new InetSocketAddress[srvRecords.length];
+    for (int i=0; i < srvRecords.length; i++) {
+      socketAddresses[i]=srvRecords[i].getInetSocketAddress();
+    }
+  }
   if (socketAddresses != null) {
     ArrayList<InetSocketAddress> tempResultAddresses=new ArrayList<InetSocketAddress>();
     for (    InetSocketAddress s : socketAddresses) {

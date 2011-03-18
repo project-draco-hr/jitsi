@@ -3,7 +3,7 @@
     String transport=inputAddress.getTransport();
     String hostAddress=inputAddress.getHost();
     if (transport == null)     transport=ListeningPoint.UDP;
-    InetSocketAddress host;
+    InetSocketAddress host=null;
     if (NetworkUtils.isValidIPAddress(hostAddress)) {
       byte[] addr=null;
       addr=NetworkUtils.strToIPv4(hostAddress);
@@ -13,10 +13,16 @@
       host=new InetSocketAddress(InetAddress.getByAddress(hostAddress,addr),inputAddress.getPort());
     }
  else     if (transport.equalsIgnoreCase(ListeningPoint.TLS)) {
-      host=NetworkUtils.getSRVRecord("sips",ListeningPoint.TCP,hostAddress);
+      SRVRecord srvRecord=NetworkUtils.getSRVRecord("sips",ListeningPoint.TCP,hostAddress);
+      if (srvRecord != null) {
+        host=srvRecord.getInetSocketAddress();
+      }
     }
  else {
-      host=NetworkUtils.getSRVRecord("sip",transport,hostAddress);
+      SRVRecord srvRecord=NetworkUtils.getSRVRecord("sip",transport,hostAddress);
+      if (srvRecord != null) {
+        host=srvRecord.getInetSocketAddress();
+      }
     }
     if (host != null) {
       if (logger.isTraceEnabled())       logger.trace("Returning hop as follows" + " host= " + host.getHostName() + " port= "+ host.getPort()+ " transport= "+ transport);
