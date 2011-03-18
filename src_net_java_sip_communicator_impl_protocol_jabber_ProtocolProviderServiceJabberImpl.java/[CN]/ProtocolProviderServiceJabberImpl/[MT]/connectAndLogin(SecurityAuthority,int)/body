@@ -37,18 +37,10 @@ synchronized (initializationLock) {
       String accountResource=getAccountID().getAccountPropertyString(ProtocolProviderFactory.RESOURCE);
       if (accountResource == null || accountResource.equals(""))       accountResource="sip-comm";
       try {
-        InetSocketAddress[] srvAddresses=null;
         SRVRecord srvRecords[]=NetworkUtils.getSRVRecords("xmpp-client","tcp",serviceName);
         if (srvRecords != null) {
-          srvAddresses=new InetSocketAddress[srvRecords.length];
           for (int i=0; i < srvRecords.length; i++) {
-            srvAddresses[i]=srvRecords[i].getInetSocketAddress();
-          }
-        }
-        if (srvAddresses != null) {
-          for (int i=0; i < srvAddresses.length; i++) {
-            String addr=srvAddresses[i].getAddress().getHostAddress();
-            serverAddresses.add(addr);
+            serverAddresses.add(srvRecords[i].getTarget());
           }
         }
         InetSocketAddress addressObj4=null;

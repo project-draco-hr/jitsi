@@ -3,30 +3,34 @@
     String transport=inputAddress.getTransport();
     String hostAddress=inputAddress.getHost();
     if (transport == null)     transport=ListeningPoint.UDP;
-    InetSocketAddress host=null;
+    String host=null;
+    int port=0;
     if (NetworkUtils.isValidIPAddress(hostAddress)) {
       byte[] addr=null;
       addr=NetworkUtils.strToIPv4(hostAddress);
       if (addr == null) {
         addr=NetworkUtils.strToIPv6(hostAddress);
       }
-      host=new InetSocketAddress(InetAddress.getByAddress(hostAddress,addr),inputAddress.getPort());
+      InetSocketAddress hostSocketAddress=new InetSocketAddress(InetAddress.getByAddress(hostAddress,addr),inputAddress.getPort());
+      return new HopImpl(hostSocketAddress.getHostName(),inputAddress.getPort(),transport);
     }
  else     if (transport.equalsIgnoreCase(ListeningPoint.TLS)) {
       SRVRecord srvRecord=NetworkUtils.getSRVRecord("sips",ListeningPoint.TCP,hostAddress);
       if (srvRecord != null) {
-        host=srvRecord.getInetSocketAddress();
+        host=srvRecord.getTarget();
+        port=srvRecord.getPort();
       }
     }
  else {
       SRVRecord srvRecord=NetworkUtils.getSRVRecord("sip",transport,hostAddress);
       if (srvRecord != null) {
-        host=srvRecord.getInetSocketAddress();
+        host=srvRecord.getTarget();
+        port=srvRecord.getPort();
       }
     }
     if (host != null) {
-      if (logger.isTraceEnabled())       logger.trace("Returning hop as follows" + " host= " + host.getHostName() + " port= "+ host.getPort()+ " transport= "+ transport);
-      return new HopImpl(host.getHostName(),host.getPort(),transport);
+      if (logger.isTraceEnabled())       logger.trace("Returning hop as follows" + " host= " + host + " port= "+ port+ " transport= "+ transport);
+      return new HopImpl(host,port,transport);
     }
   }
  catch (  Exception ex) {
