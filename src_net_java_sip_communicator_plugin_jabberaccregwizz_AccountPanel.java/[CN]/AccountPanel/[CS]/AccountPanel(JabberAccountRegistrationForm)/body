@@ -3,8 +3,6 @@
   this.parentForm=parentForm;
   this.parentForm.addValidatingPanel(this);
   JLabel userIDLabel=new JLabel(parentForm.getUsernameLabel());
-  JTextArea registerArea=new JTextArea(parentForm.getCreateAccountLabel());
-  JButton registerButton=new JButton(parentForm.getCreateAccountButtonLabel());
   JLabel userIDExampleLabel=new JLabel(parentForm.getUsernameExample());
   labelsPanel.setLayout(new BoxLayout(labelsPanel,BoxLayout.Y_AXIS));
   valuesPanel.setLayout(new BoxLayout(valuesPanel,BoxLayout.Y_AXIS));
@@ -24,36 +22,23 @@
   userIDPassPanel.add(valuesPanel,BorderLayout.CENTER);
   userIDPassPanel.add(rememberPassBox,BorderLayout.SOUTH);
   userIDPassPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("plugin.sipaccregwizz.USERNAME_AND_PASSWORD")));
-  registerButton.addActionListener(new ActionListener(){
-    public void actionPerformed(    ActionEvent evt){
-      if (logger.isDebugEnabled())       logger.debug("Reg OK");
-      if (parentForm.isWebSignupSupported()) {
-        parentForm.webSignup();
-      }
- else {
-        jabberNewAccountDialog=new JabberNewAccountDialog();
-        if (jabberNewAccountDialog.isOK == true) {
-          userIDField.setText(jabberNewAccountDialog.userID + "@" + jabberNewAccountDialog.server);
-          parentForm.setServerFieldAccordingToUIN(userIDField.getText());
-          passField.setText(jabberNewAccountDialog.password);
-        }
-        if (logger.isDebugEnabled())         logger.debug("Reg End");
-      }
-    }
+  String createAccountString=parentForm.getCreateAccountButtonLabel();
+  if (createAccountString != null) {
+    JPanel buttonPanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
+    buttonPanel.add(createRegisterButton(createAccountString));
+    registerPanel.add(buttonPanel,BorderLayout.SOUTH);
   }
-);
-  buttonPanel.add(registerButton);
-  registerArea.setEditable(false);
-  registerArea.setOpaque(false);
-  registerArea.setLineWrap(true);
-  registerArea.setWrapStyleWord(true);
-  registerPanel.add(registerArea);
-  registerPanel.add(buttonPanel);
-  registerPanel.setBorder(BorderFactory.createTitledBorder(parentForm.getCreateAccountButtonLabel()));
+  String createAccountInfoString=parentForm.getCreateAccountLabel();
+  if (createAccountInfoString != null) {
+    registerPanel.add(createRegisterArea(createAccountInfoString));
+  }
   JPanel mainPanel=new TransparentPanel();
   mainPanel.setLayout(new BoxLayout(mainPanel,BoxLayout.Y_AXIS));
   mainPanel.add(userIDPassPanel);
   mainPanel.add(Box.createVerticalStrut(10));
-  mainPanel.add(registerPanel);
+  if (registerPanel.getComponentCount() > 0) {
+    registerPanel.setBorder(BorderFactory.createTitledBorder(""));
+    mainPanel.add(registerPanel);
+  }
   add(mainPanel,BorderLayout.NORTH);
 }
