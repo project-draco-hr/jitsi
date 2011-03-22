@@ -4,7 +4,8 @@
   boolean isHomeDirnameForced=name != null;
   if ((location == null) || (name == null)) {
     String defaultLocation=System.getProperty("user.home");
-    String defaultName=".sip-communicator";
+    String defaultName=".jitsi";
+    boolean chekLegacyDirNames=(name == null) || name.equals(overridableDirName);
     if (osName.startsWith("Mac")) {
       if (location == null)       location=System.getProperty("user.home") + File.separator + "Library"+ File.separator+ "Application Support";
       if (name == null)       name="SIP Communicator";
@@ -19,7 +20,7 @@
       location=defaultLocation;
       name=defaultName;
     }
-    if (isHomeDirnameForced && name.equals(overridableDirName) && !new File(location,name).isDirectory()) {
+    if (chekLegacyDirNames && !new File(location,name).isDirectory()) {
       for (int i=0; i < legacyDirNames.length; i++) {
         if (new File(location,legacyDirNames[i]).isDirectory()) {
           name=legacyDirNames[i];
@@ -35,4 +36,5 @@
     System.setProperty(PNAME_SC_HOME_DIR_LOCATION,location);
     System.setProperty(PNAME_SC_HOME_DIR_NAME,name);
   }
+  new File(location,name + File.separator + "log").mkdirs();
 }
