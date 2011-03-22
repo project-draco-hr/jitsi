@@ -1,7 +1,53 @@
 {
-  if (VideoLayout.CENTER_REMOTE.equals(constraints) && (noVideoComponent != null) && !noVideoComponent.equals(addedComp)) {
+  if ((canvas == null) || (canvas.getParent() != this)) {
+    if (OSUtils.IS_MAC && (comp != canvas)) {
+      boolean ignoreException;
+      Throwable exception;
+      ignoreException=true;
+      exception=null;
+      canvas=null;
+      try {
+        Method m=comp.getClass().getMethod("createCanvas");
+        if (m != null) {
+          ignoreException=false;
+          Object c=m.invoke(comp);
+          if (c instanceof Component)           canvas=(Component)c;
+        }
+      }
+ catch (      ClassCastException cce) {
+        exception=cce;
+      }
+catch (      ExceptionInInitializerError eiie) {
+        exception=eiie;
+      }
+catch (      IllegalAccessException illegalAccessException) {
+        exception=illegalAccessException;
+      }
+catch (      IllegalArgumentException illegalArgumentException) {
+        exception=illegalArgumentException;
+      }
+catch (      InvocationTargetException ita) {
+        exception=ita;
+      }
+catch (      NoSuchMethodException nsme) {
+        exception=nsme;
+      }
+catch (      NullPointerException npe) {
+        exception=npe;
+      }
+catch (      SecurityException se) {
+        exception=se;
+      }
+      if (canvas != null)       add(canvas,VideoLayout.CANVAS,0);
+ else       if ((exception != null) && !ignoreException)       logger.error("Failed to create video canvas.",exception);
+    }
+  }
+ else {
+    if ((index == 0) && (comp != canvas))     index++;
+  }
+  if (VideoLayout.CENTER_REMOTE.equals(constraints) && (noVideoComponent != null) && !noVideoComponent.equals(comp)) {
     remove(noVideoComponent);
     validate();
   }
-  super.add(addedComp,constraints,index);
+  super.add(comp,constraints,index);
 }

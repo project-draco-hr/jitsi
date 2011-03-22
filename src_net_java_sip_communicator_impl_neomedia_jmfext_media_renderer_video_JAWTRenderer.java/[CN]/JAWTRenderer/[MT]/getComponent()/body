@@ -1,40 +1,11 @@
 {
   if (component == null) {
-    component=new Canvas(){
-      /** 
- * Serial version UID.
- */
-      public static final long serialVersionUID=0L;
-      /** 
- * The indicator which determines whether the native counterpart
- * of this <tt>JAWTRenderer</tt> wants <tt>paint</tt> calls on
- * its AWT <tt>Component</tt> to be delivered. For example,
- * after the native counterpart has been able to acquire the
- * native handle of the AWT <tt>Component</tt>, it may be able
- * to determine when the native handle needs painting without
- * waiting for AWT to call <tt>paint</tt> on the
- * <tt>Component</tt>. In such a scenario, the native
- * counterpart may indicate with <tt>false</tt> that it does not
- * need further <tt>paint</tt> deliveries.
- */
-      private boolean wantsPaint=true;
-      @Override public void addNotify(){
-        super.addNotify();
-        wantsPaint=true;
+    component=(USE_MACOSX_CALAYERS && OSUtils.IS_MAC) ? new SwingVideoComponent() : new AWTVideoComponent(){
+      protected long getHandle(){
+        return JAWTRenderer.this.handle;
       }
-      @Override public void paint(      Graphics g){
-synchronized (JAWTRenderer.this) {
-          if (wantsPaint && (handle != 0)) {
-            wantsPaint=JAWTRenderer.paint(handle,this,g);
-          }
-        }
-      }
-      @Override public void removeNotify(){
-        wantsPaint=true;
-        super.removeNotify();
-      }
-      @Override public void update(      Graphics g){
-        paint(g);
+      protected Object getHandleLock(){
+        return JAWTRenderer.this;
       }
     }
 ;
