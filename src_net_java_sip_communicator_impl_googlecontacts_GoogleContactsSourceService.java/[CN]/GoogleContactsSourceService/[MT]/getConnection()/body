@@ -1,0 +1,33 @@
+{
+  int s=login.indexOf('@');
+  boolean isGoogleAppsOrGmail=false;
+  if (s == -1) {
+    return null;
+  }
+  String domain=login.substring((s + 1));
+  try {
+    SRVRecord srvRecords[]=NetworkUtils.getSRVRecords("xmpp-client","tcp",domain);
+    if (srvRecords == null) {
+      return null;
+    }
+    for (    SRVRecord srv : srvRecords) {
+      if (srv.getTarget().endsWith("google.com") || srv.getTarget().endsWith("google.com.")) {
+        isGoogleAppsOrGmail=true;
+        break;
+      }
+    }
+    if (isGoogleAppsOrGmail) {
+      if (cnx == null) {
+        cnx=new GoogleContactsConnectionImpl(login,password);
+      }
+    }
+ else {
+      cnx=null;
+    }
+  }
+ catch (  Exception e) {
+    logger.info("GoogleContacts connection error",e);
+    return null;
+  }
+  return (GoogleContactsConnectionImpl)cnx;
+}

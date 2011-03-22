@@ -1,0 +1,50 @@
+{
+  List<ContactDetail> ret=new LinkedList<ContactDetail>();
+  List<String> homeMails=entry.getHomeMails();
+  List<String> workMails=entry.getWorkMails();
+  List<String> mobilePhones=entry.getMobilePhones();
+  List<String> homePhones=entry.getHomePhones();
+  List<String> workPhones=entry.getWorkPhones();
+  Map<String,GoogleContactsEntry.IMProtocol> ims=entry.getIMAddresses();
+  ContactDetail detail=null;
+  for (  String mail : homeMails) {
+    detail=new ContactDetail(mail,ContactDetail.CATEGORY_EMAIL,new String[]{ContactDetail.LABEL_HOME});
+    ret.add(detail);
+  }
+  for (  String mail : workMails) {
+    detail=new ContactDetail(mail,ContactDetail.CATEGORY_EMAIL,new String[]{ContactDetail.LABEL_WORK});
+    ret.add(detail);
+  }
+  for (  String homePhone : homePhones) {
+    List<Class<? extends OperationSet>> supportedOpSets=new ArrayList<Class<? extends OperationSet>>(1);
+    supportedOpSets.add(OperationSetBasicTelephony.class);
+    homePhone=normalizePhoneNumber(homePhone);
+    detail=new ContactDetail(homePhone,ContactDetail.CATEGORY_PHONE,new String[]{ContactDetail.LABEL_HOME});
+    detail.setSupportedOpSets(supportedOpSets);
+    ret.add(detail);
+  }
+  for (  String workPhone : workPhones) {
+    List<Class<? extends OperationSet>> supportedOpSets=new ArrayList<Class<? extends OperationSet>>(1);
+    supportedOpSets.add(OperationSetBasicTelephony.class);
+    workPhone=normalizePhoneNumber(workPhone);
+    detail=new ContactDetail(workPhone,ContactDetail.CATEGORY_PHONE,new String[]{ContactDetail.LABEL_WORK});
+    detail.setSupportedOpSets(supportedOpSets);
+    ret.add(detail);
+  }
+  for (  String mobilePhone : mobilePhones) {
+    List<Class<? extends OperationSet>> supportedOpSets=new ArrayList<Class<? extends OperationSet>>(1);
+    supportedOpSets.add(OperationSetBasicTelephony.class);
+    mobilePhone=normalizePhoneNumber(mobilePhone);
+    detail=new ContactDetail(mobilePhone,ContactDetail.CATEGORY_PHONE,new String[]{ContactDetail.LABEL_MOBILE});
+    detail.setSupportedOpSets(supportedOpSets);
+    ret.add(detail);
+  }
+  for (  Map.Entry<String,GoogleContactsEntry.IMProtocol> im : ims.entrySet()) {
+    if (im.getValue() != GoogleContactsEntry.IMProtocol.OTHER) {
+      detail=new ContactDetail(im.getKey(),ContactDetail.CATEGORY_INSTANT_MESSAGING,new String[]{im.getValue().toString()});
+      setIMCapabilities(detail,im.getValue());
+      ret.add(detail);
+    }
+  }
+  return ret;
+}

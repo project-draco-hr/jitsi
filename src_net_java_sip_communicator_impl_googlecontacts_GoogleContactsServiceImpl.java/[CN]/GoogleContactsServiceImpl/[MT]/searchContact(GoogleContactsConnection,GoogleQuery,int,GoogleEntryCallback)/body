@@ -1,0 +1,63 @@
+{
+  URL url=null;
+  ContactFeed contactFeed=null;
+  ContactQuery query=null;
+  List<GoogleContactsEntry> ret=new ArrayList<GoogleContactsEntry>();
+  boolean endOfContacts=false;
+  int matchedContacts=0;
+  int index=1;
+  GoogleContactsConnectionImpl cnxImpl=(GoogleContactsConnectionImpl)cnx;
+  if (count <= 0) {
+    count=MAX_RESULT;
+  }
+  try {
+    url=new URL(feedURL);
+  }
+ catch (  MalformedURLException e) {
+    logger.info("Malformed URL",e);
+    return ret;
+  }
+  if (gQuery.isCancelled()) {
+    return ret;
+  }
+  while (matchedContacts < count || endOfContacts) {
+    query=new ContactQuery(url);
+    query.setStartIndex(index);
+    query.setMaxResults(MAX_NUMBER);
+    query.setSortOrder(ContactQuery.SortOrder.DESCENDING);
+    if (gQuery.isCancelled()) {
+      return ret;
+    }
+    try {
+      contactFeed=cnxImpl.getGoogleService().query(query,ContactFeed.class);
+    }
+ catch (    Exception e) {
+      logger.info("Problem occurred during Google Contacts retrievment",e);
+      return ret;
+    }
+    if (contactFeed.getEntries().size() == 0) {
+      endOfContacts=true;
+      break;
+    }
+    for (int i=0; i < contactFeed.getEntries().size(); i++) {
+      if (gQuery.isCancelled()) {
+        return ret;
+      }
+      ContactEntry entry=contactFeed.getEntries().get(i);
+      if (filter(entry,gQuery.getQueryPattern())) {
+        GoogleContactsEntry gcEntry=null;
+        gcEntry=getGoogleContactsEntry(entry);
+        matchedContacts++;
+        ret.add(gcEntry);
+        if (callback != null) {
+          callback.callback(gcEntry);
+        }
+        if (matchedContacts >= count) {
+          break;
+        }
+      }
+    }
+    index+=contactFeed.getEntries().size();
+  }
+  return ret;
+}

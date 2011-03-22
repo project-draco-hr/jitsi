@@ -1,0 +1,31 @@
+{
+  int row=accountTable.getSelectedRow();
+  if (e.getActionCommand().equals("new")) {
+    settingsForm.setNameFieldEnabled(true);
+    settingsForm.loadData(null);
+    int ret=settingsForm.showDialog();
+    if (ret == 1) {
+      GoogleContactsConnection cnx=settingsForm.getConnection();
+      tableModel.addAccount(cnx,true);
+      new RefreshContactSourceThread(null,cnx).start();
+      saveConfig(cnx);
+      refresh();
+    }
+  }
+  if (e.getActionCommand().equals("modify") && row != -1) {
+    settingsForm.setNameFieldEnabled(false);
+    GoogleContactsConnection cnx=tableModel.getAccountAt(row);
+    settingsForm.loadData(cnx);
+    int ret=settingsForm.showDialog();
+    if (ret == 1) {
+      refresh();
+    }
+  }
+  if (e.getActionCommand().equals("remove") && row != -1) {
+    GoogleContactsConnection cnx=tableModel.getAccountAt(row);
+    tableModel.removeAccount(cnx.getLogin());
+    removeConfig(cnx);
+    new RefreshContactSourceThread(cnx,null).start();
+    refresh();
+  }
+}

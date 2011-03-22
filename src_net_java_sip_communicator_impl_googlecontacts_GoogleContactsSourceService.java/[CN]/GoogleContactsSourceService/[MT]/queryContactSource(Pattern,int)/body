@@ -1,0 +1,19 @@
+{
+  GoogleContactsQuery query=new GoogleContactsQuery(this,queryPattern,count);
+synchronized (queries) {
+    queries.add(query);
+  }
+  boolean hasStarted=false;
+  try {
+    query.start();
+    hasStarted=true;
+  }
+  finally {
+    if (!hasStarted) {
+synchronized (queries) {
+        if (queries.remove(query))         queries.notify();
+      }
+    }
+  }
+  return query;
+}

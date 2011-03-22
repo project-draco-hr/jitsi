@@ -1,0 +1,20 @@
+{
+  String displayName=entry.getFullName();
+  if (displayName == null || displayName.length() == 0) {
+    if ((entry.getGivenName() == null || entry.getGivenName().length() == 0) && (entry.getFamilyName() == null || entry.getFamilyName().length() == 0)) {
+      return;
+    }
+    displayName=entry.getGivenName() + " " + entry.getFamilyName();
+  }
+  List<ContactDetail> contactDetails=getContactDetails(entry);
+  if (!contactDetails.isEmpty()) {
+    GenericSourceContact sourceContact=new GenericSourceContact(getContactSource(),displayName,contactDetails);
+    try {
+      byte img[]=GoogleContactsServiceImpl.downloadPhoto(((GoogleContactsEntryImpl)entry).getPhotoLink(),getContactSource().getConnection().getGoogleService());
+      sourceContact.setImage(img);
+    }
+ catch (    OutOfMemoryError oome) {
+    }
+    addQueryResult(sourceContact);
+  }
+}
