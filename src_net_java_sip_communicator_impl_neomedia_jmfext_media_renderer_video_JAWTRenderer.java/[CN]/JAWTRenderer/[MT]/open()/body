@@ -1,10 +1,26 @@
 {
-  if (handle == 0) {
-    boolean addNotify=(this.component != null) && (this.component.getParent() != null);
-    handle=open(getComponent());
+  boolean addNotify;
+  final Component component;
+synchronized (this) {
     if (handle == 0) {
-      throw new ResourceUnavailableException("Failed to open the native counterpart of JAWTRenderer");
+      addNotify=(this.component != null) && (this.component.getParent() != null);
+      component=getComponent();
+      handle=open(component);
+      if (handle == 0) {
+        throw new ResourceUnavailableException("Failed to open the native counterpart of JAWTRenderer");
+      }
     }
-    if (addNotify)     this.component.addNotify();
+ else {
+      addNotify=false;
+      component=null;
+    }
+  }
+  if (addNotify) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        component.addNotify();
+      }
+    }
+);
   }
 }

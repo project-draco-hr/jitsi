@@ -9,19 +9,21 @@ synchronized (videoContainers) {
       Container videoContainer=videoContainers.get(videoContainerCount - 1);
       if (localVideo != null) {
         if (isVisible) {
-          Container parent=localVideo.getParent();
-          if (parent != null) {
-            parent.remove(parent);
-            parent.remove(closeButton);
+          if (OSUtils.IS_MAC && (localVideo instanceof JComponent)) {
+            handleVideoEvent(null,videoContainer);
           }
-          videoContainer.add(closeButton,VideoLayout.CLOSE_LOCAL_BUTTON,0);
-          videoContainer.add(localVideo,VideoLayout.LOCAL,1);
+ else {
+            Container localVideoParent=localVideo.getParent();
+            if (localVideoParent != null)             localVideoParent.remove(localVideo);
+            Container closeButtonParent=closeButton.getParent();
+            if (closeButtonParent != null)             closeButtonParent.remove(closeButton);
+            videoContainer.add(localVideo,VideoLayout.LOCAL);
+            videoContainer.add(closeButton,VideoLayout.CLOSE_LOCAL_BUTTON);
+          }
         }
  else {
-          if (localVideo != null) {
-            videoContainer.remove(localVideo);
-            videoContainer.remove(closeButton);
-          }
+          videoContainer.remove(localVideo);
+          videoContainer.remove(closeButton);
         }
       }
     }
