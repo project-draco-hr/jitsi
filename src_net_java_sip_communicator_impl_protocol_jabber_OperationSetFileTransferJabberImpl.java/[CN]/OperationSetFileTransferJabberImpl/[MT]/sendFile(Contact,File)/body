@@ -3,21 +3,9 @@
   try {
     assertConnected();
     if (file.length() > getMaximumFileLength())     throw new IllegalArgumentException("File length exceeds the allowed one for this protocol");
-    Iterator<Presence> iter=jabberProvider.getConnection().getRoster().getPresences(toContact.getAddress());
-    int bestPriority=-1;
-    String fullJid=null;
-    while (iter.hasNext()) {
-      Presence presence=iter.next();
-      if (jabberProvider.isFeatureListSupported(presence.getFrom(),new String[]{"http://jabber.org/protocol/si","http://jabber.org/protocol/si/profile/file-transfer"})) {
-        int priority=(presence.getPriority() == Integer.MIN_VALUE) ? 0 : presence.getPriority();
-        if (priority > bestPriority) {
-          bestPriority=priority;
-          fullJid=presence.getFrom();
-        }
-      }
-    }
-    if (fullJid == null) {
-      throw new OperationNotSupportedException("Contact client or server does not support file transfers.");
+    String fullJid=jabberProvider.getFullJid(toContact);
+    if (!jabberProvider.isFeatureListSupported(fullJid,new String[]{"http://jabber.org/protocol/si","http://jabber.org/protocol/si/profile/file-transfer"})) {
+      new OperationNotSupportedException("Contact client or server does not support file transfers.");
     }
     OutgoingFileTransfer transfer=manager.createOutgoingFileTransfer(fullJid);
     outgoingTransfer=new OutgoingFileTransferJabberImpl(toContact,file,transfer,jabberProvider);
