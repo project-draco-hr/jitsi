@@ -11,6 +11,18 @@
     GoogleContactsConnectionImpl cnx=(GoogleContactsConnectionImpl)getConnection(login,password);
     cnx.setEnabled(enabled);
     if (cnx != null) {
+      if (!cnx.connect()) {
+        cnx.setEnabled(false);
+        AccountSettingsForm settings=new AccountSettingsForm();
+        settings.setModal(true);
+        settings.loadData(cnx);
+        int ret=settings.showDialog();
+        if (ret == 1) {
+          cnx=(GoogleContactsConnectionImpl)settings.getConnection();
+          cnx.setEnabled(enabled);
+          saveConfig(cnx);
+        }
+      }
       accounts.add(cnx);
       if (cnx.isEnabled()) {
         addContactSource(cnx);

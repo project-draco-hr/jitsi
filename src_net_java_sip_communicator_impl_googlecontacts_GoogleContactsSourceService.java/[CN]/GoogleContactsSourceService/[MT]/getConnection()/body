@@ -19,6 +19,32 @@
     if (isGoogleAppsOrGmail) {
       if (cnx == null) {
         cnx=new GoogleContactsConnectionImpl(login,password);
+        if (cnx.connect() == false) {
+          AccountSettingsForm settings=new AccountSettingsForm();
+          settings.setModal(true);
+          settings.loadData(cnx);
+          int ret=settings.showDialog();
+          if (ret == 1) {
+            cnx=(GoogleContactsConnectionImpl)settings.getConnection();
+            GoogleContactsActivator.getGoogleContactsService().saveConfig(cnx);
+          }
+ else {
+            cnx=null;
+          }
+        }
+      }
+ else       if (!cnx.connect()) {
+        AccountSettingsForm settings=new AccountSettingsForm();
+        settings.setModal(true);
+        settings.loadData(cnx);
+        int ret=settings.showDialog();
+        if (ret == 1) {
+          cnx=(GoogleContactsConnectionImpl)settings.getConnection();
+          GoogleContactsActivator.getGoogleContactsService().saveConfig(cnx);
+        }
+ else {
+          cnx=null;
+        }
       }
     }
  else {
