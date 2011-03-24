@@ -1,0 +1,32 @@
+{
+  if (handle != 0) {
+    Rectangle bounds=component.getBounds();
+    if (!component.isVisible()) {
+      bounds.height=0;
+      bounds.width=0;
+    }
+    JAWTRenderer.processLightweightComponentEvent(handle,bounds.x,bounds.y,bounds.width,bounds.height);
+    if ((bounds.height < 1) || (bounds.width < 1))     return;
+    if ((height != bounds.height) || (width != bounds.width)) {
+      rgb=new int[bounds.width * bounds.height];
+      bufferedImage=new BufferedImage(bounds.width,bounds.height,BufferedImage.TYPE_INT_ARGB);
+      height=bounds.height;
+      width=bounds.width;
+    }
+    if ((bufferedImage != null) && (rgb != null)) {
+      Graphics g=bufferedImage.createGraphics();
+      boolean process=false;
+      try {
+        component.paint(g);
+        process=true;
+      }
+  finally {
+        g.dispose();
+      }
+      if (process) {
+        bufferedImage.getRGB(0,0,width,height,rgb,0,width);
+        JAWTRenderer.process(handle,component,rgb,0,rgb.length,width,height);
+      }
+    }
+  }
+}
