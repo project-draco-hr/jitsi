@@ -3,12 +3,13 @@
   videoContainer.revalidate();
   videoContainer.repaint();
   if (device == null)   return;
-  Iterator<MediaDevice> mDevsIter=NeomediaActivator.getMediaServiceImpl().getDevices(MediaType.VIDEO,MediaUseCase.ANY).iterator();
-  while (mDevsIter.hasNext()) {
-    MediaDeviceImpl dev=(MediaDeviceImpl)mDevsIter.next();
-    if (dev.getCaptureDeviceInfo().equals(device)) {
-      Component c=(Component)NeomediaActivator.getMediaServiceImpl().getVideoPreviewComponent(dev,videoContainer.getSize().width,videoContainer.getSize().height);
-      videoContainer.add(c);
+  MediaService mediaService=NeomediaActivator.getMediaServiceImpl();
+  Iterable<MediaDevice> devs=mediaService.getDevices(MediaType.VIDEO,MediaUseCase.ANY);
+  for (  MediaDevice dev : devs) {
+    if (((MediaDeviceImpl)dev).getCaptureDeviceInfo().equals(device)) {
+      Dimension videoContainerSize=videoContainer.getSize();
+      Component preview=(Component)mediaService.getVideoPreviewComponent(dev,videoContainerSize.width,videoContainerSize.height);
+      videoContainer.add(preview);
       break;
     }
   }

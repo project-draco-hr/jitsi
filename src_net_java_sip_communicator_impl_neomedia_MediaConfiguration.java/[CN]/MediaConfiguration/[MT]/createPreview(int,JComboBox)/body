@@ -34,22 +34,48 @@ catch (        MediaException ex) {
     }
 ;
     comboBox.addActionListener(comboBoxListener);
-    comboBox.addHierarchyListener(new HierarchyListener(){
+    HierarchyListener hierarchyListener=new HierarchyListener(){
+      private Window window;
+      private WindowListener windowListener;
+      public void dispose(){
+        if (windowListener != null) {
+          if (window != null) {
+            window.removeWindowListener(windowListener);
+            window=null;
+          }
+          windowListener=null;
+        }
+        videoDeviceInPreview=null;
+      }
       public void hierarchyChanged(      HierarchyEvent event){
-        if (((event.getChangeFlags() & HierarchyEvent.DISPLAYABILITY_CHANGED) != 0) && comboBox.isDisplayable()) {
+        if ((event.getChangeFlags() & HierarchyEvent.DISPLAYABILITY_CHANGED) == 0)         return;
+        if (comboBox.isDisplayable()) {
           SwingUtilities.invokeLater(new Runnable(){
             public void run(){
               comboBoxListener.actionPerformed(null);
             }
           }
 );
+          if (windowListener == null) {
+            window=SwingUtilities.windowForComponent(comboBox);
+            if (window != null) {
+              windowListener=new WindowAdapter(){
+                @Override public void windowClosing(                WindowEvent event){
+                  dispose();
+                }
+              }
+;
+              window.addWindowListener(windowListener);
+            }
+          }
         }
  else {
-          if (!comboBox.isDisplayable())           videoDeviceInPreview=null;
+          dispose();
         }
       }
     }
-);
+;
+    comboBox.addHierarchyListener(hierarchyListener);
   }
  else   preview=new TransparentPanel();
   return preview;
