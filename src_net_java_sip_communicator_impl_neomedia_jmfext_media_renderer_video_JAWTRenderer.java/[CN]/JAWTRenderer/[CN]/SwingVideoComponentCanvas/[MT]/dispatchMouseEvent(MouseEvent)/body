@@ -1,14 +1,24 @@
 {
   Component srcc=e.getComponent();
   if (srcc != null) {
-    Container parent=getParent();
-    if (parent != null) {
-      Point parentPoint=SwingUtilities.convertPoint(srcc,e.getPoint(),parent);
-      Component dstc=getComponentAt(parent,parentPoint);
-      if (dstc != null) {
-        dstc.dispatchEvent(SwingUtilities.convertMouseEvent(srcc,e,dstc));
-        return true;
+    int id=e.getID();
+    Component dstc=null;
+    if (MouseEvent.MOUSE_PRESSED == id)     mousePressedComponent=null;
+ else     if (mousePressedComponent != null) {
+      dstc=mousePressedComponent;
+      if ((MouseEvent.MOUSE_CLICKED == id) || (MouseEvent.MOUSE_RELEASED == id))       mousePressedComponent=null;
+    }
+    if (dstc == null) {
+      Container parent=getParent();
+      if (parent != null) {
+        Point parentPoint=SwingUtilities.convertPoint(srcc,e.getPoint(),parent);
+        dstc=getComponentAt(parent,parentPoint);
       }
+    }
+    if (dstc != null) {
+      if (MouseEvent.MOUSE_PRESSED == id)       mousePressedComponent=dstc;
+      dstc.dispatchEvent(SwingUtilities.convertMouseEvent(srcc,e,dstc));
+      return true;
     }
   }
   return false;
