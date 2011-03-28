@@ -13,20 +13,7 @@
   }
   int numberOfWrites=length / bytesPerBuffer;
   if (numberOfWrites > 0) {
-    if (gainControl != null) {
-      if (gainControl.getMute()) {
-        Arrays.fill(buffer,(byte)0);
-      }
- else       if (gainControl.getDB() != 0) {
-        double factor=Math.pow(10,(gainControl.getDB() / 10d));
-        for (int i=0; i < buffer.length; i+=2) {
-          short s=(short)((buffer[i] & 0xff) | (buffer[i + 1] << 8));
-          s=(short)(s * factor);
-          buffer[i]=(byte)s;
-          buffer[i + 1]=(byte)(s >> 8);
-        }
-      }
-    }
+    if (gainControl != null)     applyGain(buffer,offset,length);
     PortAudio.Pa_WriteStream(stream,buffer,offset,framesPerBuffer,numberOfWrites);
     int bytesWritten=numberOfWrites * bytesPerBuffer;
     offset+=bytesWritten;
