@@ -5,9 +5,16 @@
   }
   CallPeerState peerState=getState();
   if (peerState.equals(CallPeerState.CONNECTED) || CallPeerState.isOnHold(peerState)) {
-    boolean dialogIsAlive=sayBye();
-    if (!dialogIsAlive) {
-      setDisconnectedState(failed,reason);
+    try {
+      boolean dialogIsAlive=sayBye();
+      if (!dialogIsAlive) {
+        setDisconnectedState(failed,reason);
+      }
+    }
+ catch (    Throwable ex) {
+      logger.error("Error while trying to hangup, trying to handle!",ex);
+      setDisconnectedState(true,null);
+      if (ex instanceof OperationFailedException)       throw (OperationFailedException)ex;
     }
   }
  else   if (CallPeerState.CONNECTING.equals(getState()) || CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(getState()) || CallPeerState.ALERTING_REMOTE_SIDE.equals(getState())) {
