@@ -26,18 +26,7 @@ synchronized (this) {
       throw ioex;
     }
     if (volumeControl != null) {
-      if (volumeControl.getMute()) {
-        Arrays.fill(bufferData,(byte)0);
-      }
- else       if (volumeControl.getDB() != 0) {
-        double factor=Math.pow(10,(volumeControl.getDB() / 10d));
-        for (int i=0; i < bufferData.length; i+=2) {
-          short s=(short)((bufferData[i] & 0xff) | (bufferData[i + 1] << 8));
-          s=(short)(s * factor);
-          bufferData[i]=(byte)s;
-          bufferData[i + 1]=(byte)(s >> 8);
-        }
-      }
+      AbstractVolumeControl.applyGain(volumeControl,bufferData,0,bytesPerBuffer);
     }
     long bufferTimeStamp=System.nanoTime();
     buffer.setFlags(Buffer.FLAG_SYSTEM_TIME);
