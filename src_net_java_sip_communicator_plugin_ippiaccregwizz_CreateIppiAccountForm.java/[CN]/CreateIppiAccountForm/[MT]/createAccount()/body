@@ -1,0 +1,30 @@
+{
+  NewAccount newAccount=null;
+  try {
+    String registerLinkFilled=MessageFormat.format(registerLink,URLEncoder.encode(usernameField.getText(),"UTF-8"),URLEncoder.encode(new String(passField.getPassword()),"UTF-8"),URLEncoder.encode(emailField.getText(),"UTF-8"));
+    URL url=new URL(registerLinkFilled);
+    URLConnection conn=url.openConnection();
+    if (!(conn instanceof HttpURLConnection)) {
+      return null;
+    }
+    HttpURLConnection httpConn=(HttpURLConnection)conn;
+    int responseCode=httpConn.getResponseCode();
+    if (responseCode == HttpURLConnection.HTTP_OK) {
+      BufferedReader in=new BufferedReader(new InputStreamReader(conn.getInputStream()));
+      String str;
+      StringBuffer stringBuffer=new StringBuffer();
+      while ((str=in.readLine()) != null) {
+        stringBuffer.append(str);
+      }
+      if (logger.isInfoEnabled())       logger.info("JSON response to create account request: " + stringBuffer.toString());
+      newAccount=parseHttpResponse(stringBuffer.toString());
+    }
+  }
+ catch (  MalformedURLException e1) {
+    if (logger.isInfoEnabled())     logger.info("Failed to create URL with string: " + registerLink,e1);
+  }
+catch (  IOException e1) {
+    if (logger.isInfoEnabled())     logger.info("Failed to open connection.",e1);
+  }
+  return newAccount;
+}
