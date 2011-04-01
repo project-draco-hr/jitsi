@@ -1,0 +1,42 @@
+{
+  CoinIQ coinIQ=new CoinIQ();
+  String entity=parser.getAttributeValue("",CoinIQ.ENTITY_ATTR_NAME);
+  String version=parser.getAttributeValue("",CoinIQ.VERSION_ATTR_NAME);
+  StateType state=StateType.full;
+  String stateStr=parser.getAttributeValue("",EndpointPacketExtension.STATE_ATTR_NAME);
+  String sid=parser.getAttributeValue("",CoinIQ.SID_ATTR_NAME);
+  if (stateStr != null) {
+    state=StateType.parseString(stateStr);
+  }
+  coinIQ.setEntity(entity);
+  coinIQ.setVersion(Integer.parseInt(version));
+  coinIQ.setState(state);
+  coinIQ.setSID(sid);
+  int eventType;
+  String elementName=null;
+  boolean done=false;
+  while (!done) {
+    eventType=parser.next();
+    elementName=parser.getName();
+    if (eventType == XmlPullParser.START_TAG) {
+      if (elementName.equals(DescriptionPacketExtension.ELEMENT_NAME)) {
+        PacketExtension childExtension=descriptionProvider.parseExtension(parser);
+        coinIQ.addExtension(childExtension);
+      }
+ else       if (elementName.equals(UsersPacketExtension.ELEMENT_NAME)) {
+        PacketExtension childExtension=usersProvider.parseExtension(parser);
+        coinIQ.addExtension(childExtension);
+      }
+ else       if (elementName.equals(StatePacketExtension.ELEMENT_NAME)) {
+        PacketExtension childExtension=stateProvider.parseExtension(parser);
+        coinIQ.addExtension(childExtension);
+      }
+    }
+    if (eventType == XmlPullParser.END_TAG) {
+      if (parser.getName().equals(CoinIQ.ELEMENT_NAME)) {
+        done=true;
+      }
+    }
+  }
+  return coinIQ;
+}

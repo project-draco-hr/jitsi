@@ -1,3 +1,11 @@
 {
-  return getBasicTelephony().createOutgoingCall(call,calleeAddress);
+  if (!wasConferenceFocus && call.isConferenceFocus()) {
+    Iterator<CallPeerJabberImpl> callPeerIter=call.getCallPeers();
+    while (callPeerIter.hasNext()) {
+      CallPeerJabberImpl callPeer=callPeerIter.next();
+      callPeer.sendCoinSessionInfo(true);
+    }
+  }
+  CoinPacketExtension confInfo=new CoinPacketExtension(true);
+  return getBasicTelephony().createOutgoingCall(call,calleeAddress,Arrays.asList(new PacketExtension[]{confInfo}));
 }

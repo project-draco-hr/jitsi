@@ -1,0 +1,27 @@
+{
+  boolean done=false;
+  int eventType;
+  String elementName=null;
+  StatePacketExtension ext=new StatePacketExtension();
+  while (!done) {
+    eventType=parser.next();
+    elementName=parser.getName();
+    if (eventType == XmlPullParser.START_TAG) {
+      if (elementName.equals(StatePacketExtension.ELEMENT_ACTIVE)) {
+        ext.setActive(Boolean.parseBoolean(CoinIQProvider.parseText(parser)) ? 1 : 0);
+      }
+ else       if (elementName.equals(StatePacketExtension.ELEMENT_LOCKED)) {
+        ext.setLocked(Boolean.parseBoolean(CoinIQProvider.parseText(parser)) ? 1 : 0);
+      }
+      if (elementName.equals(StatePacketExtension.ELEMENT_USER_COUNT)) {
+        ext.setUserCount(Integer.parseInt(CoinIQProvider.parseText(parser)));
+      }
+    }
+ else     if (eventType == XmlPullParser.END_TAG) {
+      if (parser.getName().equals(StatePacketExtension.ELEMENT_NAME)) {
+        done=true;
+      }
+    }
+  }
+  return ext;
+}

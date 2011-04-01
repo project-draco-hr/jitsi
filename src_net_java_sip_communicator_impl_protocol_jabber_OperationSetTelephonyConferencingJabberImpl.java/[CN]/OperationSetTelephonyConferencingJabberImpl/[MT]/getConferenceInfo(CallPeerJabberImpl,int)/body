@@ -1,0 +1,33 @@
+{
+  CoinIQ iq=new CoinIQ();
+  CallJabberImpl call=callPeer.getCall();
+  iq.setFrom(call.getProtocolProvider().getOurJID());
+  iq.setTo(callPeer.getAddress());
+  iq.setType(Type.SET);
+  iq.setEntity(getBasicTelephony().getProtocolProvider().getOurJID());
+  iq.setVersion(version);
+  iq.setState(StateType.full);
+  if (callPeer.getJingleSID() == null)   return null;
+  iq.setSID(callPeer.getJingleSID());
+  iq.addExtension(new DescriptionPacketExtension());
+  StatePacketExtension state=new StatePacketExtension();
+  state.setUserCount(call.getCallPeerCount() + 1);
+  iq.addExtension(state);
+  UsersPacketExtension users=new UsersPacketExtension();
+  UserPacketExtension user=new UserPacketExtension(parentProvider.getOurJID());
+  EndpointPacketExtension endpoint=new EndpointPacketExtension(parentProvider.getOurJID());
+  endpoint.setStatus(EndpointStatusType.connected);
+  List<MediaPacketExtension> medias=getMedia(callPeer,false);
+  for (  MediaPacketExtension media : medias) {
+    endpoint.addChildExtension(media);
+  }
+  user.addChildExtension(endpoint);
+  users.addChildExtension(user);
+  Iterator<CallPeerJabberImpl> callPeerIter=call.getCallPeers();
+  while (callPeerIter.hasNext()) {
+    UserPacketExtension ext=getUser(callPeerIter.next());
+    users.addChildExtension(ext);
+  }
+  iq.addExtension(users);
+  return iq;
+}

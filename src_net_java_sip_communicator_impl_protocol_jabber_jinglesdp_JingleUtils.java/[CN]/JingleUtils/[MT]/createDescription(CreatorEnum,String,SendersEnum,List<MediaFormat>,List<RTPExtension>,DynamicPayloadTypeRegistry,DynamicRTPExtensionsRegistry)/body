@@ -9,5 +9,20 @@
   for (  MediaFormat fmt : formats) {
     description.addPayloadType(formatToPayloadType(fmt,dynamicPayloadTypes));
   }
+  if (rtpExtensions != null && rtpExtensions.size() > 0) {
+    for (    RTPExtension extension : rtpExtensions) {
+      byte extID=rtpExtensionsRegistry.obtainExtensionMapping(extension);
+      URI uri=extension.getURI();
+      MediaDirection extDirection=extension.getDirection();
+      String attributes=extension.getExtensionAttributes();
+      SendersEnum sendersEnum=getSenders(extDirection,false);
+      RTPHdrExtPacketExtension ext=new RTPHdrExtPacketExtension();
+      ext.setURI(uri);
+      ext.setSenders(sendersEnum);
+      ext.setID(Byte.toString(extID));
+      ext.setAttributes(attributes);
+      description.addChildExtension(ext);
+    }
+  }
   return content;
 }

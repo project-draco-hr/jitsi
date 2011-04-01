@@ -1,0 +1,29 @@
+{
+  boolean done=false;
+  int eventType;
+  String elementName=null;
+  StateType state=StateType.full;
+  String stateStr=parser.getAttributeValue("",UserPacketExtension.STATE_ATTR_NAME);
+  if (stateStr != null) {
+    state=StateType.parseString(stateStr);
+  }
+  UsersPacketExtension ext=new UsersPacketExtension();
+  ext.setAttribute(UsersPacketExtension.STATE_ATTR_NAME,state);
+  while (!done) {
+    eventType=parser.next();
+    elementName=parser.getName();
+    if (eventType == XmlPullParser.START_TAG) {
+      if (elementName.equals(UserPacketExtension.ELEMENT_NAME)) {
+        PacketExtensionProvider provider=new UserProvider();
+        PacketExtension childExtension=provider.parseExtension(parser);
+        ext.addChildExtension(childExtension);
+      }
+    }
+ else     if (eventType == XmlPullParser.END_TAG) {
+      if (parser.getName().equals(UsersPacketExtension.ELEMENT_NAME)) {
+        done=true;
+      }
+    }
+  }
+  return ext;
+}

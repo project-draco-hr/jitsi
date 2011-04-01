@@ -1,0 +1,17 @@
+{
+  String to=getBasicTelephony().getFullCalleeURI(callPeer.getAddress());
+  try {
+    DiscoverInfo discoverInfo=parentProvider.getDiscoveryManager().discoverInfo(to);
+    if (!discoverInfo.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_COIN)) {
+      logger.info(callPeer.getAddress() + " does not support COIN");
+      return;
+    }
+  }
+ catch (  XMPPException xmppe) {
+    logger.warn("Failed to retrieve DiscoverInfo for " + to,xmppe);
+  }
+  IQ iq=getConferenceInfo((CallPeerJabberImpl)callPeer,version);
+  if (iq != null) {
+    parentProvider.getConnection().sendPacket(iq);
+  }
+}

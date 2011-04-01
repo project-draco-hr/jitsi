@@ -1,0 +1,42 @@
+{
+  boolean done=false;
+  int eventType;
+  String elementName=null;
+  String entity=parser.getAttributeValue("",EndpointPacketExtension.ENTITY_ATTR_NAME);
+  StateType state=StateType.full;
+  String stateStr=parser.getAttributeValue("",EndpointPacketExtension.STATE_ATTR_NAME);
+  if (stateStr != null) {
+    state=StateType.parseString(stateStr);
+  }
+  EndpointPacketExtension ext=new EndpointPacketExtension(entity);
+  ext.setAttribute(EndpointPacketExtension.STATE_ATTR_NAME,state);
+  while (!done) {
+    eventType=parser.next();
+    elementName=parser.getName();
+    if (eventType == XmlPullParser.START_TAG) {
+      if (elementName.equals(EndpointPacketExtension.ELEMENT_DISPLAY_TEXT)) {
+        ext.setDisplayText(CoinIQProvider.parseText(parser));
+      }
+ else       if (elementName.equals(EndpointPacketExtension.ELEMENT_DISCONNECTION)) {
+        ext.setDisconnectionType(DisconnectionType.parseString(parser.getText()));
+      }
+ else       if (elementName.equals(EndpointPacketExtension.ELEMENT_JOINING)) {
+        ext.setJoiningType(JoiningType.parseString(CoinIQProvider.parseText(parser)));
+      }
+ else       if (elementName.equals(EndpointPacketExtension.ELEMENT_STATUS)) {
+        ext.setStatus(EndpointStatusType.parseString(CoinIQProvider.parseText(parser)));
+      }
+ else       if (elementName.equals(MediaPacketExtension.ELEMENT_NAME)) {
+        PacketExtensionProvider provider=new MediaProvider();
+        PacketExtension childExtension=provider.parseExtension(parser);
+        ext.addChildExtension(childExtension);
+      }
+    }
+ else     if (eventType == XmlPullParser.END_TAG) {
+      if (parser.getName().equals(EndpointPacketExtension.ELEMENT_NAME)) {
+        done=true;
+      }
+    }
+  }
+  return ext;
+}

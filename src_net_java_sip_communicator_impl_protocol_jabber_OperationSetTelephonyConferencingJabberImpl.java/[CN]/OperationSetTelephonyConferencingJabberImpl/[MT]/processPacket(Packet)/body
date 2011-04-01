@@ -1,0 +1,16 @@
+{
+  CoinIQ coinIQ=(CoinIQ)packet;
+  if (coinIQ.getType() == IQ.Type.SET) {
+    IQ ack=IQ.createResultIQ(coinIQ);
+    parentProvider.getConnection().sendPacket(ack);
+  }
+  String sid=coinIQ.getSID();
+  if (sid == null) {
+    return;
+  }
+  CallPeerJabberImpl callPeer=getBasicTelephony().getActiveCallsRepository().findCallPeer(sid);
+  if (callPeer == null) {
+    return;
+  }
+  handleCoin(coinIQ,callPeer);
+}

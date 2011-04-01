@@ -1,0 +1,23 @@
+{
+  MediaPacketExtension ext=null;
+  CallPeerMediaHandlerJabberImpl mediaHandler=callPeer.getMediaHandler();
+  List<MediaPacketExtension> ret=new ArrayList<MediaPacketExtension>();
+  long i=1;
+  for (  MediaType mediaType : MediaType.values()) {
+    MediaStream stream=mediaHandler.getStream(mediaType);
+    if (stream != null) {
+      long srcId=remote ? stream.getRemoteSourceID() : stream.getLocalSourceID();
+      if (srcId != -1) {
+        ext=new MediaPacketExtension(Long.toString(i));
+        ext.setSrcID(Long.toString(srcId));
+        ext.setType(mediaType.toString());
+        MediaDirection direction=stream.getDirection();
+        if (direction == null)         direction=MediaDirection.INACTIVE;
+        ext.setStatus(direction.toString());
+        ret.add(ext);
+        i++;
+      }
+    }
+  }
+  return ret;
+}

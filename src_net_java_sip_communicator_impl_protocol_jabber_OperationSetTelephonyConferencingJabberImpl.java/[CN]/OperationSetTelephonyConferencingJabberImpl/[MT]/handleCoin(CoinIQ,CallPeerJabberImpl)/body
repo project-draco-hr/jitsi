@@ -1,0 +1,71 @@
+{
+  ConferenceMember[] conferenceMembersToRemove=callPeer.getConferenceMembers();
+  int conferenceMembersToRemoveCount=conferenceMembersToRemove.length;
+  UsersPacketExtension users=null;
+  Collection<PacketExtension> usersList=coinIQ.getExtensions();
+  for (  PacketExtension ext : usersList) {
+    if (ext.getElementName().equals(UsersPacketExtension.ELEMENT_NAME)) {
+      users=(UsersPacketExtension)ext;
+      break;
+    }
+  }
+  if (users == null) {
+    return;
+  }
+  Collection<UserPacketExtension> userList=users.getChildExtensionsOfType(UserPacketExtension.class);
+  if (userList.size() == 0) {
+    return;
+  }
+  for (  UserPacketExtension u : userList) {
+    String address=null;
+    if (u.getAttribute("entity") != null) {
+      address=stripParametersFromAddress((String)u.getAttribute("entity"));
+    }
+    if ((address == null) || (address.length() < 1))     continue;
+    ConferenceMemberJabberImpl existingConferenceMember=null;
+    for (int conferenceMemberIndex=0; conferenceMemberIndex < conferenceMembersToRemoveCount; conferenceMemberIndex++) {
+      ConferenceMemberJabberImpl conferenceMember=(ConferenceMemberJabberImpl)conferenceMembersToRemove[conferenceMemberIndex];
+      if ((conferenceMember != null) && address.equalsIgnoreCase(conferenceMember.getAddress())) {
+        conferenceMembersToRemove[conferenceMemberIndex]=null;
+        existingConferenceMember=conferenceMember;
+        break;
+      }
+    }
+    boolean addConferenceMember=false;
+    if (existingConferenceMember == null) {
+      existingConferenceMember=new ConferenceMemberJabberImpl(callPeer,address);
+      addConferenceMember=true;
+    }
+ else {
+      addConferenceMember=false;
+    }
+    if (existingConferenceMember != null) {
+      String displayName=u.getDisplayText();
+      List<EndpointPacketExtension> endpoints=u.getChildExtensionsOfType(EndpointPacketExtension.class);
+      String endpointStatus=null;
+      String ssrc=null;
+      if (endpoints.size() > 0) {
+        EndpointPacketExtension endpoint=endpoints.get(0);
+        endpointStatus=endpoint.getStatus().toString();
+        List<MediaPacketExtension> medias=endpoint.getChildExtensionsOfType(MediaPacketExtension.class);
+        for (        MediaPacketExtension media : medias) {
+          if (media.getType().equalsIgnoreCase(MediaType.AUDIO.toString())) {
+            ssrc=media.getSrcID();
+          }
+        }
+      }
+      existingConferenceMember.setDisplayName(displayName);
+      existingConferenceMember.setEndpointStatus(endpointStatus);
+      if (ssrc != null) {
+        existingConferenceMember.setSSRC(Long.parseLong(ssrc));
+      }
+      if (addConferenceMember) {
+        callPeer.addConferenceMember(existingConferenceMember);
+      }
+    }
+  }
+  for (int conferenceMemberIndex=0; conferenceMemberIndex < conferenceMembersToRemoveCount; conferenceMemberIndex++) {
+    ConferenceMember conferenceMemberToRemove=conferenceMembersToRemove[conferenceMemberIndex];
+    if (conferenceMemberToRemove != null)     callPeer.removeConferenceMember(conferenceMemberToRemove);
+  }
+}
