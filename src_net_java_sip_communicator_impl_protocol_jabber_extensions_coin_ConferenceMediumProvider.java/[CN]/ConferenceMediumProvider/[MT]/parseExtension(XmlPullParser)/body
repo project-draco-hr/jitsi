@@ -1,0 +1,31 @@
+{
+  boolean done=false;
+  int eventType;
+  String elementName=null;
+  String label=parser.getAttributeValue("",ConferenceMediumPacketExtension.LABEL_ATTR_NAME);
+  if (label == null) {
+    throw new Exception("Coin medium element must contain entity attribute");
+  }
+  ConferenceMediumPacketExtension ext=new ConferenceMediumPacketExtension("entry",label);
+  while (!done) {
+    eventType=parser.next();
+    elementName=parser.getName();
+    if (eventType == XmlPullParser.START_TAG) {
+      if (elementName.equals(MediaPacketExtension.ELEMENT_DISPLAY_TEXT)) {
+        ext.setDisplayText(CoinIQProvider.parseText(parser));
+      }
+ else       if (elementName.equals(MediaPacketExtension.ELEMENT_STATUS)) {
+        ext.setStatus(CoinIQProvider.parseText(parser));
+      }
+ else       if (elementName.equals(MediaPacketExtension.ELEMENT_TYPE)) {
+        ext.setType(CoinIQProvider.parseText(parser));
+      }
+    }
+ else     if (eventType == XmlPullParser.END_TAG) {
+      if (parser.getName().equals(ConferenceMediumPacketExtension.ELEMENT_NAME)) {
+        done=true;
+      }
+    }
+  }
+  return ext;
+}
