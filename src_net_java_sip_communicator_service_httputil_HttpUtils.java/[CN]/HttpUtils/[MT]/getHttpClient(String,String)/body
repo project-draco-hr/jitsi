@@ -1,0 +1,15 @@
+{
+  HttpParams params=new BasicHttpParams();
+  params.setParameter(CoreConnectionPNames.SO_TIMEOUT,10000);
+  params.setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT,10000);
+  DefaultHttpClient httpClient=new DefaultHttpClient(params);
+  HttpProtocolParams.setUserAgent(httpClient.getParams(),System.getProperty("sip-communicator.application.name") + "/" + System.getProperty("sip-communicator.version"));
+  SSLContext sslCtx=HttpUtilActivator.getCertificateVerificationService().getSSLContext(HttpUtilActivator.getResources().getI18NString("service.gui.CERT_DIALOG_CLIENT_DESCRIPTION_TXT",new String[]{HttpUtilActivator.getResources().getSettingsString("service.gui.APPLICATION_NAME")}));
+  Scheme sch=new Scheme("https",443,new SSLSocketFactory(sslCtx,SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER));
+  httpClient.getConnectionManager().getSchemeRegistry().register(sch);
+  ProxySelectorRoutePlanner routePlanner=new ProxySelectorRoutePlanner(httpClient.getConnectionManager().getSchemeRegistry(),ProxySelector.getDefault());
+  httpClient.setRoutePlanner(routePlanner);
+  HTTPCredentialsProvider credentialsProvider=new HTTPCredentialsProvider(usernamePropertyName,passwordPropertyName);
+  httpClient.setCredentialsProvider(credentialsProvider);
+  return httpClient;
+}

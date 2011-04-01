@@ -13,111 +13,76 @@
       url=url.substring(0,url.indexOf('?'));
     }
     URL u=new URL(url);
-    URLConnection uc=u.openConnection();
-    OutputStreamWriter out=null;
-    if (uc instanceof HttpURLConnection) {
-      configureHTTPConnection(u,(HttpURLConnection)uc);
-      ((HttpURLConnection)uc).setInstanceFollowRedirects(false);
-      uc.setDoInput(true);
-      uc.setDoOutput(true);
-      out=new OutputStreamWriter(uc.getOutputStream());
-      StringBuffer content=new StringBuffer();
-      InetAddress ipaddr=getNetworkAddressManagerService().getLocalHost(InetAddress.getByName(u.getHost()));
-      if (args != null && args.length > 0) {
-        for (        String s : args) {
-          if (s.equals("username=$username") || s.equals("username")) {
-            if (userCredentials == null) {
-              handleProvisioningAuth();
-            }
-            content.append("username=" + URLEncoder.encode(userCredentials.getUserName(),"UTF-8"));
-          }
- else           if (s.equals("password=$password") || s.equals("password")) {
-            if (userCredentials == null) {
-              handleProvisioningAuth();
-            }
-            content.append("password=" + URLEncoder.encode(userCredentials.getPasswordAsString(),"UTF-8"));
-          }
- else           if (s.equals("osname=$osname") || s.equals("osname")) {
-            content.append("osname=" + URLEncoder.encode(System.getProperty("os.name"),"UTF-8"));
-          }
- else           if (s.equals("build=$build") || s.equals("build")) {
-            content.append("build=" + URLEncoder.encode(System.getProperty("sip-communicator.version"),"UTF-8"));
-          }
- else           if (s.equals("ipaddr=$ipaddr") || s.equals("ipaddr")) {
-            content.append("ipaddr=" + URLEncoder.encode(ipaddr.getHostAddress(),"UTF-8"));
-          }
- else           if (s.equals("hwaddr=$hwaddr") || s.equals("hwaddr")) {
-            String hwaddr=null;
-            if (ipaddr != null) {
-              Enumeration<NetworkInterface> en=NetworkInterface.getNetworkInterfaces();
-              while (en.hasMoreElements()) {
-                NetworkInterface iface=en.nextElement();
-                Enumeration<InetAddress> enInet=iface.getInetAddresses();
-                while (enInet.hasMoreElements()) {
-                  InetAddress inet=enInet.nextElement();
-                  if (inet.equals(ipaddr)) {
-                    byte hw[]=getNetworkAddressManagerService().getHardwareAddress(iface);
-                    StringBuffer buf=new StringBuffer();
-                    for (                    byte h : hw) {
-                      int hi=h >= 0 ? h : h + 256;
-                      String t=new String((hi <= 0xf) ? "0" : "");
-                      t+=Integer.toHexString(hi);
-                      buf.append(t);
-                      buf.append(":");
-                    }
-                    buf.deleteCharAt(buf.length() - 1);
-                    hwaddr=buf.toString();
-                    content.append("hwaddr=" + URLEncoder.encode(hwaddr,"UTF-8"));
-                    break;
+    InetAddress ipaddr=getNetworkAddressManagerService().getLocalHost(InetAddress.getByName(u.getHost()));
+    String[] paramNames=null;
+    String[] paramValues=null;
+    int usernameIx=-1;
+    int passwordIx=-1;
+    if (args != null && args.length > 0) {
+      paramNames=new String[args.length];
+      paramValues=new String[args.length];
+      for (int i=0; i < args.length; i++) {
+        String s=args[i];
+        if (s.equals("username=$username") || s.equals("username")) {
+          paramNames[i]="username";
+          paramValues[i]="";
+          usernameIx=i;
+        }
+ else         if (s.equals("password=$password") || s.equals("password")) {
+          paramNames[i]="password";
+          paramValues[i]="";
+          passwordIx=i;
+        }
+ else         if (s.equals("osname=$osname") || s.equals("osname")) {
+          paramNames[i]="osname";
+          paramValues[i]=System.getProperty("os.name");
+        }
+ else         if (s.equals("build=$build") || s.equals("build")) {
+          paramNames[i]="build";
+          paramValues[i]=System.getProperty("sip-communicator.version");
+        }
+ else         if (s.equals("ipaddr=$ipaddr") || s.equals("ipaddr")) {
+          paramNames[i]="ipaddr";
+          paramValues[i]=ipaddr.getHostAddress();
+        }
+ else         if (s.equals("hwaddr=$hwaddr") || s.equals("hwaddr")) {
+          paramNames[i]="hwaddr";
+          if (ipaddr != null) {
+            Enumeration<NetworkInterface> en=NetworkInterface.getNetworkInterfaces();
+            while (en.hasMoreElements()) {
+              NetworkInterface iface=en.nextElement();
+              Enumeration<InetAddress> enInet=iface.getInetAddresses();
+              while (enInet.hasMoreElements()) {
+                InetAddress inet=enInet.nextElement();
+                if (inet.equals(ipaddr)) {
+                  byte hw[]=getNetworkAddressManagerService().getHardwareAddress(iface);
+                  StringBuffer buf=new StringBuffer();
+                  for (                  byte h : hw) {
+                    int hi=h >= 0 ? h : h + 256;
+                    String t=new String((hi <= 0xf) ? "0" : "");
+                    t+=Integer.toHexString(hi);
+                    buf.append(t);
+                    buf.append(":");
                   }
+                  buf.deleteCharAt(buf.length() - 1);
+                  paramValues[i]=buf.toString();
+                  break;
                 }
               }
             }
           }
-          content.append("&");
-        }
-      }
-      out.write(content.toString());
-      out.flush();
-      int responseCode=((HttpURLConnection)uc).getResponseCode();
-      if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
-        getConfigurationService().removeProperty(PROPERTY_PROVISIONING_USERNAME);
-        getCredentialsStorageService().removePassword(PROPERTY_PROVISIONING_PASSWORD);
-        AuthenticationWindow authWindow=new AuthenticationWindow(u.getHost(),true,null);
-        authWindow.setVisible(true);
-        userCredentials=new UserCredentials();
-        userCredentials.setUserName(authWindow.getUserName());
-        userCredentials.setPassword(authWindow.getPassword());
-        userCredentials.setPasswordPersistent(authWindow.isRememberPassword());
-        if (userCredentials.getUserName() == null) {
-          userCredentials=null;
         }
  else {
-          tmpFile.delete();
-          return retrieveConfigurationFile(url);
-        }
-      }
- else       if (responseCode == HttpURLConnection.HTTP_MOVED_PERM || responseCode == HttpURLConnection.HTTP_MOVED_TEMP) {
-        String loc=((HttpURLConnection)uc).getHeaderField("Location");
-        if (loc != null && (loc.startsWith("http://") || loc.startsWith("https://"))) {
-          tmpFile.delete();
-          return retrieveConfigurationFile(loc);
-        }
-      }
- else       if (responseCode == HttpURLConnection.HTTP_OK) {
-        if (userCredentials != null && userCredentials.getUserName() != null && userCredentials.isPasswordPersistent()) {
-          getConfigurationService().setProperty(PROPERTY_PROVISIONING_USERNAME,userCredentials.getUserName());
-          getCredentialsStorageService().storePassword(PROPERTY_PROVISIONING_PASSWORD,userCredentials.getPasswordAsString());
+          paramNames[i]="";
+          paramValues[i]="";
         }
       }
     }
- else {
-      return null;
-    }
-    InputStream in=uc.getInputStream();
+    HttpUtils.HTTPResponseResult res=HttpUtils.postForm(url,PROPERTY_PROVISIONING_USERNAME,PROPERTY_PROVISIONING_PASSWORD,paramNames,paramValues,usernameIx,passwordIx);
+    InputStream in=res.getContent();
     final ProgressMonitorInputStream pin=new ProgressMonitorInputStream(null,u.toString(),in);
     ProgressMonitor pm=pin.getProgressMonitor();
-    pm.setMaximum(uc.getContentLength());
+    pm.setMaximum((int)res.getContentLength());
     final BufferedOutputStream bout=new BufferedOutputStream(new FileOutputStream(temp));
     try {
       int read=-1;
@@ -128,7 +93,6 @@
       pin.close();
       bout.flush();
       bout.close();
-      out.close();
       return temp;
     }
  catch (    Exception e) {
@@ -136,7 +100,6 @@
       try {
         pin.close();
         bout.close();
-        out.close();
       }
  catch (      Exception e1) {
       }

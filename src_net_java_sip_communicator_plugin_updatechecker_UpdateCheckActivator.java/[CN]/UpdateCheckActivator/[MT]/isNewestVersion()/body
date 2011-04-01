@@ -9,26 +9,12 @@
       if (logger.isDebugEnabled())       logger.debug("Updates are disabled. Faking latest version.");
       return true;
     }
-    URL url=new URL(configString);
-    URLConnection conn=url.openConnection();
-    if (conn instanceof HttpURLConnection) {
-      while (((HttpURLConnection)conn).getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED && !isAuthenticationCanceled) {
-        if (userCredentials.getUserName() != null) {
-          errorMessage=getResources().getI18NString("service.gui.AUTHENTICATION_FAILED",new String[]{userCredentials.getUserName(),host});
-          userCredentials.setUserName(null);
-          userCredentials.setPasswordPersistent(false);
-          userCredentials=null;
-          getConfiguration().removeProperty(UPDATE_USERNAME_CONFIG);
-          getConfiguration().removeProperty(UPDATE_PASSWORD_CONFIG);
-          conn=url.openConnection();
-        }
- else         break;
-      }
-    }
-    conn.setConnectTimeout(10000);
-    conn.setReadTimeout(10000);
     Properties props=new Properties();
-    props.load(conn.getInputStream());
+    HttpUtils.HTTPResponseResult res=HttpUtils.openURLConnection(configString);
+    if (res == null)     return true;
+    InputStream in=res.getContent();
+    props.load(in);
+    in.close();
     lastVersion=props.getProperty("last_version");
     downloadLink=props.getProperty("download_link");
     changesLink=configString.substring(0,configString.lastIndexOf("/") + 1) + props.getProperty("changes_html");

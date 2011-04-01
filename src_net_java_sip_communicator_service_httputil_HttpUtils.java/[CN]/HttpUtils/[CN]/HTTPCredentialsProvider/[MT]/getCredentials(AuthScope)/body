@@ -1,0 +1,23 @@
+{
+  this.usedScope=authscope;
+  if (passwordPropertyName == null)   passwordPropertyName=getCredentialProperty(authscope);
+  if (usernamePropertyName == null)   usernamePropertyName=getCredentialProperty(authscope);
+  String pass=HttpUtilActivator.getCredentialsService().loadPassword(passwordPropertyName);
+  if (pass == null) {
+    AuthenticationWindow authWindow=new AuthenticationWindow(authscope.getHost(),true,null);
+    authWindow.setVisible(true);
+    if (!authWindow.isCanceled()) {
+      Credentials cred=new UsernamePasswordCredentials(authWindow.getUserName(),new String(authWindow.getPassword()));
+      if (authWindow.isRememberPassword()) {
+        HttpUtilActivator.getConfigurationService().setProperty(usernamePropertyName,authWindow.getUserName());
+        HttpUtilActivator.getCredentialsService().storePassword(passwordPropertyName,new String(authWindow.getPassword()));
+      }
+      return cred;
+    }
+    retry=false;
+  }
+ else {
+    return new UsernamePasswordCredentials(HttpUtilActivator.getConfigurationService().getString(usernamePropertyName),pass);
+  }
+  return null;
+}

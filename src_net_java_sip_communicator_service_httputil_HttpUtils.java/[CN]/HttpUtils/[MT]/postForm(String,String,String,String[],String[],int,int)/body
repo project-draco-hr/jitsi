@@ -1,0 +1,36 @@
+{
+  DefaultHttpClient httpClient=null;
+  try {
+    httpClient=getHttpClient(usernamePropertyName,passwordPropertyName);
+    HttpPost postMethod=new HttpPost(address);
+    Credentials creds=null;
+    if (usernameParamIx != -1 && usernameParamIx < formParamNames.length && passwordParamIx != -1 && passwordParamIx < formParamNames.length) {
+      URL url=new URL(address);
+      creds=new HTTPCredentialsProvider(usernamePropertyName,passwordPropertyName).getCredentials(new AuthScope(url.getHost(),url.getPort()));
+    }
+    List<NameValuePair> parameters=new ArrayList<NameValuePair>();
+    for (int i=0; i < formParamNames.length; i++) {
+      if (i == usernameParamIx && creds != null) {
+        parameters.add(new BasicNameValuePair(formParamNames[i],creds.getUserPrincipal().getName()));
+      }
+ else       if (i == passwordParamIx && creds != null) {
+        parameters.add(new BasicNameValuePair(formParamNames[i],creds.getPassword()));
+      }
+ else {
+        parameters.add(new BasicNameValuePair(formParamNames[i],formParamValues[i]));
+      }
+    }
+    String s=URLEncodedUtils.format(parameters,HTTP.UTF_8);
+    StringEntity entity=new StringEntity(s,HTTP.UTF_8);
+    entity.setContentType(URLEncodedUtils.CONTENT_TYPE);
+    postMethod.setEntity(entity);
+    HttpEntity resEntity=executeMethod(httpClient,postMethod);
+    if (resEntity == null)     return null;
+    if (logger.isDebugEnabled())     logger.debug("Post form response: " + EntityUtils.toString(resEntity));
+    return new HTTPResponseResult(resEntity,httpClient);
+  }
+ catch (  Throwable e) {
+    e.printStackTrace();
+  }
+  return null;
+}

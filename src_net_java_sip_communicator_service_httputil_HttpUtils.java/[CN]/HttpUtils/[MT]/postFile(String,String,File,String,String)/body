@@ -1,0 +1,21 @@
+{
+  DefaultHttpClient httpClient=null;
+  try {
+    httpClient=getHttpClient(usernamePropertyName,passwordPropertyName);
+    HttpPost postMethod=new HttpPost(address);
+    String mimeType=URLConnection.guessContentTypeFromName(file.getPath());
+    if (mimeType == null)     mimeType="application/octet-stream";
+    FileBody bin=new FileBody(file,mimeType);
+    MultipartEntity reqEntity=new MultipartEntity();
+    reqEntity.addPart(fileParamName,bin);
+    postMethod.setEntity(reqEntity);
+    HttpEntity resEntity=executeMethod(httpClient,postMethod);
+    if (resEntity == null)     return null;
+    if (logger.isDebugEnabled())     logger.debug("Post file response: " + EntityUtils.toString(resEntity));
+    return new HTTPResponseResult(reqEntity,httpClient);
+  }
+ catch (  Throwable e) {
+    logger.error("Cannot post file to:" + address,e);
+  }
+  return null;
+}

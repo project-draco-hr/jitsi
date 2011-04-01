@@ -1,0 +1,23 @@
+{
+  HttpResponse response=null;
+  while (response == null || response.getStatusLine().getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
+    if (response != null) {
+      if (logger.isDebugEnabled())       logger.debug("Will retry http connect and " + "credentials input as latest are not correct!");
+      URI uri=req.getURI();
+      req.abort();
+      req=req.getClass().newInstance();
+      req.setURI(uri);
+      httpClient.getCredentialsProvider().clear();
+      response=httpClient.execute(req);
+    }
+ else     response=httpClient.execute(req);
+    if (!((HTTPCredentialsProvider)httpClient.getCredentialsProvider()).retry()) {
+      if (logger.isDebugEnabled())       logger.debug("User canceled credentials input.");
+      break;
+    }
+  }
+  if (response != null && response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+    return response.getEntity();
+  }
+  return null;
+}

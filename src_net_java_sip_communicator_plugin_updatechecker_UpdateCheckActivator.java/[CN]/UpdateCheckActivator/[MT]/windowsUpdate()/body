@@ -5,20 +5,11 @@
   try {
     URL u=new URL(downloadLink);
     tempFileOutputStream=createTempFileOutputStream(u,tempFile);
-    URLConnection uc=u.openConnection();
-    if (uc instanceof HttpURLConnection) {
-      if (uc instanceof HttpsURLConnection) {
-        CertificateVerificationService cvs=getCertificateVerification();
-        int port=u.getPort();
-        if (port == -1) {
-          if (u.getProtocol().equals("http"))           port=80;
- else           if (u.getProtocol().equals("https"))           port=443;
-        }
-        ((HttpsURLConnection)uc).setSSLSocketFactory(cvs.getSSLContext(u.getHost(),port).getSocketFactory());
-      }
-    }
-    final ProgressMonitorInputStream input=new ProgressMonitorInputStream(null,u.toString(),uc.getInputStream());
-    input.getProgressMonitor().setMaximum(uc.getContentLength());
+    HttpUtils.HTTPResponseResult res=HttpUtils.openURLConnection(downloadLink);
+    if (res == null)     return;
+    InputStream in=res.getContent();
+    final ProgressMonitorInputStream input=new ProgressMonitorInputStream(null,downloadLink,in);
+    input.getProgressMonitor().setMaximum((int)res.getContentLength());
     final BufferedOutputStream output=new BufferedOutputStream(tempFileOutputStream);
     try {
       int read=-1;
