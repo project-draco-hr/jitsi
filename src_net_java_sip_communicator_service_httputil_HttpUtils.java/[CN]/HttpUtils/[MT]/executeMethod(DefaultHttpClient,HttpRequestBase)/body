@@ -1,5 +1,6 @@
 {
   HttpResponse response=null;
+  int redirects=0;
   while (response == null || response.getStatusLine().getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
     if (response != null) {
       if (logger.isDebugEnabled())       logger.debug("Will retry http connect and " + "credentials input as latest are not correct!");
@@ -14,6 +15,23 @@
     if (!((HTTPCredentialsProvider)httpClient.getCredentialsProvider()).retry()) {
       if (logger.isDebugEnabled())       logger.debug("User canceled credentials input.");
       break;
+    }
+    Header locationHeader=response.getFirstHeader("location");
+    if (locationHeader != null && req instanceof HttpPost && (response.getStatusLine().getStatusCode() == HttpStatus.SC_MOVED_PERMANENTLY || response.getStatusLine().getStatusCode() == HttpStatus.SC_MOVED_TEMPORARILY || response.getStatusLine().getStatusCode() == HttpStatus.SC_SEE_OTHER) && redirects < MAX_REDIRECTS) {
+      HttpRequestBase oldreq=req;
+      oldreq.abort();
+      String newLocation=locationHeader.getValue();
+      HttpEntity en=((HttpPost)oldreq).getEntity();
+      if (en != null && en instanceof StringEntity) {
+        ByteArrayOutputStream out=new ByteArrayOutputStream();
+        en.writeTo(out);
+        newLocation+="?" + out.toString("UTF-8");
+      }
+      req=new HttpGet(newLocation);
+      req.setParams(oldreq.getParams());
+      req.setHeaders(oldreq.getAllHeaders());
+      redirects++;
+      response=httpClient.execute(req);
     }
   }
   if (response != null && response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
