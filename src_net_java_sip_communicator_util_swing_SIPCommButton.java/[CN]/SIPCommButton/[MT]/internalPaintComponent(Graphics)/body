@@ -12,38 +12,34 @@
  else     paintBgImage=bgImage;
     g.drawImage(paintBgImage,this.getWidth() / 2 - this.bgImage.getWidth(null) / 2,this.getHeight() / 2 - this.bgImage.getHeight(null) / 2,this);
   }
-  if (this.getModel().isPressed()) {
-    if (this.pressedImage != null) {
-      g.drawImage(this.pressedImage,0,0,this);
-    }
- else     if (this.iconImage != null) {
-      g.drawImage(this.iconImage,this.getWidth() / 2 - this.iconImage.getWidth(null) / 2 + 1,this.getHeight() / 2 - this.iconImage.getHeight(null) / 2 + 1,this);
-    }
+  if (this.getModel().isPressed() && this.pressedImage != null) {
+    g.drawImage(this.pressedImage,0,0,this);
   }
- else   if (this.getModel().isRollover() && this.rolloverImage != null) {
-    g.drawImage(this.rolloverImage,0,0,this);
+  FadeTracker fadeTracker=FadeTracker.getInstance();
+  float visibility=this.getModel().isRollover() ? 1.0f : 0.0f;
+  if (fadeTracker.isTracked(this,FadeKind.ROLLOVER)) {
+    visibility=fadeTracker.getFade(this,FadeKind.ROLLOVER);
   }
-  if (rolloverImage == null) {
-    FadeTracker fadeTracker=FadeTracker.getInstance();
-    float visibility=this.getModel().isRollover() ? 1.0f : 0.0f;
-    if (fadeTracker.isTracked(this,FadeKind.ROLLOVER)) {
-      visibility=fadeTracker.getFade(this,FadeKind.ROLLOVER);
-    }
-    visibility/=2;
-    g.setColor(new Color(1.0f,1.0f,1.0f,visibility));
-    if (this.bgImage != null) {
-      g.fillRoundRect(this.getWidth() / 2 - this.bgImage.getWidth(null) / 2,this.getHeight() / 2 - this.bgImage.getHeight(null) / 2,bgImage.getWidth(null),bgImage.getHeight(null),10,10);
-    }
- else     if (isContentAreaFilled() || (visibility != 0.0f)) {
-      g.fillRoundRect(0,0,this.getWidth(),this.getHeight(),10,10);
-    }
+  visibility/=2;
+  g.setColor(new Color(1.0f,1.0f,1.0f,visibility));
+  if (this.bgImage != null) {
+    g.fillRoundRect(this.getWidth() / 2 - this.bgImage.getWidth(null) / 2,this.getHeight() / 2 - this.bgImage.getHeight(null) / 2,bgImage.getWidth(null),bgImage.getHeight(null),10,10);
   }
-  if (this.iconImage != null) {
-    Image paintIconImage;
+ else   if (isContentAreaFilled() || (visibility != 0.0f)) {
+    g.fillRoundRect(0,0,this.getWidth(),this.getHeight(),10,10);
+  }
+  Image paintIconImage=null;
+  if (getModel().isPressed() && pressedIconImage != null) {
+    paintIconImage=pressedIconImage;
+  }
+ else   if (this.getModel().isRollover() && rolloverIconImage != null) {
+    paintIconImage=rolloverIconImage;
+  }
+ else   if (this.iconImage != null) {
     if (!isEnabled()) {
       paintIconImage=new ImageIcon(LightGrayFilter.createDisabledImage(iconImage)).getImage();
     }
  else     paintIconImage=iconImage;
-    g.drawImage(paintIconImage,this.getWidth() / 2 - this.iconImage.getWidth(null) / 2,this.getHeight() / 2 - this.iconImage.getHeight(null) / 2,this);
   }
+  if (paintIconImage != null)   g.drawImage(paintIconImage,this.getWidth() / 2 - this.iconImage.getWidth(null) / 2,this.getHeight() / 2 - this.iconImage.getHeight(null) / 2,this);
 }
