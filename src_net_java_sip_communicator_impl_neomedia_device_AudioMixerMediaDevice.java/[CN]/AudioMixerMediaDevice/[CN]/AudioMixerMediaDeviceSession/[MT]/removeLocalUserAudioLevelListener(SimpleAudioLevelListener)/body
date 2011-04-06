@@ -1,12 +1,13 @@
 {
-synchronized (localUserAudioLevelListeners) {
-    SimpleAudioLevelListenerWrapper wrapper=new SimpleAudioLevelListenerWrapper(l);
-    localUserAudioLevelListeners.remove(wrapper);
-    int index=localUserAudioLevelListeners.indexOf(wrapper);
+synchronized (localUserAudioLevelListenersSyncRoot) {
+    int index=localUserAudioLevelListeners.indexOf(new SimpleAudioLevelListenerWrapper(l));
     if (index != -1) {
-      wrapper=localUserAudioLevelListeners.get(index);
-      if (wrapper.refCounter > 1)       wrapper.refCounter--;
- else       localUserAudioLevelListeners.remove(wrapper);
+      SimpleAudioLevelListenerWrapper wrapper=localUserAudioLevelListeners.get(index);
+      if (wrapper.referenceCount > 1)       wrapper.referenceCount--;
+ else {
+        localUserAudioLevelListeners=new ArrayList<SimpleAudioLevelListenerWrapper>(localUserAudioLevelListeners);
+        localUserAudioLevelListeners.remove(wrapper);
+      }
     }
     if (localUserAudioLevelListeners.isEmpty()) {
       localUserAudioLevelDispatcher.stop();

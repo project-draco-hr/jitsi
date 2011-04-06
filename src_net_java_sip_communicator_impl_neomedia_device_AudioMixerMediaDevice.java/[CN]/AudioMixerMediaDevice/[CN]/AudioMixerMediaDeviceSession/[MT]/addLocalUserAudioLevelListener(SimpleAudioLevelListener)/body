@@ -1,5 +1,5 @@
 {
-synchronized (localUserAudioLevelListeners) {
+synchronized (localUserAudioLevelListenersSyncRoot) {
     if (localUserAudioLevelListeners.isEmpty()) {
       localUserAudioLevelDispatcher.setAudioLevelListener(localUserAudioLevelDelegator);
       new Thread(localUserAudioLevelDispatcher,"Local User Audio Level Dispatcher (Mixer Edition)").start();
@@ -8,9 +8,10 @@ synchronized (localUserAudioLevelListeners) {
     int index=localUserAudioLevelListeners.indexOf(wrapper);
     if (index != -1) {
       wrapper=localUserAudioLevelListeners.get(index);
-      wrapper.refCounter++;
+      wrapper.referenceCount++;
     }
  else {
+      localUserAudioLevelListeners=new ArrayList<SimpleAudioLevelListenerWrapper>(localUserAudioLevelListeners);
       localUserAudioLevelListeners.add(wrapper);
     }
   }
