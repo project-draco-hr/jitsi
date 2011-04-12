@@ -1,14 +1,27 @@
 {
   if (encodings != null)   return encodings;
   MediaFormat[] availableEncodings=encodingConfiguration.getAvailableEncodings(type);
-  final int encodingCount=availableEncodings.length;
+  int encodingCount=availableEncodings.length;
   if (encodingCount < 1)   encodings=MediaUtils.EMPTY_MEDIA_FORMATS;
  else {
+    HashMap<String,MediaFormat> availableEncodingSet=new HashMap<String,MediaFormat>();
+    for (    MediaFormat availableEncoding : availableEncodings) {
+      availableEncodingSet.put(availableEncoding.getEncoding() + "/" + availableEncoding.getClockRateString(),availableEncoding);
+    }
+    availableEncodings=availableEncodingSet.values().toArray(MediaUtils.EMPTY_MEDIA_FORMATS);
+    encodingCount=availableEncodings.length;
     encodings=new MediaFormat[encodingCount];
     System.arraycopy(availableEncodings,0,encodings,0,encodingCount);
     Arrays.sort(encodings,0,encodingCount,new Comparator<MediaFormat>(){
       public int compare(      MediaFormat format0,      MediaFormat format1){
-        return encodingConfiguration.getPriority(format1) - encodingConfiguration.getPriority(format0);
+        int ret=encodingConfiguration.getPriority(format1) - encodingConfiguration.getPriority(format0);
+        if (ret == 0) {
+          ret=format0.getEncoding().compareToIgnoreCase(format1.getEncoding());
+          if (ret == 0) {
+            ret=Double.compare(format1.getClockRate(),format0.getClockRate());
+          }
+        }
+        return ret;
       }
     }
 );
