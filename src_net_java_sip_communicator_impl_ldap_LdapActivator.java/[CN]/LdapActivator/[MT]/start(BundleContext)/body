@@ -1,10 +1,20 @@
 {
+  LdapActivator.bundleContext=bundleContext;
   try {
     logger.logEntry();
     ldapService=new LdapServiceImpl();
     ldapService.start(bundleContext);
     bundleContext.registerService(LdapService.class.getName(),ldapService,null);
     logger.trace("LDAP Service ...[REGISTERED]");
+    if (ldapService.getServerSet().size() == 0) {
+      return;
+    }
+    for (    LdapDirectory ldapDir : getLdapService().getServerSet()) {
+      if (!ldapDir.getSettings().isEnabled()) {
+        continue;
+      }
+      registerContactSource(ldapDir);
+    }
   }
   finally {
     logger.logExit();

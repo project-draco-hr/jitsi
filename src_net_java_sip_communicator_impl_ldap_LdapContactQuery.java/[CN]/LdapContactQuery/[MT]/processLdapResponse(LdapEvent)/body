@@ -33,26 +33,20 @@ synchronized (objLock) {
     }
     new Thread(){
       public void run(){
-        DirectorySettingsForm settingsForm=new DirectorySettingsForm();
-        LdapDirectorySettings ldapSettings=getContactSource().getLdapDirectory().getSettings();
-        settingsForm.setModal(true);
-        settingsForm.loadData(ldapSettings);
-        settingsForm.setNameFieldEnabled(false);
-        settingsForm.setHostnameFieldEnabled(false);
-        settingsForm.setBaseDNFieldEnabled(false);
-        settingsForm.setPortFieldEnabled(false);
-        JOptionPane.showMessageDialog(null,Resources.getString("impl.ldap.WRONG_CREDENTIALS",new String[]{ldapSettings.getName()}),Resources.getString("impl.ldap.WRONG_CREDENTIALS",new String[]{ldapSettings.getName()}),JOptionPane.WARNING_MESSAGE);
-        int ret=settingsForm.showDialog();
-        if (ret == 1) {
+        LdapDirectorySettingsImpl ldapSettings=(LdapDirectorySettingsImpl)getContactSource().getLdapDirectory().getSettings();
+        AuthenticationWindow authWindow=new AuthenticationWindow(ldapSettings.getUserName(),ldapSettings.getPassword().toCharArray(),ldapSettings.getName(),false,LdapActivator.getResourceService().getImage("service.gui.icons.AUTHORIZATION_ICON"),LdapActivator.getResourceService().getI18NString("impl.ldap.WRONG_CREDENTIALS",new String[]{ldapSettings.getName()}));
+        authWindow.setVisible(true);
+        if (!authWindow.isCanceled()) {
+          LdapDirectorySettings newSettings=new LdapDirectorySettingsImpl(ldapSettings);
           LdapService ldapService=LdapActivator.getLdapService();
           LdapFactory factory=ldapService.getFactory();
           LdapDirectory ldapDir=getContactSource().getLdapDirectory();
-          LdapDirectorySettings settings=ldapDir.getSettings();
-          LdapActivator.disableContactSource(ldapDir);
-          ldapService.getServerSet().removeServerWithName(settings.getName());
-          ldapDir=factory.createServer(settingsForm.getSettings());
+          LdapActivator.unregisterContactSource(ldapDir);
+          ldapService.getServerSet().removeServerWithName(ldapSettings.getName());
+          newSettings.setPassword(new String(authWindow.getPassword()));
+          ldapDir=factory.createServer(newSettings);
           ldapService.getServerSet().addServer(ldapDir);
-          LdapActivator.enableContactSource(ldapDir);
+          LdapActivator.registerContactSource(ldapDir);
         }
       }
     }
