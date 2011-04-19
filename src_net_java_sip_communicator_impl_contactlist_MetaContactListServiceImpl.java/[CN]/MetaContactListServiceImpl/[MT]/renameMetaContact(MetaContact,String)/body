@@ -4,6 +4,19 @@
   }
   String oldDisplayName=metaContact.getDisplayName();
   ((MetaContactImpl)metaContact).setDisplayName(newDisplayName);
+  Iterator<Contact> contacts=metaContact.getContacts();
+  while (contacts.hasNext()) {
+    Contact protoContact=contacts.next();
+    OperationSetPersistentPresence opSetPresence=protoContact.getProtocolProvider().getOperationSet(OperationSetPersistentPresence.class);
+    if (opSetPresence != null) {
+      try {
+        opSetPresence.setDisplayName(protoContact,newDisplayName);
+      }
+ catch (      Throwable t) {
+        logger.error("Error renaming protocol contact: " + protoContact,t);
+      }
+    }
+  }
   fireMetaContactEvent(new MetaContactRenamedEvent(metaContact,oldDisplayName,newDisplayName));
   fireMetaContactGroupEvent(findParentMetaContactGroup(metaContact),null,null,MetaContactGroupEvent.CHILD_CONTACTS_REORDERED);
 }
