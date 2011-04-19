@@ -34,8 +34,17 @@ synchronized (initializationLock) {
       List<String> serverAddresses=new ArrayList<String>();
       String serverAddressUserSetting=getAccountID().getAccountPropertyString(ProtocolProviderFactory.SERVER_ADDRESS);
       int serverPort=getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SERVER_PORT,5222);
-      String accountResource=getAccountID().getAccountPropertyString(ProtocolProviderFactory.RESOURCE);
-      if (accountResource == null || accountResource.equals(""))       accountResource="sip-comm";
+      if (resource == null) {
+        String defaultResource="jitsi";
+        String autoGenenerateResource=getAccountID().getAccountPropertyString(ProtocolProviderFactory.AUTO_GENERATE_RESOURCE);
+        if (autoGenenerateResource == null || Boolean.parseBoolean(autoGenenerateResource)) {
+          resource=defaultResource + net.java.sip.communicator.util.StringUtils.randomString(8);
+        }
+ else {
+          resource=getAccountID().getAccountPropertyString(ProtocolProviderFactory.RESOURCE);
+          if (resource == null || resource.length() == 0)           resource=defaultResource;
+        }
+      }
       try {
         SRVRecord srvRecords[]=NetworkUtils.getSRVRecords("xmpp-client","tcp",serviceName);
         if (srvRecords != null) {
@@ -112,7 +121,7 @@ synchronized (initializationLock) {
       for (int i=0; i < serverAddresses.size(); i++) {
         String currentAddress=serverAddresses.get(i);
         try {
-          ConnectState state=connectAndLogin(currentAddress,serverPort,serviceName,userID,password,accountResource);
+          ConnectState state=connectAndLogin(currentAddress,serverPort,serviceName,userID,password,resource);
           if (state == ConnectState.ABORT_CONNECTING)           return;
  else           if (state == ConnectState.CONTINUE_TRYING)           continue;
  else           if (state == ConnectState.STOP_TRYING)           break;
@@ -120,7 +129,7 @@ synchronized (initializationLock) {
  catch (        XMPPException ex) {
           disconnectAndCleanConnection();
           try {
-            ConnectState state=connectAndLogin(currentAddress,serverPort,serviceName,userID + "@" + serviceName,password,accountResource);
+            ConnectState state=connectAndLogin(currentAddress,serverPort,serviceName,userID + "@" + serviceName,password,resource);
             if (state == ConnectState.ABORT_CONNECTING)             return;
  else             if (state == ConnectState.CONTINUE_TRYING)             continue;
  else             if (state == ConnectState.STOP_TRYING)             break;
