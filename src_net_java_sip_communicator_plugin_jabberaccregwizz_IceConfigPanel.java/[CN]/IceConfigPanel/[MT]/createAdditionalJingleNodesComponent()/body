@@ -4,27 +4,29 @@
   jnTableModel.addColumn(Resources.getString("plugin.jabberaccregwizz.RELAY_SUPPORT"));
   jnTable.setDefaultRenderer(JingleNodeDescriptor.class,new ServerCellRenderer());
   JScrollPane scrollPane=new JScrollPane(jnTable);
-  JButton addButton=new JButton(Resources.getString("service.gui.ADD"));
+  final JButton addButton=new JButton(Resources.getString("service.gui.ADD"));
   addButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
       JNConfigDialog jnDialog=new JNConfigDialog(false);
+      jnDialog.setModal(true);
       jnDialog.setVisible(true);
     }
   }
 );
-  JButton editButton=new JButton(Resources.getString("service.gui.EDIT"));
+  final JButton editButton=new JButton(Resources.getString("service.gui.EDIT"));
   editButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
       if (jnTable.getSelectedRow() < 0)       return;
       JingleNodeDescriptor jn=(JingleNodeDescriptor)jnTableModel.getValueAt(jnTable.getSelectedRow(),0);
       if (jn != null) {
         JNConfigDialog dialog=new JNConfigDialog(jn.getJID(),jn.isRelaySupported());
+        dialog.setModal(true);
         dialog.setVisible(true);
       }
     }
   }
 );
-  JButton deleteButton=new JButton(Resources.getString("service.gui.DELETE"));
+  final JButton deleteButton=new JButton(Resources.getString("service.gui.DELETE"));
   deleteButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
       jnTableModel.removeRow(jnTable.getSelectedRow());
@@ -39,5 +41,16 @@
   mainPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("plugin.jabberaccregwizz.ADDITIONAL_JINGLE_NODES")));
   mainPanel.add(scrollPane);
   mainPanel.add(buttonsPanel,BorderLayout.SOUTH);
+  jnTable.addMouseListener(new MouseAdapter(){
+    /** 
+ * {@inheritDoc}
+ */
+    public void mouseClicked(    MouseEvent evt){
+      if (evt.getComponent().isEnabled() && evt.getButton() == MouseEvent.BUTTON1 && evt.getClickCount() == 2) {
+        editButton.doClick();
+      }
+    }
+  }
+);
   return mainPanel;
 }

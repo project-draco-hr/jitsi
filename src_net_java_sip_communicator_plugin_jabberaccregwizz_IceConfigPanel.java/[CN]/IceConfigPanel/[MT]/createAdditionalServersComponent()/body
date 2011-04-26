@@ -4,27 +4,29 @@
   tableModel.addColumn(Resources.getString("plugin.jabberaccregwizz.SUPPORT_TURN"));
   table.setDefaultRenderer(StunServerDescriptor.class,new ServerCellRenderer());
   JScrollPane scrollPane=new JScrollPane(table);
-  JButton addButton=new JButton(Resources.getString("service.gui.ADD"));
+  final JButton addButton=new JButton(Resources.getString("service.gui.ADD"));
   addButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
       StunConfigDialog stunDialog=new StunConfigDialog(false);
+      stunDialog.setModal(true);
       stunDialog.setVisible(true);
     }
   }
 );
-  JButton editButton=new JButton(Resources.getString("service.gui.EDIT"));
+  final JButton editButton=new JButton(Resources.getString("service.gui.EDIT"));
   editButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
       if (table.getSelectedRow() < 0)       return;
       StunServerDescriptor stunServer=(StunServerDescriptor)tableModel.getValueAt(table.getSelectedRow(),0);
       if (stunServer != null) {
         StunConfigDialog dialog=new StunConfigDialog(stunServer.getAddress(),stunServer.getPort(),stunServer.isTurnSupported(),StringUtils.getUTF8String(stunServer.getUsername()),StringUtils.getUTF8String(stunServer.getPassword()));
+        dialog.setModal(true);
         dialog.setVisible(true);
       }
     }
   }
 );
-  JButton deleteButton=new JButton(Resources.getString("service.gui.DELETE"));
+  final JButton deleteButton=new JButton(Resources.getString("service.gui.DELETE"));
   deleteButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
       tableModel.removeRow(table.getSelectedRow());
@@ -39,5 +41,16 @@
   mainPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("plugin.jabberaccregwizz.ADDITIONAL_STUN_SERVERS")));
   mainPanel.add(scrollPane);
   mainPanel.add(buttonsPanel,BorderLayout.SOUTH);
+  table.addMouseListener(new MouseAdapter(){
+    /** 
+ * {@inheritDoc}
+ */
+    public void mouseClicked(    MouseEvent evt){
+      if (evt.getComponent().isEnabled() && evt.getButton() == MouseEvent.BUTTON1 && evt.getClickCount() == 2) {
+        editButton.doClick();
+      }
+    }
+  }
+);
   return mainPanel;
 }

@@ -1,7 +1,7 @@
 {
   super(false);
   this.isEditMode=editMode;
-  setTitle(Resources.getString("plugin.jabberaccregwizz.ADD_STUN_SERVER"));
+  setTitle(Resources.getString(!editMode ? "plugin.jabberaccregwizz.ADD_STUN_SERVER" : "plugin.jabberaccregwizz.EDIT_STUN_SERVER"));
   JLabel addressLabel=new JLabel(Resources.getString("plugin.jabberaccregwizz.IP_ADDRESS"));
   JLabel portLabel=new JLabel(Resources.getString("service.gui.PORT"));
   JLabel usernameLabel=new JLabel(Resources.getString("plugin.jabberaccregwizz.TURN_USERNAME"));
@@ -22,7 +22,7 @@
   valuesPanel.add(usernameField);
   valuesPanel.add(passwordField);
   portField.setInputVerifier(portVerifier);
-  JButton addButton=new JButton(Resources.getString(isEditMode ? "service.gui.EDIT" : "service.gui.ADD"));
+  JButton addButton=new JButton(Resources.getString("service.gui.OK"));
   JButton cancelButton=new JButton(Resources.getString("service.gui.CANCEL"));
   addButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
@@ -36,7 +36,12 @@
       String errorMessage=null;
       if (address == null || address.length() <= 0)       errorMessage=Resources.getString("plugin.jabberaccregwizz.NO_STUN_ADDRESS");
       if ((username == null || username.length() <= 0) && supportTurnCheckBox.isSelected())       errorMessage=Resources.getString("plugin.jabberaccregwizz.NO_STUN_USERNAME");
-      stunServer=getStunServer(address,port);
+      if (isEditMode) {
+        stunServer=getStunServer(previousServer,previousPort);
+      }
+ else {
+        stunServer=getStunServer(address,port);
+      }
       if (stunServer != null && !isEditMode) {
         errorMessage=Resources.getString("plugin.jabberaccregwizz.STUN_ALREADY_EXIST");
       }
