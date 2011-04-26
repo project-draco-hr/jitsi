@@ -20,7 +20,15 @@
       if (cnx == null) {
         cnx=new GoogleContactsConnectionImpl(login,password);
         if (cnx.connect() == false) {
-          AccountSettingsForm settings=new AccountSettingsForm();
+synchronized (this) {
+            if (settings != null) {
+              cnx=null;
+              return null;
+            }
+ else {
+              settings=new AccountSettingsForm();
+            }
+          }
           settings.setModal(true);
           settings.loadData(cnx);
           int ret=settings.showDialog();
@@ -34,7 +42,15 @@
         }
       }
  else       if (!cnx.connect()) {
-        AccountSettingsForm settings=new AccountSettingsForm();
+synchronized (this) {
+          if (settings != null) {
+            cnx=null;
+            return null;
+          }
+ else {
+            settings=new AccountSettingsForm();
+          }
+        }
         settings.setModal(true);
         settings.loadData(cnx);
         int ret=settings.showDialog();
