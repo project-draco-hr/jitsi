@@ -1,0 +1,46 @@
+{
+  final File[] tempFile=new File[1];
+  FileOutputStream tempFileOutputStream=null;
+  boolean deleteTempFile=true;
+  tempFileOutputStream=createTempFileOutputStream(new URL(url),null,false,tempFile);
+  try {
+    HttpUtils.HTTPResponseResult res=HttpUtils.openURLConnection(url);
+    if (res != null) {
+      InputStream content=res.getContent();
+      ProgressMonitorInputStream input=new ProgressMonitorInputStream(null,url,content);
+      input.getProgressMonitor().setMaximum((int)res.getContentLength());
+      try {
+        final BufferedOutputStream output=new BufferedOutputStream(tempFileOutputStream);
+        try {
+          int read=-1;
+          byte[] buff=new byte[1024];
+          while ((read=input.read(buff)) != -1)           output.write(buff,0,read);
+        }
+  finally {
+          output.close();
+          tempFileOutputStream=null;
+        }
+        deleteTempFile=false;
+      }
+  finally {
+        try {
+          input.close();
+        }
+ catch (        IOException ioe) {
+        }
+      }
+    }
+  }
+  finally {
+    try {
+      if (tempFileOutputStream != null)       tempFileOutputStream.close();
+    }
+  finally {
+      if (deleteTempFile && (tempFile[0] != null)) {
+        tempFile[0].delete();
+        tempFile[0]=null;
+      }
+    }
+  }
+  return tempFile[0];
+}

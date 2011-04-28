@@ -1,0 +1,74 @@
+{
+  File delta=null;
+  boolean deleteDelta=true;
+  File msi=null;
+  try {
+    String deltaLink=downloadLink.replace(latestVersion,latestVersion + "-delta-" + getCurrentVersion());
+    if (!deltaLink.equalsIgnoreCase(downloadLink) && logger.isDebugEnabled())     delta=download(deltaLink);
+    if (delta != null) {
+      File[] deltaMsi=new File[1];
+      createTempFileOutputStream(delta.toURI().toURL(),".msi",true,deltaMsi);
+      Process process=new ProcessBuilder(delta.getCanonicalPath(),"--quiet",deltaMsi[0].getCanonicalPath()).start();
+      int exitCode=1;
+      while (true) {
+        try {
+          exitCode=process.waitFor();
+          break;
+        }
+ catch (        InterruptedException ie) {
+        }
+      }
+      if (0 == exitCode) {
+        deleteDelta=false;
+        msi=deltaMsi[0];
+      }
+    }
+  }
+ catch (  Exception e) {
+  }
+ finally {
+    if (deleteDelta && (delta != null)) {
+      delta.delete();
+      delta=null;
+    }
+  }
+  boolean deleteMsi=true;
+  deleteDelta=true;
+  try {
+    if (msi == null)     msi=download(downloadLink);
+    if (msi != null) {
+      ResourceManagementService resources=Resources.getResources();
+      if (UpdateActivator.getUIService().getPopupDialog().showConfirmPopupDialog(resources.getI18NString("plugin.updatechecker.DIALOG_WARN"),resources.getI18NString("plugin.updatechecker.DIALOG_TITLE"),PopupDialog.YES_NO_OPTION,PopupDialog.QUESTION_MESSAGE) == PopupDialog.YES_OPTION) {
+        List<String> command=new ArrayList<String>();
+        command.add(((delta == null) ? msi : delta).getCanonicalPath());
+        command.add("--wait-parent");
+        if (delta != null) {
+          command.add("--msiexec");
+          command.add(msi.getCanonicalPath());
+        }
+        command.add("SIP_COMMUNICATOR_AUTOUPDATE_INSTALLDIR=\"" + System.getProperty("user.dir") + "\"");
+        deleteMsi=false;
+        deleteDelta=false;
+        new ProcessBuilder(command).start();
+        UpdateActivator.getShutdownService().beginShutdown();
+      }
+    }
+  }
+ catch (  FileNotFoundException fnfe) {
+    ResourceManagementService resources=Resources.getResources();
+    UpdateActivator.getUIService().getPopupDialog().showMessagePopupDialog(resources.getI18NString("plugin.updatechecker.DIALOG_MISSING_UPDATE"),resources.getI18NString("plugin.updatechecker.DIALOG_NOUPDATE_TITLE"),PopupDialog.INFORMATION_MESSAGE);
+  }
+catch (  Exception e) {
+    if (logger.isInfoEnabled())     logger.info("Could not update",e);
+  }
+ finally {
+    if (deleteMsi && (msi != null)) {
+      msi.delete();
+      msi=null;
+    }
+    if (deleteDelta && (delta != null)) {
+      delta.delete();
+      delta=null;
+    }
+  }
+}

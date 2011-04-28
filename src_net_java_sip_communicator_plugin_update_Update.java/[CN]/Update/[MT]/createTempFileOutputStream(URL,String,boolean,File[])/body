@@ -1,0 +1,42 @@
+{
+  String path=url.getPath();
+  File tf=null;
+  FileOutputStream tfos=null;
+  if ((path != null) && (path.length() != 0)) {
+    int nameBeginIndex=path.lastIndexOf('/');
+    String name;
+    if (nameBeginIndex > 0) {
+      name=path.substring(nameBeginIndex + 1);
+      nameBeginIndex=name.lastIndexOf('\\');
+      if (nameBeginIndex > 0)       name=name.substring(nameBeginIndex + 1);
+    }
+ else     name=path;
+    int nameLength=name.length();
+    if (nameLength != 0) {
+      int baseNameEnd=name.lastIndexOf('.');
+      if (extension == null)       extension=".exe";
+      if (baseNameEnd == -1)       name+=extension;
+ else       if (baseNameEnd == 0) {
+        if (!extension.equalsIgnoreCase(name))         name+=extension;
+      }
+ else       name=name.substring(0,baseNameEnd) + extension;
+      try {
+        String tempDir=System.getProperty("java.io.tmpdir");
+        if ((tempDir != null) && (tempDir.length() != 0)) {
+          tf=new File(tempDir,name);
+          if (!dryRun)           tfos=new FileOutputStream(tf);
+        }
+      }
+ catch (      FileNotFoundException fnfe) {
+      }
+catch (      SecurityException se) {
+      }
+    }
+  }
+  if ((tfos == null) && !dryRun) {
+    tf=File.createTempFile("setup",".exe");
+    tfos=new FileOutputStream(tf);
+  }
+  tempFile[0]=tf;
+  return tfos;
+}

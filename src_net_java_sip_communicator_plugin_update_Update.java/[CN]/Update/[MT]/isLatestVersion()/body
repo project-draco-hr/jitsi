@@ -1,0 +1,33 @@
+{
+  try {
+    String updateLink=UpdateActivator.getConfiguration().getString(PROP_UPDATE_LINK);
+    if (updateLink == null) {
+      updateLink=Resources.getUpdateConfigurationString("update_link");
+    }
+    if (updateLink == null) {
+      if (logger.isDebugEnabled())       logger.debug("Updates are disabled, faking latest version.");
+    }
+ else {
+      HttpUtils.HTTPResponseResult res=HttpUtils.openURLConnection(updateLink);
+      if (res != null) {
+        InputStream in=null;
+        Properties props=new Properties();
+        try {
+          in=res.getContent();
+          props.load(in);
+        }
+  finally {
+          in.close();
+        }
+        latestVersion=props.getProperty("last_version");
+        downloadLink=props.getProperty("download_link");
+        changesLink=updateLink.substring(0,updateLink.lastIndexOf("/") + 1) + props.getProperty("changes_html");
+        return latestVersion.compareTo(getCurrentVersion()) <= 0;
+      }
+    }
+  }
+ catch (  Exception e) {
+    logger.warn("Could not retrieve latest version or compare it to current" + " version",e);
+  }
+  return true;
+}
