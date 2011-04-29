@@ -1,21 +1,3 @@
 {
-  OperationSetVideoTelephony telephony=call.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
-  boolean enableSucceeded=false;
-  if (telephony != null) {
-    if (enable && isDesktopSharingEnabled(call)) {
-      getActiveCallContainer(call).setDesktopSharingButtonSelected(false);
-      JFrame frame=DesktopSharingFrame.getFrameForCall(call);
-      if (frame != null) {
-        frame.dispose();
-      }
-    }
-    try {
-      telephony.setLocalVideoAllowed(call,enable);
-      enableSucceeded=true;
-    }
- catch (    OperationFailedException ex) {
-      logger.error("Failed to toggle the streaming of local video.",ex);
-    }
-  }
-  if (enable && !enableSucceeded)   getActiveCallContainer(call).setVideoButtonSelected(false);
+  new EnableLocalVideoThread(call,enable).start();
 }
