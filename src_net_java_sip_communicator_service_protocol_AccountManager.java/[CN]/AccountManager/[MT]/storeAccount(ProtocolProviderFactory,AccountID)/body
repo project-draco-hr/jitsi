@@ -22,10 +22,17 @@ synchronized (storedAccounts) {
   for (  Map.Entry<String,String> entry : accountProperties.entrySet()) {
     String property=entry.getKey();
     String value=entry.getValue();
+    String secureStorePrefix=null;
     if (property.equals(ProtocolProviderFactory.PASSWORD)) {
-      CredentialsStorageService credentialsStorage=ServiceUtils.getService(bundleContext,CredentialsStorageService.class);
       String accountPrefix=factoryPackage + "." + accountNodeName;
-      if ((value != null) && (value.length() != 0) && !credentialsStorage.storePassword(accountPrefix,value)) {
+      secureStorePrefix=accountPrefix;
+    }
+ else     if (property.endsWith("." + ProtocolProviderFactory.PASSWORD)) {
+      secureStorePrefix=factoryPackage + "." + accountNodeName+ "."+ property.substring(0,property.lastIndexOf("."));
+    }
+    if (secureStorePrefix != null) {
+      CredentialsStorageService credentialsStorage=ServiceUtils.getService(bundleContext,CredentialsStorageService.class);
+      if ((value != null) && (value.length() != 0) && !credentialsStorage.storePassword(secureStorePrefix,value)) {
         throw new OperationFailedException("CredentialsStorageService failed to" + " storePassword",OperationFailedException.GENERAL_ERROR);
       }
     }
