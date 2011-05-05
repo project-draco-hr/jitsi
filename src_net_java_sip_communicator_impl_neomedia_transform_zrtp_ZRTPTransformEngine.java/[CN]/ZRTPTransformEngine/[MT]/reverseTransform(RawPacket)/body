@@ -1,15 +1,23 @@
 {
   if (!started && enableZrtp && ownSSRC != 0)   startZrtp();
+  if (remoteSSRC == 0) {
+    remoteSSRC=pkt.getSSRC();
+  }
   if (!ZrtpRawPacket.isZrtpData(pkt)) {
     if (srtpInTransformer == null) {
-      if (muted)       return null;
+      if (muted) {
+        return null;
+      }
  else       return pkt;
     }
-    pkt=srtpInTransformer.reverseTransform(pkt);
-    if ((pkt != null) && started && zrtpEngine.inState(ZrtpStateClass.ZrtpStates.WaitConfAck)) {
+    RawPacket pkt2=srtpInTransformer.reverseTransform(pkt);
+    if ((pkt2 != null) && started && zrtpEngine.inState(ZrtpStateClass.ZrtpStates.WaitConfAck)) {
       zrtpEngine.conf2AckSecure();
     }
-    return pkt;
+    if (remoteSSRC != pkt.getSSRC()) {
+      return pkt;
+    }
+    return pkt2;
   }
   if (enableZrtp && started) {
     ZrtpRawPacket zPkt=new ZrtpRawPacket(pkt);
