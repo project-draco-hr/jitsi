@@ -6,18 +6,17 @@
   videoContainer.setPreferredSize(new Dimension(preferredWidth,preferredHeight));
   videoContainer.setMaximumSize(new Dimension(preferredWidth,preferredHeight));
   try {
-    if (device == null || ((MediaDeviceImpl)device).getCaptureDeviceInfo() == null) {
-      return videoContainer;
-    }
-    DataSource dataSource=Manager.createDataSource(((MediaDeviceImpl)device).getCaptureDeviceInfo().getLocator());
+    CaptureDeviceInfo captureDeviceInfo;
+    if ((device == null) || ((captureDeviceInfo=((MediaDeviceImpl)device).getCaptureDeviceInfo()) == null))     return videoContainer;
+    DataSource dataSource=Manager.createDataSource(captureDeviceInfo.getLocator());
     if ((preferredWidth < 128) || (preferredHeight < 96)) {
       preferredHeight=128;
       preferredWidth=96;
     }
     VideoMediaStreamImpl.selectVideoSize(dataSource,preferredWidth,preferredHeight);
     dataSource.connect();
-    final MediaLocator locator=dataSource.getLocator();
     Processor player=Manager.createProcessor(dataSource);
+    final MediaLocator locator=dataSource.getLocator();
     player.addControllerListener(new ControllerListener(){
       public void controllerUpdate(      ControllerEvent event){
         controllerUpdateForPreview(event,videoContainer,locator);

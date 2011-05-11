@@ -3,13 +3,21 @@
   if (captureDevice != null) {
     MediaLocator locator=captureDevice.getLocator();
     String protocol=(locator == null) ? null : locator.getProtocol();
+    float frameRate;
+    DeviceConfiguration deviceConfig=NeomediaActivator.getMediaServiceImpl().getDeviceConfiguration();
     if (ImageStreamingAuto.LOCATOR_PROTOCOL.equals(protocol)) {
-      FrameRateControl frameRateControl=(FrameRateControl)captureDevice.getControl(FrameRateControl.class.getName());
-      float defaultFrameRate=10;
-      if ((frameRateControl != null) && (defaultFrameRate <= frameRateControl.getMaxSupportedFrameRate()))       frameRateControl.setFrameRate(defaultFrameRate);
+      frameRate=10;
     }
  else {
-      VideoMediaStreamImpl.selectVideoSize(captureDevice,640,480);
+      Dimension videoSize=deviceConfig.getVideoSize();
+      VideoMediaStreamImpl.selectVideoSize(captureDevice,videoSize.width,videoSize.height);
+      frameRate=deviceConfig.getFrameRate();
+    }
+    FrameRateControl frameRateControl=(FrameRateControl)captureDevice.getControl(FrameRateControl.class.getName());
+    if (frameRateControl != null) {
+      float maxSupportedFrameRate=frameRateControl.getMaxSupportedFrameRate();
+      if ((maxSupportedFrameRate > 0) && (frameRate > maxSupportedFrameRate))       frameRate=maxSupportedFrameRate;
+      frameRateControl.setFrameRate(frameRate);
     }
     if (!(captureDevice instanceof PullBufferDataSource)) {
       DataSource cloneableDataSource=Manager.createCloneableDataSource(captureDevice);

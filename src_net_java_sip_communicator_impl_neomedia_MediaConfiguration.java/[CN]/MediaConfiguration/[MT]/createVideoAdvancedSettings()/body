@@ -14,12 +14,7 @@
   advancedPanel.add(centerPanel,BorderLayout.CENTER);
   advButton.addMouseListener(new MouseAdapter(){
     @Override public void mouseClicked(    MouseEvent e){
-      if (centerPanel.isVisible()) {
-        advButton.setIcon(NeomediaActivator.getResources().getImage("service.gui.icons.RIGHT_ARROW_ICON"));
-      }
- else {
-        advButton.setIcon(NeomediaActivator.getResources().getImage("service.gui.icons.DOWN_ARROW_ICON"));
-      }
+      advButton.setIcon(NeomediaActivator.getResources().getImage(centerPanel.isVisible() ? "service.gui.icons.RIGHT_ARROW_ICON" : "service.gui.icons.DOWN_ARROW_ICON"));
       centerPanel.setVisible(!centerPanel.isVisible());
       advancedPanel.revalidate();
       NeomediaActivator.getUIService().getConfigurationContainer().validateCurrentForm();
@@ -66,18 +61,16 @@
   constraints.gridx=1;
   constraints.gridy=2;
   centerPanel.add(videoMaxBandwidth,constraints);
-  Dimension currentResolution=deviceConfig.getResolution();
-  if (currentResolution.getHeight() != DeviceConfiguration.DEFAULT_VIDEO_HEIGHT && currentResolution.getWidth() != DeviceConfiguration.DEFAULT_VIDEO_WIDTH) {
-    sizeCombo.setSelectedItem(deviceConfig.getResolution());
-  }
+  Dimension videoSize=deviceConfig.getVideoSize();
+  if ((videoSize.getHeight() != DeviceConfiguration.DEFAULT_VIDEO_HEIGHT) && (videoSize.getWidth() != DeviceConfiguration.DEFAULT_VIDEO_WIDTH))   sizeCombo.setSelectedItem(deviceConfig.getVideoSize());
  else   sizeCombo.setSelectedIndex(0);
   sizeCombo.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
-      Dimension selectedResolution=(Dimension)sizeCombo.getSelectedItem();
-      if (selectedResolution == null) {
-        selectedResolution=new Dimension(DeviceConfiguration.DEFAULT_VIDEO_WIDTH,DeviceConfiguration.DEFAULT_VIDEO_HEIGHT);
+      Dimension selectedVideoSize=(Dimension)sizeCombo.getSelectedItem();
+      if (selectedVideoSize == null) {
+        selectedVideoSize=new Dimension(DeviceConfiguration.DEFAULT_VIDEO_WIDTH,DeviceConfiguration.DEFAULT_VIDEO_HEIGHT);
       }
-      deviceConfig.setResolution(selectedResolution);
+      deviceConfig.setVideoSize(selectedVideoSize);
       videoDeviceInPreview=null;
       videoDeviceChangeListener.actionPerformed(null);
     }
