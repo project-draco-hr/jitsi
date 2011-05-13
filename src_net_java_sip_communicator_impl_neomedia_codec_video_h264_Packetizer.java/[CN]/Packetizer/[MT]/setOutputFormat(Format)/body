@@ -1,11 +1,15 @@
 {
-  if (!(out instanceof VideoFormat) || (null == AbstractCodecExt.matches(out,getMatchingOutputFormats(inputFormat))))   return null;
-  VideoFormat videoOut=(VideoFormat)out;
-  Dimension outSize=videoOut.getSize();
-  if (outSize == null) {
-    Dimension inSize=((VideoFormat)inputFormat).getSize();
-    outSize=(inSize == null) ? new Dimension(Constants.VIDEO_WIDTH,Constants.VIDEO_HEIGHT) : inSize;
+  if (!(output instanceof VideoFormat) || (null == AbstractCodecExt.matches(output,getMatchingOutputFormats(inputFormat))))   return null;
+  VideoFormat videoOutput=(VideoFormat)output;
+  Dimension outputSize=videoOutput.getSize();
+  if (outputSize == null) {
+    Dimension inputSize=((VideoFormat)inputFormat).getSize();
+    outputSize=(inputSize == null) ? new Dimension(Constants.VIDEO_WIDTH,Constants.VIDEO_HEIGHT) : inputSize;
   }
-  outputFormat=new VideoFormat(videoOut.getEncoding(),outSize,outSize.width * outSize.height,Format.byteArray,videoOut.getFrameRate());
+  Map<String,String> fmtps=null;
+  if (output instanceof ParameterizedVideoFormat)   fmtps=((ParameterizedVideoFormat)output).getFormatParameters();
+  if (fmtps == null)   fmtps=new HashMap<String,String>();
+  if (fmtps.get(JNIEncoder.PACKETIZATION_MODE_FMTP) == null)   fmtps.put(JNIEncoder.PACKETIZATION_MODE_FMTP,getPacketizationMode(inputFormat));
+  outputFormat=new ParameterizedVideoFormat(videoOutput.getEncoding(),outputSize,outputSize.width * outputSize.height,Format.byteArray,videoOutput.getFrameRate(),fmtps);
   return outputFormat;
 }

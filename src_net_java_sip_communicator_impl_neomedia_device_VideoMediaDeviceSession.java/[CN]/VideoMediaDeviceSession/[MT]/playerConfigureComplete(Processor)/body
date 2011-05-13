@@ -6,17 +6,17 @@
     try {
       for (      TrackControl trackControl : trackControls) {
         playerScaler=new PlayerScaler(player);
-        if (format.getEncoding().equals("h264/rtp") && usePLI) {
-          DePacketizer depack=new DePacketizer();
-          depack.setRtcpFeedbackPLI(usePLI);
+        if (usePLI && "h264/rtp".equalsIgnoreCase(getFormat().getJMFEncoding())) {
+          DePacketizer depacketizer=new DePacketizer();
+          depacketizer.setRtcpFeedbackPLI(usePLI);
           try {
-            depack.setConnector(rtpConnector.getControlOutputStream());
+            depacketizer.setConnector(rtpConnector.getControlOutputStream());
           }
  catch (          Exception e) {
             logger.error("Error cannot get RTCP output stream",e);
           }
-          depack.setSSRC(localSSRC,remoteSSRC);
-          trackControl.setCodecChain(new Codec[]{depack,playerScaler});
+          depacketizer.setSSRC(localSSRC,remoteSSRC);
+          trackControl.setCodecChain(new Codec[]{depacketizer,playerScaler});
         }
  else {
           trackControl.setCodecChain(new Codec[]{playerScaler});
