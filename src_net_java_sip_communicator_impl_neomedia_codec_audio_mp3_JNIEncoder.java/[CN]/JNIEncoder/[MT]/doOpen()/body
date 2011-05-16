@@ -15,6 +15,12 @@
     if (channels == Format.NOT_SPECIFIED)     channels=1;
     FFmpeg.avcodeccontext_set_bit_rate(avctx,128000);
     FFmpeg.avcodeccontext_set_channels(avctx,channels);
+    try {
+      FFmpeg.avcodeccontext_set_sample_fmt(avctx,FFmpeg.AV_SAMPLE_FMT_S16);
+    }
+ catch (    UnsatisfiedLinkError ule) {
+      logger.warn("The FFmpeg JNI library is out-of-date.");
+    }
     if (sampleRate != Format.NOT_SPECIFIED)     FFmpeg.avcodeccontext_set_sample_rate(avctx,sampleRate);
     avcodec_open=FFmpeg.avcodec_open(avctx,encoder);
     frameSizeInBytes=FFmpeg.avcodeccontext_get_frame_size(avctx) * (inputFormat.getSampleSizeInBits() / 8) * channels;
