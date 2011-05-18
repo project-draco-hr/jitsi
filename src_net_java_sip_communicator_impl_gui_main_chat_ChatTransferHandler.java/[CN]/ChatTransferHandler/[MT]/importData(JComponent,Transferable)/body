@@ -17,16 +17,19 @@ catch (    IOException e) {
       if (logger.isDebugEnabled())       logger.debug("Failed to drop files.",e);
     }
   }
- else   if (t.isDataFlavorSupported(uriListFlavor)) {
+  if (t.isDataFlavorSupported(uriListFlavor)) {
     try {
       Object o=t.getTransferData(uriListFlavor);
+      boolean dataProcessed=false;
       StringTokenizer tokens=new StringTokenizer((String)o);
       while (tokens.hasMoreTokens()) {
         String urlString=tokens.nextToken();
         URL url=new URL(urlString);
         File file=new File(URLDecoder.decode(url.getFile(),"UTF-8"));
         chatPanel.sendFile(file);
+        dataProcessed=true;
       }
+      return dataProcessed;
     }
  catch (    UnsupportedFlavorException e) {
       if (logger.isDebugEnabled())       logger.debug("Failed to drop files.",e);
@@ -35,7 +38,7 @@ catch (    IOException e) {
       if (logger.isDebugEnabled())       logger.debug("Failed to drop files.",e);
     }
   }
- else   if (t.isDataFlavorSupported(uiContactDataFlavor)) {
+  if (t.isDataFlavorSupported(uiContactDataFlavor)) {
     Object o=null;
     try {
       o=t.getTransferData(uiContactDataFlavor);
@@ -62,14 +65,14 @@ catch (    IOException e) {
  else       new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.CONTACT_NOT_SUPPORTING_CHAT_CONF",new String[]{uiContact.getDisplayName()})).showDialog();
     }
   }
- else   if (t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+  if (t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
     InputContext inputContext=comp.getInputContext();
     if (inputContext != null) {
       inputContext.endComposition();
     }
     try {
       BufferedReader reader=new BufferedReader(DataFlavor.stringFlavor.getReaderForText(t));
-      StringBuffer buffToPaste=new StringBuffer();
+      StringBuilder buffToPaste=new StringBuilder();
       String line=reader.readLine();
       while (line != null) {
         buffToPaste.append(line);
