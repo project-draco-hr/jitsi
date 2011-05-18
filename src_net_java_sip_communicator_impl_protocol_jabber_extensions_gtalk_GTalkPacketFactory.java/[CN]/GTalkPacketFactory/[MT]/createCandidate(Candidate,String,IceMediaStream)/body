@@ -1,0 +1,25 @@
+{
+  GTalkCandidatePacketExtension packet=new GTalkCandidatePacketExtension();
+  Component component=candidate.getParentComponent();
+  packet.setName(name);
+  packet.setProtocol(candidate.getTransport().toString());
+  packet.setGeneration(component.getParentStream().getParentAgent().getGeneration());
+  TransportAddress transportAddress=candidate.getTransportAddress();
+  packet.setUsername(stream.getParentAgent().getLocalUfrag());
+  packet.setPassword("");
+  packet.setAddress(transportAddress.getHostAddress());
+  packet.setPort(transportAddress.getPort());
+  packet.setNetwork(0);
+  packet.setFoundation(0);
+  packet.setComponent(component.getComponentID());
+  CandidateType candType=CandidateType.valueOf(candidate.getType().toString());
+  if (candType == CandidateType.srflx) {
+    candType=CandidateType.stun;
+  }
+ else   if (candType == CandidateType.host) {
+    candType=CandidateType.local;
+  }
+  packet.setType(candType);
+  packet.setPreference(candidate.getPriority() / 1000);
+  return packet;
+}

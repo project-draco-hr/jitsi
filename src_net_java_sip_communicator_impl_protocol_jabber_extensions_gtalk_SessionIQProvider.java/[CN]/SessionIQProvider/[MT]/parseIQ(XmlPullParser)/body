@@ -1,0 +1,36 @@
+{
+  SessionIQ sessionIQ=new SessionIQ();
+  boolean done=false;
+  GTalkType type=GTalkType.parseString(parser.getAttributeValue("",SessionIQ.TYPE_ATTR_NAME));
+  String initiator=parser.getAttributeValue("",SessionIQ.INITIATOR_ATTR_NAME);
+  String id=parser.getAttributeValue("",SessionIQ.ID_ATTR_NAME);
+  sessionIQ.setGTalkType(type);
+  sessionIQ.setInitiator(initiator);
+  sessionIQ.setID(id);
+  DefaultPacketExtensionProvider<GTalkCandidatePacketExtension> candidateProvider=new DefaultPacketExtensionProvider<GTalkCandidatePacketExtension>(GTalkCandidatePacketExtension.class);
+  DefaultPacketExtensionProvider<RtpDescriptionPacketExtension> descriptionProvider=new DefaultPacketExtensionProvider<RtpDescriptionPacketExtension>(RtpDescriptionPacketExtension.class);
+  ReasonProvider reasonProvider=new ReasonProvider();
+  while (!done) {
+    int eventType=parser.next();
+    String elementName=parser.getName();
+    if (eventType == XmlPullParser.START_TAG) {
+      if (elementName.equals(CandidatePacketExtension.ELEMENT_NAME)) {
+        sessionIQ.addExtension(candidateProvider.parseExtension(parser));
+      }
+ else       if (elementName.equals(RtpDescriptionPacketExtension.ELEMENT_NAME)) {
+        RtpDescriptionPacketExtension ext=descriptionProvider.parseExtension(parser);
+        sessionIQ.addExtension(ext);
+      }
+ else       if (elementName.equals(ReasonPacketExtension.ELEMENT_NAME)) {
+        ReasonPacketExtension reason=reasonProvider.parseExtension(parser);
+        sessionIQ.setReason(reason);
+      }
+    }
+    if (eventType == XmlPullParser.END_TAG) {
+      if (parser.getName().equals(SessionIQ.ELEMENT_NAME)) {
+        done=true;
+      }
+    }
+  }
+  return sessionIQ;
+}
