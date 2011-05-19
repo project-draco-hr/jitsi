@@ -1,44 +1,52 @@
 {
   JButton button=(JButton)e.getSource();
   if (button.equals(addButton)) {
+    final ProtocolProviderService protocolProvider=(ProtocolProviderService)accountCombo.getSelectedItem();
+    final String contactAddress=contactAddressField.getText();
+    final String displayName=displayNameField.getText();
+    if (displayName != null && displayName.length() > 0) {
+      GuiActivator.getContactListService().addMetaContactListListener(new MetaContactListAdapter(){
+        public void metaContactAdded(        MetaContactEvent evt){
+          if (evt.getSourceMetaContact().getContact(contactAddress,protocolProvider) != null) {
+            new Thread(){
+              @Override public void run(){
+                GuiActivator.getContactListService().renameMetaContact(metaContact,displayName);
+              }
+            }
+.start();
+          }
+        }
+      }
+);
+    }
     if (metaContact != null) {
       new Thread(){
         @Override public void run(){
-          GuiActivator.getContactListService().addNewContactToMetaContact((ProtocolProviderService)accountCombo.getSelectedItem(),metaContact,contactAddressField.getText());
+          GuiActivator.getContactListService().addNewContactToMetaContact(protocolProvider,metaContact,contactAddress);
         }
       }
 .start();
     }
  else {
-      final String contactName=contactAddressField.getText();
       new Thread(){
         @Override public void run(){
           try {
-            metaContact=GuiActivator.getContactListService().createMetaContact((ProtocolProviderService)accountCombo.getSelectedItem(),(MetaContactGroup)groupCombo.getSelectedItem(),contactName);
+            metaContact=GuiActivator.getContactListService().createMetaContact(protocolProvider,(MetaContactGroup)groupCombo.getSelectedItem(),contactAddress);
           }
  catch (          MetaContactListException ex) {
             logger.error(ex);
             ex.printStackTrace();
             int errorCode=ex.getErrorCode();
             if (errorCode == MetaContactListException.CODE_CONTACT_ALREADY_EXISTS_ERROR) {
-              new ErrorDialog(mainFrame,GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_ERROR_TITLE"),GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_EXIST_ERROR",new String[]{contactName}),ex).showDialog();
+              new ErrorDialog(mainFrame,GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_ERROR_TITLE"),GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_EXIST_ERROR",new String[]{contactAddress}),ex).showDialog();
             }
  else             if (errorCode == MetaContactListException.CODE_NETWORK_ERROR) {
-              new ErrorDialog(mainFrame,GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_ERROR_TITLE"),GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_NETWORK_ERROR",new String[]{contactName}),ex).showDialog();
+              new ErrorDialog(mainFrame,GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_ERROR_TITLE"),GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_NETWORK_ERROR",new String[]{contactAddress}),ex).showDialog();
             }
  else {
-              new ErrorDialog(mainFrame,GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_ERROR_TITLE"),GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_ERROR",new String[]{contactName}),ex).showDialog();
+              new ErrorDialog(mainFrame,GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_ERROR_TITLE"),GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_ERROR",new String[]{contactAddress}),ex).showDialog();
             }
           }
-        }
-      }
-.start();
-    }
-    final String displayName=displayNameField.getText();
-    if (metaContact != null && displayName != null && displayName.length() > 0 && !metaContact.getDisplayName().equals(displayName)) {
-      new Thread(){
-        @Override public void run(){
-          GuiActivator.getContactListService().renameMetaContact(metaContact,displayName);
         }
       }
 .start();
