@@ -1,0 +1,39 @@
+{
+  List<PayloadTypePacketExtension> payloadTypes=offer.getPayloadTypes();
+  boolean atLeastOneValidDescription=false;
+  List<PayloadTypePacketExtension> answer=new ArrayList<PayloadTypePacketExtension>();
+  List<MediaFormat> remoteFormats=JingleUtils.extractFormats(offer,getDynamicPayloadTypes());
+  boolean isAudio=false;
+  boolean isVideo=false;
+  for (  PayloadTypePacketExtension ext : payloadTypes) {
+    if (ext.getNamespace().equals(SessionIQProvider.GTALK_AUDIO_NAMESPACE)) {
+      isAudio=true;
+    }
+ else     if (ext.getNamespace().equals(SessionIQProvider.GTALK_VIDEO_NAMESPACE)) {
+      isVideo=true;
+    }
+  }
+  for (  MediaType mediaType : MediaType.values()) {
+    if (!(isAudio && mediaType == MediaType.AUDIO) && !(isVideo && mediaType == MediaType.VIDEO)) {
+      continue;
+    }
+    remoteContentMap.put(mediaType.toString(),payloadTypes);
+    MediaDevice dev=getDefaultDevice(mediaType);
+    MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
+    devDirection=devDirection.and(getDirectionUserPreference(mediaType));
+    List<MediaFormat> mutuallySupportedFormats=intersectFormats(remoteFormats,dev.getSupportedFormats());
+    List<PayloadTypePacketExtension> contents=createPayloadTypesForOffer(getNameForMediaType(mediaType),mutuallySupportedFormats);
+    answer.addAll(contents);
+    localContentMap.put(mediaType.toString(),answer);
+    atLeastOneValidDescription=true;
+  }
+  if (!atLeastOneValidDescription) {
+    ProtocolProviderServiceJabberImpl.throwOperationFailedException("Offer contained no media formats" + " or no valid media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
+  }
+  harvestCandidates(answer,new CandidatesSender(){
+    public void sendCandidates(    Iterable<GTalkCandidatePacketExtension> candidates){
+      getPeer().sendCandidates(candidates);
+    }
+  }
+);
+}

@@ -1,0 +1,91 @@
+{
+  if (IceProcessingState.RUNNING.equals(iceAgent.getState())) {
+    if (logger.isInfoEnabled()) {
+      logger.info("Update Google ICE remote candidates");
+    }
+    if (remote == null) {
+      return false;
+    }
+    for (    GTalkCandidatePacketExtension candidate : remote) {
+      String name=candidate.getName();
+      int numComponent=0;
+      if (name.equals("rtp")) {
+        numComponent=1;
+      }
+ else       if (name.equals("rtcp")) {
+        name="rtp";
+        numComponent=1;
+      }
+ else       if (name.equals("video_rtp")) {
+        numComponent=1;
+      }
+ else       if (name.equals("video_rtcp")) {
+        name="video_rtp";
+        numComponent=2;
+      }
+      IceMediaStream stream=iceAgent.getStream(name);
+      if (stream == null) {
+        continue;
+      }
+      String ufrag=candidate.getUsername();
+      if (candidate.getGeneration() != iceAgent.getGeneration())       continue;
+      if (!candidate.getProtocol().equalsIgnoreCase(Transport.UDP.toString()))       continue;
+      Component component=stream.getComponent(numComponent);
+    }
+    for (    IceMediaStream stream : iceAgent.getStreams()) {
+      for (      Component component : stream.getComponents()) {
+        component.updateRemoteCandidate();
+      }
+    }
+    return false;
+  }
+  int generation=iceAgent.getGeneration();
+  boolean startConnectivityEstablishment=false;
+  if (remote == null) {
+    return false;
+  }
+  for (  GTalkCandidatePacketExtension candidate : remote) {
+    String name=candidate.getName();
+    int numComponent=0;
+    if (name.equals("rtp")) {
+      numComponent=1;
+    }
+ else     if (name.equals("rtcp")) {
+      name="rtp";
+      numComponent=1;
+    }
+ else     if (name.equals("video_rtp")) {
+      numComponent=1;
+    }
+ else     if (name.equals("video_rtcp")) {
+      name="video_rtp";
+      numComponent=2;
+    }
+    IceMediaStream stream=iceAgent.getStream(name);
+    if (stream == null) {
+      continue;
+    }
+    String ufrag=candidate.getUsername();
+    if (candidate.getGeneration() != generation)     continue;
+    if (!candidate.getProtocol().equalsIgnoreCase(Transport.UDP.toString()))     continue;
+    Component component=stream.getComponent(numComponent);
+    startConnectivityEstablishment=true;
+  }
+  if (startConnectivityEstablishment) {
+    for (    IceMediaStream stream : iceAgent.getStreams()) {
+      for (      Component component : stream.getComponents()) {
+        if (component.getName().equals("RTCP"))         continue;
+        if (component.getRemoteCandidateCount() < 2) {
+          startConnectivityEstablishment=false;
+          break;
+        }
+      }
+      if (!startConnectivityEstablishment)       break;
+    }
+    if (startConnectivityEstablishment) {
+      iceAgent.startConnectivityEstablishment();
+      return true;
+    }
+  }
+  return false;
+}

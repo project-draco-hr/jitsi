@@ -1,0 +1,19 @@
+{
+  sid=SessionIQ.generateSID();
+  isInitiator=false;
+  RtpDescriptionPacketExtension offer=getMediaHandler().createDescription();
+  ProtocolProviderServiceJabberImpl protocolProvider=getProtocolProvider();
+  sessionInitIQ=GTalkPacketFactory.createSessionInitiate(protocolProvider.getOurJID(),this.peerJID,sid,offer);
+  if (sessionInitiateExtensions != null) {
+    for (    PacketExtension sessionInitiateExtension : sessionInitiateExtensions) {
+      sessionInitIQ.addExtension(sessionInitiateExtension);
+    }
+  }
+  protocolProvider.getConnection().sendPacket(sessionInitIQ);
+  getMediaHandler().harvestCandidates(offer.getPayloadTypes(),new CandidatesSender(){
+    public void sendCandidates(    Iterable<GTalkCandidatePacketExtension> candidates){
+      CallPeerGTalkImpl.this.sendCandidates(candidates);
+    }
+  }
+);
+}

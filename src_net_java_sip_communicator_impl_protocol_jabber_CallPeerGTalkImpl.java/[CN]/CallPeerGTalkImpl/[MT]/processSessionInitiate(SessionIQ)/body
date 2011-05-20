@@ -1,0 +1,30 @@
+{
+  this.sessionInitIQ=sessionInitIQ;
+  this.isInitiator=true;
+  RtpDescriptionPacketExtension description=null;
+  for (  PacketExtension ext : sessionInitIQ.getExtensions()) {
+    if (ext.getElementName().equals(RtpDescriptionPacketExtension.ELEMENT_NAME)) {
+      description=(RtpDescriptionPacketExtension)ext;
+      break;
+    }
+  }
+  if (description == null) {
+    logger.info("No description in incoming session initiate");
+    String reasonText="Error: no description";
+    SessionIQ errResp=GTalkPacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getID(),Reason.INCOMPATIBLE_PARAMETERS,reasonText);
+    setState(CallPeerState.FAILED,reasonText);
+    getProtocolProvider().getConnection().sendPacket(errResp);
+    return;
+  }
+  try {
+    getMediaHandler().processOffer(description);
+  }
+ catch (  Exception ex) {
+    logger.info("Failed to process an incoming session initiate",ex);
+    String reasonText="Error: " + ex.getMessage();
+    SessionIQ errResp=GTalkPacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getID(),Reason.INCOMPATIBLE_PARAMETERS,reasonText);
+    setState(CallPeerState.FAILED,reasonText);
+    getProtocolProvider().getConnection().sendPacket(errResp);
+    return;
+  }
+}

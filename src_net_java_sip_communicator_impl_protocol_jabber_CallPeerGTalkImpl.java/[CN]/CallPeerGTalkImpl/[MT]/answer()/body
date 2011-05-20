@@ -1,0 +1,32 @@
+{
+  System.out.println("answer");
+  RtpDescriptionPacketExtension answer=null;
+  try {
+    getMediaHandler().getTransportManager().wrapupConnectivityEstablishment();
+    answer=getMediaHandler().generateSessionAccept();
+  }
+ catch (  Exception exc) {
+    logger.info("Failed to answer an incoming call",exc);
+    String reasonText="Error: " + exc.getMessage();
+    SessionIQ errResp=GTalkPacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getID(),Reason.FAILED_APPLICATION,reasonText);
+    setState(CallPeerState.FAILED,reasonText);
+    getProtocolProvider().getConnection().sendPacket(errResp);
+    return;
+  }
+  SessionIQ response=GTalkPacketFactory.createSessionAccept(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),getSessionID(),answer);
+  getProtocolProvider().getConnection().sendPacket(response);
+  try {
+    getMediaHandler().start();
+  }
+ catch (  UndeclaredThrowableException e) {
+    Throwable exc=e.getUndeclaredThrowable();
+    logger.info("Failed to establish a connection",exc);
+    String reasonText="Error: " + exc.getMessage();
+    SessionIQ errResp=GTalkPacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getID(),Reason.GENERAL_ERROR,reasonText);
+    getMediaHandler().getTransportManager().close();
+    setState(CallPeerState.FAILED,reasonText);
+    getProtocolProvider().getConnection().sendPacket(errResp);
+    return;
+  }
+  setState(CallPeerState.CONNECTED);
+}

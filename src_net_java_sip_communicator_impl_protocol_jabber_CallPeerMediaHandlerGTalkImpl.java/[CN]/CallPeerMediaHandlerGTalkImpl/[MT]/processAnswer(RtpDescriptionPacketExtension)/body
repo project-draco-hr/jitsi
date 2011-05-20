@@ -1,0 +1,27 @@
+{
+  List<PayloadTypePacketExtension> lst=answer.getPayloadTypes();
+  for (  MediaType mediaType : MediaType.values()) {
+    String ns=getNamespaceForMediaType(mediaType);
+    String mediaName=getNameForMediaType(mediaType);
+    MediaFormat format=null;
+    for (    PayloadTypePacketExtension ext : lst) {
+      if (ext.getNamespace().equals(ns)) {
+        format=JingleUtils.payloadTypeToMediaFormat(ext,getDynamicPayloadTypes());
+        if (format == null) {
+          continue;
+        }
+        break;
+      }
+    }
+    if (format == null) {
+      continue;
+    }
+    System.out.println("format: " + format);
+    StreamConnector connector=transportManager.getStreamConnector(mediaType);
+    MediaDevice dev=getDefaultDevice(mediaType);
+    MediaStreamTarget target=transportManager.getStreamTarget(mediaType);
+    List<RTPExtension> rtpExtensions=new ArrayList<RTPExtension>();
+    MediaDirection direction=MediaDirection.SENDRECV;
+    initStream(mediaName,connector,dev,format,target,direction,rtpExtensions);
+  }
+}

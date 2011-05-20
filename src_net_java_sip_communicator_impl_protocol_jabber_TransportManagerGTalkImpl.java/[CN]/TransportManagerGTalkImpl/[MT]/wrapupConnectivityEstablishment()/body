@@ -1,0 +1,36 @@
+{
+  final Object iceProcessingStateSyncRoot=new Object();
+  PropertyChangeListener stateChangeListener=new PropertyChangeListener(){
+    public void propertyChange(    PropertyChangeEvent evt){
+      Object newValue=evt.getNewValue();
+      if (IceProcessingState.COMPLETED.equals(newValue) || IceProcessingState.FAILED.equals(newValue) || IceProcessingState.TERMINATED.equals(newValue)) {
+        if (logger.isTraceEnabled())         logger.trace("ICE " + newValue);
+        Agent iceAgent=(Agent)evt.getSource();
+        iceAgent.removeStateChangeListener(this);
+        if (iceAgent == TransportManagerGTalkImpl.this.iceAgent) {
+synchronized (iceProcessingStateSyncRoot) {
+            iceProcessingStateSyncRoot.notify();
+          }
+        }
+      }
+    }
+  }
+;
+  iceAgent.addStateChangeListener(stateChangeListener);
+  boolean interrupted=false;
+synchronized (iceProcessingStateSyncRoot) {
+    while (IceProcessingState.RUNNING.equals(iceAgent.getState())) {
+      try {
+        iceProcessingStateSyncRoot.wait();
+      }
+ catch (      InterruptedException ie) {
+        interrupted=true;
+      }
+    }
+  }
+  if (interrupted)   Thread.currentThread().interrupt();
+  iceAgent.removeStateChangeListener(stateChangeListener);
+  if (iceAgent.getState().equals(IceProcessingState.FAILED)) {
+    throw new OperationFailedException("Could not establish connection (ICE failed)",OperationFailedException.GENERAL_ERROR);
+  }
+}

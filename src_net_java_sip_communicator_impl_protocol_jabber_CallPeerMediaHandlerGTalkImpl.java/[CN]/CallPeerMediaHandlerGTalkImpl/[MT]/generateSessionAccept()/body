@@ -1,0 +1,34 @@
+{
+  RtpDescriptionPacketExtension description=new RtpDescriptionPacketExtension();
+  List<PayloadTypePacketExtension> lst=localContentMap.get("audio");
+  description.setNamespace(SessionIQProvider.GTALK_AUDIO_NAMESPACE);
+  for (  MediaType mediaType : MediaType.values()) {
+    MediaFormat format=null;
+    String ns=getNamespaceForMediaType(mediaType);
+    String mediaName=getNameForMediaType(mediaType);
+    for (    PayloadTypePacketExtension ext : lst) {
+      if (ext.getNamespace().equals(ns)) {
+        format=JingleUtils.payloadTypeToMediaFormat(ext,getDynamicPayloadTypes());
+        description.addPayloadType(ext);
+        if (format == null) {
+          continue;
+        }
+        break;
+      }
+    }
+    if (format == null) {
+      continue;
+    }
+    System.out.println("session format " + format);
+    StreamConnector connector=transportManager.getStreamConnector(mediaType);
+    MediaDevice dev=getDefaultDevice(mediaType);
+    MediaStreamTarget target=transportManager.getStreamTarget(mediaType);
+    List<RTPExtension> rtpExtensions=new ArrayList<RTPExtension>();
+    MediaDirection direction=MediaDirection.SENDRECV;
+    initStream(mediaName,connector,dev,format,target,direction,rtpExtensions);
+    if (mediaType == MediaType.VIDEO) {
+      description.setNamespace(SessionIQProvider.GTALK_VIDEO_NAMESPACE);
+    }
+  }
+  return description;
+}

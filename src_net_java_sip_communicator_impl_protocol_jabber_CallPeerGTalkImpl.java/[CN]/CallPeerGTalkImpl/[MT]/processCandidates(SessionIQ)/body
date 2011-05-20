@@ -1,0 +1,22 @@
+{
+  Collection<PacketExtension> extensions=sessionInitIQ.getExtensions();
+  List<GTalkCandidatePacketExtension> candidates=new ArrayList<GTalkCandidatePacketExtension>();
+  for (  PacketExtension ext : extensions) {
+    if (ext.getElementName().equalsIgnoreCase(GTalkCandidatePacketExtension.ELEMENT_NAME)) {
+      GTalkCandidatePacketExtension cand=(GTalkCandidatePacketExtension)ext;
+      candidates.add(cand);
+    }
+  }
+  try {
+    getMediaHandler().processCandidates(candidates);
+  }
+ catch (  OperationFailedException ofe) {
+    logger.warn("Failed to process an incoming candidates",ofe);
+    String reasonText="Error: " + ofe.getMessage();
+    SessionIQ errResp=GTalkPacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getID(),Reason.GENERAL_ERROR,reasonText);
+    getMediaHandler().getTransportManager().close();
+    setState(CallPeerState.FAILED,reasonText);
+    getProtocolProvider().getConnection().sendPacket(errResp);
+    return;
+  }
+}

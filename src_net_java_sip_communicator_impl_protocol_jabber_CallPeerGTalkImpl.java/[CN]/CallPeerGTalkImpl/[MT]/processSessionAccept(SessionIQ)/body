@@ -1,0 +1,27 @@
+{
+  this.sessionInitIQ=sessionInitIQ;
+  CallPeerMediaHandlerGTalkImpl mediaHandler=getMediaHandler();
+  Collection<PacketExtension> extensions=sessionInitIQ.getExtensions();
+  RtpDescriptionPacketExtension answer=null;
+  for (  PacketExtension ext : extensions) {
+    if (ext.getElementName().equalsIgnoreCase(RtpDescriptionPacketExtension.ELEMENT_NAME)) {
+      answer=(RtpDescriptionPacketExtension)ext;
+      break;
+    }
+  }
+  try {
+    mediaHandler.getTransportManager().wrapupConnectivityEstablishment();
+    mediaHandler.processAnswer(answer);
+  }
+ catch (  Exception exc) {
+    if (logger.isInfoEnabled())     logger.info("Failed to process a session-accept",exc);
+    String reasonText="Error: " + exc.getMessage();
+    SessionIQ errResp=GTalkPacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getID(),Reason.GENERAL_ERROR,reasonText);
+    getMediaHandler().getTransportManager().close();
+    setState(CallPeerState.FAILED,reasonText);
+    getProtocolProvider().getConnection().sendPacket(errResp);
+    return;
+  }
+  setState(CallPeerState.CONNECTED);
+  mediaHandler.start();
+}

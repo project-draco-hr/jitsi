@@ -1,0 +1,27 @@
+{
+  boolean audio=false;
+  boolean video=false;
+  List<GTalkCandidatePacketExtension> candidates=new LinkedList<GTalkCandidatePacketExtension>();
+  for (  PayloadTypePacketExtension ext : ourAnswer) {
+    if (ext.getNamespace().equals(SessionIQProvider.GTALK_AUDIO_NAMESPACE)) {
+      audio=true;
+    }
+ else     if (ext.getNamespace().equals(SessionIQProvider.GTALK_VIDEO_NAMESPACE)) {
+      video=true;
+    }
+  }
+  if (audio) {
+    IceMediaStream stream=createIceStream("rtp");
+    for (    Component cmp : stream.getComponents()) {
+      if (cmp.getComponentID() == 2) {
+        stream.removeComponent(cmp);
+      }
+    }
+    candidates.addAll(GTalkPacketFactory.createCandidates("rtp",stream));
+  }
+  if (video) {
+    IceMediaStream stream=createIceStream("video_rtp");
+    candidates.addAll(GTalkPacketFactory.createCandidates("video_rtp",stream));
+  }
+  candidatesSender.sendCandidates(candidates);
+}

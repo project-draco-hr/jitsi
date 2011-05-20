@@ -1,0 +1,28 @@
+{
+  RtpDescriptionPacketExtension description=new RtpDescriptionPacketExtension(SessionIQProvider.GTALK_AUDIO_NAMESPACE);
+  List<PayloadTypePacketExtension> mediaDescs=new ArrayList<PayloadTypePacketExtension>();
+  boolean isVideo=false;
+  for (  MediaType mediaType : MediaType.values()) {
+    MediaDevice dev=getDefaultDevice(mediaType);
+    if (dev != null) {
+      MediaDirection direction=dev.getDirection().and(getDirectionUserPreference(mediaType));
+      if (isLocallyOnHold())       direction=direction.and(MediaDirection.SENDONLY);
+      if (MediaDirection.RECVONLY.equals(direction))       direction=MediaDirection.INACTIVE;
+      if (direction != MediaDirection.INACTIVE) {
+        List<PayloadTypePacketExtension> contents=createPayloadTypesForOffer(getNameForMediaType(mediaType),dev.getSupportedFormats());
+        for (        PayloadTypePacketExtension ext : contents) {
+          if (!isVideo && mediaType.equals(MediaType.VIDEO)) {
+            description.setNamespace(SessionIQProvider.GTALK_VIDEO_NAMESPACE);
+            isVideo=true;
+          }
+          description.addChildExtension(ext);
+          mediaDescs.add(ext);
+        }
+      }
+    }
+  }
+  if (mediaDescs.isEmpty()) {
+    ProtocolProviderServiceJabberImpl.throwOperationFailedException("We couldn't find any active Audio/Video devices" + " and couldn't create a call",OperationFailedException.GENERAL_ERROR,null,logger);
+  }
+  return description;
+}
