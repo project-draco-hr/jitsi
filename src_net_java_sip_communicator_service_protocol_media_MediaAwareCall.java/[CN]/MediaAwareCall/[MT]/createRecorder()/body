@@ -1,9 +1,40 @@
 {
   final Recorder recorder=ProtocolMediaActivator.getMediaService().createRecorder(getDefaultDevice(MediaType.AUDIO));
   if (recorder != null) {
-    final CallChangeListener callChangeListener=new CallChangeAdapter(){
-      @Override public void callStateChanged(      CallChangeEvent evt){
+    final PropertyChangeListener muteListener=new PropertyChangeListener(){
+      public void propertyChange(      PropertyChangeEvent evt){
+        if (evt.getPropertyName().equals(CallPeer.MUTE_PROPERTY_NAME)) {
+          updateRecorderMuteState(recorder);
+        }
+      }
+    }
+;
+    final CallChangeListener callChangeListener=new CallChangeListener(){
+      /** 
+ * When call ends we stop recording.
+ * @param evt the <tt>CallChangeEvent</tt> instance
+ * containing the source
+ */
+      public void callStateChanged(      CallChangeEvent evt){
         if (CallState.CALL_ENDED.equals(evt.getNewValue()))         recorder.stop();
+      }
+      /** 
+ * We listen for mute on newly added call peers.
+ * @param evt the <tt>CallPeerEvent</tt> containing
+ * the source call
+ */
+      public void callPeerAdded(      CallPeerEvent evt){
+        updateRecorderMuteState(recorder);
+        evt.getSourceCallPeer().addPropertyChangeListener(muteListener);
+      }
+      /** 
+ * We stop listen for mute on removed call peers.
+ * @param evt the <tt>CallPeerEvent</tt> containing
+ * the source call
+ */
+      public void callPeerRemoved(      CallPeerEvent evt){
+        updateRecorderMuteState(recorder);
+        evt.getSourceCallPeer().removePropertyChangeListener(muteListener);
       }
     }
 ;
@@ -14,6 +45,11 @@
       }
     }
 );
+    Iterator<T> iter=getCallPeers();
+    while (iter.hasNext()) {
+      iter.next().addPropertyChangeListener(muteListener);
+    }
+    updateRecorderMuteState(recorder);
   }
   return recorder;
 }
