@@ -1,56 +1,58 @@
 {
-  if (!(evt.getSource() instanceof ProtocolProviderService))   return;
-  try {
-    ProtocolProviderService pp=(ProtocolProviderService)evt.getSource();
-    if (evt.getNewState().equals(RegistrationState.CONNECTION_FAILED)) {
-      if (!hasAtLeastOneSuccessfulConnection(pp)) {
-        String notifyMsg;
-        if (evt.getReasonCode() == RegistrationStateChangeEvent.REASON_NON_EXISTING_USER_ID) {
-          notify(getResources().getI18NString("service.gui.ERROR"),"service.gui.NON_EXISTING_USER_ID",new String[]{pp.getAccountID().getService()});
+  if (!(evt.getSource() instanceof ProtocolProviderService) || !(evt.getNewState().equals(RegistrationState.REGISTERED) || evt.getNewState().equals(RegistrationState.UNREGISTERED) || evt.getNewState().equals(RegistrationState.CONNECTION_FAILED)))   return;
+synchronized (this) {
+    try {
+      ProtocolProviderService pp=(ProtocolProviderService)evt.getSource();
+      if (evt.getNewState().equals(RegistrationState.CONNECTION_FAILED)) {
+        if (!hasAtLeastOneSuccessfulConnection(pp)) {
+          String notifyMsg;
+          if (evt.getReasonCode() == RegistrationStateChangeEvent.REASON_NON_EXISTING_USER_ID) {
+            notify(getResources().getI18NString("service.gui.ERROR"),"service.gui.NON_EXISTING_USER_ID",new String[]{pp.getAccountID().getService()});
+          }
+ else {
+            notify(getResources().getI18NString("service.gui.ERROR"),"plugin.reconnectplugin.CONNECTION_FAILED_MSG",new String[]{pp.getAccountID().getUserID(),pp.getAccountID().getService()});
+          }
+          return;
+        }
+        if (needsReconnection.contains(pp))         return;
+        if (connectedInterfaces.isEmpty()) {
+          needsReconnection.add(pp);
+          if (currentlyReconnecting.containsKey(pp))           currentlyReconnecting.remove(pp).cancel();
         }
  else {
-          notify(getResources().getI18NString("service.gui.ERROR"),"plugin.reconnectplugin.CONNECTION_FAILED_MSG",new String[]{pp.getAccountID().getUserID(),pp.getAccountID().getService()});
+          reconnect(pp);
         }
-        return;
+        unregisteredProviders.remove(pp);
+        if (logger.isTraceEnabled()) {
+          logger.trace("Got Connection Failed for " + pp);
+          traceCurrentPPState();
+        }
       }
-      if (needsReconnection.contains(pp))       return;
-      if (connectedInterfaces.isEmpty()) {
-        needsReconnection.add(pp);
+ else       if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
+        if (!hasAtLeastOneSuccessfulConnection(pp)) {
+          setAtLeastOneSuccessfulConnection(pp,true);
+        }
+        autoReconnEnabledProviders.put(pp,new ArrayList<String>(connectedInterfaces));
         if (currentlyReconnecting.containsKey(pp))         currentlyReconnecting.remove(pp).cancel();
+        if (logger.isTraceEnabled()) {
+          logger.trace("Got Registered for " + pp);
+          traceCurrentPPState();
+        }
       }
- else {
-        reconnect(pp);
-      }
-      unregisteredProviders.remove(pp);
-      if (logger.isTraceEnabled()) {
-        logger.trace("Got Connection Failed for " + pp);
-        traceCurrentPPState();
-      }
-    }
- else     if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
-      if (!hasAtLeastOneSuccessfulConnection(pp)) {
-        setAtLeastOneSuccessfulConnection(pp,true);
-      }
-      autoReconnEnabledProviders.put(pp,new ArrayList<String>(connectedInterfaces));
-      if (currentlyReconnecting.containsKey(pp))       currentlyReconnecting.remove(pp).cancel();
-      if (logger.isTraceEnabled()) {
-        logger.trace("Got Registered for " + pp);
-        traceCurrentPPState();
+ else       if (evt.getNewState().equals(RegistrationState.UNREGISTERED)) {
+        autoReconnEnabledProviders.remove(pp);
+        if (!unregisteredProviders.contains(pp) && currentlyReconnecting.containsKey(pp)) {
+          currentlyReconnecting.remove(pp).cancel();
+        }
+        unregisteredProviders.remove(pp);
+        if (logger.isTraceEnabled()) {
+          logger.trace("Got Unregistered for " + pp);
+          traceCurrentPPState();
+        }
       }
     }
- else     if (evt.getNewState().equals(RegistrationState.UNREGISTERED)) {
-      autoReconnEnabledProviders.remove(pp);
-      if (!unregisteredProviders.contains(pp) && currentlyReconnecting.containsKey(pp)) {
-        currentlyReconnecting.remove(pp).cancel();
-      }
-      unregisteredProviders.remove(pp);
-      if (logger.isTraceEnabled()) {
-        logger.trace("Got Unregistered for " + pp);
-        traceCurrentPPState();
-      }
+ catch (    Throwable ex) {
+      logger.error("Error dispatching protocol registration change",ex);
     }
-  }
- catch (  Throwable ex) {
-    logger.error("Error dispatching protocol registration change",ex);
   }
 }
