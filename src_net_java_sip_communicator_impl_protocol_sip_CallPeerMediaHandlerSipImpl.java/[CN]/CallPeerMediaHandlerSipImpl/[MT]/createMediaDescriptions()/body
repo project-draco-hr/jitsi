@@ -6,7 +6,12 @@
       MediaDirection direction=dev.getDirection().and(getDirectionUserPreference(mediaType));
       if (isLocallyOnHold())       direction=direction.and(MediaDirection.SENDONLY);
       if (direction != MediaDirection.INACTIVE) {
-        MediaDescription md=createMediaDescription(dev.getSupportedFormats(),getTransportManager().getStreamConnector(mediaType),direction,dev.getSupportedExtensions());
+        MediaDescription md=createMediaDescription(dev.getSupportedFormats(videoQualityPreset),getTransportManager().getStreamConnector(mediaType),direction,dev.getSupportedExtensions());
+        try {
+          if (videoQualityPreset != null)           md.setAttribute("framerate",String.valueOf(videoQualityPreset.getFameRate()));
+        }
+ catch (        SdpException e) {
+        }
         updateMediaDescriptionForZrtp(mediaType,md);
         mediaDescs.add(md);
       }
