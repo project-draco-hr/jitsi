@@ -6,7 +6,14 @@
     JTextComponent c=getComponent();
     String searchText=c.getText();
     if (searchText == null)     return;
-    searchText=GuiUtils.formatCallString(searchText);
+    if (ConfigurationManager.isNormalizePhoneNumber()) {
+      if (!StringUtils.containsLetters(searchText) && GuiActivator.getPhoneNumberService().isPhoneNumber(searchText)) {
+        searchText=GuiActivator.getPhoneNumberService().normalize(searchText);
+      }
+ else {
+        searchText=StringUtils.concatenateWords(searchText);
+      }
+    }
     getComponent().setToolTipText(callString + " " + searchText);
     ToolTipManager.sharedInstance().mouseEntered(new MouseEvent(getComponent(),0,x,y,x,y,0,false));
     isCallMouseOver=true;
