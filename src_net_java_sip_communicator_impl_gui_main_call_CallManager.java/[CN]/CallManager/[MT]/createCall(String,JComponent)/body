@@ -1,0 +1,20 @@
+{
+  callString=callString.trim();
+  if (ConfigurationManager.isNormalizePhoneNumber()) {
+    if (!StringUtils.containsLetters(callString) && GuiActivator.getPhoneNumberService().isPhoneNumber(callString)) {
+      callString=GuiActivator.getPhoneNumberService().normalize(callString);
+    }
+ else {
+      callString=StringUtils.concatenateWords(callString);
+    }
+  }
+  List<ProtocolProviderService> telephonyProviders=CallManager.getTelephonyProviders();
+  if (telephonyProviders.size() == 1) {
+    CallManager.createCall(telephonyProviders.get(0),callString);
+  }
+ else   if (telephonyProviders.size() > 1) {
+    ChooseCallAccountPopupMenu chooseAccountDialog=new ChooseCallAccountPopupMenu(c,callString,telephonyProviders);
+    chooseAccountDialog.setLocation(c.getLocation());
+    chooseAccountDialog.showPopupMenu();
+  }
+}
