@@ -10,6 +10,8 @@
   }
   ContactGroupSipImpl oldParentGroup=(ContactGroupSipImpl)contact.getParentContactGroup();
   oldParentGroup.removeContact(contact);
+  boolean wasContactPersistent=contact.isPersistent();
+  if (newParentGroup.isPersistent())   contact.setPersistent(true);
   newParentGroup.addContact(contact);
   if (contact.isPersistent()) {
     try {
@@ -19,6 +21,21 @@
       newParentGroup.removeContact(contact);
       oldParentGroup.addContact(contact);
       throw new OperationFailedException("Error while moving XCAP contact",OperationFailedException.NETWORK_FAILURE,e);
+    }
+    if (!wasContactPersistent) {
+      contact.setResolved(true);
+      XCapClient xCapClient=sipProvider.getXCapClient();
+      if (xCapClient.isConnected() && xCapClient.isResourceListsSupported()) {
+        contact.setXCapResolved(true);
+        try {
+          if (!isContactInWhiteRule(contact.getAddress())) {
+            if (addContactToWhiteList(contact))             updatePresRules();
+          }
+        }
+ catch (        XCapException e) {
+          logger.error("Cannot add contact to white list while " + "creating it",e);
+        }
+      }
     }
   }
   fireContactMoved(oldParentGroup,newParentGroup,contact);
