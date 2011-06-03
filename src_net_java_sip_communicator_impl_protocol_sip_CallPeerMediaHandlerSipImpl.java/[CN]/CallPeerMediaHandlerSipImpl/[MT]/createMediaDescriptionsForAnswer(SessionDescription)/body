@@ -32,6 +32,26 @@
     StreamConnector connector=getTransportManager().getStreamConnector(mediaType);
     MediaFormat fmt=findMediaFormat(remoteFormats,mutuallySupportedFormats.get(0));
     initStream(connector,dev,fmt,target,direction,rtpExtensions);
+    if (mediaType.equals(MediaType.VIDEO)) {
+      QualityPresets sendQualityPreset=null;
+      QualityPresets receiveQualityPreset=null;
+      if (qualityControls != null) {
+        sendQualityPreset=qualityControls.getRemoteReceivePreset();
+        receiveQualityPreset=qualityControls.getRemoteSendMaxPreset();
+        mutuallySupportedFormats=(dev == null) ? null : intersectFormats(mutuallySupportedFormats,dev.getSupportedFormats(sendQualityPreset,receiveQualityPreset));
+      }
+      supportQualityControls=SdpUtils.containsAttribute(mediaDescription,"imageattr");
+      float frameRate=-1;
+      try {
+        String frStr=mediaDescription.getAttribute("framerate");
+        if (frStr != null)         frameRate=Integer.parseInt(frStr);
+      }
+ catch (      SdpParseException e) {
+      }
+      if (frameRate > 0) {
+        qualityControls.setMaxFrameRate(frameRate);
+      }
+    }
     MediaDescription md=createMediaDescription(mutuallySupportedFormats,connector,direction,rtpExtensions);
     updateMediaDescriptionForZrtp(mediaType,md);
     answerDescriptions.add(md);

@@ -1,0 +1,35 @@
+{
+  EncodingConfiguration encodingConfiguration=NeomediaActivator.getMediaServiceImpl().getEncodingConfiguration();
+  MediaFormat[] supportedEncodings=encodingConfiguration.getSupportedEncodings(getMediaType());
+  List<MediaFormat> supportedFormats=new ArrayList<MediaFormat>();
+  if (supportedEncodings != null)   for (  MediaFormat supportedEncoding : supportedEncodings)   supportedFormats.add(supportedEncoding);
+{
+    MediaFormat customFormat=null;
+    MediaFormat toRemove=null;
+    for (    MediaFormat f : supportedFormats) {
+      if ("h264".equalsIgnoreCase(f.getEncoding())) {
+        Map<String,String> h264AdvancedAttributes=f.getAdvancedAttributes();
+        if (h264AdvancedAttributes == null)         h264AdvancedAttributes=new HashMap<String,String>();
+        Dimension sendSize=null;
+        Dimension receiveSize;
+        if (!captureDeviceInfo.getLocator().getProtocol().equals(ImageStreamingAuto.LOCATOR_PROTOCOL)) {
+          if (sendPreset != null)           sendSize=sendPreset.getResolution();
+ else           sendSize=NeomediaActivator.getMediaServiceImpl().getDeviceConfiguration().getVideoSize();
+        }
+        if (receivePreset != null)         receiveSize=receivePreset.getResolution();
+ else {
+          ScreenDevice screen=NeomediaActivator.getMediaServiceImpl().getDefaultScreenDevice();
+          receiveSize=(screen == null) ? null : screen.getSize();
+        }
+        h264AdvancedAttributes.put("imageattr",MediaUtils.createImageAttr(sendSize,receiveSize));
+        customFormat=NeomediaActivator.getMediaServiceImpl().getFormatFactory().createMediaFormat(f.getEncoding(),f.getClockRate(),f.getFormatParameters(),h264AdvancedAttributes);
+        toRemove=f;
+      }
+    }
+    if (toRemove != null && customFormat != null) {
+      supportedFormats.remove(toRemove);
+      supportedFormats.add(customFormat);
+    }
+  }
+  return supportedFormats;
+}

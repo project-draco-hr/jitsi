@@ -1,3 +1,14 @@
 {
   super(call,fullScreen,selected,ImageLoader.SD_VIDEO_BUTTON,"service.gui.CHANGE_VIDEO_QUALITY");
+  try {
+    CallPeer peer=call.getCallPeers().next();
+    OperationSetVideoTelephony videoOpSet=peer.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
+    QualityControls qualityControls=videoOpSet.getQualityControls(peer);
+    QualityPresets maxRemotePreset=qualityControls.getRemoteSendMaxPreset();
+    if (maxRemotePreset == null || maxRemotePreset.compareTo(QualityPresets.HD_QUALITY) >= 0)     hdOptionPresent=true;
+    if (maxRemotePreset == null || maxRemotePreset.compareTo(QualityPresets.SD_QUALITY) >= 0)     sdOptionPresent=true;
+    if (maxRemotePreset == null || maxRemotePreset.compareTo(QualityPresets.LO_QUALITY) >= 0)     loOptionPresent=true;
+  }
+ catch (  Throwable t) {
+  }
 }

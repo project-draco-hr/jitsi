@@ -1,14 +1,20 @@
 {
   Vector<MediaDescription> mediaDescs=new Vector<MediaDescription>();
+  QualityPresets sendQualityPreset=null;
+  QualityPresets receiveQualityPreset=null;
+  if (qualityControls != null) {
+    sendQualityPreset=qualityControls.getRemoteReceivePreset();
+    receiveQualityPreset=qualityControls.getRemoteSendMaxPreset();
+  }
   for (  MediaType mediaType : MediaType.values()) {
     MediaDevice dev=getDefaultDevice(mediaType);
     if (dev != null) {
       MediaDirection direction=dev.getDirection().and(getDirectionUserPreference(mediaType));
       if (isLocallyOnHold())       direction=direction.and(MediaDirection.SENDONLY);
       if (direction != MediaDirection.INACTIVE) {
-        MediaDescription md=createMediaDescription(dev.getSupportedFormats(videoQualityPreset),getTransportManager().getStreamConnector(mediaType),direction,dev.getSupportedExtensions());
+        MediaDescription md=createMediaDescription(dev.getSupportedFormats(sendQualityPreset,receiveQualityPreset),getTransportManager().getStreamConnector(mediaType),direction,dev.getSupportedExtensions());
         try {
-          if (videoQualityPreset != null)           md.setAttribute("framerate",String.valueOf(videoQualityPreset.getFameRate()));
+          if (receiveQualityPreset != null && receiveQualityPreset.getFameRate() > 0)           md.setAttribute("framerate",String.valueOf((int)receiveQualityPreset.getFameRate()));
         }
  catch (        SdpException e) {
         }
