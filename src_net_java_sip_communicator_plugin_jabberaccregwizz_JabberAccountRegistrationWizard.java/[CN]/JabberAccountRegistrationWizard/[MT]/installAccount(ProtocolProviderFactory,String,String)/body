@@ -3,6 +3,7 @@
     logger.trace("Preparing to install account for user " + userName);
   }
   Hashtable<String,String> accountProperties=new Hashtable<String,String>();
+  accountProperties.put(ProtocolProviderFactory.IS_PREFERRED_PROTOCOL,Boolean.toString(isPreferredProtocol()));
   accountProperties.put(ProtocolProviderFactory.PROTOCOL,getProtocol());
   String protocolIconPath=getProtocolIconPath();
   if (protocolIconPath != null)   accountProperties.put(ProtocolProviderFactory.PROTOCOL_ICON_PATH,protocolIconPath);
@@ -47,9 +48,9 @@
     jnRelay.storeDescriptor(accountProperties,JingleNodeDescriptor.JN_PREFIX + serverIndex);
   }
   accountProperties.put(ProtocolProviderFactory.IS_USE_UPNP,String.valueOf(registration.isUseUPNP()));
-  if (isModification) {
+  if (isModification()) {
     providerFactory.modifyAccount(protocolProvider,accountProperties);
-    this.isModification=false;
+    setModification(false);
     return protocolProvider;
   }
   try {
