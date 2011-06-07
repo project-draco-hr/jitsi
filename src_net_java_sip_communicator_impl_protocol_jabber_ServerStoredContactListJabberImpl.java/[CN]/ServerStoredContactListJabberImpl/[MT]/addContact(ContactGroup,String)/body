@@ -1,14 +1,15 @@
 {
   if (logger.isTraceEnabled())   logger.trace("Adding contact " + id + " to parent="+ parent);
-  ContactJabberImpl existingContact=findContactById(id);
+  String completeID=parseAddressString(id);
+  ContactJabberImpl existingContact=findContactById(completeID);
   if (existingContact != null && existingContact.isPersistent()) {
-    if (logger.isDebugEnabled())     logger.debug("Contact " + id + " already exists in group "+ findContactGroup(existingContact));
-    throw new OperationFailedException("Contact " + id + " already exists.",OperationFailedException.SUBSCRIPTION_ALREADY_EXISTS);
+    if (logger.isDebugEnabled())     logger.debug("Contact " + completeID + " already exists in group "+ findContactGroup(existingContact));
+    throw new OperationFailedException("Contact " + completeID + " already exists.",OperationFailedException.SUBSCRIPTION_ALREADY_EXISTS);
   }
   try {
     String[] parentNames=null;
     if (parent != null)     parentNames=new String[]{parent.getGroupName()};
-    this.roster.createEntry(id,id,parentNames);
+    this.roster.createEntry(completeID,completeID,parentNames);
   }
  catch (  XMPPException ex) {
     String errTxt="Error adding new jabber entry";
