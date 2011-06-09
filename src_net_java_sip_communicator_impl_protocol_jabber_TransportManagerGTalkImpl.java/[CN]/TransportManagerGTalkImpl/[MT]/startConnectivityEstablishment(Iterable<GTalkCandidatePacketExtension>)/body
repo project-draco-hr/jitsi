@@ -1,4 +1,7 @@
 {
+  if (IceProcessingState.COMPLETED.equals(iceAgent.getState())) {
+    return true;
+  }
   if (IceProcessingState.RUNNING.equals(iceAgent.getState())) {
     if (logger.isInfoEnabled()) {
       logger.info("Update Google ICE remote candidates");
@@ -10,18 +13,18 @@
       String name=candidate.getName();
       int numComponent=0;
       if (name.equals("rtp")) {
-        numComponent=1;
+        numComponent=Component.RTP;
       }
  else       if (name.equals("rtcp")) {
         name="rtp";
-        numComponent=1;
+        numComponent=Component.RTCP;
       }
  else       if (name.equals("video_rtp")) {
-        numComponent=1;
+        numComponent=Component.RTP;
       }
  else       if (name.equals("video_rtcp")) {
         name="video_rtp";
-        numComponent=2;
+        numComponent=Component.RTCP;
       }
       IceMediaStream stream=iceAgent.getStream(name);
       if (stream == null) {
@@ -31,6 +34,8 @@
       if (candidate.getGeneration() != iceAgent.getGeneration())       continue;
       if (!candidate.getProtocol().equalsIgnoreCase(Transport.UDP.toString()))       continue;
       Component component=stream.getComponent(numComponent);
+      RemoteCandidate remoteCandidate=new RemoteCandidate(new TransportAddress(candidate.getAddress(),candidate.getPort(),Transport.parse(candidate.getProtocol())),component,org.ice4j.ice.CandidateType.parse(candidate.getType().toString()),"0",(long)(candidate.getPreference() * 1000),ufrag);
+      component.addUpdateRemoteCandidate(remoteCandidate);
     }
     for (    IceMediaStream stream : iceAgent.getStreams()) {
       for (      Component component : stream.getComponents()) {
@@ -48,20 +53,23 @@
     String name=candidate.getName();
     int numComponent=0;
     if (name.equals("rtp")) {
-      numComponent=1;
+      numComponent=Component.RTP;
     }
  else     if (name.equals("rtcp")) {
       name="rtp";
-      numComponent=1;
+      numComponent=Component.RTCP;
     }
  else     if (name.equals("video_rtp")) {
-      numComponent=1;
+      numComponent=Component.RTP;
     }
  else     if (name.equals("video_rtcp")) {
       name="video_rtp";
-      numComponent=2;
+      numComponent=Component.RTCP;
     }
-    IceMediaStream stream=iceAgent.getStream(name);
+    IceMediaStream stream=null;
+synchronized (wrapupSyncRoot) {
+      stream=iceAgent.getStream(name);
+    }
     if (stream == null) {
       continue;
     }
@@ -69,13 +77,14 @@
     if (candidate.getGeneration() != generation)     continue;
     if (!candidate.getProtocol().equalsIgnoreCase(Transport.UDP.toString()))     continue;
     Component component=stream.getComponent(numComponent);
+    RemoteCandidate remoteCandidate=new RemoteCandidate(new TransportAddress(candidate.getAddress(),candidate.getPort(),Transport.parse(candidate.getProtocol())),component,org.ice4j.ice.CandidateType.parse(candidate.getType().toString()),"0",(long)(candidate.getPreference() * 1000),ufrag);
+    component.addRemoteCandidate(remoteCandidate);
     startConnectivityEstablishment=true;
   }
   if (startConnectivityEstablishment) {
     for (    IceMediaStream stream : iceAgent.getStreams()) {
       for (      Component component : stream.getComponents()) {
-        if (component.getName().equals("RTCP"))         continue;
-        if (component.getRemoteCandidateCount() < 2) {
+        if (component.getRemoteCandidateCount() < 1) {
           startConnectivityEstablishment=false;
           break;
         }

@@ -8,6 +8,9 @@
   int bestPriority=-1;
   Iterator<Presence> it=getProtocolProvider().getConnection().getRoster().getPresences(calleeAddress);
   String calleeURI=null;
+  boolean isGingle=false;
+  String gingleURI=null;
+  int bestPriorityGTalk=-1;
   while (it.hasNext()) {
     Presence presence=it.next();
     int priority=(presence.getPriority() == Integer.MIN_VALUE) ? 0 : presence.getPriority();
@@ -21,24 +24,52 @@
           fullCalleeURI=calleeURI;
         }
       }
+ else {
+        if (!Boolean.getBoolean("gtalktesting")) {
+          continue;
+        }
+        if (getProtocolProvider().isExtFeatureListSupported(calleeURI,ProtocolProviderServiceJabberImpl.CAPS_GTALK_WEB_VOICE)) {
+          if (priority > bestPriorityGTalk) {
+            bestPriorityGTalk=priority;
+            isGingle=true;
+            gingleURI=calleeURI;
+          }
+        }
+      }
     }
  catch (    XMPPException ex) {
       logger.warn("could not retrieve info for " + fullCalleeURI,ex);
     }
   }
-  if (di != null) {
+  if (isGingle) {
+    if (logger.isInfoEnabled()) {
+      logger.info(gingleURI + ": Google Talk dialect supported");
+    }
+    fullCalleeURI=gingleURI;
+  }
+ else   if (di != null) {
     if (logger.isInfoEnabled())     logger.info(fullCalleeURI + ": jingle supported ");
   }
  else {
-    if (logger.isInfoEnabled())     logger.info(calleeURI + ": jingle not supported ?");
-    throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + calleeURI + " does not support jingle",OperationFailedException.INTERNAL_ERROR);
+    if (logger.isInfoEnabled())     logger.info(calleeURI + ": jingle and Google Talk not supported ?");
+    throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + calleeURI + " does not support jingle or Google Talk",OperationFailedException.INTERNAL_ERROR);
   }
   if (logger.isInfoEnabled()) {
     logger.info("Choose one is: " + fullCalleeURI + " "+ bestPriority);
   }
-  CallPeerJabberImpl peer=null;
+  AbstractCallPeer<?,?> peer=null;
   try {
-    peer=call.initiateSession(fullCalleeURI,di,sessionInitiateExtensions);
+    if (isGingle) {
+      logger.info("initiate Gingle call");
+      CallGTalkImpl callGTalk=new CallGTalkImpl(this);
+      MediaUseCase useCase=call.getMediaUseCase();
+      boolean isVideo=call.isLocalVideoAllowed(useCase);
+      callGTalk.setLocalVideoAllowed(isVideo,useCase);
+      peer=callGTalk.initiateGTalkSession(fullCalleeURI,sessionInitiateExtensions);
+    }
+ else     if (di != null) {
+      peer=call.initiateSession(fullCalleeURI,di,sessionInitiateExtensions);
+    }
   }
  catch (  Throwable t) {
     if (t instanceof ThreadDeath)     throw (ThreadDeath)t;

@@ -1,0 +1,78 @@
+{
+  JingleInfoQueryIQ iq=new JingleInfoQueryIQ();
+  ProtocolProviderServiceJabberImpl provider=getCallPeer().getProtocolProvider();
+  String accountIDService=provider.getAccountID().getService();
+  boolean jingleInfoIsSupported=provider.isFeatureSupported(accountIDService,JingleInfoQueryIQ.NAMESPACE);
+  final List<StunServerDescriptor> servers=new ArrayList<StunServerDescriptor>();
+  final Object syncRoot=new Object();
+  if (!jingleInfoIsSupported) {
+    return servers;
+  }
+  if (logger.isDebugEnabled())   logger.debug("google:jingleinfo supported for " + provider.getOurJID());
+  iq.setFrom(provider.getOurJID());
+  iq.setTo(StringUtils.parseBareAddress(provider.getOurJID()));
+  iq.setType(Type.GET);
+  XMPPConnection connection=provider.getConnection();
+  PacketListener pl=new PacketListener(){
+    public void processPacket(    Packet p){
+      JingleInfoQueryIQ iq=(JingleInfoQueryIQ)p;
+      Iterator<PacketExtension> it=iq.getExtensions().iterator();
+      while (it.hasNext()) {
+        AbstractPacketExtension ext=(AbstractPacketExtension)it.next();
+        if (ext.getElementName().equals(StunPacketExtension.ELEMENT_NAME)) {
+          for (          ServerPacketExtension e : ext.getChildExtensionsOfType(ServerPacketExtension.class)) {
+            StunServerDescriptor dsc=new StunServerDescriptor(e.getHost(),e.getUdp(),false,null,null);
+            servers.add(dsc);
+          }
+        }
+ else         if (ext.getElementName().equals(RelayPacketExtension.ELEMENT_NAME)) {
+          String token=((RelayPacketExtension)ext).getToken();
+          for (          ServerPacketExtension e : ext.getChildExtensionsOfType(ServerPacketExtension.class)) {
+            String headerNames[]=new String[2];
+            String headerValues[]=new String[2];
+            String addr="http://" + e.getHost() + "/create_session";
+            headerNames[0]="X-Talk-Google-Relay-Auth";
+            headerNames[1]="X-Google-Relay-Auth";
+            headerValues[0]=token;
+            headerValues[1]=token;
+            HTTPResponseResult res=HttpUtils.openURLConnection(addr,headerNames,headerValues);
+            Hashtable<String,String> relayData=null;
+            try {
+              relayData=parseGoogleRelay(res.getContentString());
+            }
+ catch (            IOException excpt) {
+              logger.info("HTTP query to " + e.getHost() + "failed",excpt);
+              break;
+            }
+            String user=relayData.get("username");
+            String password=relayData.get("passsword");
+            StunServerDescriptor dsc=new StunServerDescriptor(relayData.get("relay"),Integer.parseInt(relayData.get("udpport")),true,user,password);
+            dsc.setOldTurn(true);
+            servers.add(dsc);
+          }
+        }
+      }
+synchronized (syncRoot) {
+        syncRoot.notify();
+      }
+    }
+  }
+;
+  connection.addPacketListener(pl,new PacketFilter(){
+    public boolean accept(    Packet p){
+      if (p instanceof JingleInfoQueryIQ)       return true;
+      return false;
+    }
+  }
+);
+  provider.getConnection().sendPacket(iq);
+synchronized (syncRoot) {
+    try {
+      syncRoot.wait(2000);
+    }
+ catch (    InterruptedException e) {
+    }
+  }
+  connection.removePacketListener(pl);
+  return servers;
+}

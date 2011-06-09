@@ -1,0 +1,19 @@
+{
+  IceMediaStream stream;
+  try {
+    stream=iceAgent.createMediaStream(media);
+    int rtpPort=nextMediaPortToTry;
+    iceAgent.createComponent(stream,Transport.UDP,rtpPort,rtpPort,rtpPort + 100);
+    if (rtcp)     iceAgent.createComponent(stream,Transport.UDP,rtpPort + 1,rtpPort + 1,rtpPort + 101);
+  }
+ catch (  Exception ex) {
+    throw new OperationFailedException("Failed to initialize stream " + media,OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  try {
+    nextMediaPortToTry=stream.getComponent(rtcp ? Component.RTCP : Component.RTP).getLocalCandidates().get(0).getTransportAddress().getPort() + 1;
+  }
+ catch (  Throwable t) {
+    logger.debug("Determining next port didn't work: ",t);
+  }
+  return stream;
+}

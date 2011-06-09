@@ -1,0 +1,23 @@
+{
+  boolean done=false;
+  int eventType;
+  String elementName=null;
+  StunPacketExtension ext=new StunPacketExtension();
+  while (!done) {
+    eventType=parser.next();
+    elementName=parser.getName();
+    if (eventType == XmlPullParser.START_TAG) {
+      if (elementName.equals(ServerPacketExtension.ELEMENT_NAME)) {
+        PacketExtensionProvider provider=(PacketExtensionProvider)ProviderManager.getInstance().getExtensionProvider(ServerPacketExtension.ELEMENT_NAME,ServerPacketExtension.NAMESPACE);
+        PacketExtension childExtension=provider.parseExtension(parser);
+        ext.addChildExtension(childExtension);
+      }
+    }
+ else     if (eventType == XmlPullParser.END_TAG) {
+      if (parser.getName().equals(StunPacketExtension.ELEMENT_NAME)) {
+        done=true;
+      }
+    }
+  }
+  return ext;
+}

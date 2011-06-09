@@ -3,11 +3,26 @@
   if (opset == null)   return null;
   if (!online) {
     if (OFFLINE_OPERATION_SETS.contains(opsetClass))     return opset;
- else     return null;
+ else {
+      return null;
+    }
   }
   if (OPERATION_SETS_TO_FEATURES.containsKey(opsetClass)) {
     String[] features=OPERATION_SETS_TO_FEATURES.get(opsetClass);
-    if ((features == null) || ((features.length != 0) && !parentProvider.isFeatureListSupported(jid,features)))     opset=null;
+    if ((features == null) || ((features.length != 0) && !parentProvider.isFeatureListSupported(jid,features))) {
+      if (CAPS_OPERATION_SETS_TO_FEATURES.containsKey(opsetClass)) {
+        String[] extFeatures=CAPS_OPERATION_SETS_TO_FEATURES.get(opsetClass);
+        if (!Boolean.getBoolean("gtalktesting")) {
+          opset=null;
+        }
+ else         if ((extFeatures == null) || ((extFeatures.length != 0) && !parentProvider.isExtFeatureListSupported(jid,extFeatures))) {
+          opset=null;
+        }
+      }
+ else {
+        opset=null;
+      }
+    }
   }
   return opset;
 }

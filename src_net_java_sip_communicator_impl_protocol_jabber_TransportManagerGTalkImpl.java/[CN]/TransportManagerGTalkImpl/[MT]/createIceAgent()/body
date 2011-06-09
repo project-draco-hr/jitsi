@@ -1,5 +1,50 @@
 {
   CallPeerGTalkImpl peer=getCallPeer();
-  Agent agent=null;
+  Agent agent=new Agent(CompatibilityMode.GTALK);
+  List<StunServerDescriptor> servers=null;
+  boolean atLeastOneStunServer=false;
+  ProtocolProviderServiceJabberImpl provider=peer.getProtocolProvider();
+  JabberAccountID accID=(JabberAccountID)provider.getAccountID();
+  agent.setControlling(!peer.isInitiator());
+  servers=requestJingleInfo();
+  for (  StunServerDescriptor desc : servers) {
+    TransportAddress addr=new TransportAddress(desc.getAddress(),desc.getPort(),Transport.UDP);
+    StunCandidateHarvester harvester=null;
+    if (desc.isTurnSupported()) {
+      logger.info("Google TURN descriptor");
+      if (desc.isOldTurn()) {
+        logger.info("new Google TURN harvester");
+        harvester=new GoogleTurnCandidateHarvester(addr,new String(desc.getUsername()));
+      }
+ else {
+        harvester=new TurnCandidateHarvester(addr,new LongTermCredential(desc.getUsername(),desc.getPassword()));
+        atLeastOneStunServer=true;
+      }
+    }
+ else {
+      if (atLeastOneStunServer)       continue;
+      harvester=new StunCandidateHarvester(addr);
+      atLeastOneStunServer=true;
+      logger.info("Found Google STUN server " + harvester);
+    }
+    if (harvester != null) {
+      agent.addCandidateHarvester(harvester);
+    }
+  }
+  if (!atLeastOneStunServer) {
+    if (accID.isUseDefaultStunServer()) {
+      TransportAddress addr=new TransportAddress(DEFAULT_STUN_SERVER_ADDRESS,DEFAULT_STUN_SERVER_PORT,Transport.UDP);
+      StunCandidateHarvester harvester=new StunCandidateHarvester(addr);
+      if (harvester != null) {
+        agent.addCandidateHarvester(harvester);
+      }
+    }
+  }
+  if (accID.isUPNPEnabled()) {
+    UPNPHarvester harvester=new UPNPHarvester();
+    if (harvester != null) {
+      agent.addCandidateHarvester(harvester);
+    }
+  }
   return agent;
 }

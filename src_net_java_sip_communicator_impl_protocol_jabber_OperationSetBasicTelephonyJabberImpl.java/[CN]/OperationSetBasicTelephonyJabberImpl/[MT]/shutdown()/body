@@ -1,9 +1,23 @@
 {
   if (logger.isTraceEnabled())   logger.trace("Ending all active calls. ");
   Iterator<CallJabberImpl> activeCalls=this.activeCallsRepository.getActiveCalls();
+  Iterator<CallGTalkImpl> activeGTalkCalls=this.activeGTalkCallsRepository.getActiveCalls();
   while (activeCalls.hasNext()) {
     CallJabberImpl call=activeCalls.next();
     Iterator<CallPeerJabberImpl> callPeers=call.getCallPeers();
+    while (callPeers.hasNext()) {
+      CallPeer peer=callPeers.next();
+      try {
+        this.hangupCallPeer(peer);
+      }
+ catch (      Exception ex) {
+        logger.warn("Failed to properly hangup peer " + peer,ex);
+      }
+    }
+  }
+  while (activeGTalkCalls.hasNext()) {
+    CallGTalkImpl call=activeGTalkCalls.next();
+    Iterator<CallPeerGTalkImpl> callPeers=call.getCallPeers();
     while (callPeers.hasNext()) {
       CallPeer peer=callPeers.next();
       try {

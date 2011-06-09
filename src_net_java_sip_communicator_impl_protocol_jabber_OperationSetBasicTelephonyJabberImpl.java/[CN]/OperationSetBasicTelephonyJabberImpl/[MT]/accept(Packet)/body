@@ -1,6 +1,10 @@
 {
-  if (!(packet instanceof JingleIQ)) {
-    CallPeerJabberImpl callPeer=activeCallsRepository.findCallPeerBySessInitPacketID(packet.getPacketID());
+  String sid=null;
+  if (!(packet instanceof JingleIQ) && !(packet instanceof SessionIQ)) {
+    AbstractCallPeer<?,?> callPeer=activeCallsRepository.findCallPeerBySessInitPacketID(packet.getPacketID());
+    if (callPeer == null) {
+      callPeer=activeGTalkCallsRepository.findCallPeerBySessInitPacketID(packet.getPacketID());
+    }
     if (callPeer != null) {
       XMPPError error=packet.getError();
       if (error != null) {
@@ -16,9 +20,21 @@
     }
     return false;
   }
-  JingleIQ jingleIQ=(JingleIQ)packet;
-  if (jingleIQ.getAction() == JingleAction.SESSION_INITIATE) {
-    return jingleIQ.containsContentChildOfType(RtpDescriptionPacketExtension.class);
+  if (packet instanceof JingleIQ) {
+    JingleIQ jingleIQ=(JingleIQ)packet;
+    if (jingleIQ.getAction() == JingleAction.SESSION_INITIATE) {
+      return jingleIQ.containsContentChildOfType(RtpDescriptionPacketExtension.class);
+    }
+    sid=jingleIQ.getSID();
+    return (activeCallsRepository.findJingleSID(sid) != null);
   }
-  return (activeCallsRepository.findJingleSID(jingleIQ.getSID()) != null);
+ else   if (packet instanceof SessionIQ) {
+    SessionIQ sessionIQ=(SessionIQ)packet;
+    if (sessionIQ.getGTalkType() == GTalkType.INITIATE) {
+      return true;
+    }
+    sid=sessionIQ.getID();
+    return (activeGTalkCallsRepository.findSessionID(sid) != null);
+  }
+  return false;
 }

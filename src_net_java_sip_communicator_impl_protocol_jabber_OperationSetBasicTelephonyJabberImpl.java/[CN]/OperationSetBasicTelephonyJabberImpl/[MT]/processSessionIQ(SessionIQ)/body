@@ -1,0 +1,43 @@
+{
+  CallPeerGTalkImpl callPeer=activeGTalkCallsRepository.findCallPeer(sessionIQ.getID());
+  IQ.Type type=sessionIQ.getType();
+  if (type == Type.RESULT) {
+    return;
+  }
+  if (type == Type.ERROR) {
+    logger.error("Received error");
+    XMPPError error=sessionIQ.getError();
+    String message="Remote party returned an error!";
+    if (error != null) {
+      logger.error(" code=" + error.getCode() + " message="+ error.getMessage());
+      if (error.getMessage() != null)       message=error.getMessage();
+    }
+    if (callPeer != null)     callPeer.setState(CallPeerState.FAILED,message);
+    return;
+  }
+  GTalkType action=sessionIQ.getGTalkType();
+  if (action == GTalkType.INITIATE) {
+    CallGTalkImpl call=null;
+    if (call == null) {
+      call=new CallGTalkImpl(this);
+    }
+    call.processGTalkInitiate(sessionIQ);
+    return;
+  }
+ else   if (callPeer == null) {
+    if (logger.isDebugEnabled())     logger.debug("Received a stray trying response.");
+    return;
+  }
+ else   if (action == GTalkType.CANDIDATES) {
+    callPeer.processCandidates(sessionIQ);
+  }
+ else   if (action == GTalkType.REJECT) {
+    callPeer.processSessionReject(sessionIQ);
+  }
+ else   if (action == GTalkType.TERMINATE) {
+    callPeer.processSessionTerminate(sessionIQ);
+  }
+ else   if (action == GTalkType.ACCEPT) {
+    callPeer.processSessionAccept(sessionIQ);
+  }
+}

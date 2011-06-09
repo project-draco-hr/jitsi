@@ -1,0 +1,22 @@
+{
+  boolean done=false;
+  JingleInfoQueryIQ iq=new JingleInfoQueryIQ();
+  while (!done) {
+    int eventType=parser.next();
+    String elementName=parser.getName();
+    if (eventType == XmlPullParser.START_TAG) {
+      if (elementName.equals(StunPacketExtension.ELEMENT_NAME)) {
+        iq.addExtension(stunProvider.parseExtension(parser));
+      }
+ else       if (elementName.equals(RelayPacketExtension.ELEMENT_NAME)) {
+        iq.addExtension(relayProvider.parseExtension(parser));
+      }
+    }
+    if (eventType == XmlPullParser.END_TAG) {
+      if (parser.getName().equals(JingleInfoQueryIQ.ELEMENT_NAME)) {
+        done=true;
+      }
+    }
+  }
+  return iq;
+}

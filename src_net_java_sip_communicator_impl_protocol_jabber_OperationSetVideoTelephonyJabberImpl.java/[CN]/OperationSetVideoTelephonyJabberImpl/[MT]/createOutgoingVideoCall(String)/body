@@ -3,8 +3,8 @@
   if (parentProvider.getConnection() == null) {
     throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + "we don't have a valid XMPPConnection.",OperationFailedException.INTERNAL_ERROR);
   }
-  CallJabberImpl call=new CallJabberImpl(basicTelephony);
+  MediaAwareCall<?,?,?> call=new CallJabberImpl(basicTelephony);
   call.setLocalVideoAllowed(true,getMediaUseCase());
-  basicTelephony.createOutgoingCall(call,calleeAddress);
-  return call;
+  CallPeer callPeer=basicTelephony.createOutgoingCall((CallJabberImpl)call,calleeAddress);
+  return callPeer.getCall() == call ? call : callPeer.getCall();
 }
