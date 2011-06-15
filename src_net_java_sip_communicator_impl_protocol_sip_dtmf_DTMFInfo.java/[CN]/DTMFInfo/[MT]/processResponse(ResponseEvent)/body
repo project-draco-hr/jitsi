@@ -1,20 +1,36 @@
 {
+  boolean processed=false;
   if (responseEvent == null) {
     if (logger.isDebugEnabled())     logger.debug("null responseEvent");
-    return false;
-  }
-  Response response=responseEvent.getResponse();
-  if (response == null) {
-    if (logger.isDebugEnabled())     logger.debug("null response");
-    return false;
-  }
-  int code=response.getStatusCode();
-  if (logger.isDebugEnabled())   logger.debug("DTMF status code=" + code);
-  if (code != 200) {
-    logger.error("DTMF Send failed :" + code);
   }
  else {
-    if (logger.isDebugEnabled())     logger.debug("DTMF succeeded");
+    Response response=responseEvent.getResponse();
+    if (response == null) {
+      if (logger.isDebugEnabled())       logger.debug("null response");
+    }
+ else {
+      ClientTransaction clientTransaction=responseEvent.getClientTransaction();
+      if (clientTransaction == null) {
+        if (logger.isDebugEnabled())         logger.debug("null clientTransaction");
+      }
+ else {
+        Request request=clientTransaction.getRequest();
+        if (request == null) {
+          if (logger.isDebugEnabled())           logger.debug("null request");
+        }
+ else {
+          ContentTypeHeader contentTypeHeader=(ContentTypeHeader)request.getHeader(ContentTypeHeader.NAME);
+          if ((contentTypeHeader != null) && CONTENT_TYPE.equalsIgnoreCase(contentTypeHeader.getContentType()) && CONTENT_SUB_TYPE.equalsIgnoreCase(contentTypeHeader.getContentSubType())) {
+            processed=true;
+            int statusCode=response.getStatusCode();
+            if (statusCode == 200) {
+              if (logger.isDebugEnabled())               logger.debug("DTMF send succeeded: " + statusCode);
+            }
+ else             logger.error("DTMF send failed: " + statusCode);
+          }
+        }
+      }
+    }
   }
-  return true;
+  return processed;
 }
