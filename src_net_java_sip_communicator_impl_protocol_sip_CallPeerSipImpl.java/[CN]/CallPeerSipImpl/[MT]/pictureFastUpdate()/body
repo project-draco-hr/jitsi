@@ -1,0 +1,33 @@
+{
+  Request info=getProtocolProvider().getMessageFactory().createRequest(getDialog(),Request.INFO);
+  ContentType ct=new ContentType("application","media_control+xml");
+  String content="<?xml version=\"1.0\" encoding=\"utf-8\" ?>\r\n<media_control>\r\n<vc_primitive>\r\n<to_encoder>\r\n<picture_fast_update/>\r\n</to_encoder>\r\n</vc_primitive>\r\n</media_control>";
+  ContentLength cl=new ContentLength(content.length());
+  info.setContentLength(cl);
+  try {
+    info.setContent(content.getBytes(),ct);
+  }
+ catch (  ParseException ex) {
+    logger.error("Failed to construct the INFO request",ex);
+    throw new OperationFailedException("Failed to construct a client the INFO request",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  ClientTransaction clientTransaction=null;
+  try {
+    clientTransaction=getJainSipProvider().getNewClientTransaction(info);
+  }
+ catch (  TransactionUnavailableException ex) {
+    logger.error("Failed to construct a client transaction from the INFO request",ex);
+    throw new OperationFailedException("Failed to construct a client transaction from the INFO request",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  try {
+    if (getDialog().getState() == DialogState.TERMINATED) {
+      logger.warn("Trying to send a dtmf tone inside a " + "TERMINATED dialog.");
+      return;
+    }
+    getDialog().sendRequest(clientTransaction);
+    if (logger.isDebugEnabled())     logger.debug("sent request:\n" + info);
+  }
+ catch (  SipException ex) {
+    throw new OperationFailedException("Failed to send the INFO request",OperationFailedException.NETWORK_FAILURE,ex);
+  }
+}
