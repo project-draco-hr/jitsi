@@ -5,16 +5,13 @@
   byte fu_header=in[inOffset];
   inOffset++;
   inLength--;
+  int nal_unit_type=fu_header & 0x1F;
+  this.nal_unit_type=nal_unit_type;
   boolean start_bit=(fu_header & 0x80) != 0;
   boolean end_bit=(fu_header & 0x40) != 0;
-  boolean keyframe=((fu_header & 0x1F) == 5);
   int outOffset=outBuffer.getOffset();
   int newOutLength=inLength;
   int octet;
-  if (keyframe) {
-    lostFrame=false;
-    lastReceivedKeyframeTime=System.currentTimeMillis();
-  }
   if (start_bit) {
     if (end_bit) {
       outBuffer.setDiscard(true);
@@ -22,7 +19,7 @@
     }
     fuaStartedAndNotEnded=true;
     newOutLength+=NAL_PREFIX.length + 1;
-    octet=(fu_indicator & 0xE0) | (fu_header & 0x1F);
+    octet=(fu_indicator & 0xE0) | nal_unit_type;
   }
  else   if (!fuaStartedAndNotEnded) {
     outBuffer.setDiscard(true);

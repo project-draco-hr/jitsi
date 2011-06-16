@@ -2,16 +2,14 @@
   if (ioError)   return -1;
   int pktLength=pkt.getLength();
   if (length < pktLength)   throw new IOException("Input buffer not big enough for " + pktLength);
-  if (pktLength >= 12) {
+  if ((pktLength >= 12) && !listeners.isEmpty()) {
     byte data[]=pkt.getBuffer();
     int fmt=0;
     int pt=0;
     fmt=(data[0] & 0x1F);
     pt|=(data[1] & 0xFF);
     RTCPFeedbackEvent evt=new RTCPFeedbackEvent(this,fmt,pt);
-    for (    RTCPFeedbackListener l : listeners) {
-      l.feedbackReceived(evt);
-    }
+    for (    RTCPFeedbackListener l : listeners)     l.feedbackReceived(evt);
   }
   System.arraycopy(pkt.getBuffer(),pkt.getOffset(),inBuffer,offset,pktLength);
   return pktLength;

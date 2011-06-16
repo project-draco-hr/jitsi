@@ -1,0 +1,22 @@
+{
+  if (this.requestKeyFrame != requestKeyFrame) {
+    this.requestKeyFrame=requestKeyFrame;
+    if ((this.requestKeyFrame) && (requestKeyFrameThread == null)) {
+      requestKeyFrameThread=new Thread(){
+        public void run(){
+          try {
+            runInRequestKeyFrameThread();
+          }
+  finally {
+synchronized (DePacketizer.this) {
+              if (requestKeyFrameThread == Thread.currentThread())               requestKeyFrameThread=null;
+            }
+          }
+        }
+      }
+;
+      requestKeyFrameThread.start();
+    }
+    notifyAll();
+  }
+}

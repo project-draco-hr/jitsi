@@ -1,21 +1,17 @@
 {
   long sequenceNumber=inBuffer.getSequenceNumber();
   int ret;
+  boolean requestKeyFrame=(lastKeyFrameTime == -1);
   if ((lastSequenceNumber != -1) && ((sequenceNumber - lastSequenceNumber) != 1)) {
     if (logger.isTraceEnabled())     logger.trace("Dropped RTP packets upto sequenceNumber " + lastSequenceNumber + " and continuing with sequenceNumber "+ sequenceNumber);
-    if (usePLI) {
-      lostFrame=true;
-      if (!pliSendThreadIsRunning) {
-        pliSendThreadIsRunning=true;
-        pliSendThread.start();
-      }
-    }
+    requestKeyFrame=true;
     ret=reset(outBuffer);
-    if ((ret & OUTPUT_BUFFER_NOT_FILLED) == 0)     return ret;
+    if ((ret & OUTPUT_BUFFER_NOT_FILLED) == 0) {
+      setRequestKeyFrame(requestKeyFrame);
+      return ret;
+    }
   }
-  long timeStamp=inBuffer.getTimeStamp();
   lastSequenceNumber=sequenceNumber;
-  lastTimeStamp=timeStamp;
   byte[] in=(byte[])inBuffer.getData();
   int inOffset=inBuffer.getOffset();
   byte octet=in[inOffset];
@@ -30,11 +26,23 @@
   }
  else {
     logger.warn("Dropping NAL unit of unsupported type " + nal_unit_type);
+    this.nal_unit_type=nal_unit_type;
     fuaStartedAndNotEnded=false;
     outBuffer.setDiscard(true);
     ret=BUFFER_PROCESSED_OK;
   }
   outBuffer.setSequenceNumber(sequenceNumber);
   if ((inBuffer.getFlags() & Buffer.FLAG_RTP_MARKER) != 0)   outBuffer.setFlags(outBuffer.getFlags() | Buffer.FLAG_RTP_MARKER);
-  return ret;
+switch (this.nal_unit_type) {
+case 5:
+    lastKeyFrameTime=System.currentTimeMillis();
+case 7:
+case 8:
+  requestKeyFrame=false;
+break;
+default :
+break;
+}
+setRequestKeyFrame(requestKeyFrame);
+return ret;
 }

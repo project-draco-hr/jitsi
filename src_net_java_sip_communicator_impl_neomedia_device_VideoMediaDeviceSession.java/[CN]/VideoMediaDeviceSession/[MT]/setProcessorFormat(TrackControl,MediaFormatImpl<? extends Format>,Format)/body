@@ -2,18 +2,20 @@
   JNIEncoder encoder=null;
   SwScaler scaler=null;
   int codecCount=0;
-  if (usePLI && "h264/rtp".equalsIgnoreCase(format.getEncoding())) {
+  if ("h264/rtp".equalsIgnoreCase(format.getEncoding())) {
     encoder=new JNIEncoder();
 {
       Map<String,String> formatParameters=mediaFormat.getFormatParameters();
       String packetizationMode=(formatParameters == null) ? null : formatParameters.get(JNIEncoder.PACKETIZATION_MODE_FMTP);
       encoder.setPacketizationMode(packetizationMode);
     }
-    try {
-      ((ControlTransformInputStream)rtpConnector.getControlInputStream()).addRTCPFeedbackListener(encoder);
-    }
- catch (    Exception e) {
-      logger.error("Error cannot get RTCP input stream",e);
+    if (usePLI) {
+      try {
+        ((ControlTransformInputStream)rtpConnector.getControlInputStream()).addRTCPFeedbackListener(encoder);
+      }
+ catch (      IOException ioe) {
+        logger.error("Error cannot get RTCP input stream",ioe);
+      }
     }
     codecCount++;
   }

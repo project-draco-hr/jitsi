@@ -1,3 +1,29 @@
 {
-  usePLI=use;
+  if (this.usePLI != usePLI) {
+    this.usePLI=usePLI;
+    if (this.usePLI) {
+      if (keyFrameRequester == null) {
+        keyFrameRequester=new KeyFrameControl.KeyFrameRequester(){
+          public boolean requestKeyFrame(){
+            boolean requested=false;
+            if (VideoMediaDeviceSession.this.usePLI) {
+              try {
+                new RTCPFeedbackPacket(1,206,localSSRC,remoteSSRC).writeTo(rtpConnector.getControlOutputStream());
+                requested=true;
+              }
+ catch (              IOException ioe) {
+              }
+            }
+            return requested;
+          }
+        }
+;
+      }
+      if (keyFrameControl != null)       keyFrameControl.addKeyFrameRequester(-1,keyFrameRequester);
+    }
+ else     if (keyFrameRequester != null) {
+      if (keyFrameControl != null)       keyFrameControl.removeKeyFrameRequester(keyFrameRequester);
+      keyFrameRequester=null;
+    }
+  }
 }
