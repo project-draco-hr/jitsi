@@ -7,9 +7,18 @@
       for (      TrackControl trackControl : trackControls) {
         playerScaler=new PlayerScaler(player);
         if ("h264/rtp".equalsIgnoreCase(getFormat().getJMFEncoding())) {
-          DePacketizer depacketizer=new DePacketizer();
-          if (keyFrameControl != null)           depacketizer.setKeyFrameControl(keyFrameControl);
-          trackControl.setCodecChain(new Codec[]{depacketizer,playerScaler});
+          final DePacketizer depacketizer=new DePacketizer();
+          JNIDecoder decoder=new JNIDecoder();
+          if (keyFrameControl != null) {
+            depacketizer.setKeyFrameControl(keyFrameControl);
+            decoder.setKeyFrameControl(new KeyFrameControlAdapter(){
+              @Override public boolean requestKeyFrame(){
+                return depacketizer.requestKeyFrame();
+              }
+            }
+);
+          }
+          trackControl.setCodecChain(new Codec[]{depacketizer,decoder,playerScaler});
         }
  else {
           trackControl.setCodecChain(new Codec[]{playerScaler});

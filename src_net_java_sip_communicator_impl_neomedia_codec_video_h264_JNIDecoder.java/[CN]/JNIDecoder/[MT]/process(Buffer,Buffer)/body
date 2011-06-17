@@ -11,6 +11,9 @@
   got_picture[0]=false;
   FFmpeg.avcodec_decode_video(avctx,avframe,got_picture,(byte[])inBuffer.getData(),inBuffer.getLength());
   if (!got_picture[0]) {
+    if ((inBuffer.getFlags() & Buffer.FLAG_RTP_MARKER) != 0) {
+      if (keyFrameControl != null)       keyFrameControl.requestKeyFrame();
+    }
     outBuffer.setDiscard(true);
     return BUFFER_PROCESSED_OK;
   }
