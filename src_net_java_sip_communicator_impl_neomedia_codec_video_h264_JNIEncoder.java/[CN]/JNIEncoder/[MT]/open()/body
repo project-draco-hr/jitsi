@@ -59,6 +59,15 @@
   FFmpeg.avframe_set_data(avframe,rawFrameBuffer,sizeInBytes,sizeInBytes / 4);
   FFmpeg.avframe_set_linesize(avframe,width,width / 2,width / 2);
   encFrameBuffer=new byte[encFrameLen];
+  if (keyFrameRequestee == null) {
+    keyFrameRequestee=new KeyFrameControl.KeyFrameRequestee(){
+      public boolean keyFrameRequest(){
+        return JNIEncoder.this.keyFrameRequest();
+      }
+    }
+;
+  }
+  if (keyFrameControl != null)   keyFrameControl.addKeyFrameRequestee(-1,keyFrameRequestee);
   opened=true;
   super.open();
 }

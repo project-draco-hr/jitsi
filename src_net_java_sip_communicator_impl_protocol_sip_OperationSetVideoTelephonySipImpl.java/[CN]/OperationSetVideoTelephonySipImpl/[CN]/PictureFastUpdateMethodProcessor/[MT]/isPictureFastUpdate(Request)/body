@@ -1,0 +1,22 @@
+{
+  ContentTypeHeader contentTypeHeader=(ContentTypeHeader)request.getHeader(ContentTypeHeader.NAME);
+  if (contentTypeHeader == null)   return false;
+  if (!"application".equalsIgnoreCase(contentTypeHeader.getContentType()))   return false;
+  if (!CallPeerSipImpl.PICTURE_FAST_UPDATE_CONTENT_SUB_TYPE.equalsIgnoreCase(contentTypeHeader.getContentSubType()))   return false;
+  Object content=request.getContent();
+  if (content == null)   return false;
+  String xml;
+  if (content instanceof String)   xml=content.toString();
+ else   if (content instanceof byte[]) {
+    byte[] bytes=(byte[])content;
+    try {
+      xml=new String(bytes,"UTF-8");
+    }
+ catch (    UnsupportedEncodingException uee) {
+      xml=new String(bytes);
+    }
+  }
+ else   return false;
+  if (xml == null)   return false;
+  return xml.contains("picture_fast_update");
+}
