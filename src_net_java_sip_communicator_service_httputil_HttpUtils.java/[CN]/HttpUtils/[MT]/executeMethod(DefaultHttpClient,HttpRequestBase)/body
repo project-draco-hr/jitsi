@@ -2,14 +2,19 @@
   HttpResponse response=null;
   int redirects=0;
   while (response == null || response.getStatusLine().getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
-    if (response != null) {
+    if (response != null && response.getStatusLine().getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
       if (logger.isDebugEnabled())       logger.debug("Will retry http connect and " + "credentials input as latest are not correct!");
       URI uri=req.getURI();
       req.abort();
       req=req.getClass().newInstance();
       req.setURI(uri);
       httpClient.getCredentialsProvider().clear();
-      response=httpClient.execute(req);
+      if (!((HTTPCredentialsProvider)httpClient.getCredentialsProvider()).isChallengedForCredentials()) {
+        throw new AuthenticationException("Unauthorized");
+      }
+ else {
+        response=httpClient.execute(req);
+      }
     }
  else     response=httpClient.execute(req);
     if (!((HTTPCredentialsProvider)httpClient.getCredentialsProvider()).retry()) {

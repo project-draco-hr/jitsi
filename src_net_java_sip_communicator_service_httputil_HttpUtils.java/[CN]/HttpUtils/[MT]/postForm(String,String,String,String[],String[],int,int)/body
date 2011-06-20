@@ -1,32 +1,21 @@
 {
-  DefaultHttpClient httpClient=null;
+  DefaultHttpClient httpClient;
+  HttpPost postMethod;
+  HttpEntity resEntity=null;
   try {
-    HttpPost postMethod=new HttpPost(address);
-    httpClient=getHttpClient(usernamePropertyName,passwordPropertyName,postMethod.getURI().getHost());
-    Credentials creds=null;
-    if (usernameParamIx != -1 && usernameParamIx < formParamNames.length && passwordParamIx != -1 && passwordParamIx < formParamNames.length) {
-      URL url=new URL(address);
-      creds=new HTTPCredentialsProvider(usernamePropertyName,passwordPropertyName).getCredentials(new AuthScope(url.getHost(),url.getPort()));
-    }
-    List<NameValuePair> parameters=new ArrayList<NameValuePair>();
-    if (formParamNames != null) {
-      for (int i=0; i < formParamNames.length; i++) {
-        if (i == usernameParamIx && creds != null) {
-          parameters.add(new BasicNameValuePair(formParamNames[i],creds.getUserPrincipal().getName()));
-        }
- else         if (i == passwordParamIx && creds != null) {
-          parameters.add(new BasicNameValuePair(formParamNames[i],creds.getPassword()));
-        }
- else {
-          parameters.add(new BasicNameValuePair(formParamNames[i],formParamValues[i]));
-        }
+    AuthenticationException authEx;
+    do {
+      postMethod=new HttpPost(address);
+      httpClient=getHttpClient(usernamePropertyName,passwordPropertyName,postMethod.getURI().getHost());
+      try {
+        resEntity=postForm(httpClient,postMethod,address,usernamePropertyName,passwordPropertyName,formParamNames,formParamValues,usernameParamIx,passwordParamIx);
+        authEx=null;
+      }
+ catch (      AuthenticationException ex) {
+        authEx=ex;
       }
     }
-    String s=URLEncodedUtils.format(parameters,HTTP.UTF_8);
-    StringEntity entity=new StringEntity(s,HTTP.UTF_8);
-    entity.setContentType(URLEncodedUtils.CONTENT_TYPE);
-    postMethod.setEntity(entity);
-    HttpEntity resEntity=executeMethod(httpClient,postMethod);
+ while (authEx != null);
     if (resEntity == null)     return null;
     return new HTTPResponseResult(resEntity,httpClient);
   }
