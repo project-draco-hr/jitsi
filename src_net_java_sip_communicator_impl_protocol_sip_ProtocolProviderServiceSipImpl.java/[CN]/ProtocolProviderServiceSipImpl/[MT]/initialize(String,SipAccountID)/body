@@ -34,9 +34,23 @@ synchronized (initializationLock) {
     boolean isServerValidated=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.SERVER_ADDRESS_VALIDATED,false);
     if (!isServerValidated)     initRegistrarConnection(accountID);
     OperationSetBasicTelephonySipImpl opSetBasicTelephonySipImpl=new OperationSetBasicTelephonySipImpl(this);
-    addSupportedOperationSet(OperationSetBasicTelephony.class,opSetBasicTelephonySipImpl);
-    addSupportedOperationSet(OperationSetAdvancedTelephony.class,opSetBasicTelephonySipImpl);
-    addSupportedOperationSet(OperationSetSecureTelephony.class,opSetBasicTelephonySipImpl);
+    boolean isCallingDisabled=SipActivator.getConfigurationService().getBoolean(IS_CALL_DISABLED,false);
+    boolean isCallingDisabledForAccount=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_CALLING_DISABLED_FOR_ACCOUNT,false);
+    if (!isCallingDisabled && !isCallingDisabledForAccount) {
+      addSupportedOperationSet(OperationSetBasicTelephony.class,opSetBasicTelephonySipImpl);
+      addSupportedOperationSet(OperationSetAdvancedTelephony.class,opSetBasicTelephonySipImpl);
+      addSupportedOperationSet(OperationSetSecureTelephony.class,opSetBasicTelephonySipImpl);
+      addSupportedOperationSet(OperationSetVideoTelephony.class,new OperationSetVideoTelephonySipImpl(opSetBasicTelephonySipImpl));
+      addSupportedOperationSet(OperationSetTelephonyConferencing.class,new OperationSetTelephonyConferencingSipImpl(this));
+      addSupportedOperationSet(OperationSetDTMF.class,new OperationSetDTMFSipImpl(this));
+      boolean isDesktopStreamingDisabled=SipActivator.getConfigurationService().getBoolean(IS_DESKTOP_STREAMING_DISABLED,false);
+      boolean isAccountDesktopStreamingDisabled=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_DESKTOP_STREAMING_DISABLED,false);
+      if (!isDesktopStreamingDisabled && !isAccountDesktopStreamingDisabled) {
+        addSupportedOperationSet(OperationSetDesktopStreaming.class,new OperationSetDesktopStreamingSipImpl(opSetBasicTelephonySipImpl));
+        addSupportedOperationSet(OperationSetDesktopSharingServer.class,new OperationSetDesktopSharingServerSipImpl(opSetBasicTelephonySipImpl));
+        addSupportedOperationSet(OperationSetDesktopSharingClient.class,new OperationSetDesktopSharingClientSipImpl(this));
+      }
+    }
     OperationSetPersistentPresence opSetPersPresence=new OperationSetPresenceSipImpl(this,enablePresence,forceP2P,pollingValue,subscriptionExpiration);
     addSupportedOperationSet(OperationSetPersistentPresence.class,opSetPersPresence);
     addSupportedOperationSet(OperationSetPresence.class,opSetPersPresence);
@@ -48,12 +62,6 @@ synchronized (initializationLock) {
       addSupportedOperationSet(OperationSetServerStoredAccountInfo.class,opSetSSAccountInfo);
       addSupportedOperationSet(OperationSetAvatar.class,new OperationSetAvatarSipImpl(this,opSetSSAccountInfo));
     }
-    addSupportedOperationSet(OperationSetVideoTelephony.class,new OperationSetVideoTelephonySipImpl(opSetBasicTelephonySipImpl));
-    addSupportedOperationSet(OperationSetDesktopStreaming.class,new OperationSetDesktopStreamingSipImpl(opSetBasicTelephonySipImpl));
-    addSupportedOperationSet(OperationSetDesktopSharingServer.class,new OperationSetDesktopSharingServerSipImpl(opSetBasicTelephonySipImpl));
-    addSupportedOperationSet(OperationSetDesktopSharingClient.class,new OperationSetDesktopSharingClientSipImpl(this));
-    addSupportedOperationSet(OperationSetDTMF.class,new OperationSetDTMFSipImpl(this));
-    addSupportedOperationSet(OperationSetTelephonyConferencing.class,new OperationSetTelephonyConferencingSipImpl(this));
     addSupportedOperationSet(OperationSetMessageWaiting.class,new OperationSetMessageWaitingSipImpl(this));
     new ClientCapabilities(this);
     this.sipSecurityManager=new SipSecurityManager(accountID);
