@@ -3,8 +3,6 @@
   this.parentWindow=window;
   TransparentPanel mainPanel=new TransparentPanel(new BorderLayout());
   this.add(mainPanel,BorderLayout.NORTH);
-  initTextArea(parentWindow.getCurrentSearchText());
-  mainPanel.add(textArea,BorderLayout.CENTER);
   TransparentPanel buttonPanel=new TransparentPanel(new GridLayout(0,1));
   if (!ConfigurationManager.isAddContactDisabled()) {
     addContact.setAlignmentX(JButton.CENTER_ALIGNMENT);
@@ -19,19 +17,32 @@
     }
 );
   }
-  callContact.setAlignmentX(JButton.CENTER_ALIGNMENT);
-  callContact.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.CALL_CONTACT"));
-  buttonPanel.add(callContact);
-  TransparentPanel southPanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
-  southPanel.add(buttonPanel);
-  mainPanel.add(southPanel,BorderLayout.SOUTH);
-  callContact.addActionListener(new ActionListener(){
-    public void actionPerformed(    ActionEvent e){
-      String searchText=parentWindow.getCurrentSearchText();
-      if (searchText == null)       return;
-      CallManager.createCall(searchText,callContact);
+  List<ProtocolProviderService> telephonyProviders=CallManager.getTelephonyProviders();
+  if (telephonyProviders != null && telephonyProviders.size() > 0) {
+    callContact.setAlignmentX(JButton.CENTER_ALIGNMENT);
+    callContact.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.CALL_CONTACT"));
+    buttonPanel.add(callContact);
+    callContact.addActionListener(new ActionListener(){
+      public void actionPerformed(      ActionEvent e){
+        String searchText=parentWindow.getCurrentSearchText();
+        if (searchText == null)         return;
+        CallManager.createCall(searchText,callContact);
+      }
     }
-  }
 );
+  }
+  initTextArea();
+  mainPanel.add(textArea,BorderLayout.CENTER);
+  if (callContact.getParent() != null) {
+    textArea.setText(GuiActivator.getResources().getI18NString("service.gui.NO_CONTACTS_FOUND",new String[]{'"' + parentWindow.getCurrentSearchText() + '"'}));
+  }
+ else {
+    textArea.setText(GuiActivator.getResources().getI18NString("service.gui.NO_CONTACTS_FOUND_SHORT"));
+  }
+  if (buttonPanel.getComponentCount() > 0) {
+    TransparentPanel southPanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
+    southPanel.add(buttonPanel);
+    mainPanel.add(southPanel,BorderLayout.SOUTH);
+  }
   loadSkin();
 }
