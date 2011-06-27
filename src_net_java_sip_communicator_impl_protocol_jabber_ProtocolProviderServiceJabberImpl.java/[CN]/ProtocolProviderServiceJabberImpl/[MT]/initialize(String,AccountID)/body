@@ -52,28 +52,16 @@ synchronized (initializationLock) {
       addSupportedOperationSet(OperationSetSecureTelephony.class,basicTelephony);
       addSupportedOperationSet(OperationSetVideoTelephony.class,new OperationSetVideoTelephonyJabberImpl(basicTelephony));
       addSupportedOperationSet(OperationSetTelephonyConferencing.class,new OperationSetTelephonyConferencingJabberImpl(this));
+      addJingleFeatures();
       boolean isDesktopStreamingDisabled=JabberActivator.getConfigurationService().getBoolean(IS_DESKTOP_STREAMING_DISABLED,false);
       boolean isAccountDesktopStreamingDisabled=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_DESKTOP_STREAMING_DISABLED,false);
       if (!isDesktopStreamingDisabled && !isAccountDesktopStreamingDisabled) {
         addSupportedOperationSet(OperationSetDesktopStreaming.class,new OperationSetDesktopStreamingJabberImpl(basicTelephony));
         addSupportedOperationSet(OperationSetDesktopSharingServer.class,new OperationSetDesktopSharingServerJabberImpl(basicTelephony));
         addSupportedOperationSet(OperationSetDesktopSharingClient.class,new OperationSetDesktopSharingClientJabberImpl(this));
+        supportedFeatures.add(InputEvtIQ.NAMESPACE);
       }
     }
-    supportedFeatures.add(URN_XMPP_JINGLE);
-    supportedFeatures.add(URN_XMPP_JINGLE_RTP);
-    supportedFeatures.add(URN_XMPP_JINGLE_RAW_UDP_0);
-    if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_USE_ICE,true)) {
-      supportedFeatures.add(URN_XMPP_JINGLE_ICE_UDP_1);
-    }
-    supportedFeatures.add(URN_XMPP_JINGLE_RTP_AUDIO);
-    supportedFeatures.add(URN_XMPP_JINGLE_RTP_VIDEO);
-    supportedFeatures.add(URN_XMPP_JINGLE_RTP_ZRTP);
-    if (accountID.getAccountPropertyBoolean(ProtocolProviderFactoryJabberImpl.IS_USE_JINGLE_NODES,true)) {
-      supportedFeatures.add(URN_XMPP_JINGLE_NODES);
-    }
-    supportedFeatures.add(InputEvtIQ.NAMESPACE);
-    supportedFeatures.add(URN_XMPP_JINGLE_TRANSFER_0);
     opsetContactCapabilities=new OperationSetContactCapabilitiesJabberImpl(this);
     if (discoveryManager != null)     opsetContactCapabilities.setDiscoveryManager(discoveryManager);
     addSupportedOperationSet(OperationSetContactCapabilities.class,opsetContactCapabilities);
