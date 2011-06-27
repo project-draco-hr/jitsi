@@ -1,4 +1,11 @@
 {
   VideoFormat videoIn=(VideoFormat)in;
-  return new Format[]{new ParameterizedVideoFormat(Constants.H264,videoIn.getSize(),Format.NOT_SPECIFIED,Format.byteArray,videoIn.getFrameRate(),ParameterizedVideoFormat.toMap(PACKETIZATION_MODE_FMTP,Integer.toString(packetizationMode)))};
+  String[] packetizationModes=(this.packetizationMode == null) ? new String[]{"0","1"} : new String[]{this.packetizationMode};
+  Format[] matchingOutputFormats=new Format[packetizationModes.length];
+  Dimension size=videoIn.getSize();
+  float frameRate=videoIn.getFrameRate();
+  for (int index=packetizationModes.length - 1; index >= 0; index--) {
+    matchingOutputFormats[index]=new ParameterizedVideoFormat(Constants.H264,size,Format.NOT_SPECIFIED,Format.byteArray,frameRate,ParameterizedVideoFormat.toMap(PACKETIZATION_MODE_FMTP,packetizationModes[index]));
+  }
+  return matchingOutputFormats;
 }

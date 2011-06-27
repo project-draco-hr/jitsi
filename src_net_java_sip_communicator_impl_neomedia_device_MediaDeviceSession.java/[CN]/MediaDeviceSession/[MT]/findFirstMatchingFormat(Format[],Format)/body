@@ -1,10 +1,19 @@
 {
   double formatSampleRate=(format instanceof AudioFormat) ? ((AudioFormat)format).getSampleRate() : Format.NOT_SPECIFIED;
+  ParameterizedVideoFormat parameterizedVideoFormat=(format instanceof ParameterizedVideoFormat) ? (ParameterizedVideoFormat)format : null;
   for (  Format match : formats) {
     if (match.isSameEncoding(format)) {
-      if ((formatSampleRate != Format.NOT_SPECIFIED) && (match instanceof AudioFormat)) {
-        double matchSampleRate=((AudioFormat)match).getSampleRate();
-        if ((matchSampleRate != Format.NOT_SPECIFIED) && (matchSampleRate != formatSampleRate))         continue;
+      if (match instanceof AudioFormat) {
+        if (formatSampleRate != Format.NOT_SPECIFIED) {
+          double matchSampleRate=((AudioFormat)match).getSampleRate();
+          if ((matchSampleRate != Format.NOT_SPECIFIED) && (matchSampleRate != formatSampleRate))           continue;
+        }
+      }
+ else       if (match instanceof ParameterizedVideoFormat) {
+        if (!((ParameterizedVideoFormat)match).formatParametersMatch(format))         continue;
+      }
+ else       if (parameterizedVideoFormat != null) {
+        if (!parameterizedVideoFormat.formatParametersMatch(match))         continue;
       }
       return match;
     }
