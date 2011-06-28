@@ -1,11 +1,13 @@
 {
-synchronized (localUserAudioLevelListeners) {
-    localUserAudioLevelListeners.remove(l);
-    if (localUserAudioLevelListeners.isEmpty()) {
-      Iterator<T> cps=getCallPeers();
-      while (cps.hasNext()) {
-        T callPeer=cps.next();
-        callPeer.getMediaHandler().setLocalUserAudioLevelListener(null);
+synchronized (localUserAudioLevelListenersSyncRoot) {
+    if (localUserAudioLevelListeners != null) {
+      localUserAudioLevelListeners=new ArrayList<SoundLevelListener>(localUserAudioLevelListeners);
+      if (localUserAudioLevelListeners.remove(l) && localUserAudioLevelListeners.isEmpty())       localUserAudioLevelListeners=null;
+    }
+    if ((localUserAudioLevelListeners == null) || localUserAudioLevelListeners.isEmpty()) {
+      Iterator<T> callPeerIter=getCallPeers();
+      while (callPeerIter.hasNext()) {
+        callPeerIter.next().getMediaHandler().setLocalUserAudioLevelListener(null);
       }
     }
   }

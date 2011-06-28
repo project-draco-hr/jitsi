@@ -1,7 +1,10 @@
 {
-synchronized (streamAudioLevelListeners) {
-    streamAudioLevelListeners.remove(listener);
-    if (streamAudioLevelListeners.size() == 0) {
+synchronized (streamAudioLevelListenersSyncRoot) {
+    if (streamAudioLevelListeners != null) {
+      streamAudioLevelListeners=new ArrayList<SoundLevelListener>(streamAudioLevelListeners);
+      if (streamAudioLevelListeners.remove(listener) && streamAudioLevelListeners.isEmpty())       streamAudioLevelListeners=null;
+    }
+    if ((streamAudioLevelListeners == null) || streamAudioLevelListeners.isEmpty()) {
       getMediaHandler().setStreamAudioLevelListener(null);
     }
   }

@@ -1,18 +1,18 @@
 {
-  if (isConferenceFocus() && (getConferenceMemberCount() > 0) && (getConferenceMemberCount() < 3)) {
+  int conferenceMemberCount;
+  if (isConferenceFocus() && ((conferenceMemberCount=getConferenceMemberCount()) > 0) && (conferenceMemberCount < 3)) {
     long audioRemoteSSRC=getMediaHandler().getAudioRemoteSSRC();
     if (audioRemoteSSRC != CallPeerMediaHandler.SSRC_UNKNOWN) {
-      long[][] audioLevels=new long[1][2];
-      audioLevels[0][0]=audioRemoteSSRC;
-      audioLevels[0][1]=newLevel;
-      audioLevelsReceived(audioLevels);
+      audioLevelsReceived(new long[]{audioRemoteSSRC,newLevel});
       return;
     }
   }
-synchronized (streamAudioLevelListeners) {
-    if (streamAudioLevelListeners.size() > 0) {
-      SoundLevelChangeEvent evt=new SoundLevelChangeEvent(this,newLevel);
-      for (      SoundLevelListener listener : streamAudioLevelListeners)       listener.soundLevelChanged(evt);
-    }
+  List<SoundLevelListener> streamAudioLevelListeners;
+synchronized (streamAudioLevelListenersSyncRoot) {
+    streamAudioLevelListeners=this.streamAudioLevelListeners;
+  }
+  if (streamAudioLevelListeners != null) {
+    int streamAudioLevelListenerCount=streamAudioLevelListeners.size();
+    for (int i=0; i < streamAudioLevelListenerCount; i++)     streamAudioLevelListeners.get(i).soundLevelChanged(this,newLevel);
   }
 }
