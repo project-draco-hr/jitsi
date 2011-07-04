@@ -1,0 +1,23 @@
+{
+  if (!isDetailClassSupported(detail.getClass())) {
+    throw new IllegalArgumentException("Implementation does not support such details " + detail.getClass());
+  }
+  List<GenericDetail> alreadySetDetails=new Vector<GenericDetail>();
+  Iterator<GenericDetail> iter=getDetails(detail.getClass());
+  while (iter.hasNext()) {
+    alreadySetDetails.add(iter.next());
+  }
+  if (alreadySetDetails.size() >= getMaxDetailInstances(detail.getClass())) {
+    throw new ArrayIndexOutOfBoundsException("Max count for this detail is already reached");
+  }
+  if (ImageDetail.class.isAssignableFrom(detail.getClass()) && isImageDetailSupported()) {
+    ImageDetail imageDetail=(ImageDetail)detail;
+    putImageDetail(imageDetail);
+    accountImage=imageDetail;
+    isAccountImageLoaded=true;
+  }
+ else   if (DisplayNameDetail.class.isAssignableFrom(detail.getClass())) {
+    displayNameDetail=(DisplayNameDetail)detail;
+  }
+  if (fireChangeEvents)   fireServerStoredDetailsChangeEvent(provider,ServerStoredDetailsChangeEvent.DETAIL_ADDED,null,detail);
+}
