@@ -1,0 +1,34 @@
+{
+  Iterator<? extends CallPeer> peersIter=incomingCall.getCallPeers();
+  boolean hasMorePeers=false;
+  String textDisplayName="";
+  String textAddress="";
+  ImageIcon imageIcon=ImageUtils.scaleIconWithinBounds(ImageLoader.getImage(ImageLoader.DEFAULT_USER_PHOTO),40,45);
+  while (peersIter.hasNext()) {
+    final CallPeer peer=peersIter.next();
+    if (peersIter.hasNext()) {
+      textDisplayName=callLabel[1].getText() + getPeerDisplayName(peer) + ", ";
+      String peerAddress=getPeerDisplayAddress(peer);
+      if (!StringUtils.isNullOrEmpty(peerAddress))       textAddress=callLabel[2].getText() + peerAddress + ", ";
+      hasMorePeers=true;
+    }
+ else {
+      textDisplayName=callLabel[1].getText() + getPeerDisplayName(peer) + " "+ GuiActivator.getResources().getI18NString("service.gui.IS_CALLING");
+      String peerAddress=getPeerDisplayAddress(peer);
+      if (!StringUtils.isNullOrEmpty(peerAddress))       textAddress=callLabel[2].getText() + peerAddress;
+      byte[] image=CallManager.getPeerImage(peer);
+      if (image != null && image.length > 0)       imageIcon=ImageUtils.getScaledRoundedIcon(image,50,50);
+ else       new Thread(new Runnable(){
+        public void run(){
+          TreeContactList.setSourceContactImage(peer.getAddress(),callLabel[0],50,50);
+        }
+      }
+).start();
+    }
+  }
+  if (hasMorePeers)   textDisplayName+=GuiActivator.getResources().getI18NString("service.gui.ARE_CALLING");
+  callLabel[0].setIcon(imageIcon);
+  callLabel[1].setText(textDisplayName);
+  callLabel[2].setText(textAddress);
+  callLabel[2].setForeground(Color.GRAY);
+}
