@@ -1,0 +1,56 @@
+{
+  if (parentGroup == null) {
+    throw new IllegalArgumentException("Parent group cannot be null");
+  }
+  if (contactId == null || contactId.trim().length() == 0) {
+    throw new IllegalArgumentException("Contact identifier cannot be null or empty");
+  }
+  if (logger.isTraceEnabled()) {
+    logger.trace(String.format("createContact %1s, %2s, %3s",parentGroup.getGroupName(),contactId,persistent));
+  }
+  if (parentGroup.getContact(contactId) != null) {
+    throw new OperationFailedException("Contact " + contactId + " already exists.",OperationFailedException.SUBSCRIPTION_ALREADY_EXISTS);
+  }
+  Address contactAddress;
+  try {
+    contactAddress=sipProvider.parseAddressString(contactId);
+  }
+ catch (  ParseException ex) {
+    throw new IllegalArgumentException(contactId + " is not a valid string.",ex);
+  }
+  ContactSipImpl newContact=parentOperationSet.resolveContactID(contactAddress.getURI().toString());
+  if (newContact != null && !newContact.isPersistent() && !newContact.getParentContactGroup().isPersistent()) {
+    ContactGroupSipImpl oldParentGroup=(ContactGroupSipImpl)newContact.getParentContactGroup();
+    oldParentGroup.removeContact(newContact);
+    fireContactRemoved(oldParentGroup,newContact);
+  }
+  newContact=new ContactSipImpl(contactAddress,sipProvider);
+  newContact.setPersistent(persistent);
+  if (displayName == null || displayName.length() <= 0)   displayName=((SipURI)contactAddress.getURI()).getUser();
+  newContact.setDisplayName(displayName);
+  parentGroup.addContact(newContact);
+  if (newContact.isPersistent()) {
+    try {
+      updateResourceLists();
+    }
+ catch (    XCapException e) {
+      parentGroup.removeContact(newContact);
+      throw new OperationFailedException("Error while creating XCAP contact",OperationFailedException.NETWORK_FAILURE,e);
+    }
+    newContact.setResolved(true);
+    XCapClient xCapClient=sipProvider.getXCapClient();
+    if (xCapClient.isConnected() && xCapClient.isResourceListsSupported()) {
+      newContact.setXCapResolved(true);
+      try {
+        if (!isContactInWhiteRule(contactId)) {
+          if (addContactToWhiteList(newContact))           updatePresRules();
+        }
+      }
+ catch (      XCapException e) {
+        logger.error("Cannot add contact to white list while " + "creating it",e);
+      }
+    }
+  }
+  fireContactAdded(parentGroup,newContact);
+  return newContact;
+}
