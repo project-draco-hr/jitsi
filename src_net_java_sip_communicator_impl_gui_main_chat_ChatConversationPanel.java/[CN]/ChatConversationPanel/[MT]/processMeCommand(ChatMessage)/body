@@ -1,0 +1,45 @@
+{
+  String contentType=chatMessage.getContentType();
+  String message=chatMessage.getMessage();
+  String msgID="message";
+  String chatString="";
+  String endHeaderTag="";
+  String startDivTag="<DIV identifier=\"" + msgID + "\">";
+  String endDivTag="</DIV>";
+  String startPlainTextTag;
+  String endPlainTextTag;
+  if (HTML_CONTENT_TYPE.equals(contentType)) {
+    startPlainTextTag="";
+    endPlainTextTag="";
+  }
+ else {
+    startPlainTextTag=START_PLAINTEXT_TAG;
+    endPlainTextTag=END_PLAINTEXT_TAG;
+  }
+  if (message.length() > 4 && message.substring(0,4).equals("/me ")) {
+    chatString=startDivTag + "<B><I>";
+    endHeaderTag="</I></B>" + endDivTag;
+    chatString+=processHTMLChars("*** " + chatMessage.getContactName() + " "+ message.substring(4)) + endHeaderTag;
+    Map<String,ReplacementService> listSources=GuiActivator.getReplacementSources();
+    Iterator<Entry<String,ReplacementService>> entrySetIter=listSources.entrySet().iterator();
+    StringBuffer msgStore=new StringBuffer(chatString);
+    for (int i=0; i < listSources.size(); i++) {
+      Map.Entry<String,ReplacementService> entry=entrySetIter.next();
+      ReplacementService source=entry.getValue();
+      boolean isSmiley=source instanceof SmiliesReplacementService;
+      if (isSmiley) {
+        String sourcePattern=source.getPattern();
+        Pattern p=Pattern.compile(sourcePattern,Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+        Matcher m=p.matcher(msgStore);
+        StringBuffer msgTemp=new StringBuffer(chatString);
+        while (m.find()) {
+          msgTemp.insert(m.start(),startPlainTextTag);
+          msgTemp.insert(m.end() + startPlainTextTag.length(),endPlainTextTag);
+        }
+        if (msgTemp.length() != msgStore.length())         msgStore=msgTemp;
+      }
+    }
+    return msgStore.toString();
+  }
+ else   return "";
+}
