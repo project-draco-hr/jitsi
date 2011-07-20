@@ -1,7 +1,14 @@
 {
   StreamConnector streamConnector=streamConnectors[mediaType.ordinal()];
-  if ((streamConnector == null) || streamConnector.getDataSocket().isClosed() || (streamConnector.getControlSocket() != null && streamConnector.getControlSocket().isClosed())) {
-    streamConnectors[mediaType.ordinal()]=streamConnector=createStreamConnector(mediaType);
+  if (streamConnector == null || streamConnector.getProtocol() == StreamConnector.Protocol.UDP) {
+    if (streamConnector == null || streamConnector.getDataSocket().isClosed() || (streamConnector.getControlSocket() != null && streamConnector.getControlSocket().isClosed())) {
+      streamConnectors[mediaType.ordinal()]=streamConnector=createStreamConnector(mediaType);
+    }
+  }
+ else   if (streamConnector != null && streamConnector.getProtocol() == StreamConnector.Protocol.TCP) {
+    if (streamConnector.getDataTCPSocket().isClosed() || (streamConnector.getControlTCPSocket() != null && streamConnector.getControlTCPSocket().isClosed())) {
+      streamConnectors[mediaType.ordinal()]=streamConnector=createStreamConnector(mediaType);
+    }
   }
   return streamConnector;
 }

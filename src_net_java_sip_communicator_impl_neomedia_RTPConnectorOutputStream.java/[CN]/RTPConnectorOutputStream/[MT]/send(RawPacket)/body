@@ -1,13 +1,13 @@
 {
-  if (socket == null) {
+  if (!isSocketValid()) {
     return false;
   }
   numberOfPackets++;
   for (  InetSocketAddress target : targets) {
     try {
-      socket.send(new DatagramPacket(packet.getBuffer(),packet.getOffset(),packet.getLength(),target.getAddress(),target.getPort()));
+      sendToTarget(packet,target);
       if (logPacket(numberOfPackets) && NeomediaActivator.getPacketLogging().isLoggingEnabled(PacketLoggingService.ProtocolName.RTP)) {
-        NeomediaActivator.getPacketLogging().logPacket(PacketLoggingService.ProtocolName.RTP,socket.getLocalAddress().getAddress(),socket.getLocalPort(),target.getAddress().getAddress(),target.getPort(),PacketLoggingService.TransportName.UDP,true,packet.getBuffer(),packet.getOffset(),packet.getLength());
+        doLogPacket(packet,target);
       }
     }
  catch (    IOException ex) {

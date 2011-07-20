@@ -8,13 +8,23 @@
   agent.setControlling(!peer.isInitiator());
   servers=requestJingleInfo();
   for (  StunServerDescriptor desc : servers) {
-    TransportAddress addr=new TransportAddress(desc.getAddress(),desc.getPort(),Transport.UDP);
+    Transport transport;
+    if (desc.getProtocol().equals("ssltcp")) {
+      transport=Transport.TCP;
+    }
+ else {
+      transport=Transport.parse(desc.getProtocol());
+    }
+    TransportAddress addr=new TransportAddress(desc.getAddress(),desc.getPort(),transport);
     StunCandidateHarvester harvester=null;
     if (desc.isTurnSupported()) {
       logger.info("Google TURN descriptor");
       if (desc.isOldTurn()) {
         logger.info("new Google TURN harvester");
-        harvester=new GoogleTurnCandidateHarvester(addr,new String(desc.getUsername()));
+        if (desc.getProtocol().equals("ssltcp")) {
+          harvester=new GoogleTurnSSLCandidateHarvester(addr,new String(desc.getUsername()));
+        }
+ else         harvester=new GoogleTurnCandidateHarvester(addr,new String(desc.getUsername()));
       }
  else {
         harvester=new TurnCandidateHarvester(addr,new LongTermCredential(desc.getUsername(),desc.getPassword()));

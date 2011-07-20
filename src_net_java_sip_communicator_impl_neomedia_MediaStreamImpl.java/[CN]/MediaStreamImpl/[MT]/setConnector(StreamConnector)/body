@@ -3,19 +3,40 @@
   if (rtpConnector != null) {
     if (rtpConnector.getConnector() == connector)     return;
   }
-  RTPTransformConnector oldValue=rtpConnector;
-  rtpConnector=new RTPTransformConnector(connector){
-    @Override protected TransformOutputStream createDataOutputStream() throws IOException {
-      TransformOutputStream dataOutputStream=super.createDataOutputStream();
-      if (dataOutputStream != null)       configureDataOutputStream(dataOutputStream);
-      return dataOutputStream;
+  AbstractRTPConnector oldValue=rtpConnector;
+  if (connector.getProtocol() == StreamConnector.Protocol.UDP) {
+    rtpConnector=new RTPTransformUDPConnector(connector){
+      @Override protected TransformUDPOutputStream createDataOutputStream() throws IOException {
+        TransformUDPOutputStream dataOutputStream=super.createDataOutputStream();
+        if (dataOutputStream != null) {
+          configureDataOutputStream(dataOutputStream);
+        }
+        return dataOutputStream;
+      }
+      @Override protected TransformUDPInputStream createDataInputStream() throws IOException {
+        TransformUDPInputStream dataInputStream=super.createDataInputStream();
+        if (dataInputStream != null) {
+          configureDataInputStream(dataInputStream);
+        }
+        return dataInputStream;
+      }
     }
-    @Override protected TransformInputStream createDataInputStream() throws IOException {
-      TransformInputStream dataInputStream=super.createDataInputStream();
-      if (dataInputStream != null)       configureDataInputStream(dataInputStream);
-      return dataInputStream;
-    }
-  }
 ;
+  }
+ else   if (connector.getProtocol() == StreamConnector.Protocol.TCP) {
+    rtpConnector=new RTPTransformTCPConnector(connector){
+      @Override protected TransformTCPOutputStream createDataOutputStream() throws IOException {
+        TransformTCPOutputStream dataOutputStream=super.createDataOutputStream();
+        if (dataOutputStream != null)         configureDataOutputStream(dataOutputStream);
+        return dataOutputStream;
+      }
+      @Override protected TransformTCPInputStream createDataInputStream() throws IOException {
+        TransformTCPInputStream dataInputStream=super.createDataInputStream();
+        if (dataInputStream != null)         configureDataInputStream(dataInputStream);
+        return dataInputStream;
+      }
+    }
+;
+  }
   rtpConnectorChanged(oldValue,rtpConnector);
 }
