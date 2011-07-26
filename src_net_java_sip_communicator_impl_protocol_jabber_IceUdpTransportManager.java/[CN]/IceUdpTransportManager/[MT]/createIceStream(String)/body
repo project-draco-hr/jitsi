@@ -1,13 +1,13 @@
 {
   IceMediaStream stream;
   try {
-    stream=getNetAddrMgr().createIceStream(nextMediaPortToTry,media,iceAgent);
+    stream=getNetAddrMgr().createIceStream(getNextMediaPortToTry(),media,iceAgent);
   }
  catch (  Exception ex) {
     throw new OperationFailedException("Failed to initialize stream " + media,OperationFailedException.INTERNAL_ERROR,ex);
   }
   try {
-    nextMediaPortToTry=stream.getComponent(Component.RTCP).getLocalCandidates().get(0).getTransportAddress().getPort() + 1;
+    setNextMediaPortToTry(1 + stream.getComponent(Component.RTCP).getLocalCandidates().get(0).getTransportAddress().getPort());
   }
  catch (  Throwable t) {
     logger.debug("Determining next port didn't work: ",t);
