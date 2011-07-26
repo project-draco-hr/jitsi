@@ -1,0 +1,38 @@
+{
+  while (true) {
+    VideoEvent event=null;
+synchronized (events) {
+      long emptyTime=-1;
+      boolean interrupted=false;
+      while (events.isEmpty()) {
+        if (emptyTime == -1)         emptyTime=System.currentTimeMillis();
+ else {
+          long newEmptyTime=System.currentTimeMillis();
+          if ((newEmptyTime - emptyTime) >= THREAD_TIMEOUT) {
+            events.notify();
+            return;
+          }
+        }
+        try {
+          events.wait(THREAD_TIMEOUT);
+        }
+ catch (        InterruptedException ie) {
+          interrupted=true;
+        }
+      }
+      if (interrupted)       Thread.currentThread().interrupt();
+      event=events.remove(0);
+    }
+    if (event != null) {
+      try {
+        doFireVideoEvent(event);
+      }
+ catch (      Throwable t) {
+        if (t instanceof ThreadDeath)         throw (ThreadDeath)t;
+      }
+synchronized (events) {
+        events.notify();
+      }
+    }
+  }
+}

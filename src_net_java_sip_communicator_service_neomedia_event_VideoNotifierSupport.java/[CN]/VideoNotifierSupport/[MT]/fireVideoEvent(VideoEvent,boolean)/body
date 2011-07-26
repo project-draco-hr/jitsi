@@ -1,0 +1,22 @@
+{
+  if (synchronous)   doFireVideoEvent(event);
+ else {
+synchronized (events) {
+      events.add(event);
+      if (thread == null)       startThread();
+ else       events.notify();
+      if (wait) {
+        boolean interrupted=false;
+        while (events.contains(event) && (thread != null)) {
+          try {
+            events.wait();
+          }
+ catch (          InterruptedException ie) {
+            interrupted=true;
+          }
+        }
+        if (interrupted)         Thread.currentThread().interrupt();
+      }
+    }
+  }
+}
