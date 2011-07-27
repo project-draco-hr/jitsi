@@ -1,0 +1,20 @@
+{
+  try {
+    if (this.skipFiring)     return null;
+    spellChecker.setLocale(locale);
+    return locale;
+  }
+ catch (  Exception exc) {
+    logger.warn("Unable to retrieve dictionary for " + locale,exc);
+    PopupDialog dialog=SpellCheckActivator.getUIService().getPopupDialog();
+    String message=Resources.getString("plugin.spellcheck.DICT_ERROR");
+    if (exc instanceof IOException) {
+      message=Resources.getString("plugin.spellcheck.DICT_RETRIEVE_ERROR") + ":\n" + locale.getDictUrl();
+    }
+ else     if (exc instanceof IllegalArgumentException) {
+      message=Resources.getString("plugin.spellcheck.DICT_PROCESS_ERROR");
+    }
+    dialog.showMessagePopupDialog(message,Resources.getString("plugin.spellcheck.DICT_ERROR_TITLE"),PopupDialog.WARNING_MESSAGE);
+  }
+  return null;
+}

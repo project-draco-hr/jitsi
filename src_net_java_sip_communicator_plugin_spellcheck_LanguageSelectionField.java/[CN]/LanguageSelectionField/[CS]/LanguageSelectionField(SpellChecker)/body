@@ -1,0 +1,48 @@
+{
+  this.spellChecker=checker;
+  setPreferredSize(new Dimension(30,28));
+  setMaximumSize(new Dimension(30,28));
+  setMinimumSize(new Dimension(30,28));
+  this.menu.setPreferredSize(new Dimension(30,45));
+  this.menu.setMaximumSize(new Dimension(30,45));
+  this.add(menu);
+  this.setBorder(null);
+  this.menu.add(createEnableCheckBox());
+  this.menu.addSeparator();
+  this.menu.setBorder(null);
+  this.menu.setOpaque(false);
+  this.setOpaque(false);
+  DefaultListModel model=new DefaultListModel();
+  final JList list=new JList(model);
+  this.languageSelectionRenderer=new LanguageListRenderer();
+  for (  Parameters.Locale locale : Parameters.getLocales()) {
+    if (!localeAvailabilityCache.containsKey(locale)) {
+      localeAvailabilityCache.put(locale,spellChecker.isLocaleAvailable(locale));
+    }
+    model.addElement(locale);
+    localeList.add(locale);
+  }
+  JScrollPane scroll=new JScrollPane(list);
+  scroll.setBorder(null);
+  String localeIso=Parameters.getDefault(Default.LOCALE);
+  Parameters.Locale loc=Parameters.getLocale(localeIso);
+  list.setCellRenderer(languageSelectionRenderer);
+  list.setSelectedIndex(localeList.indexOf(loc) + 1);
+  list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+  list.addListSelectionListener(new ListSelectionListener(){
+    public void valueChanged(    ListSelectionEvent e){
+      if (!e.getValueIsAdjusting()) {
+        final JList source=(JList)e.getSource();
+        final Parameters.Locale locale=(Parameters.Locale)source.getSelectedValue();
+        source.setEnabled(false);
+        locale.setLoading(true);
+        new SetSpellChecker(locale,source).start();
+      }
+    }
+  }
+);
+  menu.add(scroll);
+  ImageIcon flagIcon=getLocaleIcon(checker.getLocale(),localeAvailabilityCache.get(checker.getLocale()));
+  SelectedObject selectedObject=new SelectedObject(flagIcon,checker.getLocale());
+  menu.setSelected(selectedObject);
+}

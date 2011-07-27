@@ -3,13 +3,16 @@
   File dictionaryDir=faService.getPrivatePersistentFile(DICT_DIR);
   if (!dictionaryDir.exists()) {
     dictionaryDir.mkdir();
-    URL dictURL=SpellCheckActivator.bundleContext.getBundle().getResource(DEFAULT_DICT_PATH);
-    if (dictURL != null) {
-      InputStream source=dictURL.openStream();
-      int filenameStart=DEFAULT_DICT_PATH.lastIndexOf('/') + 1;
-      String filename=DEFAULT_DICT_PATH.substring(filenameStart);
-      File dictLocation=faService.getPrivatePersistentFile(DICT_DIR + filename);
-      copyDictionary(source,dictLocation);
+    @SuppressWarnings("unchecked") Enumeration<URL> dictUrls=SpellCheckActivator.bundleContext.getBundle().findEntries(DEFAULT_DICT_PATH,"*.zip",false);
+    if (dictUrls != null) {
+      while (dictUrls.hasMoreElements()) {
+        URL dictUrl=dictUrls.nextElement();
+        InputStream source=dictUrl.openStream();
+        int filenameStart=dictUrl.getPath().lastIndexOf('/') + 1;
+        String filename=dictUrl.getPath().substring(filenameStart);
+        File dictLocation=faService.getPrivatePersistentFile(DICT_DIR + filename);
+        copyDictionary(source,dictLocation);
+      }
     }
   }
   this.personalDictLocation=faService.getPrivatePersistentFile(DICT_DIR + PERSONAL_DICT_NAME);

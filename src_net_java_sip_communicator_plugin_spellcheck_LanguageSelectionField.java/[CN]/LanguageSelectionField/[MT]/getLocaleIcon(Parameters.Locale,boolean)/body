@@ -1,0 +1,23 @@
+{
+  if (isAvailable && AVAILABLE_FLAGS.containsKey(locale))   return AVAILABLE_FLAGS.get(locale);
+ else   if (!isAvailable && UNAVAILABLE_FLAGS.containsKey(locale))   return UNAVAILABLE_FLAGS.get(locale);
+ else {
+    ImageIcon localeFlag;
+    try {
+      int commaIndex=locale.getIsoCode().indexOf(",");
+      String countryCode=locale.getIsoCode().substring(commaIndex + 1);
+      localeFlag=Resources.getFlagImage(countryCode);
+      BufferedImage flagBuffer=copy(localeFlag.getImage());
+      setFaded(flagBuffer);
+      ImageIcon unavailableLocaleFlag=new ImageIcon(flagBuffer);
+      AVAILABLE_FLAGS.put(locale,localeFlag);
+      UNAVAILABLE_FLAGS.put(locale,unavailableLocaleFlag);
+      return isAvailable ? localeFlag : unavailableLocaleFlag;
+    }
+ catch (    IOException exc) {
+      AVAILABLE_FLAGS.put(locale,BLANK_FLAG_ICON);
+      UNAVAILABLE_FLAGS.put(locale,BLANK_FLAG_ICON);
+      return BLANK_FLAG_ICON;
+    }
+  }
+}

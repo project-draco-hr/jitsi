@@ -1,0 +1,145 @@
+{
+  clickedWord=(clickWord == null) ? Word.getWord("  ",1,false) : clickWord;
+  topPanel=new TransparentPanel(new BorderLayout());
+  topPanel.setBorder(BorderFactory.createEmptyBorder(0,8,0,8));
+  topPanel.setLayout(new BoxLayout(topPanel,BoxLayout.Y_AXIS));
+  checkPanel=new TransparentPanel(new BorderLayout(10,10));
+  checkPanel.setBorder(BorderFactory.createEmptyBorder(0,8,0,8));
+  checkPanel.setLayout(new BoxLayout(checkPanel,BoxLayout.X_AXIS));
+  currentWord=new JTextField(clickedWord.getText());
+  currentWord.setAlignmentX(LEFT_ALIGNMENT);
+  currentWord.setMaximumSize(new Dimension(550,30));
+  currentWord.setText(clickedWord.getText());
+  currentWord.selectAll();
+  buttonsPanel=new TransparentPanel(new FlowLayout(FlowLayout.RIGHT,0,10));
+  changeButton=new JButton(resources.getI18NString("plugin.spellcheck.dialog.REPLACE"));
+  changeButton.setMnemonic(resources.getI18nMnemonic("plugin.spellcheck.dialog.REPLACE"));
+  changeButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      if (suggestionList.getSelectedValue() != null) {
+        StringBuffer newMessage=new StringBuffer(chat.getMessage());
+        int endIndex;
+        if (word != null) {
+          endIndex=index + currentWord.getText().length();
+          newMessage.replace(index,endIndex,(String)suggestionList.getSelectedValue());
+          word=(String)suggestionList.getSelectedValue();
+        }
+ else {
+          endIndex=clickedWord.getStart() + clickedWord.getText().length();
+          newMessage.replace(clickedWord.getStart(),endIndex,(String)suggestionList.getSelectedValue());
+        }
+        currentWord.setText((String)suggestionList.getSelectedValue());
+        chat.setMessage(newMessage.toString());
+      }
+    }
+  }
+);
+  changeButton.setEnabled(false);
+  nextButton=new JButton(resources.getI18NString("plugin.spellcheck.dialog.FIND"));
+  nextButton.setMnemonic(resources.getI18nMnemonic("plugin.spellcheck.dialog.FIND"));
+  nextButton.addActionListener(new ActionListener(){
+    public Word getNextWord(){
+      Word nextWord;
+      int wordIndex;
+      if (word == null) {
+        if (currentWord.getText().equals("  ")) {
+          String words[]=chat.getMessage().split(" ");
+          currentWord.setText(words[0]);
+        }
+        wordIndex=chat.getMessage().indexOf(currentWord.getText());
+        if (dict.isCorrect(currentWord.getText()))         currentWord.setText("");
+      }
+ else {
+        wordIndex=chat.getMessage().indexOf(word,index);
+      }
+      Word presentWord=Word.getWord(chat.getMessage(),wordIndex,false);
+      if (presentWord.getEnd() == chat.getMessage().length()) {
+        nextWord=Word.getWord(chat.getMessage(),1,false);
+      }
+ else {
+        nextWord=Word.getWord(chat.getMessage(),presentWord.getEnd() + 1,false);
+      }
+      index=nextWord.getStart();
+      word=nextWord.getText();
+      return nextWord;
+    }
+    public void actionPerformed(    ActionEvent e){
+      Word nextWord=getNextWord();
+      int breakIndex=nextWord.getStart();
+      while (dict.isCorrect(nextWord.getText()) && nextWord.getEnd() + 1 != breakIndex) {
+        nextWord=getNextWord();
+      }
+      if (!dict.isCorrect(nextWord.getText())) {
+        word=nextWord.getText();
+        currentWord.setText(nextWord.getText());
+        String clickedWord=currentWord.getText();
+        setSuggestionModel(clickedWord);
+      }
+    }
+  }
+);
+  buttonsPanel.setLayout(new BoxLayout(buttonsPanel,BoxLayout.Y_AXIS));
+  buttonsPanel.add(changeButton);
+  buttonsPanel.add(nextButton);
+  checkPanel.add(currentWord,BorderLayout.NORTH);
+  checkPanel.add(Box.createHorizontalStrut(10));
+  checkPanel.add(buttonsPanel,BorderLayout.EAST);
+  topPanel.add(checkPanel,BorderLayout.NORTH);
+  topPanel.add(Box.createVerticalStrut(10));
+  DefaultListModel dataModel=new DefaultListModel();
+  suggestionList=new JList(dataModel);
+  suggestionScroll=new JScrollPane(suggestionList);
+  suggestionScroll.setAlignmentX(LEFT_ALIGNMENT);
+  if (!dict.isCorrect(clickedWord.getText()))   setSuggestionModel(clickedWord.getText());
+  suggestionList.addListSelectionListener(new ListSelectionListener(){
+    public void valueChanged(    ListSelectionEvent e){
+      if (!e.getValueIsAdjusting()) {
+        changeButton.setEnabled(true);
+      }
+    }
+  }
+);
+  MouseListener clickListener=new MouseAdapter(){
+    public void mouseClicked(    MouseEvent e){
+      if (e.getClickCount() == 2) {
+        StringBuffer newMessage=new StringBuffer(chat.getMessage());
+        int endIndex;
+        if (word != null) {
+          endIndex=index + currentWord.getText().length();
+          newMessage.replace(index,endIndex,(String)suggestionList.getSelectedValue());
+          word=(String)suggestionList.getSelectedValue();
+        }
+ else {
+          endIndex=clickedWord.getStart() + clickedWord.getText().length();
+          newMessage.replace(clickedWord.getStart(),endIndex,(String)suggestionList.getSelectedValue());
+        }
+        currentWord.setText((String)suggestionList.getSelectedValue());
+        chat.setMessage(newMessage.toString());
+      }
+    }
+  }
+;
+  suggestionList.addMouseListener(clickListener);
+  addButton=new JButton(resources.getI18NString("plugin.spellcheck.dialog.ADD"));
+  addButton.setMnemonic(resources.getI18nMnemonic("plugin.spellcheck.dialog.ADD"));
+  addButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      try {
+        dict.addWord(currentWord.getText());
+        chat.promptRepaint();
+      }
+ catch (      SpellDictionaryException exc) {
+        String msg="Unable to add word to personal dictionary";
+        logger.error(msg,exc);
+      }
+    }
+  }
+);
+  suggestionPanel=new TransparentPanel(new BorderLayout(10,10));
+  suggestionPanel.setBorder(BorderFactory.createEmptyBorder(0,8,0,8));
+  suggestionPanel.setLayout(new BoxLayout(suggestionPanel,BoxLayout.X_AXIS));
+  suggestionPanel.add(suggestionScroll);
+  suggestionPanel.add(Box.createHorizontalStrut(10));
+  suggestionPanel.add(addButton);
+  topPanel.add(suggestionPanel,BorderLayout.SOUTH);
+}

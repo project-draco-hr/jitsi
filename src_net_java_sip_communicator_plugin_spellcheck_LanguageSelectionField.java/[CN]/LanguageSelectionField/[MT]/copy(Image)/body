@@ -1,0 +1,21 @@
+{
+  int width=image.getWidth(null);
+  int height=image.getHeight(null);
+  BufferedImage copy;
+  try {
+    PixelGrabber pg=new PixelGrabber(image,0,0,1,1,false);
+    pg.grabPixels();
+    ColorModel cm=pg.getColorModel();
+    WritableRaster raster=cm.createCompatibleWritableRaster(width,height);
+    boolean isRasterPremultiplied=cm.isAlphaPremultiplied();
+    copy=new BufferedImage(cm,raster,isRasterPremultiplied,null);
+  }
+ catch (  InterruptedException e) {
+    copy=new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+  }
+  Graphics2D g2=copy.createGraphics();
+  g2.setComposite(AlphaComposite.Src);
+  g2.drawImage(image,0,0,null);
+  g2.dispose();
+  return copy;
+}

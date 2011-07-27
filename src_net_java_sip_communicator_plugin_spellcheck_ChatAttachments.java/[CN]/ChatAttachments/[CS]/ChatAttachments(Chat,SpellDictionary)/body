@@ -21,15 +21,34 @@
 ;
   this.caretListener=this.docListener.getEndChecker();
   this.menuListener=new ChatMenuListener(){
-    public List<JMenuItem> getMenuElements(    Chat chat,    MouseEvent event){
+    public List<JMenuItem> getMenuElements(    final Chat chat,    MouseEvent event){
       if (isEnabled && event.getSource() instanceof JTextComponent) {
         JTextComponent comp=(JTextComponent)event.getSource();
         int index=comp.viewToModel(event.getPoint());
-        if (index != -1 && comp.getText().length() != 0) {
-          return getCorrections(Word.getWord(comp.getText(),index,false));
+        try {
+          String compText=comp.getDocument().getText(0,comp.getDocument().getLength());
+          if (index != -1 && compText.length() != 0) {
+            return getCorrections(Word.getWord(comp.getDocument().getText(0,comp.getDocument().getLength()),index,false));
+          }
+        }
+ catch (        BadLocationException e) {
+          e.printStackTrace();
         }
       }
-      return new ArrayList<JMenuItem>();
+      JMenuItem spellCheck=new JMenuItem(resources.getI18NString("plugin.spellcheck.MENU"));
+      ArrayList<JMenuItem> spellCheckItem=new ArrayList<JMenuItem>();
+      spellCheckItem.add(spellCheck);
+      spellCheck.addActionListener(new ActionListener(){
+        public void actionPerformed(        ActionEvent e){
+          if (dialog != null) {
+            dialog.dispose();
+          }
+          dialog=new SpellCheckerConfigDialog(chat,null,dict);
+          dialog.setVisible(true);
+        }
+      }
+);
+      return spellCheckItem;
     }
   }
 ;
