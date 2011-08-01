@@ -1,5 +1,5 @@
 {
-  super(mainFrame);
+  super(mainFrame,false);
   this.setModal(false);
   this.setTitle(title);
   titleLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -16,26 +16,42 @@
   this.titlePanel.add(infoTextArea);
   this.northPanel.add(iconLabel,BorderLayout.WEST);
   this.northPanel.add(titlePanel,BorderLayout.CENTER);
+  reasonsPanel.setLayout(new BoxLayout(reasonsPanel,BoxLayout.Y_AXIS));
+  reasonsPanel.setBorder(BorderFactory.createEmptyBorder(0,iconLabel.getIcon().getIconWidth() + 5,0,0));
   if (request.getReason() != null && !request.getReason().equals("")) {
-    this.requestScrollPane.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(3,3,3,3),SIPCommBorders.getBoldRoundBorder()));
+    this.requestScrollPane.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(),BorderFactory.createEmptyBorder(3,3,3,3)));
+    requestScrollPane.getViewport().setOpaque(false);
     this.requestPane.setEditable(false);
     this.requestPane.setOpaque(false);
     this.requestPane.setText(request.getReason());
     this.requestScrollPane.getViewport().add(requestPane);
     this.reasonsPanel.add(requestScrollPane);
-    this.mainPanel.setPreferredSize(new Dimension(550,300));
+    this.mainPanel.setPreferredSize(new Dimension(500,250));
   }
  else {
-    this.mainPanel.setPreferredSize(new Dimension(550,200));
+    this.mainPanel.setPreferredSize(new Dimension(500,200));
   }
-  this.acceptButton.setName("service.gui.ACCEPT");
-  this.rejectButton.setName("reject");
+  if (!contact.isPersistent()) {
+    addContactCheckBox=new SIPCommCheckBox(GuiActivator.getResources().getI18NString("service.gui.ADD_AUTHORIZED_CONTACT",new String[]{contact.getDisplayName()}),true);
+    addContactCheckBox.setBorder(null);
+    JPanel checkBoxPanel=new TransparentPanel(new FlowLayout(FlowLayout.LEFT));
+    checkBoxPanel.add(addContactCheckBox);
+    JLabel groupLabel=new JLabel(GuiActivator.getResources().getI18NString("service.gui.SELECT_GROUP"));
+    groupComboBox=AddContactDialog.createGroupCombo(this);
+    JPanel groupPanel=new TransparentPanel(new BorderLayout(5,5));
+    groupPanel.add(groupLabel,BorderLayout.WEST);
+    groupPanel.add(groupComboBox,BorderLayout.CENTER);
+    reasonsPanel.add(checkBoxPanel);
+    reasonsPanel.add(groupPanel);
+  }
+  this.acceptButton.setName("authorize");
+  this.rejectButton.setName("deny");
   this.ignoreButton.setName("ignore");
   this.acceptButton.addActionListener(this);
   this.rejectButton.addActionListener(this);
   this.ignoreButton.addActionListener(this);
-  this.acceptButton.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.ACCEPT"));
-  this.rejectButton.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.REJECT"));
+  this.acceptButton.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.AUTHORIZE"));
+  this.rejectButton.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.DENY"));
   this.ignoreButton.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.IGNORE"));
   this.buttonsPanel.add(acceptButton);
   this.buttonsPanel.add(rejectButton);
