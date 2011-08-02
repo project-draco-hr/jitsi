@@ -1,6 +1,11 @@
 {
   terminateSubscription(contact);
-  if (SubscriptionStateHeader.DEACTIVATED.equals(reasonCode))   forcePollContact(contact);
+  if (SubscriptionStateHeader.DEACTIVATED.equals(reasonCode))   try {
+    ssContactList.removeContact(contact);
+  }
+ catch (  OperationFailedException e) {
+    logger.error("Cannot remove contact that unsubscribed.",e);
+  }
   SubscriptionStateHeader stateHeader=(SubscriptionStateHeader)requestEvent.getRequest().getHeader(SubscriptionStateHeader.NAME);
   if (stateHeader != null && SubscriptionStateHeader.TERMINATED.equals(stateHeader.getState())) {
     if (SubscriptionStateHeader.REJECTED.equals(stateHeader.getReasonCode())) {
