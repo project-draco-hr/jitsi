@@ -9,12 +9,14 @@ synchronized (storedAccounts) {
   String accountNodeName=null;
   for (Iterator<String> storedAccountIter=storedAccounts.iterator(); storedAccountIter.hasNext(); ) {
     String storedAccount=storedAccountIter.next();
+    int dotIndex=storedAccount.lastIndexOf(".");
+    if (!storedAccount.substring(dotIndex + 1).startsWith(ACCOUNT_UID_PREFIX))     continue;
     String storedAccountUID=configurationService.getString(storedAccount + "." + ProtocolProviderFactory.ACCOUNT_UID);
     if (storedAccountUID.equals(accountUID))     accountNodeName=configurationService.getString(storedAccount);
   }
   Map<String,Object> configurationProperties=new HashMap<String,Object>();
   if (accountNodeName == null) {
-    accountNodeName="acc" + Long.toString(System.currentTimeMillis());
+    accountNodeName=ACCOUNT_UID_PREFIX + Long.toString(System.currentTimeMillis());
     configurationProperties.put(factoryPackage + "." + accountNodeName,accountNodeName);
     configurationProperties.put(factoryPackage + "." + accountNodeName+ "."+ ProtocolProviderFactory.ACCOUNT_UID,accountID.getAccountUniqueID());
   }
