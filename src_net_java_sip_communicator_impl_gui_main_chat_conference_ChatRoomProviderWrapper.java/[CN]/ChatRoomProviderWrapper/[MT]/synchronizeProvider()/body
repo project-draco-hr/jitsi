@@ -16,12 +16,25 @@ catch (        OperationNotSupportedException e1) {
         if (chatRoom != null) {
           chatRoomWrapper.setChatRoom(chatRoom);
           if (chatRoomWrapper.isAutojoin()) {
-            GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(chatRoom);
+            String nickName=ConfigurationManager.getChatRoomProperty(chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),"userNickName");
+            if (nickName != null) {
+              GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(chatRoom,nickName,null);
+            }
+ else {
+              GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(chatRoom);
+            }
           }
         }
  else {
           if (chatRoomWrapper.isAutojoin()) {
-            GuiActivator.getUIService().getConferenceChatManager().createChatRoom(chatRoomWrapper.getChatRoomName(),chatRoomWrapper.getParentProvider().getProtocolProvider(),new ArrayList<String>(),"",true,true);
+            ChatRoomWrapper roomWrapper=GuiActivator.getUIService().getConferenceChatManager().createChatRoom(chatRoomWrapper.getChatRoomName(),chatRoomWrapper.getParentProvider().getProtocolProvider(),new ArrayList<String>(),"",false,true);
+            String nickName=ConfigurationManager.getChatRoomProperty(chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),"userNickName");
+            if (nickName != null) {
+              GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(roomWrapper.getChatRoom(),nickName,null);
+            }
+ else {
+              GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(roomWrapper);
+            }
           }
         }
       }
