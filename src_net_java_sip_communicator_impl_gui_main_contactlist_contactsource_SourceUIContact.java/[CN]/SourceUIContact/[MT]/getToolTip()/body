@@ -3,12 +3,19 @@
   byte[] avatarImage=sourceContact.getImage();
   if (avatarImage != null && avatarImage.length > 0)   tip.setImage(new ImageIcon(avatarImage));
   tip.setTitle(sourceContact.getDisplayName());
-  List<ContactDetail> details=sourceContact.getContactDetails(ContactDetail.CATEGORY_PHONE);
-  if (details != null && details.size() > 0)   addDetailsToToolTip(details,ContactDetail.CATEGORY_PHONE,tip);
-  details=sourceContact.getContactDetails(ContactDetail.CATEGORY_EMAIL);
-  if (details != null && details.size() > 0)   addDetailsToToolTip(details,ContactDetail.CATEGORY_EMAIL,tip);
-  details=sourceContact.getContactDetails(ContactDetail.CATEGORY_INSTANT_MESSAGING);
-  if (details != null && details.size() > 0)   addDetailsToToolTip(details,ContactDetail.CATEGORY_INSTANT_MESSAGING,tip);
-  tip.setBottomText(getDisplayDetails());
+  String displayDetails=getDisplayDetails();
+  if (displayDetails != null)   tip.addLine(new JLabel[]{new JLabel(getDisplayDetails())});
+  try {
+    List<ContactDetail> details=sourceContact.getContactDetails(ContactDetail.CATEGORY_PHONE);
+    if (details != null && details.size() > 0)     addDetailsToToolTip(details,ContactDetail.CATEGORY_PHONE + "s",tip);
+    details=sourceContact.getContactDetails(ContactDetail.CATEGORY_EMAIL);
+    if (details != null && details.size() > 0)     addDetailsToToolTip(details,ContactDetail.CATEGORY_EMAIL + "s",tip);
+    details=sourceContact.getContactDetails(ContactDetail.CATEGORY_INSTANT_MESSAGING);
+    if (details != null && details.size() > 0)     addDetailsToToolTip(details,ContactDetail.CATEGORY_INSTANT_MESSAGING + "s",tip);
+  }
+ catch (  OperationNotSupportedException e) {
+    List<ContactDetail> allDetails=sourceContact.getContactDetails();
+    addDetailsToToolTip(allDetails,GuiActivator.getResources().getI18NString("service.gui.CALL_WITH"),tip);
+  }
   return tip;
 }

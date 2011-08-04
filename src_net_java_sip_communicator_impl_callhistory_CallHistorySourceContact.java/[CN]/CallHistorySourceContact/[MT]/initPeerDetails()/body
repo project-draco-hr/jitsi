@@ -2,8 +2,6 @@
   Iterator<CallPeerRecord> recordsIter=callRecord.getPeerRecords().iterator();
   while (recordsIter.hasNext()) {
     String peerAddress=recordsIter.next().getPeerAddress();
-    if (displayName.length() > 0)     displayName+="," + peerAddress;
- else     displayName+=peerAddress;
     if (peerAddress != null) {
       ContactDetail contactDetail=new ContactDetail(peerAddress);
       Map<Class<? extends OperationSet>,ProtocolProviderService> preferredProviders=null;
@@ -11,10 +9,17 @@
       ProtocolProviderService preferredProvider=callRecord.getProtocolProvider();
       if (preferredProvider != null) {
         preferredProviders=new Hashtable<Class<? extends OperationSet>,ProtocolProviderService>();
-        OperationSetContactCapabilities opSetCaps=preferredProvider.getOperationSet(OperationSetContactCapabilities.class);
         OperationSetPresence opSetPres=preferredProvider.getOperationSet(OperationSetPresence.class);
+        Contact contact=opSetPres.findContactByID(peerAddress);
+        if (contact != null) {
+          String contactDisplayName=contact.getDisplayName();
+          if (displayName == null || displayName.length() <= 0) {
+            if (callRecord.getPeerRecords().size() > 1)             displayName="Conference " + contactDisplayName;
+ else             displayName=contactDisplayName;
+          }
+        }
+        OperationSetContactCapabilities opSetCaps=preferredProvider.getOperationSet(OperationSetContactCapabilities.class);
         if (opSetCaps != null && opSetPres != null) {
-          Contact contact=opSetPres.findContactByID(peerAddress);
           if (contact != null && opSetCaps.getOperationSet(contact,OperationSetBasicTelephony.class) != null) {
             preferredProviders.put(OperationSetBasicTelephony.class,preferredProvider);
           }
@@ -35,6 +40,8 @@
       }
       contactDetail.setSupportedOpSets(supportedOpSets);
       contactDetails.add(contactDetail);
+      if (displayName == null || displayName.length() <= 0)       if (callRecord.getPeerRecords().size() > 1)       displayName="Conference " + peerAddress;
+ else       displayName=peerAddress;
     }
   }
 }
