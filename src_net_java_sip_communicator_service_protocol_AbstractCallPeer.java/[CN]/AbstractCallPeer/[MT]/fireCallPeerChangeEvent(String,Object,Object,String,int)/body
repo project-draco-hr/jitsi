@@ -7,17 +7,22 @@ synchronized (callPeerListeners) {
   }
   while (listeners.hasNext()) {
     CallPeerListener listener=listeners.next();
-    if (eventType.equals(CallPeerChangeEvent.CALL_PEER_ADDRESS_CHANGE)) {
-      listener.peerAddressChanged(evt);
+    try {
+      if (eventType.equals(CallPeerChangeEvent.CALL_PEER_ADDRESS_CHANGE)) {
+        listener.peerAddressChanged(evt);
+      }
+ else       if (eventType.equals(CallPeerChangeEvent.CALL_PEER_DISPLAY_NAME_CHANGE)) {
+        listener.peerDisplayNameChanged(evt);
+      }
+ else       if (eventType.equals(CallPeerChangeEvent.CALL_PEER_IMAGE_CHANGE)) {
+        listener.peerImageChanged(evt);
+      }
+ else       if (eventType.equals(CallPeerChangeEvent.CALL_PEER_STATE_CHANGE)) {
+        listener.peerStateChanged(evt);
+      }
     }
- else     if (eventType.equals(CallPeerChangeEvent.CALL_PEER_DISPLAY_NAME_CHANGE)) {
-      listener.peerDisplayNameChanged(evt);
-    }
- else     if (eventType.equals(CallPeerChangeEvent.CALL_PEER_IMAGE_CHANGE)) {
-      listener.peerImageChanged(evt);
-    }
- else     if (eventType.equals(CallPeerChangeEvent.CALL_PEER_STATE_CHANGE)) {
-      listener.peerStateChanged(evt);
+ catch (    Throwable t) {
+      logger.error("Error dispatching event of type" + eventType + " in "+ listener,t);
     }
   }
 }
