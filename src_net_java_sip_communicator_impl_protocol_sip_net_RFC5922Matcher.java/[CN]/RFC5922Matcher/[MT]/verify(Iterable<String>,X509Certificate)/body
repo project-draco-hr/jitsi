@@ -1,0 +1,20 @@
+{
+  boolean strict=SipActivator.getConfigurationService().getBoolean(PNAME_STRICT_RFC5922,false);
+  boolean oneMatched=false;
+  Iterable<String> certIdentities=extractCertIdentities(cert);
+  for (  String identity : identitiesToTest) {
+    for (    String dnsName : certIdentities) {
+      try {
+        if (NetworkUtils.compareDnsNames(dnsName,identity) == 0) {
+          return;
+        }
+        if (!strict && dnsName.startsWith("*.") && identity.indexOf(".") < identity.lastIndexOf(".") && NetworkUtils.compareDnsNames(dnsName.substring(2),identity.substring(identity.indexOf(".") + 1)) == 0) {
+          return;
+        }
+      }
+ catch (      ParseException e) {
+      }
+    }
+  }
+  if (!oneMatched)   throw new CertificateException("None of <" + identitiesToTest + "> matched by the rules of RFC5922 to the cert with CN="+ cert.getSubjectDN());
+}

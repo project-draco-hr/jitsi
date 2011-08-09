@@ -1,0 +1,29 @@
+{
+  ProtocolProviderServiceSipImpl provider=null;
+  for (  ProtocolProviderServiceSipImpl pps : ProtocolProviderServiceSipImpl.getAllInstances()) {
+    if (pps.matchesInetAddress(address)) {
+      provider=pps;
+      break;
+    }
+  }
+  if (provider == null)   throw new IOException("The provider that requested " + "the SSL Socket could not be found");
+  try {
+    ArrayList<String> identities=new ArrayList<String>(2);
+    SipAccountID id=(SipAccountID)provider.getAccountID();
+    if (!id.getAccountPropertyBoolean(ProtocolProviderFactory.PROXY_AUTO_CONFIG,false)) {
+      String proxy=id.getAccountPropertyString(ProtocolProviderFactory.PROXY_ADDRESS);
+      if (proxy != null)       identities.add(proxy);
+      if (logger.isDebugEnabled())       logger.debug("Added <" + proxy + "> to list of valid SIP TLS server identities.");
+    }
+    String userID=id.getAccountPropertyString(ProtocolProviderFactory.USER_ID);
+    int index=userID.indexOf('@');
+    if (index > -1) {
+      identities.add(userID.substring(index + 1));
+      if (logger.isDebugEnabled())       logger.debug("Added <" + userID.substring(index + 1) + "> to list of valid SIP TLS server identities.");
+    }
+    return certificateVerification.getSSLContext(certificateVerification.getTrustManager(identities,null,new RFC5922Matcher(provider))).getSocketFactory();
+  }
+ catch (  GeneralSecurityException e) {
+    throw new IOException(e.getMessage());
+  }
+}

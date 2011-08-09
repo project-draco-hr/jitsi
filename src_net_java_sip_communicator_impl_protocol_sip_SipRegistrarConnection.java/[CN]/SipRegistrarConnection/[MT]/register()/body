@@ -6,7 +6,11 @@
     request=sipProvider.getMessageFactory().createRegisterRequest(getAddressOfRecord(),registrationsExpiration,callIdHeader,getNextCSeqValue());
   }
  catch (  Exception exc) {
-    if (exc.getCause() instanceof SocketException || exc.getCause() instanceof IOException) {
+    if (exc.getCause() instanceof SocketException || exc.getCause() instanceof IOException || exc.getCause() instanceof SSLHandshakeException) {
+      if (exc.getCause().getCause() instanceof CertificateException) {
+        setRegistrationState(RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,exc.getMessage());
+        return;
+      }
       if (sipProvider.registerUsingNextAddress())       return;
     }
     logger.error("Failed to create a Register request.",exc);

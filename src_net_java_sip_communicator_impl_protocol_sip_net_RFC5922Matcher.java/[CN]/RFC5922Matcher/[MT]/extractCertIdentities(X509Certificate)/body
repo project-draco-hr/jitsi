@@ -1,0 +1,60 @@
+{
+  List<String> certIdentities=new ArrayList<String>();
+  Collection<List<?>> subjAltNames=null;
+  try {
+    subjAltNames=cert.getSubjectAlternativeNames();
+  }
+ catch (  CertificateParsingException ex) {
+    logger.error("Error parsing TLS certificate",ex);
+  }
+  final Integer dnsNameType=2;
+  final Integer uriNameType=6;
+  if (subjAltNames != null) {
+    if (logger.isDebugEnabled())     logger.debug("found subjAltNames: " + subjAltNames);
+    for (    List<?> altName : subjAltNames) {
+      if (altName.get(0).equals(uriNameType)) {
+        SipURI altNameUri;
+        try {
+          altNameUri=provider.getAddressFactory().createSipURI((String)altName.get(1));
+          if (!"sip".equals(altNameUri.getScheme()))           continue;
+          if (altNameUri.getUser() != null)           continue;
+          String altHostName=altNameUri.getHost();
+          if (logger.isDebugEnabled()) {
+            logger.debug("found uri " + altName.get(1) + ", hostName "+ altHostName);
+          }
+          certIdentities.add(altHostName);
+        }
+ catch (        ParseException e) {
+          logger.error("certificate contains invalid uri: " + altName.get(1));
+        }
+      }
+    }
+    if (certIdentities.isEmpty()) {
+      for (      List<?> altName : subjAltNames) {
+        if (altName.get(0).equals(dnsNameType)) {
+          if (logger.isDebugEnabled())           logger.debug("found dns " + altName.get(1));
+          certIdentities.add(altName.get(1).toString());
+        }
+      }
+    }
+  }
+ else {
+    String dname=cert.getSubjectDN().getName();
+    String cname="";
+    try {
+      Pattern EXTRACT_CN=Pattern.compile(".*CN\\s*=\\s*([\\w*\\.]+).*");
+      Matcher matcher=EXTRACT_CN.matcher(dname);
+      if (matcher.matches()) {
+        cname=matcher.group(1);
+        if (logger.isDebugEnabled()) {
+          logger.debug("found CN: " + cname + " from DN: "+ dname);
+        }
+        certIdentities.add(cname);
+      }
+    }
+ catch (    Exception ex) {
+      logger.error("exception while extracting CN",ex);
+    }
+  }
+  return certIdentities;
+}

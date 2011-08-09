@@ -1,0 +1,41 @@
+{
+  if (certOpened) {
+    certPanel.removeAll();
+    certButton.setText(R.getI18NString("service.gui.SHOW_CERT"));
+    certPanel.revalidate();
+    certPanel.repaint();
+    pack();
+    certOpened=false;
+    setLocationRelativeTo(getParent());
+    return;
+  }
+  certPanel.setLayout(new BorderLayout());
+  certPanel.add(alwaysTrustCheckBox,BorderLayout.NORTH);
+  Component certInfoPane=null;
+  if (cert instanceof X509Certificate) {
+    certInfoPane=getX509DisplayComponent((X509Certificate)cert);
+  }
+ else {
+    JTextArea textArea=new JTextArea();
+    textArea.setOpaque(false);
+    textArea.setEditable(false);
+    textArea.setText(cert.toString());
+    certInfoPane=textArea;
+  }
+  final JScrollPane certScroll=new JScrollPane(certInfoPane);
+  certScroll.setPreferredSize(new Dimension(300,300));
+  certPanel.add(certScroll,BorderLayout.CENTER);
+  SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
+      certScroll.getVerticalScrollBar().setValue(0);
+    }
+  }
+);
+  certButton.setText(R.getI18NString("service.gui.HIDE_CERT"));
+  certPanel.revalidate();
+  certPanel.repaint();
+  setPreferredSize(null);
+  pack();
+  certOpened=true;
+  setLocationRelativeTo(getParent());
+}
