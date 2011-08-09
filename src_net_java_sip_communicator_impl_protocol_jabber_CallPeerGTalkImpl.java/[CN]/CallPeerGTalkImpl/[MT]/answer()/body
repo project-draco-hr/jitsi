@@ -2,9 +2,16 @@
   RtpDescriptionPacketExtension answer=null;
   try {
     getMediaHandler().getTransportManager().wrapupConnectivityEstablishment();
-    answer=getMediaHandler().generateSessionAccept();
+    answer=getMediaHandler().generateSessionAccept(true);
   }
- catch (  Exception exc) {
+ catch (  IllegalArgumentException e) {
+    freeswitchSession=new SessionIQ();
+    answer=getMediaHandler().generateSessionAccept(false);
+    SessionIQ response=GTalkPacketFactory.createSessionAccept(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),getSessionID(),answer);
+    getProtocolProvider().getConnection().sendPacket(response);
+    return;
+  }
+catch (  Exception exc) {
     logger.info("Failed to answer an incoming call",exc);
     String reasonText="Error: " + exc.getMessage();
     SessionIQ errResp=GTalkPacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getID(),Reason.FAILED_APPLICATION,reasonText);
@@ -13,7 +20,7 @@
     return;
   }
   SessionIQ response=GTalkPacketFactory.createSessionAccept(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),getSessionID(),answer);
-  getProtocolProvider().getConnection().sendPacket(response);
+  if (freeswitchSession == null)   getProtocolProvider().getConnection().sendPacket(response);
   try {
     getMediaHandler().start();
   }
