@@ -2,9 +2,16 @@
   String proxyAddressStr=accountID.getAccountPropertyString(ProtocolProviderFactory.PROXY_ADDRESS);
   boolean proxyAddressAndPortEntered=false;
   if (proxyAddressStr == null || proxyAddressStr.trim().length() == 0) {
-    proxyAddressStr=accountID.getAccountPropertyString(ProtocolProviderFactory.SERVER_ADDRESS);
-    if (proxyAddressStr == null || proxyAddressStr.trim().length() == 0) {
-      return;
+    String userID=accountID.getAccountPropertyString(ProtocolProviderFactory.USER_ID);
+    int domainIx=userID.indexOf("@");
+    if (domainIx > 0) {
+      proxyAddressStr=userID.substring(domainIx + 1);
+    }
+ else {
+      proxyAddressStr=accountID.getAccountPropertyString(ProtocolProviderFactory.SERVER_ADDRESS);
+      if (proxyAddressStr == null || proxyAddressStr.trim().length() == 0) {
+        return;
+      }
     }
   }
  else {
@@ -30,24 +37,37 @@
     }
     InetSocketAddress proxySocketAddress=null;
     if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.PROXY_AUTO_CONFIG,false)) {
-      ArrayList<InetSocketAddress> proxySocketAddressesList=new ArrayList<InetSocketAddress>();
-      ArrayList<String> proxyTransportsList=new ArrayList<String>();
-      resolveSipAddress(proxyAddressStr,proxyTransport,proxySocketAddressesList,proxyTransportsList,true);
-      proxyTransport=proxyTransportsList.get(ix);
-      proxySocketAddress=proxySocketAddressesList.get(ix);
+      if (connectionAddresses == null) {
+        ArrayList<InetSocketAddress> proxySocketAddressesList=new ArrayList<InetSocketAddress>();
+        ArrayList<String> proxyTransportsList=new ArrayList<String>();
+        resolveSipAddress(proxyAddressStr,proxyTransport,proxySocketAddressesList,proxyTransportsList,true);
+        connectionTransports=proxyTransportsList.toArray(new String[proxyTransportsList.size()]);
+        connectionAddresses=proxySocketAddressesList.toArray(new InetSocketAddress[proxySocketAddressesList.size()]);
+      }
+      proxyTransport=connectionTransports[ix];
+      proxySocketAddress=connectionAddresses[ix];
     }
  else {
       if (proxyAddressAndPortEntered) {
-        ArrayList<InetSocketAddress> addresses=new ArrayList<InetSocketAddress>();
-        resolveAddresses(proxyAddressStr,addresses,checkPreferIPv6Addresses(),proxyPort);
-        if (addresses.size() > ix)         proxySocketAddress=addresses.get(ix);
+        if (connectionAddresses == null) {
+          ArrayList<InetSocketAddress> addresses=new ArrayList<InetSocketAddress>();
+          resolveAddresses(proxyAddressStr,addresses,checkPreferIPv6Addresses(),proxyPort);
+          connectionAddresses=addresses.toArray(new InetSocketAddress[addresses.size()]);
+          connectionTransports=new String[addresses.size()];
+          Arrays.fill(connectionTransports,proxyTransport);
+        }
+        if (connectionAddresses.length > ix)         proxySocketAddress=connectionAddresses[ix];
       }
  else {
-        ArrayList<InetSocketAddress> proxySocketAddressesList=new ArrayList<InetSocketAddress>();
-        ArrayList<String> proxyTransportsList=new ArrayList<String>();
-        resolveSipAddress(proxyAddressStr,proxyTransport,proxySocketAddressesList,proxyTransportsList,false);
-        proxyTransport=proxyTransportsList.get(ix);
-        proxySocketAddress=proxySocketAddressesList.get(ix);
+        if (connectionAddresses == null) {
+          ArrayList<InetSocketAddress> proxySocketAddressesList=new ArrayList<InetSocketAddress>();
+          ArrayList<String> proxyTransportsList=new ArrayList<String>();
+          resolveSipAddress(proxyAddressStr,proxyTransport,proxySocketAddressesList,proxyTransportsList,false);
+          connectionTransports=proxyTransportsList.toArray(new String[proxyTransportsList.size()]);
+          connectionAddresses=proxySocketAddressesList.toArray(new InetSocketAddress[proxySocketAddressesList.size()]);
+        }
+        proxyTransport=connectionTransports[ix];
+        proxySocketAddress=connectionAddresses[ix];
       }
     }
     if (proxySocketAddress == null)     throw new UnknownHostException();
@@ -63,8 +83,22 @@
       throw new IllegalArgumentException(proxyAddressStr + " appears to be an either invalid or" + " inaccessible address.",ex);
     }
   }
+  if (connectionAddresses == null || connectionAddresses.length == 0) {
+    sipRegistrarConnection=null;
+    connectionAddresses=null;
+    connectionTransports=null;
+    fireRegistrationStateChanged(RegistrationState.UNREGISTERED,RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,"Invalid or inaccessible server address.");
+    return;
+  }
   if (proxyAddress == null) {
     return;
+  }
+  try {
+    if (this.getRegistrarConnection() != null)     this.getRegistrarConnection().setTransport(proxyTransport);
+  }
+ catch (  ParseException ex) {
+    logger.error("Failed to change a registrar connection transport " + currentConnectionAddress,ex);
+    throw new IllegalArgumentException("Failed to change a registrar connection transport " + currentConnectionAddress + ": "+ ex.getMessage());
   }
   StringBuilder proxyStringBuffer=new StringBuilder(proxyAddress.getHostAddress());
   if (proxyAddress instanceof Inet6Address) {

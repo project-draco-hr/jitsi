@@ -15,7 +15,7 @@
         for (        String[] rec : naptrRecords) {
           resolveSRV(rec[2],rec[1],resultAddresses,resultTransports,preferIPv6Addresses,true);
         }
-        if (logger.isInfoEnabled())         logger.info("Found NAPRT record and using it:" + resultAddresses);
+        if (logger.isInfoEnabled())         logger.info("Found NAPTR record and using it:" + resultAddresses);
         if (resultAddresses.size() > 0 && resultTransports.size() > 0)         return;
       }
     }
@@ -24,7 +24,19 @@
     }
   }
   try {
-    resolveSRV(address,transport,resultAddresses,resultTransports,preferIPv6Addresses,false);
+    if (resolveProtocol) {
+      String[] transports=new String[]{ListeningPoint.TLS,ListeningPoint.TCP,ListeningPoint.UDP};
+      for (      String tp : transports) {
+        resolveSRV(address,tp,resultAddresses,resultTransports,preferIPv6Addresses,false);
+        if (!resultAddresses.isEmpty()) {
+          transport=tp;
+          break;
+        }
+      }
+    }
+ else {
+      resolveSRV(address,transport,resultAddresses,resultTransports,preferIPv6Addresses,false);
+    }
   }
  catch (  ParseException e) {
     logger.error("Error parsing dns record.",e);
