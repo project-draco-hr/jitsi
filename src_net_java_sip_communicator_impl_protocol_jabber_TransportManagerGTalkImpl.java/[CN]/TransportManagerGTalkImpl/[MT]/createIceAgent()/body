@@ -7,6 +7,7 @@
   JabberAccountID accID=(JabberAccountID)provider.getAccountID();
   agent.setControlling(!peer.isInitiator());
   servers=requestJingleInfo();
+  servers.addAll(accID.getStunServers());
   for (  StunServerDescriptor desc : servers) {
     Transport transport;
     if (desc.getProtocol().equals("ssltcp")) {
@@ -45,6 +46,15 @@
     if (accID.isUseDefaultStunServer()) {
       TransportAddress addr=new TransportAddress(DEFAULT_STUN_SERVER_ADDRESS,DEFAULT_STUN_SERVER_PORT,Transport.UDP);
       StunCandidateHarvester harvester=new StunCandidateHarvester(addr);
+      if (harvester != null) {
+        agent.addCandidateHarvester(harvester);
+      }
+    }
+  }
+  if (accID.isJingleNodesRelayEnabled()) {
+    SmackServiceNode serviceNode=peer.getProtocolProvider().getJingleNodesServiceNode();
+    if (serviceNode != null) {
+      JingleNodesHarvester harvester=new JingleNodesHarvester(serviceNode);
       if (harvester != null) {
         agent.addCandidateHarvester(harvester);
       }

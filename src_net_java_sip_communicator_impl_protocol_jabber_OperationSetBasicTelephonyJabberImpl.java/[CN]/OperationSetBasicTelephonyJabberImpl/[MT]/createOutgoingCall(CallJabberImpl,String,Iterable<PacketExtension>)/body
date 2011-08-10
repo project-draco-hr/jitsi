@@ -3,6 +3,17 @@
   if (protocolProvider.getConnection() == null || call == null) {
     throw new OperationFailedException("Failed to create OutgoingJingleSession." + " We don't have a valid XMPPConnection.",OperationFailedException.INTERNAL_ERROR);
   }
+  if (calleeAddress.indexOf('@') == -1) {
+    String serviceName=null;
+    String phoneSuffix=(String)getProtocolProvider().getAccountID().getAccountProperty("OVERRIDE_PHONE_SUFFIX");
+    if (phoneSuffix == null || phoneSuffix.length() == 0) {
+      serviceName="@" + StringUtils.parseServer(getProtocolProvider().getAccountID().getUserID());
+    }
+ else {
+      serviceName="@" + phoneSuffix;
+    }
+    calleeAddress+=serviceName;
+  }
   String fullCalleeURI=null;
   DiscoverInfo di=null;
   int bestPriority=-1;
