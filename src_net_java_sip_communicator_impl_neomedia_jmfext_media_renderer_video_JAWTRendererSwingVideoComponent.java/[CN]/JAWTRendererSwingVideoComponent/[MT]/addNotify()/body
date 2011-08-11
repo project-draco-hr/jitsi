@@ -1,0 +1,30 @@
+{
+  Container parent=getParent();
+  if (parent == null)   return;
+  super.addNotify();
+  wantsPaint=true;
+synchronized (renderer.getHandleLock()) {
+    long handle=renderer.getHandle();
+    if (handle != 0) {
+      SwingVideoComponentCanvas canvas=findCanvas();
+      if (canvas == null) {
+        JAWTRenderer.addNotifyLightweightComponent(handle,this,0);
+      }
+ else {
+        long canvasHandle;
+synchronized (canvas.getHandleLock()) {
+          canvasHandle=canvas.getHandle();
+          JAWTRenderer.addNotifyLightweightComponent(handle,this,canvasHandle);
+        }
+        if ((canvasHandle != 0) && (this.canvas != canvas)) {
+          this.canvas=canvas;
+        }
+      }
+      processLightweightComponentEvent();
+    }
+  }
+  if (this.parent != parent) {
+    this.parent=parent;
+    this.parent.addComponentListener(parentComponentListener);
+  }
+}

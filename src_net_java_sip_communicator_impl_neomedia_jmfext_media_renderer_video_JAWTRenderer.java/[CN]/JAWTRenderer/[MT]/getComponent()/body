@@ -1,14 +1,35 @@
 {
   if (component == null) {
-    component=(USE_MACOSX_CALAYERS && OSUtils.IS_MAC) ? new SwingVideoComponent() : new AWTVideoComponent(){
-      protected long getHandle(){
-        return JAWTRenderer.this.handle;
-      }
-      protected Object getHandleLock(){
-        return JAWTRenderer.this;
-      }
+    StringBuilder componentClassName=new StringBuilder();
+    componentClassName.append(JAWTRenderer.class.getName());
+    if (USE_MACOSX_CALAYERS && OSUtils.IS_MAC)     componentClassName.append("Swing");
+    componentClassName.append("VideoComponent");
+    Class<?> componentClass;
+    try {
+      componentClass=Class.forName(componentClassName.toString());
     }
-;
+ catch (    ClassNotFoundException cnfe) {
+      throw new RuntimeException(cnfe);
+    }
+    Constructor<?> componentConstructor;
+    try {
+      componentConstructor=componentClass.getConstructor(JAWTRenderer.class);
+    }
+ catch (    NoSuchMethodException nsme) {
+      throw new RuntimeException(nsme);
+    }
+    try {
+      component=(Component)componentConstructor.newInstance(this);
+    }
+ catch (    IllegalAccessException iae) {
+      throw new RuntimeException(iae);
+    }
+catch (    InstantiationException ie) {
+      throw new RuntimeException(ie);
+    }
+catch (    InvocationTargetException ite) {
+      throw new RuntimeException(ite);
+    }
   }
   return component;
 }
