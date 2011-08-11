@@ -1,9 +1,35 @@
 {
   boolean transferData=false;
+  FrameRateControl frameRateControl=(FrameRateControl)dataSource.getControl(FrameRateControl.class.getName());
+  long transferDataTimeStamp=-1;
   while (Thread.currentThread().equals(transferDataThread)) {
     if (transferData) {
       BufferTransferHandler transferHandler=this.transferHandler;
-      if (transferHandler != null)       transferHandler.transferData(this);
+      if (transferHandler != null) {
+        if (frameRateControl != null) {
+          float frameRate;
+          long newTransferDataTimeStamp=System.currentTimeMillis();
+          if ((transferDataTimeStamp != -1) && ((frameRate=frameRateControl.getFrameRate()) > 0)) {
+            long minimumVideoFrameInterval=(long)(1000 / frameRate);
+            if (minimumVideoFrameInterval > 0) {
+              long t=newTransferDataTimeStamp - transferDataTimeStamp;
+              if ((t > 0) && (t < minimumVideoFrameInterval)) {
+                boolean interrupted=false;
+                try {
+                  Thread.sleep(minimumVideoFrameInterval - t);
+                }
+ catch (                InterruptedException ie) {
+                  interrupted=true;
+                }
+                if (interrupted)                 Thread.currentThread().interrupt();
+                continue;
+              }
+            }
+          }
+          transferDataTimeStamp=newTransferDataTimeStamp;
+        }
+        transferHandler.transferData(this);
+      }
 synchronized (dataSyncRoot) {
         if (data != null) {
           bufferPool.returnFreeBuffer(data);
