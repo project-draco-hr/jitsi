@@ -3,7 +3,16 @@
   if (displayName == null) {
     Contact contact=getContact();
     if (contact != null)     displayName=contact.getDisplayName();
- else     displayName=getPeerAddress().getURI().toString();
+ else {
+      URI peerURI=getPeerAddress().getURI();
+      if (peerURI instanceof SipURI) {
+        String userName=((SipURI)peerURI).getUser();
+        if (userName != null && userName.length() > 0)         displayName=userName;
+      }
+ else {
+        displayName=peerURI.toString();
+      }
+    }
   }
   if (displayName.startsWith("sip:"))   displayName=displayName.substring(4);
   return displayName;

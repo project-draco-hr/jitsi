@@ -1,7 +1,8 @@
 {
   Iterator<CallPeerRecord> recordsIter=callRecord.getPeerRecords().iterator();
   while (recordsIter.hasNext()) {
-    String peerAddress=recordsIter.next().getPeerAddress();
+    CallPeerRecord peerRecord=recordsIter.next();
+    String peerAddress=peerRecord.getPeerAddress();
     if (peerAddress != null) {
       ContactDetail contactDetail=new ContactDetail(peerAddress);
       Map<Class<? extends OperationSet>,ProtocolProviderService> preferredProviders=null;
@@ -11,13 +12,6 @@
         preferredProviders=new Hashtable<Class<? extends OperationSet>,ProtocolProviderService>();
         OperationSetPresence opSetPres=preferredProvider.getOperationSet(OperationSetPresence.class);
         Contact contact=opSetPres.findContactByID(peerAddress);
-        if (contact != null) {
-          String contactDisplayName=contact.getDisplayName();
-          if (displayName == null || displayName.length() <= 0) {
-            if (callRecord.getPeerRecords().size() > 1)             displayName="Conference " + contactDisplayName;
- else             displayName=contactDisplayName;
-          }
-        }
         OperationSetContactCapabilities opSetCaps=preferredProvider.getOperationSet(OperationSetContactCapabilities.class);
         if (opSetCaps != null && opSetPres != null) {
           if (contact != null && opSetCaps.getOperationSet(contact,OperationSetBasicTelephony.class) != null) {
@@ -40,8 +34,10 @@
       }
       contactDetail.setSupportedOpSets(supportedOpSets);
       contactDetails.add(contactDetail);
-      if (displayName == null || displayName.length() <= 0)       if (callRecord.getPeerRecords().size() > 1)       displayName="Conference " + peerAddress;
- else       displayName=peerAddress;
+      String name=peerRecord.getDisplayName();
+      if (name == null || name.length() <= 0)       name=peerAddress;
+      if (displayName == null || displayName.length() <= 0)       if (callRecord.getPeerRecords().size() > 1)       displayName="Conference " + name;
+ else       displayName=name;
     }
   }
 }
