@@ -28,7 +28,7 @@
     calleeURI=presence.getFrom();
     try {
       DiscoverInfo discoverInfo=protocolProvider.getDiscoveryManager().discoverInfo(calleeURI);
-      if (discoverInfo.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE)) {
+      if (discoverInfo != null && discoverInfo.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE)) {
         if (priority > bestPriority) {
           bestPriority=priority;
           di=discoverInfo;
@@ -36,10 +36,12 @@
         }
       }
  else {
-        if (!protocolProvider.isGTalkTesting()) {
+        AccountID accountID=getProtocolProvider().getAccountID();
+        String bypassDomain=accountID.getAccountPropertyString("TELEPHONY_BYPASS_GTALK_CAPS");
+        boolean alwaysCallGtalk=(bypassDomain != null) && bypassDomain.equals(calleeAddress.substring(calleeAddress.indexOf('@') + 1));
+        if (!protocolProvider.isGTalkTesting() && !alwaysCallGtalk) {
           continue;
         }
-        boolean alwaysCallGtalk=getProtocolProvider().getAccountID().getAccountPropertyBoolean("BYPASS_GTALK_CAPABILITIES",false);
         if (getProtocolProvider().isExtFeatureListSupported(calleeURI,ProtocolProviderServiceJabberImpl.CAPS_GTALK_WEB_VOICE) || alwaysCallGtalk) {
           if (priority > bestPriorityGTalk) {
             bestPriorityGTalk=priority;
