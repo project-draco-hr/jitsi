@@ -1,0 +1,27 @@
+{
+  if (dBusSignal instanceof DBus.NameOwnerChanged) {
+    DBus.NameOwnerChanged nameOwnerChanged=(DBus.NameOwnerChanged)dBusSignal;
+    if (nameOwnerChanged.name.equals(NetworkManager.class.getName())) {
+      boolean b1=nameOwnerChanged.old_owner != null && nameOwnerChanged.old_owner.length() > 0;
+      boolean b2=nameOwnerChanged.new_owner != null && nameOwnerChanged.new_owner.length() > 0;
+      if (b1 && !b2) {
+        SystemActivityEvent evt=new SystemActivityEvent(SysActivityActivator.getSystemActivityService(),SystemActivityEvent.EVENT_NETWORK_CHANGE);
+        SysActivityActivator.getSystemActivityService().fireSystemActivityEvent(evt);
+      }
+    }
+  }
+ else   if (dBusSignal instanceof NetworkManager.StateChange) {
+    NetworkManager.StateChange stateChange=(NetworkManager.StateChange)dBusSignal;
+    SystemActivityEvent evt=null;
+switch (stateChange.getStatus()) {
+case NetworkManager.NM_STATE_CONNECTED:
+case NetworkManager.NM_STATE_DISCONNECTED:
+      evt=new SystemActivityEvent(SysActivityActivator.getSystemActivityService(),SystemActivityEvent.EVENT_NETWORK_CHANGE);
+    break;
+case NetworkManager.NM_STATE_ASLEEP:
+  evt=new SystemActivityEvent(SysActivityActivator.getSystemActivityService(),SystemActivityEvent.EVENT_SLEEP);
+break;
+}
+if (evt != null) SysActivityActivator.getSystemActivityService().fireSystemActivityEvent(evt);
+}
+}

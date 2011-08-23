@@ -1,0 +1,20 @@
+{
+  for (  ProtocolProviderService protocolProviderService : GeneralConfigPluginActivator.getProtocolProviders()) {
+    OperationSetPresence presence=protocolProviderService.getOperationSet(OperationSetPresence.class);
+    PresenceStatus status=presence.getPresenceStatus();
+    if (status.getStatus() < PresenceStatus.AVAILABLE_THRESHOLD) {
+      continue;
+    }
+    lastStates.put(protocolProviderService,status);
+    PresenceStatus newStatus=StatusUpdateThread.findAwayStatus(presence);
+    try {
+      if (newStatus != null)       presence.publishPresenceStatus(newStatus,newStatus.getStatusName());
+    }
+ catch (    IllegalArgumentException e) {
+    }
+catch (    IllegalStateException e) {
+    }
+catch (    OperationFailedException e) {
+    }
+  }
+}

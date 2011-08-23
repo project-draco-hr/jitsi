@@ -1,0 +1,18 @@
+{
+  running=true;
+  Thread notifystartThread=new Thread(new Runnable(){
+    public void run(){
+      SystemActivityNotifications.setDelegate(SystemActivityNotificationsServiceImpl.this);
+      SystemActivityNotifications.start();
+    }
+  }
+,"SystemActivityNotificationsServiceImpl");
+  notifystartThread.setDaemon(true);
+  notifystartThread.start();
+  Thread idleNotifyThread=new Thread(this,"SystemActivityNotificationsServiceImpl.IdleNotifyThread");
+  idleNotifyThread.setDaemon(true);
+  idleNotifyThread.start();
+  if (OSUtils.IS_LINUX) {
+    NetworkManagerListenerImpl.getInstance().start();
+  }
+}
