@@ -1,13 +1,18 @@
 {
-  if (columnIndex != 0)   throw new IllegalArgumentException("non editable column!");
+  if (columnIndex != 0 || columnIndex != 2)   throw new IllegalArgumentException("non editable column!");
   GoogleContactsConfigForm.RefreshContactSourceThread th=null;
   GoogleContactsConnectionImpl cnx=getAccountAt(rowIndex);
-  if (cnx.isEnabled()) {
-    th=new GoogleContactsConfigForm.RefreshContactSourceThread(cnx,null);
-  }
+  if (columnIndex == 0) {
+    if (cnx.isEnabled()) {
+      th=new GoogleContactsConfigForm.RefreshContactSourceThread(cnx,null);
+    }
  else {
-    th=new GoogleContactsConfigForm.RefreshContactSourceThread(null,cnx);
+      th=new GoogleContactsConfigForm.RefreshContactSourceThread(null,cnx);
+    }
+    cnx.setEnabled(!cnx.isEnabled());
+    th.start();
   }
-  cnx.setEnabled(!cnx.isEnabled());
-  th.start();
+ else   if (columnIndex == 2) {
+    cnx.setPrefix(aValue.toString());
+  }
 }

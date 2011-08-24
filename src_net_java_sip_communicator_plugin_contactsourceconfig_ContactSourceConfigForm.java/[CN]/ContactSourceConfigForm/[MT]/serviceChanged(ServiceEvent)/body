@@ -1,0 +1,20 @@
+{
+  ServiceReference serviceRef=event.getServiceReference();
+  Object property=serviceRef.getProperty(ConfigurationForm.FORM_TYPE);
+  if (property != ConfigurationForm.CONTACT_SOURCE_TYPE)   return;
+  Object sService=ContactSourceConfigActivator.bundleContext.getService(serviceRef);
+  if (!(sService instanceof ConfigurationForm))   return;
+  ConfigurationForm configForm=(ConfigurationForm)sService;
+  if (!configForm.isAdvanced())   return;
+  Object formComponent;
+switch (event.getType()) {
+case ServiceEvent.REGISTERED:
+    formComponent=configForm.getForm();
+  if (formComponent instanceof Component)   addConfigForm(configForm);
+break;
+case ServiceEvent.UNREGISTERING:
+formComponent=configForm.getForm();
+if (formComponent instanceof Component) remove((Component)formComponent);
+break;
+}
+}
