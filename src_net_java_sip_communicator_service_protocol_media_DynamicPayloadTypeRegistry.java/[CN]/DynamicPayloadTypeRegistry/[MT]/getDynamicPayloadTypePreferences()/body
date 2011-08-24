@@ -1,0 +1,34 @@
+{
+  if (mediaMappings == null) {
+    Map<MediaFormat,Byte> mappings=new HashMap<MediaFormat,Byte>(ProtocolMediaActivator.getMediaService().getDynamicPayloadTypePreferences());
+    if (overridePayloadTypeMappings == null)     return mappings;
+    for (    Map.Entry<Byte,String> e : this.overridePayloadTypeMappings.entrySet()) {
+      Byte key=e.getKey();
+      String fmt=e.getValue();
+      MediaFormat saveFmt=null;
+      Byte saveKey=null;
+      Byte replaceKey=null;
+      MediaFormat replaceFmt=null;
+      for (      Map.Entry<MediaFormat,Byte> e2 : mappings.entrySet()) {
+        if (e2.getKey().getEncoding().equals(fmt)) {
+          saveFmt=e2.getKey();
+          saveKey=e2.getValue();
+          if (replaceKey != null)           break;
+        }
+        if (e2.getValue().byteValue() == key.byteValue()) {
+          replaceFmt=e2.getKey();
+          replaceKey=key;
+          if (saveKey != null)           break;
+        }
+      }
+      if (saveFmt != null) {
+        mappings.remove(saveFmt);
+        if (replaceFmt != null)         mappings.remove(replaceFmt);
+        mappings.put(saveFmt,key);
+        if (replaceFmt != null)         mappings.put(replaceFmt,saveKey);
+      }
+    }
+    mediaMappings=mappings;
+  }
+  return mediaMappings;
+}

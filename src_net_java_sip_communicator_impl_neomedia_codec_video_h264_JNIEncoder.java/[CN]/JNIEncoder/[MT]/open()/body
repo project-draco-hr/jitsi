@@ -6,6 +6,24 @@
   Dimension size=outputVideoFormat.getSize();
   int width=size.width;
   int height=size.height;
+  boolean useIntraRefresh=true;
+  boolean useCustomProfile=false;
+  String customProfile=null;
+  if (additionalSettings != null) {
+    for (    Map.Entry<String,String> entry : additionalSettings.entrySet()) {
+      String key=entry.getKey();
+      String value=entry.getValue();
+      if (key.equals("h264.intrarefresh") && value.equals("false")) {
+        useIntraRefresh=false;
+      }
+ else       if (key.equals("h264.profile")) {
+        if (value.equals(MAIN_PROFILE) || value.equals(BASELINE_PROFILE)) {
+          useCustomProfile=true;
+          customProfile=value;
+        }
+      }
+    }
+  }
   long avcodec=FFmpeg.avcodec_find_encoder(FFmpeg.CODEC_ID_H264);
   avctx=FFmpeg.avcodec_alloc_context();
   FFmpeg.avcodeccontext_set_pix_fmt(avctx,FFmpeg.PIX_FMT_YUV420P);
@@ -26,7 +44,7 @@
   FFmpeg.avcodeccontext_set_mb_decision(avctx,FFmpeg.FF_MB_DECISION_SIMPLE);
   FFmpeg.avcodeccontext_set_rc_eq(avctx,"blurCplx^(1-qComp)");
   FFmpeg.avcodeccontext_add_flags(avctx,FFmpeg.CODEC_FLAG_LOOP_FILTER);
-  FFmpeg.avcodeccontext_add_flags2(avctx,FFmpeg.CODEC_FLAG2_INTRA_REFRESH);
+  if (useIntraRefresh)   FFmpeg.avcodeccontext_add_flags2(avctx,FFmpeg.CODEC_FLAG2_INTRA_REFRESH);
   FFmpeg.avcodeccontext_set_me_method(avctx,7);
   FFmpeg.avcodeccontext_set_me_subpel_quality(avctx,2);
   FFmpeg.avcodeccontext_set_me_range(avctx,16);
@@ -43,6 +61,9 @@
   }
   ConfigurationService configuration=NeomediaActivator.getConfigurationService();
   String profile=(configuration == null) ? null : configuration.getString(DEFAULT_PROFILE_PNAME,DEFAULT_DEFAULT_PROFILE);
+  if (useCustomProfile) {
+    profile=customProfile;
+  }
   try {
     FFmpeg.avcodeccontext_set_profile(avctx,BASELINE_PROFILE.equalsIgnoreCase(profile) ? FFmpeg.FF_PROFILE_H264_BASELINE : FFmpeg.FF_PROFILE_H264_MAIN);
   }
