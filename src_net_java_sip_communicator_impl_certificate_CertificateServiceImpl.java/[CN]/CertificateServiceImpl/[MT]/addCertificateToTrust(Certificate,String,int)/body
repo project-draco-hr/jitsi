@@ -1,12 +1,17 @@
 {
+  String propName=PNAME_CERT_TRUST_PREFIX + ".param." + trustFor;
+  String thumbprint=getThumbprint(cert,THUMBPRINT_HASH_ALGORITHM);
 switch (trustMode) {
 case DO_NOT_TRUST:
     throw new IllegalArgumentException("Cannot add a certificate to trust when " + "no trust is requested.");
 case TRUST_ALWAYS:
-  config.setProperty(PNAME_CERT_TRUST_PREFIX + ".param." + trustFor,getThumbprint(cert,THUMBPRINT_HASH_ALGORITHM));
+  String current=config.getString(propName);
+String newValue=thumbprint;
+if (current != null) newValue+="," + thumbprint;
+config.setProperty(propName,newValue);
 break;
 case TRUST_THIS_SESSION_ONLY:
-sessionAllowedCertificates.put(PNAME_CERT_TRUST_PREFIX + ".param." + trustFor,getThumbprint(cert,THUMBPRINT_HASH_ALGORITHM));
+getSessionCertEntry(propName).add(thumbprint);
 break;
 }
 }

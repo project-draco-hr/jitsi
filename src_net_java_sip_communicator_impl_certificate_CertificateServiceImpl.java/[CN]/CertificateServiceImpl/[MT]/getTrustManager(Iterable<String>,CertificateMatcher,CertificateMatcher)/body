@@ -40,40 +40,49 @@
       }
  catch (      CertificateException e) {
         String thumbprint=getThumbprint(chain[0],THUMBPRINT_HASH_ALGORITHM);
-        String propName=null;
         String message=null;
-        String storedCert=null;
+        List<String> propNames=new LinkedList<String>();
+        List<String> storedCerts=new LinkedList<String>();
         String appName=R.getSettingsString("service.gui.APPLICATION_NAME");
         if (identitiesToTest == null || !identitiesToTest.iterator().hasNext()) {
-          propName=PNAME_CERT_TRUST_PREFIX + ".server." + thumbprint;
+          String propName=PNAME_CERT_TRUST_PREFIX + ".server." + thumbprint;
+          propNames.add(propName);
           message=R.getI18NString("service.gui." + "CERT_DIALOG_DESCRIPTION_TXT_NOHOST",new String[]{appName});
-          storedCert=config.getString(propName);
-          if (storedCert == null)           storedCert=sessionAllowedCertificates.get(propName);
+          String hashes=config.getString(propName);
+          if (hashes != null)           for (          String h : hashes.split(","))           storedCerts.add(h);
+          List<String> sessionCerts=sessionAllowedCertificates.get(propName);
+          if (sessionCerts != null)           storedCerts.addAll(sessionCerts);
         }
  else {
-          for (          String identity : identitiesToTest) {
-            if (serverCheck) {
-              message=R.getI18NString("service.gui." + "CERT_DIALOG_DESCRIPTION_TXT",new String[]{appName,identitiesToTest.toString()});
-              propName=PNAME_CERT_TRUST_PREFIX + ".param." + identity;
-            }
+          if (serverCheck) {
+            message=R.getI18NString("service.gui." + "CERT_DIALOG_DESCRIPTION_TXT",new String[]{appName,identitiesToTest.toString()});
+          }
  else {
-              message=R.getI18NString("service.gui." + "CERT_DIALOG_PEER_DESCRIPTION_TXT",new String[]{appName,identitiesToTest.toString()});
-              propName=PNAME_CERT_TRUST_PREFIX + ".param." + identity;
-            }
-            storedCert=config.getString(propName);
-            if (storedCert == null)             storedCert=sessionAllowedCertificates.get(propName);
-            if (storedCert != null)             break;
+            message=R.getI18NString("service.gui." + "CERT_DIALOG_PEER_DESCRIPTION_TXT",new String[]{appName,identitiesToTest.toString()});
+          }
+          for (          String identity : identitiesToTest) {
+            String propName=PNAME_CERT_TRUST_PREFIX + ".param." + identity;
+            propNames.add(propName);
+            String hashes=config.getString(propName);
+            if (hashes != null)             for (            String h : hashes.split(","))             storedCerts.add(h);
+            List<String> sessionCerts=sessionAllowedCertificates.get(propName);
+            if (sessionCerts != null)             storedCerts.addAll(sessionCerts);
           }
         }
-        if (!thumbprint.equals(storedCert)) {
+        if (!storedCerts.contains(thumbprint)) {
 switch (verify(chain,message)) {
 case DO_NOT_TRUST:
             throw new CertificateException("The peer provided certificate with Subject <" + chain[0].getSubjectDN() + "> is not trusted");
 case TRUST_ALWAYS:
-          config.setProperty(propName,thumbprint);
+          for (          String propName : propNames) {
+            String current=config.getString(propName);
+            String newValue=thumbprint;
+            if (current != null)             newValue+="," + current;
+            config.setProperty(propName,newValue);
+          }
         break;
 case TRUST_THIS_SESSION_ONLY:
-      sessionAllowedCertificates.put(propName,thumbprint);
+      for (      String propName : propNames)       getSessionCertEntry(propName).add(thumbprint);
     break;
 }
 }
