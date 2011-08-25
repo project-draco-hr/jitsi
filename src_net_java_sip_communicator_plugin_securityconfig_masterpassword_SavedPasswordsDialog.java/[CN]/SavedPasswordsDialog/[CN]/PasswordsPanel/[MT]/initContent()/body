@@ -1,0 +1,19 @@
+{
+  PasswordsTableModel model=(PasswordsTableModel)accountsTable.getModel();
+  for (  Map.Entry<AccountID,String> entry : SecurityConfigActivator.getAccountIDsWithSavedPasswords().entrySet()) {
+    AccountID accID=entry.getKey();
+    String protocol=accID.getAccountPropertyString(ProtocolProviderFactory.PROTOCOL);
+    if (protocol == null)     protocol=resources.getI18NString("plugin.securityconfig.masterpassword.PROTOCOL_UNKNOWN");
+    model.savedPasswords.add(new PasswordsTableRow(entry.getValue(),protocol,accID.getUserID()));
+  }
+  String PROVISIONING_PROPERTIES_PREFIX="net.java.sip.communicator.plugin.provisioning.auth";
+  ConfigurationService configurationService=SecurityConfigActivator.getConfigurationService();
+  String uname=configurationService.getString(PROVISIONING_PROPERTIES_PREFIX + ".USERNAME");
+  model.savedPasswords.add(new PasswordsTableRow(PROVISIONING_PROPERTIES_PREFIX,resources.getI18NString("plugin.provisioning.PROVISIONING"),uname));
+  String HTTP_PROPERTIES_PREFIX="net.java.sip.communicator.util.http.credential";
+  List<String> httpPasses=configurationService.getPropertyNamesByPrefix(HTTP_PROPERTIES_PREFIX,false);
+  for (  String prop : httpPasses) {
+    if (prop.contains("PASSWORD"))     continue;
+    model.savedPasswords.add(new PasswordsTableRow(prop,"http://" + prop.substring(HTTP_PROPERTIES_PREFIX.length() + 1),configurationService.getString(prop)));
+  }
+}

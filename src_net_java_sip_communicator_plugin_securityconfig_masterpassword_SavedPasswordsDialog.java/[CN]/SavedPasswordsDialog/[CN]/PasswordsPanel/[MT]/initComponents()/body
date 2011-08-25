@@ -1,0 +1,75 @@
+{
+  setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED),resources.getI18NString("plugin.securityconfig.masterpassword.STORED_ACCOUNT_PASSWORDS")));
+  this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+  accountsTable=new JTable();
+  accountsTable.setModel(new PasswordsTableModel());
+  accountsTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+  accountsTable.setCellSelectionEnabled(false);
+  accountsTable.setColumnSelectionAllowed(false);
+  accountsTable.setRowSelectionAllowed(true);
+  accountsTable.getColumnModel().getColumn(PasswordsTableModel.USER_NAME_INDEX).setPreferredWidth(270);
+  accountsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
+    public void valueChanged(    ListSelectionEvent e){
+      if (e.getValueIsAdjusting())       return;
+      removeButton.setEnabled(true);
+    }
+  }
+);
+  JScrollPane pnlAccounts=new JScrollPane(accountsTable);
+  this.add(pnlAccounts);
+  JPanel pnlButtons=new TransparentPanel();
+  pnlButtons.setLayout(new BorderLayout());
+  this.add(pnlButtons);
+  JPanel leftButtons=new TransparentPanel();
+  pnlButtons.add(leftButtons,BorderLayout.WEST);
+  removeButton=new JButton(resources.getI18NString("plugin.securityconfig.masterpassword.REMOVE_PASSWORD_BUTTON"));
+  removeButton.setEnabled(false);
+  removeButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent arg0){
+      PasswordsTableRow selectedRow=getSelectedAccountID();
+      if (selectedRow != null) {
+        PasswordsTableModel model=(PasswordsTableModel)accountsTable.getModel();
+        removeSavedPassword(selectedRow.property);
+        model.savedPasswords.remove(selectedRow);
+        int selectedRowIx=accountsTable.getSelectedRow();
+        model.fireTableRowsDeleted(selectedRowIx,selectedRowIx);
+      }
+    }
+  }
+);
+  leftButtons.add(removeButton);
+  removeAllButton=new JButton(resources.getI18NString("plugin.securityconfig.masterpassword.REMOVE_ALL_PASSWORDS_BUTTON"));
+  removeAllButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent arg0){
+      PasswordsTableModel model=(PasswordsTableModel)accountsTable.getModel();
+      if (model.savedPasswords.isEmpty()) {
+        return;
+      }
+      int answer=SecurityConfigActivator.getUIService().getPopupDialog().showConfirmPopupDialog(resources.getI18NString("plugin.securityconfig.masterpassword.REMOVE_ALL_CONFIRMATION"),resources.getI18NString("plugin.securityconfig.masterpassword.REMOVE_ALL_TITLE"),PopupDialog.YES_NO_OPTION);
+      if (answer == PopupDialog.YES_OPTION) {
+        for (        PasswordsTableRow row : model.savedPasswords) {
+          removeSavedPassword(row.property);
+        }
+        model.savedPasswords.clear();
+        model.fireTableDataChanged();
+      }
+    }
+  }
+);
+  leftButtons.add(removeAllButton);
+  JPanel rightButtons=new TransparentPanel();
+  pnlButtons.add(rightButtons,BorderLayout.EAST);
+  showPasswordsButton=new JButton(resources.getI18NString("plugin.securityconfig.masterpassword.SHOW_PASSWORDS_BUTTON"));
+  showPasswordsButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent arg0){
+      if (credentialsStorageService.isUsingMasterPassword() && !showPasswords) {
+        showOrHidePasswordsProtected();
+      }
+ else {
+        showOrHidePasswords();
+      }
+    }
+  }
+);
+  rightButtons.add(showPasswordsButton);
+}
