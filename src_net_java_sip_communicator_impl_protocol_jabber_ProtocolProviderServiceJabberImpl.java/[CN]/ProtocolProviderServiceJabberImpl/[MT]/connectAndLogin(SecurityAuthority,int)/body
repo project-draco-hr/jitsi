@@ -47,11 +47,14 @@ synchronized (initializationLock) {
           if (resource == null || resource.length() == 0)           resource=defaultResource;
         }
       }
+      boolean isServerOverriden=getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.IS_SERVER_OVERRIDDEN,false);
       try {
-        SRVRecord srvRecords[]=NetworkUtils.getSRVRecords("xmpp-client","tcp",serviceName);
-        if (srvRecords != null) {
-          for (int i=0; i < srvRecords.length; i++) {
-            serverAddresses.add(srvRecords[i].getTarget());
+        if (!isServerOverriden) {
+          SRVRecord srvRecords[]=NetworkUtils.getSRVRecords("xmpp-client","tcp",serviceName);
+          if (srvRecords != null) {
+            for (int i=0; i < srvRecords.length; i++) {
+              serverAddresses.add(srvRecords[i].getTarget());
+            }
           }
         }
         InetSocketAddress addressObj4=null;

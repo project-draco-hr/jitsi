@@ -1,8 +1,9 @@
 {
   while (running) {
     try {
+      long idleTime=0;
       if (idleChangeListeners.size() > 0) {
-        long idleTime=SystemActivityNotifications.getLastInput();
+        idleTime=SystemActivityNotifications.getLastInput();
         if (idleTime < idleStateCheckDelay && listenersInIdleState.size() > 0) {
           for (          SystemActivityChangeListener l : listenersInIdleState) {
             fireSystemIdleEndEvent(l);
@@ -10,11 +11,23 @@
           listenersInIdleState.clear();
         }
         for (        Map.Entry<SystemActivityChangeListener,Long> entry : idleChangeListeners.entrySet()) {
-          if (entry.getValue().longValue() <= idleTime) {
+          if (entry.getValue() <= idleTime) {
             fireSystemIdleEvent(entry.getKey());
             listenersInIdleState.add(entry.getKey());
           }
         }
+      }
+      if (listenersInIdleState.size() > 0) {
+        idleStateCheckDelay=CHECK_FOR_IDLE_WHEN_IDLE;
+      }
+ else       if (idleTime != 0) {
+        long minIdleSetting=Collections.min(idleChangeListeners.values());
+        int newSetting=(int)(minIdleSetting - idleTime) + 1000;
+        if (newSetting > 0)         idleStateCheckDelay=newSetting;
+ else         idleStateCheckDelay=CHECK_FOR_IDLE_DEFAULT;
+      }
+ else {
+        idleStateCheckDelay=CHECK_FOR_IDLE_DEFAULT;
       }
 synchronized (this) {
         this.wait(idleStateCheckDelay);
