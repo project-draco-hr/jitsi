@@ -1,0 +1,30 @@
+{
+  final File f=new File(entry.getKeyStore());
+  final KeyStoreType kt=entry.getKeyStoreType();
+  if ("PKCS11".equals(kt.getName())) {
+    String config="name=" + f.getName() + "\nlibrary="+ f.getAbsoluteFile();
+    Provider p=new sun.security.pkcs11.SunPKCS11(new ByteArrayInputStream(config.getBytes()));
+    Security.insertProviderAt(p,0);
+  }
+  KeyStore.Builder ksBuilder=KeyStore.Builder.newInstance(kt.getName(),null,f,new KeyStore.CallbackHandlerProtection(new CallbackHandler(){
+    public void handle(    Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+      for (      Callback cb : callbacks) {
+        if (!(cb instanceof PasswordCallback))         throw new UnsupportedCallbackException(cb);
+        PasswordCallback pwcb=(PasswordCallback)cb;
+        if (entry.isSavePassword()) {
+          pwcb.setPassword(entry.getKeyStorePassword().toCharArray());
+          return;
+        }
+ else {
+          AuthenticationWindow aw=new AuthenticationWindow(null,f.getName(),null,kt.getName(),false,null);
+          aw.setAllowSavePassword(false);
+          aw.setVisible(true);
+          if (!aw.isCanceled())           pwcb.setPassword(aw.getPassword());
+ else           throw new IOException("User cancel");
+        }
+      }
+    }
+  }
+));
+  return ksBuilder;
+}

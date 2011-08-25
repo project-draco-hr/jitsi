@@ -1,0 +1,26 @@
+{
+  List<CertificateConfigEntry> map=new LinkedList<CertificateConfigEntry>();
+  for (  String propName : config.getPropertyNamesByPrefix(PNAME_CLIENTAUTH_CERTCONFIG_BASE,false)) {
+    String propValue=config.getString(propName);
+    if (propValue == null || !propName.endsWith(propValue))     continue;
+    String pnBase=PNAME_CLIENTAUTH_CERTCONFIG_BASE + "." + propValue;
+    CertificateConfigEntry e=new CertificateConfigEntry();
+    e.setId(propValue);
+    e.setAlias(config.getString(pnBase + ".alias"));
+    e.setDisplayName(config.getString(pnBase + ".displayName"));
+    e.setKeyStore(config.getString(pnBase + ".keyStore"));
+    e.setSavePassword(config.getBoolean(pnBase + ".savePassword",false));
+    if (e.isSavePassword()) {
+      e.setKeyStorePassword(credService.loadPassword(pnBase));
+    }
+    String type=config.getString(pnBase + ".keyStoreType");
+    for (    KeyStoreType kt : getSupportedKeyStoreTypes()) {
+      if (kt.getName().equals(type)) {
+        e.setKeyStoreType(kt);
+        break;
+      }
+    }
+    map.add(e);
+  }
+  return map;
+}

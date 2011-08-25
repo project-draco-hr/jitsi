@@ -1,0 +1,20 @@
+{
+  if (e.getStateChange() != ItemEvent.SELECTED)   return;
+  if (e.getSource() == cboKeyStoreTypes) {
+    KeyStoreType kt=(KeyStoreType)cboKeyStoreTypes.getSelectedItem();
+    if (kt == null)     return;
+    try {
+      if (!"PKCS11".equals(kt.getName()))       chkSavePassword.setEnabled(true);
+      txtKeyStorePassword.setEditable(kt.hasKeyStorePassword() && chkSavePassword.isSelected());
+      keyStore=loadKeyStore();
+      loadAliases();
+    }
+ catch (    KeyStoreException ex) {
+      cboAlias.removeAllItems();
+      showGenericError("plugin.certconfig.INVALID_KEYSTORE_TYPE",ex);
+    }
+  }
+  if (e.getSource() == cboAlias) {
+    cmdShowCert.setEnabled(cboAlias.getSelectedItem() != null);
+  }
+}

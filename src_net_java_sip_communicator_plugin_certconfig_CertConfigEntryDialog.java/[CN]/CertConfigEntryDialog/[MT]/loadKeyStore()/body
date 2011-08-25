@@ -1,0 +1,34 @@
+{
+  final File f=new File(txtKeyStore.getText());
+  final KeyStoreType kt=(KeyStoreType)cboKeyStoreTypes.getSelectedItem();
+  if ("PKCS11".equals(kt.getName())) {
+    String config="name=" + f.getName() + "\nlibrary="+ f.getAbsoluteFile();
+    Provider p=new sun.security.pkcs11.SunPKCS11(new ByteArrayInputStream(config.getBytes()));
+    Security.insertProviderAt(p,0);
+  }
+  KeyStore.Builder ksBuilder=KeyStore.Builder.newInstance(kt.getName(),null,f,new KeyStore.CallbackHandlerProtection(new CallbackHandler(){
+    public void handle(    Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+      for (      Callback cb : callbacks) {
+        if (!(cb instanceof PasswordCallback))         throw new UnsupportedCallbackException(cb);
+        PasswordCallback pwcb=(PasswordCallback)cb;
+        if ((txtKeyStorePassword.getPassword() != null && txtKeyStorePassword.getPassword().length > 0) || chkSavePassword.isSelected()) {
+          pwcb.setPassword(txtKeyStorePassword.getPassword());
+          return;
+        }
+        AuthenticationWindow aw=new AuthenticationWindow(CertConfigEntryDialog.this,f.getName(),null,kt.getName(),false,null);
+        aw.setAllowSavePassword(!"PKCS11".equals(kt.getName()));
+        aw.setVisible(true);
+        if (!aw.isCanceled()) {
+          pwcb.setPassword(aw.getPassword());
+          if (!"PKCS11".equals(kt.getName()) && aw.isRememberPassword()) {
+            txtKeyStorePassword.setText(new String(aw.getPassword()));
+          }
+          chkSavePassword.setSelected(aw.isRememberPassword());
+        }
+ else         throw new IOException("User cancel");
+      }
+    }
+  }
+));
+  return ksBuilder.getKeyStore();
+}
