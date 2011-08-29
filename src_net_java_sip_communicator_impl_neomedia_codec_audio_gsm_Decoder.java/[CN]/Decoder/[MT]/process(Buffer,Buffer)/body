@@ -1,0 +1,53 @@
+{
+  byte[] inputContent=new byte[inputBuffer.getLength()];
+  System.arraycopy(inputBuffer.getData(),inputBuffer.getOffset(),inputContent,0,inputContent.length);
+  byte[] mergedContent=mergeArrays((byte[])innerBuffer.getData(),inputContent);
+  innerBuffer.setData(mergedContent);
+  innerBuffer.setLength(mergedContent.length);
+  innerDataLength=innerBuffer.getLength();
+  if (TRACE)   dump("input ",inputBuffer);
+  if (!checkInputBuffer(inputBuffer)) {
+    return BUFFER_PROCESSED_FAILED;
+  }
+  if (isEOM(inputBuffer)) {
+    propagateEOM(outputBuffer);
+    return BUFFER_PROCESSED_OK;
+  }
+  if (TRACE)   dump("input ",inputBuffer);
+  if (!checkInputBuffer(inputBuffer)) {
+    return BUFFER_PROCESSED_FAILED;
+  }
+  if (isEOM(inputBuffer)) {
+    propagateEOM(outputBuffer);
+    return BUFFER_PROCESSED_OK;
+  }
+  final int result;
+  byte[] outputBufferData=(byte[])outputBuffer.getData();
+  if (outputBufferData == null || outputBufferData.length < PCM_BYTES * innerBuffer.getLength() / GSM_BYTES) {
+    outputBufferData=new byte[PCM_BYTES * (innerBuffer.getLength() / GSM_BYTES)];
+    outputBuffer.setData(outputBufferData);
+  }
+  if (innerBuffer.getLength() < GSM_BYTES) {
+    result=OUTPUT_BUFFER_NOT_FILLED;
+  }
+ else {
+    final boolean bigEndian=((AudioFormat)outputFormat).getEndian() == AudioFormat.BIG_ENDIAN;
+    outputBufferData=new byte[PCM_BYTES * (innerBuffer.getLength() / GSM_BYTES)];
+    outputBuffer.setData(outputBufferData);
+    outputBuffer.setLength(PCM_BYTES * (innerBuffer.getLength() / GSM_BYTES));
+    GSMDecoderUtil.gsmDecode(bigEndian,(byte[])innerBuffer.getData(),inputBuffer.getOffset(),innerBuffer.getLength(),outputBufferData);
+    outputBuffer.setFormat(outputFormat);
+    result=BUFFER_PROCESSED_OK;
+    byte[] temp=new byte[innerDataLength - (innerDataLength / GSM_BYTES) * GSM_BYTES];
+    innerContent=(byte[])innerBuffer.getData();
+    System.arraycopy(innerContent,(innerDataLength / GSM_BYTES) * GSM_BYTES,temp,0,temp.length);
+    outputBuffer.setOffset(0);
+    innerBuffer.setLength(temp.length);
+    innerBuffer.setData(temp);
+  }
+  if (TRACE) {
+    dump("input ",inputBuffer);
+    dump("output",outputBuffer);
+  }
+  return result;
+}
