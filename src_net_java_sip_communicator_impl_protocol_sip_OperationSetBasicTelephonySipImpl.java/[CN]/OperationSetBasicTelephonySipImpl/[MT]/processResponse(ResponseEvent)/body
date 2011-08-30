@@ -68,9 +68,15 @@ logger.error("Received a forward with no Contact " + "destination: " + response.
 callPeer.setState(CallPeerState.FAILED,response.getReasonPhrase());
 return true;
 }
+Address redirectAddress=contactHeader.getAddress();
+if (callPeer.getPeerAddress().getURI().equals(redirectAddress.getURI())) {
+logger.error("Redirect loop detected for: " + callPeer.getPeerAddress().getURI());
+callPeer.setState(CallPeerState.FAILED,"Redirect loop detected for: " + callPeer.getPeerAddress().getURI());
+return true;
+}
 CallSipImpl call=callPeer.getCall();
 try {
-call.invite(contactHeader.getAddress(),null);
+call.invite(redirectAddress,null);
 }
  catch (OperationFailedException exc) {
 logger.error("Call forward failed for address " + contactHeader.getAddress(),exc);
