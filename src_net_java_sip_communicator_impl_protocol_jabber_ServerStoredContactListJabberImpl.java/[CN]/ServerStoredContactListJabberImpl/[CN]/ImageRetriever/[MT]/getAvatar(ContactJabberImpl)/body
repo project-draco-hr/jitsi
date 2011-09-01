@@ -1,15 +1,22 @@
 {
+  byte[] result;
   try {
     XMPPConnection connection=jabberProvider.getConnection();
     if (connection == null || !connection.isAuthenticated())     return null;
     VCard card=new VCard();
     card.load(connection,contact.getAddress());
-    return card.getAvatar();
+    result=card.getAvatar();
+    if (result == null) {
+      result=searchForCustomAvatar(contact.getAddress());
+    }
+    return result;
   }
  catch (  Exception ex) {
     if (logger.isDebugEnabled()) {
       logger.debug("Cannot load image for contact " + this + ": "+ ex.getMessage(),ex);
     }
-    return new byte[0];
+    result=searchForCustomAvatar(contact.getAddress());
+    if (result == null)     result=new byte[0];
   }
+  return result;
 }
