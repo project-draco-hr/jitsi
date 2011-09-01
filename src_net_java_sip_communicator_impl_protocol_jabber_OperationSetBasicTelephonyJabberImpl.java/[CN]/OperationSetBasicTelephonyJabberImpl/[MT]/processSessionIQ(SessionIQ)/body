@@ -7,6 +7,27 @@
   if (type == Type.ERROR) {
     logger.error("Received error");
     XMPPError error=sessionIQ.getError();
+    RedirectPacketExtension redirect=null;
+    if (error != null) {
+      for (      PacketExtension e : error.getExtensions()) {
+        if (e.getElementName().equals(RedirectPacketExtension.ELEMENT_NAME)) {
+          redirect=(RedirectPacketExtension)e;
+        }
+      }
+    }
+    if (redirect != null) {
+      CallGTalkImpl call=callPeer.getCall();
+      try {
+        String redir=redirect.getRedir();
+        if (redir.startsWith("xmpp:"))         redir=redir.substring(5);
+        call.initiateGTalkSession(redir,null);
+      }
+ catch (      Exception e) {
+        logger.info("Failed to initiate GTalk session (redirect)");
+      }
+      callPeer.setState(CallPeerState.DISCONNECTED);
+      return;
+    }
     String message="Remote party returned an error!";
     if (error != null) {
       logger.error(" code=" + error.getCode() + " message="+ error.getMessage());

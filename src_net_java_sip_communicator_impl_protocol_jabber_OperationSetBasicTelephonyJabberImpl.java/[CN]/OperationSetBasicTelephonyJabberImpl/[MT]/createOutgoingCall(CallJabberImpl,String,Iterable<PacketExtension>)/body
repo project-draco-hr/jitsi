@@ -3,6 +3,17 @@
   if (protocolProvider.getConnection() == null || call == null) {
     throw new OperationFailedException("Failed to create OutgoingJingleSession." + " We don't have a valid XMPPConnection.",OperationFailedException.INTERNAL_ERROR);
   }
+  boolean isGoogle=isGmailOrGoogleAppsAccount();
+  boolean isGoogleVoice=false;
+  if (isGoogle) {
+    if (!calleeAddress.contains("@")) {
+      calleeAddress+="@" + GOOGLE_VOICE_DOMAIN;
+      isGoogleVoice=true;
+    }
+ else     if (calleeAddress.endsWith(GOOGLE_VOICE_DOMAIN)) {
+      isGoogleVoice=true;
+    }
+  }
   if (calleeAddress.indexOf('@') == -1) {
     String serviceName=null;
     String phoneSuffix=(String)getProtocolProvider().getAccountID().getAccountProperty("OVERRIDE_PHONE_SUFFIX");
@@ -26,33 +37,35 @@
     Presence presence=it.next();
     int priority=(presence.getPriority() == Integer.MIN_VALUE) ? 0 : presence.getPriority();
     calleeURI=presence.getFrom();
+    DiscoverInfo discoverInfo=null;
     try {
-      DiscoverInfo discoverInfo=protocolProvider.getDiscoveryManager().discoverInfo(calleeURI);
-      if (discoverInfo != null && discoverInfo.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE)) {
-        if (priority > bestPriority) {
-          bestPriority=priority;
-          di=discoverInfo;
-          fullCalleeURI=calleeURI;
-        }
-      }
- else {
-        AccountID accountID=getProtocolProvider().getAccountID();
-        String bypassDomain=accountID.getAccountPropertyString("TELEPHONY_BYPASS_GTALK_CAPS");
-        boolean alwaysCallGtalk=(bypassDomain != null) && bypassDomain.equals(calleeAddress.substring(calleeAddress.indexOf('@') + 1));
-        if (!protocolProvider.isGTalkTesting() && !alwaysCallGtalk) {
-          continue;
-        }
-        if (getProtocolProvider().isExtFeatureListSupported(calleeURI,ProtocolProviderServiceJabberImpl.CAPS_GTALK_WEB_VOICE) || alwaysCallGtalk) {
-          if (priority > bestPriorityGTalk) {
-            bestPriorityGTalk=priority;
-            isGingle=true;
-            gingleURI=calleeURI;
-          }
-        }
-      }
+      discoverInfo=protocolProvider.getDiscoveryManager().discoverInfo(calleeURI);
     }
  catch (    XMPPException ex) {
       logger.warn("could not retrieve info for " + fullCalleeURI,ex);
+    }
+    boolean hasGtalkCaps=getProtocolProvider().isExtFeatureListSupported(calleeURI,ProtocolProviderServiceJabberImpl.CAPS_GTALK_WEB_VOICE);
+    if (discoverInfo != null && discoverInfo.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE)) {
+      if (priority > bestPriority) {
+        bestPriority=priority;
+        di=discoverInfo;
+        fullCalleeURI=calleeURI;
+      }
+    }
+ else {
+      AccountID accountID=getProtocolProvider().getAccountID();
+      String bypassDomain=accountID.getAccountPropertyString("TELEPHONY_BYPASS_GTALK_CAPS");
+      boolean alwaysCallGtalk=((bypassDomain != null) && bypassDomain.equals(calleeAddress.substring(calleeAddress.indexOf('@') + 1))) || isGoogleVoice;
+      if (!protocolProvider.isGTalkTesting() && !alwaysCallGtalk) {
+        continue;
+      }
+      if (hasGtalkCaps || alwaysCallGtalk) {
+        if (priority > bestPriorityGTalk) {
+          bestPriorityGTalk=priority;
+          isGingle=true;
+          gingleURI=calleeURI;
+        }
+      }
     }
   }
   if (isGingle) {
