@@ -9,13 +9,56 @@
   AudioFormat outputAudioFormat=(AudioFormat)getOutputFormat();
   int outputSampleRate=(int)outputAudioFormat.getSampleRate();
   if (inputSampleRate == outputSampleRate) {
-    byte[] input=(byte[])inputBuffer.getData();
-    int size=(input == null) ? 0 : input.length;
-    byte[] output=validateByteArraySize(outputBuffer,size);
-    if ((input != null) && (output != null))     System.arraycopy(input,0,output,0,size);
-    outputBuffer.setFormat(inputBuffer.getFormat());
-    outputBuffer.setLength(inputBuffer.getLength());
-    outputBuffer.setOffset(inputBuffer.getOffset());
+    Class<?> inputDataType=inputAudioFormat.getDataType();
+    Class<?> outputDataType=outputAudioFormat.getDataType();
+    if (Format.byteArray.equals(inputDataType)) {
+      byte[] input=(byte[])inputBuffer.getData();
+      if (Format.byteArray.equals(outputDataType)) {
+        int length=(input == null) ? 0 : input.length;
+        byte[] output=validateByteArraySize(outputBuffer,length);
+        if ((input != null) && (output != null))         System.arraycopy(input,0,output,0,length);
+        outputBuffer.setFormat(inputBuffer.getFormat());
+        outputBuffer.setLength(inputBuffer.getLength());
+        outputBuffer.setOffset(inputBuffer.getOffset());
+      }
+ else {
+        int inputLength=inputBuffer.getLength();
+        int outputOffset=0;
+        int outputLength=inputLength / 2;
+        short[] output=validateShortArraySize(outputBuffer,outputLength);
+        for (int i=inputBuffer.getOffset(), o=outputOffset; o < outputLength; o++) {
+          output[o]=(short)(((input[i++] & 0xFF) | (input[i++] & 0xFF) << 8));
+        }
+        outputBuffer.setFormat(outputAudioFormat);
+        outputBuffer.setLength(outputLength);
+        outputBuffer.setOffset(outputOffset);
+      }
+    }
+ else {
+      short[] input=(short[])inputBuffer.getData();
+      if (Format.byteArray.equals(outputDataType)) {
+        int inputLength=inputBuffer.getLength();
+        int outputOffset=0;
+        int outputLength=inputLength * 2;
+        byte[] output=validateByteArraySize(outputBuffer,outputLength);
+        for (int i=inputBuffer.getOffset(), o=outputOffset; o < outputLength; i++) {
+          short s=input[i];
+          output[o++]=(byte)(s & 0x00FF);
+          output[o++]=(byte)((s & 0xFF00) >>> 8);
+        }
+        outputBuffer.setFormat(outputAudioFormat);
+        outputBuffer.setLength(outputLength);
+        outputBuffer.setOffset(outputOffset);
+      }
+ else {
+        int length=(input == null) ? 0 : input.length;
+        short[] output=validateShortArraySize(outputBuffer,length);
+        if ((input != null) && (output != null))         System.arraycopy(input,0,output,0,length);
+        outputBuffer.setFormat(inputBuffer.getFormat());
+        outputBuffer.setLength(inputBuffer.getLength());
+        outputBuffer.setOffset(inputBuffer.getOffset());
+      }
+    }
   }
  else {
     if ((this.inputSampleRate != inputSampleRate) || (this.outputSampleRate != outputSampleRate)) {

@@ -1,0 +1,50 @@
+{
+  int j, k, cbk_size;
+  int[] temp_idx=new int[Silk_define.NB_SUBFR];
+  int[] cdf_ptr;
+  int cdf_ptr_offset;
+  short[] cl_ptr;
+  int cl_ptr_offset;
+  short[] cbk_ptr_Q14;
+  int cbk_ptr_Q14_offset;
+  float b_ptr[];
+  float W_ptr[];
+  int b_ptr_offset, W_ptr_offset;
+  float rate_dist_subfr=0, rate_dist, min_rate_dist;
+  min_rate_dist=Float.MAX_VALUE;
+  for (k=0; k < 3; k++) {
+    cdf_ptr=Silk_tables_LTP.SKP_Silk_LTP_gain_CDF_ptrs[k];
+    cl_ptr=Silk_tables_LTP.SKP_Silk_LTP_gain_BITS_Q6_ptrs[k];
+    cbk_ptr_Q14=Silk_tables_LTP.SKP_Silk_LTP_vq_ptrs_Q14[k];
+    cbk_size=Silk_tables_LTP.SKP_Silk_LTP_vq_sizes[k];
+    W_ptr=W;
+    W_ptr_offset=0;
+    b_ptr=B;
+    b_ptr_offset=0;
+    rate_dist=0.0f;
+    for (j=0; j < Silk_define.NB_SUBFR; j++) {
+      float[] rate_dist_subfr_ptr=new float[1];
+      rate_dist_subfr_ptr[0]=rate_dist_subfr;
+      Silk_VQ_nearest_neighbor_FLP.SKP_Silk_VQ_WMat_EC_FLP(temp_idx,j,rate_dist_subfr_ptr,b_ptr,b_ptr_offset,W_ptr,W_ptr_offset,cbk_ptr_Q14,cl_ptr,mu,cbk_size);
+      rate_dist_subfr=rate_dist_subfr_ptr[0];
+      rate_dist+=rate_dist_subfr;
+      b_ptr_offset+=Silk_define.LTP_ORDER;
+      W_ptr_offset+=Silk_define.LTP_ORDER * Silk_define.LTP_ORDER;
+    }
+    if (rate_dist < min_rate_dist) {
+      min_rate_dist=rate_dist;
+      System.arraycopy(temp_idx,0,cbk_index,0,Silk_define.NB_SUBFR);
+      periodicity_index[0]=k;
+    }
+    if (lowComplexity != 0 && (rate_dist * 16384.0f < (float)Silk_tables_LTP.SKP_Silk_LTP_gain_middle_avg_RD_Q14)) {
+      break;
+    }
+  }
+  cbk_ptr_Q14=Silk_tables_LTP.SKP_Silk_LTP_vq_ptrs_Q14[periodicity_index[0]];
+  for (j=0; j < Silk_define.NB_SUBFR; j++) {
+    Silk_SigProc_FLP.SKP_short2float_array(B,j * Silk_define.LTP_ORDER,cbk_ptr_Q14,cbk_index[j] * Silk_define.LTP_ORDER,Silk_define.LTP_ORDER);
+  }
+  for (j=0; j < Silk_define.NB_SUBFR * Silk_define.LTP_ORDER; j++) {
+    B[j]*=Silk_define_FLP.Q14_CONVERSION_FAC;
+  }
+}

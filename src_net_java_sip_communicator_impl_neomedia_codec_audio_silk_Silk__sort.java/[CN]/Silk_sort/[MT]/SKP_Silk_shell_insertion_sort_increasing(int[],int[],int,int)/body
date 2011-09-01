@@ -1,0 +1,37 @@
+{
+  int value, inc_Q16_tmp;
+  int i, j, inc, idx;
+  Silk_typedef.SKP_assert(K > 0);
+  Silk_typedef.SKP_assert(L > 0);
+  Silk_typedef.SKP_assert(L >= K);
+  inc_Q16_tmp=((int)L << 15);
+  inc=(inc_Q16_tmp >> 16);
+  for (i=0; i < K; i++) {
+    index[i]=i;
+  }
+  while (inc > 0) {
+    for (i=inc; i < K; i++) {
+      value=a[i];
+      idx=index[i];
+      for (j=i - inc; (j >= 0) && (value < a[j]); j-=inc) {
+        a[j + inc]=a[j];
+        index[j + inc]=index[j];
+      }
+      a[j + inc]=value;
+      index[j + inc]=idx;
+    }
+    inc_Q16_tmp=Silk_macros.SKP_SMULWB(inc_Q16_tmp,29789);
+    inc=Silk_SigProc_FIX.SKP_RSHIFT_ROUND(inc_Q16_tmp,16);
+  }
+  for (i=K; i < L; i++) {
+    value=a[i];
+    if (value < a[K - 1]) {
+      for (j=K - 2; (j >= 0) && (value < a[j]); j--) {
+        a[j + 1]=a[j];
+        index[j + 1]=index[j];
+      }
+      a[j + 1]=value;
+      index[j + 1]=i;
+    }
+  }
+}

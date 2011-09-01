@@ -1,0 +1,29 @@
+{
+  float pitch_freq_Hz, pitch_freq_log, quality, delta_freq, smth_coef, Fc, r;
+  int[] B_Q28=new int[3], A_Q28=new int[2];
+  if (psEnc.sCmn.prev_sigtype == Silk_define.SIG_TYPE_VOICED) {
+    pitch_freq_Hz=1e3f * psEnc.sCmn.fs_kHz / psEnc.sCmn.prevLag;
+    pitch_freq_log=Silk_main_FLP.SKP_Silk_log2(pitch_freq_Hz);
+    quality=psEncCtrl.input_quality_bands[0];
+    pitch_freq_log-=quality * quality * (pitch_freq_log - Silk_main_FLP.SKP_Silk_log2(Silk_define_FLP.VARIABLE_HP_MIN_FREQ));
+    pitch_freq_log+=0.5f * (0.6f - quality);
+    delta_freq=pitch_freq_log - psEnc.variable_HP_smth1;
+    if (delta_freq < 0.0) {
+      delta_freq*=3.0f;
+    }
+    delta_freq=Silk_SigProc_FLP.SKP_LIMIT_float(delta_freq,-Silk_define_FLP.VARIABLE_HP_MAX_DELTA_FREQ,Silk_define_FLP.VARIABLE_HP_MAX_DELTA_FREQ);
+    smth_coef=Silk_define_FLP.VARIABLE_HP_SMTH_COEF1 * psEnc.speech_activity;
+    psEnc.variable_HP_smth1+=smth_coef * delta_freq;
+  }
+  psEnc.variable_HP_smth2+=Silk_define_FLP.VARIABLE_HP_SMTH_COEF2 * (psEnc.variable_HP_smth1 - psEnc.variable_HP_smth2);
+  psEncCtrl.pitch_freq_low_Hz=(float)Math.pow(2.0,psEnc.variable_HP_smth2);
+  psEncCtrl.pitch_freq_low_Hz=Silk_SigProc_FLP.SKP_LIMIT_float(psEncCtrl.pitch_freq_low_Hz,Silk_define_FLP.VARIABLE_HP_MIN_FREQ,Silk_define_FLP.VARIABLE_HP_MAX_FREQ);
+  Fc=(float)(0.45f * 2.0f * 3.14159265359* psEncCtrl.pitch_freq_low_Hz / (1e3f * psEnc.sCmn.fs_kHz));
+  r=1.0f - 0.92f * Fc;
+  B_Q28[0]=Silk_SigProc_FLP.SKP_float2int((1 << 28) * r);
+  B_Q28[1]=Silk_SigProc_FLP.SKP_float2int((1 << 28) * -2.0f * r);
+  B_Q28[2]=B_Q28[0];
+  A_Q28[0]=Silk_SigProc_FLP.SKP_float2int((1 << 28) * -2.0f * r* (1.0f - 0.5f * Fc * Fc));
+  A_Q28[1]=Silk_SigProc_FLP.SKP_float2int((1 << 28) * r * r);
+  Silk_biquad_alt.SKP_Silk_biquad_alt(in,in_offset,B_Q28,A_Q28,psEnc.sCmn.In_HP_State,out,out_offset,psEnc.sCmn.frame_length);
+}

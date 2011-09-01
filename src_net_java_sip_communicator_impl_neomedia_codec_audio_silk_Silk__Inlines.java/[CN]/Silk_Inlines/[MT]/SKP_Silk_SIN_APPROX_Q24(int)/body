@@ -1,0 +1,35 @@
+{
+  int y_Q30;
+  x&=65535;
+  if (x <= 32768) {
+    if (x < 16384) {
+      x=16384 - x;
+    }
+ else {
+      x-=16384;
+    }
+    if (x < 1100) {
+      return Silk_macros.SKP_SMLAWB(1 << 24,x * x,-5053);
+    }
+    x=Silk_macros.SKP_SMULWB(x << 8,x);
+    y_Q30=Silk_macros.SKP_SMLAWB(SKP_SIN_APPROX_CONST2,x,SKP_SIN_APPROX_CONST3);
+    y_Q30=Silk_macros.SKP_SMLAWW(SKP_SIN_APPROX_CONST1,x,y_Q30);
+    y_Q30=Silk_macros.SKP_SMLAWW(SKP_SIN_APPROX_CONST0 + 66,x,y_Q30);
+  }
+ else {
+    if (x < 49152) {
+      x=49152 - x;
+    }
+ else {
+      x-=49152;
+    }
+    if (x < 1100) {
+      return Silk_macros.SKP_SMLAWB(-1 << 24,x * x,5053);
+    }
+    x=Silk_macros.SKP_SMULWB(x << 8,x);
+    y_Q30=Silk_macros.SKP_SMLAWB(-SKP_SIN_APPROX_CONST2,x,-SKP_SIN_APPROX_CONST3);
+    y_Q30=Silk_macros.SKP_SMLAWW(-SKP_SIN_APPROX_CONST1,x,y_Q30);
+    y_Q30=Silk_macros.SKP_SMLAWW(-SKP_SIN_APPROX_CONST0,x,y_Q30);
+  }
+  return Silk_SigProc_FIX.SKP_RSHIFT_ROUND(y_Q30,6);
+}

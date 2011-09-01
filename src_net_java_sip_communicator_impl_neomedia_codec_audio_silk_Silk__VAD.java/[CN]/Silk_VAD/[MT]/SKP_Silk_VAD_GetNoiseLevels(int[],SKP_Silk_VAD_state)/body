@@ -1,0 +1,36 @@
+{
+  int k;
+  int nl, nrg, inv_nrg;
+  int coef, min_coef;
+  if (psSilk_VAD.counter < 1000) {
+    min_coef=Silk_typedef.SKP_int16_MAX / ((psSilk_VAD.counter >> 4) + 1);
+  }
+ else {
+    min_coef=0;
+  }
+  for (k=0; k < Silk_define.VAD_N_BANDS; k++) {
+    nl=psSilk_VAD.NL[k];
+    assert(nl >= 0);
+    nrg=Silk_SigProc_FIX.SKP_ADD_POS_SAT32(pX[k],psSilk_VAD.NoiseLevelBias[k]);
+    assert(nrg > 0);
+    inv_nrg=Silk_typedef.SKP_int32_MAX / nrg;
+    assert(inv_nrg >= 0);
+    if (nrg > nl << 3) {
+      coef=Silk_define.VAD_NOISE_LEVEL_SMOOTH_COEF_Q16 >> 3;
+    }
+ else     if (nrg < nl) {
+      coef=Silk_define.VAD_NOISE_LEVEL_SMOOTH_COEF_Q16;
+    }
+ else {
+      coef=Silk_macros.SKP_SMULWB(Silk_macros.SKP_SMULWW(inv_nrg,nl),Silk_define.VAD_NOISE_LEVEL_SMOOTH_COEF_Q16 << 1);
+    }
+    coef=Math.max(coef,min_coef);
+    psSilk_VAD.inv_NL[k]=Silk_macros.SKP_SMLAWB(psSilk_VAD.inv_NL[k],inv_nrg - psSilk_VAD.inv_NL[k],coef);
+    assert(psSilk_VAD.inv_NL[k] >= 0);
+    nl=Silk_typedef.SKP_int32_MAX / psSilk_VAD.inv_NL[k];
+    assert(nl >= 0);
+    nl=Math.min(nl,0x00FFFFFF);
+    psSilk_VAD.NL[k]=nl;
+  }
+  psSilk_VAD.counter++;
+}

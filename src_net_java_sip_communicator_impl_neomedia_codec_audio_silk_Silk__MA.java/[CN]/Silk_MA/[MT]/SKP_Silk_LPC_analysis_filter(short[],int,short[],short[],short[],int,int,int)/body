@@ -1,0 +1,27 @@
+{
+  int k, j, idx, Order_half=(Order >> 1);
+  int out32_Q12, out32;
+  short SA, SB;
+  Silk_typedef.SKP_assert(2 * Order_half == Order);
+  for (k=0; k < len; k++) {
+    SA=S[0];
+    out32_Q12=0;
+    for (j=0; j < (Order_half - 1); j++) {
+      idx=Silk_macros.SKP_SMULBB(2,j) + 1;
+      SB=S[idx];
+      S[idx]=SA;
+      out32_Q12=Silk_macros.SKP_SMLABB(out32_Q12,SA,B[idx - 1]);
+      out32_Q12=Silk_macros.SKP_SMLABB(out32_Q12,SB,B[idx]);
+      SA=S[idx + 1];
+      S[idx + 1]=SB;
+    }
+    SB=S[Order - 1];
+    S[Order - 1]=SA;
+    out32_Q12=Silk_macros.SKP_SMLABB(out32_Q12,SA,B[Order - 2]);
+    out32_Q12=Silk_macros.SKP_SMLABB(out32_Q12,SB,B[Order - 1]);
+    out32_Q12=Silk_macros.SKP_SUB_SAT32(((int)in[in_offset + k] << 12),out32_Q12);
+    out32=Silk_SigProc_FIX.SKP_RSHIFT_ROUND(out32_Q12,12);
+    out[out_offset + k]=(short)Silk_SigProc_FIX.SKP_SAT16(out32);
+    S[0]=in[in_offset + k];
+  }
+}

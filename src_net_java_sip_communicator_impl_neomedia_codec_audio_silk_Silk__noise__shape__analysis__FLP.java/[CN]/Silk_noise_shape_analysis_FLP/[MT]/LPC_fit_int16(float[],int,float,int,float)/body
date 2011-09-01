@@ -1,0 +1,40 @@
+{
+  float maxabs, absval, sc;
+  int k, i, idx=0;
+  float[] invGain=new float[1];
+  Silk_bwexpander_FLP.SKP_Silk_bwexpander_FLP(a,a_offset,L,bwe);
+  for (k=0; k < 1000; k++) {
+    maxabs=-1.0f;
+    for (i=0; i < L; i++) {
+      absval=Math.abs(a[a_offset + i]);
+      if (absval > maxabs) {
+        maxabs=absval;
+        idx=i;
+      }
+    }
+    if (maxabs >= maxVal) {
+      sc=0.995f * (1.0f - (1.0f - maxVal / maxabs) / (idx + 1));
+      Silk_bwexpander_FLP.SKP_Silk_bwexpander_FLP(a,a_offset,L,sc);
+    }
+ else {
+      break;
+    }
+  }
+  if (k == 1000) {
+    assert(false);
+  }
+  for (k=0; k < 1000; k++) {
+    if (Silk_LPC_inv_pred_gain_FLP.SKP_Silk_LPC_inverse_pred_gain_FLP(invGain,a,a_offset,L) == 1) {
+      Silk_bwexpander_FLP.SKP_Silk_bwexpander_FLP(a,a_offset,L,0.997f);
+    }
+ else {
+      break;
+    }
+  }
+  if (k == 1000) {
+    assert(false);
+    for (i=0; i < L; i++) {
+      a[i]=(float)0.0f;
+    }
+  }
+}

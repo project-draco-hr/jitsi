@@ -1,0 +1,22 @@
+{
+  byte[] inputData=(byte[])inputBuffer.getData();
+  int inputOffset=inputBuffer.getOffset();
+  int inputLength=inputBuffer.getLength();
+  short[] outputData=validateShortArraySize(outputBuffer,frameLength);
+  int outputOffset=0;
+  int processed;
+  outputLength[0]=frameLength;
+  if (Silk_dec_API.SKP_Silk_SDK_Decode(decState,decControl,0,inputData,inputOffset,inputLength,outputData,outputOffset,outputLength) == 0) {
+    outputBuffer.setDuration(FRAME_DURATION * 1000000);
+    outputBuffer.setLength(outputLength[0]);
+    outputBuffer.setOffset(outputOffset);
+    if (decControl.moreInternalDecoderFrames == 0)     processed=BUFFER_PROCESSED_OK;
+ else {
+      framesPerPayload++;
+      processed=(framesPerPayload >= MAX_FRAMES_PER_PAYLOAD) ? BUFFER_PROCESSED_OK : INPUT_BUFFER_NOT_CONSUMED;
+    }
+  }
+ else   processed=BUFFER_PROCESSED_FAILED;
+  if ((processed & INPUT_BUFFER_NOT_CONSUMED) != INPUT_BUFFER_NOT_CONSUMED)   framesPerPayload=0;
+  return processed;
+}

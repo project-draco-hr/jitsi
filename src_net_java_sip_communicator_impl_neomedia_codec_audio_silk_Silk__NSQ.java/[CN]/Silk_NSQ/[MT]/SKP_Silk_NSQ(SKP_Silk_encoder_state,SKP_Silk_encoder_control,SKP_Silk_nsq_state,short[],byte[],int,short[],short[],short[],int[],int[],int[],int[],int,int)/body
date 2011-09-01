@@ -1,0 +1,68 @@
+{
+  int k, lag, start_idx, subfr_length, LSF_interpolation_flag;
+  short[] A_Q12;
+  short[] B_Q14;
+  short[] AR_shp_Q13;
+  int A_Q12_offset, B_Q14_offset, AR_shp_Q13_offset;
+  short[] pxq;
+  int pxq_offset;
+  int sLTP_Q16[]=new int[2 * Silk_define.MAX_FRAME_LENGTH];
+  short sLTP[]=new short[2 * Silk_define.MAX_FRAME_LENGTH];
+  int HarmShapeFIRPacked_Q14;
+  int offset_Q10;
+  int FiltState[]=new int[Silk_define.MAX_LPC_ORDER];
+  int x_sc_Q10[]=new int[Silk_define.MAX_FRAME_LENGTH / Silk_define.NB_SUBFR];
+  subfr_length=psEncC.frame_length / Silk_define.NB_SUBFR;
+  NSQ.rand_seed=psEncCtrlC.Seed;
+  lag=NSQ.lagPrev;
+  assert(NSQ.prev_inv_gain_Q16 != 0);
+  offset_Q10=Silk_tables_other.SKP_Silk_Quantization_Offsets_Q10[psEncCtrlC.sigtype][psEncCtrlC.QuantOffsetType];
+  if (LSFInterpFactor_Q2 == (1 << 2)) {
+    LSF_interpolation_flag=0;
+  }
+ else {
+    LSF_interpolation_flag=1;
+  }
+  NSQ.sLTP_shp_buf_idx=psEncC.frame_length;
+  NSQ.sLTP_buf_idx=psEncC.frame_length;
+  pxq=NSQ.xq;
+  pxq_offset=psEncC.frame_length;
+  short[] x_tmp=x.clone();
+  int x_tmp_offset=0;
+  byte[] q_tmp=q.clone();
+  int q_tmp_offset=0;
+  for (k=0; k < Silk_define.NB_SUBFR; k++) {
+    A_Q12=PredCoef_Q12;
+    A_Q12_offset=((k >> 1) | (1 - LSF_interpolation_flag)) * Silk_define.MAX_LPC_ORDER;
+    B_Q14=LTPCoef_Q14;
+    B_Q14_offset=k * Silk_define.LTP_ORDER;
+    AR_shp_Q13=AR2_Q13;
+    AR_shp_Q13_offset=k * Silk_define.SHAPE_LPC_ORDER_MAX;
+    assert(HarmShapeGain_Q14[k] >= 0);
+    HarmShapeFIRPacked_Q14=(HarmShapeGain_Q14[k] >> 2);
+    HarmShapeFIRPacked_Q14|=((int)(HarmShapeGain_Q14[k] >> 1) << 16);
+    if (psEncCtrlC.sigtype == Silk_define.SIG_TYPE_VOICED) {
+      lag=psEncCtrlC.pitchL[k];
+      NSQ.rewhite_flag=0;
+      if ((k & (3 - (LSF_interpolation_flag << 1))) == 0) {
+        start_idx=psEncC.frame_length - lag - psEncC.predictLPCOrder- Silk_define.LTP_ORDER / 2;
+        start_idx=Silk_SigProc_FIX.SKP_LIMIT_int(start_idx,0,psEncC.frame_length - psEncC.predictLPCOrder);
+        Arrays.fill(FiltState,0,psEncC.predictLPCOrder,0);
+        Silk_MA.SKP_Silk_MA_Prediction(NSQ.xq,start_idx + k * (psEncC.frame_length >> 2),A_Q12,A_Q12_offset,FiltState,sLTP,start_idx,psEncC.frame_length - start_idx,psEncC.predictLPCOrder);
+        NSQ.rewhite_flag=1;
+        NSQ.sLTP_buf_idx=psEncC.frame_length;
+      }
+    }
+    SKP_Silk_nsq_scale_states(NSQ,x_tmp,x_tmp_offset,x_sc_Q10,psEncC.subfr_length,sLTP,sLTP_Q16,k,LTP_scale_Q14,Gains_Q16,psEncCtrlC.pitchL);
+    SKP_Silk_noise_shape_quantizer(NSQ,psEncCtrlC.sigtype,x_sc_Q10,q_tmp,q_tmp_offset,pxq,pxq_offset,sLTP_Q16,A_Q12,A_Q12_offset,B_Q14,B_Q14_offset,AR_shp_Q13,AR_shp_Q13_offset,lag,HarmShapeFIRPacked_Q14,Tilt_Q14[k],LF_shp_Q14[k],Gains_Q16[k],Lambda_Q10,offset_Q10,psEncC.subfr_length,psEncC.shapingLPCOrder,psEncC.predictLPCOrder);
+    x_tmp_offset+=psEncC.subfr_length;
+    q_tmp_offset+=psEncC.subfr_length;
+    pxq_offset+=psEncC.subfr_length;
+  }
+  NSQ.sLF_AR_shp_Q12=NSQ.sLF_AR_shp_Q12;
+  NSQ.prev_inv_gain_Q16=NSQ.prev_inv_gain_Q16;
+  NSQ.lagPrev=psEncCtrlC.pitchL[Silk_define.NB_SUBFR - 1];
+  System.arraycopy(NSQ.xq,psEncC.frame_length,NSQ.xq,0,psEncC.frame_length);
+  System.arraycopy(NSQ.sLTP_shp_Q10,psEncC.frame_length,NSQ.sLTP_shp_Q10,0,psEncC.frame_length);
+  System.arraycopy(q_tmp,0,q,0,q.length);
+}

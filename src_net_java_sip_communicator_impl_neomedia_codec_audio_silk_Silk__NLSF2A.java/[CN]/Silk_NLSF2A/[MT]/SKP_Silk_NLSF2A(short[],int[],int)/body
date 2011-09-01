@@ -1,0 +1,60 @@
+{
+  int k, i, dd;
+  int[] cos_LSF_Q20=new int[Silk_SigProc_FIX.SKP_Silk_MAX_ORDER_LPC];
+  int[] P=new int[Silk_SigProc_FIX.SKP_Silk_MAX_ORDER_LPC / 2 + 1];
+  int[] Q=new int[Silk_SigProc_FIX.SKP_Silk_MAX_ORDER_LPC / 2 + 1];
+  int Ptmp, Qtmp;
+  int f_int;
+  int f_frac;
+  int cos_val, delta;
+  int[] a_int32=new int[Silk_SigProc_FIX.SKP_Silk_MAX_ORDER_LPC];
+  int maxabs, absval, idx=0, sc_Q16;
+  Silk_typedef.SKP_assert(Silk_SigProc_FIX.LSF_COS_TAB_SZ_FIX == 128);
+  for (k=0; k < d; k++) {
+    Silk_typedef.SKP_assert(NLSF[k] >= 0);
+    Silk_typedef.SKP_assert(NLSF[k] <= 32767);
+    f_int=(NLSF[k] >> (15 - 7));
+    f_frac=NLSF[k] - (f_int << (15 - 7));
+    Silk_typedef.SKP_assert(f_int >= 0);
+    Silk_typedef.SKP_assert(f_int < Silk_SigProc_FIX.LSF_COS_TAB_SZ_FIX);
+    cos_val=Silk_LSF_cos_table.SKP_Silk_LSFCosTab_FIX_Q12[f_int];
+    delta=Silk_LSF_cos_table.SKP_Silk_LSFCosTab_FIX_Q12[f_int + 1] - cos_val;
+    cos_LSF_Q20[k]=(cos_val << 8) + (delta * f_frac);
+  }
+  dd=(d >> 1);
+  SKP_Silk_NLSF2A_find_poly(P,cos_LSF_Q20,0,dd);
+  SKP_Silk_NLSF2A_find_poly(Q,cos_LSF_Q20,1,dd);
+  for (k=0; k < dd; k++) {
+    Ptmp=P[k + 1] + P[k];
+    Qtmp=Q[k + 1] - Q[k];
+    a_int32[k]=-Silk_SigProc_FIX.SKP_RSHIFT_ROUND(Ptmp + Qtmp,9);
+    a_int32[d - k - 1]=Silk_SigProc_FIX.SKP_RSHIFT_ROUND(Qtmp - Ptmp,9);
+  }
+  for (i=0; i < 10; i++) {
+    maxabs=0;
+    for (k=0; k < d; k++) {
+      absval=Silk_SigProc_FIX.SKP_abs(a_int32[k]);
+      if (absval > maxabs) {
+        maxabs=absval;
+        idx=k;
+      }
+    }
+    if (maxabs > Silk_typedef.SKP_int16_MAX) {
+      maxabs=Silk_SigProc_FIX.SKP_min(maxabs,98369);
+      sc_Q16=65470 - (((65470 >> 2) * (maxabs - Silk_typedef.SKP_int16_MAX)) / ((maxabs * (idx + 1)) >> 2));
+      Silk_bwexpander_32.SKP_Silk_bwexpander_32(a_int32,d,sc_Q16);
+    }
+ else {
+      break;
+    }
+  }
+  if (i == 10) {
+    Silk_typedef.SKP_assert(false);
+    for (k=0; k < d; k++) {
+      a_int32[k]=Silk_SigProc_FIX.SKP_SAT16(a_int32[k]);
+    }
+  }
+  for (k=0; k < d; k++) {
+    a[k]=(short)a_int32[k];
+  }
+}

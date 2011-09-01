@@ -1,0 +1,33 @@
+{
+  float[] target_ptr, basis_ptr;
+  int target_ptr_offset, basis_ptr_offset;
+  int i, j, k, lag_counter;
+  int cbk_offset, cbk_size, delta, idx;
+  float[] scratch_mem=new float[SCRATCH_SIZE];
+  assert(complexity >= Silk_SigProc_FIX.SKP_Silk_PITCH_EST_MIN_COMPLEX);
+  assert(complexity <= Silk_SigProc_FIX.SKP_Silk_PITCH_EST_MAX_COMPLEX);
+  cbk_offset=Silk_pitch_est_tables.SKP_Silk_cbk_offsets_stage3[complexity];
+  cbk_size=Silk_pitch_est_tables.SKP_Silk_cbk_sizes_stage3[complexity];
+  target_ptr=signal;
+  target_ptr_offset=signal_offset + (sf_length << 2);
+  for (k=0; k < Silk_common_pitch_est_defines.PITCH_EST_NB_SUBFR; k++) {
+    lag_counter=0;
+    for (j=Silk_pitch_est_tables.SKP_Silk_Lag_range_stage3[complexity][k][0]; j <= Silk_pitch_est_tables.SKP_Silk_Lag_range_stage3[complexity][k][1]; j++) {
+      basis_ptr=target_ptr;
+      basis_ptr_offset=target_ptr_offset - (start_lag + j);
+      assert(lag_counter < SCRATCH_SIZE);
+      scratch_mem[lag_counter]=(float)Silk_inner_product_FLP.SKP_Silk_inner_product_FLP(target_ptr,target_ptr_offset,basis_ptr,basis_ptr_offset,sf_length);
+      lag_counter++;
+    }
+    delta=Silk_pitch_est_tables.SKP_Silk_Lag_range_stage3[complexity][k][0];
+    for (i=cbk_offset; i < (cbk_offset + cbk_size); i++) {
+      idx=Silk_pitch_est_tables.SKP_Silk_CB_lags_stage3[k][i] - delta;
+      for (j=0; j < Silk_common_pitch_est_defines.PITCH_EST_NB_STAGE3_LAGS; j++) {
+        assert(idx + j < SCRATCH_SIZE);
+        assert(idx + j < lag_counter);
+        cross_corr_st3[k][i][j]=scratch_mem[idx + j];
+      }
+    }
+    target_ptr_offset+=sf_length;
+  }
+}

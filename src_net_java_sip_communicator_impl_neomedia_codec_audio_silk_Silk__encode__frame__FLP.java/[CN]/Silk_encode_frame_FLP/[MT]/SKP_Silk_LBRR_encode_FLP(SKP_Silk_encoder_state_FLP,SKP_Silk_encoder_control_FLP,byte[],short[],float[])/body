@@ -1,0 +1,83 @@
+{
+  int[] Gains_Q16=new int[Silk_define.NB_SUBFR];
+  int k, TempGainsIndices[]=new int[Silk_define.NB_SUBFR], frame_terminator;
+  int nBytes[]=new int[1], nFramesInPayloadBuf;
+  float TempGains[]=new float[Silk_define.NB_SUBFR];
+  int typeOffset, LTP_scaleIndex, Rate_only_parameters=0;
+  Silk_control_codec_FLP.SKP_Silk_LBRR_ctrl_FLP(psEnc,psEncCtrl.sCmn);
+  if (psEnc.sCmn.LBRR_enabled != 0) {
+    System.arraycopy(psEncCtrl.sCmn.GainsIndices,0,TempGainsIndices,0,Silk_define.NB_SUBFR);
+    System.arraycopy(psEncCtrl.Gains,0,TempGains,0,Silk_define.NB_SUBFR);
+    typeOffset=psEnc.sCmn.typeOffsetPrev;
+    LTP_scaleIndex=psEncCtrl.sCmn.LTP_scaleIndex;
+    if (psEnc.sCmn.fs_kHz == 8) {
+      Rate_only_parameters=13500;
+    }
+ else     if (psEnc.sCmn.fs_kHz == 12) {
+      Rate_only_parameters=15500;
+    }
+ else     if (psEnc.sCmn.fs_kHz == 16) {
+      Rate_only_parameters=17500;
+    }
+ else     if (psEnc.sCmn.fs_kHz == 24) {
+      Rate_only_parameters=19500;
+    }
+ else {
+      assert(false);
+    }
+    if (psEnc.sCmn.Complexity > 0 && psEnc.sCmn.TargetRate_bps > Rate_only_parameters) {
+      if (psEnc.sCmn.nFramesInPayloadBuf == 0) {
+        psEnc.sNSQ_LBRR=(SKP_Silk_nsq_state)psEnc.sNSQ.clone();
+        psEnc.sCmn.LBRRprevLastGainIndex=psEnc.sShape.LastGainIndex;
+        psEncCtrl.sCmn.GainsIndices[0]+=psEnc.sCmn.LBRR_GainIncreases;
+        psEncCtrl.sCmn.GainsIndices[0]=Silk_SigProc_FIX.SKP_LIMIT(psEncCtrl.sCmn.GainsIndices[0],0,Silk_define.N_LEVELS_QGAIN - 1);
+      }
+      int LBRRprevLastGainIndex_ptr[]=new int[1];
+      LBRRprevLastGainIndex_ptr[0]=psEnc.sCmn.LBRRprevLastGainIndex;
+      Silk_gain_quant.SKP_Silk_gains_dequant(Gains_Q16,psEncCtrl.sCmn.GainsIndices,LBRRprevLastGainIndex_ptr,psEnc.sCmn.nFramesInPayloadBuf);
+      psEnc.sCmn.LBRRprevLastGainIndex=LBRRprevLastGainIndex_ptr[0];
+      for (k=0; k < Silk_define.NB_SUBFR; k++) {
+        psEncCtrl.Gains[k]=Gains_Q16[k] / 65536.0f;
+      }
+      Silk_wrappers_FLP.SKP_Silk_NSQ_wrapper_FLP(psEnc,psEncCtrl,xfw,0,psEnc.sCmn.q_LBRR,0,1);
+    }
+ else {
+      Arrays.fill(psEnc.sCmn.q_LBRR,(byte)0);
+      psEncCtrl.sCmn.LTP_scaleIndex=0;
+    }
+    if (psEnc.sCmn.nFramesInPayloadBuf == 0) {
+      Silk_range_coder.SKP_Silk_range_enc_init(psEnc.sCmn.sRC_LBRR);
+      psEnc.sCmn.nBytesInPayloadBuf=0;
+    }
+    Silk_encode_parameters.SKP_Silk_encode_parameters(psEnc.sCmn,psEncCtrl.sCmn,psEnc.sCmn.sRC_LBRR,psEnc.sCmn.q_LBRR);
+    if (psEnc.sCmn.sRC_LBRR.error != 0) {
+      nFramesInPayloadBuf=0;
+    }
+ else {
+      nFramesInPayloadBuf=psEnc.sCmn.nFramesInPayloadBuf + 1;
+    }
+    if (Silk_macros.SKP_SMULBB(nFramesInPayloadBuf,Silk_define.FRAME_LENGTH_MS) >= psEnc.sCmn.PacketSize_ms) {
+      frame_terminator=Silk_define.SKP_SILK_LAST_FRAME;
+      Silk_range_coder.SKP_Silk_range_encoder(psEnc.sCmn.sRC_LBRR,frame_terminator,Silk_tables_other.SKP_Silk_FrameTermination_CDF,0);
+      Silk_range_coder.SKP_Silk_range_coder_get_length(psEnc.sCmn.sRC_LBRR,nBytes);
+      if (pnBytesOut[0] >= nBytes[0]) {
+        Silk_range_coder.SKP_Silk_range_enc_wrap_up(psEnc.sCmn.sRC_LBRR);
+        System.arraycopy(psEnc.sCmn.sRC_LBRR.buffer,0,pCode,0,nBytes[0]);
+        pnBytesOut[0]=(short)nBytes[0];
+      }
+ else {
+        pnBytesOut[0]=0;
+        assert(false);
+      }
+    }
+ else {
+      pnBytesOut[0]=0;
+      frame_terminator=Silk_define.SKP_SILK_MORE_FRAMES;
+      Silk_range_coder.SKP_Silk_range_encoder(psEnc.sCmn.sRC_LBRR,frame_terminator,Silk_tables_other.SKP_Silk_FrameTermination_CDF,0);
+    }
+    System.arraycopy(TempGainsIndices,0,psEncCtrl.sCmn.GainsIndices,0,Silk_define.NB_SUBFR);
+    System.arraycopy(TempGains,0,psEncCtrl.Gains,0,Silk_define.NB_SUBFR);
+    psEncCtrl.sCmn.LTP_scaleIndex=LTP_scaleIndex;
+    psEnc.sCmn.typeOffsetPrev=typeOffset;
+  }
+}

@@ -1,0 +1,36 @@
+{
+  int maxabs, absval, sc_Q16;
+  int i, idx=0;
+  int invGain_Q30=0;
+  Silk_bwexpander_32.SKP_Silk_bwexpander_32(a_Q16,L,bwe_Q16);
+  while (true) {
+    maxabs=Integer.MIN_VALUE;
+    for (i=0; i < L; i++) {
+      absval=Math.abs(a_Q16[i]);
+      if (absval > maxabs) {
+        maxabs=absval;
+        idx=i;
+      }
+    }
+    if (maxabs >= LPC_STABILIZE_LPC_MAX_ABS_VALUE_Q16) {
+      sc_Q16=(Integer.MAX_VALUE / (maxabs >> 4));
+      sc_Q16=65536 - sc_Q16;
+      sc_Q16=(sc_Q16 / (idx + 1));
+      sc_Q16=65536 - sc_Q16;
+      sc_Q16=(Silk_macros.SKP_SMULWB(sc_Q16,32604) << 1);
+      Silk_bwexpander_32.SKP_Silk_bwexpander_32(a_Q16,L,sc_Q16);
+    }
+ else {
+      break;
+    }
+  }
+  for (i=0; i < L; i++) {
+    a_Q12[i]=(short)Silk_SigProc_FIX.SKP_RSHIFT_ROUND(a_Q16[i],4);
+  }
+  int invGain_Q30_ptr[]=new int[1];
+  invGain_Q30_ptr[0]=invGain_Q30;
+  while (Silk_LPC_inv_pred_gain.SKP_Silk_LPC_inverse_pred_gain(invGain_Q30_ptr,a_Q12,L) == 1) {
+    invGain_Q30=invGain_Q30_ptr[0];
+    Silk_bwexpander.SKP_Silk_bwexpander(a_Q12,L,65339);
+  }
+}

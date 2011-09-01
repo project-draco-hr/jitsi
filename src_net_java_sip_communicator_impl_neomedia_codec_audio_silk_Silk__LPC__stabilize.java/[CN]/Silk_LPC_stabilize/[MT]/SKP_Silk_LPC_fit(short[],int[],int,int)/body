@@ -1,0 +1,29 @@
+{
+  int i, rshift, idx=0;
+  int maxabs, absval, sc_Q16;
+  rshift=24 - QQ;
+  while (true) {
+    maxabs=Integer.MIN_VALUE;
+    for (i=0; i < L; i++) {
+      absval=Math.abs(a_Q24[i]);
+      if (absval > maxabs) {
+        maxabs=absval;
+        idx=i;
+      }
+    }
+    maxabs=(maxabs >> rshift);
+    if (maxabs >= Short.MAX_VALUE) {
+      maxabs=Math.min(maxabs,98369);
+      sc_Q16=65470 - (((65470 >> 2) * (maxabs - Short.MAX_VALUE)) / Silk_SigProc_FIX.SKP_RSHIFT32((maxabs * (idx + 1)),2));
+      Silk_bwexpander_32.SKP_Silk_bwexpander_32(a_Q24,L,sc_Q16);
+    }
+ else {
+      break;
+    }
+  }
+  assert(rshift > 0);
+  assert(rshift < 31);
+  for (i=0; i < L; i++) {
+    a_QQ[i]=(short)Silk_SigProc_FIX.SKP_RSHIFT_ROUND(a_Q24[i],rshift);
+  }
+}

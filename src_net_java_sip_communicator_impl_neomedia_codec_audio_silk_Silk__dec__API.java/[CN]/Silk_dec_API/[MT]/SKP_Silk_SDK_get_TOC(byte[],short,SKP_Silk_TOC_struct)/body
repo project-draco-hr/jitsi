@@ -1,0 +1,45 @@
+{
+  SKP_Silk_decoder_state sDec=new SKP_Silk_decoder_state();
+  SKP_Silk_decoder_control sDecCtrl=new SKP_Silk_decoder_control();
+  int[] TempQ=new int[Silk_define.MAX_FRAME_LENGTH];
+  sDec.nFramesDecoded=0;
+  sDec.fs_kHz=0;
+  Silk_range_coder.SKP_Silk_range_dec_init(sDec.sRC,inData,0,(int)nBytesIn);
+  Silk_TOC.corrupt=0;
+  while (true) {
+    Silk_decode_parameters.SKP_Silk_decode_parameters(sDec,sDecCtrl,TempQ,0);
+    Silk_TOC.vadFlags[sDec.nFramesDecoded]=sDec.vadFlag;
+    Silk_TOC.sigtypeFlags[sDec.nFramesDecoded]=sDecCtrl.sigtype;
+    if (sDec.sRC.error != 0) {
+      Silk_TOC.corrupt=1;
+      break;
+    }
+    if (sDec.nBytesLeft > 0 && sDec.FrameTermination == Silk_define.SKP_SILK_MORE_FRAMES) {
+      sDec.nFramesDecoded++;
+    }
+ else {
+      break;
+    }
+  }
+  if (Silk_TOC.corrupt != 0 || sDec.FrameTermination == Silk_define.SKP_SILK_MORE_FRAMES || sDec.nFramesInPacket > Silk_SDK_API.SILK_MAX_FRAMES_PER_PACKET) {
+{
+      Silk_TOC.corrupt=0;
+      Silk_TOC.framesInPacket=0;
+      Silk_TOC.fs_kHz=0;
+      Silk_TOC.inbandLBRR=0;
+      for (int i=0; i < Silk_TOC.vadFlags.length; i++)       Silk_TOC.vadFlags[i]=0;
+      for (int i=0; i < Silk_TOC.sigtypeFlags.length; i++)       Silk_TOC.sigtypeFlags[i]=0;
+    }
+    Silk_TOC.corrupt=1;
+  }
+ else {
+    Silk_TOC.framesInPacket=sDec.nFramesDecoded + 1;
+    Silk_TOC.fs_kHz=sDec.fs_kHz;
+    if (sDec.FrameTermination == Silk_define.SKP_SILK_LAST_FRAME) {
+      Silk_TOC.inbandLBRR=sDec.FrameTermination;
+    }
+ else {
+      Silk_TOC.inbandLBRR=sDec.FrameTermination - 1;
+    }
+  }
+}

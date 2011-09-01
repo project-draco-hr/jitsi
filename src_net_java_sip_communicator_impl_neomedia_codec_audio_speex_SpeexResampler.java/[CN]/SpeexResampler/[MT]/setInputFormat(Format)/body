@@ -1,8 +1,19 @@
 {
   AudioFormat inputFormat=(AudioFormat)super.setInputFormat(format);
   if (inputFormat != null) {
-    double outputSampleRate=(outputFormat == null) ? inputFormat.getSampleRate() : ((AudioFormat)outputFormat).getSampleRate();
-    setOutputFormat(new AudioFormat(inputFormat.getEncoding(),outputSampleRate,inputFormat.getSampleSizeInBits(),inputFormat.getChannels(),inputFormat.getEndian(),inputFormat.getSigned(),Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,inputFormat.getDataType()));
+    double outputSampleRate;
+    Class<?> outputDataType;
+    if (outputFormat == null) {
+      outputSampleRate=inputFormat.getSampleRate();
+      outputDataType=inputFormat.getDataType();
+    }
+ else {
+      AudioFormat outputAudioFormat=(AudioFormat)outputFormat;
+      outputSampleRate=outputAudioFormat.getSampleRate();
+      outputDataType=outputAudioFormat.getDataType();
+      if (outputSampleRate != inputFormat.getSampleRate())       outputDataType=inputFormat.getDataType();
+    }
+    setOutputFormat(new AudioFormat(inputFormat.getEncoding(),outputSampleRate,inputFormat.getSampleSizeInBits(),inputFormat.getChannels(),inputFormat.getEndian(),inputFormat.getSigned(),Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,outputDataType));
   }
   return inputFormat;
 }

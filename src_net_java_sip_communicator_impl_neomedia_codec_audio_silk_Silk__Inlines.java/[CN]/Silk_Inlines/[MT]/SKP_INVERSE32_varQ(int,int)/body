@@ -1,0 +1,24 @@
+{
+  int b_headrm, lshift;
+  int b32_inv, b32_nrm, err_Q32, result;
+  assert(b32 != 0);
+  assert(Qres > 0);
+  b_headrm=Integer.numberOfLeadingZeros(Math.abs(b32)) - 1;
+  b32_nrm=b32 << b_headrm;
+  b32_inv=(Integer.MAX_VALUE >> 2) / (b32_nrm >> 16);
+  result=b32_inv << 16;
+  err_Q32=-Silk_macros.SKP_SMULWB(b32_nrm,b32_inv) << 3;
+  result=Silk_macros.SKP_SMLAWW(result,err_Q32,b32_inv);
+  lshift=61 - b_headrm - Qres;
+  if (lshift <= 0) {
+    return Silk_SigProc_FIX.SKP_LSHIFT_SAT32(result,-lshift);
+  }
+ else {
+    if (lshift < 32) {
+      return result >> lshift;
+    }
+ else {
+      return 0;
+    }
+  }
+}

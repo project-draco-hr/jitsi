@@ -1,0 +1,51 @@
+{
+  SKP_Silk_decoder_control sDecCtrl=new SKP_Silk_decoder_control();
+  int L, fs_Khz_old, LPC_order_old, ret=0;
+  int[] Pulses=new int[Silk_define.MAX_FRAME_LENGTH];
+  L=psDec.frame_length;
+  sDecCtrl.LTP_scale_Q14=0;
+  Silk_typedef.SKP_assert(L > 0 && L <= Silk_define.MAX_FRAME_LENGTH);
+  decBytes[0]=0;
+  if (action == 0) {
+    fs_Khz_old=psDec.fs_kHz;
+    LPC_order_old=psDec.LPC_order;
+    if (psDec.nFramesDecoded == 0) {
+      Silk_range_coder.SKP_Silk_range_dec_init(psDec.sRC,pCode,pCode_offset,nBytes);
+    }
+    Silk_decode_parameters.SKP_Silk_decode_parameters(psDec,sDecCtrl,Pulses,1);
+    if (psDec.sRC.error != 0) {
+      psDec.nBytesLeft=0;
+      action=1;
+      Silk_decoder_set_fs.SKP_Silk_decoder_set_fs(psDec,fs_Khz_old);
+      decBytes[0]=psDec.sRC.bufferLength;
+      if (psDec.sRC.error == Silk_define.RANGE_CODER_DEC_PAYLOAD_TOO_LONG) {
+        ret=Silk_errors.SKP_SILK_DEC_PAYLOAD_TOO_LARGE;
+      }
+ else {
+        ret=Silk_errors.SKP_SILK_DEC_PAYLOAD_ERROR;
+      }
+    }
+ else {
+      decBytes[0]=psDec.sRC.bufferLength - psDec.nBytesLeft;
+      psDec.nFramesDecoded++;
+      L=psDec.frame_length;
+      Silk_decode_core.SKP_Silk_decode_core(psDec,sDecCtrl,pOut,pOut_offset,Pulses);
+      Silk_PLC.SKP_Silk_PLC(psDec,sDecCtrl,pOut,pOut_offset,L,action);
+      psDec.lossCnt=0;
+      psDec.prev_sigtype=sDecCtrl.sigtype;
+      psDec.first_frame_after_reset=0;
+    }
+  }
+  if (action == 1) {
+    Silk_PLC.SKP_Silk_PLC(psDec,sDecCtrl,pOut,pOut_offset,L,action);
+    psDec.lossCnt++;
+  }
+  System.arraycopy(pOut,pOut_offset + 0,psDec.outBuf,0,L);
+  Silk_PLC.SKP_Silk_PLC_glue_frames(psDec,sDecCtrl,pOut,pOut_offset,L);
+  Silk_CNG.SKP_Silk_CNG(psDec,sDecCtrl,pOut,pOut_offset,L);
+  Silk_typedef.SKP_assert(((psDec.fs_kHz == 12) && (L % 3) == 0) || ((psDec.fs_kHz != 12) && (L % 2) == 0));
+  Silk_biquad.SKP_Silk_biquad(pOut,pOut_offset,psDec.HP_B,psDec.HP_A,psDec.HPState,pOut,pOut_offset,L);
+  pN[0]=(short)L;
+  psDec.lagPrev=sDecCtrl.pitchL[Silk_define.NB_SUBFR - 1];
+  return ret;
+}
