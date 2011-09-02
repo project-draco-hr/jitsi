@@ -1,0 +1,39 @@
+{
+  long last=0;
+  boolean isAfterStandby=false;
+  while (isRunning) {
+    long curr=System.currentTimeMillis();
+    if (!isAfterStandby && last != 0)     isAfterStandby=(last + 4 * CHECK_INTERVAL - curr) < 0;
+    if (isAfterStandby) {
+      downAllInterfaces();
+      isAfterStandby=false;
+      last=curr;
+synchronized (this) {
+        try {
+          wait(CHECK_INTERVAL);
+        }
+ catch (        Exception e) {
+        }
+      }
+      continue;
+    }
+    try {
+      boolean networkIsUP=activeInterfaces.size() > 0;
+      checkNetworkInterfaces(true,1000);
+      if (!networkIsUP && activeInterfaces.size() > 0) {
+        isAfterStandby=false;
+      }
+      last=System.currentTimeMillis();
+    }
+ catch (    SocketException e) {
+      logger.error("Error checking network interfaces",e);
+    }
+synchronized (this) {
+      try {
+        wait(CHECK_INTERVAL);
+      }
+ catch (      Exception e) {
+      }
+    }
+  }
+}

@@ -1,8 +1,13 @@
 {
 synchronized (listeners) {
-    listeners.add(listener);
+    if (!listeners.contains(listener)) {
+      listeners.add(listener);
+      initialFireEvents(listener);
+    }
   }
   NetaddrActivator.getBundleContext().addServiceListener(this);
-  this.systemActivityNotificationsService=ServiceUtils.getService(NetaddrActivator.getBundleContext(),SystemActivityNotificationsService.class);
-  this.systemActivityNotificationsService.addSystemActivityChangeListener(this);
+  if (this.systemActivityNotificationsService == null) {
+    SystemActivityNotificationsService systActService=ServiceUtils.getService(NetaddrActivator.getBundleContext(),SystemActivityNotificationsService.class);
+    handleNewSystemActivityNotificationsService(systActService);
+  }
 }

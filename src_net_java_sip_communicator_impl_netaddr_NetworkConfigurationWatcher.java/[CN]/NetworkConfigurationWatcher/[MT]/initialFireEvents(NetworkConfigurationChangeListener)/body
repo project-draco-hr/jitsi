@@ -1,0 +1,23 @@
+{
+  try {
+    Enumeration<NetworkInterface> e=NetworkInterface.getNetworkInterfaces();
+    while (e.hasMoreElements()) {
+      NetworkInterface networkInterface=e.nextElement();
+      if (isInterfaceLoopback(networkInterface))       continue;
+      if (isInterfaceUp(networkInterface)) {
+        Enumeration<InetAddress> as=networkInterface.getInetAddresses();
+        boolean hasAddress=false;
+        while (as.hasMoreElements()) {
+          InetAddress inetAddress=as.nextElement();
+          if (inetAddress.isLinkLocalAddress())           continue;
+          hasAddress=true;
+          fireChangeEvent(new ChangeEvent(networkInterface.getName(),ChangeEvent.ADDRESS_UP,inetAddress,false,true),listener);
+        }
+        if (hasAddress)         fireChangeEvent(new ChangeEvent(networkInterface.getName(),ChangeEvent.IFACE_UP,null,false,true),listener);
+      }
+    }
+  }
+ catch (  SocketException e) {
+    logger.error("Error checking network interfaces",e);
+  }
+}

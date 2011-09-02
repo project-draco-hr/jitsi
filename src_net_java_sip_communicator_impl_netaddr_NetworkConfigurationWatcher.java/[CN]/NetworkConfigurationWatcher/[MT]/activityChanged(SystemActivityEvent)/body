@@ -1,13 +1,20 @@
 {
   if (event.getEventID() == SystemActivityEvent.EVENT_SLEEP) {
-    Iterator<NetworkInterface> iter=activeInterfaces.iterator();
-    while (iter.hasNext()) {
-      NetworkInterface niface=iter.next();
-      fireChangeEvent(new ChangeEvent(niface,ChangeEvent.IFACE_DOWN,true));
-    }
-    activeInterfaces.clear();
+    downAllInterfaces();
   }
  else   if (event.getEventID() == SystemActivityEvent.EVENT_NETWORK_CHANGE) {
-    checkNetworkInterfaces(true);
+synchronized (this) {
+      try {
+        wait(3000);
+      }
+ catch (      InterruptedException ex) {
+      }
+    }
+    try {
+      checkNetworkInterfaces(true,0);
+    }
+ catch (    SocketException e) {
+      logger.error("Error checking network interfaces",e);
+    }
   }
 }

@@ -1,6 +1,5 @@
 {
-  if (!(event.getSource() instanceof NetworkInterface))   return;
-  NetworkInterface iface=(NetworkInterface)event.getSource();
+  String ifaceName=(String)event.getSource();
   if (event.getType() == ChangeEvent.IFACE_UP) {
     if (connectedInterfaces.isEmpty()) {
       Iterator<ProtocolProviderService> iter=needsReconnection.iterator();
@@ -13,15 +12,15 @@
       }
       needsReconnection.clear();
     }
-    connectedInterfaces.add(iface.getName());
+    connectedInterfaces.add(ifaceName);
   }
  else   if (event.getType() == ChangeEvent.IFACE_DOWN) {
-    connectedInterfaces.remove(iface.getName());
+    connectedInterfaces.remove(ifaceName);
     if (connectedInterfaces.size() > 0) {
       Iterator<Map.Entry<ProtocolProviderService,List<String>>> iter=autoReconnEnabledProviders.entrySet().iterator();
       while (iter.hasNext()) {
         Map.Entry<ProtocolProviderService,List<String>> entry=iter.next();
-        if (entry.getValue().contains(iface.getName())) {
+        if (entry.getValue().contains(ifaceName)) {
           ProtocolProviderService pp=entry.getKey();
           if (currentlyReconnecting.containsKey(pp)) {
             currentlyReconnecting.remove(pp).cancel();
