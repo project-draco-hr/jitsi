@@ -11,13 +11,13 @@
     return (ret);
   }
   API_fs_Hz=encControl.API_sampleRate;
-  max_internal_fs_kHz=(int)encControl.maxInternalSampleRate / 1000;
-  PacketSize_ms=1000 * (int)encControl.packetSize / API_fs_Hz;
-  TargetRate_bps=(int)encControl.bitRate;
-  PacketLoss_perc=(int)encControl.packetLossPercentage;
-  UseInBandFEC=(int)encControl.useInBandFEC;
-  Complexity=(int)encControl.complexity;
-  UseDTX=(int)encControl.useDTX;
+  max_internal_fs_kHz=encControl.maxInternalSampleRate / 1000;
+  PacketSize_ms=1000 * encControl.packetSize / API_fs_Hz;
+  TargetRate_bps=encControl.bitRate;
+  PacketLoss_perc=encControl.packetLossPercentage;
+  UseInBandFEC=encControl.useInBandFEC;
+  Complexity=encControl.complexity;
+  UseDTX=encControl.useDTX;
   psEnc.sCmn.API_fs_Hz=API_fs_Hz;
   psEnc.sCmn.maxInternal_fs_kHz=max_internal_fs_kHz;
   psEnc.sCmn.useInBandFEC=UseInBandFEC;
@@ -27,7 +27,7 @@
     assert(false);
     return (ret);
   }
-  if (nSamplesIn > (int)(psEnc.sCmn.PacketSize_ms * API_fs_Hz / 1000)) {
+  if (nSamplesIn > (psEnc.sCmn.PacketSize_ms * API_fs_Hz / 1000)) {
     ret=Silk_errors.SKP_SILK_ENC_INPUT_INVALID_NO_OF_SAMPLES;
     assert(false);
     return (ret);
@@ -37,7 +37,7 @@
     return (ret);
   }
   if (Math.min(API_fs_Hz,1000 * max_internal_fs_kHz) == 24000 && psEnc.sCmn.sSWBdetect.SWB_detected == 0 && psEnc.sCmn.sSWBdetect.WB_detected == 0) {
-    Silk_detect_SWB_input.SKP_Silk_detect_SWB_input(psEnc.sCmn.sSWBdetect,samplesIn,samplesIn_offset,(int)nSamplesIn);
+    Silk_detect_SWB_input.SKP_Silk_detect_SWB_input(psEnc.sCmn.sSWBdetect,samplesIn,samplesIn_offset,nSamplesIn);
   }
   MaxBytesOut=0;
   while (true) {
@@ -48,8 +48,8 @@
       System.arraycopy(samplesIn,samplesIn_offset,psEnc.sCmn.inputBuf,psEnc.sCmn.inputBufIx,nSamplesFromInput);
     }
  else {
-      nSamplesToBuffer=Math.min(nSamplesToBuffer,(int)nSamplesIn * psEnc.sCmn.fs_kHz * 1000 / API_fs_Hz);
-      nSamplesFromInput=(int)(nSamplesToBuffer * API_fs_Hz / (psEnc.sCmn.fs_kHz * 1000));
+      nSamplesToBuffer=Math.min(nSamplesToBuffer,nSamplesIn * psEnc.sCmn.fs_kHz * 1000 / API_fs_Hz);
+      nSamplesFromInput=(nSamplesToBuffer * API_fs_Hz / (psEnc.sCmn.fs_kHz * 1000));
       ret+=Silk_resampler.SKP_Silk_resampler(psEnc.sCmn.resampler_state,psEnc.sCmn.inputBuf,psEnc.sCmn.inputBufIx,samplesIn,samplesIn_offset,nSamplesFromInput);
     }
     samplesIn_offset+=nSamplesFromInput;
