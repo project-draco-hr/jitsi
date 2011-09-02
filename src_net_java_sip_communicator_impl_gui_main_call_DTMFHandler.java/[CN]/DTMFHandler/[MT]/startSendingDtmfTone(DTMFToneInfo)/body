@@ -5,19 +5,14 @@
     currentlyPlayingAudio=audioNotifier.createAudio(info.sound);
     currentlyPlayingAudio.playInLoop(10);
   }
-  Iterator<? extends CallPeer> callPeers=callContainer.getCurrentCallRenderer().getCall().getCallPeers();
-  try {
-    while (callPeers.hasNext()) {
-      CallPeer peer=callPeers.next();
-      OperationSetDTMF dtmfOpSet=peer.getProtocolProvider().getOperationSet(OperationSetDTMF.class);
-      if (dtmfOpSet != null) {
-        dtmfOpSet.startSendingDTMF(peer,info.tone);
-        CallPeerRenderer peerRenderer=callContainer.getCurrentCallRenderer().getCallPeerRenderer(peer);
-        if (peerRenderer != null)         peerRenderer.printDTMFTone(info.keyChar);
+  if (callContainer != null)   startSendingDtmfTone(callContainer.getCurrentCallRenderer().getCall(),info);
+ else {
+    Collection<Call> activeCalls=CallManager.getActiveCalls();
+    if (activeCalls != null) {
+      Iterator<Call> callsIter=activeCalls.iterator();
+      while (callsIter.hasNext()) {
+        startSendingDtmfTone(callsIter.next(),info);
       }
     }
-  }
- catch (  Throwable e1) {
-    logger.error("Failed to send a DTMF tone.",e1);
   }
 }

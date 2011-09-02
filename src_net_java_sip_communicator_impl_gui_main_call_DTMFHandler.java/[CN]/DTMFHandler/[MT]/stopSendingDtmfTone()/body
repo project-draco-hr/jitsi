@@ -1,15 +1,14 @@
 {
   if (currentlyPlayingAudio != null)   currentlyPlayingAudio.stop();
   currentlyPlayingAudio=null;
-  Iterator<? extends CallPeer> callPeers=callContainer.getCurrentCallRenderer().getCall().getCallPeers();
-  try {
-    while (callPeers.hasNext()) {
-      CallPeer peer=callPeers.next();
-      OperationSetDTMF dtmfOpSet=peer.getProtocolProvider().getOperationSet(OperationSetDTMF.class);
-      if (dtmfOpSet != null)       dtmfOpSet.stopSendingDTMF(peer);
+  if (callContainer != null)   stopSendingDtmfTone(callContainer.getCurrentCallRenderer().getCall());
+ else {
+    Collection<Call> activeCalls=CallManager.getActiveCalls();
+    if (activeCalls != null) {
+      Iterator<Call> callsIter=activeCalls.iterator();
+      while (callsIter.hasNext()) {
+        stopSendingDtmfTone(callsIter.next());
+      }
     }
-  }
- catch (  Throwable e1) {
-    logger.error("Failed to send a DTMF tone.",e1);
   }
 }
