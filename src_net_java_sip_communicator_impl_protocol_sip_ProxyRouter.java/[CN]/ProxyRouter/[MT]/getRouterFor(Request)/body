@@ -1,8 +1,10 @@
 {
   Object service=SipApplicationData.getApplicationData(request,SipApplicationData.KEY_SERVICE);
   if (service instanceof ProtocolProviderServiceSipImpl) {
-    String proxy=((ProtocolProviderServiceSipImpl)service).getOutboundProxyString();
-    if (proxy == null)     return this.getDefaultRouter();
+    ProtocolProviderServiceSipImpl sipProvider=((ProtocolProviderServiceSipImpl)service);
+    String proxy=sipProvider.getOutboundProxyString();
+    boolean forceLooseRouting=Boolean.valueOf((String)sipProvider.getAccountID().getAccountProperty(ProtocolProviderFactory.FORCE_PROXY_BYPASS));
+    if (proxy == null || forceLooseRouting)     return this.getDefaultRouter();
     Router router=routerCache.get(proxy);
     if (router == null) {
       router=new DefaultRouter(stack,proxy);
