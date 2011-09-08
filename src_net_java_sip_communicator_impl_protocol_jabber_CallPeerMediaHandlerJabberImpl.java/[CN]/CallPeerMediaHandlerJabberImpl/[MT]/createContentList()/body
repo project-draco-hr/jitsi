@@ -36,5 +36,11 @@
   if (mediaDescs.isEmpty()) {
     ProtocolProviderServiceJabberImpl.throwOperationFailedException("We couldn't find any active Audio/Video devices" + " and couldn't create a call",OperationFailedException.GENERAL_ERROR,null,logger);
   }
-  return harvestCandidates(null,mediaDescs,null);
+  TransportInfoSender transportInfoSender=getTransportManager().getXmlNamespace().equals(ProtocolProviderServiceJabberImpl.URN_GOOGLE_TRANSPORT_P2P) ? new TransportInfoSender(){
+    public void sendTransportInfo(    Iterable<ContentPacketExtension> contents){
+      getPeer().sendTransportInfo(contents);
+    }
+  }
+ : null;
+  return harvestCandidates(null,mediaDescs,transportInfoSender);
 }

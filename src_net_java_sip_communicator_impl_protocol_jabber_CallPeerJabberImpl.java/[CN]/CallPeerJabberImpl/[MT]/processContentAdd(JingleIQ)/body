@@ -3,9 +3,39 @@
   List<ContentPacketExtension> contents=content.getContentList();
   Iterable<ContentPacketExtension> answerContents;
   JingleIQ contentIQ;
+  boolean noCands=false;
+  logger.info("nocand " + noCands);
+  logger.info("run code");
   try {
-    mediaHandler.processOffer(contents);
+    if (!contentAddWithNoCands)     mediaHandler.processOffer(contents);
+    if (contentAddWithNoCands == false) {
+      for (      ContentPacketExtension c : contents) {
+        if (JingleUtils.getFirstCandidate(c,1) == null) {
+          contentAddWithNoCands=true;
+          noCands=true;
+        }
+      }
+    }
+    if (noCands) {
+      new Thread(){
+        public void run(){
+          try {
+synchronized (candSyncRoot) {
+              candSyncRoot.wait();
+            }
+          }
+ catch (          InterruptedException e) {
+          }
+          processContentAdd(content);
+          contentAddWithNoCands=false;
+        }
+      }
+.start();
+      logger.info("start thread");
+      return;
+    }
     mediaHandler.getTransportManager().wrapupConnectivityEstablishment();
+    logger.info("wraping up");
     answerContents=mediaHandler.generateSessionAccept();
     contentIQ=null;
   }

@@ -1,0 +1,77 @@
+{
+  if (IceProcessingState.RUNNING.equals(iceAgent.getState())) {
+    if (logger.isInfoEnabled()) {
+      logger.info("Update ICE remote candidates");
+    }
+    for (    ContentPacketExtension content : remote) {
+      GTalkTransportPacketExtension transport=content.getFirstChildOfType(GTalkTransportPacketExtension.class);
+      List<GTalkCandidatePacketExtension> candidates=transport.getChildExtensionsOfType(GTalkCandidatePacketExtension.class);
+      if (candidates == null || candidates.size() == 0) {
+        return false;
+      }
+      RtpDescriptionPacketExtension description=content.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+      if (description == null) {
+        ContentPacketExtension localContent=findContentByName(cpeList,content.getName());
+        if (localContent != null) {
+          description=localContent.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+        }
+      }
+      if (description == null)       continue;
+      IceMediaStream stream=iceAgent.getStream(description.getMedia());
+      for (      GTalkCandidatePacketExtension candidate : candidates) {
+        String ufrag=candidate.getUsername();
+        if (candidate.getGeneration() != iceAgent.getGeneration())         continue;
+        Component component=stream.getComponent(candidate.getComponent());
+        RemoteCandidate remoteCandidate=new RemoteCandidate(new TransportAddress(candidate.getAddress(),candidate.getPort(),Transport.parse(candidate.getProtocol())),component,org.ice4j.ice.CandidateType.parse(candidate.getType().toString()),"0",(long)(candidate.getPreference() * 1000),ufrag);
+        component.addUpdateRemoteCandidate(remoteCandidate);
+      }
+    }
+    for (    IceMediaStream stream : iceAgent.getStreams()) {
+      for (      Component component : stream.getComponents()) {
+        component.updateRemoteCandidate();
+      }
+    }
+    return false;
+  }
+  int generation=iceAgent.getGeneration();
+  boolean startConnectivityEstablishment=false;
+  for (  ContentPacketExtension content : remote) {
+    GTalkTransportPacketExtension transport=content.getFirstChildOfType(GTalkTransportPacketExtension.class);
+    List<GTalkCandidatePacketExtension> candidates=transport.getChildExtensionsOfType(GTalkCandidatePacketExtension.class);
+    RtpDescriptionPacketExtension description=content.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+    if ((description == null) && (cpeList != null)) {
+      ContentPacketExtension localContent=findContentByName(cpeList,content.getName());
+      if (localContent != null) {
+        description=localContent.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+      }
+    }
+    if (description == null)     continue;
+    IceMediaStream stream=iceAgent.getStream(description.getMedia());
+    for (    GTalkCandidatePacketExtension candidate : candidates) {
+      String ufrag=candidate.getUsername();
+      if (candidate.getGeneration() != generation)       continue;
+      if (candidate.getProtocol().equalsIgnoreCase("ssltcp"))       continue;
+      Component component=stream.getComponent(candidate.getComponent());
+      RemoteCandidate remoteCandidate=new RemoteCandidate(new TransportAddress(candidate.getAddress(),candidate.getPort(),Transport.parse(candidate.getProtocol())),component,org.ice4j.ice.CandidateType.parse(candidate.getType().toString()),"0",(long)(candidate.getPreference() * 1000),ufrag);
+      component.addRemoteCandidate(remoteCandidate);
+      logger.info("add remote candidate");
+      startConnectivityEstablishment=true;
+    }
+  }
+  if (startConnectivityEstablishment) {
+    for (    IceMediaStream stream : iceAgent.getStreams()) {
+      for (      Component component : stream.getComponents()) {
+        if (component.getRemoteCandidateCount() < 1) {
+          startConnectivityEstablishment=false;
+          break;
+        }
+      }
+      if (!startConnectivityEstablishment)       break;
+    }
+    if (startConnectivityEstablishment) {
+      iceAgent.startConnectivityEstablishment();
+      return true;
+    }
+  }
+  return false;
+}

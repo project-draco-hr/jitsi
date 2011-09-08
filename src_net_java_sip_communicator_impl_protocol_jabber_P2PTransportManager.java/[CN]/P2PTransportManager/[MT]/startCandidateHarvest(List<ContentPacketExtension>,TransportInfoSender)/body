@@ -1,0 +1,41 @@
+{
+  final List<ContentPacketExtension> offer=ourOffer;
+  this.cpeList=ourOffer;
+  if (transportInfoSender == null) {
+    for (    ContentPacketExtension ourContent : ourOffer) {
+      RtpDescriptionPacketExtension rtpDesc=ourContent.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+      IceMediaStream stream=createIceStream(rtpDesc.getMedia());
+      ourContent.addChildExtension(createTransport(stream));
+    }
+    return;
+  }
+  for (  ContentPacketExtension ourContent : offer) {
+    ourContent.addChildExtension(getTransportPacketExtension());
+  }
+  new Thread(){
+    public void run(){
+      Collection<ContentPacketExtension> transportInfoContents=(transportInfoSender == null) ? null : new LinkedList<ContentPacketExtension>();
+      for (      ContentPacketExtension ourContent : offer) {
+        RtpDescriptionPacketExtension rtpDesc=ourContent.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+        ourContent.addChildExtension(getTransportPacketExtension());
+        IceMediaStream stream=null;
+        try {
+          stream=createIceStream(rtpDesc.getMedia());
+        }
+ catch (        OperationFailedException e) {
+          logger.info("Failed to create ICE stream",e);
+        }
+        ContentPacketExtension transportInfoContent=new ContentPacketExtension();
+        for (        String name : ourContent.getAttributeNames()) {
+          Object value=ourContent.getAttribute(name);
+          if (value != null)           transportInfoContent.setAttribute(name,value);
+        }
+        transportInfoContent.addChildExtension(createTransport(stream));
+        transportInfoContents.clear();
+        transportInfoContents.add(transportInfoContent);
+        transportInfoSender.sendTransportInfo(transportInfoContents);
+      }
+    }
+  }
+.start();
+}
