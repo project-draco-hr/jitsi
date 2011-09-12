@@ -1,0 +1,20 @@
+{
+  if (protocolProvider.getRegistrationState() == RegistrationState.UNREGISTERING) {
+    String transport=protocolProvider.getRegistrarConnection().getTransport();
+    ListeningPoint old=getLP(transport);
+    try {
+      stack.deleteListeningPoint(old);
+    }
+ catch (    Throwable t) {
+      logger.warn("Error replacing ListeningPoint for " + transport,t);
+    }
+    try {
+      ListeningPoint tcpLP=stack.createListeningPoint(NetworkUtils.IN_ADDR_ANY,transport.equals(ListeningPoint.TCP) ? getPreferredClearPort() : getPreferredSecurePort(),transport);
+      clearJainSipProvider.addListeningPoint(tcpLP);
+    }
+ catch (    Throwable t) {
+      logger.warn("Error replacing ListeningPoint for " + protocolProvider.getRegistrarConnection().getTransport(),t);
+    }
+  }
+  resetListeningPointsTimers.remove(protocolProvider.getRegistrarConnection().getTransport());
+}

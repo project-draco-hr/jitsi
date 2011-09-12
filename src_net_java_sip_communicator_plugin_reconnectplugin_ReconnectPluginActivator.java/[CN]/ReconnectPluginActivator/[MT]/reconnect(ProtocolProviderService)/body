@@ -7,10 +7,27 @@
  else {
     delay=(long)(RECONNECT_DELAY_MIN + Math.random() * RECONNECT_DELAY_MAX) * 1000;
   }
-  unregister(pp);
-  ReconnectTask task=new ReconnectTask(pp);
+  final ReconnectTask task=new ReconnectTask(pp);
   task.delay=delay;
-  currentlyReconnecting.put(pp,task);
-  if (logger.isTraceEnabled())   logger.trace("Reconnect " + pp + " after "+ delay+ " ms.");
-  timer.schedule(task,delay);
+  RegistrationStateChangeListener listener=new RegistrationStateChangeListener(){
+    public void registrationStateChanged(    RegistrationStateChangeEvent evt){
+      if (evt.getSource() instanceof ProtocolProviderService) {
+        if (evt.getNewState().equals(RegistrationState.UNREGISTERED) || evt.getNewState().equals(RegistrationState.CONNECTION_FAILED)) {
+synchronized (this) {
+            pp.removeRegistrationStateChangeListener(this);
+            if (timer == null)             return;
+            currentlyReconnecting.put(pp,task);
+            if (logger.isTraceEnabled())             logger.trace("Reconnect " + pp + " after "+ task.delay+ " ms.");
+            timer.schedule(task,task.delay);
+          }
+        }
+ else         if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
+          pp.removeRegistrationStateChangeListener(this);
+        }
+      }
+    }
+  }
+;
+  pp.addRegistrationStateChangeListener(listener);
+  unregister(pp,true,listener,task);
 }

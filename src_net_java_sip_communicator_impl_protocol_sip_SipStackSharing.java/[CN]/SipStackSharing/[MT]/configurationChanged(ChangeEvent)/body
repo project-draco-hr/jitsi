@@ -1,0 +1,16 @@
+{
+  if (event.isInitial())   return;
+  if (event.getType() == ChangeEvent.ADDRESS_DOWN) {
+    for (    final ProtocolProviderServiceSipImpl pp : listeners) {
+      if (pp.getRegistrarConnection().getTransport() != null && (pp.getRegistrarConnection().getTransport().equals(ListeningPoint.TCP) || pp.getRegistrarConnection().getTransport().equals(ListeningPoint.TLS))) {
+        ResetListeningPoint reseter;
+synchronized (resetListeningPointsTimers) {
+          if (resetListeningPointsTimers.containsKey(pp.getRegistrarConnection().getTransport()))           continue;
+          reseter=new ResetListeningPoint(pp);
+          resetListeningPointsTimers.put(pp.getRegistrarConnection().getTransport(),reseter);
+        }
+        pp.addRegistrationStateChangeListener(reseter);
+      }
+    }
+  }
+}

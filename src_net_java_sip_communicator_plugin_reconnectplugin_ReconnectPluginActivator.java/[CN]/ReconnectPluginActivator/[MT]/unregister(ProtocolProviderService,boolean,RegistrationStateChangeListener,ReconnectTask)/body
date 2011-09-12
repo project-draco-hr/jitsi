@@ -1,0 +1,24 @@
+{
+  unregisteredProviders.add(pp);
+  new Thread(new Runnable(){
+    public void run(){
+      try {
+        if (pp.getRegistrationState().equals(RegistrationState.UNREGISTERING) || pp.getRegistrationState().equals(RegistrationState.UNREGISTERED) || pp.getRegistrationState().equals(RegistrationState.CONNECTION_FAILED)) {
+          if (reconnect) {
+            if (listener != null)             pp.removeRegistrationStateChangeListener(listener);
+            if (timer == null || task == null)             return;
+            currentlyReconnecting.put(pp,task);
+            if (logger.isTraceEnabled())             logger.trace("Reconnect " + pp + " after "+ task.delay+ " ms.");
+            timer.schedule(task,task.delay);
+          }
+          return;
+        }
+        pp.unregister();
+      }
+ catch (      Throwable t) {
+        logger.error("Error unregistering pp:" + pp,t);
+      }
+    }
+  }
+).start();
+}
