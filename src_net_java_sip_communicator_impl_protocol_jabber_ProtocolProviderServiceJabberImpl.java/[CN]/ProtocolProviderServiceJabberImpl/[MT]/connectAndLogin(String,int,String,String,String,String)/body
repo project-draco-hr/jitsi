@@ -1,6 +1,8 @@
 {
   ConnectionConfiguration confConn=new ConnectionConfiguration(address,serverPort,serviceName,proxy);
   confConn.setReconnectionAllowed(false);
+  boolean tlsRequired=!accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_ALLOW_NON_SECURE,false);
+  confConn.setSecurityMode(tlsRequired ? ConnectionConfiguration.SecurityMode.required : ConnectionConfiguration.SecurityMode.enabled);
   if (connection != null) {
     logger.error("Connection is not null and isConnected:" + connection.isConnected(),new Exception("Trace possible duplicate connections: " + getAccountID().getAccountAddress()));
   }
@@ -22,6 +24,9 @@
   registerServiceDiscoveryManager();
   if (connectionListener == null) {
     connectionListener=new JabberConnectionListener();
+  }
+  if (!connection.isSecureConnection() && tlsRequired) {
+    throw new XMPPException("TLS is required by client");
   }
   connection.addConnectionListener(connectionListener);
   if (abortConnecting) {
