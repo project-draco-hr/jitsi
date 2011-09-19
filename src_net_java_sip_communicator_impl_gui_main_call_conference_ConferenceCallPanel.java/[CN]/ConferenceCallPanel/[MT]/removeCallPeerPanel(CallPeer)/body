@@ -1,14 +1,15 @@
 {
-  ConferencePeerPanel confPeerPanel=callPeerPanels.get(peer);
-  if (confPeerPanel == null)   return;
-  peer.removeCallPeerConferenceListener(confPeerPanel);
-  peer.removeConferenceMembersSoundLevelListener(confPeerPanel.getConferenceMembersSoundLevelListener());
-  peer.removeStreamSoundLevelListener(confPeerPanel.getStreamSoundLevelListener());
+  ConferenceCallPeerRenderer confPeerRenderer=callPeerPanels.get(peer);
+  if (confPeerRenderer == null)   return;
+  ConferenceMembersSoundLevelListener membersSoundLevelListener=confPeerRenderer.getConferenceMembersSoundLevelListener();
+  if (membersSoundLevelListener != null)   peer.removeConferenceMembersSoundLevelListener(membersSoundLevelListener);
+  SoundLevelListener soundLevelListener=confPeerRenderer.getStreamSoundLevelListener();
+  if (soundLevelListener != null)   peer.removeStreamSoundLevelListener(soundLevelListener);
   callPeerPanels.remove(peer);
-  mainPanel.remove(confPeerPanel);
-  if (call.getCallPeerCount() < 2)   setSingleConferenceFocusUI(true);
-  CallPeerAdapter adapter=confPeerPanel.getCallPeerAdapter();
+  mainPanel.remove(confPeerRenderer.getComponent());
+  CallPeerAdapter adapter=confPeerRenderer.getCallPeerAdapter();
   peer.removeCallPeerListener(adapter);
   peer.removePropertyChangeListener(adapter);
   peer.removeCallPeerSecurityListener(adapter);
+  peer.removeCallPeerConferenceListener(adapter);
 }
