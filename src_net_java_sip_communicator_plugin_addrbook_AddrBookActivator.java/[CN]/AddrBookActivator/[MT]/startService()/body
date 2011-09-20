@@ -1,0 +1,26 @@
+{
+  String cssClassName;
+  if (OSUtils.IS_WINDOWS && getConfigService().getBoolean(PNAME_ENABLE_MICROSOFT_OUTLOOK_SEARCH,true)) {
+    cssClassName="net.java.sip.communicator.plugin.addrbook" + ".msoutlook.MsOutlookAddrBookContactSourceService";
+  }
+ else   if (OSUtils.IS_MAC && getConfigService().getBoolean(PNAME_ENABLE_MACOSX_ADDRESS_BOOK_SEARCH,true)) {
+    cssClassName="net.java.sip.communicator.plugin.addrbook" + ".macosx.MacOSXAddrBookContactSourceService";
+  }
+ else   return;
+  try {
+    css=(ContactSourceService)Class.forName(cssClassName).newInstance();
+  }
+ catch (  Exception ex) {
+    logger.error("Failed to instantiate " + cssClassName,ex);
+    return;
+  }
+  try {
+    cssServiceRegistration=bundleContext.registerService(ContactSourceService.class.getName(),css,null);
+  }
+  finally {
+    if (cssServiceRegistration == null) {
+      if (css instanceof AsyncContactSourceService)       ((AsyncContactSourceService)css).stop();
+      css=null;
+    }
+  }
+}
