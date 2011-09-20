@@ -4,7 +4,10 @@
   if (transportInfoSender == null) {
     for (    ContentPacketExtension ourContent : ourOffer) {
       RtpDescriptionPacketExtension rtpDesc=ourContent.getFirstChildOfType(RtpDescriptionPacketExtension.class);
-      IceMediaStream stream=createIceStream(rtpDesc.getMedia());
+      IceMediaStream stream=null;
+synchronized (wrapupSyncRoot) {
+        stream=createIceStream(rtpDesc.getMedia());
+      }
       ourContent.addChildExtension(createTransport(stream));
     }
     return;
@@ -20,7 +23,9 @@
         ourContent.addChildExtension(getTransportPacketExtension());
         IceMediaStream stream=null;
         try {
-          stream=createIceStream(rtpDesc.getMedia());
+synchronized (wrapupSyncRoot) {
+            stream=createIceStream(rtpDesc.getMedia());
+          }
         }
  catch (        OperationFailedException e) {
           logger.info("Failed to create ICE stream",e);
