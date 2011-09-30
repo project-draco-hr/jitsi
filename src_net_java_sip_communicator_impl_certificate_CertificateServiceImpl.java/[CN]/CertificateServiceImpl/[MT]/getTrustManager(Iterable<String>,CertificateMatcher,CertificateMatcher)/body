@@ -112,10 +112,23 @@ GeneralName gn=ad.getAccessLocation();
 if (!(gn.getTagNo() == GeneralName.uniformResourceIdentifier && gn.getName() instanceof DERIA5String)) continue;
 URI uri=new URI(((DERIA5String)gn.getName()).getString());
 if (!(uri.getScheme().equalsIgnoreCase("http") || uri.getScheme().equals("https"))) continue;
-if (logger.isDebugEnabled()) logger.debug("Downloading parent certificate for <" + current.getSubjectDN() + "> from <"+ uri+ ">");
-try {
-  InputStream is=HttpUtils.openURLConnection(uri.toString()).getContent();
-  X509Certificate cert=(X509Certificate)certFactory.generateCertificate(is);
+X509Certificate cert=null;
+AiaCacheEntry cache=aiaCache.get(uri);
+if (cache != null && cache.cacheDate.after(new Date())) {
+  cert=cache.cert;
+}
+ else {
+  if (logger.isDebugEnabled())   logger.debug("Downloading parent certificate for <" + current.getSubjectDN() + "> from <"+ uri+ ">");
+  try {
+    InputStream is=HttpUtils.openURLConnection(uri.toString()).getContent();
+    cert=(X509Certificate)certFactory.generateCertificate(is);
+  }
+ catch (  Exception e) {
+    logger.debug("Could not download from <" + uri + ">");
+  }
+  aiaCache.put(uri,new AiaCacheEntry(new Date(new Date().getTime() + 10 * 60 * 1000),cert));
+}
+if (cert != null) {
   if (!cert.getIssuerDN().equals(cert.getSubjectDN())) {
     newChain.add(cert);
     foundParent=true;
@@ -123,9 +136,6 @@ try {
     break;
   }
  else   logger.debug("Parent is self-signed, ignoring");
-}
- catch (Exception e) {
-  logger.debug("Could not download from <" + uri + ">");
 }
 }
 chainLookupCount++;
