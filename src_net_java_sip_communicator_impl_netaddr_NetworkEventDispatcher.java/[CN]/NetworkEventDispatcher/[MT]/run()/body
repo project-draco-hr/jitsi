@@ -1,0 +1,37 @@
+{
+  stopped=false;
+  while (!stopped) {
+    Map.Entry<ChangeEvent,Integer> eventToProcess=null;
+    List<NetworkConfigurationChangeListener> listenersCopy=null;
+synchronized (eventsToDispatch) {
+      if (eventsToDispatch.size() == 0) {
+        try {
+          eventsToDispatch.wait();
+        }
+ catch (        InterruptedException iex) {
+        }
+      }
+      if (listeners.size() == 0)       continue;
+      listenersCopy=new ArrayList<NetworkConfigurationChangeListener>(listeners);
+      Iterator<Map.Entry<ChangeEvent,Integer>> iter=eventsToDispatch.entrySet().iterator();
+      if (iter.hasNext()) {
+        eventToProcess=iter.next();
+        iter.remove();
+      }
+    }
+    if (eventToProcess != null && listenersCopy != null) {
+      if (eventToProcess.getValue() > 0) synchronized (this) {
+        try {
+          wait(eventToProcess.getValue());
+        }
+ catch (        Throwable t) {
+        }
+      }
+      for (int i=0; i < listenersCopy.size(); i++) {
+        fireChangeEvent(eventToProcess.getKey(),listenersCopy.get(i));
+      }
+    }
+    eventToProcess=null;
+    listenersCopy=null;
+  }
+}

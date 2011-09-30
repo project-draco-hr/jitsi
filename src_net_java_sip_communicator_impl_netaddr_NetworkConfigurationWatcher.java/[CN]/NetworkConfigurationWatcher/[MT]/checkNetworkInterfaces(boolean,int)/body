@@ -21,7 +21,7 @@
   for (int i=0; i < inactiveActiveInterfaces.size(); i++) {
     String iface=inactiveActiveInterfaces.get(i);
     if (!currentActiveInterfacesSet.contains(iface)) {
-      if (fireEvents)       fireChangeEvent(new ChangeEvent(iface,ChangeEvent.IFACE_DOWN));
+      if (fireEvents)       eventDispatcher.fireChangeEvent(new ChangeEvent(iface,ChangeEvent.IFACE_DOWN));
       activeInterfaces.remove(iface);
     }
   }
@@ -33,7 +33,7 @@
       InetAddress addr=addrIter.next();
       List<InetAddress> addresses=currentActiveInterfaces.get(entry.getKey());
       if (addresses != null && !addresses.contains(addr)) {
-        if (fireEvents)         fireChangeEvent(new ChangeEvent(entry.getKey(),ChangeEvent.ADDRESS_DOWN,addr));
+        if (fireEvents)         eventDispatcher.fireChangeEvent(new ChangeEvent(entry.getKey(),ChangeEvent.ADDRESS_DOWN,addr));
         addrIter.remove();
       }
     }
@@ -41,7 +41,7 @@
   if (waitBeforeFiringUpEvents > 0 && currentActiveInterfaces.size() != 0) {
 synchronized (this) {
       try {
-        wait(1000);
+        wait(waitBeforeFiringUpEvents);
       }
  catch (      InterruptedException ex) {
       }
@@ -53,7 +53,7 @@ synchronized (this) {
     for (    InetAddress addr : entry.getValue()) {
       List<InetAddress> addresses=activeInterfaces.get(entry.getKey());
       if (addresses != null && !addresses.contains(addr)) {
-        if (fireEvents)         fireChangeEvent(new ChangeEvent(entry.getKey(),ChangeEvent.ADDRESS_UP,addr));
+        if (fireEvents)         eventDispatcher.fireChangeEvent(new ChangeEvent(entry.getKey(),ChangeEvent.ADDRESS_UP,addr));
         addresses.add(addr);
       }
     }
@@ -64,11 +64,17 @@ synchronized (this) {
   }
   activeEntriesIter=currentActiveInterfaces.entrySet().iterator();
   while (activeEntriesIter.hasNext()) {
-    Map.Entry<String,List<InetAddress>> entry=activeEntriesIter.next();
+    final Map.Entry<String,List<InetAddress>> entry=activeEntriesIter.next();
     for (    InetAddress addr : entry.getValue()) {
-      if (fireEvents)       fireChangeEvent(new ChangeEvent(entry.getKey(),ChangeEvent.ADDRESS_UP,addr));
+      if (fireEvents)       eventDispatcher.fireChangeEvent(new ChangeEvent(entry.getKey(),ChangeEvent.ADDRESS_UP,addr));
     }
-    if (fireEvents)     fireChangeEvent(new ChangeEvent(entry.getKey(),ChangeEvent.IFACE_UP));
+    if (fireEvents) {
+      int wait=waitBeforeFiringUpEvents;
+      if (wait == 0) {
+        wait=500;
+      }
+      eventDispatcher.fireChangeEvent(new ChangeEvent(entry.getKey(),ChangeEvent.IFACE_UP),wait);
+    }
     activeInterfaces.put(entry.getKey(),entry.getValue());
   }
 }

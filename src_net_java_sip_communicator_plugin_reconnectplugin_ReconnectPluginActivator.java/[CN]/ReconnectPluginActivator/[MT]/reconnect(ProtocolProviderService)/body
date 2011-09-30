@@ -16,6 +16,11 @@
 synchronized (this) {
             pp.removeRegistrationStateChangeListener(this);
             if (timer == null)             return;
+            if (connectedInterfaces.size() == 0) {
+              needsReconnection.add(pp);
+              if (currentlyReconnecting.containsKey(pp))               currentlyReconnecting.remove(pp).cancel();
+              return;
+            }
             currentlyReconnecting.put(pp,task);
             if (logger.isTraceEnabled())             logger.trace("Reconnect " + pp + " after "+ task.delay+ " ms.");
             timer.schedule(task,task.delay);
