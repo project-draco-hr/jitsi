@@ -55,6 +55,7 @@
         }
       }
       if (!((SDesControl)scontrol).initiatorSelectAttribute(peerAttributes)) {
+        scontrol.cleanup();
         getSrtpControls().remove(key);
         if (peerAttributes.size() > 0)         logger.warn("Received unsupported sdes crypto attribute: " + peerAttributes);
       }
@@ -62,7 +63,10 @@
         Iterator<MediaTypeSrtpControl> it=getSrtpControls().keySet().iterator();
         while (it.hasNext()) {
           MediaTypeSrtpControl mtc=it.next();
-          if (mtc.mediaType == mediaType && mtc.srtpControlType != SrtpControlType.SDES)           it.remove();
+          if (mtc.mediaType == mediaType && mtc.srtpControlType != SrtpControlType.SDES) {
+            getSrtpControls().get(mtc).cleanup();
+            it.remove();
+          }
         }
       }
     }

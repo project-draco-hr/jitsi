@@ -1,17 +1,15 @@
 {
+  if ((pkt.readByte(0) & 0xC0) != 0x80)   return null;
   long ssrc=pkt.getSSRC();
   int seqNum=pkt.getSequenceNumber();
-  boolean isNewContext=false;
-  if (inContext == null) {
-    inContext=createContext(ssrc,inAttribute);
-    inContext.deriveSrtpKeys(seqNum);
-    isNewContext=true;
+  SRTPCryptoContext context=contexts.get(ssrc);
+  if (context == null) {
+    logger.debug("InContext created for SSRC=" + ssrc);
+    context=createContext(ssrc,inAttribute);
+    context.deriveSrtpKeys(seqNum);
+    contexts.put(ssrc,context);
   }
- else   if (ssrc != inContext.getSSRC()) {
-    return null;
-  }
-  boolean validPacket=inContext.reverseTransformPacket(pkt);
-  if (!validPacket && isNewContext)   inContext=null;
+  boolean validPacket=context.reverseTransformPacket(pkt);
   if (!validPacket) {
     return null;
   }

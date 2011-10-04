@@ -1,8 +1,12 @@
 {
-  if (outContext == null) {
-    outContext=createContext(pkt.getSSRC(),outAttribute);
-    outContext.deriveSrtpKeys(0);
+  long ssrc=pkt.getSSRC();
+  SRTPCryptoContext context=contexts.get(ssrc);
+  if (context == null) {
+    logger.debug("OutContext created for SSRC=" + ssrc);
+    context=createContext(ssrc,outAttribute);
+    context.deriveSrtpKeys(0);
+    contexts.put(ssrc,context);
   }
-  outContext.transformPacket(pkt);
+  context.transformPacket(pkt);
   return pkt;
 }
