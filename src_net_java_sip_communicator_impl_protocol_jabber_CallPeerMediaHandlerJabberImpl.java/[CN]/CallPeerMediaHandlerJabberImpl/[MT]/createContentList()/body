@@ -9,10 +9,11 @@
       if (direction != MediaDirection.INACTIVE) {
         ContentPacketExtension content=createContentForOffer(dev.getSupportedFormats(),direction,dev.getSupportedExtensions());
         if (getPeer().getCall().isSipZrtpAttribute()) {
-          SrtpControl control=getZrtpControls().get(mediaType);
-          if (control == null || !(control instanceof ZrtpControl)) {
+          MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.ZRTP);
+          SrtpControl control=getSrtpControls().get(key);
+          if (control == null) {
             control=JabberActivator.getMediaService().createZrtpControl();
-            getZrtpControls().put(mediaType,control);
+            getSrtpControls().put(key,control);
           }
           String helloHash[]=((ZrtpControl)control).getHelloHashSep();
           if (helloHash != null && helloHash[1].length() > 0) {

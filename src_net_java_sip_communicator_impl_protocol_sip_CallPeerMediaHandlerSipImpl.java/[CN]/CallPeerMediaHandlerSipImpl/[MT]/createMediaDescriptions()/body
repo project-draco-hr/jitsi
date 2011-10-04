@@ -8,18 +8,24 @@
   }
   for (  MediaType mediaType : MediaType.values()) {
     MediaDevice dev=getDefaultDevice(mediaType);
-    if (dev != null) {
-      MediaDirection direction=dev.getDirection().and(getDirectionUserPreference(mediaType));
-      if (isLocallyOnHold())       direction=direction.and(MediaDirection.SENDONLY);
-      if (direction != MediaDirection.INACTIVE) {
-        MediaDescription md=createMediaDescription(true,dev.getSupportedFormats(sendQualityPreset,receiveQualityPreset),getTransportManager().getStreamConnector(mediaType),direction,dev.getSupportedExtensions());
+    if (dev == null)     continue;
+    MediaDirection direction=dev.getDirection().and(getDirectionUserPreference(mediaType));
+    if (isLocallyOnHold())     direction=direction.and(MediaDirection.SENDONLY);
+    if (direction != MediaDirection.INACTIVE) {
+      boolean hadSavp=false;
+      for (      String profileName : getRtpTransports()) {
+        MediaDescription md=createMediaDescription(profileName,dev.getSupportedFormats(sendQualityPreset,receiveQualityPreset),getTransportManager().getStreamConnector(mediaType),direction,dev.getSupportedExtensions());
         try {
           if (mediaType.equals(MediaType.VIDEO) && receiveQualityPreset != null && receiveQualityPreset.getFameRate() > 0)           md.setAttribute("framerate",String.valueOf((int)receiveQualityPreset.getFameRate()));
         }
  catch (        SdpException e) {
         }
-        updateMediaDescriptionForSDes(mediaType,md,null);
+        if (!hadSavp) {
+          updateMediaDescriptionForZrtp(mediaType,md);
+          updateMediaDescriptionForSDes(mediaType,md,null);
+        }
         mediaDescs.add(md);
+        if (!hadSavp && profileName.contains("SAVP"))         hadSavp=true;
       }
     }
   }

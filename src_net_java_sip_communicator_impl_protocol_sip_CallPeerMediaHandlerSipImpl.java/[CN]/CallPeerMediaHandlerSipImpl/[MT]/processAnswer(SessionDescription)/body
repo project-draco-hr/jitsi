@@ -1,11 +1,13 @@
 {
-  this.remoteSess=answer;
   List<MediaDescription> remoteDescriptions=SdpUtils.extractMediaDescriptions(answer);
   this.setCallInfoURL(SdpUtils.getCallInfoURL(answer));
+  List<MediaType> seenMediaTypes=new ArrayList<MediaType>();
   for (  MediaDescription mediaDescription : remoteDescriptions) {
     MediaType mediaType;
     try {
       mediaType=SdpUtils.getMediaType(mediaDescription);
+      if (seenMediaTypes.contains(mediaType))       continue;
+      seenMediaTypes.add(mediaType);
     }
  catch (    IllegalArgumentException iae) {
       logger.info("Remote party added to answer a media type that " + "we don't understand. Ignoring stream.");
@@ -37,8 +39,9 @@
     if (mediaType.equals(MediaType.VIDEO)) {
       supportQualityControls=SdpUtils.containsAttribute(mediaDescription,"imageattr");
     }
-    SrtpControl scontrol=getZrtpControls().get(mediaType);
-    if (scontrol != null && scontrol instanceof SDesControl) {
+    MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.SDES);
+    SrtpControl scontrol=getSrtpControls().get(key);
+    if (scontrol != null) {
       List<String> peerAttributes=new LinkedList<String>();
       @SuppressWarnings("unchecked") Vector<Attribute> attrs=mediaDescription.getAttributes(true);
       for (      Attribute a : attrs) {
@@ -51,7 +54,17 @@
           logger.error("received an uparsable sdp attribute",e);
         }
       }
-      ((SDesControl)scontrol).initiatorSelectAttribute(peerAttributes.toArray(new String[peerAttributes.size()]));
+      if (!((SDesControl)scontrol).initiatorSelectAttribute(peerAttributes)) {
+        getSrtpControls().remove(key);
+        if (peerAttributes.size() > 0)         logger.warn("Received unsupported sdes crypto attribute: " + peerAttributes);
+      }
+ else {
+        Iterator<MediaTypeSrtpControl> it=getSrtpControls().keySet().iterator();
+        while (it.hasNext()) {
+          MediaTypeSrtpControl mtc=it.next();
+          if (mtc.mediaType == mediaType && mtc.srtpControlType != SrtpControlType.SDES)           it.remove();
+        }
+      }
     }
     initStream(connector,dev,supportedFormats.get(0),target,direction,rtpExtensions);
   }

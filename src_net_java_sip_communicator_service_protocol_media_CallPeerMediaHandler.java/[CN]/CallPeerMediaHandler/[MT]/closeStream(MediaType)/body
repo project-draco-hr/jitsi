@@ -2,9 +2,12 @@
   if (type == MediaType.AUDIO)   setAudioStream(null);
  else   setVideoStream(null);
   getTransportManager().closeStreamConnector(type);
-  SrtpControl zrtpCtrl=srtpControls.get(type);
-  if (zrtpCtrl != null) {
-    zrtpCtrl.cleanup();
-    srtpControls.remove(type);
+  Iterator<MediaTypeSrtpControl> it=srtpControls.keySet().iterator();
+  while (it.hasNext()) {
+    MediaTypeSrtpControl mct=it.next();
+    if (mct.mediaType == type) {
+      srtpControls.get(mct).cleanup();
+      it.remove();
+    }
   }
 }
