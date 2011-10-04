@@ -5,6 +5,16 @@
   boolean atLeastOneValidDescription=false;
   List<MediaType> seenMediaTypes=new ArrayList<MediaType>();
   for (  MediaDescription mediaDescription : remoteDescriptions) {
+    String transportProtocol;
+    try {
+      transportProtocol=mediaDescription.getMedia().getProtocol();
+    }
+ catch (    SdpParseException e) {
+      throw new OperationFailedException("unable to create the media description",OperationFailedException.ILLEGAL_ARGUMENT,e);
+    }
+    if (getPeer().getProtocolProvider().getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF) == ProtocolProviderFactory.SAVP_MANDATORY && transportProtocol.equals(SdpConstants.RTP_AVP)) {
+      continue;
+    }
     MediaType mediaType=null;
     try {
       mediaType=SdpUtils.getMediaType(mediaDescription);
@@ -53,13 +63,7 @@
         qualityControls.setMaxFrameRate(frameRate);
       }
     }
-    MediaDescription md;
-    try {
-      md=createMediaDescription(mediaDescription.getMedia().getProtocol(),mutuallySupportedFormats,connector,direction,rtpExtensions);
-    }
- catch (    SdpParseException e) {
-      throw new OperationFailedException("unable to create the media description",OperationFailedException.ILLEGAL_ARGUMENT,e);
-    }
+    MediaDescription md=createMediaDescription(transportProtocol,mutuallySupportedFormats,connector,direction,rtpExtensions);
     if (!updateMediaDescriptionForSDes(mediaType,md,mediaDescription))     updateMediaDescriptionForZrtp(mediaType,md);
     MediaFormat fmt=findMediaFormat(remoteFormats,mutuallySupportedFormats.get(0));
     initStream(connector,dev,fmt,target,direction,rtpExtensions);
