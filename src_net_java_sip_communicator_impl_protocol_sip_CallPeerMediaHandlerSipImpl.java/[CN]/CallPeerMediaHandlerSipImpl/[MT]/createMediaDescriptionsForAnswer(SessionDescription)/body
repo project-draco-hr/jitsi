@@ -30,8 +30,6 @@
     List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
     List<RTPExtension> rtpExtensions=intersectRTPExtensions(offeredRTPExtensions,supportedExtensions);
     StreamConnector connector=getTransportManager().getStreamConnector(mediaType);
-    MediaFormat fmt=findMediaFormat(remoteFormats,mutuallySupportedFormats.get(0));
-    initStream(connector,dev,fmt,target,direction,rtpExtensions);
     if (mediaType.equals(MediaType.VIDEO)) {
       QualityPreset sendQualityPreset=null;
       QualityPreset receiveQualityPreset=null;
@@ -52,8 +50,10 @@
         qualityControls.setMaxFrameRate(frameRate);
       }
     }
-    MediaDescription md=createMediaDescription(mutuallySupportedFormats,connector,direction,rtpExtensions);
-    updateMediaDescriptionForZrtp(mediaType,md);
+    MediaDescription md=createMediaDescription(true,mutuallySupportedFormats,connector,direction,rtpExtensions);
+    updateMediaDescriptionForSDes(mediaType,md,mediaDescription);
+    MediaFormat fmt=findMediaFormat(remoteFormats,mutuallySupportedFormats.get(0));
+    initStream(connector,dev,fmt,target,direction,rtpExtensions);
     answerDescriptions.add(md);
     atLeastOneValidDescription=true;
   }

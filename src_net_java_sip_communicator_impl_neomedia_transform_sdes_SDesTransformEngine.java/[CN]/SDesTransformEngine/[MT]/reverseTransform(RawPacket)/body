@@ -1,0 +1,19 @@
+{
+  long ssrc=pkt.getSSRC();
+  int seqNum=pkt.getSequenceNumber();
+  boolean isNewContext=false;
+  if (inContext == null) {
+    inContext=createContext(ssrc,inAttribute);
+    inContext.deriveSrtpKeys(seqNum);
+    isNewContext=true;
+  }
+ else   if (ssrc != inContext.getSSRC()) {
+    return null;
+  }
+  boolean validPacket=inContext.reverseTransformPacket(pkt);
+  if (!validPacket && isNewContext)   inContext=null;
+  if (!validPacket) {
+    return null;
+  }
+  return pkt;
+}

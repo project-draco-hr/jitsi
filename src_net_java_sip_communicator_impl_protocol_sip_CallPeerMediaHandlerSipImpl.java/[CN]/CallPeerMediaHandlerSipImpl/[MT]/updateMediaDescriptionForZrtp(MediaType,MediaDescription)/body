@@ -1,12 +1,13 @@
 {
   if (getPeer().getCall().isSipZrtpAttribute()) {
     try {
-      SrtpControl control=getZrtpControls().get(mediaType);
-      if (control == null) {
-        control=SipActivator.getMediaService().createZrtpControl();
-        getZrtpControls().put(mediaType,control);
+      SrtpControl scontrol=getZrtpControls().get(mediaType);
+      if (scontrol == null || !(scontrol instanceof ZrtpControl)) {
+        scontrol=SipActivator.getMediaService().createZrtpControl();
+        getZrtpControls().put(mediaType,scontrol);
       }
-      String helloHash=control.getHelloHash();
+      ZrtpControl zcontrol=(ZrtpControl)scontrol;
+      String helloHash=zcontrol.getHelloHash();
       if (helloHash != null && helloHash.length() > 0)       md.setAttribute("zrtp-hash",helloHash);
     }
  catch (    SdpException ex) {
