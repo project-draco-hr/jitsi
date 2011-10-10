@@ -11,14 +11,18 @@
  else {
       Dimension videoSize=deviceConfig.getVideoSize();
       if (outputSize != null && videoSize.height > outputSize.height && videoSize.width > outputSize.width)       videoSize=outputSize;
-      VideoMediaStreamImpl.selectVideoSize(captureDevice,videoSize.width,videoSize.height);
+      Dimension dim=VideoMediaStreamImpl.selectVideoSize(captureDevice,videoSize.width,videoSize.height);
       frameRate=deviceConfig.getFrameRate();
+      if (logger.isInfoEnabled() && dim != null)       logger.info("video send resolution: " + dim.width + "x"+ dim.height);
     }
     FrameRateControl frameRateControl=(FrameRateControl)captureDevice.getControl(FrameRateControl.class.getName());
     if (frameRateControl != null) {
       float maxSupportedFrameRate=frameRateControl.getMaxSupportedFrameRate();
       if ((maxSupportedFrameRate > 0) && (frameRate > maxSupportedFrameRate))       frameRate=maxSupportedFrameRate;
       if (frameRate > 0)       frameRateControl.setFrameRate(frameRate);
+      if (logger.isInfoEnabled()) {
+        logger.info("video send FPS: " + (frameRate == -1 ? "default(no restriction)" : frameRate));
+      }
     }
     if (!(captureDevice instanceof PullBufferDataSource)) {
       DataSource cloneableDataSource=Manager.createCloneableDataSource(captureDevice);
