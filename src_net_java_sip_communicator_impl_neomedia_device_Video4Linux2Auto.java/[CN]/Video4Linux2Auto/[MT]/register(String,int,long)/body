@@ -1,6 +1,7 @@
 {
   long v4l2_format=Video4Linux2.v4l2_format_alloc(Video4Linux2.V4L2_BUF_TYPE_VIDEO_CAPTURE);
   int pixelformat=0;
+  String supportedRes=null;
   if (0 != v4l2_format) {
     try {
       if (Video4Linux2.ioctl(fd,Video4Linux2.VIDIOC_G_FMT,v4l2_format) != -1) {
@@ -11,6 +12,9 @@
           if (Video4Linux2.ioctl(fd,Video4Linux2.VIDIOC_S_FMT,v4l2_format) != -1) {
             pixelformat=Video4Linux2.v4l2_pix_format_getPixelformat(fmtPix);
           }
+        }
+        if (logger.isInfoEnabled()) {
+          supportedRes=Video4Linux2.v4l2_pix_format_getWidth(fmtPix) + "x" + Video4Linux2.v4l2_pix_format_getHeight(fmtPix);
         }
       }
     }
@@ -28,6 +32,9 @@
   String name=Video4Linux2.v4l2_capability_getCard(v4l2_capability);
   if ((name == null) || (name.length() == 0))   name=deviceName;
  else   name+=" (" + deviceName + ")";
+  if (logger.isInfoEnabled() && supportedRes != null) {
+    logger.info("Webcam available resolution for " + name + ":"+ supportedRes);
+  }
   CaptureDeviceManager.addDevice(new CaptureDeviceInfo(name,new MediaLocator(LOCATOR_PROTOCOL + ":" + deviceName),new Format[]{format}));
   return true;
 }
