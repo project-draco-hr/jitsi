@@ -12,6 +12,7 @@
     for (    GTalkCandidatePacketExtension candidate : remote) {
       String name=candidate.getName();
       int numComponent=0;
+      logger.info("new cand " + name + " "+ candidate.getProtocol()+ " "+ candidate.getPort());
       if (name.equals("rtp")) {
         numComponent=Component.RTP;
       }
@@ -32,6 +33,7 @@
       }
       String ufrag=candidate.getUsername();
       if (candidate.getGeneration() != iceAgent.getGeneration())       continue;
+      if (candidate.getProtocol().equalsIgnoreCase("ssltcp"))       candidate.setProtocol("tcp");
       Component component=stream.getComponent(numComponent);
       RemoteCandidate remoteCandidate=new RemoteCandidate(new TransportAddress(candidate.getAddress(),candidate.getPort(),Transport.parse(candidate.getProtocol())),component,org.ice4j.ice.CandidateType.parse(candidate.getType().toString()),"0",(long)(candidate.getPreference() * 1000),ufrag);
       component.addUpdateRemoteCandidate(remoteCandidate);
@@ -74,7 +76,7 @@ synchronized (wrapupSyncRoot) {
     }
     String ufrag=candidate.getUsername();
     if (candidate.getGeneration() != generation)     continue;
-    if (candidate.getProtocol().equalsIgnoreCase("ssltcp"))     continue;
+    if (candidate.getProtocol().equalsIgnoreCase("ssltcp"))     candidate.setProtocol("tcp");
     Component component=stream.getComponent(numComponent);
     RemoteCandidate remoteCandidate=new RemoteCandidate(new TransportAddress(candidate.getAddress(),candidate.getPort(),Transport.parse(candidate.getProtocol())),component,org.ice4j.ice.CandidateType.parse(candidate.getType().toString()),"0",(long)(candidate.getPreference() * 1000),ufrag);
     component.addRemoteCandidate(remoteCandidate);
