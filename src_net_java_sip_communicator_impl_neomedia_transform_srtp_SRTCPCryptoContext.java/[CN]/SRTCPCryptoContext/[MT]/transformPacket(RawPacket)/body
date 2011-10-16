@@ -1,0 +1,21 @@
+{
+  boolean encrypt=false;
+  if (policy.getEncType() == SRTPPolicy.AESCM_ENCRYPTION || policy.getEncType() == SRTPPolicy.TWOFISH_ENCRYPTION) {
+    processPacketAESCM(pkt,sentIndex);
+    encrypt=true;
+  }
+ else   if (policy.getEncType() == SRTPPolicy.AESF8_ENCRYPTION || policy.getEncType() == SRTPPolicy.TWOFISHF8_ENCRYPTION) {
+    processPacketAESF8(pkt,sentIndex);
+    encrypt=true;
+  }
+  int index=0;
+  if (encrypt)   index=sentIndex | 0x80000000;
+  pkt.grow(4 + policy.getAuthTagLength());
+  if (policy.getAuthType() != SRTPPolicy.NULL_AUTHENTICATION) {
+    authenticatePacket(pkt,index);
+    pkt.append(rbStore,4);
+    pkt.append(tagStore,policy.getAuthTagLength());
+  }
+  sentIndex++;
+  sentIndex&=~0x80000000;
+}

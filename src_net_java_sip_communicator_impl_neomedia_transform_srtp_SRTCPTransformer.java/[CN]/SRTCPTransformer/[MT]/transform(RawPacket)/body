@@ -1,3 +1,15 @@
 {
+  long ssrc=pkt.GetRTCPSSRC();
+  SRTCPCryptoContext context=this.contexts.get(new Long(ssrc));
+  if (context == null) {
+    context=this.engine.getDefaultContextControl().deriveContext(ssrc);
+    if (context != null) {
+      context.deriveSrtcpKeys();
+      contexts.put(new Long(ssrc),context);
+    }
+  }
+  if (context != null) {
+    context.transformPacket(pkt);
+  }
   return pkt;
 }
