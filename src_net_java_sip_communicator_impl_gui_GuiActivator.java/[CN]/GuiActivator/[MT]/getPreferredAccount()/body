@@ -1,0 +1,23 @@
+{
+  String prefWName=GuiActivator.getResources().getSettingsString("impl.gui.PREFERRED_ACCOUNT_WIZARD");
+  if (prefWName == null || prefWName.length() <= 0)   return null;
+  ServiceReference[] accountWizardRefs=null;
+  try {
+    accountWizardRefs=GuiActivator.bundleContext.getServiceReferences(AccountRegistrationWizard.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException ex) {
+    logger.error("Error while retrieving service refs",ex);
+    return null;
+  }
+  if (accountWizardRefs != null) {
+    if (logger.isDebugEnabled())     logger.debug("Found " + accountWizardRefs.length + " already installed providers.");
+    for (int i=0; i < accountWizardRefs.length; i++) {
+      AccountRegistrationWizard wizard=(AccountRegistrationWizard)GuiActivator.bundleContext.getService(accountWizardRefs[i]);
+      if (wizard.getClass().getName().equals(prefWName)) {
+        ArrayList<AccountID> registeredAccounts=getProtocolProviderFactory(wizard.getProtocolName()).getRegisteredAccounts();
+        if (registeredAccounts.size() > 0)         return getRegisteredProviderForAccount(registeredAccounts.get(0));
+      }
+    }
+  }
+  return null;
+}
