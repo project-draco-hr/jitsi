@@ -1,18 +1,14 @@
 {
   long ssrc=pkt.GetRTCPSSRC();
-  SRTCPCryptoContext context=this.contexts.get(new Long(ssrc));
+  SRTCPCryptoContext context=this.contexts.get(ssrc);
   if (context == null) {
-    context=this.engine.getDefaultContextControl().deriveContext(ssrc);
-    if (context != null) {
-      context.deriveSrtcpKeys();
-      this.contexts.put(new Long(ssrc),context);
-    }
+    context=reverseEngine.getDefaultContextControl().deriveContext(ssrc);
+    context.deriveSrtcpKeys();
+    contexts.put(new Long(ssrc),context);
   }
-  if (context != null) {
-    boolean validPacket=context.reverseTransformPacket(pkt);
-    if (!validPacket) {
-      return null;
-    }
+  boolean validPacket=context.reverseTransformPacket(pkt);
+  if (!validPacket) {
+    return null;
   }
   return pkt;
 }
