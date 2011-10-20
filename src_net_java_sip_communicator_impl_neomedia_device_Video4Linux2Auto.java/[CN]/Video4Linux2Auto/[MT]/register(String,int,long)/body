@@ -7,7 +7,7 @@
       if (Video4Linux2.ioctl(fd,Video4Linux2.VIDIOC_G_FMT,v4l2_format) != -1) {
         long fmtPix=Video4Linux2.v4l2_format_getFmtPix(v4l2_format);
         pixelformat=Video4Linux2.v4l2_pix_format_getPixelformat(fmtPix);
-        if ((Video4Linux2.V4L2_PIX_FMT_RGB24 != pixelformat) || (FFmpeg.PIX_FMT_NONE == DataSource.getFFmpegPixFmt(pixelformat))) {
+        if (FFmpeg.PIX_FMT_NONE == DataSource.getFFmpegPixFmt(pixelformat)) {
           Video4Linux2.v4l2_pix_format_setPixelformat(fmtPix,Video4Linux2.V4L2_PIX_FMT_RGB24);
           if (Video4Linux2.ioctl(fd,Video4Linux2.VIDIOC_S_FMT,v4l2_format) != -1) {
             pixelformat=Video4Linux2.v4l2_pix_format_getPixelformat(fmtPix);
@@ -23,12 +23,9 @@
     }
   }
   Format format;
-  if (Video4Linux2.V4L2_PIX_FMT_RGB24 == pixelformat)   format=new RGBFormat();
- else {
-    int ffmpegPixFmt=DataSource.getFFmpegPixFmt(pixelformat);
-    if (FFmpeg.PIX_FMT_NONE != ffmpegPixFmt)     format=new AVFrameFormat(ffmpegPixFmt,pixelformat);
- else     return false;
-  }
+  int ffmpegPixFmt=DataSource.getFFmpegPixFmt(pixelformat);
+  if (FFmpeg.PIX_FMT_NONE != ffmpegPixFmt)   format=new AVFrameFormat(ffmpegPixFmt,pixelformat);
+ else   return false;
   String name=Video4Linux2.v4l2_capability_getCard(v4l2_capability);
   if ((name == null) || (name.length() == 0))   name=deviceName;
  else   name+=" (" + deviceName + ")";
