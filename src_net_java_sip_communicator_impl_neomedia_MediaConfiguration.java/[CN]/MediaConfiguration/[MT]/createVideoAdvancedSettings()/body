@@ -22,10 +22,17 @@
   advancedPanel.add(centerAdvancedPanel,BorderLayout.CENTER);
   advButton.addMouseListener(new MouseAdapter(){
     @Override public void mouseClicked(    MouseEvent e){
-      advButton.setIcon(NeomediaActivator.getResources().getImage(centerAdvancedPanel.isVisible() ? "service.gui.icons.RIGHT_ARROW_ICON" : "service.gui.icons.DOWN_ARROW_ICON"));
-      centerAdvancedPanel.setVisible(!centerAdvancedPanel.isVisible());
+      boolean isCurrentlyVisible=centerAdvancedPanel.isVisible();
+      int currentHeight=advancedPanel.getHeight();
+      advButton.setIcon(NeomediaActivator.getResources().getImage(isCurrentlyVisible ? "service.gui.icons.RIGHT_ARROW_ICON" : "service.gui.icons.DOWN_ARROW_ICON"));
+      centerAdvancedPanel.setVisible(!isCurrentlyVisible);
       advancedPanel.revalidate();
       NeomediaActivator.getUIService().getConfigurationContainer().validateCurrentForm();
+      Window window=SwingUtilities.getWindowAncestor(advancedPanel);
+      if (window != null) {
+        if (!isCurrentlyVisible)         window.setSize(window.getWidth(),window.getHeight() + advancedPanel.getHeight());
+ else         window.setSize(window.getWidth(),window.getHeight() - currentHeight);
+      }
     }
   }
 );
