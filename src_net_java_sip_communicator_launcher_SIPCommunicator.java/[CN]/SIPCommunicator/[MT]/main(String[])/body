@@ -10,7 +10,8 @@
  else     if (osName.startsWith("Linux"))     os=ChangeJVMFrame.LINUX;
  else     if (osName.startsWith("Windows"))     os=ChangeJVMFrame.WINDOWS;
     ChangeJVMFrame changeJVMFrame=new ChangeJVMFrame(os);
-    changeJVMFrame.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - changeJVMFrame.getWidth() / 2,Toolkit.getDefaultToolkit().getScreenSize().height / 2 - changeJVMFrame.getHeight() / 2);
+    Dimension screenSize=Toolkit.getDefaultToolkit().getScreenSize();
+    changeJVMFrame.setLocation(screenSize.width / 2 - changeJVMFrame.getWidth() / 2,screenSize.height / 2 - changeJVMFrame.getHeight() / 2);
     changeJVMFrame.setVisible(true);
     return;
   }
@@ -20,19 +21,19 @@
     System.exit(argHandler.getErrorCode());
   }
   if (argHandlerRes != LaunchArgHandler.ACTION_CONTINUE_LOCK_DISABLED) {
-    SipCommunicatorLock lock=new SipCommunicatorLock();
-    int lockResult=lock.tryLock(args);
-    if (lockResult == SipCommunicatorLock.LOCK_ERROR) {
+switch (new SipCommunicatorLock().tryLock(args)) {
+case SipCommunicatorLock.LOCK_ERROR:
       System.err.println("Failed to lock SIP Communicator's " + "configuration directory.\n" + "Try launching with the --multiple param.");
-      System.exit(SipCommunicatorLock.LOCK_ERROR);
-    }
- else     if (lockResult == SipCommunicatorLock.ALREADY_STARTED) {
-      System.out.println("SIP Communicator is already running and will " + "handle your parameters (if any).\n" + "Launch with the --multiple param to override this "+ "behaviour.");
-      System.exit(SipCommunicatorLock.SUCCESS);
-    }
- else     if (lockResult == SipCommunicatorLock.SUCCESS) {
-    }
-  }
-  System.setOut(new ScStdOut(System.out));
-  Main.main(new String[0]);
+    System.exit(SipCommunicatorLock.LOCK_ERROR);
+  break;
+case SipCommunicatorLock.ALREADY_STARTED:
+System.out.println("SIP Communicator is already running and will " + "handle your parameters (if any).\n" + "Launch with the --multiple param to override this "+ "behaviour.");
+System.exit(SipCommunicatorLock.SUCCESS);
+break;
+case SipCommunicatorLock.SUCCESS:
+break;
+}
+}
+System.setOut(new ScStdOut(System.out));
+Main.main(new String[0]);
 }
