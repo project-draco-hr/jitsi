@@ -140,7 +140,7 @@
         boolean contactAlreadyListed=false;
         for (int k=0; k < sipcontact.size(); k++) {
           Object[] tmp=sipcontact.get(k);
-          if (((Contact)tmp[0]).equals(tmpContact)) {
+          if (tmp[0].equals(tmpContact)) {
             contactAlreadyListed=true;
             if (((Float)tmp[1]).floatValue() < prio.floatValue()) {
               sipcontact.remove(k);
@@ -156,10 +156,6 @@
     }
     if (sipcontact.isEmpty()) {
       if (logger.isDebugEnabled())       logger.debug("no contact found for id: " + contactID);
-      continue;
-    }
-    if (personStatus != null) {
-      newPresenceStates=setStatusForContacts(personStatus,sipcontact,newPresenceStates);
       continue;
     }
     NodeList statusList=getPidfChilds(tuple,STATUS_ELEMENT);
@@ -218,7 +214,12 @@
     }
     if (changed == false && basic != null) {
       if (getTextContent(basic).equalsIgnoreCase(ONLINE_STATUS)) {
-        newPresenceStates=setStatusForContacts(sipStatusEnum.getStatus(SipStatusEnum.ONLINE),sipcontact,newPresenceStates);
+        if (personStatus != null) {
+          newPresenceStates=setStatusForContacts(personStatus,sipcontact,newPresenceStates);
+        }
+ else {
+          newPresenceStates=setStatusForContacts(sipStatusEnum.getStatus(SipStatusEnum.ONLINE),sipcontact,newPresenceStates);
+        }
       }
  else       if (getTextContent(basic).equalsIgnoreCase(OFFLINE_STATUS)) {
         newPresenceStates=setStatusForContacts(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE),sipcontact,newPresenceStates);
