@@ -3,15 +3,17 @@
   boolean unknown=false;
   List<ParameterPacketExtension> params=payloadType.getParameters();
   Map<String,String> paramsMap=new HashMap<String,String>();
+  Map<String,String> advancedMap=new HashMap<String,String>();
   for (  ParameterPacketExtension param : params) {
-    paramsMap.put(param.getName(),param.getValue());
+    if (param.getName().equals("imageattr"))     advancedMap.put(param.getName(),param.getValue());
+ else     paramsMap.put(param.getName(),param.getValue());
   }
   for (  String attr : payloadType.getAttributeNames()) {
     if (attr.equals("width") || attr.equals("height")) {
       paramsMap.put(attr,payloadType.getAttributeAsString(attr));
     }
   }
-  MediaFormat format=JabberActivator.getMediaService().getFormatFactory().createMediaFormat(pt,payloadType.getName(),(double)payloadType.getClockrate(),payloadType.getChannels(),-1,paramsMap,null);
+  MediaFormat format=JabberActivator.getMediaService().getFormatFactory().createMediaFormat(pt,payloadType.getName(),(double)payloadType.getClockrate(),payloadType.getChannels(),-1,paramsMap,advancedMap);
   if (format == null) {
     unknown=true;
     format=JabberActivator.getMediaService().getFormatFactory().createUnknownMediaFormat(MediaType.AUDIO);

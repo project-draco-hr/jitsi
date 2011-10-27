@@ -1,0 +1,23 @@
+{
+  ContentPacketExtension remoteContent=getMediaHandler().getRemoteContent(MediaType.VIDEO.toString());
+  ContentPacketExtension content;
+  logger.info("send modify-content to change resolution");
+  SendersEnum senders=remoteContent.getSenders();
+  try {
+    content=getMediaHandler().createContentForMedia(MediaType.VIDEO);
+  }
+ catch (  Exception exc) {
+    logger.warn("Failed to gather content for video type",exc);
+    return;
+  }
+  content.setSenders(senders);
+  JingleIQ contentIQ=JinglePacketFactory.createContentModify(getProtocolProvider().getOurJID(),this.peerJID,getJingleSID(),content);
+  getProtocolProvider().getConnection().sendPacket(contentIQ);
+  try {
+    getMediaHandler().reinitContent(remoteContent.getName(),content,false);
+    getMediaHandler().start();
+  }
+ catch (  Exception e) {
+    logger.warn("Exception occurred when media reinitialization",e);
+  }
+}

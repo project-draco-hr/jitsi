@@ -1,8 +1,14 @@
 {
   MediaDirection direction=dev.getDirection().and(getDirectionUserPreference(dev.getMediaType()));
   if (isLocallyOnHold())   direction=direction.and(MediaDirection.SENDONLY);
+  QualityPreset sendQualityPreset=null;
+  QualityPreset receiveQualityPreset=null;
+  if (qualityControls != null) {
+    sendQualityPreset=qualityControls.getRemoteReceivePreset();
+    receiveQualityPreset=qualityControls.getRemoteSendMaxPreset();
+  }
   if (direction != MediaDirection.INACTIVE) {
-    ContentPacketExtension content=createContentForOffer(dev.getSupportedFormats(),direction,dev.getSupportedExtensions());
+    ContentPacketExtension content=createContentForOffer(dev.getSupportedFormats(sendQualityPreset,receiveQualityPreset),direction,dev.getSupportedExtensions());
     if (getPeer().getCall().isSipZrtpAttribute()) {
       MediaTypeSrtpControl key=new MediaTypeSrtpControl(dev.getMediaType(),SrtpControlType.ZRTP);
       SrtpControl control=getSrtpControls().get(key);
