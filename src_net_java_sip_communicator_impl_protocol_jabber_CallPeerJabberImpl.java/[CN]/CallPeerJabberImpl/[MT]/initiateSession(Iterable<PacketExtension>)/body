@@ -3,7 +3,13 @@
   List<ContentPacketExtension> offer=getMediaHandler().createContentList();
   if (logger.isTraceEnabled())   logger.trace("will send ringing response: ");
   ProtocolProviderServiceJabberImpl protocolProvider=getProtocolProvider();
-  sessionInitIQ=JinglePacketFactory.createSessionInitiate(protocolProvider.getOurJID(),this.peerJID,JingleIQ.generateSID(),offer);
+synchronized (sidSyncRoot) {
+    sessionInitIQ=JinglePacketFactory.createSessionInitiate(protocolProvider.getOurJID(),this.peerJID,JingleIQ.generateSID(),offer);
+    if (cancelled) {
+      getMediaHandler().getTransportManager().close();
+      return;
+    }
+  }
   if (sessionInitiateExtensions != null) {
     for (    PacketExtension sessionInitiateExtension : sessionInitiateExtensions) {
       sessionInitIQ.addExtension(sessionInitiateExtension);
