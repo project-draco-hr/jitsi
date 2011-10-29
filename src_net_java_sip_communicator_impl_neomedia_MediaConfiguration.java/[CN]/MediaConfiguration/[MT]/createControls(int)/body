@@ -1,13 +1,14 @@
 {
-  final JComboBox comboBox=new JComboBox();
-  comboBox.setEditable(false);
-  comboBox.setModel(new DeviceConfigurationComboBoxModel(mediaService.getDeviceConfiguration(),type));
+  SIPCommTabbedPane container=new SIPCommTabbedPane();
+  final JComboBox cboDevice=new JComboBox();
+  cboDevice.setEditable(false);
+  cboDevice.setModel(new DeviceConfigurationComboBoxModel(mediaService.getDeviceConfiguration(),type));
   final JPanel portAudioPanel;
   if (type == DeviceConfigurationComboBoxModel.AUDIO) {
     portAudioPanel=new TransparentPanel(new GridBagLayout());
     portAudioPanel.setPreferredSize(new Dimension(WIDTH,200));
     portAudioPanel.setMaximumSize(new Dimension(WIDTH,200));
-    comboBox.addItemListener(new ItemListener(){
+    cboDevice.addItemListener(new ItemListener(){
       public void itemStateChanged(      ItemEvent e){
         if (ItemEvent.SELECTED == e.getStateChange()) {
           if (DeviceConfiguration.AUDIO_SYSTEM_PORTAUDIO.equals(e.getItem()))           createPortAudioControls(portAudioPanel);
@@ -18,27 +19,26 @@
       }
     }
 );
-    if (DeviceConfiguration.AUDIO_SYSTEM_PORTAUDIO.equals(comboBox.getSelectedItem()))     createPortAudioControls(portAudioPanel);
+    if (DeviceConfiguration.AUDIO_SYSTEM_PORTAUDIO.equals(cboDevice.getSelectedItem()))     createPortAudioControls(portAudioPanel);
   }
  else   portAudioPanel=null;
   JLabel label=new JLabel(getLabelText(type));
   label.setDisplayedMnemonic(getDisplayedMnemonic(type));
-  label.setLabelFor(comboBox);
-  Container firstContainer=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
-  firstContainer.setMaximumSize(new Dimension(WIDTH,25));
-  firstContainer.add(label);
-  firstContainer.add(comboBox);
-  JPanel secondContainer=new TransparentPanel();
-  secondContainer.setLayout(new BoxLayout(secondContainer,BoxLayout.Y_AXIS));
-  if (portAudioPanel != null)   secondContainer.add(portAudioPanel);
+  label.setLabelFor(cboDevice);
+  Container pnlDevice=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
+  pnlDevice.setMaximumSize(new Dimension(WIDTH,25));
+  pnlDevice.add(label);
+  pnlDevice.add(cboDevice);
+  JPanel pnlDeviceAndDetails=new TransparentPanel(new BorderLayout());
+  pnlDeviceAndDetails.add(pnlDevice,BorderLayout.NORTH);
+  if (portAudioPanel != null)   pnlDeviceAndDetails.add(portAudioPanel,BorderLayout.CENTER);
  else {
-    comboBox.setLightWeightPopupEnabled(false);
-    secondContainer.add(createPreview(type,comboBox));
+    cboDevice.setLightWeightPopupEnabled(false);
+    pnlDeviceAndDetails.add(createPreview(type,cboDevice),BorderLayout.CENTER);
   }
-  secondContainer.add(createEncodingControls(type));
-  if (portAudioPanel == null)   secondContainer.add(createVideoAdvancedSettings());
-  JPanel container=new TransparentPanel(new BorderLayout());
-  container.add(firstContainer,BorderLayout.NORTH);
-  container.add(secondContainer,BorderLayout.CENTER);
+  ResourceManagementService R=NeomediaActivator.getResources();
+  container.insertTab(R.getI18NString("impl.media.configform.DEVICES"),null,pnlDeviceAndDetails,null,0);
+  container.insertTab(R.getI18NString("impl.media.configform.ENCODINGS"),null,createEncodingControls(type),null,1);
+  if (portAudioPanel == null)   container.insertTab(R.getI18NString("impl.media.configform.VIDEO_MORE_SETTINGS"),null,createVideoAdvancedSettings(),null,2);
   return container;
 }
