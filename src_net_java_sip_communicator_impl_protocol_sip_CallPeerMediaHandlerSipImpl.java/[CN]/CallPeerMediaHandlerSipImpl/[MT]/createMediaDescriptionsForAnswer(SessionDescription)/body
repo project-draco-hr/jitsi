@@ -3,6 +3,7 @@
   Vector<MediaDescription> answerDescriptions=new Vector<MediaDescription>(remoteDescriptions.size());
   this.setCallInfoURL(SdpUtils.getCallInfoURL(offer));
   boolean atLeastOneValidDescription=false;
+  boolean rejectedAvpOfferDueToSavpRequired=false;
   List<MediaType> seenMediaTypes=new ArrayList<MediaType>();
   for (  MediaDescription mediaDescription : remoteDescriptions) {
     String transportProtocol;
@@ -13,6 +14,7 @@
       throw new OperationFailedException("unable to create the media description",OperationFailedException.ILLEGAL_ARGUMENT,e);
     }
     if (getPeer().getProtocolProvider().getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF) == ProtocolProviderFactory.SAVP_MANDATORY && transportProtocol.equals(SdpConstants.RTP_AVP)) {
+      rejectedAvpOfferDueToSavpRequired=true;
       continue;
     }
     MediaType mediaType=null;
@@ -78,6 +80,7 @@
     answerDescriptions.add(md);
     atLeastOneValidDescription=true;
   }
+  if (rejectedAvpOfferDueToSavpRequired && !atLeastOneValidDescription)   throw new OperationFailedException("Offer contained no valid " + "media descriptions. Insecure media was rejected (only " + "RTP/AVP instead of RTP/SAVP).",OperationFailedException.ILLEGAL_ARGUMENT);
   if (!atLeastOneValidDescription)   throw new OperationFailedException("Offer contained no valid " + "media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT);
   return answerDescriptions;
 }
