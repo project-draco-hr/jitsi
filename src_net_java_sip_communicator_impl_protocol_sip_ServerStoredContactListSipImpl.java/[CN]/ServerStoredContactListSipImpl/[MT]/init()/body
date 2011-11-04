@@ -1,6 +1,31 @@
 {
   try {
-    XCapClient xCapClient=sipProvider.getXCapClient();
+    AccountID accountID=sipProvider.getAccountID();
+    boolean enableXCap=accountID.getAccountPropertyBoolean(XCAP_ENABLE,true);
+    boolean useSipCredentials=accountID.getAccountPropertyBoolean(XCAP_USE_SIP_CREDETIALS,true);
+    String serverUri=accountID.getAccountPropertyString(XCAP_SERVER_URI);
+    String username=accountID.getAccountPropertyString(ProtocolProviderFactory.USER_ID);
+    Address userAddress=sipProvider.parseAddressString(username);
+    String password;
+    if (useSipCredentials) {
+      username=((SipUri)userAddress.getURI()).getUser();
+      password=SipActivator.getProtocolProviderFactory().loadPassword(accountID);
+    }
+ else {
+      username=accountID.getAccountPropertyString(XCAP_USER);
+      password=accountID.getAccountPropertyString(XCAP_PASSWORD);
+    }
+    if (enableXCap && serverUri != null) {
+      URI uri=new URI(serverUri.trim());
+      if (uri.getHost() != null && uri.getPath() != null) {
+        xCapClient.connect(uri,userAddress,username,password);
+      }
+    }
+  }
+ catch (  Throwable ex) {
+    logger.error("Error while connecting to XCAP server. " + "Contact list won't be saved",ex);
+  }
+  try {
     if (!xCapClient.isConnected() || !xCapClient.isResourceListsSupported()) {
       return;
     }
@@ -68,6 +93,6 @@
   }
  catch (  XCapException e) {
     logger.error("Error initializing serverside list!",e);
-    sipProvider.getXCapClient().disconnect();
+    xCapClient.disconnect();
   }
 }

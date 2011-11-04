@@ -1,0 +1,51 @@
+{
+  if (!incomingObject.has("class"))   return;
+  try {
+    String classField=incomingObject.getString("class");
+    if (classField.equals("loginko")) {
+      logger.error("Error login: " + incomingObject.getString("errorstring"));
+      destroy();
+      return;
+    }
+ else     if (classField.equals("login_id_ok")) {
+      AccountID accountID=sipProvider.getAccountID();
+      boolean useSipCredentials=accountID.getAccountPropertyBoolean(XIVO_USE_SIP_CREDETIALS,true);
+      String password;
+      if (useSipCredentials) {
+        password=SipActivator.getProtocolProviderFactory().loadPassword(accountID);
+      }
+ else {
+        password=accountID.getAccountPropertyString(XIVO_PASSWORD);
+      }
+      if (!authorize(incomingObject.getString("sessionid"),password))       logger.error("Error login authorization!");
+      return;
+    }
+ else     if (classField.equals("login_pass_ok")) {
+      if (!sendCapas(incomingObject.getJSONArray("capalist")))       logger.error("Error send capas!");
+      return;
+    }
+ else     if (classField.equals("login_capas_ok")) {
+      if (!sendFeatures(incomingObject.getString("astid"),incomingObject.getString("xivo_userid")))       logger.error("Problem send features get!");
+      return;
+    }
+ else     if (classField.equals("features")) {
+      if (!getPhoneList())       logger.error("Problem send get phones!");
+      return;
+    }
+ else     if (classField.equals("phones")) {
+      phonesRecieved(incomingObject);
+      return;
+    }
+ else     if (classField.equals("disconn")) {
+      destroy();
+      return;
+    }
+ else {
+      if (logger.isTraceEnabled())       logger.trace("unhandled classField: " + incomingObject);
+      return;
+    }
+  }
+ catch (  Throwable t) {
+    logger.error("Error handling incoming object",t);
+  }
+}

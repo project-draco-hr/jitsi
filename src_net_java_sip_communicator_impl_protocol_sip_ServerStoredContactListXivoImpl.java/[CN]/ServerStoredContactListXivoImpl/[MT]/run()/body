@@ -1,0 +1,27 @@
+{
+  if (connection == null) {
+    logger.error("No connection.");
+    return;
+  }
+  try {
+    connectionReader=new BufferedReader(new InputStreamReader(connection.getInputStream()));
+    if (!connectionReader.readLine().contains("XiVO")) {
+      logger.error("Error xivo with server!");
+      destroy();
+      return;
+    }
+    String line;
+    while ((line=connectionReader.readLine()) != null || !stopped) {
+      try {
+        if (logger.isTraceEnabled())         logger.trace("Read from server:" + line);
+        handle(new JSONObject(line));
+      }
+ catch (      JSONException ex) {
+        logger.error("Error parsing object:" + line,ex);
+      }
+    }
+  }
+ catch (  IOException ex) {
+    destroy();
+  }
+}

@@ -1,0 +1,34 @@
+{
+  try {
+    AccountID accountID=sipProvider.getAccountID();
+    boolean enableXivo=accountID.getAccountPropertyBoolean(XIVO_ENABLE,true);
+    if (!enableXivo)     return;
+    boolean useSipCredentials=accountID.getAccountPropertyBoolean(XIVO_USE_SIP_CREDETIALS,true);
+    String serverAddress=accountID.getAccountPropertyString(XIVO_SERVER_ADDRESS);
+    String username=accountID.getAccountPropertyString(ProtocolProviderFactory.USER_ID);
+    Address userAddress=sipProvider.parseAddressString(username);
+    if (useSipCredentials) {
+      username=((SipUri)userAddress.getURI()).getUser();
+    }
+ else {
+      username=accountID.getAccountPropertyString(XIVO_USER);
+    }
+    try {
+      connect(serverAddress);
+    }
+ catch (    Throwable ex) {
+      logger.error("Error connecting to server",ex);
+      return;
+    }
+    Thread thread=new Thread(this,this.getClass().getName());
+    thread.setDaemon(true);
+    thread.start();
+    if (!login(username)) {
+      logger.error("Cannot login.");
+      return;
+    }
+  }
+ catch (  Throwable t) {
+    logger.error("Error init clist from xivo server");
+  }
+}

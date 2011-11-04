@@ -1,10 +1,11 @@
 {
-  super(new BorderLayout());
+  super(new BorderLayout(10,10));
+  JPanel mainPanel=new TransparentPanel();
+  mainPanel.setLayout(new BoxLayout(mainPanel,BoxLayout.Y_AXIS));
   this.enablePresOpButton=new SIPCommCheckBox(Resources.getString("plugin.sipaccregwizz.ENABLE_PRESENCE"),regform.getRegistration().isEnablePresence());
   this.forceP2PPresOpButton=new SIPCommCheckBox(Resources.getString("plugin.sipaccregwizz.FORCE_P2P_PRESENCE"),regform.getRegistration().isForceP2PMode());
-  this.xCapEnableBox=new SIPCommCheckBox(Resources.getString("plugin.sipaccregwizz.XCAP_ENABLE"),regform.getRegistration().isXCapEnable());
-  this.xCapUseSipCredetialsBox=new SIPCommCheckBox(Resources.getString("plugin.sipaccregwizz.XCAP_USE_SIP_CREDENTIALS"),regform.getRegistration().isXCapUseSipCredetials());
-  if (regform.getRegistration().isXCapEnable())   this.xCapServerUriValue.setText(regform.getRegistration().getXCapServerUri());
+  this.clistOptionUseSipCredentialsBox=new SIPCommCheckBox(Resources.getString("plugin.sipaccregwizz.XCAP_USE_SIP_CREDENTIALS"),regform.getRegistration().isClistOptionUseSipCredentials());
+  if (regform.getRegistration().isXCapEnable())   this.clistOptionServerUriValue.setText(regform.getRegistration().getClistOptionServerUri());
   enablePresOpButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent evt){
       JCheckBox cb=(JCheckBox)evt.getSource();
@@ -22,38 +23,51 @@
   presenceOpPanel.add(labelsPresOpPanel,BorderLayout.WEST);
   presenceOpPanel.add(valuesPresOpPanel,BorderLayout.CENTER);
   presenceOpPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("plugin.sipaccregwizz.PRESENCE_OPTIONS")));
-  xCapEnableBox.setSelected(regform.getRegistration().isXCapEnable());
-  xCapEnableBox.addActionListener(new ActionListener(){
+  clistOptionUseSipCredentialsBox.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent evt){
       JCheckBox checkBox=(JCheckBox)evt.getSource();
-      setXCapEnableEnabled(checkBox.isSelected());
+      setClistOptionUseSipCredentialsEnabled(checkBox.isSelected());
     }
   }
 );
-  xCapUseSipCredetialsBox.addActionListener(new ActionListener(){
-    public void actionPerformed(    ActionEvent evt){
-      JCheckBox checkBox=(JCheckBox)evt.getSource();
-      setXCapUseSipCredetialsEnabled(checkBox.isSelected());
-    }
+  JPanel xCapServerUriPanel=new TransparentPanel(new BorderLayout());
+  xCapServerUriPanel.add(new JLabel(Resources.getString("plugin.sipaccregwizz.XCAP_SERVER_URI")),BorderLayout.WEST);
+  xCapServerUriPanel.add(clistOptionServerUriValue,BorderLayout.CENTER);
+  String xcapUri=regform.getRegistration().getClistOptionServerUri();
+  if (xcapUri != null)   clistOptionServerUriValue.setText(xcapUri);
+  JPanel xCapPanel=new TransparentPanel(new BorderLayout(5,5));
+  JPanel xCapButtonsPanel=new TransparentPanel();
+  xCapButtonsPanel.setLayout(new BoxLayout(xCapButtonsPanel,BoxLayout.Y_AXIS));
+  JPanel xCapCredentialsLabelsPanel=new TransparentPanel(new GridLayout(0,1,0,0));
+  JPanel xCapCredentialsValuesPanel=new TransparentPanel(new GridLayout(0,1,0,0));
+  JPanel contactlistTypePanel=new TransparentPanel(new FlowLayout(FlowLayout.LEFT));
+  contactlistTypePanel.add(new JLabel(Resources.getString("plugin.sipaccregwizz.CLIST_TYPE")));
+  contactlistTypePanel.add(contactlistOptionsCombo);
+  contactlistOptionsCombo.addActionListener(this);
+  if (regform.getRegistration().isXCapEnable()) {
+    setXCapEnable(true);
   }
-);
-  setXCapEnableEnabled(xCapEnableBox.isSelected());
-  JPanel xCapServerUriPanel=new TransparentPanel(new BorderLayout(10,10));
-  xCapServerUriPanel.add(xCapServerUriLabel,BorderLayout.WEST);
-  xCapServerUriPanel.add(xCapServerUriValue,BorderLayout.CENTER);
-  String xcapUri=regform.getRegistration().getXCapServerUri();
-  if (xcapUri != null)   xCapServerUriValue.setText(xcapUri);
-  xCapButtonsPanel.add(xCapEnableBox);
+ else   if (regform.getRegistration().isXiVOEnable()) {
+    setXiVOEnable(true);
+  }
+  updateContactListPanel();
+  xCapServerUriPanel.setBorder(BorderFactory.createEmptyBorder(0,16,0,0));
+  xCapButtonsPanel.add(contactlistTypePanel);
   xCapButtonsPanel.add(xCapServerUriPanel);
-  xCapButtonsPanel.add(xCapUseSipCredetialsBox);
-  xCapCredetialsLabelsPanel.add(xCapUserLabel);
-  xCapCredetialsLabelsPanel.add(xCapPasswordLabel);
-  xCapCredetialsValuesPanel.add(xCapUserValue);
-  xCapCredetialsValuesPanel.add(xCapPasswordValue);
+  JPanel credPanel=new TransparentPanel(new BorderLayout());
+  credPanel.add(clistOptionUseSipCredentialsBox,BorderLayout.WEST);
+  credPanel.setBorder(BorderFactory.createEmptyBorder(0,7,0,0));
+  xCapButtonsPanel.add(credPanel);
+  xCapCredentialsLabelsPanel.add(new JLabel(Resources.getString("plugin.sipaccregwizz.XCAP_USER")));
+  xCapCredentialsLabelsPanel.add(new JLabel(Resources.getString("plugin.sipaccregwizz.XCAP_PASSWORD")));
+  xCapCredentialsValuesPanel.add(clistOptionUserValue);
+  xCapCredentialsValuesPanel.add(clistOptionPasswordValue);
+  xCapCredentialsLabelsPanel.setBorder(BorderFactory.createEmptyBorder(0,16,0,0));
   xCapPanel.add(xCapButtonsPanel,BorderLayout.NORTH);
-  xCapPanel.add(xCapCredetialsLabelsPanel,BorderLayout.WEST);
-  xCapPanel.add(xCapCredetialsValuesPanel,BorderLayout.CENTER);
+  xCapPanel.add(xCapCredentialsLabelsPanel,BorderLayout.WEST);
+  xCapPanel.add(xCapCredentialsValuesPanel,BorderLayout.CENTER);
   xCapPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("plugin.sipaccregwizz.XCAP_OPTIONS")));
-  this.add(presenceOpPanel,BorderLayout.NORTH);
-  this.add(xCapPanel,BorderLayout.SOUTH);
+  mainPanel.add(presenceOpPanel);
+  mainPanel.add(xCapPanel);
+  this.add(mainPanel,BorderLayout.NORTH);
 }
