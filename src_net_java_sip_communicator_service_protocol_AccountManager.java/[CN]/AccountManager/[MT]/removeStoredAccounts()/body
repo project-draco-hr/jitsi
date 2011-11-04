@@ -1,0 +1,19 @@
+{
+synchronized (loadStoredAccountsQueue) {
+    boolean interrupted=false;
+    while (loadStoredAccountsThread != null)     try {
+      loadStoredAccountsQueue.wait(LOAD_STORED_ACCOUNTS_TIMEOUT);
+    }
+ catch (    InterruptedException ie) {
+      interrupted=true;
+    }
+    if (interrupted)     Thread.currentThread().interrupt();
+synchronized (this.storedAccounts) {
+      AccountID[] storedAccounts=this.storedAccounts.toArray(new AccountID[this.storedAccounts.size()]);
+      for (      AccountID storedAccount : storedAccounts) {
+        ProtocolProviderFactory ppf=ProtocolProviderActivator.getProtocolProviderFactory(storedAccount.getProtocolName());
+        if (ppf != null)         ppf.uninstallAccount(storedAccount);
+      }
+    }
+  }
+}

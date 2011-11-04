@@ -16,6 +16,7 @@ synchronized (loadStoredAccountsQueue) {
           }
           factory=loadStoredAccountsQueue.poll();
         }
+        if (factory != null)         loadStoredAccountsQueue.notifyAll();
       }
       if (factory != null) {
         try {
@@ -31,6 +32,7 @@ synchronized (loadStoredAccountsQueue) {
         if (!interrupted && (loadStoredAccountsQueue.size() <= 0)) {
           if (loadStoredAccountsThread == Thread.currentThread()) {
             loadStoredAccountsThread=null;
+            loadStoredAccountsQueue.notifyAll();
           }
           break;
         }
