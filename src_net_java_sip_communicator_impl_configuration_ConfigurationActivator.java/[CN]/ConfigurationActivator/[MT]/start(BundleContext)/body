@@ -1,6 +1,18 @@
 {
-  if (logger.isDebugEnabled())   logger.debug("Service Impl: " + getClass().getName() + " [  STARTED ]");
-  impl.start(bundleContext);
-  bundleContext.registerService(ConfigurationService.class.getName(),impl,null);
-  if (logger.isDebugEnabled())   logger.debug("Service Impl: " + getClass().getName() + " [REGISTERED]");
+  boolean started=false;
+  ConfigurationActivator.bundleContext=bundleContext;
+  try {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Service Impl: " + getClass().getName() + " [  STARTED ]");
+    }
+    impl.start(bundleContext);
+    bundleContext.registerService(ConfigurationService.class.getName(),impl,null);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Service Impl: " + getClass().getName() + " [REGISTERED]");
+    }
+    started=true;
+  }
+  finally {
+    if (!started && (ConfigurationActivator.bundleContext == bundleContext))     ConfigurationActivator.bundleContext=null;
+  }
 }

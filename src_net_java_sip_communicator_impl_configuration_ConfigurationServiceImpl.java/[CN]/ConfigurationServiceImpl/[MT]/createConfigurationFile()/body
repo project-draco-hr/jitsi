@@ -1,8 +1,7 @@
 {
   File configurationFile=getConfigurationFile("xml",false);
   if (configurationFile == null) {
-    this.configurationFile=getConfigurationFile("xml",true);
-    if (!(this.store instanceof XMLConfigurationStore))     this.store=new XMLConfigurationStore();
+    setConfigurationStore(XMLConfigurationStore.class);
   }
  else {
     String name=configurationFile.getName();
@@ -19,6 +18,7 @@
         if (!(this.store instanceof PropertyConfigurationStore))         this.store=new PropertyConfigurationStore();
       }
  else       if (getSystemProperty(PNAME_CONFIGURATION_FILE_NAME) == null) {
+        Class<? extends ConfigurationStore> defaultConfigurationStoreClass=getDefaultConfigurationStoreClass();
         if (configurationFile.exists()) {
           ConfigurationStore xmlStore=new XMLConfigurationStore();
           try {
@@ -29,10 +29,8 @@
             ioex.initCause(xmlex);
             throw ioex;
           }
-          ConfigurationStore propertyStore=(this.store instanceof PropertyConfigurationStore) ? this.store : new PropertyConfigurationStore();
-          copy(xmlStore,propertyStore);
-          this.configurationFile=getConfigurationFile("properties",true);
-          this.store=propertyStore;
+          setConfigurationStore(defaultConfigurationStoreClass);
+          if (this.store != null)           copy(xmlStore,this.store);
           Throwable exception=null;
           try {
             storeConfiguration(this.configurationFile);
@@ -50,8 +48,7 @@ catch (          IOException ioex) {
           }
         }
  else {
-          this.configurationFile=getConfigurationFile("properties",true);
-          if (!(this.store instanceof PropertyConfigurationStore))           this.store=new PropertyConfigurationStore();
+          setConfigurationStore(defaultConfigurationStoreClass);
         }
       }
  else {

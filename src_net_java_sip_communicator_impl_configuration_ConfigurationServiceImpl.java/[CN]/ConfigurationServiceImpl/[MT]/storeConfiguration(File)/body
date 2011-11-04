@@ -1,13 +1,17 @@
 {
   if (!started)   throw new IllegalStateException("Service is stopped or has not been started");
-  FailSafeTransaction trans=this.faService.createFailSafeTransaction(file);
+  FailSafeTransaction trans=(file == null) ? null : this.faService.createFailSafeTransaction(file);
   Throwable exception=null;
   try {
-    trans.beginTransaction();
-    OutputStream stream=new FileOutputStream(file);
-    store.storeConfiguration(stream);
-    stream.close();
-    trans.commit();
+    if (trans != null)     trans.beginTransaction();
+    OutputStream stream=(file == null) ? null : new FileOutputStream(file);
+    try {
+      store.storeConfiguration(stream);
+    }
+  finally {
+      if (stream != null)       stream.close();
+    }
+    if (trans != null)     trans.commit();
   }
  catch (  IllegalStateException isex) {
     exception=isex;
@@ -17,6 +21,6 @@ catch (  IOException ioex) {
   }
   if (exception != null) {
     logger.error("can't write data in the configuration file",exception);
-    trans.rollback();
+    if (trans != null)     trans.rollback();
   }
 }
