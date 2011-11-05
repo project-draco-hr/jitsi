@@ -1,15 +1,20 @@
 {
   final MetaHistoryService chatHistory=GuiActivator.getMetaHistoryService();
   if (chatHistory == null)   return;
-  new Thread(){
-    public void run(){
+  SwingWorker worker=new SwingWorker(){
+    public Object construct() throws Exception {
       Date lastMsgDate=getChatConversationPanel().getPageLastMsgTimestamp();
       Collection<Object> c=null;
       if (lastMsgDate != null) {
         c=chatSession.getHistoryAfterDate(lastMsgDate,MESSAGES_PER_PAGE);
       }
       if (c != null && c.size() > 0)       SwingUtilities.invokeLater(new HistoryMessagesLoader(c));
+      return "";
+    }
+    public void finished(){
+      getChatContainer().updateHistoryButtonState(ChatPanel.this);
     }
   }
-.start();
+;
+  worker.start();
 }
