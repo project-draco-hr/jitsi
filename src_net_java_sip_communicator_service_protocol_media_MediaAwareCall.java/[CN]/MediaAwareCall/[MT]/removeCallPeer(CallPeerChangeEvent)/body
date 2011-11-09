@@ -1,10 +1,14 @@
 {
   T callPeer=(T)evt.getSourceCallPeer();
   if (!getCallPeersVector().contains(callPeer))   return;
+  int elementPeerIx=getCallPeersVector().indexOf(callPeer);
   getCallPeersVector().remove(callPeer);
   callPeer.removeCallPeerListener(this);
 synchronized (localUserAudioLevelListenersSyncRoot) {
     callPeer.getMediaHandler().setLocalUserAudioLevelListener(null);
+    if (!getCallPeersVector().isEmpty() && elementPeerIx == 0) {
+      getCallPeersVector().firstElement().getMediaHandler().setLocalUserAudioLevelListener(localAudioLevelDelegator);
+    }
   }
   try {
     fireCallPeerEvent(callPeer,CallPeerEvent.CALL_PEER_REMOVED);
