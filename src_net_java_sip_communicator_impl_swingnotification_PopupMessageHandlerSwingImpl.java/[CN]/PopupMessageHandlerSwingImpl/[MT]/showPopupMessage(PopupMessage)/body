@@ -8,7 +8,7 @@
   }
 );
   popupTimer.setRepeats(false);
-  notificationWindow.addMouseListener(new MouseAdapter(){
+  MouseAdapter adapter=new MouseAdapter(){
     @Override public void mouseEntered(    MouseEvent e){
       popupTimer.stop();
     }
@@ -22,13 +22,14 @@
       notificationWindow.dispose();
     }
   }
-);
-  if (popupMessage.getComponent() != null) {
-    notificationWindow.add(popupMessage.getComponent());
+;
+  notificationWindow.addMouseListener(adapter);
+  JComponent content=popupMessage.getComponent();
+  if (content == null) {
+    content=createPopup(popupMessage.getMessageTitle(),popupMessage.getMessage(),popupMessage.getIcon(),popupMessage.getTag());
   }
- else {
-    notificationWindow.add(createPopup(popupMessage.getMessageTitle(),popupMessage.getMessage(),popupMessage.getIcon(),popupMessage.getTag()));
-  }
+  registerMouseListener(content,adapter);
+  notificationWindow.add(content);
   notificationWindow.setAlwaysOnTop(true);
   notificationWindow.pack();
   new Thread(new PopupLauncher(notificationWindow,graphicsConf)).start();

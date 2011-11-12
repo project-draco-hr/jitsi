@@ -1,13 +1,9 @@
 {
-  JLabel msgIcon=new JLabel(defaultIcon);
+  JLabel msgIcon=null;
   if (imageBytes != null) {
     ImageIcon imageIcon=ImageUtils.getScaledRoundedIcon(imageBytes,45,45);
     msgIcon=new JLabel(imageIcon);
   }
-  JLabel msgTitle=new JLabel(titleString);
-  int msgTitleHeight=msgTitle.getFontMetrics(msgTitle.getFont()).getHeight();
-  msgTitle.setPreferredSize(new Dimension(200,msgTitleHeight));
-  msgTitle.setFont(msgTitle.getFont().deriveFont(Font.BOLD));
   String plainMessage=Html2Text.extractText("<pre>" + message + "</pre>");
   JTextArea msgContent=new JTextArea(plainMessage);
   msgContent.setLineWrap(true);
@@ -15,16 +11,15 @@
   msgContent.setOpaque(false);
   msgContent.setAlignmentX(JTextArea.LEFT_ALIGNMENT);
   int msgContentHeight=getPopupMessageAreaHeight(msgContent,plainMessage);
-  msgContent.setPreferredSize(new Dimension(200,msgContentHeight));
+  msgContent.setPreferredSize(new Dimension(250,msgContentHeight));
   TransparentPanel notificationBody=new TransparentPanel();
   notificationBody.setLayout(new BoxLayout(notificationBody,BoxLayout.Y_AXIS));
   notificationBody.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
-  notificationBody.add(msgTitle);
   notificationBody.add(msgContent);
   TransparentPanel notificationContent=new TransparentPanel();
   notificationContent.setLayout(new BorderLayout(5,0));
-  notificationContent.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-  notificationContent.add(msgIcon,BorderLayout.WEST);
+  notificationContent.setBorder(BorderFactory.createEmptyBorder(0,5,5,5));
+  if (msgIcon != null)   notificationContent.add(msgIcon,BorderLayout.WEST);
   notificationContent.add(notificationBody,BorderLayout.CENTER);
-  return new PopupNotificationPanel(notificationContent,tag);
+  return new PopupNotificationPanel(titleString,notificationContent,tag);
 }
