@@ -4,6 +4,8 @@
   this.setCallInfoURL(SdpUtils.getCallInfoURL(offer));
   boolean atLeastOneValidDescription=false;
   boolean rejectedAvpOfferDueToSavpRequired=false;
+  boolean encryptionEnabled=getPeer().getProtocolProvider().getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true);
+  int savpOption=getPeer().getProtocolProvider().getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF);
   List<MediaType> seenMediaTypes=new ArrayList<MediaType>();
   for (  MediaDescription mediaDescription : remoteDescriptions) {
     String transportProtocol;
@@ -13,7 +15,7 @@
  catch (    SdpParseException e) {
       throw new OperationFailedException("unable to create the media description",OperationFailedException.ILLEGAL_ARGUMENT,e);
     }
-    if (getPeer().getProtocolProvider().getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF) == ProtocolProviderFactory.SAVP_MANDATORY && transportProtocol.equals(SdpConstants.RTP_AVP)) {
+    if (savpOption == ProtocolProviderFactory.SAVP_MANDATORY && transportProtocol.equals(SdpConstants.RTP_AVP) && encryptionEnabled) {
       rejectedAvpOfferDueToSavpRequired=true;
       continue;
     }
