@@ -1,0 +1,25 @@
+{
+  photoLabel.setPreferredSize(new Dimension(90,90));
+  final Container videoContainer=createVideoContainer(photoLabel);
+  videoContainer.addHierarchyListener(new HierarchyListener(){
+    public void hierarchyChanged(    HierarchyEvent event){
+      int changeFlags=HierarchyEvent.DISPLAYABILITY_CHANGED;
+      if ((event.getChangeFlags() & changeFlags) == changeFlags) {
+synchronized (videoContainers) {
+          boolean changed=false;
+          if (videoContainer.isDisplayable()) {
+            if (!videoContainers.contains(videoContainer))             changed=videoContainers.add(videoContainer);
+            if (!photoLabels.contains(photoLabel))             photoLabels.add(photoLabel);
+          }
+ else {
+            changed=videoContainers.remove(videoContainer);
+            photoLabels.remove(photoLabel);
+          }
+          if (changed)           videoHandler.handleVideoEvent(null);
+        }
+      }
+    }
+  }
+);
+  return videoContainer;
+}

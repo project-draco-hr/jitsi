@@ -1,0 +1,18 @@
+{
+  final Call call=callPeer.getCall();
+  if (call == null)   return;
+  final OperationSetVideoTelephony telephony=call.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
+  if (telephony == null)   return;
+  if (videoTelephonyListener == null)   return;
+  telephony.removeVideoListener(callPeer,videoTelephonyListener);
+  telephony.removePropertyChangeListener(call,videoTelephonyListener);
+  videoListenerIsAdded=false;
+  if (localVideo != null) {
+    telephony.disposeLocalVisualComponent(callPeer,localVideo);
+    localVideo=null;
+  }
+synchronized (videoContainers) {
+    if (telephony.equals(videoTelephony))     videoTelephony=null;
+  }
+  callRenderer.exitFullScreen();
+}

@@ -1,0 +1,69 @@
+{
+  final Call call=callPeer.getCall();
+  if (call == null)   return null;
+  final OperationSetVideoTelephony telephony=call.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
+  if (telephony == null)   return null;
+  videoTelephonyListener=new VideoTelephonyListener();
+  CallChangeListener callListener=new CallChangeListener(){
+    private void addVideoListener(){
+      telephony.addVideoListener(callPeer,videoTelephonyListener);
+      telephony.addPropertyChangeListener(call,videoTelephonyListener);
+      videoListenerIsAdded=true;
+synchronized (videoContainers) {
+        videoTelephony=telephony;
+        handleVideoEvent(null);
+        handleLocalVideoStreamingChange(videoTelephonyListener);
+      }
+    }
+    /** 
+ * When the #callPeer of this CallPeerPanel gets added
+ * to the Call, starts listening for changes in the video in order
+ * to display it.
+ * @param event the <tt>CallPeerEvent</tt> received
+ */
+    public synchronized void callPeerAdded(    CallPeerEvent event){
+      if (callPeer.equals(event.getSourceCallPeer()) && !videoListenerIsAdded) {
+        Call call=callPeer.getCall();
+        if ((call != null) && CallState.CALL_IN_PROGRESS.equals(call.getCallState()))         addVideoListener();
+      }
+    }
+    /** 
+ * When the #callPeer of this CallPeerPanel leaves the
+ * Call, stops listening for changes in the video because it should
+ * no longer be updated anyway.
+ * @param event the <tt>CallPeerEvent</tt> received
+ */
+    public synchronized void callPeerRemoved(    CallPeerEvent event){
+      if (callPeer.equals(event.getSourceCallPeer()) && videoListenerIsAdded) {
+        if (callPeer.getCall() != null)         removeVideoListener();
+      }
+    }
+    /** 
+ * When the Call of #callPeer ends, stops tracking the
+ * updates in the video because there should no longer be any video
+ * anyway. When the Call in question starts, starts tracking any
+ * changes to the video because it's negotiated and it should be
+ * displayed in this CallPeerPanel.
+ * @param event the <tt>CallChangeEvent</tt> received
+ */
+    public synchronized void callStateChanged(    CallChangeEvent event){
+      if (!event.getEventType().equals(CallChangeEvent.CALL_STATE_CHANGE))       return;
+      CallState newCallState=(CallState)event.getNewValue();
+      if (CallState.CALL_ENDED.equals(newCallState)) {
+        if (videoListenerIsAdded)         removeVideoListener();
+        call.removeCallChangeListener(this);
+        if (allowRemoteControl) {
+          allowRemoteControl=false;
+          removeMouseAndKeyListeners();
+        }
+      }
+ else       if (CallState.CALL_IN_PROGRESS.equals(newCallState)) {
+        if (!videoListenerIsAdded)         addVideoListener();
+      }
+    }
+  }
+;
+  call.addCallChangeListener(callListener);
+  callListener.callStateChanged(new CallChangeEvent(call,CallChangeEvent.CALL_STATE_CHANGE,null,call.getCallState()));
+  return telephony;
+}

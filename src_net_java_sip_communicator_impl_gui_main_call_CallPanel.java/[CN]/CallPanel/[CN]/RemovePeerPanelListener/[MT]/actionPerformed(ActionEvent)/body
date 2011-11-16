@@ -6,7 +6,17 @@
           isLastConference=false;
           remove(callPanel);
           CallPeer singlePeer=call.getCallPeers().next();
-          if (singlePeer != null && !singlePeer.isConferenceFocus())           updateCurrentCallPanel(new OneToOneCallPanel(CallPanel.this,call,singlePeer));
+          if (singlePeer != null && !singlePeer.isConferenceFocus()) {
+            CallRenderer callRenderer=(CallRenderer)callPanel;
+            CallPeerRenderer currentPeerRenderer=callRenderer.getCallPeerRenderer(singlePeer);
+            UIVideoHandler videoHandler=currentPeerRenderer.getVideoHandler();
+            JComponent newPanel=null;
+            if (videoHandler != null) {
+              newPanel=new OneToOneCallPanel(CallPanel.this,call,singlePeer,videoHandler);
+            }
+ else             newPanel=new OneToOneCallPanel(CallPanel.this,call,singlePeer);
+            updateCurrentCallPanel(newPanel);
+          }
  else           if (singlePeer.isConferenceFocus()) {
             ((ConferenceCallPanel)callPanel).removeCallPeerPanel(peer);
           }
