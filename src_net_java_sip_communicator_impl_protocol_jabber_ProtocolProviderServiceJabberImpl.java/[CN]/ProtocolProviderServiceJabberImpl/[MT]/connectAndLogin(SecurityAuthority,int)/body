@@ -3,66 +3,63 @@ synchronized (connectAndLoginLock) {
     inConnectAndLogin=true;
   }
 synchronized (initializationLock) {
+    String serviceName=StringUtils.parseServer(getAccountID().getUserID());
     String password=loadPassword(authority,reasonCode);
     if (password == null)     return;
-    String serviceName=StringUtils.parseServer(getAccountID().getUserID());
-    List<String> serverAddresses=new ArrayList<String>();
-    String serverAddressUserSetting=getAccountID().getAccountPropertyString(ProtocolProviderFactory.SERVER_ADDRESS);
-    int serverPort=getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SERVER_PORT,5222);
     loadResource();
+    loadProxy();
+    Roster.setDefaultSubscriptionMode(Roster.SubscriptionMode.manual);
     boolean isServerOverriden=getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.IS_SERVER_OVERRIDDEN,false);
-    try {
-      if (!isServerOverriden) {
-        SRVRecord srvRecords[]=NetworkUtils.getSRVRecords("xmpp-client","tcp",serviceName);
-        if (srvRecords != null) {
-          for (int i=0; i < srvRecords.length; i++) {
-            serverAddresses.add(srvRecords[i].getTarget());
+    if (!isServerOverriden) {
+      SRVRecord srvRecords[]=null;
+      try {
+        srvRecords=NetworkUtils.getSRVRecords("xmpp-client","tcp",serviceName);
+      }
+ catch (      ParseException e) {
+        logger.error("SRV record not resolved",e);
+      }
+      if (srvRecords != null) {
+        for (        SRVRecord srv : srvRecords) {
+          InetSocketAddress[] addrs=null;
+          try {
+            addrs=NetworkUtils.getAorAAAARecords(srv.getTarget(),srv.getPort());
+          }
+ catch (          ParseException e) {
+            logger.error("Invalid SRV record target",e);
+          }
+          if (addrs == null)           continue;
+          for (          InetSocketAddress isa : addrs) {
+            try {
+              ConnectState state=connectAndLogin(isa,password,serviceName);
+              if (state == ConnectState.ABORT_CONNECTING || state == ConnectState.STOP_TRYING)               return;
+            }
+ catch (            XMPPException ex) {
+              disconnectAndCleanConnection();
+              if (isAuthenticationFailed(ex))               throw ex;
+            }
           }
         }
       }
-      InetSocketAddress addressObj4=null;
-      InetSocketAddress addressObj6=null;
-      try {
-        addressObj4=NetworkUtils.getARecord(serverAddressUserSetting,serverPort);
-      }
- catch (      ParseException ex) {
-        logger.error("Cannot obtain A record for " + serverAddressUserSetting,ex);
-      }
-      try {
-        addressObj6=NetworkUtils.getAAAARecord(serverAddressUserSetting,serverPort);
-      }
- catch (      ParseException ex) {
-        logger.error("Cannot obtain AAAA record for " + serverAddressUserSetting,ex);
-      }
-      if (Boolean.getBoolean("java.net.preferIPv6Addresses")) {
-        if (addressObj6 != null) {
-          serverAddresses.add(addressObj6.getAddress().getHostAddress());
-        }
-        if (addressObj4 != null) {
-          serverAddresses.add(addressObj4.getAddress().getHostAddress());
-        }
-      }
- else {
-        if (addressObj4 != null) {
-          serverAddresses.add(addressObj4.getAddress().getHostAddress());
-        }
-        if (addressObj6 != null) {
-          serverAddresses.add(addressObj6.getAddress().getHostAddress());
-        }
-      }
-      serverAddresses.add(serverAddressUserSetting);
     }
- catch (    ParseException ex1) {
-      logger.error("Domain not resolved " + ex1.getMessage());
+    String serverAddressUserSetting=getAccountID().getAccountPropertyString(ProtocolProviderFactory.SERVER_ADDRESS);
+    int serverPort=getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SERVER_PORT,5222);
+    InetSocketAddress[] addrs=null;
+    try {
+      addrs=NetworkUtils.getAorAAAARecords(serverAddressUserSetting,serverPort);
     }
-    Roster.setDefaultSubscriptionMode(Roster.SubscriptionMode.manual);
-    loadProxy();
-    for (int i=0; i < serverAddresses.size(); i++) {
-      String currentAddress=serverAddresses.get(i);
-      ConnectState state=connectAndLogin(currentAddress,password,serviceName,serverPort);
-      if (state == ConnectState.ABORT_CONNECTING)       return;
- else       if (state == ConnectState.CONTINUE_TRYING)       return;
- else       if (state == ConnectState.STOP_TRYING)       break;
+ catch (    ParseException e) {
+      logger.error("Domain not resolved",e);
+    }
+    if (addrs == null)     throw new XMPPException("No server address found");
+    for (    InetSocketAddress isa : addrs) {
+      try {
+        ConnectState state=connectAndLogin(isa,password,serviceName);
+        if (state == ConnectState.ABORT_CONNECTING || state == ConnectState.STOP_TRYING)         return;
+      }
+ catch (      XMPPException ex) {
+        disconnectAndCleanConnection();
+        if (isAuthenticationFailed(ex))         throw ex;
+      }
     }
   }
 synchronized (connectAndLoginLock) {
