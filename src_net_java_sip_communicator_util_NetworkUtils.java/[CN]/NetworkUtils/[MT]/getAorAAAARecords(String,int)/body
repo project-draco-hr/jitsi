@@ -1,0 +1,27 @@
+{
+  List<InetSocketAddress> addresses=new LinkedList<InetSocketAddress>();
+  boolean v6lookup=Boolean.getBoolean("java.net.preferIPv6Addresses");
+  for (int i=0; i < 2; i++) {
+    Lookup lookup;
+    try {
+      lookup=createLookup(domain,v6lookup ? Type.AAAA : Type.A);
+    }
+ catch (    TextParseException tpe) {
+      logger.error("Failed to parse domain <" + domain + ">",tpe);
+      throw new ParseException(tpe.getMessage(),0);
+    }
+    Record[] records=lookup.run();
+    if (records != null) {
+      for (      Record r : records) {
+        try {
+          addresses.add(new InetSocketAddress(InetAddress.getByAddress(domain,v6lookup ? ((AAAARecord)r).getAddress().getAddress() : ((ARecord)r).getAddress().getAddress()),port));
+        }
+ catch (        UnknownHostException e) {
+          logger.error("Invalid record returned from DNS",e);
+        }
+      }
+    }
+    v6lookup=!v6lookup;
+  }
+  return (InetSocketAddress[])addresses.toArray(new InetSocketAddress[0]);
+}
