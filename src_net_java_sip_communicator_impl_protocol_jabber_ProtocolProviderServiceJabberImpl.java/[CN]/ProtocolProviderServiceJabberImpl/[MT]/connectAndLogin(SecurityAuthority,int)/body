@@ -3,26 +3,8 @@ synchronized (connectAndLoginLock) {
     inConnectAndLogin=true;
   }
 synchronized (initializationLock) {
-    String password=JabberActivator.getProtocolProviderFactory().loadPassword(getAccountID());
-    if (password == null) {
-      UserCredentials credentials=new UserCredentials();
-      credentials.setUserName(getAccountID().getUserID());
-      credentials=authority.obtainCredentials(ProtocolNames.JABBER,credentials,reasonCode);
-      if (credentials == null) {
-        fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"No credentials provided");
-        return;
-      }
-      char[] pass=credentials.getPassword();
-      if (pass == null) {
-        fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"No password entered");
-        return;
-      }
-      password=new String(pass);
-      if (credentials.isPasswordPersistent()) {
-        JabberActivator.getProtocolProviderFactory().storePassword(getAccountID(),password);
-      }
- else       userCredentials=credentials;
-    }
+    String password=loadPassword(authority,reasonCode);
+    if (password == null)     return;
     try {
       String userID=null;
       if (getAccountID().getProtocolDisplayName().equals("Google Talk")) {

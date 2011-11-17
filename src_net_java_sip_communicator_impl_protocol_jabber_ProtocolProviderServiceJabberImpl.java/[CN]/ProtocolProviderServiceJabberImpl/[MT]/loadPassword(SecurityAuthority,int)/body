@@ -1,0 +1,23 @@
+{
+  String password=JabberActivator.getProtocolProviderFactory().loadPassword(getAccountID());
+  if (password == null) {
+    UserCredentials credentials=new UserCredentials();
+    credentials.setUserName(getAccountID().getUserID());
+    credentials=authority.obtainCredentials(ProtocolNames.JABBER,credentials,reasonCode);
+    if (credentials == null) {
+      fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"No credentials provided");
+      return null;
+    }
+    char[] pass=credentials.getPassword();
+    if (pass == null) {
+      fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"No password entered");
+      return null;
+    }
+    password=new String(pass);
+    if (credentials.isPasswordPersistent()) {
+      JabberActivator.getProtocolProviderFactory().storePassword(getAccountID(),password);
+    }
+ else     userCredentials=credentials;
+  }
+  return password;
+}
