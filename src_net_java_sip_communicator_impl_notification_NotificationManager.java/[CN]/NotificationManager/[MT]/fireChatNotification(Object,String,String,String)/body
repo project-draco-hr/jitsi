@@ -2,11 +2,12 @@
   NotificationService notificationService=NotificationActivator.getNotificationService();
   if (notificationService == null)   return;
   NotificationActionHandler popupActionHandler=null;
+  UIService uiService=NotificationActivator.getUIService();
   Chat chatPanel=null;
   byte[] contactIcon=null;
   if (chatContact instanceof Contact) {
     Contact contact=(Contact)chatContact;
-    chatPanel=NotificationActivator.getUIService().getChat(contact);
+    if (uiService != null)     chatPanel=uiService.getChat(contact);
     contactIcon=contact.getImage();
     if (contactIcon == null) {
       contactIcon=ImageUtils.toByteArray(getImage(DEFAULT_USER_PHOTO));
@@ -15,10 +16,10 @@
  else   if (chatContact instanceof ChatRoom) {
     ChatRoom chatRoom=(ChatRoom)chatContact;
     if (chatRoom.isSystem())     return;
-    chatPanel=NotificationActivator.getUIService().getChat(chatRoom);
+    if (uiService != null)     chatPanel=uiService.getChat(chatRoom);
   }
   if (chatPanel != null) {
-    if (eventType.equals(INCOMING_MESSAGE) && chatPanel.isChatFocused()) {
+    if (eventType.equals(NotificationService.INCOMING_MESSAGE) && chatPanel.isChatFocused()) {
       popupActionHandler=notificationService.getEventNotificationActionHandler(eventType,NotificationService.ACTION_POPUP_MESSAGE);
       popupActionHandler.setEnabled(false);
     }
