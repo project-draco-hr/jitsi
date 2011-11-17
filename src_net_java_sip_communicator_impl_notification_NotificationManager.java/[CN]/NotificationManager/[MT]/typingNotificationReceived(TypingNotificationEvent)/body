@@ -1,29 +1,34 @@
 {
-  Contact contact=event.getSourceContact();
-  UIService uiService=NotificationActivator.getUIService();
-  if (uiService != null) {
-    Chat chat=uiService.getCurrentChat();
-    if (chat != null) {
-      MetaContact metaContact=uiService.getChatContact(chat);
-      if (metaContact != null && metaContact.containsContact(contact) && chat.isChatFocused()) {
+  try {
+    Contact contact=event.getSourceContact();
+    UIService uiService=NotificationActivator.getUIService();
+    if (uiService != null) {
+      Chat chat=uiService.getCurrentChat();
+      if (chat != null) {
+        MetaContact metaContact=uiService.getChatContact(chat);
+        if (metaContact != null && metaContact.containsContact(contact) && chat.isChatFocused()) {
+          return;
+        }
+      }
+    }
+    long currentTime=System.currentTimeMillis();
+    if (this.proactiveTimer.size() > 0) {
+      Iterator<Map.Entry<Contact,Long>> entries=this.proactiveTimer.entrySet().iterator();
+      while (entries.hasNext()) {
+        Map.Entry<Contact,Long> entry=entries.next();
+        Long lastNotificationDate=entry.getValue();
+        if (lastNotificationDate.longValue() + 30000 < currentTime) {
+          entries.remove();
+        }
+      }
+      if (this.proactiveTimer.containsKey(contact)) {
         return;
       }
     }
+    this.proactiveTimer.put(contact,currentTime);
+    NotificationManager.fireChatNotification(contact,NotificationService.PROACTIVE_NOTIFICATION,contact.getDisplayName(),NotificationActivator.getResources().getI18NString("service.gui.PROACTIVE_NOTIFICATION"));
   }
-  long currentTime=System.currentTimeMillis();
-  if (this.proactiveTimer.size() > 0) {
-    Iterator<Map.Entry<Contact,Long>> entries=this.proactiveTimer.entrySet().iterator();
-    while (entries.hasNext()) {
-      Map.Entry<Contact,Long> entry=entries.next();
-      Long lastNotificationDate=entry.getValue();
-      if (lastNotificationDate.longValue() + 30000 < currentTime) {
-        entries.remove();
-      }
-    }
-    if (this.proactiveTimer.containsKey(contact)) {
-      return;
-    }
+ catch (  Throwable t) {
+    logger.error("Error notifying for typing evt received",t);
   }
-  this.proactiveTimer.put(contact,currentTime);
-  NotificationManager.fireChatNotification(contact,NotificationService.PROACTIVE_NOTIFICATION,contact.getDisplayName(),NotificationActivator.getResources().getI18NString("service.gui.PROACTIVE_NOTIFICATION"));
 }
