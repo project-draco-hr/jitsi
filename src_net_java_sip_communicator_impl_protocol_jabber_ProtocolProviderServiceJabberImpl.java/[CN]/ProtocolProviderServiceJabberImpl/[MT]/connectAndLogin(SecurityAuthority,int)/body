@@ -5,94 +5,64 @@ synchronized (connectAndLoginLock) {
 synchronized (initializationLock) {
     String password=loadPassword(authority,reasonCode);
     if (password == null)     return;
+    String serviceName=StringUtils.parseServer(getAccountID().getUserID());
+    List<String> serverAddresses=new ArrayList<String>();
+    String serverAddressUserSetting=getAccountID().getAccountPropertyString(ProtocolProviderFactory.SERVER_ADDRESS);
+    int serverPort=getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SERVER_PORT,5222);
+    loadResource();
+    boolean isServerOverriden=getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.IS_SERVER_OVERRIDDEN,false);
     try {
-      String userID=null;
-      if (getAccountID().getProtocolDisplayName().equals("Google Talk")) {
-        userID=getAccountID().getUserID();
+      if (!isServerOverriden) {
+        SRVRecord srvRecords[]=NetworkUtils.getSRVRecords("xmpp-client","tcp",serviceName);
+        if (srvRecords != null) {
+          for (int i=0; i < srvRecords.length; i++) {
+            serverAddresses.add(srvRecords[i].getTarget());
+          }
+        }
       }
- else {
-        userID=StringUtils.parseName(getAccountID().getUserID());
-      }
-      String serviceName=StringUtils.parseServer(getAccountID().getUserID());
-      List<String> serverAddresses=new ArrayList<String>();
-      String serverAddressUserSetting=getAccountID().getAccountPropertyString(ProtocolProviderFactory.SERVER_ADDRESS);
-      int serverPort=getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SERVER_PORT,5222);
-      loadResource();
-      boolean isServerOverriden=getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.IS_SERVER_OVERRIDDEN,false);
+      InetSocketAddress addressObj4=null;
+      InetSocketAddress addressObj6=null;
       try {
-        if (!isServerOverriden) {
-          SRVRecord srvRecords[]=NetworkUtils.getSRVRecords("xmpp-client","tcp",serviceName);
-          if (srvRecords != null) {
-            for (int i=0; i < srvRecords.length; i++) {
-              serverAddresses.add(srvRecords[i].getTarget());
-            }
-          }
+        addressObj4=NetworkUtils.getARecord(serverAddressUserSetting,serverPort);
+      }
+ catch (      ParseException ex) {
+        logger.error("Cannot obtain A record for " + serverAddressUserSetting,ex);
+      }
+      try {
+        addressObj6=NetworkUtils.getAAAARecord(serverAddressUserSetting,serverPort);
+      }
+ catch (      ParseException ex) {
+        logger.error("Cannot obtain AAAA record for " + serverAddressUserSetting,ex);
+      }
+      if (Boolean.getBoolean("java.net.preferIPv6Addresses")) {
+        if (addressObj6 != null) {
+          serverAddresses.add(addressObj6.getAddress().getHostAddress());
         }
-        InetSocketAddress addressObj4=null;
-        InetSocketAddress addressObj6=null;
-        try {
-          addressObj4=NetworkUtils.getARecord(serverAddressUserSetting,serverPort);
+        if (addressObj4 != null) {
+          serverAddresses.add(addressObj4.getAddress().getHostAddress());
         }
- catch (        ParseException ex) {
-          logger.error("Cannot obtain A record for " + serverAddressUserSetting,ex);
-        }
-        try {
-          addressObj6=NetworkUtils.getAAAARecord(serverAddressUserSetting,serverPort);
-        }
- catch (        ParseException ex) {
-          logger.error("Cannot obtain AAAA record for " + serverAddressUserSetting,ex);
-        }
-        if (Boolean.getBoolean("java.net.preferIPv6Addresses")) {
-          if (addressObj6 != null) {
-            serverAddresses.add(addressObj6.getAddress().getHostAddress());
-          }
-          if (addressObj4 != null) {
-            serverAddresses.add(addressObj4.getAddress().getHostAddress());
-          }
-        }
+      }
  else {
-          if (addressObj4 != null) {
-            serverAddresses.add(addressObj4.getAddress().getHostAddress());
-          }
-          if (addressObj6 != null) {
-            serverAddresses.add(addressObj6.getAddress().getHostAddress());
-          }
+        if (addressObj4 != null) {
+          serverAddresses.add(addressObj4.getAddress().getHostAddress());
         }
-        serverAddresses.add(serverAddressUserSetting);
-      }
- catch (      ParseException ex1) {
-        logger.error("Domain not resolved " + ex1.getMessage());
-      }
-      Roster.setDefaultSubscriptionMode(Roster.SubscriptionMode.manual);
-      loadProxy();
-      for (int i=0; i < serverAddresses.size(); i++) {
-        String currentAddress=serverAddresses.get(i);
-        try {
-          ConnectState state=connectAndLogin(currentAddress,serverPort,serviceName,userID,password,resource);
-          if (state == ConnectState.ABORT_CONNECTING)           return;
- else           if (state == ConnectState.CONTINUE_TRYING)           continue;
- else           if (state == ConnectState.STOP_TRYING)           break;
-        }
- catch (        XMPPException ex) {
-          disconnectAndCleanConnection();
-          try {
-            ConnectState state=connectAndLogin(currentAddress,serverPort,serviceName,userID + "@" + serviceName,password,resource);
-            if (state == ConnectState.ABORT_CONNECTING)             return;
- else             if (state == ConnectState.CONTINUE_TRYING)             continue;
- else             if (state == ConnectState.STOP_TRYING)             break;
-          }
- catch (          XMPPException e) {
-            if (isAuthenticationFailed(ex))             throw ex;
-            disconnectAndCleanConnection();
-            if (i == serverAddresses.size() - 1) {
-              throw ex;
-            }
-          }
+        if (addressObj6 != null) {
+          serverAddresses.add(addressObj6.getAddress().getHostAddress());
         }
       }
+      serverAddresses.add(serverAddressUserSetting);
     }
- catch (    NumberFormatException ex) {
-      throw new OperationFailedException("Wrong port",OperationFailedException.INVALID_ACCOUNT_PROPERTIES,ex);
+ catch (    ParseException ex1) {
+      logger.error("Domain not resolved " + ex1.getMessage());
+    }
+    Roster.setDefaultSubscriptionMode(Roster.SubscriptionMode.manual);
+    loadProxy();
+    for (int i=0; i < serverAddresses.size(); i++) {
+      String currentAddress=serverAddresses.get(i);
+      ConnectState state=connectAndLogin(currentAddress,password,serviceName,serverPort);
+      if (state == ConnectState.ABORT_CONNECTING)       return;
+ else       if (state == ConnectState.CONTINUE_TRYING)       return;
+ else       if (state == ConnectState.STOP_TRYING)       break;
     }
   }
 synchronized (connectAndLoginLock) {

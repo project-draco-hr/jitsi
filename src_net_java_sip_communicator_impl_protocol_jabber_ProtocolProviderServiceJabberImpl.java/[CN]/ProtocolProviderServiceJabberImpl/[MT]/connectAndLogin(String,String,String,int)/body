@@ -1,0 +1,29 @@
+{
+  String userID=null;
+  boolean qualifiedUserID;
+  if (getAccountID().getProtocolDisplayName().equals("Google Talk")) {
+    userID=getAccountID().getUserID();
+    qualifiedUserID=true;
+  }
+ else {
+    userID=StringUtils.parseName(getAccountID().getUserID());
+    qualifiedUserID=false;
+  }
+  try {
+    return connectAndLogin(currentAddress,serverPort,serviceName,userID,password,resource);
+  }
+ catch (  XMPPException ex) {
+    disconnectAndCleanConnection();
+    if (ex.getWrappedThrowable() instanceof ConnectException)     throw ex;
+    if (!qualifiedUserID) {
+      try {
+        return connectAndLogin(currentAddress,serverPort,serviceName,userID + "@" + serviceName,password,resource);
+      }
+ catch (      XMPPException ex2) {
+        disconnectAndCleanConnection();
+        throw ex;
+      }
+    }
+ else     throw ex;
+  }
+}
