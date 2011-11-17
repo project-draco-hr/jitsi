@@ -1,0 +1,16 @@
+{
+  ChatRoom sourceChatRoom=evt.getSourceChatRoom();
+  ChatRoomMember sourceMember=evt.getSourceChatRoomMember();
+  boolean fireChatNotification;
+  String messageContent=evt.getMessage().getContent();
+  if (sourceChatRoom.isSystem() || isPrivate(sourceChatRoom) || (messageContent == null))   fireChatNotification=true;
+ else {
+    String nickname=sourceChatRoom.getUserNickname();
+    int atIx=nickname.indexOf("@");
+    fireChatNotification=(nickname == null) || messageContent.toLowerCase().contains(nickname.toLowerCase()) || ((atIx == -1) ? false : messageContent.toLowerCase().contains(nickname.substring(0,atIx).toLowerCase()));
+  }
+  if (fireChatNotification) {
+    String title=NotificationActivator.getResources().getI18NString("service.gui.MSG_RECEIVED",new String[]{sourceMember.getName()});
+    NotificationManager.fireChatNotification(sourceChatRoom,NotificationManager.INCOMING_MESSAGE,title,messageContent);
+  }
+}
