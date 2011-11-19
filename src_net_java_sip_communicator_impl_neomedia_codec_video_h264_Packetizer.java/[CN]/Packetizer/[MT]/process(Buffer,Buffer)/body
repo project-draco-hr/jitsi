@@ -8,41 +8,60 @@
     outBuffer.setSequenceNumber(sequenceNumber++);
     if (nals.size() > 0)     return (BUFFER_PROCESSED_OK | INPUT_BUFFER_NOT_CONSUMED);
  else {
-      outBuffer.setFlags(outBuffer.getFlags() | Buffer.FLAG_RTP_MARKER);
-      return BUFFER_PROCESSED_OK;
+      int flags=outBuffer.getFlags() | Buffer.FLAG_RTP_MARKER;
+      if (nal.length > 0) {
+        int nal_unit_type=nal[0] & 0x1F;
+        if ((nal_unit_type == 28) && (nal.length > 1)) {
+          byte fuHeader=nal[1];
+          if ((fuHeader & 0x40) == 0) {
+            flags&=~Buffer.FLAG_RTP_MARKER;
+          }
+ else           nal_unit_type=fuHeader & 0x1F;
+        }
+switch (nal_unit_type) {
+case 6:
+case 7:
+case 8:
+case 9:
+          flags&=~Buffer.FLAG_RTP_MARKER;
+        break;
     }
   }
-  if (isEOM(inBuffer)) {
-    propagateEOM(outBuffer);
-    reset();
-    return BUFFER_PROCESSED_OK;
-  }
-  if (inBuffer.isDiscard()) {
-    outBuffer.setDiscard(true);
-    reset();
-    return BUFFER_PROCESSED_OK;
-  }
-  Format inFormat=inBuffer.getFormat();
-  if ((inFormat != inputFormat) && !inFormat.matches(inputFormat))   setInputFormat(inFormat);
-  int inLength=inBuffer.getLength();
-  if (inLength < 4) {
-    outBuffer.setDiscard(true);
-    reset();
-    return BUFFER_PROCESSED_OK;
-  }
-  byte[] inData=(byte[])inBuffer.getData();
-  int inOffset=inBuffer.getOffset();
-  boolean nalsAdded=false;
-  int endIndex=inOffset + inLength;
-  int beginIndex=ff_avc_find_startcode(inData,inOffset,endIndex);
-  if (beginIndex < endIndex) {
-    beginIndex+=3;
-    for (int nextBeginIndex; (beginIndex < endIndex) && ((nextBeginIndex=ff_avc_find_startcode(inData,beginIndex,endIndex)) <= endIndex); beginIndex=nextBeginIndex + 3) {
-      int nalLength=nextBeginIndex - beginIndex;
-      while ((nalLength > 0) && (inData[beginIndex + nalLength - 1] == 0))       nalLength--;
-      if (nalLength > 0)       nalsAdded=packetizeNAL(inData,beginIndex,nalLength) || nalsAdded;
-    }
-  }
-  nalsTimeStamp=inBuffer.getTimeStamp();
-  return nalsAdded ? process(inBuffer,outBuffer) : OUTPUT_BUFFER_NOT_FILLED;
+  outBuffer.setFlags(flags);
+  return BUFFER_PROCESSED_OK;
+}
+}
+if (isEOM(inBuffer)) {
+propagateEOM(outBuffer);
+reset();
+return BUFFER_PROCESSED_OK;
+}
+if (inBuffer.isDiscard()) {
+outBuffer.setDiscard(true);
+reset();
+return BUFFER_PROCESSED_OK;
+}
+Format inFormat=inBuffer.getFormat();
+if ((inFormat != inputFormat) && !inFormat.matches(inputFormat)) setInputFormat(inFormat);
+int inLength=inBuffer.getLength();
+if (inLength < 4) {
+outBuffer.setDiscard(true);
+reset();
+return BUFFER_PROCESSED_OK;
+}
+byte[] inData=(byte[])inBuffer.getData();
+int inOffset=inBuffer.getOffset();
+boolean nalsAdded=false;
+int endIndex=inOffset + inLength;
+int beginIndex=ff_avc_find_startcode(inData,inOffset,endIndex);
+if (beginIndex < endIndex) {
+beginIndex+=3;
+for (int nextBeginIndex; (beginIndex < endIndex) && ((nextBeginIndex=ff_avc_find_startcode(inData,beginIndex,endIndex)) <= endIndex); beginIndex=nextBeginIndex + 3) {
+  int nalLength=nextBeginIndex - beginIndex;
+  while ((nalLength > 0) && (inData[beginIndex + nalLength - 1] == 0))   nalLength--;
+  if (nalLength > 0)   nalsAdded=packetizeNAL(inData,beginIndex,nalLength) || nalsAdded;
+}
+}
+nalsTimeStamp=inBuffer.getTimeStamp();
+return nalsAdded ? process(inBuffer,outBuffer) : OUTPUT_BUFFER_NOT_FILLED;
 }
