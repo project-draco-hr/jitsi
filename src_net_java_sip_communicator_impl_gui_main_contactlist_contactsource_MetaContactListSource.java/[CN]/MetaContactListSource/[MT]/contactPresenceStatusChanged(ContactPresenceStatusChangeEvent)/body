@@ -1,0 +1,31 @@
+{
+  if (evt.getOldStatus() == evt.getNewStatus())   return;
+  final Contact sourceContact=evt.getSourceContact();
+  final MetaContact metaContact=GuiActivator.getContactListService().findMetaContactByContact(sourceContact);
+  if (metaContact == null)   return;
+synchronized (metaContact) {
+    UIContact uiContact=getUIContact(metaContact);
+    ContactListFilter currentFilter=GuiActivator.getContactList().getCurrentFilter();
+    if (uiContact == null) {
+      uiContact=createUIContact(metaContact);
+      if (currentFilter != null && currentFilter.isMatching(uiContact)) {
+        MetaContactGroup parentGroup=metaContact.getParentMetaContactGroup();
+        UIGroup uiGroup=null;
+        if (!MetaContactListSource.isRootGroup(parentGroup)) {
+          uiGroup=MetaContactListSource.getUIGroup(parentGroup);
+          if (uiGroup == null)           uiGroup=MetaContactListSource.createUIGroup(parentGroup);
+        }
+        if (logger.isDebugEnabled())         logger.debug("Add matching contact due to status change: " + uiContact.getDisplayName());
+        GuiActivator.getContactList().addContact(uiContact,uiGroup,true,true);
+      }
+ else       removeUIContact(metaContact);
+    }
+ else {
+      if (currentFilter != null && !currentFilter.isMatching(uiContact)) {
+        if (logger.isDebugEnabled())         logger.debug("Remove unmatching contact due to status change: " + uiContact.getDisplayName());
+        GuiActivator.getContactList().removeContact(uiContact);
+      }
+ else       GuiActivator.getContactList().nodeChanged(uiContact.getContactNode());
+    }
+  }
+}
