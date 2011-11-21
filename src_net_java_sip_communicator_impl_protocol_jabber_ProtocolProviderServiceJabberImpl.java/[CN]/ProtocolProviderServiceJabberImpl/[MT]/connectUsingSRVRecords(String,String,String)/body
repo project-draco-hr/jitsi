@@ -1,0 +1,31 @@
+{
+  SRVRecord srvRecords[]=null;
+  try {
+    srvRecords=NetworkUtils.getSRVRecords("xmpp-client","tcp",domain);
+  }
+ catch (  ParseException e) {
+    logger.error("SRV record not resolved",e);
+  }
+  if (srvRecords != null) {
+    for (    SRVRecord srv : srvRecords) {
+      InetSocketAddress[] addrs=null;
+      try {
+        addrs=NetworkUtils.getAandAAAARecords(srv.getTarget(),srv.getPort());
+      }
+ catch (      ParseException e) {
+        logger.error("Invalid SRV record target",e);
+      }
+      if (addrs == null)       continue;
+      for (      InetSocketAddress isa : addrs) {
+        try {
+          return connectAndLogin(isa,password,serviceName);
+        }
+ catch (        XMPPException ex) {
+          disconnectAndCleanConnection();
+          if (isAuthenticationFailed(ex))           throw ex;
+        }
+      }
+    }
+  }
+  return ConnectState.CONTINUE_TRYING;
+}
