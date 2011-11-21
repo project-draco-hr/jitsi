@@ -4,6 +4,15 @@
   final MetaContactGroup newParent=evt.getNewParent();
   UIContact uiContact=MetaContactListSource.getUIContact(metaContact);
   if (uiContact == null)   return;
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        metaContactMoved(evt);
+      }
+    }
+);
+    return;
+  }
   UIGroup oldUIGroup;
   if (MetaContactListSource.isRootGroup(oldParent))   oldUIGroup=GuiActivator.getContactList().getTreeModel().getRoot().getGroupDescriptor();
  else   oldUIGroup=MetaContactListSource.getUIGroup(oldParent);
