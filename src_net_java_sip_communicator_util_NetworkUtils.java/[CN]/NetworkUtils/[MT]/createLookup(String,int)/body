@@ -1,4 +1,5 @@
 {
+  if (netListenerAdded.compareAndSet(false,true))   UtilActivator.getNetworkAddressManagerService().addNetworkConfigurationChangeListener(netListener);
   Lookup lookup=new Lookup(domain,type);
   if (!UtilActivator.getConfigurationService().getBoolean(PNAME_BACKUP_RESOLVER_ENABLED,PDEFAULT_BACKUP_RESOLVER_ENABLED))   return lookup;
 synchronized (parallelResolverLock) {
@@ -19,7 +20,6 @@ synchronized (parallelResolverLock) {
         int rslvrPort=UtilActivator.getConfigurationService().getInt(PNAME_BACKUP_RESOLVER_PORT,SimpleResolver.DEFAULT_PORT);
         InetSocketAddress resolverSockAddr=new InetSocketAddress(resolverAddress,rslvrPort);
         parallelResolver=new ParallelResolver(new InetSocketAddress[]{resolverSockAddr});
-        UtilActivator.getNetworkAddressManagerService().addNetworkConfigurationChangeListener(new NetworkListener());
         UtilActivator.getConfigurationService().addPropertyChangeListener(new DnsConfigurationChangeListener());
       }
  catch (      Throwable t) {
