@@ -1,0 +1,28 @@
+{
+  final MetaContact metaContact=evt.getSourceMetaContact();
+  final MetaContactGroup oldParent=evt.getOldParent();
+  final MetaContactGroup newParent=evt.getNewParent();
+  UIContact uiContact=MetaContactListSource.getUIContact(metaContact);
+  if (uiContact == null)   return;
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        metaContactMoved(evt);
+      }
+    }
+);
+    return;
+  }
+  UIGroup oldUIGroup;
+  if (MetaContactListSource.isRootGroup(oldParent))   oldUIGroup=treeModel.getRoot().getGroupDescriptor();
+ else   oldUIGroup=MetaContactListSource.getUIGroup(oldParent);
+  if (oldUIGroup != null)   removeContact(uiContact);
+  uiContact=MetaContactListSource.createUIContact(evt.getSourceMetaContact());
+  UIGroup newUIGroup=null;
+  if (!MetaContactListSource.isRootGroup(newParent)) {
+    newUIGroup=MetaContactListSource.getUIGroup(newParent);
+    if (newUIGroup == null)     newUIGroup=MetaContactListSource.createUIGroup(newParent);
+  }
+  if (currentFilter.isMatching(uiContact))   addContact(uiContact,newUIGroup,true,true);
+ else   MetaContactListSource.removeUIContact(metaContact);
+}
