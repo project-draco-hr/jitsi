@@ -15,13 +15,13 @@ synchronized (initializationLock) {
       state=connectUsingSRVRecords(serviceName,password,serviceName);
       if (state == ConnectState.ABORT_CONNECTING || state == ConnectState.STOP_TRYING)       return;
     }
-    String serverAddressUserSetting=getAccountID().getAccountPropertyString(ProtocolProviderFactory.SERVER_ADDRESS);
-    int serverPort=getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SERVER_PORT,5222);
     String customXMPPDomain=getAccountID().getAccountPropertyString("CUSTOM_XMPP_DOMAIN");
     if (customXMPPDomain != null) {
       state=connectUsingSRVRecords(customXMPPDomain,password,serviceName);
       if (state == ConnectState.ABORT_CONNECTING || state == ConnectState.STOP_TRYING)       return;
     }
+    String serverAddressUserSetting=getAccountID().getAccountPropertyString(ProtocolProviderFactory.SERVER_ADDRESS);
+    int serverPort=getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SERVER_PORT,5222);
     InetSocketAddress[] addrs=null;
     try {
       addrs=NetworkUtils.getAandAAAARecords(serverAddressUserSetting,serverPort);
@@ -29,7 +29,9 @@ synchronized (initializationLock) {
  catch (    ParseException e) {
       logger.error("Domain not resolved",e);
     }
-    if (addrs == null)     throw new XMPPException("No server address found");
+    if (addrs == null || addrs.length == 0) {
+      fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,"No server addresses found");
+    }
     for (    InetSocketAddress isa : addrs) {
       try {
         state=connectAndLogin(isa,password,serviceName);
