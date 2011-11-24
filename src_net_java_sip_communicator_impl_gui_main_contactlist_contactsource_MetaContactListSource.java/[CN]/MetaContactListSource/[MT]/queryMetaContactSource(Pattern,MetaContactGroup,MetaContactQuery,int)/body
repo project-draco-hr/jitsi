@@ -7,10 +7,16 @@
       if (resultCount <= INITIAL_CONTACT_COUNT) {
         UIGroup uiGroup=null;
         if (!MetaContactListSource.isRootGroup(parentGroup)) {
-          uiGroup=MetaContactListSource.getUIGroup(parentGroup);
-          if (uiGroup == null)           uiGroup=MetaContactListSource.createUIGroup(parentGroup);
+synchronized (parentGroup) {
+            uiGroup=MetaContactListSource.getUIGroup(parentGroup);
+            if (uiGroup == null)             uiGroup=MetaContactListSource.createUIGroup(parentGroup);
+          }
         }
-        GuiActivator.getContactList().addContact(MetaContactListSource.createUIContact(metaContact),uiGroup,true,true);
+        UIContact newUIContact;
+synchronized (metaContact) {
+          newUIContact=MetaContactListSource.createUIContact(metaContact);
+        }
+        GuiActivator.getContactList().addContact(newUIContact,uiGroup,true,true);
         query.setInitialResultCount(resultCount);
       }
  else       query.fireQueryEvent(metaContact);
