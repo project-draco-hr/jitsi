@@ -3,15 +3,32 @@
     if (logger.isTraceEnabled())     logger.trace("Trying to reregister us!");
     this.unregister(false);
     this.abortConnecting=false;
+synchronized (connectAndLoginLock) {
+      inConnectAndLogin=true;
+    }
     connectAndLogin(authority,authReasonCode);
   }
  catch (  OperationFailedException ex) {
     logger.error("Error ReRegistering",ex);
+    eventDuringLogin=null;
     disconnectAndCleanConnection();
     fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,null);
   }
 catch (  XMPPException ex) {
     logger.error("Error ReRegistering",ex);
+    eventDuringLogin=null;
     fireRegistrationStateChanged(ex);
+  }
+ finally {
+synchronized (connectAndLoginLock) {
+      if (eventDuringLogin != null) {
+        if (eventDuringLogin.getNewState().equals(RegistrationState.CONNECTION_FAILED) || eventDuringLogin.getNewState().equals(RegistrationState.UNREGISTERED))         disconnectAndCleanConnection();
+        fireRegistrationStateChanged(eventDuringLogin.getOldState(),eventDuringLogin.getNewState(),eventDuringLogin.getReasonCode(),eventDuringLogin.getReason());
+        eventDuringLogin=null;
+        inConnectAndLogin=false;
+        return;
+      }
+      inConnectAndLogin=false;
+    }
   }
 }

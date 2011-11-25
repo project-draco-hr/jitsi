@@ -3,10 +3,26 @@
   this.authority=authority;
   try {
     abortConnecting=false;
+synchronized (connectAndLoginLock) {
+      inConnectAndLogin=true;
+    }
     connectAndLogin(authority,SecurityAuthority.AUTHENTICATION_REQUIRED);
   }
  catch (  XMPPException ex) {
     logger.error("Error registering",ex);
+    eventDuringLogin=null;
     fireRegistrationStateChanged(ex);
+  }
+ finally {
+synchronized (connectAndLoginLock) {
+      if (eventDuringLogin != null) {
+        if (eventDuringLogin.getNewState().equals(RegistrationState.CONNECTION_FAILED) || eventDuringLogin.getNewState().equals(RegistrationState.UNREGISTERED))         disconnectAndCleanConnection();
+        fireRegistrationStateChanged(eventDuringLogin.getOldState(),eventDuringLogin.getNewState(),eventDuringLogin.getReasonCode(),eventDuringLogin.getReason());
+        eventDuringLogin=null;
+        inConnectAndLogin=false;
+        return;
+      }
+      inConnectAndLogin=false;
+    }
   }
 }
