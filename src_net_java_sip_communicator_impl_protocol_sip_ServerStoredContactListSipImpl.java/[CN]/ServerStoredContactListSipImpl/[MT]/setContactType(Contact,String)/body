@@ -1,0 +1,27 @@
+{
+  if (!(contact instanceof ContactSipImpl)) {
+    String errorMessage=String.format("Contact %1s does not seem to belong to this protocol's " + "contact list",contact.getAddress());
+    throw new IllegalArgumentException(errorMessage);
+  }
+  ContactSipImpl contactSip=(ContactSipImpl)contact;
+  List<Element> anyElements=contactSip.getAny();
+  try {
+    Element typeElement=null;
+    for (    Element el : anyElements) {
+      if (el.getNodeName().equals(CONTACT_TYPE_ELEMENT_NAME)) {
+        typeElement=el;
+        break;
+      }
+    }
+    if (typeElement == null) {
+      Document document=XMLUtils.createDocument();
+      typeElement=document.createElementNS(CONTACT_TYPE_NS,CONTACT_TYPE_ELEMENT_NAME);
+      anyElements.add(typeElement);
+    }
+    typeElement.setTextContent(contactType);
+    contactSip.setAny(anyElements);
+  }
+ catch (  Throwable t) {
+    logger.error("Error creating element",t);
+  }
+}
