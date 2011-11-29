@@ -1,0 +1,68 @@
+{
+  AWTKeyStroke keystroke=evt.getKeyStroke();
+  GlobalKeybindingSet set=keybindingsService.getGlobalBindings();
+  Call choosenCall=null;
+  for (  Map.Entry<String,List<AWTKeyStroke>> entry : set.getBindings().entrySet()) {
+    for (    AWTKeyStroke ks : entry.getValue()) {
+      if (entry.getKey().equals("answer") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
+synchronized (incomingCalls) {
+          int size=incomingCalls.size();
+          for (int i=0; i < size; i++) {
+            Call c=incomingCalls.get(i);
+            if (c.getCallPeers().next().getState() == CallPeerState.INCOMING_CALL) {
+              choosenCall=c;
+              break;
+            }
+          }
+        }
+        if (choosenCall == null)         return;
+        final OperationSetBasicTelephony<?> opSet=choosenCall.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
+        final Call cCall=choosenCall;
+        new Thread(){
+          public void run(){
+            try {
+              opSet.answerCallPeer(cCall.getCallPeers().next());
+            }
+ catch (            OperationFailedException e) {
+              logger.info("Failed to answer call via global shortcut",e);
+            }
+          }
+        }
+.start();
+      }
+ else       if (entry.getKey().equals("hangup") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
+        Call incomingCall=null;
+synchronized (incomingCalls) {
+          int size=incomingCalls.size();
+          for (int i=0; i < size; i++) {
+            Call c=incomingCalls.get(i);
+            if (c.getCallPeers().next().getState() == CallPeerState.CONNECTED) {
+              choosenCall=c;
+              break;
+            }
+ else             if (c.getCallPeers().next().getState() == CallPeerState.INCOMING_CALL && incomingCall == null) {
+              incomingCall=c;
+            }
+          }
+        }
+        if (choosenCall == null && incomingCall != null) {
+          choosenCall=incomingCall;
+        }
+        if (choosenCall == null)         return;
+        final OperationSetBasicTelephony<?> opSet=choosenCall.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
+        final Call cCall=choosenCall;
+        new Thread(){
+          public void run(){
+            try {
+              opSet.hangupCallPeer(cCall.getCallPeers().next());
+            }
+ catch (            OperationFailedException e) {
+              logger.info("Failed to answer call via global shortcut",e);
+            }
+          }
+        }
+.start();
+      }
+    }
+  }
+}

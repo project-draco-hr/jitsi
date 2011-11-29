@@ -1,0 +1,27 @@
+{
+  KeybindingsService keybindingService=KeybindingChooserActivator.getKeybindingsService();
+  GlobalShortcutService globalShortcutService=KeybindingChooserActivator.getGlobalShortcutService();
+  Map<String,List<AWTKeyStroke>> gBindings=keybindingService.getGlobalBindings().getBindings();
+  List<GlobalShortcutEntry> entries=tableModel.getEntries();
+  List<AWTKeyStroke> kss=null;
+  for (  GlobalShortcutEntry entry : entries) {
+    String desc=null;
+    if (entry.getAction().equals(Resources.getString("plugin.keybindings.globalchooser.ANSWER_CALL"))) {
+      desc="answer";
+    }
+ else     if (entry.getAction().equals(Resources.getString("plugin.keybindings.globalchooser.HANGUP_CALL"))) {
+      desc="hangup";
+    }
+ else     if (entry.getAction().equals(Resources.getString("plugin.keybindings.globalchooser.SHOW_CONTACTLIST"))) {
+      desc="contactlist";
+    }
+ else     continue;
+    kss=gBindings.get(desc);
+    kss.clear();
+    kss.add(entry.getShortcut());
+    kss.add(entry.getShortcut2());
+    gBindings.put(desc,kss);
+  }
+  keybindingService.saveGlobalShortcutFromConfiguration();
+  globalShortcutService.reloadGlobalShortcuts();
+}
