@@ -3,37 +3,13 @@
   this.parentWindow=window;
   TransparentPanel mainPanel=new TransparentPanel(new BorderLayout());
   this.add(mainPanel,BorderLayout.NORTH);
-  TransparentPanel buttonPanel=new TransparentPanel(new GridLayout(0,1));
   if (!ConfigurationManager.isAddContactDisabled()) {
-    addContact.setAlignmentX(JButton.CENTER_ALIGNMENT);
-    addContact.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.ADD_CONTACT"));
-    buttonPanel.add(addContact);
-    addContact.addActionListener(new ActionListener(){
-      public void actionPerformed(      ActionEvent e){
-        AddContactDialog dialog=new AddContactDialog(parentWindow);
-        dialog.setContactAddress(parentWindow.getCurrentSearchText());
-        dialog.setVisible(true);
-      }
-    }
-);
+    initAddContactButton();
   }
-  List<ProtocolProviderService> telephonyProviders=CallManager.getTelephonyProviders();
-  if (telephonyProviders != null && telephonyProviders.size() > 0) {
-    callContact.setAlignmentX(JButton.CENTER_ALIGNMENT);
-    callContact.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.CALL_CONTACT"));
-    buttonPanel.add(callContact);
-    callContact.addActionListener(new ActionListener(){
-      public void actionPerformed(      ActionEvent e){
-        String searchText=parentWindow.getCurrentSearchText();
-        if (searchText == null)         return;
-        CallManager.createCall(searchText,callContact);
-      }
-    }
-);
-  }
+  initCallButton();
   initTextArea();
   mainPanel.add(textArea,BorderLayout.CENTER);
-  if (callContact.getParent() != null) {
+  if (callButton.getParent() != null) {
     textArea.setText(GuiActivator.getResources().getI18NString("service.gui.NO_CONTACTS_FOUND",new String[]{'"' + parentWindow.getCurrentSearchText() + '"'}));
   }
  else {
