@@ -4,6 +4,7 @@
   Call choosenCall=null;
   for (  Map.Entry<String,List<AWTKeyStroke>> entry : set.getBindings().entrySet()) {
     for (    AWTKeyStroke ks : entry.getValue()) {
+      if (ks == null)       continue;
       if (entry.getKey().equals("answer") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
 synchronized (incomingCalls) {
           int size=incomingCalls.size();
@@ -32,21 +33,40 @@ synchronized (incomingCalls) {
       }
  else       if (entry.getKey().equals("hangup") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
         Call incomingCall=null;
+        Call outgoingCall=null;
 synchronized (incomingCalls) {
           int size=incomingCalls.size();
           for (int i=0; i < size; i++) {
             Call c=incomingCalls.get(i);
-            if (c.getCallPeers().next().getState() == CallPeerState.CONNECTED) {
+            if (c.getCallPeers().next().getState() == CallPeerState.INCOMING_CALL && incomingCall == null) {
+              incomingCall=c;
+              break;
+            }
+ else             if (c.getCallPeers().next().getState() == CallPeerState.CONNECTED) {
               choosenCall=c;
               break;
             }
- else             if (c.getCallPeers().next().getState() == CallPeerState.INCOMING_CALL && incomingCall == null) {
-              incomingCall=c;
+          }
+        }
+synchronized (outgoingCalls) {
+          int size=outgoingCalls.size();
+          for (int i=0; i < size; i++) {
+            Call c=outgoingCalls.get(i);
+            if ((c.getCallPeers().next().getState() == CallPeerState.CONNECTING || c.getCallPeers().next().getState() == CallPeerState.ALERTING_REMOTE_SIDE) && outgoingCall == null) {
+              outgoingCall=c;
+              break;
+            }
+ else             if (c.getCallPeers().next().getState() == CallPeerState.CONNECTED) {
+              choosenCall=c;
+              break;
             }
           }
         }
         if (choosenCall == null && incomingCall != null) {
           choosenCall=incomingCall;
+        }
+        if (choosenCall == null && outgoingCall != null) {
+          choosenCall=outgoingCall;
         }
         if (choosenCall == null)         return;
         final OperationSetBasicTelephony<?> opSet=choosenCall.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
