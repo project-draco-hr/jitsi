@@ -1,6 +1,21 @@
 {
   RosterEntry entry=roster.getEntry(rosterEntryID);
-  ContactJabberImpl contact=new ContactJabberImpl(entry,ServerStoredContactListJabberImpl.this,true,true);
+  if (!isEntryDisplayable(entry))   return null;
+  ContactJabberImpl contact=findContactById(entry.getUser());
+  if (contact != null) {
+    if (contact.isPersistent()) {
+      contact.setResolved(entry);
+      return contact;
+    }
+ else {
+      ContactGroup oldParentGroup=contact.getParentContactGroup();
+      if (oldParentGroup instanceof ContactGroupJabberImpl && !oldParentGroup.isPersistent()) {
+        ((ContactGroupJabberImpl)oldParentGroup).removeContact(contact);
+        fireContactRemoved(oldParentGroup,contact);
+      }
+    }
+  }
+  contact=new ContactJabberImpl(entry,ServerStoredContactListJabberImpl.this,true,true);
   if (entry.getGroups() == null || entry.getGroups().size() == 0) {
     rootGroup.addContact(contact);
     fireContactAdded(rootGroup,contact);
