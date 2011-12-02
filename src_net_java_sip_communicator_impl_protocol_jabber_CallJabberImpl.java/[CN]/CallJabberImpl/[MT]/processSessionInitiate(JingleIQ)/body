@@ -51,6 +51,19 @@
     }
     return callPeer;
   }
-  if (this.getCallPeerCount() == 1)   parentOpSet.fireCallEvent(CallEvent.CALL_RECEIVED,this);
+  List<ContentPacketExtension> offer=callPeer.getSessionIQ().getContentList();
+  Map<MediaType,MediaDirection> directions=new HashMap<MediaType,MediaDirection>();
+  directions.put(MediaType.AUDIO,MediaDirection.INACTIVE);
+  directions.put(MediaType.VIDEO,MediaDirection.INACTIVE);
+  for (  ContentPacketExtension c : offer) {
+    MediaDirection remoteDirection=JingleUtils.getDirection(c,callPeer.isInitiator());
+    if (c.getName().equals(MediaType.AUDIO.toString())) {
+      directions.put(MediaType.AUDIO,remoteDirection);
+    }
+ else     if (c.getName().equals(MediaType.VIDEO.toString())) {
+      directions.put(MediaType.VIDEO,remoteDirection);
+    }
+  }
+  if (this.getCallPeerCount() == 1)   parentOpSet.fireCallEvent(CallEvent.CALL_RECEIVED,this,directions);
   return callPeer;
 }

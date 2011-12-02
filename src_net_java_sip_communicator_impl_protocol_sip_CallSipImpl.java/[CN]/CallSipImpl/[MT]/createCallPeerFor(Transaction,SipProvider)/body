@@ -4,11 +4,12 @@
   boolean incomingCall=(containingTransaction instanceof ServerTransaction);
   callPeer.setState(incomingCall ? CallPeerState.INCOMING_CALL : CallPeerState.INITIATING_CALL);
   if (this.getCallPeerCount() == 1) {
-    ArrayList<MediaType> mediaTypes=null;
+    Map<MediaType,MediaDirection> mediaDirections=new HashMap<MediaType,MediaDirection>();
+    mediaDirections.put(MediaType.AUDIO,MediaDirection.INACTIVE);
+    mediaDirections.put(MediaType.VIDEO,MediaDirection.INACTIVE);
     try {
       Request inviteReq=containingTransaction.getRequest();
       if (inviteReq != null && inviteReq.getRawContent() != null) {
-        mediaTypes=new ArrayList<MediaType>();
         String sdpStr=SdpUtils.getContentAsString(inviteReq);
         SessionDescription sesDescr=SdpUtils.parseSdpString(sdpStr);
         List<MediaDescription> remoteDescriptions=SdpUtils.extractMediaDescriptions(sesDescr);
@@ -16,19 +17,19 @@
           MediaType mediaType=SdpUtils.getMediaType(mediaDescription);
           if (mediaType.equals(MediaType.VIDEO)) {
             MediaDirection videoDirection=SdpUtils.getDirection(mediaDescription);
-            if (videoDirection.allowsSending()) {
-              mediaTypes.add(mediaType);
-              continue;
-            }
+            mediaDirections.put(MediaType.VIDEO,videoDirection);
           }
- else           mediaTypes.add(mediaType);
+ else           if (mediaType.equals(MediaType.AUDIO)) {
+            MediaDirection audioDirection=SdpUtils.getDirection(mediaDescription);
+            mediaDirections.put(MediaType.AUDIO,audioDirection);
+          }
         }
       }
     }
  catch (    Throwable t) {
       logger.warn("Error getting media types",t);
     }
-    getParentOperationSet().fireCallEvent((incomingCall ? CallEvent.CALL_RECEIVED : CallEvent.CALL_INITIATED),this,mediaTypes);
+    getParentOperationSet().fireCallEvent((incomingCall ? CallEvent.CALL_RECEIVED : CallEvent.CALL_INITIATED),this,mediaDirections);
   }
   return callPeer;
 }
