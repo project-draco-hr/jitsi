@@ -1,0 +1,48 @@
+{
+  String eventTypeNodeName=null;
+  String actionTypeNodeName=null;
+  List<String> eventTypes=configService.getPropertyNamesByPrefix(NOTIFICATIONS_PREFIX,true);
+  for (  String eventTypeRootPropName : eventTypes) {
+    String eType=configService.getString(eventTypeRootPropName);
+    if (eType.equals(eventType))     eventTypeNodeName=eventTypeRootPropName;
+  }
+  if (eventTypeNodeName == null) {
+    eventTypeNodeName=NOTIFICATIONS_PREFIX + ".eventType" + Long.toString(System.currentTimeMillis());
+    configService.setProperty(eventTypeNodeName,eventType);
+  }
+  if (action == null) {
+    configService.setProperty(eventTypeNodeName + ".active",Boolean.toString(isActive));
+    return;
+  }
+  String actionPrefix=eventTypeNodeName + ".actions";
+  List<String> actionTypes=configService.getPropertyNamesByPrefix(actionPrefix,true);
+  for (  String actionTypeRootPropName : actionTypes) {
+    String aType=configService.getString(actionTypeRootPropName);
+    if (aType.equals(action.getActionType()))     actionTypeNodeName=actionTypeRootPropName;
+  }
+  Map<String,Object> configProperties=new HashMap<String,Object>();
+  if (actionTypeNodeName == null) {
+    actionTypeNodeName=actionPrefix + ".actionType" + Long.toString(System.currentTimeMillis());
+    configProperties.put(actionTypeNodeName,action.getActionType());
+  }
+  if (action instanceof SoundNotificationAction) {
+    SoundNotificationAction soundAction=(SoundNotificationAction)action;
+    configProperties.put(actionTypeNodeName + ".soundFileDescriptor",soundAction.getDescriptor());
+    configProperties.put(actionTypeNodeName + ".loopInterval",soundAction.getLoopInterval());
+  }
+ else   if (action instanceof PopupMessageNotificationAction) {
+    PopupMessageNotificationAction messageAction=(PopupMessageNotificationAction)action;
+    configProperties.put(actionTypeNodeName + ".defaultMessage",messageAction.getDefaultMessage());
+  }
+ else   if (action instanceof LogMessageNotificationAction) {
+    LogMessageNotificationAction logMessageAction=(LogMessageNotificationAction)action;
+    configProperties.put(actionTypeNodeName + ".logType",logMessageAction.getLogType());
+  }
+ else   if (action instanceof CommandNotificationAction) {
+    CommandNotificationAction commandAction=(CommandNotificationAction)action;
+    configProperties.put(actionTypeNodeName + ".commandDescriptor",commandAction.getDescriptor());
+  }
+  configProperties.put(actionTypeNodeName + ".enabled",Boolean.toString(isActive));
+  configProperties.put(actionTypeNodeName + ".default",Boolean.toString(isDefault));
+  configService.setProperties(configProperties);
+}

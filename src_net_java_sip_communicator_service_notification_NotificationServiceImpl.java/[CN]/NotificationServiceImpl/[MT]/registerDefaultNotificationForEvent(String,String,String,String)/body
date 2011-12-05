@@ -1,0 +1,51 @@
+{
+  if (logger.isDebugEnabled())   logger.debug("Registering default event " + eventType + "/"+ actionType+ "/"+ actionDescriptor+ "/"+ defaultMessage);
+  if (isDefault(eventType,actionType)) {
+    NotificationAction action=getEventNotificationAction(eventType,actionType);
+    boolean isNew=false;
+    if (action == null) {
+      isNew=true;
+      if (actionType.equals(ACTION_SOUND)) {
+        action=new SoundNotificationAction(actionDescriptor,-1);
+      }
+ else       if (actionType.equals(ACTION_LOG_MESSAGE)) {
+        action=new LogMessageNotificationAction(LogMessageNotificationAction.INFO_LOG_TYPE);
+      }
+ else       if (actionType.equals(ACTION_POPUP_MESSAGE)) {
+        action=new PopupMessageNotificationAction(defaultMessage);
+      }
+ else       if (actionType.equals(ACTION_COMMAND)) {
+        action=new CommandNotificationAction(actionDescriptor);
+      }
+    }
+    this.saveNotification(eventType,action,action.isEnabled(),true);
+    Notification notification=null;
+    if (notifications.containsKey(eventType))     notification=notifications.get(eventType);
+ else {
+      notification=new Notification(eventType);
+      notifications.put(eventType,notification);
+    }
+    notification.addAction(action);
+    fireNotificationActionTypeEvent(isNew ? ACTION_ADDED : ACTION_CHANGED,eventType,action);
+  }
+  Notification notification=null;
+  if (defaultNotifications.containsKey(eventType))   notification=defaultNotifications.get(eventType);
+ else {
+    notification=new Notification(eventType);
+    defaultNotifications.put(eventType,notification);
+  }
+  NotificationAction action=null;
+  if (actionType.equals(ACTION_SOUND)) {
+    action=new SoundNotificationAction(actionDescriptor,-1);
+  }
+ else   if (actionType.equals(ACTION_LOG_MESSAGE)) {
+    action=new LogMessageNotificationAction(LogMessageNotificationAction.INFO_LOG_TYPE);
+  }
+ else   if (actionType.equals(ACTION_POPUP_MESSAGE)) {
+    action=new PopupMessageNotificationAction(defaultMessage);
+  }
+ else   if (actionType.equals(ACTION_COMMAND)) {
+    action=new CommandNotificationAction(actionDescriptor);
+  }
+  notification.addAction(action);
+}

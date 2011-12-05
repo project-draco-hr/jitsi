@@ -1,0 +1,26 @@
+{
+  if (isDefault(eventType,action.getActionType())) {
+    NotificationAction h=getEventNotificationAction(eventType,action.getActionType());
+    boolean isNew=false;
+    if (h == null) {
+      isNew=true;
+      h=action;
+    }
+    this.saveNotification(eventType,action,h.isEnabled(),true);
+    Notification notification=null;
+    if (notifications.containsKey(eventType))     notification=notifications.get(eventType);
+ else {
+      notification=new Notification(eventType);
+      notifications.put(eventType,notification);
+    }
+    notification.addAction(action);
+    fireNotificationActionTypeEvent(isNew ? ACTION_ADDED : ACTION_CHANGED,eventType,action);
+  }
+  Notification notification=null;
+  if (defaultNotifications.containsKey(eventType))   notification=defaultNotifications.get(eventType);
+ else {
+    notification=new Notification(eventType);
+    defaultNotifications.put(eventType,notification);
+  }
+  notification.addAction(action);
+}

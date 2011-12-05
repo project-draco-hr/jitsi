@@ -1,0 +1,37 @@
+{
+  List<String> eventTypes=configService.getPropertyNamesByPrefix(NOTIFICATIONS_PREFIX,true);
+  for (  String eventTypeRootPropName : eventTypes) {
+    boolean isEventActive=isEnabled(eventTypeRootPropName + ".active");
+    String eventType=configService.getString(eventTypeRootPropName);
+    List<String> actions=configService.getPropertyNamesByPrefix(eventTypeRootPropName + ".actions",true);
+    for (    String actionPropName : actions) {
+      String actionType=configService.getString(actionPropName);
+      NotificationAction action=null;
+      if (actionType.equals(ACTION_SOUND)) {
+        String soundFileDescriptor=configService.getString(actionPropName + ".soundFileDescriptor");
+        String loopInterval=configService.getString(actionPropName + ".loopInterval");
+        action=new SoundNotificationAction(soundFileDescriptor,Integer.parseInt(loopInterval));
+      }
+ else       if (actionType.equals(ACTION_POPUP_MESSAGE)) {
+        String defaultMessage=configService.getString(actionPropName + ".defaultMessage");
+        action=new PopupMessageNotificationAction(defaultMessage);
+      }
+ else       if (actionType.equals(ACTION_LOG_MESSAGE)) {
+        String logType=configService.getString(actionPropName + ".logType");
+        action=new LogMessageNotificationAction(logType);
+      }
+ else       if (actionType.equals(ACTION_COMMAND)) {
+        String commandDescriptor=configService.getString(actionPropName + ".commandDescriptor");
+        action=new CommandNotificationAction(commandDescriptor);
+      }
+      action.setEnabled(isEnabled(actionPropName + ".enabled"));
+      Notification notification=notifications.get(eventType);
+      if (notification == null) {
+        notification=new Notification(eventType);
+        notifications.put(eventType,notification);
+      }
+      notification.setActive(isEventActive);
+      notification.addAction(action);
+    }
+  }
+}

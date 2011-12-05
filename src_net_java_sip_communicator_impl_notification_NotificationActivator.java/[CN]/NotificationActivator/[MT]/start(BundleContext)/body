@@ -1,12 +1,20 @@
 {
   bundleContext=bc;
   try {
-    notificationService=new NotificationServiceImpl();
-    if (logger.isInfoEnabled())     logger.info("Notification Service...[  STARTED ]");
-    bundleContext.registerService(NotificationService.class.getName(),notificationService,null);
-    new NotificationManager().init();
-    if (logger.isInfoEnabled())     logger.info("Notification Service ...[REGISTERED]");
     logger.logEntry();
+    logger.info("Notification handler Service...[  STARTED ]");
+    ServiceReference notifReference=bundleContext.getServiceReference(NotificationService.class.getName());
+    notificationService=(NotificationService)bundleContext.getService(notifReference);
+    commandHandler=new CommandNotificationHandlerImpl();
+    logMessageHandler=new LogMessageNotificationHandlerImpl();
+    popupMessageHandler=new PopupMessageNotificationHandlerImpl();
+    soundHandler=new SoundNotificationHandlerImpl();
+    notificationService.addActionHandler(commandHandler);
+    notificationService.addActionHandler(logMessageHandler);
+    notificationService.addActionHandler(popupMessageHandler);
+    notificationService.addActionHandler(soundHandler);
+    new NotificationManager().init();
+    logger.info("Notification handler Service ...[REGISTERED]");
   }
   finally {
     logger.logExit();
