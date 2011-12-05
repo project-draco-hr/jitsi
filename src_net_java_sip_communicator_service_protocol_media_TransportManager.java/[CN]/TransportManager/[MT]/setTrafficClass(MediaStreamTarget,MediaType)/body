@@ -1,0 +1,22 @@
+{
+  int trafficClass=0;
+  trafficClass=getTrafficClass(type);
+  if (trafficClass <= 0)   return;
+  if (logger.isInfoEnabled())   logger.info("Set traffic class for " + type + " "+ trafficClass);
+  try {
+    StreamConnector connector=getStreamConnector(type);
+synchronized (connector) {
+      if (connector.getProtocol() == StreamConnector.Protocol.TCP) {
+        connector.getDataTCPSocket().setTrafficClass(trafficClass);
+        if (connector.getControlTCPSocket() != null)         connector.getControlTCPSocket().setTrafficClass(trafficClass);
+      }
+ else {
+        connector.getDataSocket().setTrafficClass(trafficClass);
+        if (connector.getControlSocket() != null)         connector.getControlSocket().setTrafficClass(trafficClass);
+      }
+    }
+  }
+ catch (  Exception e) {
+    logger.error("Error cannot send to remote peer",e);
+  }
+}
