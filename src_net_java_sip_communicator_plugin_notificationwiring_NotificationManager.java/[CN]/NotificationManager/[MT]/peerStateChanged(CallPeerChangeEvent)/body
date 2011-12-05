@@ -1,0 +1,28 @@
+{
+  try {
+    CallPeer sourcePeer=evt.getSourceCallPeer();
+    Call call=sourcePeer.getCall();
+    CallPeerState newState=(CallPeerState)evt.getNewValue();
+    CallPeerState oldState=(CallPeerState)evt.getOldValue();
+    if (newState == CallPeerState.INITIATING_CALL || newState == CallPeerState.CONNECTING) {
+      callNotifications.put(call,fireNotification(DIALING));
+    }
+ else {
+      stopSound(callNotifications.get(call));
+    }
+    if (newState == CallPeerState.ALERTING_REMOTE_SIDE && oldState != CallPeerState.CONNECTING_WITH_EARLY_MEDIA) {
+      callNotifications.put(call,fireNotification(OUTGOING_CALL));
+    }
+ else     if (newState == CallPeerState.BUSY) {
+      if (!isConference(call)) {
+        callNotifications.put(call,fireNotification(BUSY_CALL));
+      }
+    }
+ else     if (newState == CallPeerState.DISCONNECTED || newState == CallPeerState.FAILED) {
+      callNotifications.put(call,fireNotification(HANG_UP));
+    }
+  }
+ catch (  Throwable t) {
+    logger.error("Error notifying after peer state changed",t);
+  }
+}

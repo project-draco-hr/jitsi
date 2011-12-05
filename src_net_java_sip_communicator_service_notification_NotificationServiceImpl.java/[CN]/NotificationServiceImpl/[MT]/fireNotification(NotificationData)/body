@@ -1,0 +1,21 @@
+{
+  Notification notification=notifications.get(data.getEventType());
+  if (notification == null || !notification.isActive())   return;
+  for (  NotificationAction action : notification.getActions().values()) {
+    String actionType=action.getActionType();
+    if (!action.isEnabled() || !handlers.containsKey(actionType))     continue;
+    NotificationHandler handler=handlers.get(actionType);
+    if (actionType.equals(ACTION_POPUP_MESSAGE)) {
+      ((PopupMessageNotificationHandler)handler).popupMessage((PopupMessageNotificationAction)action,data.getTitle(),data.getMessage(),data.getIcon(),data.getTag());
+    }
+ else     if (actionType.equals(ACTION_LOG_MESSAGE)) {
+      ((LogMessageNotificationHandler)handler).logMessage((LogMessageNotificationAction)action,data.getMessage());
+    }
+ else     if (actionType.equals(ACTION_SOUND)) {
+      ((SoundNotificationHandler)handler).start((SoundNotificationAction)action,data);
+    }
+ else     if (actionType.equals(ACTION_COMMAND)) {
+      ((CommandNotificationHandler)handler).execute((CommandNotificationAction)action);
+    }
+  }
+}

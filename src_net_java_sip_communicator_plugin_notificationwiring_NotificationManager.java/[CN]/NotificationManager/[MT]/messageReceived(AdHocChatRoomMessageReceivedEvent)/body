@@ -1,0 +1,17 @@
+{
+  try {
+    AdHocChatRoom sourceChatRoom=evt.getSourceChatRoom();
+    Contact sourceParticipant=evt.getSourceChatRoomParticipant();
+    boolean fireChatNotification;
+    String nickname=sourceChatRoom.getName();
+    String messageContent=evt.getMessage().getContent();
+    fireChatNotification=(nickname == null) || messageContent.toLowerCase().contains(nickname.toLowerCase());
+    if (fireChatNotification) {
+      String title=NotificationWiringActivator.getResources().getI18NString("service.gui.MSG_RECEIVED",new String[]{sourceParticipant.getDisplayName()});
+      fireChatNotification(sourceChatRoom,INCOMING_MESSAGE,title,messageContent);
+    }
+  }
+ catch (  Throwable t) {
+    logger.error("Error notifying for adhoc message received",t);
+  }
+}

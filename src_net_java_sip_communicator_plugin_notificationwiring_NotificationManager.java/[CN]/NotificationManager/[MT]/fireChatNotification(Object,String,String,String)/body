@@ -1,0 +1,29 @@
+{
+  NotificationService notificationService=NotificationWiringActivator.getNotificationService();
+  if (notificationService == null)   return;
+  NotificationAction popupActionHandler=null;
+  UIService uiService=NotificationWiringActivator.getUIService();
+  Chat chatPanel=null;
+  byte[] contactIcon=null;
+  if (chatContact instanceof Contact) {
+    Contact contact=(Contact)chatContact;
+    if (uiService != null)     chatPanel=uiService.getChat(contact);
+    contactIcon=contact.getImage();
+    if (contactIcon == null) {
+      contactIcon=ImageUtils.toByteArray(getImage(DEFAULT_USER_PHOTO));
+    }
+  }
+ else   if (chatContact instanceof ChatRoom) {
+    ChatRoom chatRoom=(ChatRoom)chatContact;
+    if (chatRoom.isSystem())     return;
+    if (uiService != null)     chatPanel=uiService.getChat(chatRoom);
+  }
+  if (chatPanel != null) {
+    if (eventType.equals(INCOMING_MESSAGE) && chatPanel.isChatFocused()) {
+      popupActionHandler=notificationService.getEventNotificationAction(eventType,NotificationAction.ACTION_POPUP_MESSAGE);
+      popupActionHandler.setEnabled(false);
+    }
+  }
+  notificationService.fireNotification(eventType,messageTitle,message,contactIcon,chatContact);
+  if (popupActionHandler != null)   popupActionHandler.setEnabled(true);
+}
