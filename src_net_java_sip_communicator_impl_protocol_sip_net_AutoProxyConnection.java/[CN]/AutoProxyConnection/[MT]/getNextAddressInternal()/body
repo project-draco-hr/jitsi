@@ -1,0 +1,124 @@
+{
+switch (state) {
+case New:
+    state=State.Naptr;
+  return getNextAddressFromDns();
+case IP:
+if (socketAddressIndex == 0) {
+  socketAddressIndex++;
+  try {
+    socketAddress=new InetSocketAddress(nu.getInetAddress(address),ListeningPoint.TLS.equalsIgnoreCase(transport) ? ListeningPoint.PORT_5061 : ListeningPoint.PORT_5060);
+  }
+ catch (  UnknownHostException e) {
+    logger.error("invalid IP address: " + address,e);
+    return false;
+  }
+  transport=defaultTransport;
+  return true;
+}
+return false;
+case Naptr:
+naptrRecords=nu.getNAPTRRecords(address);
+if (naptrRecords != null && naptrRecords.length > 0) {
+state=State.NaptrSrv;
+naptrIndex=0;
+}
+ else {
+hadSrvResults=false;
+state=State.Srv;
+srvTransportIndex=0;
+}
+return getNextAddressFromDns();
+case NaptrSrv:
+for (; naptrIndex < naptrRecords.length; naptrIndex++) {
+srvRecords=nu.getSRVRecords(naptrRecords[naptrIndex][2]);
+if (srvRecords != null && srvRecords.length > 0) {
+state=State.NaptrSrvHosts;
+if (TLS.equalsIgnoreCase(naptrRecords[naptrIndex][1])) transport=TLS;
+ else if (TCP.equalsIgnoreCase(naptrRecords[naptrIndex][1])) transport=TCP;
+ else transport=UDP;
+srvRecordsIndex=0;
+if (getNextAddressFromDns()) {
+naptrIndex++;
+return true;
+}
+}
+}
+return false;
+case NaptrSrvHosts:
+for (; srvRecordsIndex < srvRecords.length; srvRecordsIndex++) {
+socketAddresses=nu.getAandAAAARecords(srvRecords[srvRecordsIndex].getTarget(),srvRecords[srvRecordsIndex].getPort());
+if (socketAddresses != null && socketAddresses.length > 0) {
+state=State.NaptrSrvHostIPs;
+socketAddressIndex=0;
+if (getNextAddressFromDns()) {
+srvRecordsIndex++;
+return true;
+}
+}
+}
+state=State.NaptrSrv;
+return getNextAddressFromDns();
+case NaptrSrvHostIPs:
+if (socketAddressIndex >= socketAddresses.length) {
+state=State.NaptrSrvHosts;
+return getNextAddressFromDns();
+}
+socketAddress=socketAddresses[socketAddressIndex];
+socketAddressIndex++;
+return true;
+case Srv:
+for (; srvTransportIndex < transports.length; srvTransportIndex++) {
+srvRecords=nu.getSRVRecords((TLS.equals(transports[srvTransportIndex]) ? "sips" : "sip"),(UDP.equalsIgnoreCase(transports[srvTransportIndex]) ? UDP : TCP),address);
+if (srvRecords != null && srvRecords.length > 0) {
+hadSrvResults=true;
+state=State.SrvHosts;
+srvRecordsIndex=0;
+transport=transports[srvTransportIndex];
+if (getNextAddressFromDns()) {
+srvTransportIndex++;
+return true;
+}
+}
+}
+if (!hadSrvResults) {
+state=State.Hosts;
+socketAddressIndex=0;
+return getNextAddressFromDns();
+}
+return false;
+case SrvHosts:
+for (; srvRecordsIndex < srvRecords.length; srvRecordsIndex++) {
+socketAddresses=nu.getAandAAAARecords(srvRecords[srvRecordsIndex].getTarget(),srvRecords[srvRecordsIndex].getPort());
+if (socketAddresses != null && socketAddresses.length > 0) {
+state=State.SrvHostIPs;
+socketAddressIndex=0;
+if (getNextAddressFromDns()) {
+srvRecordsIndex++;
+return true;
+}
+}
+}
+state=State.Srv;
+return getNextAddressFromDns();
+case SrvHostIPs:
+if (socketAddressIndex >= socketAddresses.length) {
+state=State.SrvHosts;
+return getNextAddressFromDns();
+}
+socketAddress=socketAddresses[socketAddressIndex];
+socketAddressIndex++;
+return true;
+case Hosts:
+transport=defaultTransport;
+if (socketAddresses == null) {
+socketAddresses=nu.getAandAAAARecords(address,ListeningPoint.PORT_5060);
+}
+if (socketAddresses != null && socketAddresses.length > 0 && socketAddressIndex < socketAddresses.length) {
+socketAddress=socketAddresses[socketAddressIndex++];
+return true;
+}
+return false;
+}
+return false;
+}

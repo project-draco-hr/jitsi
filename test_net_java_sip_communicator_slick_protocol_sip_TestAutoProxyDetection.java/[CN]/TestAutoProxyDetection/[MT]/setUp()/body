@@ -1,0 +1,30 @@
+{
+  account=createMock(SipAccountID.class);
+  expect(account.getAccountPropertyString(USER_ID)).andReturn("unit@" + DOMAIN);
+  replay(account);
+  nu=createMock(TestedAutoProxyDetection.NetworkUtils.class);
+  apd=new TestedAutoProxyDetection(account,"UDP");
+  apd.setNetworkUtils(nu);
+  srv1=createMock(SRVRecord.class);
+  expect(srv1.getTarget()).andReturn("proxy1." + DOMAIN);
+  expect(srv1.getPort()).andReturn(5060);
+  srv2=createMock(SRVRecord.class);
+  expect(srv2.getTarget()).andReturn("proxy2." + DOMAIN);
+  expect(srv2.getPort()).andReturn(5061);
+  srv3=createMock(SRVRecord.class);
+  expect(srv3.getTarget()).andReturn("proxy3." + DOMAIN);
+  expect(srv3.getPort()).andReturn(5062);
+  try {
+    ia1=InetAddress.getByAddress("proxy1." + DOMAIN,new byte[]{0x7f,0,0,1});
+    ia2=InetAddress.getByAddress("proxy2." + DOMAIN,new byte[]{0x7f,0,0,2});
+    ia3=InetAddress.getByAddress("proxy3." + DOMAIN,new byte[]{0x7f,0,0,3});
+    ia4=InetAddress.getByAddress("proxy4." + DOMAIN,new byte[]{0x7f,0,0,4});
+  }
+ catch (  UnknownHostException e) {
+    fail("unable to initialize: " + e.getMessage());
+  }
+  a1=new InetSocketAddress(ia1,5060);
+  a2=new InetSocketAddress(ia2,5061);
+  a3=new InetSocketAddress(ia3,5062);
+  a4=new InetSocketAddress(ia4,5063);
+}

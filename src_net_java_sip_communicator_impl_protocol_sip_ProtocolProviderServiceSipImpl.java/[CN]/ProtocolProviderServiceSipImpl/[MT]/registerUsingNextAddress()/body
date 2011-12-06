@@ -1,20 +1,21 @@
 {
-  if (connectionAddresses == null)   return false;
-  int i=0;
-  for (; i < connectionAddresses.length; i++) {
-    if (connectionAddresses[i].equals(currentConnectionAddress))     break;
-  }
-  if (i + 1 < connectionAddresses.length) {
-    changeAddress(i + 1);
-    try {
+  if (connection == null)   return false;
+  try {
+    if (sipRegistrarConnection.isRegistrarless()) {
+      sipRegistrarConnection.setTransport(getDefaultTransport());
       sipRegistrarConnection.register();
+      return true;
     }
- catch (    Throwable e) {
-      logger.error("Cannot send register!",e);
-      sipRegistrarConnection.setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,"A timeout occurred while trying to connect to the server.");
+ else     if (connection.getNextAddress()) {
+      sipRegistrarConnection.setTransport(connection.getTransport());
+      sipRegistrarConnection.register();
+      return true;
     }
-    return true;
   }
-  changeAddress(0);
+ catch (  Throwable e) {
+    logger.error("Cannot send register!",e);
+    sipRegistrarConnection.setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,"A timeout occurred while trying to connect to the server.");
+  }
+  connection.reset();
   return false;
 }

@@ -1,17 +1,13 @@
 {
   InetSocketAddress destinationInetAddress=null;
-  InetSocketAddress outboundProxy=outboundProxySocketAddress;
+  InetSocketAddress outboundProxy=connection.getAddress();
   if (outboundProxy != null) {
     if (logger.isTraceEnabled())     logger.trace("Will use proxy address");
     destinationInetAddress=outboundProxy;
   }
  else {
-    try {
-      destinationInetAddress=resolveSipAddress(host);
-    }
- catch (    UnknownHostException ex) {
-      throw new IllegalArgumentException(host + " is not a valid internet address.",ex);
-    }
+    ProxyConnection tempConn=new AutoProxyConnection((SipAccountID)getAccountID(),host,getDefaultTransport());
+    destinationInetAddress=tempConn.getAddress();
   }
   if (logger.isDebugEnabled())   logger.debug("Returning address " + destinationInetAddress + " for destination "+ host);
   return destinationInetAddress;

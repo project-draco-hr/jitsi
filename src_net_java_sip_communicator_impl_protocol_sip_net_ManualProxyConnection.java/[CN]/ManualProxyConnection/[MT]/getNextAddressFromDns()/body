@@ -1,0 +1,25 @@
+{
+  if (lookups == null) {
+    try {
+      lookupIndex=0;
+      lookups=NetworkUtils.getAandAAAARecords(address,port);
+      if (lookups.length == 0) {
+        lookups=null;
+        return false;
+      }
+    }
+ catch (    ParseException e) {
+      logger.error("Invalid address <" + address + ">",e);
+      return false;
+    }
+  }
+  if (lookupIndex >= lookups.length) {
+    if (logger.isDebugEnabled())     logger.debug("No more addresses for " + account);
+    lookups=null;
+    return false;
+  }
+  if (logger.isDebugEnabled())   logger.debug("Returning <" + socketAddress + "> as next address for "+ account);
+  socketAddress=lookups[lookupIndex];
+  lookupIndex++;
+  return true;
+}

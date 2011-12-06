@@ -1,0 +1,20 @@
+{
+  expect(nu.getNAPTRRecords(DOMAIN)).andReturn(new String[][]{{"0","udp","_sip._udp." + DOMAIN},{"0","tcp","_sip._tcp." + DOMAIN},{"0","tls","_sips._tcp." + DOMAIN}});
+  expect(nu.getSRVRecords("_sip._udp." + DOMAIN)).andReturn(new SRVRecord[]{srv1});
+  expect(nu.getSRVRecords("_sip._tcp." + DOMAIN)).andReturn(new SRVRecord[]{srv2});
+  expect(nu.getSRVRecords("_sips._tcp." + DOMAIN)).andReturn(new SRVRecord[]{srv3});
+  expect(nu.getAandAAAARecords("proxy1." + DOMAIN,5060)).andReturn(new InetSocketAddress[]{a1});
+  expect(nu.getAandAAAARecords("proxy2." + DOMAIN,5061)).andReturn(new InetSocketAddress[]{a1});
+  expect(nu.getAandAAAARecords("proxy3." + DOMAIN,5062)).andReturn(new InetSocketAddress[]{a1});
+  replay(nu,srv1,srv2,srv3);
+  assertEquals(a1,apd.getAddress());
+  assertEquals("UDP",apd.getTransport());
+  assertTrue(apd.getNextAddress());
+  assertEquals(a1,apd.getAddress());
+  assertEquals("TCP",apd.getTransport());
+  assertTrue(apd.getNextAddress());
+  assertEquals(a1,apd.getAddress());
+  assertEquals("TLS",apd.getTransport());
+  assertFalse(apd.getNextAddress());
+  verify(account,nu,srv1,srv2,srv3);
+}
