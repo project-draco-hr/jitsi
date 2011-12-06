@@ -1,0 +1,21 @@
+{
+  final OperationSetExtendedAuthorizations authOpSet=contact.getProtocolProvider().getOperationSet(OperationSetExtendedAuthorizations.class);
+  if (authOpSet == null)   return;
+  final AuthorizationRequest request=new AuthorizationRequest();
+  final RequestAuthorizationDialog dialog=new RequestAuthorizationDialog(mainFrame,contact,request);
+  new Thread(){
+    public void run(){
+      int returnCode=dialog.showDialog();
+      if (returnCode == RequestAuthorizationDialog.OK_RETURN_CODE) {
+        request.setReason(dialog.getRequestReason());
+        try {
+          authOpSet.reRequestAuthorization(request,contact);
+        }
+ catch (        OperationFailedException e) {
+          new ErrorDialog(mainFrame,GuiActivator.getResources().getI18NString("service.gui.RE_REQUEST_AUTHORIZATION"),e.getMessage(),ErrorDialog.WARNING).showDialog();
+        }
+      }
+    }
+  }
+.start();
+}

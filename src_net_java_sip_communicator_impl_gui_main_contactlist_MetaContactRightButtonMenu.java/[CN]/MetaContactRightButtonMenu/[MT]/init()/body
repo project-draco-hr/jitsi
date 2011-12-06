@@ -46,6 +46,11 @@
         multiContactFullShareMenu.add(createMenuItem(contactAddress,fullDesktopSharingPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
         multiContactRegionShareMenu.add(createMenuItem(contactAddress,regionDesktopSharingPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
       }
+      OperationSetExtendedAuthorizations authOpSet=protocolProvider.getOperationSet(OperationSetExtendedAuthorizations.class);
+      if (authOpSet != null && authOpSet.getSubscriptionStatus(contact) != null && !authOpSet.getSubscriptionStatus(contact).equals(SubscriptionStatus.Subscribed)) {
+        if (firstUnsubscribedContact == null)         firstUnsubscribedContact=contact;
+        multiContactRequestAuthMenu.add(createMenuItem(contactAddress,requestAuthPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
+      }
     }
   }
   this.add(sendMessageItem);
@@ -93,6 +98,17 @@
   add(renameContactItem);
   addSeparator();
   add(viewHistoryItem);
+  addSeparator();
+  Contact defaultContact=metaContact.getDefaultContact();
+  int authRequestItemCount=multiContactRequestAuthMenu.getItemCount();
+  if (authRequestItemCount > 1) {
+    this.add(multiContactRequestAuthMenu);
+  }
+ else   if (authRequestItemCount == 1 || (metaContact.getContactCount() == 1 && defaultContact.getProtocolProvider().getOperationSet(OperationSetExtendedAuthorizations.class) != null) && !defaultContact.getProtocolProvider().getOperationSet(OperationSetExtendedAuthorizations.class).getSubscriptionStatus(defaultContact).equals(SubscriptionStatus.Subscribed)) {
+    this.add(requestAuthMenuItem);
+    this.requestAuthMenuItem.setName("requestAuth");
+    this.requestAuthMenuItem.addActionListener(this);
+  }
   initPluginComponents();
   sendMessageItem.setName("sendMessage");
   sendFileItem.setName("sendFile");
