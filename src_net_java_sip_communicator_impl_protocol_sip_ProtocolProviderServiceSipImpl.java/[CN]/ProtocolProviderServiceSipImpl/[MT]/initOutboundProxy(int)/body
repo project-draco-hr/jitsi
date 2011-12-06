@@ -19,7 +19,6 @@
       proxyAddressAndPortEntered=true;
     }
   }
-  InetAddress proxyAddress=null;
   int proxyPort=ListeningPoint.PORT_5060;
   String proxyTransport=accountID.getAccountPropertyString(ProtocolProviderFactory.PREFERRED_TRANSPORT);
   if (proxyTransport != null && proxyTransport.length() > 0) {
@@ -30,12 +29,12 @@
  else {
     proxyTransport=getDefaultTransport();
   }
+  InetSocketAddress proxySocketAddress=null;
   try {
     proxyPort=accountID.getAccountPropertyInt(ProtocolProviderFactory.PROXY_PORT,proxyPort);
     if (proxyPort > NetworkUtils.MAX_PORT_NUMBER) {
       throw new IllegalArgumentException(proxyPort + " is larger than " + NetworkUtils.MAX_PORT_NUMBER+ " and does not therefore represent a valid port number.");
     }
-    InetSocketAddress proxySocketAddress=null;
     if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.PROXY_AUTO_CONFIG,false)) {
       if (connectionAddresses == null) {
         ArrayList<InetSocketAddress> proxySocketAddressesList=new ArrayList<InetSocketAddress>();
@@ -71,7 +70,6 @@
       }
     }
     if (proxySocketAddress == null)     throw new UnknownHostException();
-    proxyAddress=proxySocketAddress.getAddress();
     if (this.currentConnectionAddress == null)     this.currentConnectionAddress=proxySocketAddress;
     proxyPort=proxySocketAddress.getPort();
     if (logger.isTraceEnabled())     logger.trace("Setting proxy address = " + proxyAddressStr);
@@ -91,16 +89,10 @@
     fireRegistrationStateChanged(RegistrationState.UNREGISTERED,RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,"Invalid or inaccessible server address.");
     return;
   }
-  if (proxyAddress == null) {
+  if (proxySocketAddress == null) {
     return;
   }
-  try {
-    if (sipRegistrarConnection != null)     sipRegistrarConnection.setTransport(proxyTransport);
-  }
- catch (  ParseException ex) {
-    logger.error("Failed to change a registrar connection transport " + currentConnectionAddress,ex);
-    throw new IllegalArgumentException("Failed to change a registrar connection transport " + currentConnectionAddress + ": "+ ex.getMessage());
-  }
-  this.outboundProxySocketAddress=new InetSocketAddress(proxyAddress,proxyPort);
+  if (sipRegistrarConnection != null)   sipRegistrarConnection.setTransport(proxyTransport);
+  this.outboundProxySocketAddress=new InetSocketAddress(proxySocketAddress.getAddress(),proxyPort);
   this.outboundProxyTransport=proxyTransport;
 }
