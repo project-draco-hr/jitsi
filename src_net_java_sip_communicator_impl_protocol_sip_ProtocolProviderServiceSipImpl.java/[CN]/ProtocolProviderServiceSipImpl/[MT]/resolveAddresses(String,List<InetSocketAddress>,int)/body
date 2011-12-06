@@ -1,0 +1,16 @@
+{
+  if (NetworkUtils.isValidIPAddress(address)) {
+    InetAddress addressObj=NetworkUtils.getInetAddress(address);
+    resultAddresses.add(new InetSocketAddress(addressObj,defaultPort));
+    return;
+  }
+  try {
+    for (    InetSocketAddress a : NetworkUtils.getAandAAAARecords(address,defaultPort)) {
+      resultAddresses.add(a);
+    }
+  }
+ catch (  ParseException ex) {
+    logger.error("Error parsing dns record.",ex);
+  }
+  if (resultAddresses.size() == 0)   logger.warn("No AAAA and A record found for " + address);
+}
