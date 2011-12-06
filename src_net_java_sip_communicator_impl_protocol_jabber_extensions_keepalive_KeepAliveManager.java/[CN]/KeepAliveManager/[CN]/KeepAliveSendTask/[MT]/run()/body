@@ -1,0 +1,18 @@
+{
+  if (!parentProvider.isRegistered()) {
+    if (logger.isTraceEnabled())     logger.trace("provider not registered. " + "won't send keep alive for " + parentProvider.getAccountID().getDisplayName());
+    return;
+  }
+  if (System.currentTimeMillis() - lastReceiveActivity > keepAliveCheckInterval) {
+    if (waitingForPacketWithID != null) {
+      logger.error("un-registering not received ping packet.");
+      parentProvider.unregister(false);
+      parentProvider.fireRegistrationStateChanged(parentProvider.getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,null);
+      return;
+    }
+    KeepAliveEvent ping=new KeepAliveEvent(parentProvider.getOurJID(),parentProvider.getAccountID().getService());
+    waitingForPacketWithID=ping.getPacketID();
+    if (logger.isTraceEnabled())     logger.trace("send keepalive for acc: " + parentProvider.getAccountID().getDisplayName());
+    parentProvider.getConnection().sendPacket(ping);
+  }
+}

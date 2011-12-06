@@ -1,0 +1,23 @@
+{
+  if (logger.isDebugEnabled())   logger.debug("The provider changed state from: " + evt.getOldState() + " to: "+ evt.getNewState());
+  if (evt.getNewState() == RegistrationState.REGISTERED) {
+    parentProvider.getConnection().removePacketListener(this);
+    parentProvider.getConnection().addPacketListener(this,null);
+    keepAliveSendTask=new KeepAliveSendTask();
+    keepAliveCheckInterval=2 * SmackConfiguration.getKeepAliveInterval();
+    if (keepAliveCheckInterval == 0)     keepAliveCheckInterval=60000;
+    keepAliveTimer=new Timer("Jabber keepalive timer for <" + parentProvider.getAccountID() + ">",true);
+    keepAliveTimer.scheduleAtFixedRate(keepAliveSendTask,keepAliveCheckInterval,keepAliveCheckInterval);
+  }
+ else   if (evt.getNewState() == RegistrationState.UNREGISTERED || evt.getNewState() == RegistrationState.CONNECTION_FAILED || evt.getNewState() == RegistrationState.AUTHENTICATION_FAILED) {
+    if (parentProvider.getConnection() != null)     parentProvider.getConnection().removePacketListener(this);
+    if (keepAliveSendTask != null) {
+      keepAliveSendTask.cancel();
+      keepAliveSendTask=null;
+    }
+    if (keepAliveTimer != null) {
+      keepAliveTimer.cancel();
+      keepAliveTimer=null;
+    }
+  }
+}

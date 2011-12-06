@@ -13,24 +13,10 @@
  else   if (evt.getNewState() == RegistrationState.REGISTERED) {
     boolean enableGmailNotifications=jabberProvider.getAccountID().getAccountPropertyBoolean("GMAIL_NOTIFICATIONS_ENABLED",false);
     if (enableGmailNotifications)     subscribeForGmailNotifications();
-    if ((keepAliveSendTask == null || keepAliveTimer == null) && keepAliveEnabled) {
-      jabberProvider.getConnection().addPacketListener(new KeepalivePacketListener(),new PacketTypeFilter(KeepAliveEvent.class));
-      keepAliveSendTask=new KeepAliveSendTask();
-      keepAliveTimer=new Timer("Jabber keepalive timer for <" + evt.getProvider().getAccountID() + ">",true);
-      keepAliveTimer.scheduleAtFixedRate(keepAliveSendTask,KEEPALIVE_INTERVAL,KEEPALIVE_INTERVAL);
-    }
   }
  else   if (evt.getNewState() == RegistrationState.UNREGISTERED || evt.getNewState() == RegistrationState.CONNECTION_FAILED || evt.getNewState() == RegistrationState.AUTHENTICATION_FAILED) {
     if (jabberProvider.getConnection() != null) {
       if (smackMessageListener != null)       jabberProvider.getConnection().removePacketListener(smackMessageListener);
-    }
-    if (keepAliveSendTask != null) {
-      keepAliveSendTask.cancel();
-      keepAliveSendTask=null;
-    }
-    if (keepAliveTimer != null) {
-      keepAliveTimer.cancel();
-      keepAliveTimer=null;
     }
     smackMessageListener=null;
   }
