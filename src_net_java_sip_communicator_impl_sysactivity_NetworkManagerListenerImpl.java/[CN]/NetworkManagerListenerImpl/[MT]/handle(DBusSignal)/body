@@ -1,7 +1,7 @@
 {
   if (dBusSignal instanceof DBus.NameOwnerChanged) {
     DBus.NameOwnerChanged nameOwnerChanged=(DBus.NameOwnerChanged)dBusSignal;
-    if (nameOwnerChanged.name.equals(NetworkManager.class.getName())) {
+    if (nameOwnerChanged.name.equals("org.freedesktop.NetworkManager")) {
       boolean b1=nameOwnerChanged.old_owner != null && nameOwnerChanged.old_owner.length() > 0;
       boolean b2=nameOwnerChanged.new_owner != null && nameOwnerChanged.new_owner.length() > 0;
       if (b1 && !b2) {
@@ -10,15 +10,20 @@
       }
     }
   }
- else   if (dBusSignal instanceof NetworkManager.StateChange) {
-    NetworkManager.StateChange stateChange=(NetworkManager.StateChange)dBusSignal;
+ else   if (dBusSignal instanceof DBusNetworkManager.StateChange) {
+    DBusNetworkManager.StateChange stateChange=(DBusNetworkManager.StateChange)dBusSignal;
     SystemActivityEvent evt=null;
 switch (stateChange.getStatus()) {
-case NetworkManager.NM_STATE_CONNECTED:
-case NetworkManager.NM_STATE_DISCONNECTED:
+case DBusNetworkManager.NM_STATE_CONNECTED:
+case DBusNetworkManager.NM_STATE_DISCONNECTED:
+case DBusNetworkManager.NM9_STATE_DISCONNECTED:
+case DBusNetworkManager.NM9_STATE_CONNECTED_LOCAL:
+case DBusNetworkManager.NM9_STATE_CONNECTED_SITE:
+case DBusNetworkManager.NM9_STATE_CONNECTED_GLOBAL:
       evt=new SystemActivityEvent(SysActivityActivator.getSystemActivityService(),SystemActivityEvent.EVENT_NETWORK_CHANGE);
     break;
-case NetworkManager.NM_STATE_ASLEEP:
+case DBusNetworkManager.NM_STATE_ASLEEP:
+case DBusNetworkManager.NM9_STATE_ASLEEP:
   evt=new SystemActivityEvent(SysActivityActivator.getSystemActivityService(),SystemActivityEvent.EVENT_SLEEP);
 break;
 }
