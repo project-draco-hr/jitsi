@@ -26,7 +26,30 @@
     x+=chatButton.getWidth();
   }
   UIContactDetail telephonyContact=uiContact.getDefaultContactDetail(OperationSetBasicTelephony.class);
-  if (telephonyContact != null || uiContact.getDescriptor() instanceof SourceContact) {
+  boolean hasPhone=false;
+  if (uiContact.getContactNode().getContactDescriptor().getDescriptor() instanceof MetaContact) {
+    MetaContact metaContact=(MetaContact)uiContact.getContactNode().getContactDescriptor().getDescriptor();
+    Iterator<Contact> contacts=metaContact.getContacts();
+    while (contacts.hasNext() && !hasPhone) {
+      Contact contact=contacts.next();
+      OperationSetServerStoredContactInfo infoOpSet=contact.getProtocolProvider().getOperationSet(OperationSetServerStoredContactInfo.class);
+      Iterator<GenericDetail> details=null;
+      if (infoOpSet != null) {
+        details=infoOpSet.getAllDetailsForContact(contact);
+        while (details.hasNext()) {
+          GenericDetail d=details.next();
+          if (d instanceof PhoneNumberDetail) {
+            PhoneNumberDetail pnd=(PhoneNumberDetail)d;
+            if (pnd.getNumber() != null && pnd.getNumber().length() > 0) {
+              hasPhone=true;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  if (telephonyContact != null || uiContact.getDescriptor() instanceof SourceContact || hasPhone) {
     constraints.anchor=GridBagConstraints.WEST;
     constraints.fill=GridBagConstraints.NONE;
     constraints.gridx=2;
@@ -38,7 +61,7 @@
     this.callButton.setBorder(null);
     this.add(callButton,constraints);
     callButton.setBounds(x,nameLabel.getHeight() + statusMessageLabelHeight,28,28);
-    callButton.setEnabled(telephonyContact != null);
+    callButton.setEnabled(telephonyContact != null || hasPhone);
     x+=callButton.getWidth();
   }
   UIContactDetail videoContact=uiContact.getDefaultContactDetail(OperationSetVideoTelephony.class);

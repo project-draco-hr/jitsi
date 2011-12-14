@@ -28,6 +28,9 @@
     this.removeContactMenu.addSeparator();
     this.moveSubcontactMenu.addSeparator();
   }
+  List<ProtocolProviderService> providers=CallManager.getTelephonyProviders();
+  boolean hasPhones=false;
+  boolean separator=false;
   while (contacts.hasNext()) {
     Contact contact=contacts.next();
     ProtocolProviderService protocolProvider=contact.getProtocolProvider();
@@ -35,9 +38,26 @@
     Icon protocolIcon=new ImageIcon(createContactStatusImage(contact));
     this.removeContactMenu.add(createMenuItem(contactAddress,removeContactPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
     this.moveSubcontactMenu.add(createMenuItem(contactAddress,moveSubcontactPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
-    if (metaContact.getContactCount() > 1) {
+    OperationSetServerStoredContactInfo infoOpSet=contact.getProtocolProvider().getOperationSet(OperationSetServerStoredContactInfo.class);
+    Iterator<GenericDetail> details=null;
+    ArrayList<String> phones=new ArrayList<String>();
+    if (infoOpSet != null) {
+      details=infoOpSet.getAllDetailsForContact(contact);
+      while (details.hasNext()) {
+        GenericDetail d=details.next();
+        if (d instanceof PhoneNumberDetail) {
+          PhoneNumberDetail pnd=(PhoneNumberDetail)d;
+          if (pnd.getNumber() != null && pnd.getNumber().length() > 0) {
+            phones.add(pnd.getNumber());
+            hasPhones=true;
+          }
+        }
+      }
+    }
+    if (metaContact.getContactCount() > 1 || phones.size() > 0) {
       if (protocolProvider.getOperationSet(OperationSetBasicTelephony.class) != null && hasContactCapabilities(contact,OperationSetBasicTelephony.class)) {
         callContactMenu.add(createMenuItem(contactAddress,callContactPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
+        separator=true;
       }
       if (protocolProvider.getOperationSet(OperationSetVideoTelephony.class) != null && hasContactCapabilities(contact,OperationSetVideoTelephony.class)) {
         videoCallMenu.add(createMenuItem(contactAddress,videoCallPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
@@ -52,6 +72,22 @@
         multiContactRequestAuthMenu.add(createMenuItem(contactAddress,requestAuthPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
       }
     }
+    for (    String phone : phones) {
+      if (providers.size() > 0) {
+        JMenuItem menu=createMenuItem(phone,callPhonePrefix + phone,null);
+        callContactMenu.add(menu);
+        separator=true;
+      }
+    }
+    if (separator && contacts.hasNext()) {
+      callContactMenu.addSeparator();
+      separator=false;
+    }
+  }
+  Component c=null;
+  if (callContactMenu.getMenuComponentCount() > 0)   c=callContactMenu.getMenuComponent(callContactMenu.getMenuComponentCount() - 1);
+  if (c != null && (c instanceof JSeparator)) {
+    callContactMenu.remove(c);
   }
   this.add(sendMessageItem);
   if (metaContact.getDefaultContact(OperationSetSmsMessaging.class) != null) {
@@ -59,7 +95,7 @@
     sendSmsItem.addActionListener(this);
     sendSmsItem.setName("sendSms");
   }
-  if (callContactMenu.getItemCount() > 1) {
+  if (callContactMenu.getItemCount() > 1 || hasPhones) {
     this.add(callContactMenu);
   }
  else {
