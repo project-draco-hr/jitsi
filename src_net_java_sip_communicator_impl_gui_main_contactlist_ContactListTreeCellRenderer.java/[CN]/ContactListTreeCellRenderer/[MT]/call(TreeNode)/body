@@ -2,7 +2,6 @@
   List<UIContactDetail> telephonyContacts=((ContactNode)treeNode).getContactDescriptor().getContactDetailsForOperationSet(OperationSetBasicTelephony.class);
   ContactNode n=(ContactNode)treeNode;
   MetaContact metaContact=null;
-  boolean hasPhone=false;
   if (n.getContactDescriptor().getDescriptor() instanceof MetaContact) {
     metaContact=(MetaContact)n.getContactDescriptor().getDescriptor();
     Iterator<Contact> contacts=metaContact.getContacts();
@@ -26,7 +25,6 @@
               }
 ;
               telephonyContacts.add(cd);
-              hasPhone=true;
             }
           }
         }
@@ -34,7 +32,7 @@
     }
   }
   ChooseCallAccountPopupMenu chooseAccountDialog=null;
-  if (telephonyContacts.size() == 1 && !hasPhone) {
+  if (telephonyContacts.size() == 1) {
     UIContactDetail detail=telephonyContacts.get(0);
     ProtocolProviderService preferredProvider=detail.getPreferredProtocolProvider(OperationSetBasicTelephony.class);
     List<ProtocolProviderService> providers=GuiActivator.getOpSetRegisteredProviders(OperationSetBasicTelephony.class,preferredProvider,detail.getPreferredProtocol(OperationSetBasicTelephony.class));
@@ -49,7 +47,7 @@
  else       if (providersCount > 1)       chooseAccountDialog=new ChooseCallAccountPopupMenu(tree,detail.getAddress(),providers);
     }
   }
- else   if (telephonyContacts.size() > 1 || hasPhone) {
+ else   if (telephonyContacts.size() > 1) {
     chooseAccountDialog=new ChooseCallAccountPopupMenu(tree,telephonyContacts);
   }
   if (chooseAccountDialog != null) {
