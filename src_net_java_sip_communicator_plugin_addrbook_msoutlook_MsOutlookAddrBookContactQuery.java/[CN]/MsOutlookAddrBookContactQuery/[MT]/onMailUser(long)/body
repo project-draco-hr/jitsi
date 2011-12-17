@@ -28,18 +28,22 @@
         }
       }
     }
-    GenericSourceContact sourceContact=new GenericSourceContact(getContactSource(),(String)props[PR_DISPLAY_NAME],contactDetails);
-    if (MAPI_MESSAGE == objType) {
-      ++mapiMessageCount;
-      try {
-        Object[] images=IMAPIProp_GetProps(iUnknown,new long[]{PR_ATTACHMENT_CONTACTPHOTO},0);
-        Object image=images[0];
-        if (image instanceof byte[])         sourceContact.setImage((byte[])image);
+    if (!contactDetails.isEmpty()) {
+      String displayName=(String)props[PR_DISPLAY_NAME];
+      if ((displayName == null) || (displayName.length() == 0))       displayName=(String)props[PR_COMPANY_NAME];
+      GenericSourceContact sourceContact=new GenericSourceContact(getContactSource(),displayName,contactDetails);
+      if (MAPI_MESSAGE == objType) {
+        ++mapiMessageCount;
+        try {
+          Object[] images=IMAPIProp_GetProps(iUnknown,new long[]{PR_ATTACHMENT_CONTACTPHOTO},0);
+          Object image=images[0];
+          if (image instanceof byte[])           sourceContact.setImage((byte[])image);
+        }
+ catch (        MsOutlookMAPIHResultException ex) {
+        }
       }
- catch (      MsOutlookMAPIHResultException ex) {
-      }
+      addQueryResult(sourceContact);
     }
-    addQueryResult(sourceContact);
   }
   return (getStatus() == QUERY_IN_PROGRESS);
 }
