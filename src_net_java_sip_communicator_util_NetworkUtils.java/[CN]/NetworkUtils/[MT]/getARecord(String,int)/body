@@ -18,9 +18,17 @@
     logger.error("Failed to parse domain=" + domain,tpe);
     throw new ParseException(tpe.getMessage(),0);
   }
+catch (  DnssecRuntimeException e) {
+    throw new DnssecException(e);
+  }
   if (records != null && records.length > 0) {
     if (logger.isTraceEnabled())     logger.trace("A record for " + domain + "="+ ((ARecord)records[0]).getAddress());
-    return new InetSocketAddress(((ARecord)records[0]).getAddress(),port);
+    try {
+      return new InetSocketAddress(InetAddress.getByAddress(domain,((ARecord)records[0]).getAddress().getAddress()),port);
+    }
+ catch (    UnknownHostException e) {
+      return null;
+    }
   }
  else {
     if (logger.isTraceEnabled())     logger.trace("No A record found for " + domain);

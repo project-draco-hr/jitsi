@@ -6,6 +6,10 @@
  catch (  ParseException e) {
     logger.error("SRV record not resolved",e);
   }
+catch (  DnssecException e) {
+    logger.error("DNSSEC failure for SRV lookup",e);
+    dnssecState[0]=true;
+  }
   if (srvRecords != null) {
     for (    SRVRecord srv : srvRecords) {
       InetSocketAddress[] addrs=null;
@@ -15,10 +19,15 @@
  catch (      ParseException e) {
         logger.error("Invalid SRV record target",e);
       }
-      if (addrs == null)       continue;
+catch (      DnssecException e) {
+        logger.error("DNSSEC failure for A/AAAA lookup of SRV",e);
+        dnssecState[0]=true;
+      }
+      if (addrs == null || addrs.length == 0)       continue;
       for (      InetSocketAddress isa : addrs) {
         try {
-          return connectAndLogin(isa,password,serviceName);
+          ConnectState state=connectAndLogin(isa,password,serviceName);
+          return state;
         }
  catch (        XMPPException ex) {
           disconnectAndCleanConnection();

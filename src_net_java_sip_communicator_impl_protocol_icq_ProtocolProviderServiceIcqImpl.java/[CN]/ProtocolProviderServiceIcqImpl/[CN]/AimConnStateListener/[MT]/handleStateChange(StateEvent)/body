@@ -26,7 +26,11 @@
  else     if (logger.isDebugEnabled())     logger.debug("The aim Connection was disconnected!");
   }
  else   if (newState == State.FAILED) {
-    if (logger.isDebugEnabled())     logger.debug("The aim Connection failed! " + event.getNewStateInfo());
+    if (oldState == State.CONNECTINGAUTH && conn.getLoginService() != null && conn.getLoginService().getOscarConnection() != null && conn.getLoginService().getOscarConnection().getConnectionState() == ClientConn.STATE_RESOLVING) {
+      fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"Disconnected due to assumed DNSSEC failure");
+      return;
+    }
+ else     if (logger.isDebugEnabled())     logger.debug("The aim Connection failed! " + event.getNewStateInfo());
   }
   if (event.getNewStateInfo() instanceof LoginFailureStateInfo) {
     LoginFailureInfo loginFailure=((LoginFailureStateInfo)event.getNewStateInfo()).getLoginFailureInfo();

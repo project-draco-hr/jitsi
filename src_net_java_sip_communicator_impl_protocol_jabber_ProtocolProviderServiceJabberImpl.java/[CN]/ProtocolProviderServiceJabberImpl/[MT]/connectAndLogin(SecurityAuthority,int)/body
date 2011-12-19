@@ -7,14 +7,23 @@ synchronized (initializationLock) {
     loadProxy();
     Roster.setDefaultSubscriptionMode(Roster.SubscriptionMode.manual);
     ConnectState state;
+    boolean[] hadDnsSecException=new boolean[]{false};
     boolean isServerOverriden=getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.IS_SERVER_OVERRIDDEN,false);
     if (!isServerOverriden) {
-      state=connectUsingSRVRecords(serviceName,password,serviceName);
+      state=connectUsingSRVRecords(serviceName,password,serviceName,hadDnsSecException);
+      if (hadDnsSecException[0]) {
+        setDnssecLoginFailure();
+        return;
+      }
       if (state == ConnectState.ABORT_CONNECTING || state == ConnectState.STOP_TRYING)       return;
     }
     String customXMPPDomain=getAccountID().getAccountPropertyString("CUSTOM_XMPP_DOMAIN");
-    if (customXMPPDomain != null) {
-      state=connectUsingSRVRecords(customXMPPDomain,password,serviceName);
+    if (customXMPPDomain != null && !hadDnsSecException[0]) {
+      state=connectUsingSRVRecords(customXMPPDomain,password,serviceName,hadDnsSecException);
+      if (hadDnsSecException[0]) {
+        setDnssecLoginFailure();
+        return;
+      }
       if (state == ConnectState.ABORT_CONNECTING || state == ConnectState.STOP_TRYING)       return;
     }
     String serverAddressUserSetting=getAccountID().getAccountPropertyString(ProtocolProviderFactory.SERVER_ADDRESS);
@@ -26,17 +35,24 @@ synchronized (initializationLock) {
  catch (    ParseException e) {
       logger.error("Domain not resolved",e);
     }
+catch (    DnssecException e) {
+      logger.error("DNSSEC failure for overridden server",e);
+      setDnssecLoginFailure();
+      return;
+    }
     if (addrs == null || addrs.length == 0) {
       fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,"No server addresses found");
     }
-    for (    InetSocketAddress isa : addrs) {
-      try {
-        state=connectAndLogin(isa,password,serviceName);
-        if (state == ConnectState.ABORT_CONNECTING || state == ConnectState.STOP_TRYING)         return;
-      }
- catch (      XMPPException ex) {
-        disconnectAndCleanConnection();
-        if (isAuthenticationFailed(ex))         throw ex;
+ else {
+      for (      InetSocketAddress isa : addrs) {
+        try {
+          state=connectAndLogin(isa,password,serviceName);
+          if (state == ConnectState.ABORT_CONNECTING || state == ConnectState.STOP_TRYING)           return;
+        }
+ catch (        XMPPException ex) {
+          disconnectAndCleanConnection();
+          if (isAuthenticationFailed(ex))           throw ex;
+        }
       }
     }
   }

@@ -3,6 +3,9 @@
     if (logger.isDebugEnabled())     logger.debug("NetConfigChange listener added: " + netListener.hashCode());
     UtilActivator.getNetworkAddressManagerService().addNetworkConfigurationChangeListener(netListener);
   }
+  if (UtilActivator.getConfigurationService().getBoolean(PNAME_DNS_ALWAYS_ABSOLUTE,PDEFAULT_DNS_ALWAYS_ABSOLUTE)) {
+    if (!Name.fromString(domain).isAbsolute())     domain=domain + ".";
+  }
   Lookup lookup=new Lookup(domain,type);
   if (logger.isTraceEnabled()) {
     StringBuilder sb=new StringBuilder();
@@ -13,7 +16,9 @@
     }
     logger.trace(sb.toString());
   }
-  if (!UtilActivator.getConfigurationService().getBoolean(PNAME_BACKUP_RESOLVER_ENABLED,PDEFAULT_BACKUP_RESOLVER_ENABLED))   return lookup;
+  if (!UtilActivator.getConfigurationService().getBoolean(PNAME_BACKUP_RESOLVER_ENABLED,PDEFAULT_BACKUP_RESOLVER_ENABLED) || UtilActivator.getConfigurationService().getBoolean(DnsUtilActivator.PNAME_DNSSEC_RESOLVER_ENABLED,DnsUtilActivator.PDEFAULT_DNSSEC_RESOLVER_ENABLED)) {
+    return lookup;
+  }
 synchronized (parallelResolverLock) {
     if (parallelResolver == null) {
       try {
