@@ -1,0 +1,47 @@
+{
+  if (listener == null)   throw new IllegalArgumentException("listener cannot be null");
+  final long context=prepareContext();
+  final CallbackData cbData=new CallbackData();
+  cbData.listener=listener;
+  cbData.context=context;
+  int asyncId;
+  try {
+    asyncId=UnboundApi.resolveAsync(context,query.getQuestion().getName().toString(),query.getQuestion().getType(),query.getQuestion().getDClass(),cbData,new UnboundApi.UnboundCallback(){
+      public void UnboundResolveCallback(      Object data,      int err,      UnboundResult result){
+        CallbackData cbData=(CallbackData)data;
+        deleteContext(cbData,false);
+        ResolverListener l=cbData.listener;
+        if (err == 0) {
+          try {
+            l.receiveMessage(data,new SecureMessage(result));
+          }
+ catch (          IOException e) {
+            l.handleException(data,e);
+          }
+        }
+ else         l.handleException(data,new Exception(UnboundApi.errorCodeToString(err)));
+        cbData.sync.countDown();
+      }
+    }
+);
+  }
+ catch (  UnboundException e) {
+    listener.handleException(null,e);
+    return null;
+  }
+  cbData.asyncId=asyncId;
+  threadPool.execute(new Runnable(){
+    public void run(){
+      try {
+        UnboundApi.processAsync(context);
+      }
+ catch (      UnboundException ex) {
+        cbData.listener.handleException(this,ex);
+        deleteContext(cbData,false);
+        cbData.sync.countDown();
+      }
+    }
+  }
+);
+  return cbData;
+}

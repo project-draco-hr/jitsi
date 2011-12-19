@@ -1,0 +1,37 @@
+{
+  String fqdn=msg.getQuestion().getName().toString();
+  String type=Type.string(msg.getQuestion().getType());
+  String propName=createPropNameUnsigned(fqdn,type);
+  SecureResolveMode defaultAction=Enum.valueOf(SecureResolveMode.class,config.getString(PNAME_DNSSEC_VALIDATION_MODE,SecureResolveMode.WarnIfBogus.name()));
+  SecureResolveMode pinned=Enum.valueOf(SecureResolveMode.class,config.getString(propName,defaultAction.name()));
+  if (pinned == defaultAction)   config.setProperty(propName,pinned.name());
+  if (pinned == SecureResolveMode.IgnoreDnssec || msg.isSecure())   return;
+  if ((pinned == SecureResolveMode.SecureOnly && !msg.isSecure()) || (pinned == SecureResolveMode.SecureOrUnsigned && msg.isBogus())) {
+    String text=getExceptionMessage(msg);
+    Date last=lastNotifications.get(text);
+    if (last == null || last.before(new Date(new Date().getTime() - 1000 * 60 * 5))) {
+      DnsUtilActivator.getNotificationService().fireNotification(EVENT_TYPE,R.getI18NString("util.dns.INSECURE_ANSWER_TITLE"),text,null,null);
+      lastNotifications.put(text,new Date());
+    }
+    throw new DnssecRuntimeException(text);
+  }
+  if (pinned == SecureResolveMode.SecureOrUnsigned && !msg.isBogus())   return;
+  if (pinned == SecureResolveMode.WarnIfBogus && !msg.isBogus())   return;
+  String reason=msg.isBogus() ? R.getI18NString("util.dns.DNSSEC_ADVANCED_REASON_BOGUS",new String[]{fqdn,msg.getBogusReason()}) : R.getI18NString("util.dns.DNSSEC_ADVANCED_REASON_UNSIGNED",new String[]{type,fqdn});
+  DnssecDialog dlg=new DnssecDialog(fqdn,reason);
+  dlg.setVisible(true);
+  DnssecDialogResult result=dlg.getResult();
+switch (result) {
+case Accept:
+    break;
+case Deny:
+  throw new DnssecRuntimeException(getExceptionMessage(msg));
+case AlwaysAccept:
+if (msg.isBogus()) config.setProperty(propName,SecureResolveMode.IgnoreDnssec.name());
+ else config.setProperty(propName,SecureResolveMode.WarnIfBogus.name());
+break;
+case AlwaysDeny:
+config.setProperty(propName,SecureResolveMode.SecureOnly);
+throw new DnssecRuntimeException(getExceptionMessage(msg));
+}
+}

@@ -1,0 +1,35 @@
+{
+  Future<SecureMessage> future=threadPool.submit(new Callable<SecureMessage>(){
+    public SecureMessage call() throws Exception {
+      if (logger.isDebugEnabled())       logger.debug(query);
+      SecureMessage secureMessage=null;
+      final long context=prepareContext();
+      try {
+        UnboundResult result=UnboundApi.resolve(context,query.getQuestion().getName().toString(),query.getQuestion().getType(),query.getQuestion().getDClass());
+        secureMessage=new SecureMessage(result);
+        validateMessage(secureMessage);
+      }
+  finally {
+        UnboundApi.deleteContext(context);
+        if (logger.isDebugEnabled() && secureMessage != null)         logger.debug(secureMessage);
+      }
+      return secureMessage;
+    }
+  }
+);
+  try {
+    return future.get(timeout,TimeUnit.SECONDS);
+  }
+ catch (  InterruptedException e) {
+    logger.error(e);
+    throw new IOException(e.getMessage());
+  }
+catch (  ExecutionException e) {
+    if (e.getCause() instanceof DnssecRuntimeException)     throw new DnssecRuntimeException(e.getCause().getMessage());
+    logger.error(e);
+    throw new IOException(e.getMessage());
+  }
+catch (  TimeoutException e) {
+    throw new SocketTimeoutException(e.getMessage());
+  }
+}
