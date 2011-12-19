@@ -25,25 +25,25 @@
           provisioningMethod="DHCP";
         }
       }
-      ProvisioningActivator.setProvisioningMethod(provisioningMethod);
+      ProvisioningActivator.getProvisioningService().setProvisioningMethod(provisioningMethod);
     }
   }
 );
   dhcpButton.addChangeListener(new ChangeListener(){
     public void stateChanged(    ChangeEvent e){
-      if (dhcpButton.isSelected())       ProvisioningActivator.setProvisioningMethod("DHCP");
+      if (dhcpButton.isSelected())       ProvisioningActivator.getProvisioningService().setProvisioningMethod("DHCP");
     }
   }
 );
   dnsButton.addChangeListener(new ChangeListener(){
     public void stateChanged(    ChangeEvent e){
-      if (dnsButton.isSelected())       ProvisioningActivator.setProvisioningMethod("DNS");
+      if (dnsButton.isSelected())       ProvisioningActivator.getProvisioningService().setProvisioningMethod("DNS");
     }
   }
 );
   bonjourButton.addChangeListener(new ChangeListener(){
     public void stateChanged(    ChangeEvent e){
-      if (bonjourButton.isSelected())       ProvisioningActivator.setProvisioningMethod("Bonjour");
+      if (bonjourButton.isSelected())       ProvisioningActivator.getProvisioningService().setProvisioningMethod("Bonjour");
     }
   }
 );
@@ -52,11 +52,13 @@
       boolean isSelected=manualButton.isSelected();
       uriField.setEnabled(isSelected);
       if (isSelected) {
-        ProvisioningActivator.setProvisioningMethod("Manual");
+        ProvisioningActivator.getProvisioningService().setProvisioningMethod("Manual");
         String uriText=uriField.getText();
-        if (uriText != null && uriText.length() > 0)         ProvisioningActivator.setProvisioningUri(uriText);
+        if (uriText != null && uriText.length() > 0)         ProvisioningActivator.getProvisioningService().setProvisioningUri(uriText);
       }
- else       ProvisioningActivator.setProvisioningUri(null);
+ else {
+        ProvisioningActivator.getProvisioningService().setProvisioningUri(null);
+      }
     }
   }
 );
@@ -64,7 +66,7 @@
     public void focusLost(    FocusEvent e){
       if (!manualButton.isSelected())       return;
       String uriText=uriField.getText();
-      if (uriText != null && uriText.length() > 0)       ProvisioningActivator.setProvisioningUri(uriText);
+      if (uriText != null && uriText.length() > 0)       ProvisioningActivator.getProvisioningService().setProvisioningUri(uriText);
     }
     public void focusGained(    FocusEvent e){
     }
@@ -77,8 +79,8 @@
       }
       int result=JOptionPane.showConfirmDialog((Component)ProvisioningActivator.getUIService().getExportedWindow(ExportedWindow.MAIN_WINDOW).getSource(),ProvisioningActivator.getResourceService().getI18NString("plugin.provisioning.REMOVE_CREDENTIALS_MESSAGE"),ProvisioningActivator.getResourceService().getI18NString("service.gui.REMOVE"),JOptionPane.YES_NO_OPTION);
       if (result == JOptionPane.YES_OPTION) {
-        ProvisioningActivator.getCredentialsStorageService().removePassword(ProvisioningActivator.PROPERTY_PROVISIONING_PASSWORD);
-        ProvisioningActivator.getConfigurationService().removeProperty(ProvisioningActivator.PROPERTY_PROVISIONING_USERNAME);
+        ProvisioningActivator.getCredentialsStorageService().removePassword(ProvisioningServiceImpl.PROPERTY_PROVISIONING_PASSWORD);
+        ProvisioningActivator.getConfigurationService().removeProperty(ProvisioningServiceImpl.PROPERTY_PROVISIONING_USERNAME);
         usernameField.setText("");
         passwordField.setText("");
       }

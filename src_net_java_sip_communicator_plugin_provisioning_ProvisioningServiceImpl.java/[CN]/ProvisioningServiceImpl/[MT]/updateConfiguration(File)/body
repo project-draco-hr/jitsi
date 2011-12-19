@@ -1,0 +1,47 @@
+{
+  Properties fileProps=new OrderedProperties();
+  InputStream in=null;
+  try {
+    in=new BufferedInputStream(new FileInputStream(file));
+    fileProps.load(in);
+    Iterator<Map.Entry<Object,Object>> it=fileProps.entrySet().iterator();
+    while (it.hasNext()) {
+      Map.Entry<Object,Object> entry=it.next();
+      String key=(String)entry.getKey();
+      Object value=entry.getValue();
+      if (key.equals(PROVISIONING_ALLOW_PREFIX_PROP)) {
+        String prefixes[]=((String)value).split("\\|");
+        for (        String s : prefixes) {
+          allowedPrefixes.add(s);
+        }
+        continue;
+      }
+ else       if (key.equals(PROVISIONING_ENFORCE_PREFIX_PROP)) {
+        checkEnforcePrefix((String)value);
+        continue;
+      }
+      if (!isPrefixAllowed(key)) {
+        continue;
+      }
+      processProperty(key,value);
+    }
+    try {
+      ProvisioningActivator.getConfigurationService().storeConfiguration();
+      ProvisioningActivator.getConfigurationService().reloadConfiguration();
+    }
+ catch (    Exception e) {
+      logger.error("Cannot reload configuration");
+    }
+  }
+ catch (  IOException e) {
+    logger.warn("Error during load of provisioning file");
+  }
+ finally {
+    try {
+      in.close();
+      file.delete();
+    }
+ catch (    IOException e) {
+    }
+  }
+}
