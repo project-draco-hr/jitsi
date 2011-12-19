@@ -1,6 +1,7 @@
 {
   try {
-    if (!SipActivator.getPacketLogging().isLoggingEnabled(PacketLoggingService.ProtocolName.SIP))     return;
+    PacketLoggingService packetLogging=SipActivator.getPacketLogging();
+    if (packetLogging == null || !packetLogging.isLoggingEnabled(PacketLoggingService.ProtocolName.SIP))     return;
     boolean isTransportUDP=message.getTopmostVia().getTransport().equalsIgnoreCase("UDP");
     byte[] srcAddr;
     int srcPort;
@@ -25,7 +26,7 @@
  else       srcAddr=new byte[dstAddr.length];
     }
     byte[] msg=message.toString().getBytes("UTF-8");
-    SipActivator.getPacketLogging().logPacket(PacketLoggingService.ProtocolName.SIP,srcAddr,srcPort,dstAddr,dstPort,isTransportUDP ? PacketLoggingService.TransportName.UDP : PacketLoggingService.TransportName.TCP,sender,msg);
+    packetLogging.logPacket(PacketLoggingService.ProtocolName.SIP,srcAddr,srcPort,dstAddr,dstPort,isTransportUDP ? PacketLoggingService.TransportName.UDP : PacketLoggingService.TransportName.TCP,sender,msg);
   }
  catch (  UnsupportedEncodingException e) {
     logger.error("Cannot obtain message body",e);
