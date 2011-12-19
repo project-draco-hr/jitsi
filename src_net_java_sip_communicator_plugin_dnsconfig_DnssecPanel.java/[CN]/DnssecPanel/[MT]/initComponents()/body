@@ -1,0 +1,55 @@
+{
+  setLayout(new BorderLayout(0,10));
+  setBorder(BorderFactory.createEmptyBorder(10,5,0,0));
+  JPanel pnlCommon=new TransparentPanel(new GridBagLayout());
+  pnlCommon.setAlignmentX(LEFT_ALIGNMENT);
+  GridBagConstraints cl=new GridBagConstraints();
+  GridBagConstraints cr=new GridBagConstraints();
+  cl.gridy=cr.gridy=0;
+  cl.anchor=cr.anchor=GridBagConstraints.LINE_START;
+  cl.gridx=0;
+  cl.weightx=0;
+  cl.insets=new Insets(0,0,0,10);
+  cr.gridx=1;
+  cr.fill=GridBagConstraints.HORIZONTAL;
+  cr.gridwidth=GridBagConstraints.REMAINDER;
+  cr.weightx=1;
+  add(pnlCommon,BorderLayout.NORTH);
+  chkAbsolute=new SIPCommCheckBox(R.getI18NString("plugin.dnsconfig.dnssec.chkAbsolute"));
+  cl.gridwidth=2;
+  pnlCommon.add(chkAbsolute,cl);
+  cl.gridwidth=1;
+  cl.gridy=++cr.gridy;
+  chkEnabled=new SIPCommCheckBox(R.getI18NString("plugin.dnsconfig.dnssec.chkEnabled"));
+  cl.gridwidth=2;
+  pnlCommon.add(chkEnabled,cl);
+  cl.gridwidth=1;
+  cl.gridy=++cr.gridy;
+  JLabel lblNameserver=new JLabel(R.getI18NString("plugin.dnsconfig.dnssec.lblNameservers"));
+  pnlCommon.add(lblNameserver,cl);
+  txtNameservers=new JTextField();
+  pnlCommon.add(txtNameservers,cr);
+  cl.gridy=++cr.gridy;
+  JLabel lblNameserversHint=new JLabel(R.getI18NString("plugin.dnsconfig.dnssec.lblNameserversHint"));
+  pnlCommon.add(lblNameserversHint,cr);
+  cl.gridy=++cr.gridy;
+  JLabel lblDefault=new JLabel(R.getI18NString("plugin.dnsconfig.dnssec.lblDefault"));
+  pnlCommon.add(lblDefault,cl);
+  cboDefault=new JComboBox(SecureResolveMode.values());
+  cboDefault.setRenderer(getResolveModeRenderer());
+  pnlCommon.add(cboDefault,cr);
+  tblDomains=new JTable(data);
+  tblDomains.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+  tblDomains.setRowHeight(20);
+  tblDomains.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer(){
+    @Override protected void setValue(    Object value){
+      if (value instanceof SecureResolveMode)       setText(R.getI18NString(SecureResolveMode.class.getName() + "." + ((SecureResolveMode)value).name()));
+ else       super.setValue(value);
+    }
+  }
+);
+  JComboBox cboTblModeEditor=new JComboBox(SecureResolveMode.values());
+  cboTblModeEditor.setRenderer(getResolveModeRenderer());
+  tblDomains.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(cboTblModeEditor));
+  add(new JScrollPane(tblDomains),BorderLayout.CENTER);
+}
