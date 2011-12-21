@@ -9,7 +9,27 @@
     leaveChatRoomButton.setEnabled(chatPanel.chatSession instanceof ConferenceChatSession);
     inviteButton.setEnabled(chatPanel.findInviteChatTransport() != null);
     sendFileButton.setEnabled(chatPanel.findFileTransferChatTransport() != null);
-    callButton.setEnabled(!getOperationSetForCapabilities(chatPanel.chatSession.getTransportsForOperationSet(OperationSetBasicTelephony.class),OperationSetBasicTelephony.class).isEmpty());
+    boolean hasPhone=false;
+    Iterator<Contact> contacts=contact.getContacts();
+    while (contacts.hasNext()) {
+      Contact c=contacts.next();
+      OperationSetServerStoredContactInfo infoOpSet=c.getProtocolProvider().getOperationSet(OperationSetServerStoredContactInfo.class);
+      Iterator<GenericDetail> details=null;
+      if (infoOpSet != null) {
+        details=infoOpSet.getAllDetailsForContact(c);
+        while (details.hasNext()) {
+          GenericDetail d=details.next();
+          if (d instanceof PhoneNumberDetail && !(d instanceof PagerDetail) && !(d instanceof FaxDetail)) {
+            PhoneNumberDetail pnd=(PhoneNumberDetail)d;
+            if (pnd.getNumber() != null && pnd.getNumber().length() > 0) {
+              hasPhone=true;
+              break;
+            }
+          }
+        }
+      }
+    }
+    callButton.setEnabled(hasPhone || !getOperationSetForCapabilities(chatPanel.chatSession.getTransportsForOperationSet(OperationSetBasicTelephony.class),OperationSetBasicTelephony.class).isEmpty());
     desktopSharingButton.setEnabled(!getOperationSetForCapabilities(chatPanel.chatSession.getTransportsForOperationSet(OperationSetDesktopSharingServer.class),OperationSetDesktopSharingServer.class).isEmpty());
     changeHistoryButtonsState(chatPanel);
   }
