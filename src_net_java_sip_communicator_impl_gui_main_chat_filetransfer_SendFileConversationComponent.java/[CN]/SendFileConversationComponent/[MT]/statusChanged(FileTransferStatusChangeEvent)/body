@@ -1,6 +1,15 @@
 {
   FileTransfer fileTransfer=event.getFileTransfer();
   int status=event.getNewStatus();
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        statusChanged(event);
+      }
+    }
+);
+    return;
+  }
   if (status == FileTransferStatusChangeEvent.COMPLETED || status == FileTransferStatusChangeEvent.CANCELED || status == FileTransferStatusChangeEvent.FAILED || status == FileTransferStatusChangeEvent.REFUSED) {
     parentChatPanel.removeActiveFileTransfer(fileTransfer.getID());
     fileTransfer.removeStatusListener(this);
