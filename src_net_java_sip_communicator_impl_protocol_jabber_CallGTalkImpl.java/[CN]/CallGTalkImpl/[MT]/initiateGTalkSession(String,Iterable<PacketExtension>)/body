@@ -1,8 +1,23 @@
 {
   CallPeerGTalkImpl callPeer=new CallPeerGTalkImpl(calleeJID,this);
+  if (!firstCallPeerIsGV)   firstCallPeerIsGV=calleeJID.endsWith(ProtocolProviderServiceJabberImpl.GOOGLE_VOICE_DOMAIN);
   addCallPeer(callPeer);
   callPeer.setState(CallPeerState.INITIATING_CALL);
-  if (getCallPeerCount() == 1)   parentOpSet.fireCallEvent(CallEvent.CALL_INITIATED,this);
+  if (getCallPeerCount() == 1 && !calleeJID.endsWith(ProtocolProviderServiceJabberImpl.GOOGLE_VOICE_DOMAIN) || getCallPeerCount() == 2 && firstCallPeerIsGV) {
+    if (firstCallPeerIsGV) {
+      firstCallPeerIsGV=false;
+      Iterator<CallPeerGTalkImpl> it=getCallPeersVector().iterator();
+      String sub=calleeJID.substring(0,calleeJID.indexOf("/"));
+      while (it.hasNext()) {
+        CallPeer p=it.next();
+        if (p.getAddress().equals(sub)) {
+          it.remove();
+          break;
+        }
+      }
+    }
+    parentOpSet.fireCallEvent(CallEvent.CALL_INITIATED,this);
+  }
   CallPeerMediaHandlerGTalkImpl mediaHandler=callPeer.getMediaHandler();
   mediaHandler.setLocalVideoTransmissionEnabled(localVideoAllowed);
   callPeer.setState(CallPeerState.CONNECTING);

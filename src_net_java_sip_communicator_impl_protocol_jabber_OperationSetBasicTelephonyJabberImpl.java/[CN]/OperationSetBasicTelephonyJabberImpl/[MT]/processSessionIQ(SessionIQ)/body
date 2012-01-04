@@ -1,5 +1,5 @@
 {
-  CallPeerGTalkImpl callPeer=activeGTalkCallsRepository.findCallPeer(sessionIQ.getID());
+  final CallPeerGTalkImpl callPeer=activeGTalkCallsRepository.findCallPeer(sessionIQ.getID());
   IQ.Type type=sessionIQ.getType();
   if (type == Type.RESULT) {
     return;
@@ -16,16 +16,24 @@
       }
     }
     if (redirect != null) {
-      CallGTalkImpl call=callPeer.getCall();
-      try {
-        String redir=redirect.getRedir();
-        callPeer.setState(CallPeerState.DISCONNECTED);
-        if (redir.startsWith("xmpp:"))         redir=redir.substring(5);
-        call.initiateGTalkSession(redir,null);
+      final CallGTalkImpl call=callPeer.getCall();
+      final String redirAddr;
+      String redir=redirect.getRedir();
+      if (redir.startsWith("xmpp:"))       redirAddr=redir.substring(5);
+ else       redirAddr=null;
+      if (redirAddr == null)       return;
+      new Thread(){
+        public void run(){
+          try {
+            call.initiateGTalkSession(redirAddr,null);
+            callPeer.setState(CallPeerState.DISCONNECTED);
+          }
+ catch (          Exception e) {
+            logger.info("Failed to initiate GTalk session (redirect)");
+          }
+        }
       }
- catch (      Exception e) {
-        logger.info("Failed to initiate GTalk session (redirect)");
-      }
+.start();
       return;
     }
     String message="Remote party returned an error!";
