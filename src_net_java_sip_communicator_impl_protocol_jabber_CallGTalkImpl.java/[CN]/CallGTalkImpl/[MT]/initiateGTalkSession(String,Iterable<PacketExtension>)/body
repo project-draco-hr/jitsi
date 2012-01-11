@@ -21,6 +21,15 @@
   CallPeerMediaHandlerGTalkImpl mediaHandler=callPeer.getMediaHandler();
   mediaHandler.setLocalVideoTransmissionEnabled(localVideoAllowed);
   callPeer.setState(CallPeerState.CONNECTING);
-  callPeer.initiateSession(sessionInitiateExtensions);
-  return callPeer;
+  boolean sessionInitiated=false;
+  try {
+    callPeer.initiateSession(sessionInitiateExtensions);
+    sessionInitiated=true;
+    return callPeer;
+  }
+  finally {
+    if (!sessionInitiated) {
+      callPeer.setState(CallPeerState.FAILED);
+    }
+  }
 }
