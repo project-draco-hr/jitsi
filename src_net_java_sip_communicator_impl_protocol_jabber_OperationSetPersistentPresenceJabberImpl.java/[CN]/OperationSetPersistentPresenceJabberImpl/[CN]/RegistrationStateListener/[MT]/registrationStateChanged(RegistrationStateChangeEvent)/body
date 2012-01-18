@@ -1,10 +1,10 @@
 {
   if (logger.isDebugEnabled())   logger.debug("The Jabber provider changed state from: " + evt.getOldState() + " to: "+ evt.getNewState());
-  if (evt.getNewState() == RegistrationState.REGISTERED) {
-    contactChangesListener=new ContactChangesListener();
-    parentProvider.getConnection().getRoster().addRosterListener(contactChangesListener);
+  if (evt.getNewState() == RegistrationState.REGISTERING) {
+    parentProvider.getConnection().addPacketListener(new ServerStoredListInit(),new PacketTypeFilter(RosterPacket.class));
+  }
+ else   if (evt.getNewState() == RegistrationState.REGISTERED) {
     fireProviderStatusChangeEvent(currentStatus,parentProvider.getJabberStatusEnum().getStatus(JabberStatusEnum.AVAILABLE));
-    ssContactList.init();
   }
  else   if (evt.getNewState() == RegistrationState.UNREGISTERED || evt.getNewState() == RegistrationState.AUTHENTICATION_FAILED || evt.getNewState() == RegistrationState.CONNECTION_FAILED) {
     PresenceStatus oldStatus=currentStatus;
