@@ -1,31 +1,8 @@
 {
-  final ExtendedTooltip tip=new ExtendedTooltip(GuiActivator.getUIService().getMainFrame(),true);
+  ExtendedTooltip tip=new ExtendedTooltip(GuiActivator.getUIService().getMainFrame(),true);
   byte[] avatarImage=metaContact.getAvatar();
   if (avatarImage != null && avatarImage.length > 0)   tip.setImage(new ImageIcon(avatarImage));
   tip.setTitle(metaContact.getDisplayName());
-  Iterator<Contact> i=metaContact.getContacts();
-  String statusMessage=null;
-  Contact protocolContact;
-  while (i.hasNext()) {
-    protocolContact=i.next();
-    ImageIcon protocolStatusIcon=ImageLoader.getIndexedProtocolIcon(ImageUtils.getBytesInImage(protocolContact.getPresenceStatus().getStatusIcon()),protocolContact.getProtocolProvider());
-    String contactAddress=protocolContact.getAddress();
-    tip.addLine(protocolStatusIcon,contactAddress);
-    OperationSetServerStoredContactInfo infoOpSet=protocolContact.getProtocolProvider().getOperationSet(OperationSetServerStoredContactInfo.class);
-    if (infoOpSet != null) {
-      Iterator<GenericDetail> details=infoOpSet.requestAllDetailsForContact(protocolContact,new OperationSetServerStoredContactInfo.DetailsResponseListener(){
-        public void detailsRetrieved(        Iterator<GenericDetail> details){
-          fillTooltipLines(tip,details);
-        }
-      }
-);
-      if (details != null)       fillTooltipLines(tip,details);
- else {
-        tip.addLine(null,GuiActivator.getResources().getI18NString("service.gui.LOADING"));
-      }
-    }
-    if (statusMessage == null && protocolContact.getStatusMessage() != null && protocolContact.getStatusMessage().length() > 0)     statusMessage=protocolContact.getStatusMessage();
-  }
-  if (statusMessage != null)   tip.setBottomText(statusMessage);
+  loadTooltip(tip);
   return tip;
 }
