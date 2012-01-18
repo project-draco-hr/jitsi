@@ -1,0 +1,54 @@
+{
+  int deviceCount=PortAudio.Pa_GetDeviceCount();
+  int defaultInputDeviceIx=PortAudio.Pa_GetDefaultInputDevice();
+  int defaultOutputDeviceIx=PortAudio.Pa_GetDefaultOutputDevice();
+  playbackDevices=null;
+  defaultPlaybackDevice=null;
+  defaultCaptureDevice=null;
+  AudioFormat fmt=new AudioFormat(AudioFormat.LINEAR,Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,AudioFormat.LITTLE_ENDIAN,AudioFormat.SIGNED,Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,Format.byteArray);
+  Iterator<?> it=CaptureDeviceManager.getDeviceList(fmt).iterator();
+  List<CaptureDeviceInfo> devicesToRemove=new ArrayList<CaptureDeviceInfo>();
+  while (it.hasNext()) {
+    CaptureDeviceInfo ifo=(CaptureDeviceInfo)it.next();
+    if (!ifo.getLocator().getProtocol().equals("portaudio")) {
+      continue;
+    }
+ else {
+      devicesToRemove.add(ifo);
+    }
+  }
+  for (  CaptureDeviceInfo info : devicesToRemove) {
+    CaptureDeviceManager.removeDevice(info);
+  }
+  if (devicesToRemove.size() > 0)   CaptureDeviceManager.commit();
+  Vector<CaptureDeviceInfo> playbackDevVector=new Vector<CaptureDeviceInfo>();
+  int channels=1;
+  int sampleSizeInBits=16;
+  long sampleFormat=PortAudio.getPaSampleFormat(sampleSizeInBits);
+  for (int deviceIndex=0; deviceIndex < deviceCount; deviceIndex++) {
+    long deviceInfo=PortAudio.Pa_GetDeviceInfo(deviceIndex);
+    int maxInputChannels=PortAudio.PaDeviceInfo_getMaxInputChannels(deviceInfo);
+    int maxOutputChannels=PortAudio.PaDeviceInfo_getMaxOutputChannels(deviceInfo);
+    String devName=PortAudio.PaDeviceInfo_getName(deviceInfo);
+    if (devName != null)     devName=devName.trim();
+    CaptureDeviceInfo jmfInfo=new CaptureDeviceInfo(devName,new MediaLocator(LOCATOR_PROTOCOL + ":#" + deviceIndex),new Format[]{new AudioFormat(AudioFormat.LINEAR,(maxInputChannels > 0) ? getSupportedSampleRate(true,deviceIndex,channels,sampleFormat) : PortAudio.DEFAULT_SAMPLE_RATE,sampleSizeInBits,channels,AudioFormat.LITTLE_ENDIAN,AudioFormat.SIGNED,Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,Format.byteArray)});
+    if (maxInputChannels > 0) {
+      CaptureDeviceManager.addDevice(jmfInfo);
+      if (logger.isDebugEnabled())       logger.debug("Adding capture device: [" + devName + "]");
+    }
+    if (maxOutputChannels > 0) {
+      playbackDevVector.add(jmfInfo);
+      if (logger.isDebugEnabled())       logger.debug("Adding playback device: [" + devName + "]");
+    }
+    if (deviceIndex == defaultInputDeviceIx) {
+      defaultCaptureDevice=jmfInfo;
+      if (logger.isDebugEnabled())       logger.debug("Default capture device: [" + devName + "]");
+    }
+    if (deviceIndex == defaultOutputDeviceIx) {
+      defaultPlaybackDevice=jmfInfo;
+      if (logger.isDebugEnabled())       logger.debug("Default playback device: [" + devName + "]");
+    }
+  }
+  playbackDevices=playbackDevVector.toArray(new CaptureDeviceInfo[0]);
+  CaptureDeviceManager.commit();
+}

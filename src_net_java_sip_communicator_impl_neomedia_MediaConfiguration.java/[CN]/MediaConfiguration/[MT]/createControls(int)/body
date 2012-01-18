@@ -1,44 +1,9 @@
 {
   SIPCommTabbedPane container=new SIPCommTabbedPane();
-  final JComboBox cboDevice=new JComboBox();
-  cboDevice.setEditable(false);
-  cboDevice.setModel(new DeviceConfigurationComboBoxModel(mediaService.getDeviceConfiguration(),type));
-  final JPanel portAudioPanel;
-  if (type == DeviceConfigurationComboBoxModel.AUDIO) {
-    portAudioPanel=new TransparentPanel(new GridBagLayout());
-    portAudioPanel.setPreferredSize(new Dimension(WIDTH,200));
-    portAudioPanel.setMaximumSize(new Dimension(WIDTH,200));
-    cboDevice.addItemListener(new ItemListener(){
-      public void itemStateChanged(      ItemEvent e){
-        if (ItemEvent.SELECTED == e.getStateChange()) {
-          if (DeviceConfiguration.AUDIO_SYSTEM_PORTAUDIO.equals(e.getItem()))           createPortAudioControls(portAudioPanel);
- else           portAudioPanel.removeAll();
-          portAudioPanel.revalidate();
-          portAudioPanel.repaint();
-        }
-      }
-    }
-);
-    if (DeviceConfiguration.AUDIO_SYSTEM_PORTAUDIO.equals(cboDevice.getSelectedItem()))     createPortAudioControls(portAudioPanel);
-  }
- else   portAudioPanel=null;
-  JLabel label=new JLabel(getLabelText(type));
-  label.setDisplayedMnemonic(getDisplayedMnemonic(type));
-  label.setLabelFor(cboDevice);
-  Container pnlDevice=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
-  pnlDevice.setMaximumSize(new Dimension(WIDTH,25));
-  pnlDevice.add(label);
-  pnlDevice.add(cboDevice);
-  JPanel pnlDeviceAndDetails=new TransparentPanel(new BorderLayout());
-  pnlDeviceAndDetails.add(pnlDevice,BorderLayout.NORTH);
-  if (portAudioPanel != null)   pnlDeviceAndDetails.add(portAudioPanel,BorderLayout.CENTER);
- else {
-    cboDevice.setLightWeightPopupEnabled(false);
-    pnlDeviceAndDetails.add(createPreview(type,cboDevice),BorderLayout.CENTER);
-  }
+  Component pnlDeviceAndDetails=createBasicControls(type);
   ResourceManagementService R=NeomediaActivator.getResources();
   container.insertTab(R.getI18NString("impl.media.configform.DEVICES"),null,pnlDeviceAndDetails,null,0);
   container.insertTab(R.getI18NString("impl.media.configform.ENCODINGS"),null,createEncodingControls(type),null,1);
-  if (portAudioPanel == null)   container.insertTab(R.getI18NString("impl.media.configform.VIDEO_MORE_SETTINGS"),null,createVideoAdvancedSettings(),null,2);
+  if (type == DeviceConfigurationComboBoxModel.VIDEO)   container.insertTab(R.getI18NString("impl.media.configform.VIDEO_MORE_SETTINGS"),null,createVideoAdvancedSettings(),null,2);
   return container;
 }

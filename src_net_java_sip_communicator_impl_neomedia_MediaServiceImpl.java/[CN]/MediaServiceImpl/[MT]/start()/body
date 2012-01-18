@@ -3,4 +3,36 @@
   encodingConfiguration.initializeFormatPreferences();
   encodingConfiguration.registerCustomPackages();
   encodingConfiguration.registerCustomCodecs();
+  if (!OSUtils.IS_ANDROID) {
+    final Component panel=MediaConfiguration.createBasicControls(DeviceConfigurationComboBoxModel.AUDIO,false);
+    audioConfiguration=new SIPCommDialog(){
+      /** 
+ * Serial version UID.
+ */
+      private static final long serialVersionUID=0L;
+      /** 
+ * {@inheritDoc}
+ */
+      @Override protected void close(      boolean isEscaped){
+        setVisible(false);
+      }
+    }
+;
+    TransparentPanel mainPanel=new TransparentPanel(new BorderLayout());
+    TransparentPanel btnPanel=new TransparentPanel(new FlowLayout(FlowLayout.RIGHT));
+    JButton btn=new JButton(NeomediaActivator.getResources().getI18NString("service.gui.CLOSE"));
+    btn.addActionListener(new ActionListener(){
+      public void actionPerformed(      ActionEvent evt){
+        audioConfiguration.setVisible(false);
+      }
+    }
+);
+    btnPanel.add(btn);
+    mainPanel.add(panel,BorderLayout.CENTER);
+    mainPanel.add(btnPanel,BorderLayout.SOUTH);
+    audioConfiguration.add(mainPanel);
+    audioConfiguration.validate();
+    audioConfiguration.pack();
+    PortAudio.addDeviceChangedCallback(this);
+  }
 }

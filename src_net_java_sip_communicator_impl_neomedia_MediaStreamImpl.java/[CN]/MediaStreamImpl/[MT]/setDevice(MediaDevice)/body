@@ -7,9 +7,11 @@
     if (deviceSession != null) {
       startedDirection=deviceSession.getStartedDirection();
       deviceSession.removePropertyChangeListener(deviceSessionPropertyChangeListener);
-      deviceSession.setDisposePlayerOnClose(false);
+      deviceSession.setDisposePlayerOnClose((deviceSession instanceof VideoMediaDeviceSession) == false);
       deviceSession.close();
+      deviceSession.getDevice().close();
       deviceSession=null;
+      deviceSessionReinit=true;
     }
  else {
       startedDirection=MediaDirection.INACTIVE;
@@ -28,7 +30,9 @@
       deviceSession.setMute(mute);
       deviceSession.start(startedDirection);
 synchronized (receiveStreamSyncRoot) {
-        if (receiveStream != null)         deviceSession.setReceiveStream(receiveStream);
+        if (receiveStream != null) {
+          deviceSession.setReceiveStream(receiveStream);
+        }
       }
     }
   }
