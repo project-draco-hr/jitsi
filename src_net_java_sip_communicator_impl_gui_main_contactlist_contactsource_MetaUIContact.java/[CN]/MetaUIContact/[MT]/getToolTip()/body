@@ -1,5 +1,5 @@
 {
-  ExtendedTooltip tip=new ExtendedTooltip(GuiActivator.getUIService().getMainFrame(),true);
+  final ExtendedTooltip tip=new ExtendedTooltip(GuiActivator.getUIService().getMainFrame(),true);
   byte[] avatarImage=metaContact.getAvatar();
   if (avatarImage != null && avatarImage.length > 0)   tip.setImage(new ImageIcon(avatarImage));
   tip.setTitle(metaContact.getDisplayName());
@@ -13,25 +13,15 @@
     tip.addLine(protocolStatusIcon,contactAddress);
     OperationSetServerStoredContactInfo infoOpSet=protocolContact.getProtocolProvider().getOperationSet(OperationSetServerStoredContactInfo.class);
     if (infoOpSet != null) {
-      Iterator<GenericDetail> details=infoOpSet.getAllDetailsForContact(protocolContact);
-      while (details.hasNext()) {
-        GenericDetail d=details.next();
-        if (d instanceof PhoneNumberDetail && !(d instanceof FaxDetail) && !(d instanceof PagerDetail)) {
-          PhoneNumberDetail pnd=(PhoneNumberDetail)d;
-          if (pnd.getNumber() != null && pnd.getNumber().length() > 0) {
-            String localizedType=null;
-            if (d instanceof WorkPhoneDetail) {
-              localizedType=GuiActivator.getResources().getI18NString("service.gui.WORK_PHONE");
-            }
- else             if (d instanceof MobilePhoneDetail) {
-              localizedType=GuiActivator.getResources().getI18NString("service.gui.MOBILE_PHONE");
-            }
- else {
-              localizedType=GuiActivator.getResources().getI18NString("service.gui.PHONE");
-            }
-            tip.addLine(null,pnd.getNumber() + " (" + localizedType+ ")");
-          }
+      Iterator<GenericDetail> details=infoOpSet.requestAllDetailsForContact(protocolContact,new OperationSetServerStoredContactInfo.DetailsResponseListener(){
+        public void detailsRetrieved(        Iterator<GenericDetail> details){
+          fillTooltipLines(tip,details);
         }
+      }
+);
+      if (details != null)       fillTooltipLines(tip,details);
+ else {
+        tip.addLine(null,GuiActivator.getResources().getI18NString("service.gui.LOADING"));
       }
     }
     if (statusMessage == null && protocolContact.getStatusMessage() != null && protocolContact.getStatusMessage().length() > 0)     statusMessage=protocolContact.getStatusMessage();

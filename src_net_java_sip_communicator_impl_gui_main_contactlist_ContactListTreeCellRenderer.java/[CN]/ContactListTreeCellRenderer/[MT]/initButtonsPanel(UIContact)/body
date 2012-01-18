@@ -27,22 +27,24 @@
   }
   UIContactDetail telephonyContact=uiContact.getDefaultContactDetail(OperationSetBasicTelephony.class);
   boolean hasPhone=false;
-  if (uiContact.getContactNode().getContactDescriptor().getDescriptor() instanceof MetaContact) {
+  if (uiContact.getContactNode().getContactDescriptor().getDescriptor() instanceof MetaContact && telephonyContact == null) {
     MetaContact metaContact=(MetaContact)uiContact.getContactNode().getContactDescriptor().getDescriptor();
     Iterator<Contact> contacts=metaContact.getContacts();
     while (contacts.hasNext() && !hasPhone) {
       Contact contact=contacts.next();
       OperationSetServerStoredContactInfo infoOpSet=contact.getProtocolProvider().getOperationSet(OperationSetServerStoredContactInfo.class);
-      Iterator<GenericDetail> details=null;
+      Iterator<GenericDetail> details;
       if (infoOpSet != null) {
-        details=infoOpSet.getAllDetailsForContact(contact);
-        while (details.hasNext()) {
-          GenericDetail d=details.next();
-          if (d instanceof PhoneNumberDetail && !(d instanceof PagerDetail) && !(d instanceof FaxDetail)) {
-            PhoneNumberDetail pnd=(PhoneNumberDetail)d;
-            if (pnd.getNumber() != null && pnd.getNumber().length() > 0) {
-              hasPhone=true;
-              break;
+        details=infoOpSet.requestAllDetailsForContact(contact,new DetailsListener(treeNode,callButton,uiContact));
+        if (details != null) {
+          while (details.hasNext()) {
+            GenericDetail d=details.next();
+            if (d instanceof PhoneNumberDetail && !(d instanceof PagerDetail) && !(d instanceof FaxDetail)) {
+              PhoneNumberDetail pnd=(PhoneNumberDetail)d;
+              if (pnd.getNumber() != null && pnd.getNumber().length() > 0) {
+                hasPhone=true;
+                break;
+              }
             }
           }
         }

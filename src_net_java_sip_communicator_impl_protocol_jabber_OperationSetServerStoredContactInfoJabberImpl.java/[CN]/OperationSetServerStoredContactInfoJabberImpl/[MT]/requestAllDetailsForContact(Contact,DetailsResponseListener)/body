@@ -1,0 +1,37 @@
+{
+  List<GenericDetail> res=infoRetreiver.getCachedContactDetails(contact.getAddress());
+  if (res != null) {
+    return res.iterator();
+  }
+synchronized (listenersForDetails) {
+    List<DetailsResponseListener> ls=listenersForDetails.get(contact.getAddress());
+    boolean isFirst=false;
+    if (ls == null) {
+      ls=new ArrayList<DetailsResponseListener>();
+      isFirst=true;
+      listenersForDetails.put(contact.getAddress(),ls);
+    }
+    if (!ls.contains(listener))     ls.add(listener);
+    if (!isFirst)     return null;
+  }
+  new Thread(new Runnable(){
+    public void run(){
+      List<GenericDetail> result=infoRetreiver.retrieveDetails(contact.getAddress());
+      List<DetailsResponseListener> listeners;
+synchronized (listenersForDetails) {
+        listeners=listenersForDetails.remove(contact.getAddress());
+      }
+      if (listeners == null)       return;
+      for (      DetailsResponseListener l : listeners) {
+        try {
+          l.detailsRetrieved(result.iterator());
+        }
+ catch (        Throwable t) {
+          logger.error("Error delivering for retrieved details",t);
+        }
+      }
+    }
+  }
+,getClass().getName() + ".RetrieveDetails").start();
+  return null;
+}
