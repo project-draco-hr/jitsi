@@ -1,6 +1,12 @@
 {
-  String htmlText=getTextFromWriteArea(OperationSetBasicInstantMessaging.HTML_MIME_TYPE).trim();
-  String plainText=getTextFromWriteArea(OperationSetBasicInstantMessaging.DEFAULT_MIME_TYPE);
+  String htmlText;
+  String plainText;
+synchronized (writeMessagePanel) {
+    if (isWriteAreaEmpty())     return;
+    htmlText=getTextFromWriteArea(OperationSetBasicInstantMessaging.HTML_MIME_TYPE).trim();
+    plainText=getTextFromWriteArea(OperationSetBasicInstantMessaging.DEFAULT_MIME_TYPE);
+    this.refreshWriteArea();
+  }
   String messageText;
   String mimeType;
   if (chatSession.getCurrentChatTransport().isContentTypeSupported(OperationSetBasicInstantMessaging.HTML_MIME_TYPE) && (htmlText.indexOf("<b") > -1 || htmlText.indexOf("<i") > -1 || htmlText.indexOf("<u") > -1 || htmlText.indexOf("<font") > -1)) {
@@ -32,5 +38,4 @@ catch (  Exception ex) {
   if (chatSession.getCurrentChatTransport().allowsTypingNotifications()) {
     getChatWritePanel().stopTypingTimer();
   }
-  this.refreshWriteArea();
 }
