@@ -1,0 +1,33 @@
+{
+  vcard.setTo(user);
+  vcard.setType(IQ.Type.GET);
+  PacketCollector collector=connection.createPacketCollector(new PacketIDFilter(vcard.getPacketID()));
+  connection.sendPacket(vcard);
+  VCard result=null;
+  try {
+    result=(VCard)collector.nextResult(timeout);
+    if (result == null) {
+      String errorMessage="Timeout getting VCard information";
+      throw new XMPPException(errorMessage,new XMPPError(XMPPError.Condition.request_timeout,errorMessage));
+    }
+    if (result.getError() != null) {
+      throw new XMPPException(result.getError());
+    }
+  }
+ catch (  ClassCastException e) {
+    logger.error("No vcard for " + user);
+  }
+  if (result == null)   result=new VCard();
+  Field[] fields=VCard.class.getDeclaredFields();
+  for (  Field field : fields) {
+    if (field.getDeclaringClass() == VCard.class && !Modifier.isFinal(field.getModifiers())) {
+      try {
+        field.setAccessible(true);
+        field.set(vcard,field.get(result));
+      }
+ catch (      IllegalAccessException e) {
+        throw new RuntimeException("Cannot set field:" + field,e);
+      }
+    }
+  }
+}
