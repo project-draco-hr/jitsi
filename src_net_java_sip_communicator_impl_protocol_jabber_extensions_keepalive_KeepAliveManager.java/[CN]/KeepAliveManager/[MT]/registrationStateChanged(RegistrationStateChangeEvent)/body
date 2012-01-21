@@ -3,6 +3,16 @@
   if (evt.getNewState() == RegistrationState.REGISTERED) {
     parentProvider.getConnection().removePacketListener(this);
     parentProvider.getConnection().addPacketListener(this,null);
+    if (keepAliveSendTask != null) {
+      logger.error("Those task is not supposed to be available for " + parentProvider.getAccountID().getDisplayName());
+      keepAliveSendTask.cancel();
+      keepAliveSendTask=null;
+    }
+    if (keepAliveTimer != null) {
+      logger.error("Those timer is not supposed to be available for " + parentProvider.getAccountID().getDisplayName());
+      keepAliveTimer.cancel();
+      keepAliveTimer=null;
+    }
     keepAliveSendTask=new KeepAliveSendTask();
     keepAliveCheckInterval=SmackConfiguration.getKeepAliveInterval();
     if (keepAliveCheckInterval == 0)     keepAliveCheckInterval=30000;
