@@ -1,0 +1,21 @@
+{
+  try {
+    SRVRecord[] currentRecords=NetworkUtils.getSRVRecords("xmpp-client","tcp",serviceName);
+    if (isConnectedToPrimary(currentRecords))     return;
+    SRVRecord srv=getPrimaryServerRecord(currentRecords);
+    ConnectionConfiguration confConn=new ConnectionConfiguration(srv.getTarget(),srv.getPort());
+    confConn.setReconnectionAllowed(false);
+    XMPPConnection connection=new XMPPConnection(confConn);
+    connection.connect();
+    connection.disconnect();
+    try {
+      parentProvider.unregister();
+    }
+ catch (    Throwable t) {
+      logger.error("Error un-registering before " + "connecting to primary",t);
+    }
+    parentProvider.register(JabberActivator.getUIService().getDefaultSecurityAuthority(parentProvider));
+  }
+ catch (  Throwable t) {
+  }
+}

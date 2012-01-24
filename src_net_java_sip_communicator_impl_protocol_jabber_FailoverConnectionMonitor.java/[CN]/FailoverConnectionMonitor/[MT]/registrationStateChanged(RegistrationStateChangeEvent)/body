@@ -1,0 +1,21 @@
+{
+  if (evt.getNewState() == RegistrationState.REGISTERED) {
+    if (checkTimer == null)     checkTimer=new Timer(FailoverConnectionMonitor.class.getName(),true);
+    if (task == null)     task=new CheckPrimaryTask();
+    checkTimer.schedule(task,CHECK_FOR_PRIMARY_UP_INTERVAL,CHECK_FOR_PRIMARY_UP_INTERVAL);
+  }
+ else   if (evt.getNewState() == RegistrationState.UNREGISTERED || evt.getNewState() == RegistrationState.AUTHENTICATION_FAILED || evt.getNewState() == RegistrationState.CONNECTION_FAILED) {
+synchronized (providerFilovers) {
+      providerFilovers.remove(parentProvider);
+      parentProvider.removeRegistrationStateChangeListener(this);
+    }
+    if (checkTimer != null) {
+      checkTimer.cancel();
+      checkTimer=null;
+    }
+    if (task != null) {
+      task.cancel();
+      task=null;
+    }
+  }
+}
