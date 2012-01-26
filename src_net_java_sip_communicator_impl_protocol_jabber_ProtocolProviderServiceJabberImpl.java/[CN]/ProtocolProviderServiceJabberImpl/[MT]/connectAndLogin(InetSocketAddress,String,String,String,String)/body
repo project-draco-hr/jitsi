@@ -37,7 +37,14 @@
   if (!connection.isSecureConnection() && tlsRequired) {
     throw new XMPPException("TLS is required by client");
   }
-  connection.addConnectionListener(connectionListener);
+  if (!connection.isConnected()) {
+    disconnectAndCleanConnection();
+    fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,null);
+    return ConnectState.ABORT_CONNECTING;
+  }
+ else {
+    connection.addConnectionListener(connectionListener);
+  }
   if (abortConnecting) {
     abortConnecting=false;
     disconnectAndCleanConnection();

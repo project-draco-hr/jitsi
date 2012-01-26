@@ -5,27 +5,7 @@
   int eventType=evt.getEventType();
   MetaContact metaContact=GuiActivator.getContactListService().findMetaContactByContact(protocolContact);
   if (metaContact != null) {
-    final ChatPanel chatPanel=chatWindowManager.getContactChat(metaContact,protocolContact,message.getMessageUID());
-    if (!chatPanel.isChatFocused())     contactList.setActiveContact(metaContact,true);
-    String messageType=null;
-    if (eventType == MessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED) {
-      messageType=Chat.INCOMING_MESSAGE;
-    }
- else     if (eventType == MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED) {
-      messageType=Chat.SYSTEM_MESSAGE;
-    }
- else     if (eventType == MessageReceivedEvent.SMS_MESSAGE_RECEIVED) {
-      messageType=Chat.SMS_MESSAGE;
-    }
-    chatPanel.addMessage(protocolContact.getAddress(),protocolContact.getDisplayName(),evt.getTimestamp(),messageType,message.getContent(),message.getContentType());
-    SwingUtilities.invokeLater(new Runnable(){
-      public void run(){
-        chatWindowManager.openChat(chatPanel,false);
-      }
-    }
-);
-    ChatTransport chatTransport=chatPanel.getChatSession().findChatTransportForDescriptor(protocolContact);
-    chatPanel.setSelectedChatTransport(chatTransport);
+    messageReceived(protocolContact,metaContact,message,eventType,evt.getTimestamp());
   }
  else {
     if (logger.isTraceEnabled())     logger.trace("MetaContact not found for protocol contact: " + protocolContact + ".");
