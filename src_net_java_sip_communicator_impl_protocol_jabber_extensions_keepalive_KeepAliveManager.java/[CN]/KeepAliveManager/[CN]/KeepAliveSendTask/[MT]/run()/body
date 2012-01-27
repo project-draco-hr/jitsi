@@ -10,9 +10,15 @@
       parentProvider.fireRegistrationStateChanged(parentProvider.getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,null);
       return;
     }
-    KeepAliveEvent ping=new KeepAliveEvent(parentProvider.getOurJID(),parentProvider.getAccountID().getService());
-    waitingForPacketWithID=ping.getPacketID();
-    if (logger.isTraceEnabled())     logger.trace("send keepalive for acc: " + parentProvider.getAccountID().getDisplayName());
-    parentProvider.getConnection().sendPacket(ping);
+    try {
+      KeepAliveEvent ping=new KeepAliveEvent(parentProvider.getOurJID(),parentProvider.getAccountID().getService());
+      if (logger.isTraceEnabled())       logger.trace("send keepalive for acc: " + parentProvider.getAccountID().getDisplayName());
+      waitingForPacketWithID=ping.getPacketID();
+      parentProvider.getConnection().sendPacket(ping);
+    }
+ catch (    Throwable t) {
+      logger.error("Error sending ping request!",t);
+      waitingForPacketWithID=null;
+    }
   }
 }
