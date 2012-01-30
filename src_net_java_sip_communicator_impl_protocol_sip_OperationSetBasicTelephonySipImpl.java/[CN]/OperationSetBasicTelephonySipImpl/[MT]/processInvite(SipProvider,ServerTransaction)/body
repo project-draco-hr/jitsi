@@ -2,11 +2,14 @@
   Request invite=serverTransaction.getRequest();
   Dialog dialog=serverTransaction.getDialog();
   CallPeerSipImpl existingPeer=activeCallsRepository.findCallPeer(dialog);
+  OperationSetAutoAnswerSipImpl autoAnswerOpSet=(OperationSetAutoAnswerSipImpl)protocolProvider.getOperationSet(OperationSetAutoAnswer.class);
   if (existingPeer == null) {
     ReplacesHeader replacesHeader=(ReplacesHeader)invite.getHeader(ReplacesHeader.NAME);
     if (replacesHeader == null) {
+      if (autoAnswerOpSet != null && autoAnswerOpSet.preCallCheck(invite,serverTransaction))       return;
       CallSipImpl call=new CallSipImpl(this);
       call.processInvite(sourceProvider,serverTransaction);
+      if (autoAnswerOpSet != null && autoAnswerOpSet.followCallCheck(invite,call))       return;
     }
  else {
       existingPeer=activeCallsRepository.findCallPeer(replacesHeader.getCallId(),replacesHeader.getToTag(),replacesHeader.getFromTag());

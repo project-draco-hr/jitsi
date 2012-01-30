@@ -1,0 +1,19 @@
+{
+  if (StringUtils.isNullOrEmpty(callFwdTo))   return false;
+  Response response;
+  try {
+    if (logger.isTraceEnabled())     logger.trace("will send moved temporally response: ");
+    response=telephonySip.getProtocolProvider().getMessageFactory().createResponse(Response.MOVED_TEMPORARILY,invite);
+    ContactHeader contactHeader=(ContactHeader)response.getHeader(ContactHeader.NAME);
+    AddressFactory addressFactory=telephonySip.getProtocolProvider().getAddressFactory();
+    String destination=getCallForward();
+    if (!destination.startsWith("sip"))     destination="sip:" + destination;
+    contactHeader.setAddress(addressFactory.createAddress(addressFactory.createURI(destination)));
+    serverTransaction.sendResponse(response);
+    if (logger.isDebugEnabled())     logger.debug("sent a moved temporally response: " + response);
+  }
+ catch (  Throwable ex) {
+    logger.error("Error while trying to send a request",ex);
+  }
+  return true;
+}

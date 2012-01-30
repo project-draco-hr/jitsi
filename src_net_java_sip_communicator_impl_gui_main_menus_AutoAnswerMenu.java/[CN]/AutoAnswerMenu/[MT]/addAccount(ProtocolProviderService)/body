@@ -1,0 +1,32 @@
+{
+  OperationSetAutoAnswer opset=protocolProvider.getOperationSet(OperationSetAutoAnswer.class);
+  if (opset == null) {
+    return;
+  }
+  boolean isHidden=protocolProvider.getAccountID().getAccountProperty(ProtocolProviderFactory.IS_PROTOCOL_HIDDEN) != null;
+  if (isHidden)   return;
+  AutoAnswerMenuItem providerMenu=new AutoAnswerMenuItem(protocolProvider);
+  boolean isMenuAdded=false;
+  AccountID accountId=protocolProvider.getAccountID();
+  for (int i=0; i < getItemCount(); i++) {
+    JMenuItem c=getItem(i);
+    if (!(c instanceof AutoAnswerMenuItem))     continue;
+    AutoAnswerMenuItem menu=(AutoAnswerMenuItem)c;
+    int menuIndex=getPopupMenu().getComponentIndex(menu);
+    AccountID menuAccountID=menu.getProtocolProvider().getAccountID();
+    int protocolCompare=accountId.getProtocolDisplayName().compareTo(menuAccountID.getProtocolDisplayName());
+    if (protocolCompare < 0) {
+      insert(providerMenu,menuIndex);
+      isMenuAdded=true;
+      break;
+    }
+ else     if (protocolCompare == 0) {
+      if (accountId.getDisplayName().compareTo(menuAccountID.getDisplayName()) < 0) {
+        insert(providerMenu,menuIndex);
+        isMenuAdded=true;
+        break;
+      }
+    }
+  }
+  if (!isMenuAdded)   add(providerMenu);
+}
