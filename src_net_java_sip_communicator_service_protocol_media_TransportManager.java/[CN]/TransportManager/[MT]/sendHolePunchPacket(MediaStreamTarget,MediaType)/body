@@ -3,11 +3,15 @@
   try {
     StreamConnector connector=getStreamConnector(type);
 synchronized (connector) {
-      if (connector.getProtocol() == StreamConnector.Protocol.TCP) {
-        return;
+      if (connector.getProtocol() != StreamConnector.Protocol.TCP) {
+        DatagramSocket socket;
+        if ((socket=connector.getDataSocket()) != null) {
+          socket.send(new DatagramPacket(new byte[0],0,target.getDataAddress().getAddress(),target.getDataAddress().getPort()));
+        }
+        if ((socket=connector.getControlSocket()) != null) {
+          socket.send(new DatagramPacket(new byte[0],0,target.getControlAddress().getAddress(),target.getControlAddress().getPort()));
+        }
       }
-      if (connector.getDataSocket() != null)       connector.getDataSocket().send(new DatagramPacket(new byte[0],0,target.getDataAddress().getAddress(),target.getDataAddress().getPort()));
-      if (connector.getControlSocket() != null)       connector.getControlSocket().send(new DatagramPacket(new byte[0],0,target.getControlAddress().getAddress(),target.getControlAddress().getPort()));
     }
   }
  catch (  Exception e) {
