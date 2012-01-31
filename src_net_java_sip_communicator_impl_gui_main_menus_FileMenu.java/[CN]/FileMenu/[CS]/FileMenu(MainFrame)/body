@@ -4,6 +4,7 @@
   createGroupItem=new JMenuItem(resources.getI18NString("service.gui.CREATE_GROUP"));
   myChatRoomsItem=new JMenuItem(resources.getI18NString("service.gui.MY_CHAT_ROOMS"));
   this.parentWindow=parentWindow;
+  boolean endsWithSeparator=false;
   Boolean showAccountConfig=GuiActivator.getConfigurationService().getBoolean(ConfigurationFrame.SHOW_ACCOUNT_CONFIG_PROPERTY,true);
   if (showAccountConfig.booleanValue()) {
     newAccountMenuItem=new JMenuItem(resources.getI18NString("service.gui.NEW_ACCOUNT"));
@@ -11,19 +12,35 @@
     newAccountMenuItem.setName("newAccount");
     newAccountMenuItem.addActionListener(this);
     newAccountMenuItem.setMnemonic(resources.getI18nMnemonic("service.gui.NEW_ACCOUNT"));
+    if (!ConfigurationManager.isAddContactDisabled() || !ConfigurationManager.isCreateGroupDisabled() || !ConfigurationManager.isGoToChatroomDisabled()) {
+      this.addSeparator();
+      endsWithSeparator=true;
+    }
   }
-  this.addSeparator();
   if (!ConfigurationManager.isAddContactDisabled()) {
     addContactItem=new JMenuItem(resources.getI18NString("service.gui.ADD_CONTACT") + "...");
     this.add(addContactItem);
     addContactItem.setName("addContact");
     addContactItem.addActionListener(this);
     addContactItem.setMnemonic(resources.getI18nMnemonic("service.gui.ADD_CONTACT"));
+    if (ConfigurationManager.isCreateGroupDisabled() && !ConfigurationManager.isGoToChatroomDisabled()) {
+      this.addSeparator();
+      endsWithSeparator=true;
+    }
+ else     endsWithSeparator=false;
   }
-  this.add(createGroupItem);
-  this.addSeparator();
-  this.add(myChatRoomsItem);
-  registerCloseMenuItem();
+  if (!ConfigurationManager.isCreateGroupDisabled()) {
+    this.add(createGroupItem);
+    if (!ConfigurationManager.isGoToChatroomDisabled()) {
+      this.addSeparator();
+      endsWithSeparator=true;
+    }
+  }
+  if (!ConfigurationManager.isGoToChatroomDisabled()) {
+    this.add(myChatRoomsItem);
+    endsWithSeparator=false;
+  }
+  registerCloseMenuItem(!endsWithSeparator);
   loadSkin();
   createGroupItem.setName("createGroup");
   myChatRoomsItem.setName("myChatRooms");
