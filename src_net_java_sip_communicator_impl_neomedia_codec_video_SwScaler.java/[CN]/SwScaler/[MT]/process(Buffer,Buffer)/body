@@ -17,9 +17,15 @@
     if (outputFormat == null)     return BUFFER_PROCESSED_FAILED;
   }
   Dimension outputSize=outputFormat.getSize();
+  if (outputSize == null) {
+    outputSize=inputFormat.getSize();
+    if (outputSize == null)     return BUFFER_PROCESSED_FAILED;
+  }
   int outputWidth=outputSize.width;
   int outputHeight=outputSize.height;
   if ((outputWidth < 2) || (outputHeight < 2))   return OUTPUT_BUFFER_NOT_FILLED;
+  outputFormat=setSize(outputFormat,outputSize);
+  if (outputFormat == null)   return BUFFER_PROCESSED_FAILED;
   int dstFmt;
   int dstLength;
   if (outputFormat instanceof YUVFormat) {
@@ -27,7 +33,7 @@
     dstLength=(int)(outputWidth * outputHeight * 1.5);
   }
  else {
-    dstFmt=FFmpeg.PIX_FMT_RGB32;
+    dstFmt=OSUtils.IS_ANDROID ? getNativeRGBFormat((RGBFormat)outputFormat) : FFmpeg.PIX_FMT_RGB32;
     dstLength=(outputWidth * outputHeight * 4);
   }
   Class<?> outputDataType=outputFormat.getDataType();
@@ -48,6 +54,7 @@
     return BUFFER_PROCESSED_FAILED;
   }
   Dimension inputSize=inputFormat.getSize();
+  if (inputSize == null)   return BUFFER_PROCESSED_FAILED;
   int inputWidth=inputSize.width;
   int inputHeight=inputSize.height;
   Object src=input.getData();
