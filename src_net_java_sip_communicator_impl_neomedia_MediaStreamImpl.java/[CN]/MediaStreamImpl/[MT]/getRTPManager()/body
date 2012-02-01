@@ -2,7 +2,7 @@
   if (rtpManager == null) {
     RTPConnector rtpConnector=getRTPConnector();
     if (rtpConnector == null)     throw new IllegalStateException("rtpConnector");
-    rtpManager=RTPManager.newInstance();
+    rtpManager=new StreamRTPManager(rtpTranslator);
     registerCustomCodecFormats(rtpManager);
     rtpManager.addReceiveStreamListener(this);
     rtpManager.addSendStreamListener(this);
@@ -11,7 +11,7 @@
     BufferControl bc=(BufferControl)rtpManager.getControl(BufferControl.class.getName());
     if (bc != null)     configureRTPManagerBufferControl(rtpManager,bc);
     rtpManager.initialize(rtpConnector);
-    setLocalSourceID(((RTPSessionMgr)rtpManager).getLocalSSRC() & 0xFFFFFFFFL);
+    setLocalSourceID(rtpManager.getLocalSSRC() & 0xFFFFFFFFL);
   }
   return rtpManager;
 }

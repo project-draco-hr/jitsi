@@ -25,15 +25,21 @@ default :
 }
 }
 videoContainer.removeAll();
-Component video=videoTelephony.getVisualComponent(callPeer);
-if (video != null) {
-Container videoParent=video.getParent();
-if (videoParent != null) videoParent.remove(video);
-videoContainer.add(video,VideoLayout.CENTER_REMOTE,0);
-callRenderer.getCallContainer().addRemoteVideoSpecificComponents(callPeer);
+Iterator<? extends CallPeer> callPeerIter=callPeer.getCall().getCallPeers();
+List<Component> remoteVideos=new LinkedList<Component>();
+while (callPeerIter.hasNext()) {
+remoteVideos.addAll(videoTelephony.getVisualComponents(callPeerIter.next()));
+}
+if (remoteVideos.isEmpty()) {
+callRenderer.getCallContainer().removeRemoteVideoSpecificComponents();
 }
  else {
-callRenderer.getCallContainer().removeRemoteVideoSpecificComponents();
+for (Component remoteVideo : remoteVideos) {
+  Container remoteVideoParent=remoteVideo.getParent();
+  if (remoteVideoParent != null)   remoteVideoParent.remove(remoteVideo);
+  videoContainer.add(remoteVideo,VideoLayout.CENTER_REMOTE,0);
+}
+callRenderer.getCallContainer().addRemoteVideoSpecificComponents(callPeer);
 }
 if (localVideo != null) {
 Container localVideoParent=localVideo.getParent();

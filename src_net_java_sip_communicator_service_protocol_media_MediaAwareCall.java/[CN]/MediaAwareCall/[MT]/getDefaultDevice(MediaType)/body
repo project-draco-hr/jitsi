@@ -1,6 +1,5 @@
 {
-  MediaDevice device=null;
-  MediaService mediaService=ProtocolMediaActivator.getMediaService();
+  MediaDevice device;
 switch (mediaType) {
 case AUDIO:
     device=audioDevice;
@@ -11,10 +10,19 @@ break;
 default :
 return null;
 }
+MediaService mediaService=ProtocolMediaActivator.getMediaService();
 if (device == null) device=mediaService.getDefaultDevice(mediaType,mediaUseCase);
-if (MediaType.AUDIO.equals(mediaType)) {
+switch (mediaType) {
+case AUDIO:
 if ((conferenceAudioMixer == null) && (device != null)) conferenceAudioMixer=mediaService.createMixer(device);
 device=conferenceAudioMixer;
+break;
+case VIDEO:
+if (isConferenceFocus()) {
+if ((conferenceVideoMixer == null) && (device != null)) conferenceVideoMixer=mediaService.createMixer(device);
+device=conferenceVideoMixer;
+}
+break;
 }
 return device;
 }

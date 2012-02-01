@@ -2,6 +2,16 @@
   Processor player=null;
   Throwable exception=null;
   try {
+    dataSource.connect();
+  }
+ catch (  IOException ioex) {
+    exception=ioex;
+  }
+  if (exception != null) {
+    logger.error("Failed to connect to " + MediaStreamImpl.toString(dataSource),exception);
+    return player;
+  }
+  try {
     player=Manager.createProcessor(dataSource);
   }
  catch (  IOException ioe) {
@@ -10,7 +20,9 @@
 catch (  NoPlayerException npe) {
     exception=npe;
   }
-  if (exception != null)   logger.error("Failed to create Player for " + MediaStreamImpl.toString(dataSource),exception);
+  if (exception != null) {
+    logger.error("Failed to create Player for " + MediaStreamImpl.toString(dataSource),exception);
+  }
  else {
     if (playerControllerListener == null)     playerControllerListener=new ControllerListener(){
       /** 
@@ -30,7 +42,7 @@ catch (  NoPlayerException npe) {
     player.addControllerListener(playerControllerListener);
     player.configure();
     if (logger.isTraceEnabled())     logger.trace("Created Player with hashCode " + player.hashCode() + " for "+ MediaStreamImpl.toString(dataSource));
-    return player;
   }
-  return null;
+  if (player == null)   dataSource.disconnect();
+  return player;
 }

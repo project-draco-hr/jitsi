@@ -22,17 +22,19 @@
  else   if (controllerEvent instanceof RealizeCompleteEvent) {
     Player player=(Player)controllerEvent.getSourceController();
     Component visualComponent=player.getVisualComponent();
-    if (visualComponent != null) {
-      if (fireVideoEvent(VideoEvent.VIDEO_ADDED,visualComponent,VideoEvent.LOCAL,true)) {
-        localVisualComponentConsumed(visualComponent,player);
-      }
+    boolean start;
+    if (visualComponent == null)     start=false;
  else {
-        if (localPlayer == player)         localPlayer=null;
-        player.stop();
-        player.deallocate();
-        player.close();
-      }
+      start=fireVideoEvent(VideoEvent.VIDEO_ADDED,visualComponent,VideoEvent.LOCAL,true);
     }
-    player.start();
+    if (start)     player.start();
+ else {
+synchronized (localPlayerSyncRoot) {
+        if (localPlayer == player)         localPlayer=null;
+      }
+      player.stop();
+      player.deallocate();
+      player.close();
+    }
   }
 }

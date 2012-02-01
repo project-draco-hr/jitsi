@@ -1,0 +1,25 @@
+{
+  if (closed)   return;
+  int writeIndex;
+  if (writeQueueLength < writeQueue.length) {
+    writeIndex=(writeQueueHead + writeQueueLength) % writeQueue.length;
+  }
+ else {
+    writeIndex=writeQueueHead;
+    writeQueueHead++;
+    if (writeQueueHead >= writeQueue.length)     writeQueueHead=0;
+    writeQueueLength--;
+    logger.warn("Will not translate RTP packet.");
+  }
+  RTPTranslatorBuffer write=writeQueue[writeIndex];
+  if (write == null)   writeQueue[writeIndex]=write=new RTPTranslatorBuffer();
+  byte[] data=write.data;
+  if ((data == null) || (data.length < length))   write.data=data=new byte[length];
+  System.arraycopy(buffer,offset,data,0,length);
+  write.exclusion=exclusion;
+  write.format=format;
+  write.length=length;
+  writeQueueLength++;
+  if (writeThread == null)   createWriteThread();
+ else   notify();
+}

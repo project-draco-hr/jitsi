@@ -16,12 +16,8 @@
  else {
       startedDirection=MediaDirection.INACTIVE;
     }
-    if (oldValue != null) {
-      deviceSession=abstractMediaDevice.createSession(oldValue);
-    }
- else {
-      deviceSession=abstractMediaDevice.createSession();
-    }
+    deviceSession=abstractMediaDevice.createSession();
+    if (oldValue != null)     deviceSession.copyPlayback(oldValue);
     deviceSession.addPropertyChangeListener(deviceSessionPropertyChangeListener);
     direction=null;
     MediaDeviceSession newValue=deviceSession;
@@ -29,10 +25,8 @@
     if (deviceSession != null) {
       deviceSession.setMute(mute);
       deviceSession.start(startedDirection);
-synchronized (receiveStreamSyncRoot) {
-        if (receiveStream != null) {
-          deviceSession.setReceiveStream(receiveStream);
-        }
+synchronized (receiveStreams) {
+        for (        ReceiveStream receiveStream : receiveStreams)         deviceSession.addReceiveStream(receiveStream);
       }
     }
   }

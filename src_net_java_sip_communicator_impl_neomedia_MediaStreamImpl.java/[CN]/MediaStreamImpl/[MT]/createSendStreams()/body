@@ -1,5 +1,5 @@
 {
-  RTPManager rtpManager=getRTPManager();
+  StreamRTPManager rtpManager=getRTPManager();
   MediaDeviceSession deviceSession=getDeviceSession();
   DataSource dataSource=deviceSession.getOutputDataSource();
   int streamCount;
@@ -25,8 +25,10 @@
     try {
       SendStream sendStream=rtpManager.createSendStream(dataSource,streamIndex);
       if (logger.isTraceEnabled())       logger.trace("Created SendStream" + " with hashCode " + sendStream.hashCode() + " for "+ toString(dataSource)+ " and streamIndex "+ streamIndex+ " in RTPManager with hashCode "+ rtpManager.hashCode());
+      long localSSRC=sendStream.getSSRC();
+      if (getLocalSourceID() != localSSRC)       setLocalSourceID(localSSRC);
       TransformEngine engine=srtpControl.getTransformEngine();
-      if (engine != null && engine instanceof ZRTPTransformEngine)       ((ZRTPTransformEngine)engine).setOwnSSRC(sendStream.getSSRC());
+      if ((engine != null) && (engine instanceof ZRTPTransformEngine))       ((ZRTPTransformEngine)engine).setOwnSSRC(localSSRC);
     }
  catch (    IOException ioe) {
       logger.error("Failed to create send stream for data source " + dataSource + " and stream index "+ streamIndex,ioe);

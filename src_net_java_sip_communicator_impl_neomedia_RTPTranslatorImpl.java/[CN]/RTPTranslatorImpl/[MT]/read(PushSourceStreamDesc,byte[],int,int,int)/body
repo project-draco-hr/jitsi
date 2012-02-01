@@ -1,0 +1,21 @@
+{
+  boolean data=streamDesc.data;
+  StreamRTPManagerDesc streamRTPManagerDesc=streamDesc.connectorDesc.streamRTPManagerDesc;
+  Format format=null;
+  if (data) {
+    if (length >= 12) {
+      long ssrc=readInt(buffer,offset + 8);
+      if (!streamRTPManagerDesc.containsReceiveSSRC(ssrc)) {
+        if (findStreamRTPManagerDescByReceiveSSRC(ssrc,streamRTPManagerDesc) == null)         streamRTPManagerDesc.addReceiveSSRC(ssrc);
+ else         return 0;
+      }
+      int payloadType=buffer[offset + 1] & 0x7f;
+      format=streamRTPManagerDesc.getFormat(payloadType);
+    }
+  }
+  OutputDataStreamImpl outputStream=data ? connector.getDataOutputStream() : connector.getControlOutputStream();
+  if (outputStream != null) {
+    outputStream.write(buffer,offset,read,format,streamRTPManagerDesc);
+  }
+  return read;
+}
