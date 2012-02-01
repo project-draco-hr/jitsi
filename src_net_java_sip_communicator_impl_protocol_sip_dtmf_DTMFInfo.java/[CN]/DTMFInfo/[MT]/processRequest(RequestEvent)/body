@@ -1,0 +1,61 @@
+{
+  Request request=requestEvent.getRequest();
+  ContentTypeHeader contentTypeHeader=(ContentTypeHeader)request.getHeader(ContentTypeHeader.NAME);
+  if ((contentTypeHeader != null) && CONTENT_TYPE.equalsIgnoreCase(contentTypeHeader.getContentType()) && CONTENT_SUB_TYPE.equalsIgnoreCase(contentTypeHeader.getContentSubType())) {
+    try {
+      byte[] value;
+      Object valueObj=request.getContent();
+      if (valueObj instanceof String)       value=((String)valueObj).getBytes("UTF-8");
+ else       if (valueObj instanceof byte[])       value=(byte[])valueObj;
+ else {
+        logger.error("Unknown content type");
+        return false;
+      }
+      Properties prop=new Properties();
+      prop.load(new ByteArrayInputStream(value));
+      String signal=prop.getProperty("Signal");
+      String durationStr=prop.getProperty("Duration");
+      DTMFTone tone=DTMFTone.getDTMFTone(signal);
+      if (tone == null) {
+        logger.warn("Unknown tone received: " + tone);
+        return false;
+      }
+      long duration=0;
+      try {
+        duration=Long.parseLong(durationStr);
+      }
+ catch (      NumberFormatException ex) {
+        logger.warn("Error parsing duration:" + durationStr,ex);
+      }
+      fireToneEvent(tone,duration);
+    }
+ catch (    IOException ioe) {
+    }
+    Response responseOK;
+    try {
+      responseOK=pps.getMessageFactory().createResponse(Response.OK,requestEvent.getRequest());
+    }
+ catch (    ParseException ex) {
+      logger.warn("Failed to create OK for incoming INFO request",ex);
+      return false;
+    }
+    try {
+      SipStackSharing.getOrCreateServerTransaction(requestEvent).sendResponse(responseOK);
+    }
+ catch (    TransactionUnavailableException ex) {
+      if (logger.isInfoEnabled())       logger.info("Failed to respond to an incoming " + "transactionless INFO request");
+      if (logger.isTraceEnabled())       logger.trace("Exception was:",ex);
+      return false;
+    }
+catch (    InvalidArgumentException ex) {
+      logger.warn("Failed to send OK for incoming INFO request",ex);
+      return false;
+    }
+catch (    SipException ex) {
+      logger.warn("Failed to send OK for incoming INFO request",ex);
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
