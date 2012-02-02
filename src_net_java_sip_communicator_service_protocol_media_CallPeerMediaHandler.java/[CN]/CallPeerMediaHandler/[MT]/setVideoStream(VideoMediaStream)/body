@@ -1,10 +1,10 @@
 {
   if (this.videoStream != videoStream) {
-    Component oldVisualComponent=null;
+    List<Component> oldVisualComponents=null;
     if (this.videoStream != null) {
       this.videoStream.removePropertyChangeListener(streamPropertyChangeListener);
       this.videoStream.removeVideoListener(videoStreamVideoListener);
-      oldVisualComponent=this.videoStream.getVisualComponent();
+      oldVisualComponents=this.videoStream.getVisualComponents();
       setKeyFrameControlFromVideoStream(null);
       this.videoStream.close();
     }
@@ -12,18 +12,29 @@
     setKeyFrameControlFromVideoStream(this.videoStream);
     long videoLocalSSRC;
     long videoRemoteSSRC;
-    Component newVisualComponent=null;
+    List<Component> newVisualComponents=null;
     if (this.videoStream != null) {
       this.videoStream.addPropertyChangeListener(streamPropertyChangeListener);
       videoLocalSSRC=this.videoStream.getLocalSourceID();
       videoRemoteSSRC=this.videoStream.getRemoteSourceID();
       this.videoStream.addVideoListener(videoStreamVideoListener);
-      newVisualComponent=this.videoStream.getVisualComponent();
+      newVisualComponents=this.videoStream.getVisualComponents();
     }
  else     videoLocalSSRC=videoRemoteSSRC=SSRC_UNKNOWN;
     setVideoLocalSSRC(videoLocalSSRC);
     setVideoRemoteSSRC(videoRemoteSSRC);
-    if (oldVisualComponent != null)     fireVideoEvent(VideoEvent.VIDEO_REMOVED,oldVisualComponent,VideoEvent.REMOTE);
-    if (newVisualComponent != null)     fireVideoEvent(VideoEvent.VIDEO_ADDED,newVisualComponent,VideoEvent.REMOTE);
+    if ((oldVisualComponents != null) && !oldVisualComponents.isEmpty()) {
+      if (newVisualComponents == null)       newVisualComponents=Collections.emptyList();
+      for (      Component oldVisualComponent : oldVisualComponents) {
+        if (!newVisualComponents.remove(oldVisualComponent)) {
+          fireVideoEvent(VideoEvent.VIDEO_REMOVED,oldVisualComponent,VideoEvent.REMOTE);
+        }
+      }
+    }
+    if ((newVisualComponents != null) && !newVisualComponents.isEmpty()) {
+      for (      Component newVisualComponent : newVisualComponents) {
+        fireVideoEvent(VideoEvent.VIDEO_ADDED,newVisualComponent,VideoEvent.REMOTE);
+      }
+    }
   }
 }
