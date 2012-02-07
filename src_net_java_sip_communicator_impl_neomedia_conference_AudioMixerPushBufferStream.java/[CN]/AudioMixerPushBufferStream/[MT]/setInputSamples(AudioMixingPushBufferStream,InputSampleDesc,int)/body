@@ -6,7 +6,17 @@
   boolean outputDataSourceIsMute=outputDataSource.isMute();
   for (int i=0; i < inputSamples.length; i++) {
     InputStreamDesc inputStreamDesc=inputStreams[i];
-    if (outputDataSource.equals(inputStreamDesc.getOutputDataSource()) || (outputDataSourceIsMute && (inputStreamDesc.inputDataSourceDesc.inputDataSource == audioMixer.captureDevice)))     inputSamples[i]=null;
+    if (audioMixer.captureDevice instanceof AudioMixingPushBufferDataSource && inputStreamDesc.inputDataSourceDesc.inputDataSource == audioMixer.captureDevice && outputDataSource.isSendingDTMF()) {
+      PushBufferStream inputStream=(PushBufferStream)inputStreamDesc.getInputStream();
+      AudioFormat inputStreamFormat=(AudioFormat)inputStream.getFormat();
+      double samplingFrequency=inputStreamFormat.getSampleRate();
+      int sampleSizeInBits=inputStreamFormat.getSampleSizeInBits();
+      inputSamples[i]=outputDataSource.getNextToneSignal(samplingFrequency,sampleSizeInBits);
+      if (maxInputSampleCount < inputSamples[i].length) {
+        maxInputSampleCount=inputSamples[i].length;
+      }
+    }
+ else     if (outputDataSource.equals(inputStreamDesc.getOutputDataSource()) || (outputDataSourceIsMute && (inputStreamDesc.inputDataSourceDesc.inputDataSource == audioMixer.captureDevice)))     inputSamples[i]=null;
   }
   outputStream.setInputSamples(inputSamples,maxInputSampleCount,inputSampleDesc.getTimeStamp());
 }

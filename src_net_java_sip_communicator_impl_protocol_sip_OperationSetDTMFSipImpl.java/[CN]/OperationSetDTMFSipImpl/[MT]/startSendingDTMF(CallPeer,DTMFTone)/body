@@ -6,10 +6,15 @@
     throw new IllegalArgumentException();
   }
   CallPeerSipImpl cp=(CallPeerSipImpl)(callPeer);
-  if (isRFC4733Active(cp)) {
-    dtmfModeRFC4733.startSendingDTMF(((AudioMediaStream)cp.getMediaHandler().getStream(MediaType.AUDIO)),tone);
+  if (this.dtmfMethod == null || this.dtmfMethod.equals("RFC4733 / SIP-INFO")) {
+    if (isRFC4733Active(cp)) {
+      dtmfModeRFC4733.startSendingDTMF(((AudioMediaStream)cp.getMediaHandler().getStream(MediaType.AUDIO)),tone);
+    }
+ else {
+      dtmfModeInfo.startSendingDTMF(cp,tone);
+    }
   }
  else {
-    dtmfModeInfo.startSendingDTMF(cp,tone);
+    dtmfModeInband.addInbandDTMF(((AudioMediaStream)cp.getMediaHandler().getStream(MediaType.AUDIO)),tone);
   }
 }
