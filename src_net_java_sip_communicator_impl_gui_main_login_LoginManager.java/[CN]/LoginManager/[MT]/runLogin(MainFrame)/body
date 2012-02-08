@@ -1,16 +1,6 @@
 {
+  GuiActivator.getAccountManager().addListener(this);
   for (  ProtocolProviderFactory providerFactory : GuiActivator.getProtocolProviderFactories().values()) {
-    ServiceReference serRef;
-    ProtocolProviderService protocolProvider;
-    for (    AccountID accountID : providerFactory.getRegisteredAccounts()) {
-      serRef=providerFactory.getProviderForAccount(accountID);
-      protocolProvider=(ProtocolProviderService)GuiActivator.bundleContext.getService(serRef);
-      protocolProvider.addRegistrationStateChangeListener(this);
-      this.mainFrame.addProtocolProvider(protocolProvider);
-      Object status=this.mainFrame.getProtocolProviderLastStatus(protocolProvider);
-      if (status == null || status.equals(Constants.ONLINE_STATUS) || ((status instanceof PresenceStatus) && (((PresenceStatus)status).getStatus() >= PresenceStatus.ONLINE_THRESHOLD))) {
-        this.login(protocolProvider);
-      }
-    }
+    addAccountsForProtocolProviderFactory(providerFactory);
   }
 }
