@@ -11,11 +11,11 @@
   iq.setSID(callPeer.getJingleSID());
   iq.addExtension(new DescriptionPacketExtension());
   StatePacketExtension state=new StatePacketExtension();
-  state.setUserCount(call.getCallPeerCount() + 1);
+  state.setUserCount(call.getCallPeerCount() + 1 + call.getCrossProtocolCallPeerCount());
   iq.addExtension(state);
   UsersPacketExtension users=new UsersPacketExtension();
-  UserPacketExtension user=new UserPacketExtension(parentProvider.getOurJID());
-  EndpointPacketExtension endpoint=new EndpointPacketExtension(parentProvider.getOurJID());
+  UserPacketExtension user=new UserPacketExtension("xmpp:" + parentProvider.getOurJID());
+  EndpointPacketExtension endpoint=new EndpointPacketExtension("xmpp:" + parentProvider.getOurJID());
   endpoint.setStatus(EndpointStatusType.connected);
   List<MediaPacketExtension> medias=getMedia(callPeer,false);
   for (  MediaPacketExtension media : medias) {
@@ -26,6 +26,11 @@
   Iterator<CallPeerJabberImpl> callPeerIter=call.getCallPeers();
   while (callPeerIter.hasNext()) {
     UserPacketExtension ext=getUser(callPeerIter.next());
+    users.addChildExtension(ext);
+  }
+  Iterator<CallPeer> crossProtocolCallPeerIter=call.getCrossProtocolCallPeers();
+  while (crossProtocolCallPeerIter.hasNext()) {
+    UserPacketExtension ext=getUser((MediaAwareCallPeer<?,?,?>)crossProtocolCallPeerIter.next());
     users.addChildExtension(ext);
   }
   iq.addExtension(users);

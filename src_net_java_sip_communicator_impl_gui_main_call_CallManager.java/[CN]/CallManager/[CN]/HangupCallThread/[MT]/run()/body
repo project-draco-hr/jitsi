@@ -1,14 +1,31 @@
 {
-  ProtocolProviderService pps=call.getProtocolProvider();
-  Iterator<? extends CallPeer> peers=call.getCallPeers();
-  while (peers.hasNext()) {
-    CallPeer peer=peers.next();
-    OperationSetBasicTelephony<?> telephony=pps.getOperationSet(OperationSetBasicTelephony.class);
-    try {
-      telephony.hangupCallPeer(peer);
+  Iterator<? extends CallPeer> peers=null;
+  if (call.getCallGroup() != null) {
+    List<Call> calls=call.getCallGroup().getCalls();
+    for (    Call c : calls) {
+      peers=c.getCallPeers();
+      CallPeer peer=peers.next();
+      OperationSetBasicTelephony<?> telephony=peer.getCall().getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
+      try {
+        telephony.hangupCallPeer(peer);
+      }
+ catch (      OperationFailedException e) {
+        logger.error("Could not hang up : " + peer + " caused by the following exception: "+ e);
+      }
     }
- catch (    OperationFailedException e) {
-      logger.error("Could not hang up : " + peer + " caused by the following exception: "+ e);
+  }
+ else {
+    ProtocolProviderService pps=call.getProtocolProvider();
+    peers=call.getCallPeers();
+    while (peers.hasNext()) {
+      CallPeer peer=peers.next();
+      OperationSetBasicTelephony<?> telephony=pps.getOperationSet(OperationSetBasicTelephony.class);
+      try {
+        telephony.hangupCallPeer(peer);
+      }
+ catch (      OperationFailedException e) {
+        logger.error("Could not hang up : " + peer + " caused by the following exception: "+ e);
+      }
     }
   }
 }

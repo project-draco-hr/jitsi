@@ -3,7 +3,14 @@
   callPeer.setDiscoverInfo(discoverInfo);
   addCallPeer(callPeer);
   callPeer.setState(CallPeerState.INITIATING_CALL);
-  if (getCallPeerCount() == 1)   parentOpSet.fireCallEvent(CallEvent.CALL_INITIATED,this);
+  if (getCallPeerCount() == 1 && getCallGroup() == null) {
+    parentOpSet.fireCallEvent(CallEvent.CALL_INITIATED,this);
+  }
+ else   if (getCallGroup() != null) {
+    CallEvent cEvent=new CallEvent(this,CallEvent.CALL_INITIATED);
+    AbstractOperationSetTelephonyConferencing<?,?,?,?,?> opSet=(AbstractOperationSetTelephonyConferencing<?,?,?,?,?>)getProtocolProvider().getOperationSet(OperationSetTelephonyConferencing.class);
+    if (opSet != null)     opSet.outgoingCallCreated(cEvent);
+  }
   CallPeerMediaHandlerJabberImpl mediaHandler=callPeer.getMediaHandler();
   mediaHandler.setLocalVideoTransmissionEnabled(localVideoAllowed);
   mediaHandler.setLocalInputEvtAware(localInputEvtAware);

@@ -1,0 +1,26 @@
+{
+  CallGroup group=null;
+  if (call.getCallGroup() == null) {
+    group=new CallGroup();
+    group.addCall(call);
+  }
+ else {
+    group=call.getCallGroup();
+  }
+  OperationSetBasicTelephony<?> opSetTelephony=provider.getOperationSet(OperationSetBasicTelephony.class);
+  if (opSetTelephony != null) {
+    Exception exception=null;
+    try {
+      Call c=opSetTelephony.createCall(callee,group);
+      group.addCall(c);
+    }
+ catch (    Exception e) {
+      exception=e;
+      logger.info("Failed to call " + callee,e);
+    }
+    if (exception != null) {
+      logger.error("Failed to invite callee: " + callee,exception);
+      new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),exception.getMessage(),ErrorDialog.ERROR).showDialog();
+    }
+  }
+}

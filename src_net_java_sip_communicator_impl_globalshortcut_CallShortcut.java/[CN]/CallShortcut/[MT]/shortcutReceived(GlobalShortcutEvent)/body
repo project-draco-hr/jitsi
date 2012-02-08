@@ -74,7 +74,13 @@ synchronized (outgoingCalls) {
         new Thread(){
           public void run(){
             try {
-              opSet.hangupCallPeer(cCall.getCallPeers().next());
+              Iterator<? extends CallPeer> peers=cCall.getCrossProtocolCallPeers();
+              while (peers.hasNext()) {
+                CallPeer peer=peers.next();
+                peer.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class).hangupCallPeer(peer);
+              }
+              peers=cCall.getCallPeers();
+              while (peers.hasNext())               opSet.hangupCallPeer(peers.next());
             }
  catch (            OperationFailedException e) {
               logger.info("Failed to answer call via global shortcut",e);
