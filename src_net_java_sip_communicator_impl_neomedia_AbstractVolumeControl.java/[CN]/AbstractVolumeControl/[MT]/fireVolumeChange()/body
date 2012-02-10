@@ -1,7 +1,13 @@
 {
-  VolumeChangeListener[] ls;
+  List<VolumeChangeListener> ls;
 synchronized (volumeChangeListeners) {
-    ls=volumeChangeListeners.toArray(new VolumeChangeListener[volumeChangeListeners.size()]);
+    Iterator<WeakReference<VolumeChangeListener>> i=volumeChangeListeners.iterator();
+    ls=new ArrayList<VolumeChangeListener>(volumeChangeListeners.size());
+    while (i.hasNext()) {
+      VolumeChangeListener l=i.next().get();
+      if (l == null)       i.remove();
+ else       ls.add(l);
+    }
   }
   VolumeChangeEvent changeEvent=new VolumeChangeEvent(this,volumeLevel,mute);
   for (  VolumeChangeListener l : ls)   l.volumeChange(changeEvent);

@@ -1,9 +1,20 @@
 {
-  List<ChatPanel> chatPanelsToDispose=chatContainer.getChats();
-  for (  ChatPanel chatPanel : chatPanelsToDispose)   chatPanel.dispose();
+  Collection<ChatPanel> chatPanels=new HashSet<ChatPanel>();
+  chatPanels.addAll(chatContainer.getChats());
 synchronized (chatPanels) {
-    chatPanels.removeAll(chatPanelsToDispose);
+    chatPanels.addAll(chatPanels);
   }
-  if (chatContainer.getChatCount() > 0)   chatContainer.removeAllChats();
-  GuiActivator.getContactList().deactivateAll();
+  ChatPanel currentChat=chatContainer.getCurrentChat();
+  for (  ChatPanel chatPanel : chatPanels) {
+    if (chatPanel != currentChat) {
+      try {
+        closeChatPanel(chatPanel);
+      }
+ catch (      Exception e) {
+        logger.error("Failed to close chat: " + chatPanel,e);
+      }
+    }
+  }
+  if ((currentChat != null) && chatPanels.contains(currentChat))   closeChatPanel(currentChat);
+  if (chatContainer.getChatCount() <= 0)   GuiActivator.getContactList().deactivateAll();
 }

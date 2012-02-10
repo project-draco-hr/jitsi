@@ -1,5 +1,12 @@
 {
 synchronized (volumeChangeListeners) {
-    if (!volumeChangeListeners.contains(listener))     volumeChangeListeners.add(listener);
+    Iterator<WeakReference<VolumeChangeListener>> i=volumeChangeListeners.iterator();
+    boolean contains=false;
+    while (i.hasNext()) {
+      VolumeChangeListener l=i.next().get();
+      if (l == null)       i.remove();
+ else       if (l.equals(listener))       contains=true;
+    }
+    if (!contains)     volumeChangeListeners.add(new WeakReference<VolumeChangeListener>(listener));
   }
 }

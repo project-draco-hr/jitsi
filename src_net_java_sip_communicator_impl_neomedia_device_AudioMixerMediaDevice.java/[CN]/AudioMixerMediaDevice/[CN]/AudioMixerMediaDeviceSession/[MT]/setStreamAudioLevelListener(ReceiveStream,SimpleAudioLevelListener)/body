@@ -1,0 +1,24 @@
+{
+synchronized (streamAudioLevelListeners) {
+    AudioLevelEventDispatcher dispatcher=streamAudioLevelListeners.get(stream);
+    if (listener == null) {
+      if (dispatcher != null) {
+        try {
+          dispatcher.setAudioLevelListener(null);
+          dispatcher.setAudioLevelCache(null,-1);
+        }
+  finally {
+          streamAudioLevelListeners.remove(dispatcher);
+        }
+      }
+    }
+ else {
+      if (dispatcher == null) {
+        dispatcher=new AudioLevelEventDispatcher("Stream Audio Level Dispatcher" + " (Mixer Edition)");
+        dispatcher.setAudioLevelCache(audioLevelCache,stream.getSSRC());
+        streamAudioLevelListeners.put(stream,dispatcher);
+      }
+      dispatcher.setAudioLevelListener(listener);
+    }
+  }
+}

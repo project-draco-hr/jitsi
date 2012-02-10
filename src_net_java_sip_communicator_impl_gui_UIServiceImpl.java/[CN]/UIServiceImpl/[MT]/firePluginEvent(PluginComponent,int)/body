@@ -2,17 +2,22 @@
   PluginComponentEvent evt=new PluginComponentEvent(pluginComponent,eventID);
   if (logger.isDebugEnabled())   logger.debug("Will dispatch the following plugin component event: " + evt);
 synchronized (pluginComponentListeners) {
-    for (    PluginComponentListener l : pluginComponentListeners) {
+    Iterator<WeakReference<PluginComponentListener>> i=pluginComponentListeners.iterator();
+    while (i.hasNext()) {
+      PluginComponentListener l=i.next().get();
+      if (l == null)       i.remove();
+ else {
 switch (evt.getEventID()) {
 case PluginComponentEvent.PLUGIN_COMPONENT_ADDED:
-        l.pluginComponentAdded(evt);
-      break;
+          l.pluginComponentAdded(evt);
+        break;
 case PluginComponentEvent.PLUGIN_COMPONENT_REMOVED:
-    l.pluginComponentRemoved(evt);
-  break;
+      l.pluginComponentRemoved(evt);
+    break;
 default :
-logger.error("Unknown event type " + evt.getEventID());
+  logger.error("Unknown event type " + evt.getEventID());
 break;
+}
 }
 }
 }
