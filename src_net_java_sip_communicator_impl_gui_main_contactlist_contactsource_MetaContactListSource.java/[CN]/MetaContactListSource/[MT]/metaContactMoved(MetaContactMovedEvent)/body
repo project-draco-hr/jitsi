@@ -1,4 +1,13 @@
 {
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        metaContactMoved(evt);
+      }
+    }
+);
+    return;
+  }
   final MetaContact metaContact=evt.getSourceMetaContact();
   final MetaContactGroup oldParent=evt.getOldParent();
   final MetaContactGroup newParent=evt.getNewParent();
@@ -11,7 +20,7 @@ synchronized (metaContact) {
       oldUIGroup=MetaContactListSource.getUIGroup(oldParent);
     }
     if (oldUIGroup != null)     GuiActivator.getContactList().removeContact(uiContact);
-    uiContact=MetaContactListSource.createUIContact(evt.getSourceMetaContact());
+    uiContact=MetaContactListSource.createUIContact(metaContact);
     UIGroup newUIGroup=null;
     if (!MetaContactListSource.isRootGroup(newParent)) {
 synchronized (newParent) {
