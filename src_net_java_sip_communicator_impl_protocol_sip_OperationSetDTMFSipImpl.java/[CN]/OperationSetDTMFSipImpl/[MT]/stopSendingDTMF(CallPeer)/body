@@ -6,12 +6,22 @@
     throw new IllegalArgumentException();
   }
   CallPeerSipImpl cp=(CallPeerSipImpl)(callPeer);
-  if (this.dtmfMethod == null || this.dtmfMethod.equals("RFC4733 / SIP-INFO")) {
-    if (isRFC4733Active(cp)) {
-      dtmfModeRFC4733.stopSendingDTMF(((AudioMediaStream)cp.getMediaHandler().getStream(MediaType.AUDIO)));
-    }
+  if (this.dtmfMethod == DTMFEnum.SIP_INFO_DTMF) {
+    dtmfModeInfo.stopSendingDTMF(cp);
+  }
  else {
-      dtmfModeInfo.stopSendingDTMF(cp);
+    DTMFEnum cpDTMFMethod=dtmfMethod;
+    if (this.dtmfMethod == DTMFEnum.AUTO_DTMF) {
+      if (isRFC4733Active(cp)) {
+        cpDTMFMethod=DTMFEnum.RTP_DTMF;
+      }
+ else {
+        cpDTMFMethod=DTMFEnum.INBAND_DTMF;
+      }
     }
+    if (this.dtmfMethod == DTMFEnum.RTP_DTMF && !isRFC4733Active(cp)) {
+      logger.debug("RTP DTMF used without telephon-event capacities");
+    }
+    ((AudioMediaStream)cp.getMediaHandler().getStream(MediaType.AUDIO)).stopSendingDTMF(cpDTMFMethod);
   }
 }
