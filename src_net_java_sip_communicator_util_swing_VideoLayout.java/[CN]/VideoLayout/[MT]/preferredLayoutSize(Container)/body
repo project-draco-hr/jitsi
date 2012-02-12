@@ -1,3 +1,38 @@
 {
+  List<Component> remotes;
+  Component local=getLocal();
+  if ((this.remotes.size() > 1) && (local != null)) {
+    remotes=new ArrayList<Component>();
+    remotes.addAll(this.remotes);
+    remotes.add(local);
+  }
+ else   remotes=this.remotes;
+  int remoteCount=remotes.size();
+  if (remoteCount == 0) {
+    if (local != null) {
+      Dimension preferredSize=local.getPreferredSize();
+      if (preferredSize != null)       return preferredSize;
+    }
+  }
+ else   if (remoteCount == 1) {
+    Dimension preferredSize=remotes.get(0).getPreferredSize();
+    if (preferredSize != null)     return preferredSize;
+  }
+ else   if (remoteCount > 1) {
+    int maxWidth=0;
+    int maxHeight=0;
+    for (    Component remote : remotes) {
+      Dimension preferredSize=remote.getPreferredSize();
+      if (preferredSize != null) {
+        if (maxWidth < preferredSize.width)         maxWidth=preferredSize.width;
+        if (maxHeight < preferredSize.height)         maxHeight=preferredSize.height;
+      }
+    }
+    if ((maxWidth > 0) && (maxHeight > 0)) {
+      int columns=COLUMNS;
+      int rows=(remoteCount + columns - 1) / columns;
+      return new Dimension(maxWidth * columns,maxHeight * rows);
+    }
+  }
   return super.preferredLayoutSize(parent);
 }
