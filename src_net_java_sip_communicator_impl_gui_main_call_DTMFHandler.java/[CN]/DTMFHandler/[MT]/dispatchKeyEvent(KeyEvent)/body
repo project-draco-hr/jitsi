@@ -1,26 +1,29 @@
 {
   if (e.getID() == KeyEvent.KEY_TYPED)   return false;
-  boolean singleWindowRule=GuiActivator.getUIService().getSingleWindowContainer() == null || callContainer.isFocusOwner();
+  if ((GuiActivator.getUIService().getSingleWindowContainer() != null) && ((callContainer == null) || !callContainer.isFocusOwner()))   return false;
   boolean dispatch=false;
-  for (int i=0; i < parents.size(); i++) {
-    if (parents.get(i).isFocused() && singleWindowRule) {
-      dispatch=true;
-      break;
+synchronized (parents) {
+    for (int i=0, count=parents.size(); i < count; i++) {
+      if (parents.get(i).isFocused()) {
+        dispatch=true;
+        break;
+      }
     }
   }
-  if (!dispatch)   return false;
-  for (int i=0; i < availableTones.length; i++) {
-    DTMFToneInfo info=availableTones[i];
-    if (info.keyChar == e.getKeyChar()) {
+  if (dispatch) {
+    for (int i=0; i < AVAILABLE_TONES.length; i++) {
+      DTMFToneInfo info=AVAILABLE_TONES[i];
+      if (info.keyChar == e.getKeyChar()) {
 switch (e.getID()) {
 case KeyEvent.KEY_PRESSED:
-        startSendingDtmfTone(info);
-      break;
+          startSendingDtmfTone(info);
+        break;
 case KeyEvent.KEY_RELEASED:
-    stopSendingDtmfTone();
-  break;
+      stopSendingDtmfTone();
+    break;
 }
-return false;
+break;
+}
 }
 }
 return false;

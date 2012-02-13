@@ -1,6 +1,18 @@
 {
   this.callContainer=callContainer;
-  if (callContainer != null)   this.addParent(callContainer.getCallWindow().getFrame());
-  KeyboardFocusManager keyManager=KeyboardFocusManager.getCurrentKeyboardFocusManager();
-  keyManager.addKeyEventDispatcher(this);
+  if (this.callContainer != null) {
+    final Window parent=callContainer.getCallWindow().getFrame();
+    if (parent != null) {
+      parent.addWindowListener(new WindowAdapter(){
+        @Override public void windowClosed(        WindowEvent e){
+          removeParent(parent);
+        }
+        @Override public void windowOpened(        WindowEvent e){
+          addParent(parent);
+        }
+      }
+);
+      if (parent.isVisible())       addParent(parent);
+    }
+  }
 }

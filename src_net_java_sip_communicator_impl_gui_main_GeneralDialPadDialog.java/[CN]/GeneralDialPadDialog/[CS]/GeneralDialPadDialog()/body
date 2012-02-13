@@ -1,35 +1,36 @@
 {
-  if (OSUtils.IS_MAC) {
-    HudWindow window=new HudWindow();
-    dialPadDialog=window.getJDialog();
-  }
- else {
-    dialPadDialog=new SIPCommDialog(false);
-  }
-  callField=new CallField(GuiActivator.getResources().getI18NString("service.gui.ENTER_NAME_OR_NUMBER"));
+  dialPadDialog=OSUtils.IS_MAC ? new HudWindow().getJDialog() : new SIPCommDialog(false);
   dialPadDialog.setTitle(GuiActivator.getResources().getI18NString("service.gui.DIALPAD"));
+  callField=new CallField(GuiActivator.getResources().getI18NString("service.gui.ENTER_NAME_OR_NUMBER"));
   initInputMap();
   JPanel mainPanel=new TransparentPanel(new BorderLayout());
   mainPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
   mainPanel.add(callField,BorderLayout.NORTH);
-  DTMFHandler dtmfHandler=new DTMFHandler();
-  dtmfHandler.addParent(dialPadDialog);
+  final DTMFHandler dtmfHandler=new DTMFHandler();
   mainPanel.add(new GeneralDialPanel(this,dtmfHandler));
   mainPanel.add(createCallPanel(),BorderLayout.SOUTH);
   dialPadDialog.add(mainPanel);
   dialPadDialog.pack();
   dialPadDialog.addWindowListener(new WindowAdapter(){
-    public void windowOpened(    WindowEvent e){
+    @Override public void windowOpened(    WindowEvent e){
       if (keyManager == null) {
         keyManager=KeyboardFocusManager.getCurrentKeyboardFocusManager();
-        keyDispatcher=new MainKeyDispatcher(keyManager);
       }
-      keyManager.addKeyEventDispatcher(new MainKeyDispatcher(keyManager));
+      if (keyDispatcher == null)       keyDispatcher=new MainKeyDispatcher(keyManager);
+      keyManager.addKeyEventDispatcher(keyDispatcher);
+      dtmfHandler.addParent(dialPadDialog);
     }
     @Override public void windowClosed(    WindowEvent e){
-      if (keyManager != null)       keyManager.removeKeyEventDispatcher(keyDispatcher);
-      keyManager=null;
-      keyDispatcher=null;
+      try {
+        if (keyManager != null) {
+          keyManager.removeKeyEventDispatcher(keyDispatcher);
+          keyManager=null;
+        }
+        keyDispatcher=null;
+      }
+  finally {
+        dtmfHandler.removeParent(dialPadDialog);
+      }
     }
   }
 );
