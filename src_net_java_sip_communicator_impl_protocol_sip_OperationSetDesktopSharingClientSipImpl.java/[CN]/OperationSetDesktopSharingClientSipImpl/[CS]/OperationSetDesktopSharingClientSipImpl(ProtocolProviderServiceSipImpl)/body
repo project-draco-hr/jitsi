@@ -2,12 +2,29 @@
   super(parentProvider);
   notifier=new EventPackageNotifier(this.parentProvider,DesktopSharingProtocolSipImpl.EVENT_PACKAGE,DesktopSharingProtocolSipImpl.SUBSCRIPTION_DURATION,DesktopSharingProtocolSipImpl.CONTENT_SUB_TYPE,this.timer){
     protected Subscription createSubscription(    Address fromAddress,    String eventId){
-      fireRemoteControlGranted();
       return new RemoteControlNotifierSubscription(fromAddress,eventId);
     }
+    /** 
+ * {@inheritedDocs}.
+ */
+    @Override public boolean processRequest(    RequestEvent requestEvent){
+      boolean ret=super.processRequest(requestEvent);
+      if (requestEvent == null || requestEvent.getDialog() == null || requestEvent.getDialog().getCallId() == null)       return ret;
+      String callId=requestEvent.getDialog().getCallId().getCallId();
+      Subscription subs=this.getSubscription(callId);
+      if (subs instanceof RemoteControlNotifierSubscription) {
+        fireRemoteControlGranted(((RemoteControlNotifierSubscription)subs).getCallPeer());
+      }
+      return ret;
+    }
     protected void removeSubscription(    Response response,    String eventId,    ClientTransaction clientTransaction){
+      CallIdHeader callIdHeader=(CallIdHeader)response.getHeader(CallIdHeader.NAME);
+      String callId=callIdHeader.getCallId();
+      Subscription ret=this.getSubscription(callId);
+      if (ret instanceof RemoteControlNotifierSubscription) {
+        fireRemoteControlRevoked(((RemoteControlNotifierSubscription)ret).getCallPeer());
+      }
       super.removeSubscription(response,eventId,clientTransaction);
-      fireRemoteControlRevoked();
     }
   }
 ;
