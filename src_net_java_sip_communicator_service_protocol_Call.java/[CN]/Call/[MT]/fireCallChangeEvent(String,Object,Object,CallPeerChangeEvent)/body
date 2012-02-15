@@ -1,12 +1,11 @@
 {
-  CallChangeEvent ccEvent=new CallChangeEvent(this,type,oldValue,newValue,cause);
-  if (logger.isDebugEnabled())   logger.debug("Dispatching a CallChange event to " + callListeners.size() + " listeners. event is: "+ ccEvent.toString());
-  Iterator<CallChangeListener> listeners;
+  CallChangeEvent event=new CallChangeEvent(this,type,oldValue,newValue,cause);
+  if (logger.isDebugEnabled()) {
+    logger.debug("Dispatching a CallChange event to " + callListeners.size() + " listeners. The CallChange event is: "+ event);
+  }
+  CallChangeListener[] listeners;
 synchronized (callListeners) {
-    listeners=new ArrayList<CallChangeListener>(callListeners).iterator();
+    listeners=callListeners.toArray(new CallChangeListener[callListeners.size()]);
   }
-  while (listeners.hasNext()) {
-    CallChangeListener listener=listeners.next();
-    if (type.equals(CallChangeEvent.CALL_STATE_CHANGE))     listener.callStateChanged(ccEvent);
-  }
+  for (  CallChangeListener listener : listeners)   if (type.equals(CallChangeEvent.CALL_STATE_CHANGE))   listener.callStateChanged(event);
 }

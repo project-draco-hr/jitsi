@@ -1,15 +1,13 @@
 {
-  String propertyName=evt.getPropertyName();
-  if (propertyName.equals("CHANGE_CAPTURE_DEV")) {
-    conferenceAudioMixer=null;
-    audioDevice=null;
-    for (    MediaAwareCallPeer<?,?,?> p : getCallPeersVector()) {
-      MediaStream stream=p.getMediaHandler().getStream(MediaType.AUDIO);
-      if (stream != null) {
-        MediaFormat fmt=stream.getFormat();
-        stream.setDevice(getDefaultDevice(MediaType.AUDIO));
-        stream.setFormat(fmt);
-      }
+  if (MediaService.DEFAULT_DEVICE.equals(event.getPropertyName())) {
+    MediaDevice oldValue=null;
+    MediaDevice newValue=(audioDevice == null) ? ProtocolMediaActivator.getMediaService().getDefaultDevice(MediaType.AUDIO,mediaUseCase) : audioDevice;
+    if (conferenceAudioMixer instanceof MediaDeviceWrapper) {
+      oldValue=((MediaDeviceWrapper)conferenceAudioMixer).getWrappedDevice();
+    }
+    if (oldValue != newValue) {
+      conferenceAudioMixer=null;
+      propertyChangeSupport.firePropertyChange(DEFAULT_DEVICE,oldValue,newValue);
     }
   }
 }

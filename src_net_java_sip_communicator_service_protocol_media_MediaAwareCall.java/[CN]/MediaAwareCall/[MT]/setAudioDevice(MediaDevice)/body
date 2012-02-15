@@ -1,3 +1,16 @@
 {
-  this.audioDevice=dev;
+  if (audioDevice != dev) {
+    MediaDevice oldAudioDevice=audioDevice;
+    audioDevice=dev;
+    if (conferenceAudioMixer instanceof MediaDeviceWrapper) {
+      MediaDevice wrappedDevice=((MediaDeviceWrapper)conferenceAudioMixer).getWrappedDevice();
+      if (wrappedDevice != audioDevice) {
+        conferenceAudioMixer=null;
+        propertyChangeSupport.firePropertyChange(DEFAULT_DEVICE,wrappedDevice,audioDevice);
+      }
+    }
+ else     if (conferenceAudioMixer == null) {
+      propertyChangeSupport.firePropertyChange(DEFAULT_DEVICE,oldAudioDevice,audioDevice);
+    }
+  }
 }
