@@ -92,7 +92,27 @@
       }
     }
     HttpUtils.HTTPResponseResult res=HttpUtils.postForm(url,PROPERTY_PROVISIONING_USERNAME,PROPERTY_PROVISIONING_PASSWORD,paramNames,paramValues,usernameIx,passwordIx);
-    if (res == null)     return null;
+    if (res == null) {
+      boolean provisioningMandatory=false;
+      String defaultSettingsProp=ProvisioningActivator.getResourceService().getSettingsString(PROPERTY_PROVISIONING_MANDATORY);
+      if (defaultSettingsProp != null && Boolean.parseBoolean(defaultSettingsProp))       provisioningMandatory=true;
+      if (ProvisioningActivator.getConfigurationService().getBoolean(PROPERTY_PROVISIONING_MANDATORY,provisioningMandatory)) {
+{
+          for (          Bundle b : ProvisioningActivator.bundleContext.getBundles()) {
+            try {
+              if (ProvisioningActivator.bundleContext.equals(b.getBundleContext())) {
+                continue;
+              }
+              b.stop();
+            }
+ catch (            BundleException ex) {
+              logger.error("Failed to being gentle stop " + b.getLocation(),ex);
+            }
+          }
+        }
+      }
+      return null;
+    }
     String userPass[]=res.getCredentials();
     if (userPass[0] != null && userPass[1] != null) {
       provUsername=userPass[0];
