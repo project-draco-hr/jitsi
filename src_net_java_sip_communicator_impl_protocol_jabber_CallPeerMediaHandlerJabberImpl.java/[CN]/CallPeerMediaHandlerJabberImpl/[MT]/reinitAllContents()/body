@@ -1,6 +1,22 @@
 {
+  boolean masterStreamSet=false;
   for (  String key : remoteContentMap.keySet()) {
     ContentPacketExtension ext=remoteContentMap.get(key);
-    if (ext != null)     processContent(ext,false);
+    boolean masterStream=false;
+    if (!masterStreamSet) {
+      RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(ext);
+      MediaType mediaType=MediaType.parseString(description.getMedia());
+      if (remoteContentMap.size() > 1) {
+        if (mediaType.equals(MediaType.AUDIO)) {
+          masterStream=true;
+          masterStreamSet=true;
+        }
+      }
+ else {
+        masterStream=true;
+        masterStreamSet=true;
+      }
+    }
+    if (ext != null)     processContent(ext,false,masterStream);
   }
 }

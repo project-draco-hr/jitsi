@@ -2,8 +2,15 @@
   TransportManagerJabberImpl transportManager=getTransportManager();
   Iterable<ContentPacketExtension> sessAccept=transportManager.wrapupCandidateHarvest();
   CallPeerJabberImpl peer=getPeer();
+  Map<ContentPacketExtension,RtpDescriptionPacketExtension> contents=new HashMap<ContentPacketExtension,RtpDescriptionPacketExtension>();
   for (  ContentPacketExtension ourContent : sessAccept) {
     RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(ourContent);
+    contents.put(ourContent,description);
+  }
+  boolean masterStreamSet=false;
+  for (  Map.Entry<ContentPacketExtension,RtpDescriptionPacketExtension> en : contents.entrySet()) {
+    ContentPacketExtension ourContent=en.getKey();
+    RtpDescriptionPacketExtension description=en.getValue();
     MediaType type=MediaType.parseString(description.getMedia());
     StreamConnector connector=transportManager.getStreamConnector(type);
     MediaDevice dev=getDefaultDevice(type);
@@ -30,7 +37,20 @@
         if (f.getKey().equals("imageattr"))         supportQualityControls=true;
       }
     }
-    initStream(ourContent.getName(),connector,dev,format,target,direction,rtpExtensions);
+    boolean masterStream=false;
+    if (!masterStreamSet) {
+      if (contents.size() > 1) {
+        if (type.equals(MediaType.AUDIO)) {
+          masterStream=true;
+          masterStreamSet=true;
+        }
+      }
+ else {
+        masterStream=true;
+        masterStreamSet=true;
+      }
+    }
+    initStream(ourContent.getName(),connector,dev,format,target,direction,rtpExtensions,masterStream);
     if (ourContent.getChildExtensionsOfType(InputEvtPacketExtension.class) != null) {
       OperationSetDesktopSharingClientJabberImpl client=(OperationSetDesktopSharingClientJabberImpl)peer.getProtocolProvider().getOperationSet(OperationSetDesktopSharingClient.class);
       if (client != null)       client.fireRemoteControlGranted(peer);

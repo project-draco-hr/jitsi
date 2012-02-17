@@ -6,6 +6,7 @@
   boolean rejectedAvpOfferDueToSavpRequired=false;
   boolean encryptionEnabled=getPeer().getProtocolProvider().getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true);
   int savpOption=getPeer().getProtocolProvider().getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF);
+  boolean masterStreamSet=false;
   List<MediaType> seenMediaTypes=new ArrayList<MediaType>();
   for (  MediaDescription mediaDescription : remoteDescriptions) {
     String transportProtocol;
@@ -78,7 +79,20 @@
     MediaDescription md=createMediaDescription(transportProtocol,mutuallySupportedFormats,connector,direction,rtpExtensions);
     if (!updateMediaDescriptionForSDes(mediaType,md,mediaDescription))     updateMediaDescriptionForZrtp(mediaType,md);
     MediaFormat fmt=findMediaFormat(remoteFormats,mutuallySupportedFormats.get(0));
-    initStream(connector,dev,fmt,target,direction,rtpExtensions);
+    boolean masterStream=false;
+    if (!masterStreamSet) {
+      if (remoteDescriptions.size() > 1) {
+        if (mediaType.equals(MediaType.AUDIO)) {
+          masterStream=true;
+          masterStreamSet=true;
+        }
+      }
+ else {
+        masterStream=true;
+        masterStreamSet=true;
+      }
+    }
+    initStream(connector,dev,fmt,target,direction,rtpExtensions,masterStream);
     answerDescriptions.add(md);
     atLeastOneValidDescription=true;
   }

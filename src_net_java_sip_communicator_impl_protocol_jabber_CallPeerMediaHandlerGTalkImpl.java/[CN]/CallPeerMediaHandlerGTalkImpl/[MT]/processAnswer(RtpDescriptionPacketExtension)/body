@@ -1,5 +1,6 @@
 {
   List<PayloadTypePacketExtension> lst=answer.getPayloadTypes();
+  boolean masterStreamSet=true;
   for (  MediaType mediaType : MediaType.values()) {
     String ns=getNamespaceForMediaType(mediaType);
     String mediaName=getNameForMediaType(mediaType);
@@ -21,6 +22,19 @@
     MediaStreamTarget target=transportManager.getStreamTarget(mediaType);
     List<RTPExtension> rtpExtensions=new ArrayList<RTPExtension>();
     MediaDirection direction=MediaDirection.SENDRECV;
-    initStream(mediaName,connector,dev,format,target,direction,rtpExtensions);
+    boolean masterStream=false;
+    if (!masterStreamSet) {
+      if (MediaType.values().length > 1) {
+        if (mediaType.equals(MediaType.AUDIO)) {
+          masterStream=true;
+          masterStreamSet=true;
+        }
+      }
+ else {
+        masterStream=true;
+        masterStreamSet=true;
+      }
+    }
+    initStream(mediaName,connector,dev,format,target,direction,rtpExtensions,masterStream);
   }
 }
