@@ -1,6 +1,17 @@
 {
   ProtocolProviderService pps=call.getProtocolProvider();
   Iterator<? extends CallPeer> peers=call.getCallPeers();
+  CallGroup group=null;
+  if (existingCall != null) {
+    if (existingCall.getCallGroup() == null) {
+      group=new CallGroup();
+      group.addCall(existingCall);
+    }
+ else {
+      group=existingCall.getCallGroup();
+    }
+    if (call.getCallGroup() == null && group != null)     group.addCall(call);
+  }
   while (peers.hasNext()) {
     CallPeer peer=peers.next();
     OperationSetBasicTelephony<?> telephony=pps.getOperationSet(OperationSetBasicTelephony.class);

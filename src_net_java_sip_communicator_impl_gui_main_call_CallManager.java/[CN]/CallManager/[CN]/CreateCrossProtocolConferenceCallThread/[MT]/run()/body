@@ -1,0 +1,23 @@
+{
+  CallGroup group=new CallGroup();
+  for (  Map.Entry<ProtocolProviderService,List<String>> entry : callees.entrySet()) {
+    ProtocolProviderService provider=entry.getKey();
+    List<String> contacts=entry.getValue();
+    OperationSetBasicTelephony<?> opSetTelephony=provider.getOperationSet(OperationSetBasicTelephony.class);
+    if (opSetTelephony != null) {
+      OperationSetTelephonyConferencing opSetConf=provider.getOperationSet(OperationSetTelephonyConferencing.class);
+      String[] contactAddressStrings=new String[contacts.size()];
+      contacts.toArray(contactAddressStrings);
+      if (ConfigurationManager.isNormalizePhoneNumber()) {
+        normalizePhoneNumbers(contactAddressStrings);
+      }
+      try {
+        opSetConf.createConfCall(contactAddressStrings,group);
+      }
+ catch (      Exception exception) {
+        logger.error("Failed to invite callees",exception);
+        new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),exception.getMessage(),ErrorDialog.ERROR).showDialog();
+      }
+    }
+  }
+}

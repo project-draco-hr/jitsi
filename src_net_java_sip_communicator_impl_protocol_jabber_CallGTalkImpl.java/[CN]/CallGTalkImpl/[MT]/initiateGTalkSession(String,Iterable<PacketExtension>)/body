@@ -16,7 +16,14 @@
         }
       }
     }
-    parentOpSet.fireCallEvent(CallEvent.CALL_INITIATED,this);
+    if (getCallPeerCount() == 1 && getCallGroup() == null) {
+      parentOpSet.fireCallEvent(CallEvent.CALL_INITIATED,this);
+    }
+ else     if (getCallGroup() != null) {
+      CallEvent cEvent=new CallEvent(this,CallEvent.CALL_INITIATED);
+      AbstractOperationSetTelephonyConferencing<?,?,?,?,?> opSet=(AbstractOperationSetTelephonyConferencing<?,?,?,?,?>)getProtocolProvider().getOperationSet(OperationSetTelephonyConferencing.class);
+      if (opSet != null)       opSet.outgoingCallCreated(cEvent);
+    }
   }
   CallPeerMediaHandlerGTalkImpl mediaHandler=callPeer.getMediaHandler();
   mediaHandler.setLocalVideoTransmissionEnabled(localVideoAllowed);

@@ -1,18 +1,12 @@
 {
-  if (call != null) {
-    accountSelectorBox.addItem(call.getProtocolProvider());
-    accountSelectorBox.setEnabled(false);
-  }
- else {
-    Iterator<ProtocolProviderService> protocolProviders=GuiActivator.getUIService().getMainFrame().getProtocolProviders();
-    while (protocolProviders.hasNext()) {
-      ProtocolProviderService protocolProvider=protocolProviders.next();
-      OperationSet opSet=protocolProvider.getOperationSet(OperationSetTelephonyConferencing.class);
-      if (opSet != null && protocolProvider.isRegistered()) {
-        accountSelectorBox.addItem(protocolProvider);
-      }
+  Iterator<ProtocolProviderService> protocolProviders=GuiActivator.getUIService().getMainFrame().getProtocolProviders();
+  List<ProtocolProviderService> provs=new ArrayList<ProtocolProviderService>();
+  while (protocolProviders.hasNext()) {
+    ProtocolProviderService protocolProvider=protocolProviders.next();
+    OperationSet opSet=protocolProvider.getOperationSet(OperationSetTelephonyConferencing.class);
+    if (opSet != null && protocolProvider.isRegistered()) {
+      provs.add(protocolProvider);
     }
   }
-  ProtocolProviderService lastConfProvider=ConfigurationManager.getLastCallConferenceProvider();
-  if (lastConfProvider != null)   accountSelectorBox.setSelectedItem(lastConfProvider);
+  if (accountBox == null)   accountBox=new ProtocolProviderSelectorBox(provs.iterator());
 }

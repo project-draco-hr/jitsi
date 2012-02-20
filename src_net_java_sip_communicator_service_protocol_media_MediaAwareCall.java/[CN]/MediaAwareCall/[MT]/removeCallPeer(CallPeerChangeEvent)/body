@@ -16,5 +16,13 @@ synchronized (localUserAudioLevelListenersSyncRoot) {
   finally {
     callPeer.setCall(null);
   }
-  if (getCallPeersVector().isEmpty())   setCallState(CallState.CALL_ENDED,evt);
+  if (getCallPeersVector().isEmpty() && getCrossProtocolCallPeersVector().isEmpty()) {
+    setCallState(CallState.CALL_ENDED,evt);
+    if (getCallGroup() != null) {
+      for (      Call c : getCallGroup().getCalls()) {
+        if (c == this)         continue;
+        ((MediaAwareCall<?,?,?>)c).setCallState(CallState.CALL_ENDED,evt);
+      }
+    }
+  }
 }

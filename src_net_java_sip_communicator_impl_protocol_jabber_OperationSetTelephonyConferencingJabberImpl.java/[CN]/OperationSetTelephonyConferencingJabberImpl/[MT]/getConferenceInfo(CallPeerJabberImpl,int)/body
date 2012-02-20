@@ -1,6 +1,21 @@
 {
   CoinIQ iq=new CoinIQ();
   CallJabberImpl call=callPeer.getCall();
+  List<CallPeer> crossPeers=new ArrayList<CallPeer>();
+  Iterator<CallPeer> crossProtocolCallPeerIter=call.getCrossProtocolCallPeers();
+  while (crossProtocolCallPeerIter.hasNext()) {
+    MediaAwareCallPeer<?,?,?> crossPeer=(MediaAwareCallPeer<?,?,?>)crossProtocolCallPeerIter.next();
+    Iterator<CallPeerJabberImpl> it=call.getCallPeers();
+    boolean found=false;
+    while (it.hasNext()) {
+      if (it.next().getAddress().equals(crossPeer.getAddress())) {
+        found=true;
+        break;
+      }
+    }
+    if (found)     continue;
+    if (!crossPeers.contains(crossPeer))     crossPeers.add(crossPeer);
+  }
   iq.setFrom(call.getProtocolProvider().getOurJID());
   iq.setTo(callPeer.getAddress());
   iq.setType(Type.SET);
@@ -11,7 +26,7 @@
   iq.setSID(callPeer.getJingleSID());
   iq.addExtension(new DescriptionPacketExtension());
   StatePacketExtension state=new StatePacketExtension();
-  state.setUserCount(call.getCallPeerCount() + 1 + call.getCrossProtocolCallPeerCount());
+  state.setUserCount(call.getCallPeerCount() + 1 + crossPeers.size());
   iq.addExtension(state);
   UsersPacketExtension users=new UsersPacketExtension();
   UserPacketExtension user=new UserPacketExtension("xmpp:" + parentProvider.getOurJID());
@@ -28,9 +43,9 @@
     UserPacketExtension ext=getUser(callPeerIter.next());
     users.addChildExtension(ext);
   }
-  Iterator<CallPeer> crossProtocolCallPeerIter=call.getCrossProtocolCallPeers();
-  while (crossProtocolCallPeerIter.hasNext()) {
-    UserPacketExtension ext=getUser((MediaAwareCallPeer<?,?,?>)crossProtocolCallPeerIter.next());
+  for (  CallPeer cp : crossPeers) {
+    MediaAwareCallPeer<?,?,?> crossPeer=(MediaAwareCallPeer<?,?,?>)cp;
+    UserPacketExtension ext=getUser(crossPeer);
     users.addChildExtension(ext);
   }
   iq.addExtension(users);

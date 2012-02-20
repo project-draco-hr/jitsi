@@ -1,0 +1,26 @@
+{
+  List<CalleeAddressT> calleeAddresses=new ArrayList<CalleeAddressT>(callees.length);
+  for (  String callee : callees)   calleeAddresses.add(parseAddressString(callee));
+  MediaAwareCallT call=createOutgoingCall();
+  if (group.getCalls().size() > 0) {
+    group.addCall(call);
+    call.setCallGroup(group);
+  }
+  call.setConferenceFocus(true);
+  for (  CalleeAddressT calleeAddress : calleeAddresses) {
+    boolean wasConferenceFocus;
+    if (call.isConferenceFocus())     wasConferenceFocus=true;
+ else {
+      wasConferenceFocus=false;
+      call.setConferenceFocus(true);
+    }
+    CallPeer p=inviteCalleeToCall(calleeAddress,call,wasConferenceFocus);
+    if (p.getCall() != call) {
+      group.addCall(p.getCall());
+    }
+    if (call.getCallGroup() == null) {
+      group.addCall(call);
+    }
+  }
+  return call;
+}

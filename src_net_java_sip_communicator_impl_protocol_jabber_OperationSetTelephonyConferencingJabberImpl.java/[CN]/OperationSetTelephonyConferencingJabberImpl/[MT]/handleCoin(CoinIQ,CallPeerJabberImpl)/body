@@ -3,6 +3,7 @@
   int conferenceMembersToRemoveCount=conferenceMembersToRemove.length;
   UsersPacketExtension users=null;
   Collection<PacketExtension> usersList=coinIQ.getExtensions();
+  boolean changed=false;
   for (  PacketExtension ext : usersList) {
     if (ext.getElementName().equals(UsersPacketExtension.ELEMENT_NAME)) {
       users=(UsersPacketExtension)ext;
@@ -60,7 +61,9 @@
       existingConferenceMember.setDisplayName(displayName);
       existingConferenceMember.setEndpointStatus(endpointStatus);
       if (ssrc != null) {
-        existingConferenceMember.setSSRC(Long.parseLong(ssrc));
+        long newSsrc=Long.parseLong(ssrc);
+        if (existingConferenceMember.getSSRC() != newSsrc)         changed=true;
+        existingConferenceMember.setSSRC(newSsrc);
       }
       if (addConferenceMember) {
         callPeer.addConferenceMember(existingConferenceMember);
@@ -71,4 +74,5 @@
     ConferenceMember conferenceMemberToRemove=conferenceMembersToRemove[conferenceMemberIndex];
     if (conferenceMemberToRemove != null)     callPeer.removeConferenceMember(conferenceMemberToRemove);
   }
+  if (changed)   notifyAll(callPeer.getCall());
 }

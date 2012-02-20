@@ -9,7 +9,7 @@
     return;
   }
   Call sourceCall=event.getSourceCall();
-  final ReceivedCallDialog receivedCallDialog=new ReceivedCallDialog(sourceCall,event.isVideoCall());
+  final ReceivedCallDialog receivedCallDialog=new ReceivedCallDialog(sourceCall,event.isVideoCall(),(CallManager.getActiveCalls().size() > 0));
   receivedCallDialog.setVisible(true);
   final String peerName=sourceCall.getCallPeers().next().getDisplayName();
   final Date callDate=new Date();
@@ -17,7 +17,7 @@
     @Override public void callStateChanged(    CallChangeEvent evt){
       if (receivedCallDialog.isVisible())       receivedCallDialog.setVisible(false);
       Call call=evt.getSourceCall();
-      if ((evt.getNewValue().equals(CallState.CALL_INITIALIZATION) || evt.getNewValue().equals(CallState.CALL_IN_PROGRESS)) && activeCalls.get(call) == null) {
+      if ((evt.getNewValue().equals(CallState.CALL_INITIALIZATION) || evt.getNewValue().equals(CallState.CALL_IN_PROGRESS)) && activeCalls.get(call) == null && call.getCallGroup() == null) {
         openCallContainer(call);
       }
       if (evt.getNewValue().equals(CallState.CALL_ENDED)) {

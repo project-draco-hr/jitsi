@@ -1,9 +1,17 @@
 {
   OperationSetBasicTelephony<?> telephonyOpSet=protocolProvider.getOperationSet(OperationSetBasicTelephony.class);
   if (telephonyOpSet == null)   return;
+  String callString=null;
+  if (contact != null)   callString=contact.getAddress();
+ else   if (stringContact != null)   callString=stringContact;
+  if (ConfigurationManager.isNormalizePhoneNumber()) {
+    String normalizedContact[]=new String[1];
+    normalizedContact[0]=callString;
+    normalizePhoneNumbers(normalizedContact);
+    callString=normalizedContact[0];
+  }
   try {
-    if (contact != null)     telephonyOpSet.createCall(contact);
- else     if (stringContact != null)     telephonyOpSet.createCall(stringContact);
+    telephonyOpSet.createCall(callString);
   }
  catch (  Throwable exception) {
     logger.error("The call could not be created: ",exception);

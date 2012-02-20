@@ -2,6 +2,7 @@
   NodeList usersList=conferenceInfoDocument.getElementsByTagName(ELEMENT_USERS);
   ConferenceMember[] conferenceMembersToRemove=callPeer.getConferenceMembers();
   int conferenceMembersToRemoveCount=conferenceMembersToRemove.length;
+  boolean changed=false;
   if (usersList.getLength() > 0) {
     NodeList userList=usersList.item(0).getChildNodes();
     int userCount=userList.getLength();
@@ -42,7 +43,11 @@
         }
         existingConferenceMember.setDisplayName(displayName);
         existingConferenceMember.setEndpointStatus(endpointStatus);
-        if (ssrc != null)         existingConferenceMember.setSSRC(Long.parseLong(ssrc));
+        if (ssrc != null) {
+          long newSsrc=Long.parseLong(ssrc);
+          if (existingConferenceMember.getSSRC() != newSsrc)           changed=true;
+          existingConferenceMember.setSSRC(newSsrc);
+        }
         if (addConferenceMember)         callPeer.addConferenceMember(existingConferenceMember);
       }
     }
@@ -51,4 +56,5 @@
     ConferenceMember conferenceMemberToRemove=conferenceMembersToRemove[conferenceMemberIndex];
     if (conferenceMemberToRemove != null)     callPeer.removeConferenceMember(conferenceMemberToRemove);
   }
+  if (changed)   notifyAll(callPeer.getCall());
 }
