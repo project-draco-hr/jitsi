@@ -123,11 +123,16 @@
     ProgressMonitor pm=pin.getProgressMonitor();
     pm.setMaximum((int)res.getContentLength());
     final BufferedOutputStream bout=new BufferedOutputStream(new FileOutputStream(temp));
+    ByteArrayOutputStream logStream=new ByteArrayOutputStream();
     try {
       int read=-1;
       byte[] buff=new byte[1024];
       while ((read=pin.read(buff)) != -1) {
         bout.write(buff,0,read);
+        logStream.write(buff,0,read);
+      }
+      if (logger.isInfoEnabled()) {
+        logger.info("Provisioning response : " + logStream.toString());
       }
       pin.close();
       bout.flush();
