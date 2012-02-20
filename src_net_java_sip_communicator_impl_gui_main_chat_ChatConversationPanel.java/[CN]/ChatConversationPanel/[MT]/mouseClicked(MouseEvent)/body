@@ -5,7 +5,20 @@
     openContextMenu(p);
   }
  else   if ((e.getModifiers() & InputEvent.BUTTON1_MASK) != 0 && currentHref != null && currentHref.length() != 0) {
-    GuiActivator.getBrowserLauncher().openURL(currentHref);
+    URI uri;
+    try {
+      uri=new URI(currentHref);
+    }
+ catch (    URISyntaxException e1) {
+      logger.error("Invalid URL",e1);
+      return;
+    }
+    if (uri.getScheme().equals("jitsi")) {
+      for (      ChatLinkClickedListener l : chatLinkClickedListeners) {
+        l.chatLinkClicked(uri);
+      }
+    }
+ else     GuiActivator.getBrowserLauncher().openURL(currentHref);
     this.currentHref="";
   }
 }

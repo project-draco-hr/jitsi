@@ -10,7 +10,15 @@ case ENCRYPTED:
       PublicKey storedPubKey=OtrActivator.scOtrKeyManager.loadPublicKey(contact);
     if (!remotePubKey.equals(storedPubKey))     OtrActivator.scOtrKeyManager.savePublicKey(contact,remotePubKey);
   if (!OtrActivator.scOtrKeyManager.isVerified(contact)) {
-    String unverifiedSessionWarning=OtrActivator.resourceService.getI18NString("plugin.otr.activator.unverifiedsessionwarning",new String[]{contact.getDisplayName()});
+    UUID sessionGuid=null;
+    for (    ScSessionID scSessionID : contactsMap.keySet()) {
+      if (scSessionID.getSessionID().equals(sessionID)) {
+        sessionGuid=scSessionID.getGUID();
+        break;
+      }
+    }
+    OtrActivator.uiService.getChat(contact).addChatLinkClickedListener(ScOtrEngineImpl.this);
+    String unverifiedSessionWarning=OtrActivator.resourceService.getI18NString("plugin.otr.activator.unverifiedsessionwarning",new String[]{contact.getDisplayName(),this.getClass().getName(),"AUTHENTIFICATION",sessionGuid.toString()});
     OtrActivator.uiService.getChat(contact).addMessage(contact.getDisplayName(),System.currentTimeMillis(),Chat.SYSTEM_MESSAGE,unverifiedSessionWarning,OperationSetBasicInstantMessaging.HTML_MIME_TYPE);
   }
 message=OtrActivator.resourceService.getI18NString((OtrActivator.scOtrKeyManager.isVerified(contact)) ? "plugin.otr.activator.sessionstared" : "plugin.otr.activator.unverifiedsessionstared",new String[]{contact.getDisplayName()});
