@@ -1,10 +1,9 @@
 {
   if (connector == null)   throw new NullPointerException("connector");
-  if (rtpConnector != null) {
-    if (rtpConnector.getConnector() == connector)     return;
-  }
   AbstractRTPConnector oldValue=rtpConnector;
-  if (connector.getProtocol() == StreamConnector.Protocol.UDP) {
+  if ((oldValue != null) && (oldValue.getConnector() == connector))   return;
+switch (connector.getProtocol()) {
+case UDP:
     rtpConnector=new RTPTransformUDPConnector(connector){
       @Override protected TransformUDPOutputStream createDataOutputStream() throws IOException {
         TransformUDPOutputStream dataOutputStream=super.createDataOutputStream();
@@ -18,21 +17,24 @@
       }
     }
 ;
+  break;
+case TCP:
+rtpConnector=new RTPTransformTCPConnector(connector){
+  @Override protected TransformTCPOutputStream createDataOutputStream() throws IOException {
+    TransformTCPOutputStream dataOutputStream=super.createDataOutputStream();
+    if (dataOutputStream != null)     configureDataOutputStream(dataOutputStream);
+    return dataOutputStream;
   }
- else   if (connector.getProtocol() == StreamConnector.Protocol.TCP) {
-    rtpConnector=new RTPTransformTCPConnector(connector){
-      @Override protected TransformTCPOutputStream createDataOutputStream() throws IOException {
-        TransformTCPOutputStream dataOutputStream=super.createDataOutputStream();
-        if (dataOutputStream != null)         configureDataOutputStream(dataOutputStream);
-        return dataOutputStream;
-      }
-      @Override protected TransformTCPInputStream createDataInputStream() throws IOException {
-        TransformTCPInputStream dataInputStream=super.createDataInputStream();
-        if (dataInputStream != null)         configureDataInputStream(dataInputStream);
-        return dataInputStream;
-      }
-    }
+  @Override protected TransformTCPInputStream createDataInputStream() throws IOException {
+    TransformTCPInputStream dataInputStream=super.createDataInputStream();
+    if (dataInputStream != null)     configureDataInputStream(dataInputStream);
+    return dataInputStream;
+  }
+}
 ;
-  }
-  rtpConnectorChanged(oldValue,rtpConnector);
+break;
+default :
+throw new IllegalArgumentException("connector");
+}
+rtpConnectorChanged(oldValue,rtpConnector);
 }
