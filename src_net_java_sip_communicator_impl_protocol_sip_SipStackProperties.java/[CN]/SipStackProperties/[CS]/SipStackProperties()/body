@@ -40,4 +40,20 @@
   this.setProperty(NSPNAME_STACK_LOGGER,NSPVALUE_STACK_LOGGER);
   this.setProperty(NSPNAME_SERVER_LOGGER,NSPVALUE_SERVER_LOGGER);
   this.setProperty("gov.nist.javax.sip.NETWORK_LAYER",SslNetworkLayer.class.getName());
+  try {
+    String enabledSslProtocols=SipActivator.getConfigurationService().getString(NSPNAME_TLS_CLIENT_PROTOCOLS);
+    if (StringUtils.isNullOrEmpty(enabledSslProtocols,true)) {
+      SSLSocket temp=(SSLSocket)SSLSocketFactory.getDefault().createSocket();
+      String[] enabledDefaultProtocols=temp.getEnabledProtocols();
+      enabledSslProtocols="";
+      for (int i=0; i < enabledDefaultProtocols.length; i++) {
+        enabledSslProtocols+=enabledDefaultProtocols[i];
+        if (i < enabledDefaultProtocols.length - 1)         enabledSslProtocols+=",";
+      }
+    }
+    this.setProperty(NSPNAME_TLS_CLIENT_PROTOCOLS,enabledSslProtocols);
+  }
+ catch (  IOException ex) {
+    logger.error("Unable to obtain default SSL protocols from Java," + " using JSIP defaults.",ex);
+  }
 }
