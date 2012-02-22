@@ -1,0 +1,29 @@
+{
+  try {
+    stopped=false;
+    while (!stopped) {
+      Map.Entry<String,EntityCapsManager.Caps> entityToProcess=null;
+synchronized (entities) {
+        if (entities.size() == 0) {
+          try {
+            entities.wait();
+          }
+ catch (          InterruptedException iex) {
+          }
+        }
+        Iterator<Map.Entry<String,EntityCapsManager.Caps>> iter=entities.entrySet().iterator();
+        if (iter.hasNext()) {
+          entityToProcess=iter.next();
+          iter.remove();
+        }
+      }
+      if (entityToProcess != null) {
+        requestDiscoveryInfo(entityToProcess.getKey(),entityToProcess.getValue());
+      }
+      entityToProcess=null;
+    }
+  }
+ catch (  Throwable t) {
+    logger.error("Error requesting discovery info, " + "thread ended unexpectedly",t);
+  }
+}

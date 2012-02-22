@@ -1,0 +1,28 @@
+{
+  try {
+    DiscoverInfo discoverInfo=discoverInfo(entityID,(caps == null) ? null : caps.getNodeVer());
+    if ((caps != null) && !caps.isValid(discoverInfo)) {
+      if (!caps.hash.equals("")) {
+        logger.error("Invalid DiscoverInfo for " + caps.getNodeVer() + ": "+ discoverInfo);
+      }
+      caps=null;
+    }
+    boolean fireEvent;
+    if (caps == null) {
+      if (CACHE_NON_CAPS) {
+        nonCapsCache.put(entityID,discoverInfo);
+        fireEvent=true;
+      }
+    }
+ else {
+      EntityCapsManager.addDiscoverInfoByCaps(caps,discoverInfo);
+      fireEvent=true;
+    }
+    if (fireEvent && capabilitiesOpSet != null) {
+      capabilitiesOpSet.fireContactCapabilitiesChanged(entityID);
+    }
+  }
+ catch (  XMPPException ex) {
+    logger.error("Error requesting discover info for " + entityID,ex);
+  }
+}
