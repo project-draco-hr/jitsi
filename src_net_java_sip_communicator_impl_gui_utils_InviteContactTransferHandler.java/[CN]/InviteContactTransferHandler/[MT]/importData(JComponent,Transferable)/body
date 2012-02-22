@@ -1,0 +1,45 @@
+{
+  if (t.isDataFlavorSupported(uiContactDataFlavor)) {
+    if (!selected)     return false;
+    Object o=null;
+    try {
+      o=t.getTransferData(uiContactDataFlavor);
+    }
+ catch (    UnsupportedFlavorException e) {
+      if (logger.isDebugEnabled())       logger.debug("Failed to drop meta contact.",e);
+    }
+catch (    IOException e) {
+      if (logger.isDebugEnabled())       logger.debug("Failed to drop meta contact.",e);
+    }
+    if (o instanceof ContactNode) {
+      UIContact uiContact=((ContactNode)o).getContactDescriptor();
+      Object obj=uiContact.getDescriptor();
+      if (!(obj instanceof MetaContact))       return false;
+      Iterator<UIContactDetail> contactDetails=uiContact.getContactDetailsForOperationSet(OperationSetBasicTelephony.class).iterator();
+      if (!contactDetails.hasNext())       return false;
+      MetaContact metaContact=(MetaContact)uiContact.getDescriptor();
+      dialog.addSelectedMetaContact(metaContact);
+      return true;
+    }
+  }
+ else   if (t.isDataFlavorSupported(metaContactDataFlavor)) {
+    MetaContact c=null;
+    try {
+      c=(MetaContact)t.getTransferData(metaContactDataFlavor);
+    }
+ catch (    Exception e) {
+      e.printStackTrace();
+    }
+    if (selected) {
+      dialog.removeMetaContact(c);
+      dialog.addSelectedMetaContact(c);
+      return true;
+    }
+ else {
+      dialog.removeSelectedMetaContact(c);
+      dialog.addMetaContact(c);
+    }
+    return true;
+  }
+  return false;
+}
