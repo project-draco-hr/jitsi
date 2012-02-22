@@ -1,0 +1,15 @@
+{
+  long currentTimeMs=System.currentTimeMillis();
+  int downloadNewNbLost=this.getDownloadNbPDULost();
+  int downloadNewNbRecv=this.getDownloadNbPDUProcessed();
+  long downloadNewNbByteRecv=this.getNbByteReceived();
+  int downloadNbSteps=downloadNewNbRecv - this.downloadNbPackets;
+  double newPercentLost=MediaStreamStatsImpl.computePercentLost(downloadNewNbRecv - this.downloadNbPackets,downloadNewNbLost - this.downloadNbLost);
+  this.downloadPercentLost=MediaStreamStatsImpl.computeEWMA(downloadNbSteps,this.downloadPercentLost,newPercentLost);
+  double newRateKiloBitPerSec=MediaStreamStatsImpl.computeRateKiloBitPerSec(downloadNewNbByteRecv - this.downloadNbByte,currentTimeMs - this.updateTimeMs);
+  this.downloadRateKiloBitPerSec=MediaStreamStatsImpl.computeEWMA(downloadNbSteps,this.downloadRateKiloBitPerSec,newRateKiloBitPerSec);
+  this.updateTimeMs=currentTimeMs;
+  this.downloadNbLost=downloadNewNbLost;
+  this.downloadNbPackets=downloadNewNbRecv;
+  this.downloadNbByte=downloadNewNbByteRecv;
+}
