@@ -1,0 +1,23 @@
+{
+  Caps caps=null;
+  String lastRemovedJid=null;
+  Iterator<String> iter=userCaps.keySet().iterator();
+  while (iter.hasNext()) {
+    String jid=iter.next();
+    if (StringUtils.parseBareAddress(jid).equals(contact.getAddress())) {
+      caps=userCaps.get(jid);
+      lastRemovedJid=jid;
+      iter.remove();
+    }
+  }
+  if (caps != null) {
+    UserCapsNodeListener[] listeners;
+synchronized (userCapsNodeListeners) {
+      listeners=userCapsNodeListeners.toArray(NO_USER_CAPS_NODE_LISTENERS);
+    }
+    if (listeners.length != 0) {
+      String nodeVer=caps.getNodeVer();
+      for (      UserCapsNodeListener listener : listeners)       listener.userCapsNodeRemoved(lastRemovedJid,nodeVer,false);
+    }
+  }
+}

@@ -1,10 +1,13 @@
 {
   OperationSetPresence opsetPresence=parentProvider.getOperationSet(OperationSetPresence.class);
   if (opsetPresence != null) {
-    String jid=StringUtils.parseBareAddress(user);
-    Contact contact=opsetPresence.findContactByID(jid);
+    String userID=StringUtils.parseBareAddress(user);
+    Contact contact=opsetPresence.findContactByID(userID);
+    boolean online=false;
+    Presence presence=parentProvider.getConnection().getRoster().getPresence(user);
+    if (presence != null)     online=presence.isAvailable();
     if (contact != null) {
-      fireContactCapabilitiesEvent(contact,ContactCapabilitiesEvent.SUPPORTED_OPERATION_SETS_CHANGED,getSupportedOperationSets(contact,true));
+      fireContactCapabilitiesEvent(contact,ContactCapabilitiesEvent.SUPPORTED_OPERATION_SETS_CHANGED,getSupportedOperationSets(user,online));
     }
   }
 }
