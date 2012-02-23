@@ -1,3 +1,19 @@
 {
+  try {
+    byte[] data=pkt.getBuffer();
+    int offset=pkt.getOffset();
+    int length=pkt.getLength();
+    RTCPHeader header=new RTCPHeader(data,offset,length);
+    if (header.getPacketType() == RTCPPacket.SR) {
+      RTCPSenderReport report=new RTCPSenderReport(data,offset,length);
+      if (report.getFeedbackReports().size() > 0) {
+        RTCPFeedback feedback=(RTCPFeedback)report.getFeedbackReports().get(0);
+        this.mediaStream.getMediaStreamStats().updateNewReceivedFeedback(feedback);
+      }
+    }
+  }
+ catch (  Throwable t) {
+    t.printStackTrace();
+  }
   return pkt;
 }

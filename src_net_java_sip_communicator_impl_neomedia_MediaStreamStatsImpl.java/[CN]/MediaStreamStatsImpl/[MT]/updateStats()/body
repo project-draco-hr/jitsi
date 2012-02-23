@@ -1,15 +1,22 @@
 {
   long currentTimeMs=System.currentTimeMillis();
-  int downloadNewNbLost=this.getDownloadNbPDULost();
-  int downloadNewNbRecv=this.getDownloadNbPDUProcessed();
-  long downloadNewNbByteRecv=this.getNbByteReceived();
-  int downloadNbSteps=downloadNewNbRecv - this.downloadNbPackets;
-  double newPercentLost=MediaStreamStatsImpl.computePercentLost(downloadNewNbRecv - this.downloadNbPackets,downloadNewNbLost - this.downloadNbLost);
-  this.downloadPercentLost=MediaStreamStatsImpl.computeEWMA(downloadNbSteps,this.downloadPercentLost,newPercentLost);
-  double newRateKiloBitPerSec=MediaStreamStatsImpl.computeRateKiloBitPerSec(downloadNewNbByteRecv - this.downloadNbByte,currentTimeMs - this.updateTimeMs);
-  this.downloadRateKiloBitPerSec=MediaStreamStatsImpl.computeEWMA(downloadNbSteps,this.downloadRateKiloBitPerSec,newRateKiloBitPerSec);
+  long downloadNewNbLost=this.getDownloadNbPDULost();
+  long downloadNewNbRecv=this.getDownloadNbPDUProcessed();
+  long uploadNewNbRecv=this.getUploadNbPDUProcessed();
+  long downloadNewNbByte=this.getDownloadNbByte();
+  long uploadNewNbByte=this.getDownloadNbByte();
+  long downloadNbSteps=downloadNewNbRecv - this.downloadNbPackets;
+  long uploadNbSteps=uploadNewNbRecv - this.uploadNbPackets;
+  double downloadNewPercentLoss=MediaStreamStatsImpl.computePercentLoss(downloadNewNbRecv - this.downloadNbPackets,downloadNewNbLost - this.downloadNbLost);
+  this.downloadPercentLoss=MediaStreamStatsImpl.computeEWMA(downloadNbSteps,this.downloadPercentLoss,downloadNewPercentLoss);
+  double downloadNewRateKiloBitPerSec=MediaStreamStatsImpl.computeRateKiloBitPerSec(downloadNewNbByte - this.downloadNbByte,currentTimeMs - this.updateTimeMs);
+  this.downloadRateKiloBitPerSec=MediaStreamStatsImpl.computeEWMA(downloadNbSteps,this.downloadRateKiloBitPerSec,downloadNewRateKiloBitPerSec);
+  double uploadNewRateKiloBitPerSec=MediaStreamStatsImpl.computeRateKiloBitPerSec(uploadNewNbByte - this.uploadNbByte,currentTimeMs - this.updateTimeMs);
+  this.uploadRateKiloBitPerSec=MediaStreamStatsImpl.computeEWMA(uploadNbSteps,this.uploadRateKiloBitPerSec,uploadNewRateKiloBitPerSec);
   this.updateTimeMs=currentTimeMs;
   this.downloadNbLost=downloadNewNbLost;
   this.downloadNbPackets=downloadNewNbRecv;
-  this.downloadNbByte=downloadNewNbByteRecv;
+  this.uploadNbPackets=uploadNewNbRecv;
+  this.downloadNbByte=downloadNewNbByte;
+  this.uploadNbByte=uploadNewNbByte;
 }

@@ -1,5 +1,4 @@
 {
-  if (!logger.isInfoEnabled())   return pkt;
   try {
     numberOfSenderReports++;
     byte[] data=pkt.getBuffer();
@@ -10,6 +9,8 @@
       RTCPSenderReport report=new RTCPSenderReport(data,offset,length);
       if (report.getFeedbackReports().size() > 0) {
         RTCPFeedback feedback=(RTCPFeedback)report.getFeedbackReports().get(0);
+        this.mediaStream.getMediaStreamStats().updateNewSentFeedback(feedback);
+        if (!logger.isInfoEnabled())         return pkt;
         long jitter=feedback.getJitter();
         if (jitter < getMinInterArrivalJitter() || getMinInterArrivalJitter() == -1)         minInterArrivalJitter=jitter;
         if (getMaxInterArrivalJitter() < jitter)         maxInterArrivalJitter=jitter;
