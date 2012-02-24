@@ -1,0 +1,26 @@
+{
+  long startTime=callPeer.getCallDurationStartTime();
+  long currentTime=System.currentTimeMillis();
+  long callNbTimeMsSpent=currentTime - startTime;
+  String peerAddress=callPeer.getAddress();
+  stringBuffer.append(getLineString(peerAddress,""));
+  stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.CALL_DURATION"),GuiUtils.formatTime(callNbTimeMsSpent)));
+  if (callPeer instanceof MediaAwareCallPeer) {
+    CallPeerMediaHandler callPeerMediaHandler=((MediaAwareCallPeer)callPeer).getMediaHandler();
+    if (callPeerMediaHandler != null) {
+      MediaStream mediaStream;
+      mediaStream=callPeerMediaHandler.getStream(MediaType.AUDIO);
+      if (mediaStream != null) {
+        stringBuffer.append("<br/>");
+        stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.AUDIO_INFO"),""));
+        constructAudioVideoInfo(mediaStream,stringBuffer);
+      }
+      mediaStream=callPeerMediaHandler.getStream(MediaType.VIDEO);
+      if (mediaStream != null) {
+        stringBuffer.append("<br/>");
+        stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.VIDEO_INFO"),""));
+        constructAudioVideoInfo(mediaStream,stringBuffer);
+      }
+    }
+  }
+}
