@@ -1,17 +1,17 @@
 {
   super(new BorderLayout());
+  Box box=Box.createVerticalBox();
+  add(box,BorderLayout.NORTH);
   TransparentPanel sipClientPortConfigPanel=new TransparentPanel();
   sipClientPortConfigPanel.setLayout(new BorderLayout(10,10));
-  sipClientPortConfigPanel.setPreferredSize(new Dimension(250,100));
-  add(sipClientPortConfigPanel,BorderLayout.NORTH);
+  sipClientPortConfigPanel.setPreferredSize(new Dimension(250,50));
+  box.add(sipClientPortConfigPanel);
   TransparentPanel labelPanel=new TransparentPanel(new GridLayout(0,1,2,2));
   TransparentPanel valuePanel=new TransparentPanel(new GridLayout(0,1,2,2));
   sipClientPortConfigPanel.add(labelPanel,BorderLayout.WEST);
   sipClientPortConfigPanel.add(valuePanel,BorderLayout.CENTER);
-  sipClientPortConfigPanel.add(new JLabel(Resources.getString("plugin.generalconfig.DEFAULT_LANGUAGE_RESTART_WARN")),BorderLayout.SOUTH);
   labelPanel.add(new JLabel(Resources.getString("plugin.generalconfig.SIP_CLIENT_PORT")));
   labelPanel.add(new JLabel(Resources.getString("plugin.generalconfig.SIP_CLIENT_SECURE_PORT")));
-  labelPanel.add(new JLabel(Resources.getString("plugin.generalconfig.SIP_SSL_PROTOCOLS")));
   final JTextField clientPortField=new JTextField(6);
   clientPortField.setText(String.valueOf(ConfigurationManager.getClientPort()));
   valuePanel.add(clientPortField);
@@ -56,15 +56,18 @@
     }
   }
 );
-  final JTextField sslProtocols=new SIPCommTextField(Resources.getString("plugin.generalconfig.SIP_SSL_PROTOCOLS_EXAMPLE",new String[]{"SSLv3, TLSv1"}));
-  sslProtocols.setText(String.valueOf(ConfigurationManager.getSSLProtocols()));
-  valuePanel.add(sslProtocols);
-  sslProtocols.addFocusListener(new FocusListener(){
-    public void focusLost(    FocusEvent e){
-      ConfigurationManager.setSSLProtocols(sslProtocols.getText());
-    }
-    public void focusGained(    FocusEvent e){
-    }
+  String configuredProtocols=Arrays.toString(ConfigurationManager.getEnabledSslProtocols());
+  pnlSslProtocols=Box.createVerticalBox();
+  pnlSslProtocols.setBorder(BorderFactory.createTitledBorder(Resources.getString("plugin.generalconfig.SIP_SSL_PROTOCOLS")));
+  pnlSslProtocols.setAlignmentX(Component.LEFT_ALIGNMENT);
+  for (  String protocol : ConfigurationManager.getAvailableSslProtocols()) {
+    JCheckBox chkProtocol=new SIPCommCheckBox(protocol);
+    chkProtocol.addActionListener(this);
+    chkProtocol.setSelected(configuredProtocols.contains(protocol));
+    pnlSslProtocols.add(chkProtocol);
   }
-);
+  pnlSslProtocols.add(new JLabel(Resources.getString("plugin.generalconfig.DEFAULT_LANGUAGE_RESTART_WARN")));
+  JPanel sslWrapper=new TransparentPanel(new BorderLayout());
+  sslWrapper.add(pnlSslProtocols,BorderLayout.CENTER);
+  box.add(sslWrapper);
 }
