@@ -2,12 +2,21 @@
   Call c=evt.getSourceCall();
   c.addCallChangeListener(this);
   Iterator<? extends CallPeer> peers=c.getCallPeers();
+  if (c instanceof MediaAwareCall && this == getCallGroup().getCalls().get(0)) {
+    ((MediaAwareCall<?,?,?>)c).conferenceAudioMixer=null;
+    ((MediaAwareCall<?,?,?>)c).getDefaultDevice(MediaType.AUDIO);
+  }
   while (peers.hasNext()) {
     CallPeer p=peers.next();
     if (p instanceof MediaAwareCallPeer) {
       CallPeerMediaHandler<?> mediaHandler=((MediaAwareCallPeer<?,?,?>)p).getMediaHandler();
       MediaStream stream=mediaHandler.getStream(MediaType.AUDIO);
-      if (stream != null)       stream.setDevice(this.getDefaultDevice(MediaType.AUDIO));
+      if (stream != null) {
+        if (this == getCallGroup().getCalls().get(0)) {
+          stream.setDevice(getDefaultDevice(MediaType.AUDIO));
+          mediaHandler.registerAudioLevelListeners((AudioMediaStream)stream);
+        }
+      }
     }
     getCrossProtocolCallPeersVector().add(p);
     fireCallPeerEvent(p,CallPeerEvent.CALL_PEER_ADDED);
