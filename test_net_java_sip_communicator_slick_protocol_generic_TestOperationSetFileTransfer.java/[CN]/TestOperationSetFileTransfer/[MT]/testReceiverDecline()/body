@@ -1,6 +1,6 @@
 {
   if (!enableTestReceiverDecline())   return;
-  logger.trace("Start test: receiver will decline incoming fileTransfer");
+  logger.info("Start test: receiver will decline incoming fileTransfer");
   File fileToTransfer=getTempFileToTransfer(12345);
   OperationSetFileTransfer ftOpSet1=getOpSetFilTransfer1();
   OperationSetFileTransfer ftOpSet2=getOpSetFilTransfer2();
@@ -36,7 +36,7 @@
     assertTrue("FileTransfer must be rejected",receiverFTListerner.isRejected());
     assertEquals("A file transfer status changed - " + "refused received on send side",1,senderStatusListener.collectedEvents.size());
     fileTransferStatusEvent=senderStatusListener.collectedEvents.get(0);
-    assertEquals("Event must be refused",FileTransferStatusChangeEvent.REFUSED,fileTransferStatusEvent.getNewStatus());
+    assertTrue("Event must be refused (or failed)",(fileTransferStatusEvent.getNewStatus() == FileTransferStatusChangeEvent.REFUSED) || (fileTransferStatusEvent.getNewStatus() == FileTransferStatusChangeEvent.FAILED));
   }
   finally {
     ftOpSet1.removeFileTransferListener(senderFTListerner);
