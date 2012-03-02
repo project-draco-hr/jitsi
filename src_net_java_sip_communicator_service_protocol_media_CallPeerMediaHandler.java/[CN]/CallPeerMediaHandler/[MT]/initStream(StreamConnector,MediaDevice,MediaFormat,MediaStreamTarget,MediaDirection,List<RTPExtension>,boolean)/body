@@ -3,10 +3,16 @@
   MediaStream stream=getStream(mediaType);
   if (stream == null) {
     if (logger.isTraceEnabled() && (mediaType != format.getMediaType()))     logger.trace("The media types of device and format differ.");
-    SrtpControl control=srtpControls.size() > 0 ? srtpControls.get(new MediaTypeSrtpControl(mediaType,srtpControls.firstKey().srtpControlType)) : null;
     MediaService mediaService=ProtocolMediaActivator.getMediaService();
+    SrtpControlType srtpControlType=SrtpControlType.ZRTP;
+    if (srtpControls.size() > 0) {
+      srtpControlType=srtpControls.firstKey().srtpControlType;
+    }
+    MediaTypeSrtpControl mediaTypeSrtpControl=new MediaTypeSrtpControl(mediaType,srtpControlType);
+    SrtpControl control=srtpControls.get(mediaTypeSrtpControl);
     if (control == null) {
       stream=mediaService.createMediaStream(connector,device);
+      srtpControls.put(mediaTypeSrtpControl,stream.getSrtpControl());
     }
  else {
       stream=mediaService.createMediaStream(connector,device,control);
