@@ -1,18 +1,31 @@
 {
 synchronized (mapActions) {
     List<AWTKeyStroke> keystrokes=mapActions.get(listener);
+    boolean ok=false;
     if (keyStroke == null) {
       return;
     }
     if (keystrokes != null) {
-      if (keyboardHook.registerShortcut(keyStroke.getKeyCode(),getModifiers(keyStroke))) {
-        if (add)         keystrokes.add(keyStroke);
+      if (keyStroke.getModifiers() != SPECIAL_KEY_MODIFIERS) {
+        ok=keyboardHook.registerShortcut(keyStroke.getKeyCode(),getModifiers(keyStroke));
+      }
+ else {
+        ok=keyboardHook.registerSpecial(keyStroke.getKeyCode());
+      }
+      if (ok && add) {
+        keystrokes.add(keyStroke);
       }
     }
  else {
       keystrokes=new ArrayList<AWTKeyStroke>();
-      if (keyboardHook.registerShortcut(keyStroke.getKeyCode(),getModifiers(keyStroke))) {
-        if (add)         keystrokes.add(keyStroke);
+      if (keyStroke.getModifiers() != SPECIAL_KEY_MODIFIERS) {
+        ok=keyboardHook.registerShortcut(keyStroke.getKeyCode(),getModifiers(keyStroke));
+      }
+ else {
+        ok=keyboardHook.registerSpecial(keyStroke.getKeyCode());
+      }
+      if (ok && add) {
+        keystrokes.add(keyStroke);
       }
     }
     if (add)     mapActions.put(listener,keystrokes);

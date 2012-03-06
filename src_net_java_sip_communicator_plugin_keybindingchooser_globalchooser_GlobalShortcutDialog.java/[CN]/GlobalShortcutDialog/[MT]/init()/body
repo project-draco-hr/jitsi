@@ -1,0 +1,94 @@
+{
+  TransparentPanel mainPanel=new TransparentPanel(new BorderLayout());
+  JPanel btnPanel=new TransparentPanel(new FlowLayout(FlowLayout.RIGHT));
+  JPanel shortcutPanel=new TransparentPanel(new GridLayout(0,2,0,10));
+  btnOK.addActionListener(this);
+  btnCancel.addActionListener(this);
+  KeyAdapter keyAdapter=new KeyAdapter(){
+    private KeyEvent buffer=null;
+    @Override public void keyPressed(    KeyEvent event){
+      if (event.getKeyCode() == KeyEvent.VK_ESCAPE) {
+        SIPCommTextField field=(SIPCommTextField)event.getSource();
+        AWTKeyStroke ks=null;
+        if (field == fldShortcut) {
+          ks=entry.getShortcut();
+        }
+ else         if (field == fldShortcut2) {
+          ks=entry.getShortcut2();
+        }
+        if (ks == null)         field.setText(PRESS_TO_SETUP_SHORTCUT);
+ else {
+          if (ks.getModifiers() == GlobalShortcutService.SPECIAL_KEY_MODIFIERS) {
+            field.setText("Special");
+          }
+ else {
+            field.setText(GlobalShortcutEntry.getShortcutText(entry.getShortcut()));
+          }
+        }
+        btnOK.requestFocusInWindow();
+        return;
+      }
+      if (event.getKeyCode() == 0)       return;
+      this.buffer=event;
+    }
+    @Override public void keyReleased(    KeyEvent event){
+      if (buffer != null) {
+        SIPCommTextField field=(SIPCommTextField)event.getSource();
+        AWTKeyStroke input=KeyStroke.getKeyStrokeForEvent(buffer);
+        buffer=null;
+        GlobalShortcutEntry en=entry;
+        List<AWTKeyStroke> kss=new ArrayList<AWTKeyStroke>();
+        kss.add(input);
+        kss.add(en.getShortcut2());
+        en.setShortcuts(kss);
+        en.setEditShortcut1(false);
+        en.setEditShortcut2(false);
+        field.setText(GlobalShortcutEntry.getShortcutText(input));
+        btnOK.requestFocus();
+      }
+    }
+  }
+;
+  AWTKeyStroke ks=entry.getShortcut();
+  AWTKeyStroke ks2=entry.getShortcut2();
+  if (ks != null) {
+    if (ks.getModifiers() != GlobalShortcutService.SPECIAL_KEY_MODIFIERS) {
+      fldShortcut.setText(GlobalShortcutEntry.getShortcutText(ks));
+    }
+ else {
+      fldShortcut.setText("Special");
+    }
+  }
+  if (ks2 != null) {
+    if (ks2.getModifiers() != GlobalShortcutService.SPECIAL_KEY_MODIFIERS) {
+      fldShortcut2.setText(GlobalShortcutEntry.getShortcutText(ks2));
+    }
+ else {
+      fldShortcut2.setText("Special");
+    }
+  }
+  fldShortcut.addKeyListener(keyAdapter);
+  fldShortcut2.addKeyListener(keyAdapter);
+  specialBox.addItemListener(new ItemListener(){
+    public void itemStateChanged(    ItemEvent evt){
+      KeybindingChooserActivator.getGlobalShortcutService().setSpecialKeyDetection((evt.getStateChange() == ItemEvent.SELECTED),GlobalShortcutDialog.this);
+    }
+  }
+);
+  shortcutPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+  shortcutPanel.add(new JLabel("Primary shortcut"));
+  shortcutPanel.add(fldShortcut);
+  shortcutPanel.add(new JLabel("Secondary shortcut"));
+  shortcutPanel.add(fldShortcut2);
+  if (OSUtils.IS_WINDOWS) {
+    shortcutPanel.add(new TransparentPanel());
+    shortcutPanel.add(specialBox);
+  }
+  mainPanel.add(shortcutPanel,BorderLayout.CENTER);
+  btnPanel.add(btnOK);
+  btnPanel.add(btnCancel);
+  mainPanel.add(btnPanel,BorderLayout.SOUTH);
+  btnOK.requestFocus();
+  getContentPane().add(mainPanel);
+  pack();
+}

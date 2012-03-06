@@ -1,9 +1,21 @@
 {
+  if (keyboardHook.isSpecialKeyDetection()) {
+    specialKeyDetected=AWTKeyStroke.getAWTKeyStroke(keycode,modifiers);
+synchronized (specialKeySyncRoot) {
+      specialKeySyncRoot.notify();
+    }
+    GlobalShortcutEvent evt=new GlobalShortcutEvent(specialKeyDetected);
+    List<GlobalShortcutListener> copyListeners=new ArrayList<GlobalShortcutListener>(specialKeyNotifiers);
+    for (    GlobalShortcutListener l : copyListeners) {
+      l.shortcutReceived(evt);
+    }
+    return;
+  }
 synchronized (mapActions) {
     for (    Map.Entry<GlobalShortcutListener,List<AWTKeyStroke>> entry : mapActions.entrySet()) {
       List<AWTKeyStroke> lst=entry.getValue();
       for (      AWTKeyStroke l : lst) {
-        if (l.getKeyCode() == keycode && getModifiers(l) == modifiers) {
+        if (l.getKeyCode() == keycode && (getModifiers(l) == modifiers || (modifiers == SPECIAL_KEY_MODIFIERS && l.getModifiers() == modifiers))) {
           GlobalShortcutEvent evt=new GlobalShortcutEvent(l);
           entry.getKey().shortcutReceived(evt);
           return;
