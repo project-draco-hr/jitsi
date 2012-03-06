@@ -8,7 +8,27 @@
     if (replacesHeader == null) {
       if (autoAnswerOpSet != null && autoAnswerOpSet.preCallCheck(invite,serverTransaction))       return;
       CallSipImpl call=new CallSipImpl(this);
-      call.processInvite(sourceProvider,serverTransaction);
+      MediaAwareCallPeer peer=call.processInvite(sourceProvider,serverTransaction);
+      if (getProtocolProvider().getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.MODE_PARANOIA,false) && peer.getMediaHandler().getAdvertisedEncryptionMethods().length == 0) {
+        peer.setState(CallPeerState.FAILED,"Encryption required!",Response.SESSION_NOT_ACCEPTABLE);
+        WarningHeader warning=null;
+        try {
+          warning=protocolProvider.getHeaderFactory().createWarningHeader(protocolProvider.getAccountID().getService(),399,"Encryption required!");
+        }
+ catch (        InvalidArgumentException e) {
+          logger.error("Cannot create warning header",e);
+        }
+catch (        ParseException e) {
+          logger.error("Cannot create warning header",e);
+        }
+        try {
+          protocolProvider.sayError(serverTransaction,Response.SESSION_NOT_ACCEPTABLE,warning);
+        }
+ catch (        OperationFailedException e) {
+          logger.error("Cannot send 606 error!",e);
+        }
+        return;
+      }
       if (autoAnswerOpSet != null && autoAnswerOpSet.followCallCheck(invite,call))       return;
     }
  else {

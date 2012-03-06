@@ -54,6 +54,13 @@
     answer.add(ourContent);
     localContentMap.put(content.getName(),ourContent);
     atLeastOneValidDescription=true;
+    EncryptionPacketExtension encryptionPacketExtension=description.getFirstChildOfType(EncryptionPacketExtension.class);
+    if (encryptionPacketExtension != null) {
+      ZrtpHashPacketExtension zrtpHashPacketExtension=encryptionPacketExtension.getFirstChildOfType(ZrtpHashPacketExtension.class);
+      if (zrtpHashPacketExtension != null && zrtpHashPacketExtension.getValue() != null) {
+        addAdvertisedEncryptionMethod(SrtpControlType.ZRTP);
+      }
+    }
   }
   if (!atLeastOneValidDescription) {
     ProtocolProviderServiceJabberImpl.throwOperationFailedException("Offer contained no media formats" + " or no valid media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);

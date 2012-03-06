@@ -4,6 +4,13 @@
   CallPeerGTalkImpl callPeer=new CallPeerGTalkImpl(remoteParty,this);
   addCallPeer(callPeer);
   callPeer.processSessionInitiate(sessionIQ);
+  if (getProtocolProvider().getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.MODE_PARANOIA,false) && callPeer.getMediaHandler().getAdvertisedEncryptionMethods().length == 0) {
+    String reasonText="Encryption required!";
+    SessionIQ errResp=GTalkPacketFactory.createSessionTerminate(sessionIQ.getTo(),sessionIQ.getFrom(),sessionIQ.getID(),Reason.SECURITY_ERROR,reasonText);
+    callPeer.setState(CallPeerState.FAILED,reasonText);
+    getProtocolProvider().getConnection().sendPacket(errResp);
+    return null;
+  }
   if (callPeer.getState() == CallPeerState.FAILED)   return null;
   callPeer.setState(CallPeerState.INCOMING_CALL);
   if (this.getCallPeerCount() == 1 && this.getCallGroup() == null)   parentOpSet.fireCallEvent(CallEvent.CALL_RECEIVED,this);

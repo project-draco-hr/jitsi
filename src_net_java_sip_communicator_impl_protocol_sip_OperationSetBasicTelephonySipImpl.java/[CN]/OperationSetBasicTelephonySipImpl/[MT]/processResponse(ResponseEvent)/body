@@ -94,8 +94,16 @@ return true;
 }
 CallPeerSipImpl callPeer=activeCallsRepository.findCallPeer(clientTransaction.getDialog());
 if ((responseStatusCodeRange == 4) || (responseStatusCodeRange == 5) || (responseStatusCodeRange == 6)) {
+String reason=response.getReasonPhrase();
+WarningHeader warningHeader=(WarningHeader)response.getHeader(WarningHeader.NAME);
+if (warningHeader != null) {
+reason=warningHeader.getText();
+logger.error("Received error: " + response.getStatusCode() + " "+ response.getReasonPhrase()+ " "+ warningHeader.getText()+ "-"+ warningHeader.getAgent()+ "-"+ warningHeader.getName());
+}
+ else {
 logger.error("Received error: " + response.getStatusCode() + " "+ response.getReasonPhrase());
-if (callPeer != null) callPeer.setState(CallPeerState.FAILED,response.getReasonPhrase());
+}
+if (callPeer != null) callPeer.setState(CallPeerState.FAILED,reason);
 processed=true;
 }
  else if ((responseStatusCodeRange == 2) || (responseStatusCodeRange == 3)) {

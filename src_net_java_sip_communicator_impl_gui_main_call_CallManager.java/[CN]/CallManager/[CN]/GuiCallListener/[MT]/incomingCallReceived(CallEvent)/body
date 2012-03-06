@@ -11,7 +11,12 @@
   Call sourceCall=event.getSourceCall();
   final ReceivedCallDialog receivedCallDialog=new ReceivedCallDialog(sourceCall,event.isVideoCall(),(CallManager.getActiveCalls().size() > 0));
   receivedCallDialog.setVisible(true);
-  final String peerName=sourceCall.getCallPeers().next().getDisplayName();
+  Iterator<? extends CallPeer> peerIterator=sourceCall.getCallPeers();
+  if (!peerIterator.hasNext()) {
+    if (receivedCallDialog.isVisible())     receivedCallDialog.setVisible(false);
+    return;
+  }
+  final String peerName=peerIterator.next().getDisplayName();
   final Date callDate=new Date();
   sourceCall.addCallChangeListener(new CallChangeAdapter(){
     @Override public void callStateChanged(    CallChangeEvent evt){

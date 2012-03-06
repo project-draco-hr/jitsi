@@ -2,6 +2,8 @@
   List<MediaDescription> remoteDescriptions=SdpUtils.extractMediaDescriptions(answer);
   this.setCallInfoURL(SdpUtils.getCallInfoURL(answer));
   boolean masterStreamSet=false;
+  boolean hasZrtp=false;
+  boolean hasSdes=false;
   List<MediaType> seenMediaTypes=new ArrayList<MediaType>();
   for (  MediaDescription mediaDescription : remoteDescriptions) {
     MediaType mediaType;
@@ -69,6 +71,7 @@
             it.remove();
           }
         }
+        hasSdes=true;
       }
     }
     boolean masterStream=false;
@@ -84,6 +87,14 @@
         masterStreamSet=true;
       }
     }
+    try {
+      hasZrtp=mediaDescription.getAttribute(SdpUtils.ZRTP_HASH_ATTR) != null;
+    }
+ catch (    SdpParseException e) {
+      logger.error("received an unparsable sdp attribute",e);
+    }
     initStream(connector,dev,supportedFormats.get(0),target,direction,rtpExtensions,masterStream);
   }
+  if (hasSdes)   addAdvertisedEncryptionMethod(SrtpControlType.SDES);
+  if (hasZrtp)   addAdvertisedEncryptionMethod(SrtpControlType.ZRTP);
 }
