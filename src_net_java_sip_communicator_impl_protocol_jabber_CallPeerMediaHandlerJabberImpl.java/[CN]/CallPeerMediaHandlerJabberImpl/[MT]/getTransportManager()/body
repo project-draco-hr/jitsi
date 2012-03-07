@@ -2,7 +2,15 @@
   if (transportManager == null) {
     CallPeerJabberImpl peer=getPeer();
     if (peer.isInitiator()) {
-      throw new IllegalStateException("The initiator is expected to specify the transport" + " in their offer.");
+synchronized (transportManagerSyncRoot) {
+        try {
+          transportManagerSyncRoot.wait(5000);
+        }
+ catch (        InterruptedException e) {
+        }
+      }
+      if (transportManager == null)       throw new IllegalStateException("The initiator is expected to specify the transport" + " in their offer.");
+ else       return transportManager;
     }
  else {
       ScServiceDiscoveryManager discoveryManager=peer.getProtocolProvider().getDiscoveryManager();
