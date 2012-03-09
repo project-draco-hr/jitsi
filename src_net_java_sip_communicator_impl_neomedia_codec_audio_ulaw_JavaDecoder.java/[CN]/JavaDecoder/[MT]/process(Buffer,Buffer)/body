@@ -1,0 +1,20 @@
+{
+  if (!checkInputBuffer(inputBuffer))   return BUFFER_PROCESSED_FAILED;
+  if (isEOM(inputBuffer)) {
+    propagateEOM(outputBuffer);
+    return BUFFER_PROCESSED_OK;
+  }
+  byte[] inData=(byte[])inputBuffer.getData();
+  byte[] outData=validateByteArraySize(outputBuffer,inData.length * 2);
+  int inpLength=inputBuffer.getLength();
+  int outLength=2 * inpLength;
+  int inOffset=inputBuffer.getOffset();
+  int outOffset=outputBuffer.getOffset();
+  for (int i=0; i < inpLength; i++) {
+    int temp=inData[inOffset++] & 0xff;
+    outData[outOffset++]=lutTableL[temp];
+    outData[outOffset++]=lutTableH[temp];
+  }
+  updateOutput(outputBuffer,outputFormat,outLength,outputBuffer.getOffset());
+  return BUFFER_PROCESSED_OK;
+}

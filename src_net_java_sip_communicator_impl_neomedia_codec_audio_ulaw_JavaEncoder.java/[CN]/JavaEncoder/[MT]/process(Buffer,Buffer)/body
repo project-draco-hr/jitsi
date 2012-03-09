@@ -1,0 +1,16 @@
+{
+  if (!checkInputBuffer(inputBuffer))   return BUFFER_PROCESSED_FAILED;
+  if (isEOM(inputBuffer)) {
+    propagateEOM(outputBuffer);
+    return BUFFER_PROCESSED_OK;
+  }
+  Format newFormat=inputBuffer.getFormat();
+  if (lastFormat != newFormat)   initConverter((AudioFormat)newFormat);
+  int inpLength=inputBuffer.getLength();
+  int outLength=calculateOutputSize(inputBuffer.getLength());
+  byte[] inpData=(byte[])inputBuffer.getData();
+  byte[] outData=validateByteArraySize(outputBuffer,outLength);
+  convert(inpData,inputBuffer.getOffset(),inpLength,outData,0);
+  updateOutput(outputBuffer,outputFormat,outLength,0);
+  return BUFFER_PROCESSED_OK;
+}
