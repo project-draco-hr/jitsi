@@ -2,10 +2,6 @@
   Iterator<? extends CallPeer> callPeers=call.getCallPeers();
   while (callPeers.hasNext()) {
     CallPeer callPeer=callPeers.next();
-    if (callPeer.getState() == CallPeerState.CONNECTED) {
-      enableButtons(true);
-      return;
-    }
     settingsPanel.add(transferCallButton);
     Contact peerContact=callPeer.getContact();
     ProtocolProviderService callProvider=call.getProtocolProvider();
@@ -17,6 +13,11 @@
  else {
       if (callProvider.getOperationSet(OperationSetDesktopSharingServer.class) != null)       settingsPanel.add(desktopSharingButton);
       if (callProvider.getOperationSet(OperationSetVideoTelephony.class) != null)       settingsPanel.add(videoButton);
+    }
+    if (callPeer.getState() == CallPeerState.CONNECTED) {
+      if (!isCallTimerStarted())       startCallTimer();
+      enableButtons(true);
+      return;
     }
   }
   enableButtons(false);
