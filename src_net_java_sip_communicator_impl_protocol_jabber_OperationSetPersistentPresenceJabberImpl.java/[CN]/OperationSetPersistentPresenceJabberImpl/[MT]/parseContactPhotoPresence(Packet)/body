@@ -1,0 +1,25 @@
+{
+  String userID=StringUtils.parseBareAddress(packet.getFrom());
+  ContactJabberImpl sourceContact=ssContactList.findContactById(userID);
+  byte[] currentAvatar=sourceContact.getImage(false);
+  DefaultPacketExtension defaultPacketExtension=(DefaultPacketExtension)packet.getExtension(VCardTempXUpdatePresenceExtension.ELEMENT_NAME,VCardTempXUpdatePresenceExtension.NAMESPACE);
+  try {
+    String packetPhotoSHA1=defaultPacketExtension.getValue("photo");
+    if (defaultPacketExtension != null && packetPhotoSHA1 != null && !packetPhotoSHA1.equals(VCardTempXUpdatePresenceExtension.getImageSha1(currentAvatar))) {
+      byte[] newAvatar=null;
+      if (packetPhotoSHA1.length() != 0) {
+        VCard vCard=new VCard();
+        vCard.load(parentProvider.getConnection(),userID);
+        newAvatar=vCard.getAvatar();
+      }
+ else {
+        newAvatar=new byte[0];
+      }
+      sourceContact.setImage(newAvatar);
+      this.fireContactPropertyChangeEvent(ContactPropertyChangeEvent.PROPERTY_IMAGE,sourceContact,currentAvatar,newAvatar);
+    }
+  }
+ catch (  XMPPException ex) {
+    logger.info("Can not retrieve vCard from: " + packet.getFrom(),ex);
+  }
+}

@@ -1,0 +1,24 @@
+{
+  boolean isPhotoChanged=false;
+  try {
+    byte[] newAvatar=((ImageDetail)newDetailValue).getBytes();
+    VCardXEP0153 v1=new VCardXEP0153();
+    v1.load(jabberProvider.getConnection());
+    if (!Arrays.equals(v1.getAvatar(),newAvatar)) {
+      if (newAvatar == null) {
+        v1.setAvatar(new byte[0]);
+      }
+ else {
+        v1.setAvatar(newAvatar);
+      }
+      v1.save(jabberProvider.getConnection());
+    }
+    ((OperationSetPersistentPresenceJabberImpl)this.jabberProvider.getOperationSet(OperationSetPersistentPresence.class)).updateAccountPhotoPresenceExtension(newAvatar);
+    fireServerStoredDetailsChangeEvent(jabberProvider,changeEventID,currentDetailValue,newDetailValue);
+    isPhotoChanged=true;
+  }
+ catch (  XMPPException xmppe) {
+    xmppe.printStackTrace();
+  }
+  return isPhotoChanged;
+}
