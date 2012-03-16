@@ -10,10 +10,11 @@
       CallSipImpl call=new CallSipImpl(this);
       MediaAwareCallPeer<?,?,?> peer=call.processInvite(sourceProvider,serverTransaction);
       if (getProtocolProvider().getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.MODE_PARANOIA,false) && peer.getMediaHandler().getAdvertisedEncryptionMethods().length == 0) {
-        peer.setState(CallPeerState.FAILED,"Encryption required!",Response.SESSION_NOT_ACCEPTABLE);
+        String reasonText=SipActivator.getResources().getI18NString("service.gui.security.encryption.required");
+        peer.setState(CallPeerState.FAILED,reasonText,Response.SESSION_NOT_ACCEPTABLE);
         WarningHeader warning=null;
         try {
-          warning=protocolProvider.getHeaderFactory().createWarningHeader(protocolProvider.getAccountID().getService(),399,"Encryption required!");
+          warning=protocolProvider.getHeaderFactory().createWarningHeader(protocolProvider.getAccountID().getService(),399,reasonText);
         }
  catch (        InvalidArgumentException e) {
           logger.error("Cannot create warning header",e);

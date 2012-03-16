@@ -3,10 +3,11 @@
     if (logger.isDebugEnabled())     logger.debug("Ignoring a request to hangup a call peer " + "that is already DISCONNECTED");
     return;
   }
+  boolean failed=(reasonCode != HANGUP_REASON_NORMAL_CLEARING);
   CallPeerState peerState=getState();
   if (peerState.equals(CallPeerState.CONNECTED) || CallPeerState.isOnHold(peerState)) {
     try {
-      boolean dialogIsAlive=sayBye();
+      boolean dialogIsAlive=sayBye(reasonCode,reason);
       if (!dialogIsAlive) {
         setDisconnectedState(failed,reason);
       }

@@ -1,6 +1,18 @@
 {
   Dialog dialog=getDialog();
   Request bye=messageFactory.createRequest(dialog,Request.BYE);
+  if (reasonCode != HANGUP_REASON_NORMAL_CLEARING && reason != null) {
+    int sipCode=convertReasonCodeToSIPCode(reasonCode);
+    if (sipCode != -1) {
+      try {
+        ReasonHeader reasonHeader=getProtocolProvider().getHeaderFactory().createReasonHeader("SIP",sipCode,reason);
+        bye.setHeader(reasonHeader);
+      }
+ catch (      Throwable e) {
+        logger.error("Cannot set reason header",e);
+      }
+    }
+  }
   getProtocolProvider().sendInDialogRequest(getJainSipProvider(),bye,dialog);
   try {
     return EventPackageUtils.processByeThenIsDialogAlive(dialog);

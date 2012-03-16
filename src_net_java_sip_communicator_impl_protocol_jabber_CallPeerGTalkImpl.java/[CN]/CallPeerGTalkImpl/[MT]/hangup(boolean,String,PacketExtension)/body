@@ -5,23 +5,20 @@
   }
   CallPeerState prevPeerState=getState();
   getMediaHandler().getTransportManager().close();
-  setState(CallPeerState.DISCONNECTED);
-  JingleIQ responseIQ=null;
+  if (failed)   setState(CallPeerState.FAILED,reasonText);
+ else   setState(CallPeerState.DISCONNECTED,reasonText);
+  SessionIQ responseIQ=null;
   if (prevPeerState.equals(CallPeerState.CONNECTED) || CallPeerState.isOnHold(prevPeerState)) {
-    responseIQ=JinglePacketFactory.createBye(getProtocolProvider().getOurJID(),peerJID,getJingleSID());
+    responseIQ=GTalkPacketFactory.createBye(getProtocolProvider().getOurJID(),peerJID,getSessionID());
+    responseIQ.setInitiator(isInitiator() ? getAddress() : getProtocolProvider().getOurJID());
   }
  else   if (CallPeerState.CONNECTING.equals(prevPeerState) || CallPeerState.CONNECTING_WITH_EARLY_MEDIA.equals(prevPeerState) || CallPeerState.ALERTING_REMOTE_SIDE.equals(prevPeerState)) {
-    String jingleSID=getJingleSID();
-    if (jingleSID == null) {
-synchronized (sidSyncRoot) {
-        cancelled=true;
-        return;
-      }
-    }
-    responseIQ=JinglePacketFactory.createCancel(getProtocolProvider().getOurJID(),peerJID,getJingleSID());
+    responseIQ=GTalkPacketFactory.createCancel(getProtocolProvider().getOurJID(),peerJID,getSessionID());
+    responseIQ.setInitiator(isInitiator() ? getAddress() : getProtocolProvider().getOurJID());
   }
  else   if (prevPeerState.equals(CallPeerState.INCOMING_CALL)) {
-    responseIQ=JinglePacketFactory.createBusy(getProtocolProvider().getOurJID(),peerJID,getJingleSID());
+    responseIQ=GTalkPacketFactory.createBusy(getProtocolProvider().getOurJID(),peerJID,getSessionID());
+    responseIQ.setInitiator(isInitiator() ? getAddress() : getProtocolProvider().getOurJID());
   }
  else   if (prevPeerState.equals(CallPeerState.BUSY) || prevPeerState.equals(CallPeerState.FAILED)) {
   }
@@ -31,7 +28,12 @@ synchronized (sidSyncRoot) {
   if (responseIQ != null) {
     if (reasonOtherExtension != null) {
       ReasonPacketExtension reason=(ReasonPacketExtension)responseIQ.getExtension(ReasonPacketExtension.ELEMENT_NAME,ReasonPacketExtension.NAMESPACE);
-      if (reason != null)       reason.setOtherExtension(reasonOtherExtension);
+      if (reason != null) {
+        reason.setOtherExtension(reasonOtherExtension);
+      }
+ else       if (reason instanceof ReasonPacketExtension) {
+        responseIQ.setReason((ReasonPacketExtension)reasonOtherExtension);
+      }
     }
     getProtocolProvider().getConnection().sendPacket(responseIQ);
   }
