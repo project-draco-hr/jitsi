@@ -1,4 +1,9 @@
 {
-  OperationSetPersistentPresenceJabberImpl opSetPersPresence=(OperationSetPersistentPresenceJabberImpl)getOperationSet(OperationSetPersistentPresence.class);
-  opSetPersPresence.fireProviderStatusChangeEvent(opSetPersPresence.getPresenceStatus(),getJabberStatusEnum().getStatus(JabberStatusEnum.OFFLINE));
+synchronized (connectAndLoginLock) {
+    if (inConnectAndLogin) {
+      eventDuringLogin=new RegistrationStateChangeEvent(ProtocolProviderServiceJabberImpl.this,getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
+      return;
+    }
+  }
+  unregister(true);
 }
