@@ -13,7 +13,10 @@
       PacketLoggingService packetLogging=NeomediaActivator.getPacketLogging();
       if ((packetLogging != null) && packetLogging.isLoggingEnabled(PacketLoggingService.ProtocolName.RTP))       doLogPacket(p);
     }
-    pkt=createRawPacket(p);
-    if ((pkt != null) && (transferHandler != null) && !closed)     transferHandler.transferData(this);
+    DatagramPacketFilter datagramPacketFilter=getDatagramPacketFilter();
+    if ((datagramPacketFilter == null) || datagramPacketFilter.accept(p)) {
+      pkt=createRawPacket(p);
+      if ((pkt != null) && (transferHandler != null) && !closed)       transferHandler.transferData(this);
+    }
   }
 }
