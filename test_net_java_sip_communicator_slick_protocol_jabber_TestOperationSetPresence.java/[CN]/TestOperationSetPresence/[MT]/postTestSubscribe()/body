@@ -25,13 +25,12 @@
   authEventCollector1.responseToRequest=new AuthorizationResponse(AuthorizationResponse.ACCEPT,null);
   authEventCollector2.responseToRequest=new AuthorizationResponse(AuthorizationResponse.ACCEPT,null);
   operationSetPresence1.removeSubscriptionListener(subEvtCollector);
-  assertTrue("Subscription event dispatching failed.",subEvtCollector.collectedEvents.size() > 0);
+  assertTrue("Subscription event dispatching failed.",subEvtCollector.collectedSubscriptionEvents.size() > 0);
   SubscriptionEvent subEvt=null;
-  Iterator<EventObject> events=subEvtCollector.collectedEvents.iterator();
-  while (events.hasNext()) {
-    EventObject event=events.next();
-    if (event instanceof SubscriptionEvent) {
-      SubscriptionEvent elem=(SubscriptionEvent)event;
+synchronized (subEvtCollector) {
+    Iterator<SubscriptionEvent> events=subEvtCollector.collectedSubscriptionEvents.iterator();
+    while (events.hasNext()) {
+      SubscriptionEvent elem=events.next();
       if (elem.getEventID() == SubscriptionEvent.SUBSCRIPTION_CREATED)       subEvt=elem;
     }
   }
@@ -39,7 +38,9 @@
   assertEquals("SubscriptionEvent Source:",fixture.userID2,((Contact)subEvt.getSource()).getAddress());
   assertEquals("SubscriptionEvent Source Contact:",fixture.userID2,subEvt.getSourceContact().getAddress());
   assertSame("SubscriptionEvent Source Provider:",fixture.provider1,subEvt.getSourceProvider());
-  subEvtCollector.collectedEvents.clear();
+  subEvtCollector.collectedSubscriptionEvents.clear();
+  subEvtCollector.collectedSubscriptionMovedEvents.clear();
+  subEvtCollector.collectedContactPropertyChangeEvents.clear();
   logger.debug("Testing presence notifications.");
   PresenceStatus oldStatus=operationSetPresence2.getPresenceStatus();
   PresenceStatus newStatus=supportedStatusSet2.get(JabberStatusEnum.FREE_FOR_CHAT);

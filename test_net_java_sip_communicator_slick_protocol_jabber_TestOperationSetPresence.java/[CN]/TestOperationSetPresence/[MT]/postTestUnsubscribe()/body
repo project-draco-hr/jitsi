@@ -6,15 +6,17 @@
   assertNotNull("Failed to find an existing subscription for the tester agent",jabberTesterAgentContact);
 synchronized (subEvtCollector) {
     operationSetPresence1.unsubscribe(jabberTesterAgentContact);
-    subEvtCollector.waitForEvent(10000);
+    subEvtCollector.waitForSubscriptionEvent(10000);
     operationSetPresence1.removeSubscriptionListener(subEvtCollector);
   }
-  assertEquals("Subscription event dispatching failed.",1,subEvtCollector.collectedEvents.size());
-  SubscriptionEvent subEvt=(SubscriptionEvent)subEvtCollector.collectedEvents.get(0);
+  assertEquals("Subscription event dispatching failed.",1,subEvtCollector.collectedSubscriptionEvents.size());
+  SubscriptionEvent subEvt=subEvtCollector.collectedSubscriptionEvents.get(0);
   assertEquals("SubscriptionEvent Source:",jabberTesterAgentContact,subEvt.getSource());
   assertEquals("SubscriptionEvent Source Contact:",jabberTesterAgentContact,subEvt.getSourceContact());
   assertSame("SubscriptionEvent Source Provider:",fixture.provider1,subEvt.getSourceProvider());
-  subEvtCollector.collectedEvents.clear();
+  subEvtCollector.collectedSubscriptionEvents.clear();
+  subEvtCollector.collectedSubscriptionMovedEvents.clear();
+  subEvtCollector.collectedContactPropertyChangeEvents.clear();
   logger.debug("Testing (lack of) presence notifications.");
   PresenceStatus oldStatus=operationSetPresence2.getPresenceStatus();
   PresenceStatus newStatus=supportedStatusSet2.get(JabberStatusEnum.FREE_FOR_CHAT);
