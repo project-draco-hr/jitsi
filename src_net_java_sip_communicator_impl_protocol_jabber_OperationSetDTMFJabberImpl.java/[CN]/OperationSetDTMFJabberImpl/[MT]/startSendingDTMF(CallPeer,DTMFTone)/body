@@ -1,0 +1,22 @@
+{
+  if (callPeer == null || tone == null) {
+    throw new NullPointerException("Argument is null");
+  }
+  if (!(callPeer instanceof CallPeerJabberImpl)) {
+    throw new IllegalArgumentException();
+  }
+  CallPeerJabberImpl cp=(CallPeerJabberImpl)callPeer;
+  DTMFMethod cpDTMFMethod=dtmfMethod;
+  if (this.dtmfMethod == DTMFMethod.AUTO_DTMF) {
+    if (isRFC4733Active(cp)) {
+      cpDTMFMethod=DTMFMethod.RTP_DTMF;
+    }
+ else {
+      cpDTMFMethod=DTMFMethod.INBAND_DTMF;
+    }
+  }
+  if (this.dtmfMethod == DTMFMethod.RTP_DTMF && !isRFC4733Active(cp)) {
+    logger.debug("RTP DTMF used without telephone-event capacities");
+  }
+  ((AudioMediaStream)cp.getMediaHandler().getStream(MediaType.AUDIO)).startSendingDTMF(tone,cpDTMFMethod);
+}
