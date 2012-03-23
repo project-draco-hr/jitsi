@@ -1,19 +1,23 @@
 {
-  Vector<CaptureDeviceInfo> devInfos=(Vector<CaptureDeviceInfo>)CaptureDeviceManager.getDeviceList(null);
-  Vector<CaptureDeviceInfo> copyDevInfos=new Vector<CaptureDeviceInfo>(devInfos.size());
-  for (  CaptureDeviceInfo dev : devInfos) {
-    Format fmts[]=dev.getFormats();
-    if (fmts.length > 0 && fmts[0] instanceof VideoFormat) {
-      if (dev.getName().startsWith("Desktop Streaming")) {
-        copyDevInfos.add(dev);
+  @SuppressWarnings("unchecked") Vector<CaptureDeviceInfo> devices=(Vector<CaptureDeviceInfo>)CaptureDeviceManager.getDeviceList(null);
+  List<CaptureDeviceInfo> devicesToRemove=new ArrayList<CaptureDeviceInfo>(devices.size());
+  for (  CaptureDeviceInfo device : devices) {
+    Format formats[]=device.getFormats();
+    if ((formats.length > 0) && (formats[0] instanceof VideoFormat)) {
+      MediaLocator locator=device.getLocator();
+      if ((locator != null) && ImageStreamingAuto.LOCATOR_PROTOCOL.equals(locator.getProtocol())) {
+        devicesToRemove.add(device);
       }
     }
   }
-  for (  CaptureDeviceInfo dev : copyDevInfos)   CaptureDeviceManager.removeDevice(dev);
-  try {
-    new ImageStreamingAuto();
-  }
- catch (  Throwable exc) {
-    logger.debug("No desktop streaming available: " + exc.getMessage(),exc);
+  for (  CaptureDeviceInfo deviceToRemove : devicesToRemove)   CaptureDeviceManager.removeDevice(deviceToRemove);
+  if (!NeomediaActivator.getConfigurationService().getBoolean(MediaServiceImpl.DISABLE_VIDEO_SUPPORT_PNAME,false)) {
+    try {
+      new ImageStreamingAuto();
+    }
+ catch (    Throwable t) {
+      logger.debug("No desktop streaming available: " + t.getMessage(),t);
+      if (t instanceof ThreadDeath)       throw (ThreadDeath)t;
+    }
   }
 }
