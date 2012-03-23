@@ -1,0 +1,69 @@
+{
+  String namespace=parser.getNamespace();
+  IQ iq;
+  if (CobriConferenceIQ.ELEMENT_NAME.equals(parser.getName()) && CobriConferenceIQ.NAMESPACE.equals(namespace)) {
+    CobriConferenceIQ conference=new CobriConferenceIQ();
+    String conferenceID=parser.getAttributeValue("",CobriConferenceIQ.ID_ATTR_NAME);
+    if ((conferenceID != null) && (conferenceID.length() != 0))     conference.setID(conferenceID);
+    boolean done=false;
+    CobriConferenceIQ.Channel channel=null;
+    CobriConferenceIQ.Content content=null;
+    PacketExtensionProvider payloadTypePacketExtensionProvider=null;
+    while (!done) {
+switch (parser.next()) {
+case XmlPullParser.END_TAG:
+{
+          String name=parser.getName();
+          if (CobriConferenceIQ.ELEMENT_NAME.equals(name)) {
+            done=true;
+          }
+ else           if (CobriConferenceIQ.Channel.ELEMENT_NAME.equals(name)) {
+            content.addChannel(channel);
+            channel=null;
+          }
+ else           if (CobriConferenceIQ.Content.ELEMENT_NAME.equals(name)) {
+            conference.addContent(content);
+            content=null;
+          }
+          break;
+        }
+case XmlPullParser.START_TAG:
+{
+        String name=parser.getName();
+        if (CobriConferenceIQ.Channel.ELEMENT_NAME.equals(name)) {
+          channel=new CobriConferenceIQ.Channel();
+          String channelID=parser.getAttributeValue("",CobriConferenceIQ.Channel.ID_ATTR_NAME);
+          if ((channelID != null) && (channelID.length() != 0))           channel.setID(channelID);
+          String host=parser.getAttributeValue("",CobriConferenceIQ.Channel.HOST_ATTR_NAME);
+          if ((host != null) && (host.length() != 0))           channel.setHost(host);
+          String rtpPort=parser.getAttributeValue("",CobriConferenceIQ.Channel.RTP_PORT_ATTR_NAME);
+          if ((rtpPort != null) && (rtpPort.length() != 0))           channel.setRTPPort(Integer.parseInt(rtpPort));
+          String rtcpPort=parser.getAttributeValue("",CobriConferenceIQ.Channel.RTCP_PORT_ATTR_NAME);
+          if ((rtcpPort != null) && (rtcpPort.length() != 0))           channel.setRTCPPort(Integer.parseInt(rtcpPort));
+        }
+ else         if (CobriConferenceIQ.Content.ELEMENT_NAME.equals(name)) {
+          content=new CobriConferenceIQ.Content();
+          String contentName=parser.getAttributeValue("",CobriConferenceIQ.Content.NAME_ATTR_NAME);
+          if ((contentName != null) && (contentName.length() != 0))           content.setName(contentName);
+        }
+ else         if (PayloadTypePacketExtension.ELEMENT_NAME.equals(name)) {
+          if (payloadTypePacketExtensionProvider == null) {
+            payloadTypePacketExtensionProvider=(PacketExtensionProvider)ProviderManager.getInstance().getExtensionProvider(name,namespace);
+          }
+          if (payloadTypePacketExtensionProvider == null) {
+            while ((XmlPullParser.END_TAG != parser.next()) || !name.equals(parser.getName()))             ;
+          }
+ else {
+            PayloadTypePacketExtension payloadType=(PayloadTypePacketExtension)payloadTypePacketExtensionProvider.parseExtension(parser);
+            if (payloadType != null)             channel.addPayloadType(payloadType);
+          }
+        }
+        break;
+      }
+  }
+}
+iq=conference;
+}
+ else iq=null;
+return iq;
+}
