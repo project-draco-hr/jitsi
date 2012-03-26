@@ -1,8 +1,10 @@
 {
   InetAddress localHost=null;
-  String osVersion=System.getProperty("os.version");
-  if (logger.isTraceEnabled())   logger.trace("Querying a localhost addr for dst=" + intendedDestination);
-  if (OSUtils.IS_WINDOWS && !osVersion.startsWith("4") && !osVersion.startsWith("5.0")) {
+  if (logger.isTraceEnabled()) {
+    logger.trace("Querying for a localhost address" + " for intended destination '" + intendedDestination + "'");
+  }
+  String osVersion;
+  if (OSUtils.IS_WINDOWS && !(osVersion=System.getProperty("os.version")).startsWith("4") && !osVersion.startsWith("5.0")) {
     byte[] src=Win32LocalhostRetriever.getSourceForDestination(intendedDestination.getAddress());
     if (src == null) {
       logger.warn("Failed to get localhost ");
@@ -11,8 +13,8 @@
       try {
         localHost=InetAddress.getByAddress(src);
       }
- catch (      UnknownHostException e) {
-        logger.warn("Failed to get localhost ",e);
+ catch (      UnknownHostException uhe) {
+        logger.warn("Failed to get localhost",uhe);
       }
     }
   }
@@ -30,22 +32,21 @@
     }
   }
   if (localHost.isAnyLocalAddress()) {
-    if (logger.isTraceEnabled())     logger.trace("Socket returned the AnyLocalAddress. " + "Trying a workaround.");
+    if (logger.isTraceEnabled()) {
+      logger.trace("Socket returned the ANY local address." + " Trying a workaround.");
+    }
     try {
       if (intendedDestination instanceof Inet6Address) {
-        Enumeration<NetworkInterface> interfaces=NetworkInterface.getNetworkInterfaces();
-        while (interfaces.hasMoreElements()) {
-          NetworkInterface iface=interfaces.nextElement();
-          Enumeration<InetAddress> addresses=iface.getInetAddresses();
+        boolean done=false;
+        Enumeration<NetworkInterface> ifaces=NetworkInterface.getNetworkInterfaces();
+        while (!done && ifaces.hasMoreElements()) {
+          Enumeration<InetAddress> addresses=ifaces.nextElement().getInetAddresses();
           while (addresses.hasMoreElements()) {
             InetAddress address=addresses.nextElement();
-            if (address instanceof Inet6Address) {
-              if (!address.isAnyLocalAddress() && !address.isLinkLocalAddress() && !address.isSiteLocalAddress()&& !address.isLoopbackAddress()) {
-                if (logger.isTraceEnabled()) {
-                  logger.trace("will return ipv6 addr " + address);
-                }
-                return address;
-              }
+            if ((address instanceof Inet6Address) && !address.isAnyLocalAddress() && !address.isLinkLocalAddress()&& !address.isLoopbackAddress()&& !address.isSiteLocalAddress()) {
+              localHost=address;
+              done=true;
+              break;
             }
           }
         }
@@ -53,31 +54,26 @@
  else {
         localHost=InetAddress.getLocalHost();
         if (!(localHost instanceof Inet4Address)) {
-          Enumeration<NetworkInterface> interfaces=NetworkInterface.getNetworkInterfaces();
-          while (interfaces.hasMoreElements()) {
-            NetworkInterface iface=interfaces.nextElement();
-            Enumeration<InetAddress> addresses=iface.getInetAddresses();
+          boolean done=false;
+          Enumeration<NetworkInterface> ifaces=NetworkInterface.getNetworkInterfaces();
+          while (!done && ifaces.hasMoreElements()) {
+            Enumeration<InetAddress> addresses=ifaces.nextElement().getInetAddresses();
             while (addresses.hasMoreElements()) {
               InetAddress address=addresses.nextElement();
-              if (address instanceof Inet4Address) {
-                if (!address.isLoopbackAddress()) {
-                  if (logger.isTraceEnabled()) {
-                    logger.trace("will return ipv6 addr " + address);
-                  }
-                  return address;
-                }
+              if ((address instanceof Inet4Address) && !address.isLoopbackAddress()) {
+                localHost=address;
+                done=true;
+                break;
               }
             }
           }
         }
       }
     }
- catch (    Exception ex) {
-      logger.warn("Failed to get localhost ",ex);
+ catch (    Exception e) {
+      logger.warn("Failed to get localhost",e);
     }
   }
-  if (logger.isTraceEnabled()) {
-    logger.trace("Will return the following localhost address: " + localHost);
-  }
+  if (logger.isTraceEnabled())   logger.trace("Returning the localhost address '" + localHost + "'");
   return localHost;
 }
