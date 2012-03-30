@@ -1,11 +1,13 @@
 {
-  if (getPeer().getProtocolProvider().getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && getPeer().getCall().isSipZrtpAttribute()) {
+  MediaAwareCallPeer<?,?,?> peer=getPeer();
+  if (peer.getProtocolProvider().getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && peer.getCall().isSipZrtpAttribute()) {
     try {
+      Map<MediaTypeSrtpControl,SrtpControl> srtpControls=getSrtpControls();
       MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.ZRTP);
-      SrtpControl scontrol=getSrtpControls().get(key);
+      SrtpControl scontrol=srtpControls.get(key);
       if (scontrol == null) {
         scontrol=SipActivator.getMediaService().createZrtpControl();
-        getSrtpControls().put(key,scontrol);
+        srtpControls.put(key,scontrol);
       }
       ZrtpControl zcontrol=(ZrtpControl)scontrol;
       String helloHash=zcontrol.getHelloHash();

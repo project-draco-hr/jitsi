@@ -42,8 +42,9 @@
     if (mediaType.equals(MediaType.VIDEO)) {
       supportQualityControls=SdpUtils.containsAttribute(mediaDescription,"imageattr");
     }
+    Map<MediaTypeSrtpControl,SrtpControl> srtpControls=getSrtpControls();
     MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.SDES);
-    SrtpControl scontrol=getSrtpControls().get(key);
+    SrtpControl scontrol=srtpControls.get(key);
     if (scontrol != null) {
       List<String> peerAttributes=new LinkedList<String>();
       @SuppressWarnings("unchecked") Vector<Attribute> attrs=mediaDescription.getAttributes(true);
@@ -59,16 +60,17 @@
       }
       if (!((SDesControl)scontrol).initiatorSelectAttribute(peerAttributes)) {
         scontrol.cleanup();
-        getSrtpControls().remove(key);
+        srtpControls.remove(key);
         if (peerAttributes.size() > 0)         logger.warn("Received unsupported sdes crypto attribute: " + peerAttributes);
       }
  else {
-        Iterator<MediaTypeSrtpControl> it=getSrtpControls().keySet().iterator();
-        while (it.hasNext()) {
-          MediaTypeSrtpControl mtc=it.next();
-          if (mtc.mediaType == mediaType && mtc.srtpControlType != SrtpControlType.SDES) {
-            getSrtpControls().get(mtc).cleanup();
-            it.remove();
+        Iterator<Map.Entry<MediaTypeSrtpControl,SrtpControl>> iter=srtpControls.entrySet().iterator();
+        while (iter.hasNext()) {
+          Map.Entry<MediaTypeSrtpControl,SrtpControl> entry=iter.next();
+          MediaTypeSrtpControl mtsc=entry.getKey();
+          if ((mtsc.mediaType == mediaType) && (mtsc.srtpControlType != SrtpControlType.SDES)) {
+            entry.getValue().cleanup();
+            iter.remove();
           }
         }
         hasSdes=true;

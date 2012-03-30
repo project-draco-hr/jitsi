@@ -31,11 +31,12 @@
     }
     ContentPacketExtension ourContent=JingleUtils.createDescription(content.getCreator(),content.getName(),JingleUtils.getSenders(direction,!getPeer().isInitiator()),mutuallySupportedFormats,rtpExtensions,getDynamicPayloadTypes(),getRtpExtensionsRegistry());
     if (getPeer().getCall().isSipZrtpAttribute()) {
+      Map<MediaTypeSrtpControl,SrtpControl> srtpControls=getSrtpControls();
       MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.ZRTP);
-      SrtpControl control=getSrtpControls().get(key);
+      SrtpControl control=srtpControls.get(key);
       if (control == null) {
         control=JabberActivator.getMediaService().createZrtpControl();
-        getSrtpControls().put(key,control);
+        srtpControls.put(key,control);
       }
       String helloHash[]=((ZrtpControl)control).getHelloHashSep();
       if (helloHash != null && helloHash[1].length() > 0) {
