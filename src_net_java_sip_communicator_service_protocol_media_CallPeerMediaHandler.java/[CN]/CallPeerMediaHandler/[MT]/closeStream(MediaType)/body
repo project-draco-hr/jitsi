@@ -1,13 +1,19 @@
 {
-  if (type == MediaType.AUDIO)   setAudioStream(null);
- else   setVideoStream(null);
-  getTransportManager().closeStreamConnector(type);
-  Iterator<MediaTypeSrtpControl> it=srtpControls.keySet().iterator();
-  while (it.hasNext()) {
-    MediaTypeSrtpControl mct=it.next();
-    if (mct.mediaType == type) {
-      srtpControls.get(mct).cleanup();
-      it.remove();
+  boolean mediaHandlerCloseStream=false;
+switch (type) {
+case AUDIO:
+    if (audioStream != null) {
+      audioStream=null;
+      mediaHandlerCloseStream=true;
     }
-  }
+  break;
+case VIDEO:
+if (videoStream != null) {
+  videoStream=null;
+  mediaHandlerCloseStream=true;
+}
+break;
+}
+if (mediaHandlerCloseStream) mediaHandler.closeStream(this,type);
+getTransportManager().closeStreamConnector(type);
 }

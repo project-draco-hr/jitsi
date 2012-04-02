@@ -1,0 +1,20 @@
+{
+  CobriConferenceIQ.Channel channel=getCobriChannel(mediaType,true);
+  if (channel != null) {
+    CallPeerJabberImpl peer=getCallPeer();
+    CallJabberImpl call=peer.getCall();
+    StreamConnector streamConnector=call.createCobriStreamConnector(peer,mediaType,channel,new StreamConnectorFactory(){
+      public StreamConnector createStreamConnector(){
+        try {
+          return RawUdpTransportManager.super.createStreamConnector(mediaType);
+        }
+ catch (        OperationFailedException ofe) {
+          return null;
+        }
+      }
+    }
+);
+    if (streamConnector != null)     return streamConnector;
+  }
+  return super.createStreamConnector(mediaType);
+}

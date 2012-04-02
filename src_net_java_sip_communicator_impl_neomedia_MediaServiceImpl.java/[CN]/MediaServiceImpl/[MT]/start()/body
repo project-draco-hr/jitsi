@@ -4,18 +4,18 @@
   encodingConfiguration.initializeFormatPreferences();
   encodingConfiguration.registerCustomPackages();
   encodingConfiguration.registerCustomCodecs();
-  if (!OSUtils.IS_ANDROID) {
+  if (!OSUtils.IS_ANDROID && !GraphicsEnvironment.isHeadless()) {
     try {
       final Component panel=MediaConfiguration.createBasicControls(DeviceConfigurationComboBoxModel.AUDIO,false);
       audioConfigDialog=new SIPCommDialog(){
         /** 
- * Serial version UID.
+ * Serial version UID. 
  */
         private static final long serialVersionUID=0L;
         /** 
- * {@inheritDoc}
+ * {@inheritDoc} 
  */
-        @Override protected void close(        boolean isEscaped){
+        @Override protected void close(        boolean escaped){
           setVisible(false);
         }
       }
@@ -24,7 +24,8 @@
       TransparentPanel fieldsPanel=new TransparentPanel(new BorderLayout(10,5));
       mainPanel.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
       TransparentPanel btnPanel=new TransparentPanel(new FlowLayout(FlowLayout.RIGHT));
-      JButton btn=new JButton(NeomediaActivator.getResources().getI18NString("service.gui.CLOSE"));
+      ResourceManagementService resources=NeomediaActivator.getResources();
+      JButton btn=new JButton(resources.getI18NString("service.gui.CLOSE"));
       btn.addActionListener(new ActionListener(){
         public void actionPerformed(        ActionEvent evt){
           audioConfigDialog.setVisible(false);
@@ -37,22 +38,23 @@
       infoTextArea.setEditable(false);
       infoTextArea.setWrapStyleWord(true);
       infoTextArea.setLineWrap(true);
-      infoTextArea.setText(NeomediaActivator.getResources().getI18NString("impl.media.configform.AUDIO_DEVICE_CONNECTED_REMOVED"));
+      infoTextArea.setText(resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_CONNECTED_REMOVED"));
       fieldsPanel.add(infoTextArea,BorderLayout.NORTH);
       fieldsPanel.add(panel,BorderLayout.CENTER);
       fieldsPanel.add(btnPanel,BorderLayout.SOUTH);
       TransparentPanel iconPanel=new TransparentPanel(new BorderLayout());
-      iconPanel.add(new JLabel(NeomediaActivator.getResources().getImage("plugin.mediaconfig.AUDIO_ICON_64x64")),BorderLayout.NORTH);
+      iconPanel.add(new JLabel(resources.getImage("plugin.mediaconfig.AUDIO_ICON_64x64")),BorderLayout.NORTH);
       mainPanel.add(iconPanel,BorderLayout.WEST);
       mainPanel.add(fieldsPanel,BorderLayout.CENTER);
-      audioConfigDialog.setTitle(NeomediaActivator.getResources().getI18NString("impl.media.configform.AUDIO_DEVICE_CONFIG"));
+      audioConfigDialog.setTitle(resources.getI18NString("impl.media.configform.AUDIO_DEVICE_CONFIG"));
       audioConfigDialog.add(mainPanel);
       audioConfigDialog.validate();
       audioConfigDialog.pack();
       PortAudioDeviceChangedCallbacks.addDeviceChangedCallback(this);
     }
- catch (    Throwable e) {
-      logger.info("Cannot create audio configuration panel",e);
+ catch (    Throwable t) {
+      logger.info("Failed to create audio configuration panel",t);
+      if (t instanceof ThreadDeath)       throw (ThreadDeath)t;
     }
   }
 }

@@ -29,7 +29,7 @@
   }
   CoinPacketExtension coin=(CoinPacketExtension)jingleIQ.getExtension(CoinPacketExtension.ELEMENT_NAME,CoinPacketExtension.NAMESPACE);
   if (coin != null) {
-    boolean b=(Boolean.parseBoolean((String)coin.getAttribute(CoinPacketExtension.ISFOCUS_ATTR_NAME)));
+    boolean b=Boolean.parseBoolean((String)coin.getAttribute(CoinPacketExtension.ISFOCUS_ATTR_NAME));
     callPeer.setConferenceFocus(b);
   }
   callPeer.processSessionInitiate(jingleIQ);
@@ -54,7 +54,7 @@
       basicTelephony.hangupCallPeer(attendant);
     }
  catch (    OperationFailedException e) {
-      logger.error("Failed to hang up on attendant as part of " + "session transfer",e);
+      logger.error("Failed to hang up on attendant as part of session" + " transfer",e);
     }
     return callPeer;
   }
@@ -63,13 +63,10 @@
   directions.put(MediaType.AUDIO,MediaDirection.INACTIVE);
   directions.put(MediaType.VIDEO,MediaDirection.INACTIVE);
   for (  ContentPacketExtension c : offer) {
+    String contentName=c.getName();
     MediaDirection remoteDirection=JingleUtils.getDirection(c,callPeer.isInitiator());
-    if (c.getName().equals(MediaType.AUDIO.toString())) {
-      directions.put(MediaType.AUDIO,remoteDirection);
-    }
- else     if (c.getName().equals(MediaType.VIDEO.toString())) {
-      directions.put(MediaType.VIDEO,remoteDirection);
-    }
+    if (MediaType.AUDIO.toString().equals(contentName))     directions.put(MediaType.AUDIO,remoteDirection);
+ else     if (MediaType.VIDEO.toString().equals(contentName))     directions.put(MediaType.VIDEO,remoteDirection);
   }
   if (this.getCallPeerCount() == 1 && getCallGroup() == null)   parentOpSet.fireCallEvent(CallEvent.CALL_RECEIVED,this,directions);
   return callPeer;

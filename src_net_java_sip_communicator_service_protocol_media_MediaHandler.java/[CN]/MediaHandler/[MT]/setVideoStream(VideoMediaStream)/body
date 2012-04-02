@@ -1,0 +1,42 @@
+{
+  if (this.videoStream != videoStream) {
+    List<Component> oldVisualComponents=null;
+    if (this.videoStream != null) {
+      this.videoStream.removePropertyChangeListener(streamPropertyChangeListener);
+      this.videoStream.removeVideoListener(videoStreamVideoListener);
+      oldVisualComponents=this.videoStream.getVisualComponents();
+      setKeyFrameControlFromVideoStream(null);
+      this.videoStream.close();
+    }
+    this.videoStream=videoStream;
+    setKeyFrameControlFromVideoStream(this.videoStream);
+    long videoLocalSSRC;
+    long videoRemoteSSRC;
+    List<Component> newVisualComponents=null;
+    if (this.videoStream != null) {
+      this.videoStream.addPropertyChangeListener(streamPropertyChangeListener);
+      videoLocalSSRC=this.videoStream.getLocalSourceID();
+      videoRemoteSSRC=this.videoStream.getRemoteSourceID();
+      this.videoStream.addVideoListener(videoStreamVideoListener);
+      newVisualComponents=this.videoStream.getVisualComponents();
+    }
+ else {
+      videoLocalSSRC=videoRemoteSSRC=CallPeerMediaHandler.SSRC_UNKNOWN;
+    }
+    setLocalSSRC(MediaType.VIDEO,videoLocalSSRC);
+    setRemoteSSRC(MediaType.VIDEO,videoRemoteSSRC);
+    if ((oldVisualComponents != null) && !oldVisualComponents.isEmpty()) {
+      if (newVisualComponents == null)       newVisualComponents=Collections.emptyList();
+      for (      Component oldVisualComponent : oldVisualComponents) {
+        if (!newVisualComponents.remove(oldVisualComponent)) {
+          fireVideoEvent(VideoEvent.VIDEO_REMOVED,oldVisualComponent,VideoEvent.REMOTE);
+        }
+      }
+    }
+    if ((newVisualComponents != null) && !newVisualComponents.isEmpty()) {
+      for (      Component newVisualComponent : newVisualComponents) {
+        fireVideoEvent(VideoEvent.VIDEO_ADDED,newVisualComponent,VideoEvent.REMOTE);
+      }
+    }
+  }
+}

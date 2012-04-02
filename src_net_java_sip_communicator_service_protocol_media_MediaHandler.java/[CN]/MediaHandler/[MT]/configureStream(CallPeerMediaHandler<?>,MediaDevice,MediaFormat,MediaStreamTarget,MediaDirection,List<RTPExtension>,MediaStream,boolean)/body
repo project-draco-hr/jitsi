@@ -1,0 +1,27 @@
+{
+  registerDynamicPTsWithStream(callPeerMediaHandler,stream);
+  registerRTPExtensionsWithStream(callPeerMediaHandler,rtpExtensions,stream);
+  stream.setDevice(device);
+  stream.setTarget(target);
+  stream.setDirection(direction);
+  stream.setFormat(format);
+  MediaAwareCall<?,?,?> call=callPeerMediaHandler.getPeer().getCall();
+  MediaType mediaType=(stream instanceof AudioMediaStream) ? MediaType.AUDIO : MediaType.VIDEO;
+  stream.setRTPTranslator(call.getRTPTranslator(mediaType));
+switch (mediaType) {
+case AUDIO:
+    setAudioStream((AudioMediaStream)stream);
+  callPeerMediaHandler.registerAudioLevelListeners(audioStream);
+break;
+case VIDEO:
+setVideoStream((VideoMediaStream)stream);
+break;
+}
+if (call.isDefaultEncrypted()) {
+SrtpControl srtpControl=stream.getSrtpControl();
+srtpControl.setMasterSession(masterStream);
+srtpControl.setSrtpListener(srtpListener);
+srtpControl.start(mediaType);
+}
+return stream;
+}

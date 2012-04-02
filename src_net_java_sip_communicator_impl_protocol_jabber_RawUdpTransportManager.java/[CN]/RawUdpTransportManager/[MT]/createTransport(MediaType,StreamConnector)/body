@@ -1,0 +1,36 @@
+{
+  CobriConferenceIQ.Channel channel=getCobriChannel(mediaType,false);
+  RawUdpTransportPacketExtension ourTransport=new RawUdpTransportPacketExtension();
+  int generation=getCurrentGeneration();
+  CandidatePacketExtension rtpCand=new CandidatePacketExtension();
+  rtpCand.setComponent(CandidatePacketExtension.RTP_COMPONENT_ID);
+  rtpCand.setGeneration(generation);
+  rtpCand.setID(getNextID());
+  rtpCand.setType(CandidateType.host);
+  if (channel == null) {
+    DatagramSocket dataSocket=connector.getDataSocket();
+    rtpCand.setIP(dataSocket.getLocalAddress().getHostAddress());
+    rtpCand.setPort(dataSocket.getLocalPort());
+  }
+ else {
+    rtpCand.setIP(channel.getHost());
+    rtpCand.setPort(channel.getRTPPort());
+  }
+  ourTransport.addCandidate(rtpCand);
+  CandidatePacketExtension rtcpCand=new CandidatePacketExtension();
+  rtcpCand.setComponent(CandidatePacketExtension.RTCP_COMPONENT_ID);
+  rtcpCand.setGeneration(generation);
+  rtcpCand.setID(getNextID());
+  rtcpCand.setType(CandidateType.host);
+  if (channel == null) {
+    DatagramSocket controlSocket=connector.getControlSocket();
+    rtcpCand.setIP(controlSocket.getLocalAddress().getHostAddress());
+    rtcpCand.setPort(controlSocket.getLocalPort());
+  }
+ else {
+    rtcpCand.setIP(channel.getHost());
+    rtcpCand.setPort(channel.getRTCPPort());
+  }
+  ourTransport.addCandidate(rtcpCand);
+  return ourTransport;
+}

@@ -1,10 +1,41 @@
 {
-  for (  ContentPacketExtension content : theirOffer) {
-    RtpDescriptionPacketExtension rtpDesc=content.getFirstChildOfType(RtpDescriptionPacketExtension.class);
-    StreamConnector connector=getStreamConnector(MediaType.parseString(rtpDesc.getMedia()));
-    RawUdpTransportPacketExtension ourTransport=createTransport(connector);
-    ContentPacketExtension cpExt=findContentByName(ourAnswer,content.getName());
-    if (cpExt != null)     cpExt.addChildExtension(ourTransport);
+  CallPeerJabberImpl peer=getCallPeer();
+  CallJabberImpl call=peer.getCall();
+  List<ContentPacketExtension> cpes=(theirOffer == null) ? ourAnswer : theirOffer;
+  if (call.isConferenceFocus()) {
+    List<MediaType> mediaTypes=new ArrayList<MediaType>();
+    for (    ContentPacketExtension cpe : cpes) {
+      RtpDescriptionPacketExtension rtpDesc=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+      MediaType mediaType=MediaType.parseString(rtpDesc.getMedia());
+      if ((cobri == null) || (cobri.getContent(mediaType.toString()) == null)) {
+        if (!mediaTypes.contains(mediaType))         mediaTypes.add(mediaType);
+      }
+    }
+    if (mediaTypes.size() != 0) {
+      if (cobri == null)       cobri=new CobriConferenceIQ();
+      for (      MediaType mediaType : mediaTypes)       cobri.getOrCreateContent(mediaType.toString());
+      CobriConferenceIQ conferenceResult=call.createCobriChannels(peer,mediaTypes);
+      if (conferenceResult != null) {
+        String videoBridgeID=cobri.getID();
+        String conferenceResultID=conferenceResult.getID();
+        if (videoBridgeID == null)         cobri.setID(conferenceResultID);
+ else         if (!videoBridgeID.equals(conferenceResultID))         throw new IllegalStateException("conference.id");
+        for (        CobriConferenceIQ.Content contentResult : conferenceResult.getContents()) {
+          CobriConferenceIQ.Content content=cobri.getOrCreateContent(contentResult.getName());
+          for (          CobriConferenceIQ.Channel channelResult : contentResult.getChannels()) {
+            if (content.getChannel(channelResult.getID()) == null)             content.addChannel(channelResult);
+          }
+        }
+      }
+    }
+  }
+  for (  ContentPacketExtension cpe : cpes) {
+    RtpDescriptionPacketExtension rtpDesc=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+    MediaType mediaType=MediaType.parseString(rtpDesc.getMedia());
+    StreamConnector connector=getStreamConnector(mediaType);
+    RawUdpTransportPacketExtension ourTransport=createTransport(mediaType,connector);
+    ContentPacketExtension ourCpe=findContentByName(ourAnswer,cpe.getName());
+    if (ourCpe != null)     ourCpe.addChildExtension(ourTransport);
   }
   this.local=ourAnswer;
 }

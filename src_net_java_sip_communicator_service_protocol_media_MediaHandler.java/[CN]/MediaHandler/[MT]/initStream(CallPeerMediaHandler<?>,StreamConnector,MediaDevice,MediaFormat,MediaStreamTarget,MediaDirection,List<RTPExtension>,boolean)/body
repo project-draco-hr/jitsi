@@ -1,0 +1,21 @@
+{
+  MediaType mediaType=device.getMediaType();
+  MediaStream stream=getStream(callPeerMediaHandler,mediaType);
+  if (stream == null) {
+    if (logger.isTraceEnabled() && (mediaType != format.getMediaType()))     logger.trace("The media types of device and format differ.");
+    MediaService mediaService=ProtocolMediaActivator.getMediaService();
+    SrtpControlType srtpControlType=(srtpControls.size() > 0) ? srtpControls.firstKey().srtpControlType : SrtpControlType.ZRTP;
+    MediaTypeSrtpControl mediaTypeSrtpControl=new MediaTypeSrtpControl(mediaType,srtpControlType);
+    SrtpControl srtpControl=srtpControls.get(mediaTypeSrtpControl);
+    if (srtpControl == null) {
+      stream=mediaService.createMediaStream(connector,device);
+      srtpControls.put(mediaTypeSrtpControl,stream.getSrtpControl());
+    }
+ else {
+      stream=mediaService.createMediaStream(connector,device,srtpControl);
+    }
+  }
+ else {
+  }
+  return configureStream(callPeerMediaHandler,device,format,target,direction,rtpExtensions,stream,masterStream);
+}

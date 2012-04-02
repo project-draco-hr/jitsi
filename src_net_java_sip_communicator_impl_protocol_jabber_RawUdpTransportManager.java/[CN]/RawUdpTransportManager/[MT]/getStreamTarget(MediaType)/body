@@ -5,7 +5,13 @@
       RtpDescriptionPacketExtension rtpDescription=content.getFirstChildOfType(RtpDescriptionPacketExtension.class);
       MediaType contentMediaType=MediaType.parseString(rtpDescription.getMedia());
       if (mediaType.equals(contentMediaType)) {
-        streamTarget=JingleUtils.extractDefaultTarget(content);
+        CobriConferenceIQ.Channel channel=getCobriChannel(mediaType,true);
+        if (channel == null) {
+          streamTarget=JingleUtils.extractDefaultTarget(content);
+        }
+ else {
+          streamTarget=new MediaStreamTarget(new InetSocketAddress(channel.getHost(),channel.getRTPPort()),new InetSocketAddress(channel.getHost(),channel.getRTPPort()));
+        }
         break;
       }
     }
