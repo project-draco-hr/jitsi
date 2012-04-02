@@ -1,12 +1,24 @@
 {
-  if (type == MediaType.AUDIO)   setAudioStream(null);
- else   setVideoStream(null);
-  Iterator<Map.Entry<MediaTypeSrtpControl,SrtpControl>> iter=srtpControls.entrySet().iterator();
-  while (iter.hasNext()) {
-    Map.Entry<MediaTypeSrtpControl,SrtpControl> entry=iter.next();
-    if (entry.getKey().mediaType == type) {
-      entry.getValue().cleanup();
-      iter.remove();
-    }
-  }
+  int index=mediaType.ordinal();
+  int streamReferenceCount=streamReferenceCounts[index];
+  if (streamReferenceCount <= 0)   return;
+  streamReferenceCount--;
+  streamReferenceCounts[index]=streamReferenceCount;
+  if (streamReferenceCount > 0)   return;
+switch (mediaType) {
+case AUDIO:
+    setAudioStream(null);
+  break;
+case VIDEO:
+setVideoStream(null);
+break;
+}
+Iterator<Map.Entry<MediaTypeSrtpControl,SrtpControl>> iter=srtpControls.entrySet().iterator();
+while (iter.hasNext()) {
+Map.Entry<MediaTypeSrtpControl,SrtpControl> entry=iter.next();
+if (entry.getKey().mediaType == mediaType) {
+entry.getValue().cleanup();
+iter.remove();
+}
+}
 }

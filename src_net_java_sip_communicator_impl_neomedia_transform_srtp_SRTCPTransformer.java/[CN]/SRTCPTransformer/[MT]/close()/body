@@ -1,11 +1,13 @@
 {
-  forwardEngine.close();
-  if (forwardEngine != reverseEngine)   reverseEngine.close();
-  Iterator<Map.Entry<Long,SRTCPCryptoContext>> iter=contexts.entrySet().iterator();
-  while (iter.hasNext()) {
-    Map.Entry<Long,SRTCPCryptoContext> entry=iter.next();
-    SRTCPCryptoContext context=entry.getValue();
-    iter.remove();
-    if (context != null)     context.close();
+synchronized (contexts) {
+    forwardEngine.close();
+    if (reverseEngine != forwardEngine)     reverseEngine.close();
+    Iterator<Map.Entry<Long,SRTCPCryptoContext>> iter=contexts.entrySet().iterator();
+    while (iter.hasNext()) {
+      Map.Entry<Long,SRTCPCryptoContext> entry=iter.next();
+      SRTCPCryptoContext context=entry.getValue();
+      iter.remove();
+      if (context != null)       context.close();
+    }
   }
 }

@@ -1,20 +1,31 @@
 {
+  DatagramPacket p=new DatagramPacket(buffer,0,PACKET_RECEIVE_BUFFER_LENGTH);
   while (!closed) {
-    DatagramPacket p=new DatagramPacket(buffer,0,PACKET_RECEIVE_BUFFER);
     try {
       receivePacket(p);
-      numberOfPackets++;
     }
  catch (    IOException e) {
       ioError=true;
       break;
     }
-    if (RTPConnectorOutputStream.logPacket(numberOfPackets)) {
-      PacketLoggingService packetLogging=NeomediaActivator.getPacketLogging();
-      if ((packetLogging != null) && packetLogging.isLoggingEnabled(PacketLoggingService.ProtocolName.RTP))       doLogPacket(p);
+    DatagramPacketFilter[] datagramPacketFilters=getDatagramPacketFilters();
+    boolean accept;
+    if (datagramPacketFilters == null)     accept=true;
+ else {
+      accept=true;
+      for (int i=0; i < datagramPacketFilters.length; i++) {
+        try {
+          if (!datagramPacketFilters[i].accept(p)) {
+            accept=false;
+            break;
+          }
+        }
+ catch (        Throwable t) {
+          if (t instanceof ThreadDeath)           throw (ThreadDeath)t;
+        }
+      }
     }
-    DatagramPacketFilter datagramPacketFilter=getDatagramPacketFilter();
-    if ((datagramPacketFilter == null) || datagramPacketFilter.accept(p)) {
+    if (accept) {
       pkt=createRawPacket(p);
       if ((pkt != null) && (transferHandler != null) && !closed)       transferHandler.transferData(this);
     }

@@ -1,0 +1,16 @@
+{
+  long ssrc=pkt.getRTCPSSRC();
+  SRTCPCryptoContext context;
+synchronized (contexts) {
+    context=contexts.get(ssrc);
+    if (context == null) {
+      context=engine.getDefaultContextControl();
+      if (context != null) {
+        context=context.deriveContext(ssrc);
+        context.deriveSrtcpKeys();
+        contexts.put(ssrc,context);
+      }
+    }
+  }
+  return context;
+}

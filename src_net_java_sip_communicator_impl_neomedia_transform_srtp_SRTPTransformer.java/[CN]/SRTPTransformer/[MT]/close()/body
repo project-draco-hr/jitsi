@@ -1,11 +1,13 @@
 {
-  forwardEngine.close();
-  if (forwardEngine != reverseEngine)   reverseEngine.close();
-  for (  Long ssrc : contexts.keySet()) {
-    SRTPCryptoContext context=contexts.get(ssrc);
-    if (context != null) {
-      context.close();
-      contexts.remove(ssrc);
+synchronized (contexts) {
+    forwardEngine.close();
+    if (reverseEngine != forwardEngine)     reverseEngine.close();
+    Iterator<Map.Entry<Long,SRTPCryptoContext>> iter=contexts.entrySet().iterator();
+    while (iter.hasNext()) {
+      Map.Entry<Long,SRTPCryptoContext> entry=iter.next();
+      SRTPCryptoContext context=entry.getValue();
+      iter.remove();
+      if (context != null)       context.close();
     }
   }
 }

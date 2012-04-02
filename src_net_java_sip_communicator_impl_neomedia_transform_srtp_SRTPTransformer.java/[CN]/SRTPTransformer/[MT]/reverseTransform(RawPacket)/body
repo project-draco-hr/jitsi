@@ -1,16 +1,5 @@
 {
   if ((pkt.readByte(0) & 0xC0) != 0x80)   return null;
-  long ssrc=pkt.getSSRC();
-  int seqNum=pkt.getSequenceNumber();
-  SRTPCryptoContext context=contexts.get(ssrc);
-  if (context == null) {
-    context=reverseEngine.getDefaultContext().deriveContext(ssrc,0,0);
-    context.deriveSrtpKeys(seqNum);
-    contexts.put(ssrc,context);
-  }
-  boolean validPacket=context.reverseTransformPacket(pkt);
-  if (!validPacket) {
-    return null;
-  }
-  return pkt;
+  SRTPCryptoContext context=getContext(pkt.getSSRC(),reverseEngine,pkt.getSequenceNumber());
+  return ((context != null) && context.reverseTransformPacket(pkt)) ? pkt : null;
 }
