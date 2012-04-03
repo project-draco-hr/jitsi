@@ -1,8 +1,36 @@
 {
-  if (streamConnector instanceof CobriStreamConnector) {
-    CallPeerJabberImpl peer=getCallPeer();
-    CallJabberImpl call=peer.getCall();
-    call.closeCobriStreamConnector(peer,mediaType,(CobriStreamConnector)streamConnector);
+  try {
+    boolean superCloseStreamConnector=true;
+    if (streamConnector instanceof CobriStreamConnector) {
+      CallPeerJabberImpl peer=getCallPeer();
+      if (peer != null) {
+        CallJabberImpl call=peer.getCall();
+        if (call != null) {
+          superCloseStreamConnector=false;
+          call.closeCobriStreamConnector(peer,mediaType,(CobriStreamConnector)streamConnector);
+        }
+      }
+    }
+    if (superCloseStreamConnector)     super.closeStreamConnector(mediaType,streamConnector);
   }
- else   super.closeStreamConnector(mediaType,streamConnector);
+  finally {
+    if (cobri != null) {
+      CobriConferenceIQ.Content content=cobri.getContent(mediaType.toString());
+      if (content != null) {
+        List<CobriConferenceIQ.Channel> channels=content.getChannels();
+        if (channels.size() == 2) {
+          CobriConferenceIQ requestConferenceIQ=new CobriConferenceIQ();
+          requestConferenceIQ.setID(cobri.getID());
+          CobriConferenceIQ.Content requestContent=requestConferenceIQ.getOrCreateContent(content.getName());
+          requestContent.addChannel(channels.get(1));
+          cobri.removeContent(content);
+          CallPeerJabberImpl peer=getCallPeer();
+          if (peer != null) {
+            CallJabberImpl call=peer.getCall();
+            if (call != null)             call.expireCobriChannels(peer,requestConferenceIQ);
+          }
+        }
+      }
+    }
+  }
 }

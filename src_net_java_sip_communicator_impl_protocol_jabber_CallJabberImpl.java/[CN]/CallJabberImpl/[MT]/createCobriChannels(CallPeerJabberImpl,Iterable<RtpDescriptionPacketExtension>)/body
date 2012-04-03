@@ -9,7 +9,8 @@
   if ((jitsiVideoBridge == null) || (jitsiVideoBridge.length() == 0))   return null;
   CobriConferenceIQ conferenceRequest=new CobriConferenceIQ();
   if (cobri != null)   conferenceRequest.setID(cobri.getID());
-  for (  MediaType mediaType : mediaTypes) {
+  for (  RtpDescriptionPacketExtension rdpe : rdpes) {
+    MediaType mediaType=MediaType.parseString(rdpe.getMedia());
     String contentName=mediaType.toString();
     CobriConferenceIQ.Content contentRequest=new CobriConferenceIQ.Content(contentName);
     conferenceRequest.addContent(contentRequest);
@@ -20,9 +21,11 @@
     }
     if (requestLocalChannel) {
       CobriConferenceIQ.Channel localChannelRequest=new CobriConferenceIQ.Channel();
+      for (      PayloadTypePacketExtension ptpe : rdpe.getPayloadTypes())       localChannelRequest.addPayloadType(ptpe);
       contentRequest.addChannel(localChannelRequest);
     }
     CobriConferenceIQ.Channel remoteChannelRequest=new CobriConferenceIQ.Channel();
+    for (    PayloadTypePacketExtension ptpe : rdpe.getPayloadTypes())     remoteChannelRequest.addPayloadType(ptpe);
     contentRequest.addChannel(remoteChannelRequest);
   }
   XMPPConnection connection=protocolProvider.getConnection();
@@ -49,7 +52,8 @@
   }
   CobriConferenceIQ conferenceResult=new CobriConferenceIQ();
   conferenceResult.setID(conferenceResponseID);
-  for (  MediaType mediaType : mediaTypes) {
+  for (  RtpDescriptionPacketExtension rdpe : rdpes) {
+    MediaType mediaType=MediaType.parseString(rdpe.getMedia());
     CobriConferenceIQ.Content contentResponse=conferenceResponse.getContent(mediaType.toString());
     if (contentResponse != null) {
       String contentName=contentResponse.getName();
