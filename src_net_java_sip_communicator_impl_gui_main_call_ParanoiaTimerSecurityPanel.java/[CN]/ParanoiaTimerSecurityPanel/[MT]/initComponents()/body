@@ -21,17 +21,17 @@
   add(counter,constraints);
   ZrtpControl zrtpControl=null;
   if (securityControl instanceof ZrtpControl)   zrtpControl=(ZrtpControl)securityControl;
-  int initialSeconds=0;
-  if (zrtpControl != null)   initialSeconds=(int)zrtpControl.getTimeoutValue() / 1000;
-  c.set(Calendar.HOUR,0);
-  c.set(Calendar.MINUTE,0);
-  c.set(Calendar.SECOND,initialSeconds);
+  long initialSeconds=0;
+  if (zrtpControl != null)   initialSeconds=zrtpControl.getTimeoutValue();
+  c.setTimeInMillis(initialSeconds);
   counter.setText(format.format(c.getTime()));
   if (initialSeconds > 0)   timer.schedule(new TimerTask(){
     @Override public void run(){
-      c.add(Calendar.SECOND,-1);
-      counter.setText(format.format(c.getTime()));
+      if (c.getTimeInMillis() - 1000 > 0) {
+        c.add(Calendar.SECOND,-1);
+        counter.setText(format.format(c.getTime()));
+      }
     }
   }
-,0,1000);
+,1000,1000);
 }
