@@ -13,21 +13,42 @@ synchronized (transportManagerSyncRoot) {
  else       return transportManager;
     }
  else {
-      ScServiceDiscoveryManager discoveryManager=peer.getProtocolProvider().getDiscoveryManager();
+      ProtocolProviderServiceJabberImpl protocolProvider=peer.getProtocolProvider();
+      ScServiceDiscoveryManager discoveryManager=protocolProvider.getDiscoveryManager();
       DiscoverInfo peerDiscoverInfo=peer.getDiscoverInfo();
-      String domain=StringUtils.parseServer(peer.getAddress());
-      boolean isGoogle=peer.getProtocolProvider().isGmailOrGoogleAppsAccount() || ProtocolProviderServiceJabberImpl.isGmailOrGoogleAppsAccount(domain);
-      if (discoveryManager.includesFeature(ProtocolProviderServiceJabberImpl.URN_GOOGLE_TRANSPORT_P2P) && ((peerDiscoverInfo == null) || peerDiscoverInfo.containsFeature(ProtocolProviderServiceJabberImpl.URN_GOOGLE_TRANSPORT_P2P)) && isGoogle) {
+      boolean google=protocolProvider.isGmailOrGoogleAppsAccount() || ProtocolProviderServiceJabberImpl.isGmailOrGoogleAppsAccount(StringUtils.parseServer(peer.getAddress()));
+      if (google && isFeatureSupported(discoveryManager,peerDiscoverInfo,ProtocolProviderServiceJabberImpl.URN_GOOGLE_TRANSPORT_P2P)) {
         transportManager=new P2PTransportManager(peer);
       }
- else       if (discoveryManager.includesFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1) && ((peerDiscoverInfo == null) || peerDiscoverInfo.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1))) {
-        transportManager=new IceUdpTransportManager(peer);
-      }
- else       if (discoveryManager.includesFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0) && ((peerDiscoverInfo == null) || peerDiscoverInfo.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0))) {
-        transportManager=new RawUdpTransportManager(peer);
-      }
- else       if (logger.isDebugEnabled()) {
-        logger.debug("No known Jingle transport supported" + " by Jabber call peer " + peer);
+ else {
+        String[] transports=new String[]{ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1,ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0};
+        CallJabberImpl call=peer.getCall();
+        if (call.isConferenceFocus()) {
+          String jitsiVideoBridge=protocolProvider.getJitsiVideoBridge();
+          if ((jitsiVideoBridge != null) && (jitsiVideoBridge.length() != 0)) {
+            String jitsiVideoBridgeTransport=ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0;
+            for (int i=1; i < transports.length; i++) {
+              if (jitsiVideoBridgeTransport.equals(transports[i])) {
+                transports[i]=transports[0];
+                transports[0]=jitsiVideoBridgeTransport;
+              }
+            }
+          }
+        }
+        for (        String transport : transports) {
+          if (isFeatureSupported(discoveryManager,peerDiscoverInfo,transport)) {
+            if (ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1.equals(transport)) {
+              transportManager=new IceUdpTransportManager(peer);
+            }
+ else             if (ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0.equals(transport)) {
+              transportManager=new RawUdpTransportManager(peer);
+            }
+            if (transportManager != null)             break;
+          }
+        }
+        if ((transportManager == null) && logger.isDebugEnabled()) {
+          logger.debug("No known Jingle transport supported" + " by Jabber call peer " + peer);
+        }
       }
     }
   }
