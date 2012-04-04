@@ -1,0 +1,30 @@
+{
+  AntialiasingManager.activateAntialiasing(g);
+  if (isOpaque()) {
+    g.setColor(getBackground());
+    g.fillRect(0,0,getWidth(),getHeight());
+  }
+  FadeTracker fadeTracker=FadeTracker.getInstance();
+  float visibility=isVisible() ? 0.8f : 0.0f;
+  if (fadeTracker.isTracked(this,FadeKind.ROLLOVER)) {
+    visibility=fadeTracker.getFade(this,FadeKind.ROLLOVER);
+  }
+  g.setColor(new Color(0f,0f,0f,visibility));
+  int y=0;
+  if (beginPoint != null) {
+    y=beginPointShift;
+    int x1Points[]={beginPoint.x,beginPoint.x + beginPointShift,beginPoint.x - beginPointShift};
+    int y1Points[]={beginPoint.y,beginPoint.y + beginPointShift,beginPoint.y + beginPointShift};
+    GeneralPath polygon=new GeneralPath(GeneralPath.WIND_EVEN_ODD,x1Points.length);
+    polygon.moveTo(x1Points[0],y1Points[0]);
+    for (int index=1; index < x1Points.length; index++) {
+      polygon.lineTo(x1Points[index],y1Points[index]);
+    }
+    ;
+    polygon.closePath();
+    g.fill(polygon);
+  }
+  if (visibility != 0.0f) {
+    g.fillRoundRect(0,y,this.getWidth(),this.getHeight(),10,10);
+  }
+}

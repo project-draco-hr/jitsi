@@ -1,10 +1,13 @@
 {
   super.securityOn(evt);
-  if (securityPanel == null) {
-    securityPanel=SecurityPanel.create(evt.getSecurityController());
-    securityPanel.setLayout(new FlowLayout(FlowLayout.LEFT,5,0));
-    this.addToCenter(securityPanel);
+  if (evt == null)   return;
+  SrtpControl srtpControl=evt.getSecurityController();
+  if (securityPanel == null)   return;
+  if (securityPanel.getSecurityControl() == null || !srtpControl.getClass().isInstance(securityPanel.getSecurityControl())) {
+    setSecurityPanelVisible(false);
+    securityPanel=SecurityPanel.create(this,callPeer,srtpControl);
   }
-  securityPanel.refreshStates();
+  securityPanel.securityOn(evt);
+  if (srtpControl instanceof ZrtpControl && !((ZrtpControl)srtpControl).isSecurityVerified())   setSecurityPanelVisible(true);
   callPanel.refreshContainer();
 }

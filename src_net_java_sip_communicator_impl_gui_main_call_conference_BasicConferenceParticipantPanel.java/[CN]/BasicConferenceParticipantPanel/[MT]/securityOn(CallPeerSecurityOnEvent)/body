@@ -1,15 +1,15 @@
 {
-  if ((evt.getSecurityController().requiresSecureSignalingTransport() && renderer.getCall().getProtocolProvider().isSignalingTransportSecure()) || !evt.getSecurityController().requiresSecureSignalingTransport()) {
-    securityImageID=ImageLoader.SECURE_ON_CONF_CALL;
-    securityStatusLabel.setIcon(new ImageIcon(ImageLoader.getImage(securityImageID)));
+  if (evt == null) {
+    securityStatusLabel.setSecurityOn();
+    return;
   }
-  securityStatusLabel.setEncryptionCipher(evt.getCipher());
-switch (evt.getSessionType()) {
-case CallPeerSecurityStatusEvent.AUDIO_SESSION:
-    securityStatusLabel.setAudioSecurityOn(true);
-  break;
-case CallPeerSecurityStatusEvent.VIDEO_SESSION:
-securityStatusLabel.setVideoSecurityOn(true);
-break;
-}
+  SrtpControl srtpControl=evt.getSecurityController();
+  if ((srtpControl.requiresSecureSignalingTransport() && renderer.getCall().getProtocolProvider().isSignalingTransportSecure()) || !srtpControl.requiresSecureSignalingTransport()) {
+    if (srtpControl instanceof ZrtpControl) {
+      securityStatusLabel.setText("zrtp");
+      if (!((ZrtpControl)srtpControl).isSecurityVerified())       securityStatusLabel.setSecurityPending();
+ else       securityStatusLabel.setSecurityOn();
+    }
+ else     securityStatusLabel.setSecurityOn();
+  }
 }

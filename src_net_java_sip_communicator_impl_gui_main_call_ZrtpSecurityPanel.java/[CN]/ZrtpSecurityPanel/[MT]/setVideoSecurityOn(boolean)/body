@@ -1,0 +1,35 @@
+{
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        setVideoSecurityOn(isVideoSecurityOn);
+      }
+    }
+);
+    return;
+  }
+  this.isVideoSecurityOn=isVideoSecurityOn;
+  Icon statusIcon=null;
+  String statusText=null;
+  final OperationSetVideoTelephony telephony=callPeer.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
+  if (telephony != null && ((telephony.getVisualComponents(callPeer) != null && telephony.getVisualComponents(callPeer).size() > 0) || ((MediaAwareCallPeer<?,?,?>)callPeer).isLocalVideoStreaming())) {
+    if (isVideoSecurityOn) {
+      statusIcon=videoSecuredIcon;
+      statusText=GuiActivator.getResources().getI18NString("service.gui.security.SECURE_VIDEO");
+    }
+ else {
+      statusIcon=videoNotSecuredIcon;
+      statusText=GuiActivator.getResources().getI18NString("service.gui.security.VIDEO_NOT_SECURED");
+    }
+  }
+ else {
+    videoSecurityLabel.setVisible(false);
+  }
+  if (statusIcon != null && statusText != null) {
+    videoSecurityLabel.setIcon(statusIcon);
+    videoSecurityLabel.setText(statusText);
+    if (!videoSecurityLabel.isVisible())     videoSecurityLabel.setVisible(true);
+  }
+  revalidate();
+  repaint();
+}

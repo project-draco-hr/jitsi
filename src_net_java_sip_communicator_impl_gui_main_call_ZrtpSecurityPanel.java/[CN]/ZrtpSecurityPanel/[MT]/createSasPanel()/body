@@ -1,0 +1,50 @@
+{
+  sasVerified=getSecurityControl().isSecurityVerified();
+  TransparentPanel sasPanel=new TransparentPanel(){
+    public void paintComponent(    Graphics g){
+      g=g.create();
+      try {
+        AntialiasingManager.activateAntialiasing(g);
+        g.setColor(new Color(1f,1f,1f,0.1f));
+        g.fillRoundRect(0,0,this.getWidth(),this.getHeight(),10,10);
+        g.setColor(Color.WHITE);
+        g.drawRoundRect(0,0,this.getWidth() - 1,this.getHeight() - 1,10,10);
+      }
+  finally {
+        g.dispose();
+      }
+    }
+  }
+;
+  sasPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+  sasPanel.setPreferredSize(new Dimension(200,80));
+  sasPanel.setMinimumSize(new Dimension(200,80));
+  sasPanel.setMaximumSize(new Dimension(200,80));
+  sasPanel.setLayout(new BoxLayout(sasPanel,BoxLayout.Y_AXIS));
+  initSasLabels();
+  SIPCommButton infoButton=new SIPCommButton(ImageLoader.getImage(ImageLoader.CALL_INFO));
+  infoButton.setToolTipText(GuiActivator.getResources().getI18NString("service.gui.security.SAS_INFO_TOOLTIP"));
+  compareLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+  JPanel stringPanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER,5,0));
+  stringPanel.add(compareLabel);
+  stringPanel.add(infoButton);
+  sasPanel.add(stringPanel);
+  securityStringLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+  sasPanel.add(securityStringLabel);
+  confirmButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      if (getSecurityControl() != null) {
+        getSecurityControl().setSASVerification(!sasVerified);
+        sasVerified=!sasVerified;
+        securityStringLabel.setIcon(sasVerified ? encryptionVerifiedIcon : null);
+        if (sasVerified)         peerRenderer.securityOn(null);
+ else         peerRenderer.securityPending();
+        initSasLabels();
+      }
+    }
+  }
+);
+  confirmButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+  sasPanel.add(confirmButton);
+  return sasPanel;
+}

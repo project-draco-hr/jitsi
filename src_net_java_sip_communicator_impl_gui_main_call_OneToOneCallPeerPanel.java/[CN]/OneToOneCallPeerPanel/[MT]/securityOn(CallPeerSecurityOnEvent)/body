@@ -1,28 +1,22 @@
 {
-  if ((evt.getSecurityController().requiresSecureSignalingTransport() && callPeer.getProtocolProvider().isSignalingTransportSecure()) || !evt.getSecurityController().requiresSecureSignalingTransport()) {
-    securityImageID=ImageLoader.SECURE_BUTTON_ON;
-    securityStatusLabel.setIcon(new ImageIcon(ImageLoader.getImage(securityImageID)));
+  if (evt == null) {
+    securityStatusLabel.setSecurityOn();
+    return;
   }
-  securityStatusLabel.setEncryptionCipher(evt.getCipher());
-switch (evt.getSessionType()) {
-case CallPeerSecurityStatusEvent.AUDIO_SESSION:
-    securityStatusLabel.setAudioSecurityOn(true);
-  break;
-case CallPeerSecurityStatusEvent.VIDEO_SESSION:
-securityStatusLabel.setVideoSecurityOn(true);
-break;
-}
-if (securityPanel == null) {
-securityPanel=SecurityPanel.create(evt.getSecurityController());
-GridBagConstraints constraints=new GridBagConstraints();
-constraints.fill=GridBagConstraints.NONE;
-constraints.gridx=0;
-constraints.gridy=2;
-constraints.weightx=0;
-constraints.weighty=0;
-constraints.insets=new Insets(5,0,0,0);
-this.add(securityPanel,constraints);
-}
-securityPanel.refreshStates();
-this.revalidate();
+  SrtpControl srtpControl=evt.getSecurityController();
+  if ((srtpControl.requiresSecureSignalingTransport() && callPeer.getProtocolProvider().isSignalingTransportSecure()) || !srtpControl.requiresSecureSignalingTransport()) {
+    if (srtpControl instanceof ZrtpControl) {
+      securityStatusLabel.setText("zrtp");
+      if (!((ZrtpControl)srtpControl).isSecurityVerified())       securityStatusLabel.setSecurityPending();
+ else       securityStatusLabel.setSecurityOn();
+    }
+ else     securityStatusLabel.setSecurityOn();
+  }
+  if (!srtpControl.getClass().isInstance(securityPanel.getSecurityControl())) {
+    setSecurityPanelVisible(false);
+    securityPanel=SecurityPanel.create(this,callPeer,srtpControl);
+  }
+  securityPanel.securityOn(evt);
+  if (srtpControl instanceof ZrtpControl && !((ZrtpControl)srtpControl).isSecurityVerified())   setSecurityPanelVisible(true);
+  this.revalidate();
 }
