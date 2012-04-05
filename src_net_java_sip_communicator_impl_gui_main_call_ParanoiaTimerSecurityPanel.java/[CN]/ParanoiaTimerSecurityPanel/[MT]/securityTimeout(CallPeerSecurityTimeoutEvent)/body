@@ -1,7 +1,13 @@
 {
   timer.cancel();
   if (evt.getSource() instanceof AbstractCallPeer) {
-    AbstractCallPeer peer=(AbstractCallPeer)evt.getSource();
-    peer.setState(CallPeerState.FAILED,"Encryption Required!");
+    try {
+      AbstractCallPeer peer=(AbstractCallPeer)evt.getSource();
+      OperationSetBasicTelephony<?> telephony=peer.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
+      telephony.hangupCallPeer(peer,OperationSetBasicTelephony.HANGUP_REASON_ENCRYPTION_REQUIRED,"Encryption Required!");
+    }
+ catch (    OperationFailedException ex) {
+      Logger.getLogger(getClass()).error("Failed to hangup peer",ex);
+    }
   }
 }
