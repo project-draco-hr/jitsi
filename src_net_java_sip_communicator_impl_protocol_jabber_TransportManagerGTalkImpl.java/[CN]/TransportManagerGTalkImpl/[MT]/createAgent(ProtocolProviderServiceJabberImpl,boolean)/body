@@ -5,40 +5,38 @@
   JabberAccountID accID=(JabberAccountID)provider.getAccountID();
   agent.setControlling(controlling);
   servers=requestJingleInfo(provider);
-synchronized (servers) {
-    for (    StunServerDescriptor desc : servers) {
-      Transport transport;
-      if (desc.getProtocol().equals("ssltcp")) {
-        transport=Transport.TCP;
-      }
+  for (  StunServerDescriptor desc : servers) {
+    Transport transport;
+    if (desc.getProtocol().equals("ssltcp")) {
+      transport=Transport.TCP;
+    }
  else {
-        transport=Transport.parse(desc.getProtocol());
-      }
-      TransportAddress addr=new TransportAddress(desc.getAddress(),desc.getPort(),transport);
-      if (addr.getAddress() == null) {
-        logger.info("Unresolved address for " + addr);
-        continue;
-      }
-      StunCandidateHarvester harvester=null;
-      if (desc.isTurnSupported()) {
-        logger.info("Google TURN descriptor");
-        if (desc.isOldTurn()) {
-          logger.info("new Google TURN harvester");
-          if (desc.getProtocol().equals("ssltcp")) {
-            harvester=new GoogleTurnSSLCandidateHarvester(addr,new String(desc.getUsername()));
-          }
- else           harvester=new GoogleTurnCandidateHarvester(addr,new String(desc.getUsername()));
+      transport=Transport.parse(desc.getProtocol());
+    }
+    TransportAddress addr=new TransportAddress(desc.getAddress(),desc.getPort(),transport);
+    if (addr.getAddress() == null) {
+      logger.info("Unresolved address for " + addr);
+      continue;
+    }
+    StunCandidateHarvester harvester=null;
+    if (desc.isTurnSupported()) {
+      logger.info("Google TURN descriptor");
+      if (desc.isOldTurn()) {
+        logger.info("new Google TURN harvester");
+        if (desc.getProtocol().equals("ssltcp")) {
+          harvester=new GoogleTurnSSLCandidateHarvester(addr,new String(desc.getUsername()));
         }
+ else         harvester=new GoogleTurnCandidateHarvester(addr,new String(desc.getUsername()));
       }
+    }
  else {
-        if (atLeastOneStunServer)         continue;
-        harvester=new StunCandidateHarvester(addr);
-        atLeastOneStunServer=true;
-        logger.info("Found Google STUN server " + harvester);
-      }
-      if (harvester != null) {
-        agent.addCandidateHarvester(harvester);
-      }
+      if (atLeastOneStunServer)       continue;
+      harvester=new StunCandidateHarvester(addr);
+      atLeastOneStunServer=true;
+      logger.info("Found Google STUN server " + harvester);
+    }
+    if (harvester != null) {
+      agent.addCandidateHarvester(harvester);
     }
   }
   if (!atLeastOneStunServer) {
