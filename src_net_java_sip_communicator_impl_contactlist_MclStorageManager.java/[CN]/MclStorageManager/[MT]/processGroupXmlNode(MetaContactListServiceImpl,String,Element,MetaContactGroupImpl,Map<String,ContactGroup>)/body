@@ -38,6 +38,7 @@
       String uid=XMLUtils.getAttribute(currentMetaContactNode,UID_ATTR_NAME);
       Element displayNameNode=XMLUtils.findChild((Element)currentMetaContactNode,META_CONTACT_DISPLAY_NAME_NODE_NAME);
       String displayName=XMLUtils.getText(displayNameNode);
+      boolean isDisplayNameUserDefined=Boolean.valueOf(displayNameNode.getAttribute(USER_DEFINED_DISPLAY_NAME_ATTR_NAME));
       List<MclStorageManager.StoredProtoContactDescriptor> protoContacts=extractProtoContacts((Element)currentMetaContactNode,accountID,protoGroupsMap);
       if (protoContacts.size() < 1)       continue;
       Map<String,List<String>> details=null;
@@ -61,7 +62,8 @@
  catch (      Exception ex) {
         logger.error("Cannot load details for contact node " + currentMetaContactNode,ex);
       }
-      mclServImpl.loadStoredMetaContact(currentMetaGroup,uid,displayName,details,protoContacts,accountID);
+      MetaContactImpl mc=mclServImpl.loadStoredMetaContact(currentMetaGroup,uid,displayName,details,protoContacts,accountID);
+      if (isDisplayNameUserDefined)       mc.setDisplayNameUserDefined(true);
     }
  catch (    Throwable thr) {
       logger.warn("Failed to parse meta contact " + currentMetaContactNode + ". Will remove and continue with other contacts",thr);

@@ -2,5 +2,15 @@
   MetaContactImpl mc=(MetaContactImpl)findMetaContactByContact(evt.getSourceContact());
   if (mc != null) {
     mc.getAvatar();
+    if (mc.getContactCount() == 1 && !mc.isDisplayNameUserDefined()) {
+      String oldDisplayName=mc.getDisplayName();
+      Contact c=mc.getDefaultContact();
+      String newDisplayName=c.getDisplayName();
+      if (newDisplayName != null && !newDisplayName.equals(oldDisplayName)) {
+        mc.setDisplayName(newDisplayName);
+        fireMetaContactEvent(new MetaContactRenamedEvent(mc,oldDisplayName,newDisplayName));
+        fireMetaContactGroupEvent(findParentMetaContactGroup(mc),null,null,MetaContactGroupEvent.CHILD_CONTACTS_REORDERED);
+      }
+    }
   }
 }
