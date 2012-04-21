@@ -1,0 +1,34 @@
+{
+  Format format=mediaFormat.getFormat();
+  if (format instanceof AudioFormat) {
+    AudioFormat audioFormat=(AudioFormat)format;
+    int channels=Format.NOT_SPECIFIED;
+    double sampleRate=OSUtils.IS_ANDROID ? audioFormat.getSampleRate() : Format.NOT_SPECIFIED;
+    if ((channels != Format.NOT_SPECIFIED) || (sampleRate != Format.NOT_SPECIFIED)) {
+      FormatControl formatControl=(FormatControl)captureDevice.getControl(FormatControl.class.getName());
+      if (formatControl != null) {
+        Format[] supportedFormats=formatControl.getSupportedFormats();
+        if ((supportedFormats != null) && (supportedFormats.length != 0)) {
+          if (sampleRate != Format.NOT_SPECIFIED) {
+            String encoding=audioFormat.getEncoding();
+            if ((Constants.G722.equalsIgnoreCase(encoding) || Constants.G722_RTP.equalsIgnoreCase(encoding)) && (sampleRate == 8000)) {
+              sampleRate=16000;
+            }
+          }
+          Format supportedAudioFormat=null;
+          for (int i=0; i < supportedFormats.length; i++) {
+            Format sf=supportedFormats[i];
+            if (sf instanceof AudioFormat) {
+              AudioFormat saf=(AudioFormat)sf;
+              if ((Format.NOT_SPECIFIED != channels) && (saf.getChannels() != channels))               continue;
+              if ((Format.NOT_SPECIFIED != sampleRate) && (saf.getSampleRate() != sampleRate))               continue;
+              supportedAudioFormat=saf;
+              break;
+            }
+          }
+          if (supportedAudioFormat != null)           formatControl.setFormat(supportedAudioFormat);
+        }
+      }
+    }
+  }
+}

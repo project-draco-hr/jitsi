@@ -1,29 +1,15 @@
 {
-  if (stream == 0) {
-    MediaLocator locator=getLocator();
-    if (locator == null)     throw new ResourceUnavailableException("locator not set");
-    int deviceIndex=DataSource.getDeviceIndex(locator);
-    AudioFormat inputFormat=this.inputFormat;
-    if (inputFormat == null)     throw new ResourceUnavailableException("inputFormat not set");
-    int channels=inputFormat.getChannels();
-    if (channels == Format.NOT_SPECIFIED)     channels=1;
-    long sampleFormat=PortAudio.getPaSampleFormat(inputFormat.getSampleSizeInBits());
-    double sampleRate=inputFormat.getSampleRate();
-    framesPerBuffer=(int)((sampleRate * PortAudio.DEFAULT_MILLIS_PER_BUFFER) / (channels * 1000));
-    try {
-      outputParameters=PortAudio.PaStreamParameters_new(deviceIndex,channels,sampleFormat,PortAudio.getSuggestedLatency());
-      stream=PortAudio.Pa_OpenStream(0,outputParameters,sampleRate,framesPerBuffer,PortAudio.STREAM_FLAGS_CLIP_OFF | PortAudio.STREAM_FLAGS_DITHER_OFF,null);
+  try {
+    doOpen();
+  }
+ catch (  Throwable t) {
+    if (logger.isDebugEnabled())     logger.debug("Failed to open PortAudioRenderer",t);
+    if (t instanceof ThreadDeath)     throw (ThreadDeath)t;
+ else     if (t instanceof ResourceUnavailableException)     throw (ResourceUnavailableException)t;
+ else {
+      ResourceUnavailableException rue=new ResourceUnavailableException();
+      rue.initCause(t);
+      throw rue;
     }
- catch (    PortAudioException paex) {
-      throw new ResourceUnavailableException(paex.getMessage());
-    }
- finally {
-      if ((stream == 0) && (outputParameters != 0)) {
-        PortAudio.PaStreamParameters_free(outputParameters);
-        outputParameters=0;
-      }
-    }
-    if (stream == 0)     throw new ResourceUnavailableException("Pa_OpenStream");
-    bytesPerBuffer=PortAudio.Pa_GetSampleSize(sampleFormat) * channels * framesPerBuffer;
   }
 }
