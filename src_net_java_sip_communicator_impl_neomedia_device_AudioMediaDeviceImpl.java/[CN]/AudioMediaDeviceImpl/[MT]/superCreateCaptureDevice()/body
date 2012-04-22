@@ -1,0 +1,43 @@
+{
+  CaptureDevice captureDevice=super.createCaptureDevice();
+  if (captureDevice != null) {
+    try {
+      FormatControl[] formatControls=captureDevice.getFormatControls();
+      if ((formatControls != null) && (formatControls.length != 0)) {
+        for (        FormatControl formatControl : formatControls) {
+          Format format=formatControl.getFormat();
+          if ((format != null) && isLessThanOrEqualToMaxAudioFormat(format))           continue;
+          Format[] supportedFormats=formatControl.getSupportedFormats();
+          AudioFormat supportedFormatToSet=null;
+          if ((supportedFormats != null) && (supportedFormats.length != 0)) {
+            for (            Format supportedFormat : supportedFormats) {
+              if (isLessThanOrEqualToMaxAudioFormat(supportedFormat)) {
+                supportedFormatToSet=(AudioFormat)supportedFormat;
+                break;
+              }
+            }
+          }
+          if (!supportedFormatToSet.matches(format)) {
+            int channels=supportedFormatToSet.getChannels();
+            double sampleRate=supportedFormatToSet.getSampleRate();
+            int sampleSizeInBits=supportedFormatToSet.getSampleSizeInBits();
+            if (channels == Format.NOT_SPECIFIED)             channels=MediaUtils.MAX_AUDIO_CHANNELS;
+            if (sampleRate == Format.NOT_SPECIFIED)             sampleRate=MediaUtils.MAX_AUDIO_SAMPLE_RATE;
+            if (sampleSizeInBits == Format.NOT_SPECIFIED) {
+              sampleSizeInBits=MediaUtils.MAX_AUDIO_SAMPLE_SIZE_IN_BITS;
+              if (sampleSizeInBits == Format.NOT_SPECIFIED)               sampleSizeInBits=16;
+            }
+            if ((channels != Format.NOT_SPECIFIED) && (sampleRate != Format.NOT_SPECIFIED) && (sampleSizeInBits != Format.NOT_SPECIFIED)) {
+              AudioFormat formatToSet=new AudioFormat(supportedFormatToSet.getEncoding(),sampleRate,sampleSizeInBits,channels);
+              if (supportedFormatToSet.matches(formatToSet))               formatControl.setFormat(supportedFormatToSet.intersects(formatToSet));
+            }
+          }
+        }
+      }
+    }
+ catch (    Throwable t) {
+      if (t instanceof ThreadDeath)       throw (ThreadDeath)t;
+    }
+  }
+  return captureDevice;
+}
