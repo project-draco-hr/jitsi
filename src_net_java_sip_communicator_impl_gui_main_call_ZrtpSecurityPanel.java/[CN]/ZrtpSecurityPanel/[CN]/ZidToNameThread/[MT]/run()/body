@@ -1,20 +1,21 @@
 {
-  String message=GuiActivator.getResources().getI18NString("service.gui.ZID_NAME_SET");
-  if (zidPropertyValue == null) {
+  String message=zidAorMismatch ? GuiActivator.getResources().getI18NString("service.gui.ZID_NAME_UNEXPECTED") : GuiActivator.getResources().getI18NString("service.gui.ZID_NAME_SET");
+  if (zidNameValue == null) {
     message=GuiActivator.getResources().getI18NString("service.gui.ZID_NAME_NOT_SET");
-    zidPropertyValue=callPeer.getDisplayName();
+    zidNameValue=callPeer.getDisplayName();
   }
   PopupDialog dialog=GuiActivator.getUIService().getPopupDialog();
-  String name=(String)dialog.showInputPopupDialog(message,GuiActivator.getResources().getI18NString("service.gui.ZID_NAME_DIALOG"),PopupDialog.INFORMATION_MESSAGE,null,zidPropertyValue);
+  String name=(String)dialog.showInputPopupDialog(message,GuiActivator.getResources().getI18NString("service.gui.ZID_NAME_DIALOG"),PopupDialog.INFORMATION_MESSAGE,null,zidNameValue);
   if (name != null) {
-    zidPropertyValue=name;
-    configService.setProperty(zidPropertyName,zidPropertyValue);
-    String label=zidPropertyValue;
-    if (zidPropertyValue.length() > 6) {
-      label=zidPropertyValue.substring(0,6) + "...";
+    zidNameValue=name;
+    configService.setProperty(zidNameKey,zidNameValue);
+    configService.setProperty(zidAorKey,callPeer.getAddress());
+    String label=zidNameValue;
+    if (zidNameValue.length() > 6) {
+      label=zidNameValue.substring(0,6) + "...";
     }
     securityStatusLabel.setText("zrtp - " + label);
-    securityStatusLabel.setToolTipText(GuiActivator.getResources().getI18NString("service.gui.ZID_NAME_SET") + " '" + zidPropertyValue+ "'");
+    securityStatusLabel.setToolTipText(GuiActivator.getResources().getI18NString("service.gui.ZID_NAME_SET") + " '" + zidNameValue+ "'");
   }
  else   securityStatusLabel.setText("zrtp");
   zidNameDialogThread=null;
