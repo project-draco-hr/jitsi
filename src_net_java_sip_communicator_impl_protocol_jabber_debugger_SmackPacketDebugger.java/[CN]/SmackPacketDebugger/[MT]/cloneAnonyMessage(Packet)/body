@@ -1,0 +1,25 @@
+{
+  Message oldMsg=(Message)packet;
+  if (oldMsg.getBody() == null && (oldMsg.getBodies() == null || oldMsg.getBodies().size() == 0)) {
+    return oldMsg;
+  }
+  Message newMsg=new Message();
+  newMsg.setPacketID(packet.getPacketID());
+  newMsg.setTo(packet.getTo());
+  newMsg.setFrom(packet.getFrom());
+  for (  PacketExtension pex : packet.getExtensions())   newMsg.addExtension(pex);
+  for (  String propName : packet.getPropertyNames())   newMsg.setProperty(propName,packet.getProperty(propName));
+  newMsg.setError(packet.getError());
+  newMsg.setType(oldMsg.getType());
+  newMsg.setThread(oldMsg.getThread());
+  newMsg.setLanguage(oldMsg.getLanguage());
+  for (  Message.Subject sub : oldMsg.getSubjects()) {
+    if (sub.getSubject() != null)     newMsg.addSubject(sub.getLanguage(),new String(new char[sub.getSubject().length()]).replace('\0','.'));
+ else     newMsg.addSubject(sub.getLanguage(),sub.getSubject());
+  }
+  for (  Message.Body b : oldMsg.getBodies()) {
+    if (b.getMessage() != null)     newMsg.addBody(b.getLanguage(),new String(new char[b.getMessage().length()]).replace('\0','.'));
+ else     newMsg.addSubject(b.getLanguage(),b.getMessage());
+  }
+  return newMsg;
+}

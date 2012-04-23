@@ -1,7 +1,14 @@
 {
   try {
     if (packetLogging.isLoggingEnabled(PacketLoggingService.ProtocolName.JABBER) && packet != null && connection.getSocket() != null) {
-      packetLogging.logPacket(PacketLoggingService.ProtocolName.JABBER,remoteAddress,connection.getPort(),localAddress,connection.getSocket().getLocalPort(),PacketLoggingService.TransportName.TCP,false,packet.toXML().getBytes("UTF-8"));
+      byte[] packetBytes;
+      if (packet instanceof Message) {
+        packetBytes=cloneAnonyMessage(packet).toXML().getBytes("UTF-8");
+      }
+ else {
+        packetBytes=packet.toXML().getBytes("UTF-8");
+      }
+      packetLogging.logPacket(PacketLoggingService.ProtocolName.JABBER,remoteAddress,connection.getPort(),localAddress,connection.getSocket().getLocalPort(),PacketLoggingService.TransportName.TCP,false,packetBytes);
     }
   }
  catch (  Throwable t) {

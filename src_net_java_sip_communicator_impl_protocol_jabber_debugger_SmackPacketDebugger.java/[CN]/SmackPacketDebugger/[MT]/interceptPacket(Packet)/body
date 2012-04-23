@@ -5,7 +5,14 @@
         remoteAddress=connection.getSocket().getInetAddress().getAddress();
         localAddress=connection.getSocket().getLocalAddress().getAddress();
       }
-      packetLogging.logPacket(PacketLoggingService.ProtocolName.JABBER,localAddress,connection.getSocket().getLocalPort(),remoteAddress,connection.getPort(),PacketLoggingService.TransportName.TCP,true,packet.toXML().getBytes("UTF-8"));
+      byte[] packetBytes;
+      if (packet instanceof Message) {
+        packetBytes=cloneAnonyMessage(packet).toXML().getBytes("UTF-8");
+      }
+ else {
+        packetBytes=packet.toXML().getBytes("UTF-8");
+      }
+      packetLogging.logPacket(PacketLoggingService.ProtocolName.JABBER,localAddress,connection.getSocket().getLocalPort(),remoteAddress,connection.getPort(),PacketLoggingService.TransportName.TCP,true,packetBytes);
     }
   }
  catch (  Throwable t) {
