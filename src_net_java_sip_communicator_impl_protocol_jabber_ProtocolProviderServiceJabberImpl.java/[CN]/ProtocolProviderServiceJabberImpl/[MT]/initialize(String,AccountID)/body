@@ -3,6 +3,18 @@ synchronized (initializationLock) {
     this.accountID=accountID;
     supportedFeatures.clear();
     this.clearRegistrationStateChangeListener();
+synchronized (providerCreationLock) {
+      if (providerManager == null) {
+        try {
+          ProviderManager.setInstance(new ProviderManagerExt());
+        }
+ catch (        Throwable t) {
+        }
+ finally {
+          providerManager=ProviderManager.getInstance();
+        }
+      }
+    }
     String protocolIconPath=accountID.getAccountPropertyString(ProtocolProviderFactory.PROTOCOL_ICON_PATH);
     if (protocolIconPath == null)     protocolIconPath="resources/images/protocol/jabber";
     jabberIcon=new ProtocolIconJabberImpl(protocolIconPath);
@@ -39,7 +51,6 @@ synchronized (initializationLock) {
     supportedFeatures.add("http://jabber.org/protocol/muc#rooms");
     supportedFeatures.add("http://jabber.org/protocol/muc#traffic");
     supportedFeatures.add(URN_XMPP_JINGLE_RTP_HDREXT);
-    ProviderManager providerManager=ProviderManager.getInstance();
     providerManager.addIQProvider(JingleIQ.ELEMENT_NAME,JingleIQ.NAMESPACE,new JingleIQProvider());
     providerManager.addIQProvider(InputEvtIQ.ELEMENT_NAME,InputEvtIQ.NAMESPACE,new InputEvtIQProvider());
     providerManager.addIQProvider(CoinIQ.ELEMENT_NAME,CoinIQ.NAMESPACE,new CoinIQProvider());
