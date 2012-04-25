@@ -3,9 +3,21 @@
   if (lockAddress == null) {
     return LOCK_ERROR;
   }
+  int retries=7;
   int port=getRandomPortNumber();
-  InetSocketAddress serverSocketAddress=new InetSocketAddress(lockAddress,port);
+  InetSocketAddress serverSocketAddress;
+  while (startLockServer(serverSocketAddress=new InetSocketAddress(lockAddress,port)) != SUCCESS && retries > 0) {
+    port=getRandomPortNumber();
+    retries--;
+  }
+  try {
+    lockFile.getParentFile().mkdirs();
+    lockFile.createNewFile();
+  }
+ catch (  IOException e) {
+    logger.error("Failed to create lock file" + lockFile,e);
+  }
+  lockFile.deleteOnExit();
   writeLockFile(lockFile,serverSocketAddress);
-  startLockServer(serverSocketAddress);
   return SUCCESS;
 }

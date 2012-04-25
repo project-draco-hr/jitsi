@@ -1,4 +1,14 @@
 {
+  try {
+    Method method=iface.getClass().getMethod("isLoopback");
+    return ((Boolean)method.invoke(iface,new Object[]{})).booleanValue();
+  }
+ catch (  Throwable t) {
+  }
   Enumeration<InetAddress> addresses=iface.getInetAddresses();
-  return addresses.hasMoreElements() && addresses.nextElement().isLoopbackAddress();
+  if (addresses.hasMoreElements()) {
+    InetAddress address=addresses.nextElement();
+    if (address.isLoopbackAddress() || address.getHostAddress().startsWith(WEIRD_MACOSX_LOOPBACK_ADDRESS))     return true;
+  }
+  return false;
 }
