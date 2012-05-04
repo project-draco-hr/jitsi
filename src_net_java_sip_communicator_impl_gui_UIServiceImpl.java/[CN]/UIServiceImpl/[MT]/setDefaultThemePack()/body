@@ -8,12 +8,29 @@
   String laf=UIManager.getSystemLookAndFeelClassName();
   boolean lafIsSet=false;
   if (laf != null) {
+    String gtkLookAndFeel="com.sun.java.swing.plaf.gtk.GTKLookAndFeel";
+    if ((OSUtils.IS_FREEBSD || OSUtils.IS_LINUX) && laf.equals(UIManager.getCrossPlatformLookAndFeelClassName())) {
+      try {
+        String kdeFullSession=System.getenv("KDE_FULL_SESSION");
+        if ((kdeFullSession != null) && (kdeFullSession.length() != 0)) {
+          for (          LookAndFeelInfo lafi : UIManager.getInstalledLookAndFeels()) {
+            if (gtkLookAndFeel.equals(lafi.getClassName())) {
+              laf=gtkLookAndFeel;
+              break;
+            }
+          }
+        }
+      }
+ catch (      Throwable t) {
+        if (t instanceof ThreadDeath)         throw (ThreadDeath)t;
+      }
+    }
     try {
       UIManager.setLookAndFeel(laf);
       lafIsSet=true;
       UIDefaults uiDefaults=UIManager.getDefaults();
       if (OSUtils.IS_WINDOWS)       fixWindowsUIDefaults(uiDefaults);
-      if (laf.equals("com.sun.java.swing.plaf.gtk.GTKLookAndFeel") || laf.equals("com.sun.java.swing.plaf.motif.MotifLookAndFeel")) {
+      if (laf.equals(gtkLookAndFeel) || laf.equals("com.sun.java.swing.plaf.motif.MotifLookAndFeel")) {
         uiDefaults.put("ScrollPaneUI",new javax.swing.plaf.metal.MetalLookAndFeel().getDefaults().get("ScrollPaneUI"));
       }
     }
