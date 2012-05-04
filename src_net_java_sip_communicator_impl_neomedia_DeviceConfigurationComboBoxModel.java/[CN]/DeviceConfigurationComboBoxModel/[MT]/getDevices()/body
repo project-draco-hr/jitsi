@@ -1,13 +1,20 @@
 {
-  if (type != AUDIO && devices != null)   return devices;
-  CaptureDeviceInfo[] infos;
+  if (type == AUDIO)   throw new IllegalStateException("type");
+  if (devices != null)   return devices;
+  AudioSystem audioSystem;
+  List<CaptureDeviceInfo> infos;
 switch (type) {
 case AUDIO_CAPTURE:
-    infos=deviceConfiguration.getAvailableAudioCaptureDevices(DeviceConfiguration.AUDIO_SYSTEM_PORTAUDIO);
-  break;
+    audioSystem=deviceConfiguration.getAudioSystem();
+  infos=(audioSystem == null) ? null : audioSystem.getCaptureDevices();
+break;
 case AUDIO_NOTIFY:
+audioSystem=deviceConfiguration.getAudioSystem();
+infos=(audioSystem == null) ? null : audioSystem.getNotifyDevices();
+break;
 case AUDIO_PLAYBACK:
-infos=deviceConfiguration.getAvailableAudioPlaybackDevices();
+audioSystem=deviceConfiguration.getAudioSystem();
+infos=(audioSystem == null) ? null : audioSystem.getPlaybackDevices();
 break;
 case VIDEO:
 infos=deviceConfiguration.getAvailableVideoCaptureDevices(MediaUseCase.CALL);
@@ -15,11 +22,9 @@ break;
 default :
 throw new IllegalStateException("type");
 }
-final int deviceCount=infos.length;
+final int deviceCount=(infos == null) ? 0 : infos.size();
 devices=new CaptureDevice[deviceCount + 1];
-for (int i=0; i < deviceCount; i++) {
-devices[i]=new CaptureDevice(infos[i]);
-}
+if (deviceCount > 0) for (int i=0; i < deviceCount; i++) devices[i]=new CaptureDevice(infos.get(i));
 devices[deviceCount]=new CaptureDevice(null);
 return devices;
 }

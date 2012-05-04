@@ -1,82 +1,38 @@
 {
-  final JComponent preview;
-  if (type == DeviceConfigurationComboBoxModel.VIDEO) {
+  JComponent preview=null;
+  if (type == DeviceConfigurationComboBoxModel.AUDIO) {
+    Object selectedItem=comboBox.getSelectedItem();
+    if (selectedItem instanceof AudioSystem) {
+      AudioSystem audioSystem=(AudioSystem)selectedItem;
+      if (!NoneAudioSystem.LOCATOR_PROTOCOL.equalsIgnoreCase(audioSystem.getLocatorProtocol())) {
+        preview=new TransparentPanel(new GridBagLayout());
+        createAudioSystemControls(audioSystem,preview);
+      }
+    }
+  }
+ else   if (type == DeviceConfigurationComboBoxModel.VIDEO) {
     JLabel noPreview=new JLabel(NeomediaActivator.getResources().getI18NString("impl.media.configform.NO_PREVIEW"));
     noPreview.setHorizontalAlignment(SwingConstants.CENTER);
     noPreview.setVerticalAlignment(SwingConstants.CENTER);
     preview=createVideoContainer(noPreview);
-    preview.setPreferredSize(new Dimension(WIDTH,280));
-    preview.setMaximumSize(new Dimension(WIDTH,280));
-    videoDeviceChangeListener=new ActionListener(){
-      public void actionPerformed(      ActionEvent event){
-        Object selection=comboBox.getSelectedItem();
-        CaptureDeviceInfo device=null;
-        if (selection instanceof DeviceConfigurationComboBoxModel.CaptureDevice)         device=((DeviceConfigurationComboBoxModel.CaptureDevice)selection).info;
-        ((DeviceConfigurationComboBoxModel)comboBox.getModel()).reinitVideo();
-        if ((device != null) && device.equals(videoDeviceInPreview))         return;
-        Exception exception;
-        try {
-          createPreview(device,preview);
-          exception=null;
-        }
- catch (        IOException ex) {
-          exception=ex;
-        }
-catch (        MediaException ex) {
-          exception=ex;
-        }
-        if (exception != null) {
-          logger.error("Failed to create preview for device " + device,exception);
-          device=null;
-        }
-        videoDeviceInPreview=device;
-      }
+    Object selectedItem=comboBox.getSelectedItem();
+    CaptureDeviceInfo device=null;
+    if (selectedItem instanceof DeviceConfigurationComboBoxModel.CaptureDevice)     device=((DeviceConfigurationComboBoxModel.CaptureDevice)selectedItem).info;
+    Exception exception;
+    try {
+      createVideoPreview(device,preview);
+      exception=null;
     }
-;
-    comboBox.addActionListener(videoDeviceChangeListener);
-    HierarchyListener hierarchyListener=new HierarchyListener(){
-      private Window window;
-      private WindowListener windowListener;
-      public void dispose(){
-        if (windowListener != null) {
-          if (window != null) {
-            window.removeWindowListener(windowListener);
-            window=null;
-          }
-          windowListener=null;
-        }
-        videoDeviceInPreview=null;
-      }
-      public void hierarchyChanged(      HierarchyEvent event){
-        if ((event.getChangeFlags() & HierarchyEvent.DISPLAYABILITY_CHANGED) == 0)         return;
-        if (comboBox.isDisplayable()) {
-          SwingUtilities.invokeLater(new Runnable(){
-            public void run(){
-              videoDeviceChangeListener.actionPerformed(null);
-            }
-          }
-);
-          if (windowListener == null) {
-            window=SwingUtilities.windowForComponent(comboBox);
-            if (window != null) {
-              windowListener=new WindowAdapter(){
-                @Override public void windowClosing(                WindowEvent event){
-                  dispose();
-                }
-              }
-;
-              window.addWindowListener(windowListener);
-            }
-          }
-        }
- else {
-          dispose();
-        }
-      }
+ catch (    IOException ex) {
+      exception=ex;
     }
-;
-    comboBox.addHierarchyListener(hierarchyListener);
+catch (    MediaException ex) {
+      exception=ex;
+    }
+    if (exception != null) {
+      logger.error("Failed to create preview for device " + device,exception);
+      device=null;
+    }
   }
- else   preview=new TransparentPanel();
   return preview;
 }

@@ -1,18 +1,16 @@
 {
-  CaptureDeviceInfo[] captureDeviceInfos;
+  List<CaptureDeviceInfo> cdis;
   List<MediaDeviceImpl> privateDevices;
-  if (mediaType == MediaType.VIDEO) {
-synchronized (reinitVideoLock) {
-      getDeviceConfiguration().reinitializeVideo();
-    }
+  if (MediaType.VIDEO.equals(mediaType)) {
+    DeviceSystem.initializeDeviceSystems(MediaType.VIDEO);
   }
 switch (mediaType) {
 case AUDIO:
-    captureDeviceInfos=getDeviceConfiguration().getAvailableAudioCaptureDevices();
+    cdis=getDeviceConfiguration().getAvailableAudioCaptureDevices();
   privateDevices=audioDevices;
 break;
 case VIDEO:
-captureDeviceInfos=getDeviceConfiguration().getAvailableVideoCaptureDevices(useCase);
+cdis=getDeviceConfiguration().getAvailableVideoCaptureDevices(useCase);
 privateDevices=videoDevices;
 break;
 default :
@@ -20,28 +18,31 @@ return EMPTY_DEVICES;
 }
 List<MediaDevice> publicDevices;
 synchronized (privateDevices) {
-if ((captureDeviceInfos == null) || (captureDeviceInfos.length == 0)) privateDevices.clear();
+if ((cdis == null) || (cdis.size() <= 0)) privateDevices.clear();
  else {
 Iterator<MediaDeviceImpl> deviceIter=privateDevices.iterator();
 while (deviceIter.hasNext()) {
+Iterator<CaptureDeviceInfo> cdiIter=cdis.iterator();
 CaptureDeviceInfo captureDeviceInfo=deviceIter.next().getCaptureDeviceInfo();
 boolean deviceIsFound=false;
-for (int i=0; i < captureDeviceInfos.length; i++) if (captureDeviceInfo.equals(captureDeviceInfos[i])) {
+while (cdiIter.hasNext()) {
+if (captureDeviceInfo.equals(cdiIter.next())) {
 deviceIsFound=true;
-captureDeviceInfos[i]=null;
+cdiIter.remove();
 break;
+}
 }
 if (!deviceIsFound) deviceIter.remove();
 }
-for (CaptureDeviceInfo captureDeviceInfo : captureDeviceInfos) {
-if (captureDeviceInfo == null) continue;
+for (CaptureDeviceInfo cdi : cdis) {
+if (cdi == null) continue;
 MediaDeviceImpl device;
 switch (mediaType) {
 case AUDIO:
-device=new AudioMediaDeviceImpl(captureDeviceInfo);
+device=new AudioMediaDeviceImpl(cdi);
 break;
 case VIDEO:
-device=new MediaDeviceImpl(captureDeviceInfo,mediaType);
+device=new MediaDeviceImpl(cdi,mediaType);
 break;
 default :
 device=null;

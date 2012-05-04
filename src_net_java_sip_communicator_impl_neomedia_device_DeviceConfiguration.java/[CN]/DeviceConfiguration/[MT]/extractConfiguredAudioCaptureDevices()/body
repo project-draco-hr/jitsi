@@ -1,49 +1,33 @@
 {
-  ConfigurationService config=NeomediaActivator.getConfigurationService();
-  if (logger.isInfoEnabled())   logger.info("Scanning for configured Audio Devices.");
-  CaptureDeviceInfo[] audioCaptureDevices=getAvailableAudioCaptureDevices();
-  if (config.getBoolean(PROP_AUDIO_DEVICE_IS_DISABLED,false)) {
-    audioCaptureDevice=null;
-    audioSystem=AUDIO_NONE;
-  }
- else   if (audioCaptureDevices.length < 1) {
-    logger.warn("No Audio Device was found.");
-    audioCaptureDevice=null;
-    audioSystem=AUDIO_NONE;
-  }
- else {
-    if (logger.isDebugEnabled())     logger.debug("Found " + audioCaptureDevices.length + " capture devices: "+ audioCaptureDevices);
-    String audioDevName=config.getString(PROP_AUDIO_DEVICE);
-    if (audioDevName == null || audioDevName.equals(AUDIO_NONE)) {
-      if (PortAudioAuto.isSupported()) {
-        setAudioSystem(AUDIO_SYSTEM_PORTAUDIO,null,false);
-        if (AUDIO_NONE.equals(audioDevName))         setAudioCaptureDevice(null,false);
-      }
- else {
-        setAudioPlaybackDevice(null,false);
-        setAudioNotifyDevice(null,false);
-        if (OSUtils.IS_ANDROID)         setAudioCaptureDevice(audioCaptureDevices[0],false);
- else {
-          setAudioCaptureDevice(null,false);
-          setAudioSystem(AUDIO_SYSTEM_JAVASOUND,null,false);
-        }
-      }
-    }
- else {
-      for (      CaptureDeviceInfo captureDeviceInfo : audioCaptureDevices) {
-        if (audioDevName.equals(captureDeviceInfo.getName())) {
-          setAudioSystem(getAudioSystem(captureDeviceInfo),captureDeviceInfo,false);
+  if (logger.isInfoEnabled())   logger.info("Looking for configured audio devices.");
+  AudioSystem[] availableAudioSystems=getAvailableAudioSystems();
+  if ((availableAudioSystems != null) && (availableAudioSystems.length != 0)) {
+    AudioSystem audioSystem=getAudioSystem();
+    if (audioSystem != null) {
+      boolean audioSystemIsAvailable=false;
+      for (      AudioSystem availableAudioSystem : availableAudioSystems) {
+        if (availableAudioSystem.equals(audioSystem)) {
+          audioSystemIsAvailable=true;
           break;
         }
       }
-      if (getAudioSystem() == null || !PortAudioAuto.isSupported()) {
-        logger.warn("Computer sound config changed or " + "there is a problem since last config was saved, " + "will back to default");
-        setAudioPlaybackDevice(null,false);
-        setAudioNotifyDevice(null,false);
-        setAudioCaptureDevice(null,false);
-        setAudioSystem(AUDIO_SYSTEM_PORTAUDIO,null,false);
-      }
+      if (!audioSystemIsAvailable)       audioSystem=null;
     }
-    if (audioCaptureDevice != null)     if (logger.isInfoEnabled())     logger.info("Found " + audioCaptureDevice.getName() + " as an audio capture device.");
+    if (audioSystem == null) {
+      ConfigurationService cfg=NeomediaActivator.getConfigurationService();
+      if (cfg != null) {
+        String locatorProtocol=cfg.getString(PROP_AUDIO_SYSTEM);
+        if (locatorProtocol != null) {
+          for (          AudioSystem availableAudioSystem : availableAudioSystems) {
+            if (locatorProtocol.equalsIgnoreCase(availableAudioSystem.getLocatorProtocol())) {
+              audioSystem=availableAudioSystem;
+              break;
+            }
+          }
+        }
+      }
+      if (audioSystem == null)       audioSystem=availableAudioSystems[0];
+      setAudioSystem(audioSystem,false);
+    }
   }
 }

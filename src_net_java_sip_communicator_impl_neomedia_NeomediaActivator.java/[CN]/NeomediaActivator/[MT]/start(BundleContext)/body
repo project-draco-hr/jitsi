@@ -9,7 +9,33 @@
   Dictionary<String,String> mediaProps=new Hashtable<String,String>();
   mediaProps.put(ConfigurationForm.FORM_TYPE,ConfigurationForm.GENERAL_TYPE);
   if (!getConfigurationService().getBoolean(AUDIO_CONFIG_DISABLED_PROP,false)) {
-    bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm(AudioConfigurationPanel.class.getName(),getClass().getClassLoader(),"plugin.mediaconfig.AUDIO_ICON","impl.neomedia.configform.AUDIO",3),mediaProps);
+    final ConfigurationForm audioConfigurationForm=new LazyConfigurationForm(AudioConfigurationPanel.class.getName(),getClass().getClassLoader(),"plugin.mediaconfig.AUDIO_ICON","impl.neomedia.configform.AUDIO",3);
+    bundleContext.registerService(ConfigurationForm.class.getName(),audioConfigurationForm,mediaProps);
+    if (deviceConfigurationPropertyChangeListener == null) {
+      deviceConfigurationPropertyChangeListener=new PropertyChangeListener(){
+        public void propertyChange(        final PropertyChangeEvent event){
+          if (DeviceConfiguration.PROP_AUDIO_SYSTEM_DEVICES.equals(event.getPropertyName())) {
+            if (!SwingUtilities.isEventDispatchThread()) {
+              SwingUtilities.invokeLater(new Runnable(){
+                public void run(){
+                  propertyChange(event);
+                }
+              }
+);
+              return;
+            }
+            UIService uiService=getUIService();
+            if (uiService == null)             return;
+            ConfigurationContainer configurationContainer=uiService.getConfigurationContainer();
+            if (configurationContainer == null)             return;
+            configurationContainer.setSelected(audioConfigurationForm);
+            configurationContainer.setVisible(true);
+          }
+        }
+      }
+;
+      mediaServiceImpl.getDeviceConfiguration().addPropertyChangeListener(deviceConfigurationPropertyChangeListener);
+    }
   }
   if (!getConfigurationService().getBoolean(VIDEO_CONFIG_DISABLED_PROP,false)) {
     bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm(VideoConfigurationPanel.class.getName(),getClass().getClassLoader(),"plugin.mediaconfig.VIDEO_ICON","impl.neomedia.configform.VIDEO",4),mediaProps);

@@ -1,0 +1,32 @@
+{
+  Format format;
+switch (getMediaType()) {
+case AUDIO:
+    format=new AudioFormat(null);
+  break;
+case VIDEO:
+format=new VideoFormat(null);
+break;
+default :
+format=null;
+break;
+}
+if (format != null) {
+@SuppressWarnings("unchecked") Vector<CaptureDeviceInfo> cdis=CaptureDeviceManager.getDeviceList(format);
+if ((cdis != null) && (cdis.size() > 0)) {
+boolean commit=false;
+for (CaptureDeviceInfo cdi : filterDeviceListByLocatorProtocol(cdis,getLocatorProtocol())) {
+CaptureDeviceManager.removeDevice(cdi);
+commit=true;
+}
+if (commit) {
+try {
+CaptureDeviceManager.commit();
+}
+ catch (IOException ioe) {
+if (logger.isDebugEnabled()) logger.debug("Failed to commit CaptureDeviceManager",ioe);
+}
+}
+}
+}
+}

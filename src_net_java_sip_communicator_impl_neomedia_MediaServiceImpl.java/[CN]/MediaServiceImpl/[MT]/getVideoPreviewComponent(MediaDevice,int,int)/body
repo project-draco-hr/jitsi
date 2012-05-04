@@ -3,31 +3,31 @@
   noPreview.setHorizontalAlignment(SwingConstants.CENTER);
   noPreview.setVerticalAlignment(SwingConstants.CENTER);
   final JComponent videoContainer=new VideoContainer(noPreview);
-  videoContainer.setPreferredSize(new Dimension(preferredWidth,preferredHeight));
-  videoContainer.setMaximumSize(new Dimension(preferredWidth,preferredHeight));
+  if ((preferredWidth > 0) && (preferredHeight > 0))   videoContainer.setPreferredSize(new Dimension(preferredWidth,preferredHeight));
   try {
     CaptureDeviceInfo captureDeviceInfo;
-    if ((device == null) || ((captureDeviceInfo=((MediaDeviceImpl)device).getCaptureDeviceInfo()) == null))     return videoContainer;
-    DataSource dataSource=Manager.createDataSource(captureDeviceInfo.getLocator());
-    if ((preferredWidth < 128) || (preferredHeight < 96)) {
-      preferredHeight=128;
-      preferredWidth=96;
-    }
-    VideoMediaStreamImpl.selectVideoSize(dataSource,preferredWidth,preferredHeight);
-    dataSource.connect();
-    Processor player=Manager.createProcessor(dataSource);
-    final MediaLocator locator=dataSource.getLocator();
-    player.addControllerListener(new ControllerListener(){
-      public void controllerUpdate(      ControllerEvent event){
-        controllerUpdateForPreview(event,videoContainer,locator);
+    if ((device != null) && ((captureDeviceInfo=((MediaDeviceImpl)device).getCaptureDeviceInfo()) != null)) {
+      DataSource dataSource=Manager.createDataSource(captureDeviceInfo.getLocator());
+      if ((preferredWidth < 128) || (preferredHeight < 96)) {
+        preferredHeight=128;
+        preferredWidth=96;
       }
-    }
+      VideoMediaStreamImpl.selectVideoSize(dataSource,preferredWidth,preferredHeight);
+      dataSource.connect();
+      Processor player=Manager.createProcessor(dataSource);
+      final MediaLocator locator=dataSource.getLocator();
+      player.addControllerListener(new ControllerListener(){
+        public void controllerUpdate(        ControllerEvent event){
+          controllerUpdateForPreview(event,videoContainer,locator);
+        }
+      }
 );
-    player.configure();
-    return videoContainer;
+      player.configure();
+    }
   }
- catch (  Exception e) {
-    logger.error("Failed to create video preview component",e);
+ catch (  Throwable t) {
+    if (t instanceof ThreadDeath)     throw (ThreadDeath)t;
+    logger.error("Failed to create video preview",t);
   }
-  return null;
+  return videoContainer;
 }

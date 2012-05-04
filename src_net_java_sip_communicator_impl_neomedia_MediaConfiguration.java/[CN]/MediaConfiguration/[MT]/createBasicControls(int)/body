@@ -1,3 +1,65 @@
 {
-  return createBasicControls(type,true);
+  final JComboBox deviceComboBox=new JComboBox();
+  deviceComboBox.setEditable(false);
+  deviceComboBox.setModel(new DeviceConfigurationComboBoxModel(mediaService.getDeviceConfiguration(),type));
+  JLabel deviceLabel=new JLabel(getLabelText(type));
+  deviceLabel.setDisplayedMnemonic(getDisplayedMnemonic(type));
+  deviceLabel.setLabelFor(deviceComboBox);
+  final Container devicePanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
+  devicePanel.setMaximumSize(new Dimension(WIDTH,25));
+  devicePanel.add(deviceLabel);
+  devicePanel.add(deviceComboBox);
+  final JPanel deviceAndPreviewPanel=new TransparentPanel(new BorderLayout());
+  int preferredDeviceAndPreviewPanelHeight;
+switch (type) {
+case DeviceConfigurationComboBoxModel.AUDIO:
+    preferredDeviceAndPreviewPanelHeight=225;
+  break;
+case DeviceConfigurationComboBoxModel.VIDEO:
+preferredDeviceAndPreviewPanelHeight=305;
+break;
+default :
+preferredDeviceAndPreviewPanelHeight=0;
+break;
+}
+if (preferredDeviceAndPreviewPanelHeight > 0) deviceAndPreviewPanel.setPreferredSize(new Dimension(WIDTH,preferredDeviceAndPreviewPanelHeight));
+deviceAndPreviewPanel.add(devicePanel,BorderLayout.NORTH);
+final ActionListener deviceComboBoxActionListener=new ActionListener(){
+public void actionPerformed(ActionEvent event){
+boolean revalidateAndRepaint=false;
+for (int i=deviceAndPreviewPanel.getComponentCount() - 1; i >= 0; i--) {
+Component c=deviceAndPreviewPanel.getComponent(i);
+if (c != devicePanel) {
+deviceAndPreviewPanel.remove(i);
+revalidateAndRepaint=true;
+}
+}
+Component preview=null;
+if ((deviceComboBox.getSelectedItem() != null) && deviceComboBox.isShowing()) preview=createPreview(type,deviceComboBox);
+if (preview != null) {
+deviceAndPreviewPanel.add(preview,BorderLayout.CENTER);
+revalidateAndRepaint=true;
+}
+if (revalidateAndRepaint) {
+deviceAndPreviewPanel.revalidate();
+deviceAndPreviewPanel.repaint();
+}
+}
+}
+;
+deviceComboBox.addActionListener(deviceComboBoxActionListener);
+deviceComboBox.addHierarchyListener(new HierarchyListener(){
+public void hierarchyChanged(HierarchyEvent event){
+if ((event.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
+SwingUtilities.invokeLater(new Runnable(){
+public void run(){
+deviceComboBoxActionListener.actionPerformed(null);
+}
+}
+);
+}
+}
+}
+);
+return deviceAndPreviewPanel;
 }

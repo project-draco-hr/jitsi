@@ -1,3 +1,29 @@
 {
-  return audioSystems.toArray(new String[0]);
+  AudioSystem[] audioSystems=AudioSystem.getAudioSystems();
+  if ((audioSystems == null) || (audioSystems.length == 0))   return audioSystems;
+ else {
+    List<AudioSystem> audioSystemsWithDevices=new ArrayList<AudioSystem>();
+    for (    AudioSystem audioSystem : audioSystems) {
+      if (!NoneAudioSystem.LOCATOR_PROTOCOL.equalsIgnoreCase(audioSystem.getLocatorProtocol())) {
+        List<CaptureDeviceInfo> captureDevices=audioSystem.getCaptureDevices();
+        if ((captureDevices == null) || (captureDevices.size() <= 0)) {
+          if ((AudioSystem.FEATURE_NOTIFY_AND_PLAYBACK_DEVICES & audioSystem.getFeatures()) == 0) {
+            continue;
+          }
+ else {
+            List<CaptureDeviceInfo> notifyDevices=audioSystem.getNotifyDevices();
+            if ((notifyDevices == null) || (notifyDevices.size() <= 0)) {
+              List<CaptureDeviceInfo> playbackDevices=audioSystem.getPlaybackDevices();
+              if ((playbackDevices == null) || (playbackDevices.size() <= 0)) {
+                continue;
+              }
+            }
+          }
+        }
+      }
+      audioSystemsWithDevices.add(audioSystem);
+    }
+    int audioSystemsWithDevicesCount=audioSystemsWithDevices.size();
+    return (audioSystemsWithDevicesCount == audioSystems.length) ? audioSystems : audioSystemsWithDevices.toArray(new AudioSystem[audioSystemsWithDevicesCount]);
+  }
 }

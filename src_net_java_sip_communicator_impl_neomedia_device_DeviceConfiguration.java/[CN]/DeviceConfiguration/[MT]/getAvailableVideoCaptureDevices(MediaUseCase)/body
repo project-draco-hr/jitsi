@@ -2,20 +2,16 @@
   Format[] formats=new Format[]{new AVFrameFormat(),new VideoFormat(VideoFormat.RGB),new VideoFormat(VideoFormat.YUV),new VideoFormat(Constants.H264)};
   Set<CaptureDeviceInfo> videoCaptureDevices=new HashSet<CaptureDeviceInfo>();
   for (  Format format : formats) {
-    @SuppressWarnings("unchecked") Vector<CaptureDeviceInfo> captureDeviceInfos=CaptureDeviceManager.getDeviceList(format);
+    @SuppressWarnings("unchecked") Vector<CaptureDeviceInfo> cdis=CaptureDeviceManager.getDeviceList(format);
     if (useCase != MediaUseCase.ANY) {
-      for (      CaptureDeviceInfo dev : captureDeviceInfos) {
-        if (useCase == MediaUseCase.CALL && !dev.getLocator().getProtocol().equals(ImageStreamingAuto.LOCATOR_PROTOCOL)) {
-          videoCaptureDevices.add(dev);
-        }
- else         if (useCase == MediaUseCase.DESKTOP && dev.getLocator().getProtocol().equals(ImageStreamingAuto.LOCATOR_PROTOCOL)) {
-          videoCaptureDevices.add(dev);
-        }
+      for (      CaptureDeviceInfo cdi : cdis) {
+        MediaUseCase cdiUseCase=ImgStreamingSystem.LOCATOR_PROTOCOL.equalsIgnoreCase(cdi.getLocator().getProtocol()) ? MediaUseCase.DESKTOP : MediaUseCase.CALL;
+        if (cdiUseCase.equals(useCase))         videoCaptureDevices.add(cdi);
       }
     }
  else {
-      videoCaptureDevices.addAll(captureDeviceInfos);
+      videoCaptureDevices.addAll(cdis);
     }
   }
-  return videoCaptureDevices.toArray(NO_CAPTURE_DEVICES);
+  return new ArrayList<CaptureDeviceInfo>(videoCaptureDevices);
 }

@@ -1,0 +1,103 @@
+{
+  final ActionListener captureComboActionListener=new ActionListener(){
+    private final SimpleAudioLevelListener audioLevelListener=new SimpleAudioLevelListener(){
+      public void audioLevelChanged(      int level){
+        soundLevelIndicator.updateSoundLevel(level);
+      }
+    }
+;
+    private AudioMediaDeviceSession deviceSession;
+    private final BufferTransferHandler transferHandler=new BufferTransferHandler(){
+      public void transferData(      PushBufferStream stream){
+        try {
+          stream.read(transferHandlerBuffer);
+        }
+ catch (        IOException ioe) {
+        }
+      }
+    }
+;
+    private final Buffer transferHandlerBuffer=new Buffer();
+    public void actionPerformed(    ActionEvent event){
+      setDeviceSession(null);
+      CaptureDeviceInfo cdi;
+      if (comboBox == null) {
+        cdi=audioSystem.getCaptureDevice();
+      }
+ else {
+        Object selectedItem=soundLevelIndicator.isShowing() ? comboBox.getSelectedItem() : null;
+        cdi=(selectedItem instanceof DeviceConfigurationComboBoxModel.CaptureDevice) ? ((DeviceConfigurationComboBoxModel.CaptureDevice)selectedItem).info : null;
+      }
+      if (cdi != null) {
+        for (        MediaDevice md : mediaService.getDevices(MediaType.AUDIO,MediaUseCase.ANY)) {
+          if (md instanceof AudioMediaDeviceImpl) {
+            AudioMediaDeviceImpl amd=(AudioMediaDeviceImpl)md;
+            if (cdi.equals(amd.getCaptureDeviceInfo())) {
+              try {
+                MediaDeviceSession deviceSession=amd.createSession();
+                boolean setDeviceSession=false;
+                try {
+                  if (deviceSession instanceof AudioMediaDeviceSession) {
+                    setDeviceSession((AudioMediaDeviceSession)deviceSession);
+                    setDeviceSession=true;
+                  }
+                }
+  finally {
+                  if (!setDeviceSession)                   deviceSession.close();
+                }
+              }
+ catch (              Throwable t) {
+                if (t instanceof ThreadDeath)                 throw (ThreadDeath)t;
+              }
+              break;
+            }
+          }
+        }
+      }
+    }
+    private void setDeviceSession(    AudioMediaDeviceSession deviceSession){
+      if (this.deviceSession == deviceSession)       return;
+      if (this.deviceSession != null) {
+        try {
+          this.deviceSession.close();
+        }
+  finally {
+          this.deviceSession.setLocalUserAudioLevelListener(null);
+          soundLevelIndicator.resetSoundLevel();
+        }
+      }
+      this.deviceSession=deviceSession;
+      if (this.deviceSession != null) {
+        this.deviceSession.setContentDescriptor(new ContentDescriptor(ContentDescriptor.RAW));
+        this.deviceSession.setLocalUserAudioLevelListener(audioLevelListener);
+        this.deviceSession.start(MediaDirection.SENDONLY);
+        try {
+          DataSource dataSource=this.deviceSession.getOutputDataSource();
+          dataSource.connect();
+          PushBufferStream[] streams=((PushBufferDataSource)dataSource).getStreams();
+          for (          PushBufferStream stream : streams)           stream.setTransferHandler(transferHandler);
+          dataSource.start();
+        }
+ catch (        Throwable t) {
+          if (t instanceof ThreadDeath)           throw (ThreadDeath)t;
+ else           setDeviceSession(null);
+        }
+      }
+    }
+  }
+;
+  if (comboBox != null)   comboBox.addActionListener(captureComboActionListener);
+  soundLevelIndicator.addHierarchyListener(new HierarchyListener(){
+    public void hierarchyChanged(    HierarchyEvent event){
+      if ((event.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
+        SwingUtilities.invokeLater(new Runnable(){
+          public void run(){
+            captureComboActionListener.actionPerformed(null);
+          }
+        }
+);
+      }
+    }
+  }
+);
+}
