@@ -1,0 +1,21 @@
+{
+  if ((stream == 0) || corked)   return BUFFER_PROCESSED_FAILED;
+  int writableSize=PA.stream_writable_size(stream);
+  int ret;
+  if (writableSize <= 0) {
+    pulseAudioSystem.waitMainloop();
+    ret=BUFFER_PROCESSED_OK;
+  }
+ else {
+    int offset=buffer.getOffset();
+    int length=buffer.getLength();
+    int writtenSize=PA.stream_write(stream,(byte[])buffer.getData(),offset,(length < writableSize) ? length : writableSize,null,0,PA.SEEK_RELATIVE);
+    if (writtenSize < 0)     ret=BUFFER_PROCESSED_FAILED;
+ else {
+      ret=BUFFER_PROCESSED_OK;
+      buffer.setLength(length - writtenSize);
+      buffer.setOffset(offset + writtenSize);
+    }
+  }
+  return ret;
+}

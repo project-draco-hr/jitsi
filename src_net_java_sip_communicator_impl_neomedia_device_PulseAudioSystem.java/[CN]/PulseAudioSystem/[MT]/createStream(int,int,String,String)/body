@@ -1,0 +1,30 @@
+{
+  long context=getContext();
+  if (context == 0)   throw new IllegalStateException("context");
+  long sampleSpec=PA.sample_spec_new(PA.SAMPLE_S16LE,sampleRate,channels);
+  if (sampleSpec == 0)   throw new RuntimeException("pa_sample_spec_new");
+  long ret=0;
+  try {
+    long proplist=PA.proplist_new();
+    if (proplist == 0)     throw new RuntimeException("pa_proplist_new");
+    try {
+      PA.proplist_sets(proplist,PA.PROP_MEDIA_NAME,mediaRole);
+      PA.proplist_sets(proplist,PA.PROP_MEDIA_ROLE,mediaRole);
+      long stream=PA.stream_new_with_proplist(context,null,sampleSpec,0,proplist);
+      if (stream == 0)       throw new RuntimeException("pa_stream_new_with_proplist");
+      try {
+        ret=stream;
+      }
+  finally {
+        if (ret == 0)         PA.stream_unref(stream);
+      }
+    }
+  finally {
+      if (proplist != 0)       PA.proplist_free(proplist);
+    }
+  }
+  finally {
+    if (sampleSpec != 0)     PA.sample_spec_free(sampleSpec);
+  }
+  return ret;
+}

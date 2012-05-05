@@ -1,0 +1,21 @@
+{
+  pulseAudioSystem.lockMainloop();
+  try {
+    long stream=this.stream;
+    if (stream != 0) {
+      try {
+        stopWithMainloopLock();
+      }
+  finally {
+        this.stream=0;
+        corked=true;
+        pulseAudioSystem.signalMainloop(false);
+        PA.stream_disconnect(stream);
+        PA.stream_unref(stream);
+      }
+    }
+  }
+  finally {
+    pulseAudioSystem.unlockMainloop();
+  }
+}

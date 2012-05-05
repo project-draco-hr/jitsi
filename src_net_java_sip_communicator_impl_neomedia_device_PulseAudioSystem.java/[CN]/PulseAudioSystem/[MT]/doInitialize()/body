@@ -1,0 +1,34 @@
+{
+  long context=getContext();
+  final List<CaptureDeviceInfo> captureDevices=new LinkedList<CaptureDeviceInfo>();
+  final List<Format> formats=new LinkedList<Format>();
+  PA.source_info_cb_t sourceInfoListCallback=new PA.source_info_cb_t(){
+    public void callback(    long c,    long i,    int eol){
+      if (eol != 0)       signalMainloop(false);
+ else       if (i != 0)       sourceInfoListCallback(c,i,captureDevices,formats);
+    }
+  }
+;
+  lockMainloop();
+  try {
+    long o=PA.context_get_source_info_list(context,sourceInfoListCallback);
+    if (o == 0)     throw new RuntimeException("pa_context_get_source_info_list");
+    try {
+      while (PA.operation_get_state(o) == PA.OPERATION_RUNNING)       waitMainloop();
+    }
+  finally {
+      PA.operation_unref(o);
+    }
+  }
+  finally {
+    unlockMainloop();
+  }
+  if (!formats.isEmpty()) {
+    String name=null;
+    if (captureDevices.size() == 1)     name=captureDevices.get(0).getName();
+    if (name == null)     name="Automatic";
+    captureDevices.clear();
+    captureDevices.add(0,new CaptureDeviceInfo(name,new MediaLocator(LOCATOR_PROTOCOL + ":"),formats.toArray(new Format[formats.size()])));
+  }
+  setCaptureDevices(captureDevices);
+}

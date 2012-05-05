@@ -1,0 +1,35 @@
+{
+  int monitorOfSink=PA.source_info_get_monitor_of_sink(sourceInfo);
+  if (monitorOfSink != PA.INVALID_INDEX)   return;
+  int sampleSpecFormat=PA.source_info_get_sample_spec_format(sourceInfo);
+  if (sampleSpecFormat != PA.SAMPLE_S16LE)   return;
+  long[] formats=PA.source_info_get_formats(sourceInfo);
+  if ((formats != null) && (formats.length > 0)) {
+    int sampleSpecChannels=PA.source_info_get_sample_spec_channels(sourceInfo);
+    int sampleSpecRate=PA.source_info_get_sample_spec_rate(sourceInfo);
+    List<Format> sourceInfoFormatList=new LinkedList<Format>();
+    for (    long format : formats) {
+      int encoding=PA.format_info_get_encoding(format);
+      if ((encoding != PA.ENCODING_ANY) && (encoding != PA.ENCODING_PCM))       continue;
+      int channels=PA.format_info_get_prop_int(format,PA.PROP_FORMAT_CHANNELS);
+      if (channels <= 0) {
+        channels=sampleSpecChannels;
+        if (channels <= 0)         continue;
+      }
+      int rate=PA.format_info_get_prop_int(format,PA.PROP_FORMAT_RATE);
+      if (rate <= 0) {
+        rate=sampleSpecRate;
+        if (rate <= 0)         continue;
+      }
+      sourceInfoFormatList.add(new AudioFormat(AudioFormat.LINEAR,rate,16,channels,AudioFormat.LITTLE_ENDIAN,AudioFormat.SIGNED,Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,Format.byteArray));
+      if ((MediaUtils.MAX_AUDIO_CHANNELS != Format.NOT_SPECIFIED) && (MediaUtils.MAX_AUDIO_CHANNELS < channels))       channels=MediaUtils.MAX_AUDIO_CHANNELS;
+      if ((MediaUtils.MAX_AUDIO_SAMPLE_RATE != Format.NOT_SPECIFIED) && (MediaUtils.MAX_AUDIO_SAMPLE_RATE < rate))       rate=(int)MediaUtils.MAX_AUDIO_SAMPLE_RATE;
+      formatList.add(new AudioFormat(AudioFormat.LINEAR,rate,16,channels,AudioFormat.LITTLE_ENDIAN,AudioFormat.SIGNED,Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,Format.byteArray));
+    }
+    if (!formatList.isEmpty()) {
+      String name=PA.source_info_get_description(sourceInfo);
+      if (name == null)       name=PA.source_info_get_name(sourceInfo);
+      deviceList.add(new CaptureDeviceInfo(name,new MediaLocator(LOCATOR_PROTOCOL + ":" + PA.source_info_get_index(sourceInfo)),sourceInfoFormatList.toArray(new Format[sourceInfoFormatList.size()])));
+    }
+  }
+}
