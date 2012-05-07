@@ -1,8 +1,14 @@
 {
   try {
     Call call=event.getSourceCall();
-    String peerName=event.getSourceCall().getCallPeers().next().getDisplayName();
-    callNotifications.put(event.getSourceCall(),fireNotification(INCOMING_CALL,"",NotificationWiringActivator.getResources().getI18NString("service.gui.INCOMING_CALL",new String[]{peerName})));
+    CallPeer firstPeer=call.getCallPeers().next();
+    String peerName=firstPeer.getDisplayName();
+    Map<String,String> peerInfo=new HashMap<String,String>();
+    peerInfo.put("caller.uri",firstPeer.getURI());
+    peerInfo.put("caller.address",firstPeer.getAddress());
+    peerInfo.put("caller.name",firstPeer.getDisplayName());
+    peerInfo.put("caller.id",firstPeer.getPeerID());
+    callNotifications.put(event.getSourceCall(),fireNotification(INCOMING_CALL,"",NotificationWiringActivator.getResources().getI18NString("service.gui.INCOMING_CALL",new String[]{peerName}),peerInfo));
     call.addCallChangeListener(this);
     if (call.getCallPeers().hasNext()) {
       CallPeer peer=call.getCallPeers().next();
