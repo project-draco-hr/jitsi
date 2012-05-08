@@ -8,12 +8,13 @@ synchronized (deviceSystems) {
         className=packageName + className;
       }
       DeviceSystem deviceSystem=null;
-      boolean reinitialize=true;
       for (      DeviceSystem aDeviceSystem : deviceSystems)       if (aDeviceSystem.getClass().getName().equals(className)) {
         deviceSystem=aDeviceSystem;
         break;
       }
+      boolean reinitialize;
       if (deviceSystem == null) {
+        reinitialize=false;
         Object o=null;
         try {
           o=Class.forName(className).newInstance();
@@ -24,9 +25,10 @@ synchronized (deviceSystems) {
         }
         if (o instanceof DeviceSystem) {
           deviceSystem=(DeviceSystem)o;
-          if (!deviceSystems.contains(deviceSystem) && deviceSystems.add(deviceSystem))           reinitialize=false;
+          if (!deviceSystems.contains(deviceSystem))           deviceSystems.add(deviceSystem);
         }
       }
+ else       reinitialize=true;
       if (reinitialize && ((deviceSystem.getFeatures() & FEATURE_REINITIALIZE) != 0)) {
         try {
           deviceSystem.initialize();
