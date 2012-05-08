@@ -21,15 +21,19 @@
         rate=sampleSpecRate;
         if (rate <= 0)         continue;
       }
-      sourceInfoFormatList.add(new AudioFormat(AudioFormat.LINEAR,rate,16,channels,AudioFormat.LITTLE_ENDIAN,AudioFormat.SIGNED,Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,Format.byteArray));
       if ((MediaUtils.MAX_AUDIO_CHANNELS != Format.NOT_SPECIFIED) && (MediaUtils.MAX_AUDIO_CHANNELS < channels))       channels=MediaUtils.MAX_AUDIO_CHANNELS;
       if ((MediaUtils.MAX_AUDIO_SAMPLE_RATE != Format.NOT_SPECIFIED) && (MediaUtils.MAX_AUDIO_SAMPLE_RATE < rate))       rate=(int)MediaUtils.MAX_AUDIO_SAMPLE_RATE;
-      formatList.add(new AudioFormat(AudioFormat.LINEAR,rate,16,channels,AudioFormat.LITTLE_ENDIAN,AudioFormat.SIGNED,Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,Format.byteArray));
+      AudioFormat audioFormat=new AudioFormat(AudioFormat.LINEAR,rate,16,channels,AudioFormat.LITTLE_ENDIAN,AudioFormat.SIGNED,Format.NOT_SPECIFIED,Format.NOT_SPECIFIED,Format.byteArray);
+      if (!sourceInfoFormatList.contains(audioFormat)) {
+        sourceInfoFormatList.add(audioFormat);
+        if (!formatList.contains(audioFormat))         formatList.add(audioFormat);
+      }
     }
     if (!formatList.isEmpty()) {
-      String name=PA.source_info_get_description(sourceInfo);
-      if (name == null)       name=PA.source_info_get_name(sourceInfo);
-      deviceList.add(new CaptureDeviceInfo(name,new MediaLocator(LOCATOR_PROTOCOL + ":" + PA.source_info_get_index(sourceInfo)),sourceInfoFormatList.toArray(new Format[sourceInfoFormatList.size()])));
+      String description=PA.source_info_get_description(sourceInfo);
+      String name=PA.source_info_get_name(sourceInfo);
+      if (description == null)       description=name;
+      deviceList.add(new CaptureDeviceInfo(description,new MediaLocator(LOCATOR_PROTOCOL + ":" + name),sourceInfoFormatList.toArray(new Format[sourceInfoFormatList.size()])));
     }
   }
 }

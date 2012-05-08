@@ -40,6 +40,20 @@
     buffer.setLength(length);
     buffer.setOffset(0);
     buffer.setTimeStamp(System.nanoTime());
+    if (gainControl != null) {
+      if (SOFTWARE_GAIN || (cvolume == 0)) {
+        if (length > 0) {
+          AbstractVolumeControl.applyGain(gainControl,bytes,0,length);
+        }
+      }
+ else {
+        float gainControlLevel=gainControl.getLevel();
+        if (this.gainControlLevel != gainControlLevel) {
+          this.gainControlLevel=gainControlLevel;
+          setStreamVolume(stream,gainControlLevel);
+        }
+      }
+    }
   }
   finally {
     pulseAudioSystem.unlockMainloop();

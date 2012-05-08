@@ -10,7 +10,8 @@
   long stream=0;
   Throwable exception=null;
   try {
-    stream=pulseAudioSystem.createStream(sampleRate,channels,getClass().getName(),"phone");
+    stream=pulseAudioSystem.createStream(sampleRate,channels,getClass().getName(),PulseAudioSystem.MEDIA_ROLE_PHONE);
+    this.channels=channels;
   }
  catch (  IllegalStateException ise) {
     exception=ise;
@@ -38,7 +39,7 @@ catch (  RuntimeException re) {
       }
 ;
       PA.stream_set_state_callback(stream,stateCallback);
-      PA.stream_connect_record(stream,null,attr,PA.STREAM_ADJUST_LATENCY | PA.STREAM_START_CORKED);
+      PA.stream_connect_record(stream,getLocatorDev(),attr,PA.STREAM_ADJUST_LATENCY | PA.STREAM_START_CORKED);
       try {
         if (attr != 0) {
           PA.buffer_attr_free(attr);
@@ -47,6 +48,22 @@ catch (  RuntimeException re) {
         int state=pulseAudioSystem.waitForStreamState(stream,PA.STREAM_READY);
         if (state != PA.STREAM_READY)         throw new IOException("stream.state");
         PA.stream_set_read_callback(stream,readCallback);
+        if (!SOFTWARE_GAIN && (gainControl != null)) {
+          cvolume=PA.cvolume_new();
+          boolean freeCvolume=true;
+          try {
+            float gainControlLevel=gainControl.getLevel();
+            setStreamVolume(stream,gainControlLevel);
+            this.gainControlLevel=gainControlLevel;
+            freeCvolume=false;
+          }
+  finally {
+            if (freeCvolume) {
+              PA.cvolume_free(cvolume);
+              cvolume=0;
+            }
+          }
+        }
         this.stream=stream;
       }
   finally {
