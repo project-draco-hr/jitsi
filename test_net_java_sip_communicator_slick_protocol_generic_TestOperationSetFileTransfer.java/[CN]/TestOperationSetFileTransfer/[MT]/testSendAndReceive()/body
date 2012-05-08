@@ -37,12 +37,15 @@
     fileTransferCreatedEvent=(FileTransferCreatedEvent)receiverFTListerner.collectedEvents.get(0);
     assertEquals("FileTransfer file",fileTransferCreatedEvent.getFileTransfer().getLocalFile(),receiveFile);
     receiverStatusListener.waitForEvent(30000,3);
-    assertEquals("A file transfer status changed - " + "preparing, inprogress and completed received on receiver side",3,receiverStatusListener.collectedEvents.size());
+    assertTrue("A file transfer status changed - " + "preparing, inprogress and completed received on receiver side",3 == receiverStatusListener.collectedEvents.size() || 2 == receiverStatusListener.collectedEvents.size());
     fileTransferStatusEvent=receiverStatusListener.collectedEvents.get(0);
-    assertEquals("Event must be preparing",FileTransferStatusChangeEvent.PREPARING,fileTransferStatusEvent.getNewStatus());
-    fileTransferStatusEvent=receiverStatusListener.collectedEvents.get(1);
-    assertEquals("Event must be completed",FileTransferStatusChangeEvent.IN_PROGRESS,fileTransferStatusEvent.getNewStatus());
-    fileTransferStatusEvent=receiverStatusListener.collectedEvents.get(2);
+    if (receiverStatusListener.collectedEvents.size() == 3) {
+      assertEquals("Event must be preparing",FileTransferStatusChangeEvent.PREPARING,fileTransferStatusEvent.getNewStatus());
+      fileTransferStatusEvent=receiverStatusListener.collectedEvents.get(1);
+    }
+    assertEquals("Event must be in_progress",FileTransferStatusChangeEvent.IN_PROGRESS,fileTransferStatusEvent.getNewStatus());
+    if (receiverStatusListener.collectedEvents.size() == 3)     fileTransferStatusEvent=receiverStatusListener.collectedEvents.get(2);
+ else     fileTransferStatusEvent=receiverStatusListener.collectedEvents.get(1);
     assertEquals("Event must be completed",FileTransferStatusChangeEvent.COMPLETED,fileTransferStatusEvent.getNewStatus());
     senderStatusListener.waitForEvent(4000,2);
     assertTrue("Completed event must be received",senderStatusListener.contains(FileTransferStatusChangeEvent.COMPLETED));
