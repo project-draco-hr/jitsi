@@ -38,6 +38,7 @@
   String calleeURI=null;
   boolean isGingle=false;
   String gingleURI=null;
+  PresenceStatus jabberStatus=null;
   while (it.hasNext()) {
     Presence presence=it.next();
     int priority=(presence.getPriority() == Integer.MIN_VALUE) ? 0 : presence.getPriority();
@@ -56,12 +57,33 @@
         di=discoverInfo;
         fullCalleeURI=calleeURI;
         isGingle=false;
+        jabberStatus=OperationSetPersistentPresenceJabberImpl.jabberStatusToPresenceStatus(presence,protocolProvider);
+      }
+ else       if (priority == bestPriority && jabberStatus != null) {
+        PresenceStatus tempStatus=OperationSetPersistentPresenceJabberImpl.jabberStatusToPresenceStatus(presence,protocolProvider);
+        if (tempStatus.compareTo(jabberStatus) > 0) {
+          di=discoverInfo;
+          fullCalleeURI=calleeURI;
+          isGingle=false;
+          jabberStatus=tempStatus;
+        }
       }
     }
- else     if (protocolProvider.isGTalkTesting() && (hasGtalkCaps || alwaysCallGtalk) && (priority > bestPriority)) {
-      bestPriority=priority;
-      isGingle=true;
-      gingleURI=calleeURI;
+ else     if (protocolProvider.isGTalkTesting() && (hasGtalkCaps || alwaysCallGtalk)) {
+      if (priority > bestPriority) {
+        bestPriority=priority;
+        isGingle=true;
+        gingleURI=calleeURI;
+        jabberStatus=OperationSetPersistentPresenceJabberImpl.jabberStatusToPresenceStatus(presence,protocolProvider);
+      }
+ else       if (priority == bestPriority && jabberStatus != null) {
+        PresenceStatus tempStatus=OperationSetPersistentPresenceJabberImpl.jabberStatusToPresenceStatus(presence,protocolProvider);
+        if (tempStatus.compareTo(jabberStatus) > 0) {
+          isGingle=true;
+          gingleURI=calleeURI;
+          jabberStatus=OperationSetPersistentPresenceJabberImpl.jabberStatusToPresenceStatus(presence,protocolProvider);
+        }
+      }
     }
   }
   if (isGingle) {
