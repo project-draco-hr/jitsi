@@ -1,0 +1,18 @@
+{
+  MUCUser mucUser=getMUCUserExtension(packet);
+  if (mucUser.getDecline() != null && ((org.jivesoftware.smack.packet.Message)packet).getType() != org.jivesoftware.smack.packet.Message.Type.error) {
+    int messageReceivedEventType=ChatRoomMessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED;
+    ChatRoomMemberJabberImpl member=new ChatRoomMemberJabberImpl(ChatRoomJabberImpl.this,getName(),getName());
+    String from=mucUser.getDecline().getFrom();
+    OperationSetPersistentPresenceJabberImpl presenceOpSet=(OperationSetPersistentPresenceJabberImpl)provider.getOperationSet(OperationSetPersistentPresence.class);
+    if (presenceOpSet != null) {
+      Contact c=presenceOpSet.findContactByID(StringUtils.parseBareAddress(from));
+      if (c != null) {
+        if (!from.contains(c.getDisplayName()))         from=c.getDisplayName() + " (" + from+ ")";
+      }
+    }
+    String msgBody=JabberActivator.getResources().getI18NString("service.gui.INVITATION_REJECTED",new String[]{from,mucUser.getDecline().getReason()});
+    ChatRoomMessageReceivedEvent msgReceivedEvt=new ChatRoomMessageReceivedEvent(ChatRoomJabberImpl.this,member,System.currentTimeMillis(),createMessage(msgBody),messageReceivedEventType);
+    fireMessageEvent(msgReceivedEvt);
+  }
+}
