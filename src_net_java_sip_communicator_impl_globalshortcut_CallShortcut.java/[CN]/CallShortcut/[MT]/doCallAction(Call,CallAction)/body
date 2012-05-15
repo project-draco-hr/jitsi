@@ -1,0 +1,42 @@
+{
+  new Thread(){
+    public void run(){
+      try {
+        List<Call> calls;
+        CallGroup group=call.getCallGroup();
+        if (group != null) {
+          calls=group.getCalls();
+        }
+ else {
+          calls=new Vector<Call>();
+          calls.add(call);
+        }
+        Call tmpCall;
+        Iterator<? extends CallPeer> callPeers;
+        CallPeer callPeer;
+        for (int i=0; i < calls.size(); ++i) {
+          tmpCall=calls.get(i);
+          final OperationSetBasicTelephony<?> opSet=tmpCall.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
+          callPeers=tmpCall.getCallPeers();
+          while (callPeers.hasNext()) {
+            callPeer=callPeers.next();
+switch (callAction) {
+case ANSWER:
+              if (callPeer.getState() == CallPeerState.INCOMING_CALL) {
+                opSet.answerCallPeer(callPeer);
+              }
+            break;
+case HANGUP:
+          opSet.hangupCallPeer(callPeer);
+        break;
+    }
+  }
+}
+}
+ catch (OperationFailedException e) {
+logger.info("Failed to answer/hangup call via global shortcut",e);
+}
+}
+}
+.start();
+}

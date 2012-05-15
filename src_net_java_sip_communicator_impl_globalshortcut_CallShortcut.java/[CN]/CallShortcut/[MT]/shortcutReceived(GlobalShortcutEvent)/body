@@ -6,88 +6,21 @@
     for (    AWTKeyStroke ks : entry.getValue()) {
       if (ks == null)       continue;
       if (entry.getKey().equals("answer") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
-synchronized (incomingCalls) {
-          int size=incomingCalls.size();
-          for (int i=0; i < size; i++) {
-            Call c=incomingCalls.get(i);
-            if (c.getCallPeers().next().getState() == CallPeerState.INCOMING_CALL) {
-              choosenCall=c;
-              break;
-            }
-          }
-        }
-        if (choosenCall == null)         return;
-        final OperationSetBasicTelephony<?> opSet=choosenCall.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
-        final Call cCall=choosenCall;
-        new Thread(){
-          public void run(){
-            try {
-              opSet.answerCallPeer(cCall.getCallPeers().next());
-            }
- catch (            OperationFailedException e) {
-              logger.info("Failed to answer call via global shortcut",e);
-            }
-          }
-        }
-.start();
+        manageNextIncomingCall(CallAction.ANSWER);
       }
  else       if (entry.getKey().equals("hangup") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
-        Call incomingCall=null;
-        Call outgoingCall=null;
-synchronized (incomingCalls) {
-          int size=incomingCalls.size();
-          for (int i=0; i < size; i++) {
-            Call c=incomingCalls.get(i);
-            if (c.getCallPeers().next().getState() == CallPeerState.INCOMING_CALL && incomingCall == null) {
-              incomingCall=c;
-              break;
-            }
- else             if (c.getCallPeers().next().getState() == CallPeerState.CONNECTED) {
-              choosenCall=c;
-              break;
-            }
+        if (!manageNextIncomingCall(CallAction.HANGUP)) {
+          if (!closeAnsweredCalls(true)) {
+            closeAnsweredCalls(false);
           }
         }
-synchronized (outgoingCalls) {
-          int size=outgoingCalls.size();
-          for (int i=0; i < size; i++) {
-            Call c=outgoingCalls.get(i);
-            if ((c.getCallPeers().next().getState() == CallPeerState.CONNECTING || c.getCallPeers().next().getState() == CallPeerState.ALERTING_REMOTE_SIDE) && outgoingCall == null) {
-              outgoingCall=c;
-              break;
-            }
- else             if (c.getCallPeers().next().getState() == CallPeerState.CONNECTED) {
-              choosenCall=c;
-              break;
-            }
+      }
+ else       if (entry.getKey().equals("answer_hangup") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
+        if (!manageNextIncomingCall(CallAction.ANSWER)) {
+          if (!closeAnsweredCalls(true)) {
+            closeAnsweredCalls(false);
           }
         }
-        if (choosenCall == null && incomingCall != null) {
-          choosenCall=incomingCall;
-        }
-        if (choosenCall == null && outgoingCall != null) {
-          choosenCall=outgoingCall;
-        }
-        if (choosenCall == null)         return;
-        final OperationSetBasicTelephony<?> opSet=choosenCall.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
-        final Call cCall=choosenCall;
-        new Thread(){
-          public void run(){
-            try {
-              Iterator<? extends CallPeer> peers=cCall.getCrossProtocolCallPeers();
-              while (peers.hasNext()) {
-                CallPeer peer=peers.next();
-                peer.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class).hangupCallPeer(peer);
-              }
-              peers=cCall.getCallPeers();
-              while (peers.hasNext())               opSet.hangupCallPeer(peers.next());
-            }
- catch (            OperationFailedException e) {
-              logger.info("Failed to answer call via global shortcut",e);
-            }
-          }
-        }
-.start();
       }
  else       if (entry.getKey().equals("mute") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
 synchronized (incomingCalls) {
@@ -95,8 +28,8 @@ synchronized (incomingCalls) {
             handleMute(c);
           }
         }
-synchronized (outgoingCalls) {
-          for (          Call c : outgoingCalls) {
+synchronized (answeredCalls) {
+          for (          Call c : answeredCalls) {
             handleMute(c);
           }
         }
