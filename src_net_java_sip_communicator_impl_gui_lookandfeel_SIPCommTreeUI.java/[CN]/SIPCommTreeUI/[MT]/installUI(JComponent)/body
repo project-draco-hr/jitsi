@@ -1,19 +1,9 @@
 {
   if (c == null)   throw new NullPointerException("null component passed to BasicTreeUI.installUI()");
   tree=(JTree)c;
-  tree.getSelectionModel().addTreeSelectionListener(new TreeSelectionListener(){
-    public void valueChanged(    TreeSelectionEvent e){
-      selectionChanged(e.getOldLeadSelectionPath(),e.getNewLeadSelectionPath());
-    }
-  }
-);
-  tree.addHierarchyListener(new HierarchyListener(){
-    public void hierarchyChanged(    HierarchyEvent e){
-      if (e.getID() == HierarchyEvent.HIERARCHY_CHANGED && (e.getChangeFlags() & HierarchyEvent.PARENT_CHANGED) != 0 && e.getChangedParent() instanceof JViewport) {
-        parentViewport=(JViewport)e.getChangedParent();
-      }
-    }
-  }
-);
+  JViewport v=getFirstParentViewport(tree);
+  if (v != null)   this.parentViewport=v;
+ else   tree.addHierarchyListener(this);
+  tree.getSelectionModel().addTreeSelectionListener(this);
   super.installUI(c);
 }
