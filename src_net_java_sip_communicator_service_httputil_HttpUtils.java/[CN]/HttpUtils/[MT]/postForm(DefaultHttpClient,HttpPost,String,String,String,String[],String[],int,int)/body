@@ -3,9 +3,11 @@
   if (usernameParamIx != -1 && usernameParamIx < formParamNames.length && passwordParamIx != -1 && passwordParamIx < formParamNames.length) {
     URL url=new URL(address);
     HTTPCredentialsProvider prov=(HTTPCredentialsProvider)httpClient.getCredentialsProvider();
-    creds=prov.getCredentials(new AuthScope(url.getHost(),url.getPort()));
-    if (creds == null && !prov.retry()) {
-      return null;
+    while (creds == null || creds.getUserPrincipal() == null || StringUtils.isNullOrEmpty(creds.getUserPrincipal().getName())) {
+      creds=prov.getCredentials(new AuthScope(url.getHost(),url.getPort()));
+      if (creds == null && !prov.retry()) {
+        return null;
+      }
     }
   }
   List<NameValuePair> parameters=new ArrayList<NameValuePair>();
