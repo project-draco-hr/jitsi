@@ -4,17 +4,7 @@
   while (response == null || response.getStatusLine().getStatusCode() == HttpStatus.SC_UNAUTHORIZED || response.getStatusLine().getStatusCode() == HttpStatus.SC_FORBIDDEN) {
     if (response != null && (response.getStatusLine().getStatusCode() == HttpStatus.SC_UNAUTHORIZED || response.getStatusLine().getStatusCode() == HttpStatus.SC_FORBIDDEN)) {
       if (logger.isDebugEnabled())       logger.debug("Will retry http connect and " + "credentials input as latest are not correct!");
-      URI uri=req.getURI();
-      req.abort();
-      req=req.getClass().newInstance();
-      req.setURI(uri);
-      httpClient.getCredentialsProvider().clear();
-      if (!((HTTPCredentialsProvider)httpClient.getCredentialsProvider()).isChallengedForCredentials()) {
-        throw new AuthenticationException("Unauthorized");
-      }
- else {
-        response=httpClient.execute(req);
-      }
+      throw new AuthenticationException("Authorization needed");
     }
  else     response=httpClient.execute(req);
     if (!((HTTPCredentialsProvider)httpClient.getCredentialsProvider()).retry()) {

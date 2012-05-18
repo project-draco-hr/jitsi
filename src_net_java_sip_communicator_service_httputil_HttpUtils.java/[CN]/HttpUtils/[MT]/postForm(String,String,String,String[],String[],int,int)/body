@@ -4,15 +4,21 @@
   HttpEntity resEntity=null;
   try {
     AuthenticationException authEx;
+    HTTPCredentialsProvider credentialsProvider=null;
     do {
       postMethod=new HttpPost(address);
-      httpClient=getHttpClient(usernamePropertyName,passwordPropertyName,postMethod.getURI().getHost());
+      httpClient=getHttpClient(usernamePropertyName,passwordPropertyName,postMethod.getURI().getHost(),credentialsProvider);
       try {
         resEntity=postForm(httpClient,postMethod,address,usernamePropertyName,passwordPropertyName,formParamNames,formParamValues,usernameParamIx,passwordParamIx);
         authEx=null;
       }
  catch (      AuthenticationException ex) {
         authEx=ex;
+        credentialsProvider=(HTTPCredentialsProvider)httpClient.getCredentialsProvider();
+        String userName=credentialsProvider.authUsername;
+        credentialsProvider.clear();
+        credentialsProvider.authUsername=userName;
+        credentialsProvider.errorMessage=HttpUtilActivator.getResources().getI18NString("service.gui.AUTHENTICATION_FAILED",new String[]{credentialsProvider.usedScope.getHost()});
       }
     }
  while (authEx != null);
