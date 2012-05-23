@@ -1,0 +1,47 @@
+{
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        addVideoContainer();
+      }
+    }
+);
+    return;
+  }
+  final VideoContainer videoContainer=new VideoContainer(null);
+  videoContainer.setPreferredSize(new Dimension(0,0));
+  GridBagConstraints videoContainerGridBagConstraints=new GridBagConstraints();
+  videoContainerGridBagConstraints.fill=GridBagConstraints.BOTH;
+  videoContainerGridBagConstraints.gridx=0;
+  videoContainerGridBagConstraints.gridy=0;
+  videoContainerGridBagConstraints.weightx=0;
+  videoContainerGridBagConstraints.weighty=1;
+  add(videoContainer,videoContainerGridBagConstraints);
+  videoContainer.addContainerListener(new ContainerListener(){
+    public void componentAdded(    ContainerEvent e){
+      GridBagLayout layout=(GridBagLayout)getLayout();
+      boolean videoContainerIsVisible=(videoContainer.getComponentCount() > 0);
+      for (      Component component : getComponents()) {
+        GridBagConstraints constraints=layout.getConstraints(component);
+        if (videoContainerIsVisible) {
+          constraints.weightx=(component == videoContainer) ? 1 : 0;
+        }
+ else {
+          constraints.weightx=(component == videoContainer) ? 0 : 1;
+        }
+        layout.setConstraints(component,constraints);
+      }
+      if (e.getID() == ContainerEvent.COMPONENT_ADDED) {
+        Dimension preferredSize=videoContainer.getLayout().preferredLayoutSize(videoContainer);
+        if ((preferredSize != null) && (preferredSize.width > 0) && (preferredSize.height > 0)) {
+          ensureSize(videoContainer,preferredSize.width,preferredSize.height);
+        }
+      }
+    }
+    public void componentRemoved(    ContainerEvent e){
+      componentAdded(e);
+    }
+  }
+);
+  videoContainers.add(videoContainer);
+}

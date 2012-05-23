@@ -1,0 +1,97 @@
+{
+  if (videoEvent != null) {
+    if ((videoEvent.getOrigin() == VideoEvent.REMOTE) && (videoEvent instanceof SizeChangeVideoEvent)) {
+      SizeChangeVideoEvent sizeChangeVideoEvent=(SizeChangeVideoEvent)videoEvent;
+      Component visualComponent=sizeChangeVideoEvent.getVisualComponent();
+      int width=sizeChangeVideoEvent.getWidth();
+      int height=sizeChangeVideoEvent.getHeight();
+      if (visualComponent.getParent() == null) {
+        visualComponent.setPreferredSize(new Dimension(width,height + 30));
+      }
+ else       if (isAncestor(videoContainer,visualComponent)) {
+        if (!callRenderer.getCallContainer().getCallWindow().equals(GuiActivator.getUIService().getSingleWindowContainer())) {
+          callRenderer.ensureSize(visualComponent,width,height);
+        }
+        videoContainer.doLayout();
+      }
+      return;
+    }
+switch (videoEvent.getType()) {
+case VideoEvent.VIDEO_ADDED:
+case VideoEvent.VIDEO_REMOVED:
+      break;
+default :
+    return;
+}
+}
+videoContainer.removeAll();
+Call call=callPeer.getCall();
+Iterator<? extends CallPeer> callPeerIter=call.getCallPeers();
+List<Component> remoteVideos=new LinkedList<Component>();
+while (callPeerIter.hasNext()) {
+CallPeer peer=callPeerIter.next();
+List<Component> visualComponents=videoTelephony.getVisualComponents(peer);
+Component videoToolbar=videoToolbars.get(peer);
+if (videoToolbar != null) {
+  Container toolbarParent=videoToolbar.getParent();
+  if (toolbarParent != null)   toolbarParent.remove(videoToolbar);
+}
+if (visualComponents != null && visualComponents.size() > 0) {
+  for (int i=0; i < visualComponents.size(); i++) {
+    Component visualComponent=visualComponents.get(i);
+    if (videoToolbar != null && callRenderer.getCallContainer().isVideoConferenceInterfaceEnabled()) {
+      Container remoteVideoParent=visualComponent.getParent();
+      if (remoteVideoParent != null)       remoteVideoParent.remove(visualComponent);
+      JPanel remoteVideoPanel=new TransparentPanel(new BorderLayout());
+      remoteVideoPanel.add(visualComponent);
+      remoteVideoPanel.add(videoToolbar,BorderLayout.SOUTH);
+      remoteVideos.add(remoteVideoPanel);
+    }
+ else     remoteVideos.add(visualComponent);
+  }
+}
+ else if (videoToolbar != null && callRenderer.getCallContainer().isVideoConferenceInterfaceEnabled()) {
+  Component defaultPhotoPanel=createDefaultPhotoPanel(callPeer,videoToolbar);
+  remoteVideos.add(defaultPhotoPanel);
+}
+}
+if (remoteVideos.isEmpty()) {
+callRenderer.getCallContainer().removeRemoteVideoSpecificComponents();
+}
+ else {
+for (Component remoteVideo : remoteVideos) {
+  Container remoteVideoParent=remoteVideo.getParent();
+  if (remoteVideoParent != null) {
+    remoteVideoParent.remove(remoteVideo);
+    Container parent=remoteVideoParent.getParent();
+    if (parent != null)     parent.remove(remoteVideoParent);
+  }
+  videoContainer.add(remoteVideo,VideoLayout.CENTER_REMOTE,0);
+}
+callRenderer.getCallContainer().addRemoteVideoSpecificComponents(callPeer);
+}
+if (localVideo != null) {
+Container localVideoParent=localVideo.getParent();
+if (localVideoParent != null) localVideoParent.remove(localVideo);
+Container closeButtonParent=closeButton.getParent();
+if (closeButtonParent != null) closeButtonParent.remove(closeButton);
+if (localVideoToolbar != null) {
+  Container toolbarParent=localVideoToolbar.getParent();
+  if (toolbarParent != null)   toolbarParent.remove(localVideoToolbar);
+}
+if (localVideoVisible) {
+  if (localVideoToolbar != null && callRenderer.getCallContainer().isVideoConferenceInterfaceEnabled()) {
+    JPanel localVideoPanel=new TransparentPanel(new BorderLayout());
+    localVideoPanel.add(localVideo);
+    localVideoPanel.add(localVideoToolbar,BorderLayout.SOUTH);
+    videoContainer.add(localVideoPanel,VideoLayout.LOCAL,0);
+  }
+ else   videoContainer.add(localVideo,VideoLayout.LOCAL,0);
+  if (!CallManager.isDesktopSharingEnabled(call)) {
+    videoContainer.add(closeButton,VideoLayout.CLOSE_LOCAL_BUTTON,0);
+  }
+}
+}
+videoContainer.validate();
+videoContainer.repaint();
+}

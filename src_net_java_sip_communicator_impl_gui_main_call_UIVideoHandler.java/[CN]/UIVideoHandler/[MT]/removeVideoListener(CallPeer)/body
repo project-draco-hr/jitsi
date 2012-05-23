@@ -1,0 +1,26 @@
+{
+  final Call call=callPeer.getCall();
+  if (call == null)   return;
+  final OperationSetVideoTelephony telephony=call.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
+  if (telephony == null)   return;
+  if (videoTelephonyListener == null)   return;
+  telephony.removeVideoListener(callPeer,videoTelephonyListener);
+  if (!CallManager.isVideoStreaming(call) && isLocalVideoListenerAdded) {
+    telephony.removePropertyChangeListener(call,videoTelephonyListener);
+    isLocalVideoListenerAdded=false;
+    if (localVideo != null) {
+      telephony.disposeLocalVisualComponent(callPeer,localVideo);
+      localVideo=null;
+    }
+  }
+synchronized (videoContainers) {
+    if (!CallManager.isVideoStreaming(call) && telephony.equals(videoTelephony))     videoTelephony=null;
+    int videoContainerCount;
+    if ((videoTelephony != null) && ((videoContainerCount=videoContainers.size()) > 0)) {
+      Container videoContainer=videoContainers.get(videoContainerCount - 1);
+      handleVideoEvent(callPeer,null,videoContainer);
+    }
+  }
+  videoToolbars.remove(callPeer);
+  callRenderer.exitFullScreen();
+}
