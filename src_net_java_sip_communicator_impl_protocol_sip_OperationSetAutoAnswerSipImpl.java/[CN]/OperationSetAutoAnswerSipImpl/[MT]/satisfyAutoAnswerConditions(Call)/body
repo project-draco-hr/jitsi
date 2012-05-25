@@ -1,0 +1,23 @@
+{
+  Iterator<? extends CallPeer> peers=call.getCallPeers();
+  CallPeer peer;
+  if (answerConditional) {
+    while (peers.hasNext()) {
+      peer=peers.next();
+      Transaction transaction=((CallPeerSipImpl)peer).getLatestInviteTransaction();
+      if (transaction != null) {
+        Request invite=transaction.getRequest();
+        SIPHeader callAnswerHeader=(SIPHeader)invite.getHeader(headerName);
+        if (callAnswerHeader != null) {
+          if (!StringUtils.isNullOrEmpty(headerValue)) {
+            String value=callAnswerHeader.getHeaderValue();
+            if (value != null && headerValue.equals(value)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+  }
+  return false;
+}

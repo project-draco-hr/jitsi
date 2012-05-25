@@ -1,0 +1,22 @@
+{
+  Iterator<? extends CallPeer> peers=call.getCallPeers();
+  while (peers.hasNext()) {
+    Transaction transaction=((CallPeerSipImpl)peers.next()).getLatestInviteTransaction();
+    if (transaction != null) {
+      Request inviteReq=transaction.getRequest();
+      if (inviteReq != null && inviteReq.getRawContent() != null) {
+        String sdpStr=SdpUtils.getContentAsString(inviteReq);
+        SessionDescription sesDescr=SdpUtils.parseSdpString(sdpStr);
+        List<MediaDescription> remoteDescriptions=SdpUtils.extractMediaDescriptions(sesDescr);
+        for (        MediaDescription mediaDescription : remoteDescriptions) {
+          if (SdpUtils.getMediaType(mediaDescription) == MediaType.VIDEO) {
+            if (SdpUtils.getDirection(mediaDescription) == MediaDirection.SENDRECV) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
