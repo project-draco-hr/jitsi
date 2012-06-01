@@ -1,0 +1,27 @@
+{
+  int presenceStatus;
+  if (this.signinName.equals(signinName))   presenceStatus=getPresenceStatus();
+ else {
+    presenceStatus=Integer.MIN_VALUE;
+    for (    OperationSetPresence presenceOpSet : ppss.values()) {
+      try {
+        Contact contact=presenceOpSet.findContactByID(signinName);
+        if (contact != null) {
+          PresenceStatus contactPresenceStatus=contact.getPresenceStatus();
+          if (contactPresenceStatus != null) {
+            int contactStatus=contactPresenceStatus.getStatus();
+            if (presenceStatus < contactStatus) {
+              presenceStatus=contactStatus;
+              if (presenceStatus >= PresenceStatus.MAX_STATUS_VALUE)               break;
+            }
+          }
+        }
+      }
+ catch (      Throwable t) {
+        if (t instanceof ThreadDeath)         throw (ThreadDeath)t;
+ else         t.printStackTrace(System.err);
+      }
+    }
+  }
+  return presenceStatus;
+}

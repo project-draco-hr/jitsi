@@ -12,9 +12,29 @@
     if (l != null)     l.callInterfaceStarted();
   }
  else   if (telephonyProviders.size() > 1) {
-    ChooseCallAccountPopupMenu chooseAccountDialog=new ChooseCallAccountPopupMenu(c,callString,telephonyProviders,l);
-    chooseAccountDialog.setLocation(c.getLocation());
-    chooseAccountDialog.showPopupMenu();
+    if (c == null) {
+      ProtocolProviderService preferredTelephonyProvider=null;
+      for (      ProtocolProviderService telephonyProvider : telephonyProviders) {
+        try {
+          OperationSetPresence presenceOpSet=telephonyProvider.getOperationSet(OperationSetPresence.class);
+          if ((presenceOpSet != null) && (presenceOpSet.findContactByID(callString) != null)) {
+            preferredTelephonyProvider=telephonyProvider;
+            break;
+          }
+        }
+ catch (        Throwable t) {
+          if (t instanceof ThreadDeath)           throw (ThreadDeath)t;
+        }
+      }
+      if (preferredTelephonyProvider == null)       preferredTelephonyProvider=telephonyProviders.get(0);
+      CallManager.createCall(preferredTelephonyProvider,callString);
+      if (l != null)       l.callInterfaceStarted();
+    }
+ else {
+      ChooseCallAccountPopupMenu chooseAccountDialog=new ChooseCallAccountPopupMenu(c,callString,telephonyProviders,l);
+      chooseAccountDialog.setLocation(c.getLocation());
+      chooseAccountDialog.showPopupMenu();
+    }
   }
  else {
     new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.WARNING"),GuiActivator.getResources().getI18NString("service.gui.NO_ONLINE_TELEPHONY_ACCOUNT")).showDialog();
