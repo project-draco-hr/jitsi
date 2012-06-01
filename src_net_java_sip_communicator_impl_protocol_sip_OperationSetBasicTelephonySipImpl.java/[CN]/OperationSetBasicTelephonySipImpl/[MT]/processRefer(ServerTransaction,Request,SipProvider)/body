@@ -24,12 +24,16 @@
     }
     FromHeader fromHeader=(FromHeader)referRequest.getHeader(FromHeader.NAME);
     OperationSetPresenceSipImpl opSetPersPresence=(OperationSetPresenceSipImpl)protocolProvider.getOperationSet(OperationSetPersistentPresence.class);
-    Contact from=opSetPersPresence.resolveContactID(fromHeader.getAddress().getURI().toString());
-    if (from == null) {
+    Contact from=null;
+    if (opSetPersPresence != null)     from=opSetPersPresence.resolveContactID(fromHeader.getAddress().getURI().toString());
+    if (from == null && opSetPersPresence != null) {
       if (logger.isDebugEnabled())       logger.debug("received a message from an unknown contact: " + fromHeader.getAddress().getURI().toString());
       from=opSetPersPresence.createVolatileContact(fromHeader.getAddress().getURI().toString());
     }
-    if (!transferAuthority.processTransfer(from,referToAddress.getURI().toString())) {
+    boolean allowTransfer;
+    if (from != null)     allowTransfer=transferAuthority.processTransfer(from,referToAddress.getURI().toString());
+ else     allowTransfer=transferAuthority.processTransfer(fromHeader.getAddress().getURI().toString(),referToAddress.getURI().toString());
+    if (!allowTransfer) {
       Response declineResponse;
       try {
         declineResponse=protocolProvider.getMessageFactory().createResponse(Response.DECLINE,referRequest);
