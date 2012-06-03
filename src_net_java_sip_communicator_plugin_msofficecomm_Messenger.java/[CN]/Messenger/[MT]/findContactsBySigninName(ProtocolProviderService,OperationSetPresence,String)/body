@@ -1,0 +1,24 @@
+{
+  List<Contact> contacts=new ArrayList<Contact>();
+  for (Iterator<MetaContact> metaContactIt=metaContactListService.findAllMetaContactsForProvider(pps); metaContactIt.hasNext(); ) {
+    MetaContact metaContact=metaContactIt.next();
+    for (Iterator<Contact> contactIt=metaContact.getContacts(); contactIt.hasNext(); ) {
+      Contact contact=contactIt.next();
+      if (signinName.equalsIgnoreCase(getSigninName(contact,pps))) {
+        contacts.add(0,contact);
+        continue;
+      }
+      OperationSetServerStoredContactInfo serverStoredContactInfoOpSet=pps.getOperationSet(OperationSetServerStoredContactInfo.class);
+      if (serverStoredContactInfoOpSet != null) {
+        for (Iterator<ServerStoredDetails.EmailAddressDetail> emailAddressDetailIt=serverStoredContactInfoOpSet.getDetailsAndDescendants(contact,ServerStoredDetails.EmailAddressDetail.class); emailAddressDetailIt.hasNext(); ) {
+          ServerStoredDetails.EmailAddressDetail emailAddressDetail=emailAddressDetailIt.next();
+          if (signinName.equalsIgnoreCase(emailAddressDetail.getEMailAddress())) {
+            contacts.add(contact);
+            break;
+          }
+        }
+      }
+    }
+  }
+  return contacts;
+}

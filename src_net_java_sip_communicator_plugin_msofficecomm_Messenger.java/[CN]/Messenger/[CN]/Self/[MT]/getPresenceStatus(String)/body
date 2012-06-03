@@ -1,12 +1,12 @@
 {
   int presenceStatus;
-  if (this.signinName.equals(signinName))   presenceStatus=getPresenceStatus();
+  if (this.signinName.equalsIgnoreCase(signinName))   presenceStatus=getPresenceStatus();
  else {
     presenceStatus=Integer.MIN_VALUE;
-    for (    OperationSetPresence presenceOpSet : ppss.values()) {
+    for (    Map.Entry<ProtocolProviderService,OperationSetPresence> e : ppss.entrySet()) {
       try {
-        Contact contact=presenceOpSet.findContactByID(signinName);
-        if (contact != null) {
+        Iterable<Contact> contacts=findContactsBySigninName(e.getKey(),e.getValue(),signinName);
+        for (        Contact contact : contacts) {
           PresenceStatus contactPresenceStatus=contact.getPresenceStatus();
           if (contactPresenceStatus != null) {
             int contactStatus=contactPresenceStatus.getStatus();
@@ -16,6 +16,7 @@
             }
           }
         }
+        if (presenceStatus >= PresenceStatus.MAX_STATUS_VALUE)         break;
       }
  catch (      Throwable t) {
         if (t instanceof ThreadDeath)         throw (ThreadDeath)t;
