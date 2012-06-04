@@ -1,46 +1,6 @@
 {
   List<UIContactDetail> telephonyContacts=((ContactNode)treeNode).getContactDescriptor().getContactDetailsForOperationSet(OperationSetBasicTelephony.class);
-  ContactNode n=(ContactNode)treeNode;
-  MetaContact metaContact=null;
-  if (n.getContactDescriptor().getDescriptor() instanceof MetaContact) {
-    metaContact=(MetaContact)n.getContactDescriptor().getDescriptor();
-    Iterator<Contact> contacts=metaContact.getContacts();
-    while (contacts.hasNext()) {
-      Contact contact=contacts.next();
-      OperationSetServerStoredContactInfo infoOpSet=contact.getProtocolProvider().getOperationSet(OperationSetServerStoredContactInfo.class);
-      Iterator<GenericDetail> details=null;
-      ArrayList<String> phones=new ArrayList<String>();
-      if (infoOpSet != null) {
-        details=infoOpSet.getAllDetailsForContact(contact);
-        while (details.hasNext()) {
-          GenericDetail d=details.next();
-          if (d instanceof PhoneNumberDetail && !(d instanceof PagerDetail) && !(d instanceof FaxDetail)) {
-            PhoneNumberDetail pnd=(PhoneNumberDetail)d;
-            if (pnd.getNumber() != null && pnd.getNumber().length() > 0) {
-              String localizedType=null;
-              if (d instanceof WorkPhoneDetail) {
-                localizedType=GuiActivator.getResources().getI18NString("service.gui.WORK_PHONE");
-              }
- else               if (d instanceof MobilePhoneDetail) {
-                localizedType=GuiActivator.getResources().getI18NString("service.gui.MOBILE_PHONE");
-              }
- else {
-                localizedType=GuiActivator.getResources().getI18NString("service.gui.PHONE");
-              }
-              phones.add(pnd.getNumber());
-              UIContactDetail cd=new UIContactDetail(pnd.getNumber(),pnd.getNumber() + " (" + localizedType+ ")",null,new ArrayList<String>(),null,null,null){
-                public PresenceStatus getPresenceStatus(){
-                  return null;
-                }
-              }
-;
-              telephonyContacts.add(cd);
-            }
-          }
-        }
-      }
-    }
-  }
+  telephonyContacts.addAll(getAdditionalNumbers());
   ChooseCallAccountPopupMenu chooseAccountDialog=null;
   if (telephonyContacts.size() == 1) {
     UIContactDetail detail=telephonyContacts.get(0);
