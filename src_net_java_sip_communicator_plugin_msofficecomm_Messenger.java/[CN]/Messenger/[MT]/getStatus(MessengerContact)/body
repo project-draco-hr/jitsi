@@ -1,20 +1,21 @@
 {
   String signinName=messengerContact.signinName;
-  int presenceStatus;
-  if (signinName == null)   presenceStatus=Integer.MIN_VALUE;
+  ProtocolPresenceStatus presenceStatus;
+  if (signinName == null)   presenceStatus=null;
  else {
     Self self=getSelf(signinName);
     if (self == null) {
-      presenceStatus=Integer.MIN_VALUE;
+      presenceStatus=null;
       for (      Self aSelf : selves.values()) {
-        int aPresenceStatus=aSelf.getPresenceStatus(signinName);
-        if (presenceStatus < aPresenceStatus) {
-          presenceStatus=aPresenceStatus;
-          if (presenceStatus >= PresenceStatus.MAX_STATUS_VALUE)           break;
+        ProtocolPresenceStatus aPresenceStatus=aSelf.getPresenceStatus(signinName);
+        if (aPresenceStatus != null) {
+          if (presenceStatus == null)           presenceStatus=aPresenceStatus;
+ else           if (presenceStatus.compareTo(aPresenceStatus) < 0)           presenceStatus=aPresenceStatus;
+          if (presenceStatus.toInt() >= PresenceStatus.MAX_STATUS_VALUE)           break;
         }
       }
     }
  else     presenceStatus=self.getPresenceStatus();
   }
-  return presenceStatusToMISTATUS(presenceStatus);
+  return ProtocolPresenceStatus.toMISTATUS(presenceStatus);
 }

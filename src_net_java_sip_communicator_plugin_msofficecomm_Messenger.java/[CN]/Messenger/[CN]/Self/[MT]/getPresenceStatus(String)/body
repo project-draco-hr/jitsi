@@ -1,22 +1,26 @@
 {
-  int presenceStatus;
+  ProtocolPresenceStatus presenceStatus;
   if (this.signinName.equalsIgnoreCase(signinName))   presenceStatus=getPresenceStatus();
  else {
-    presenceStatus=Integer.MIN_VALUE;
+    presenceStatus=null;
     for (    Map.Entry<ProtocolProviderService,OperationSetPresence> e : ppss.entrySet()) {
       try {
-        Iterable<Contact> contacts=Messenger.findContactsBySigninName(e.getKey(),e.getValue(),signinName);
+        ProtocolProviderService pps=e.getKey();
+        Iterable<Contact> contacts=Messenger.findContactsBySigninName(pps,e.getValue(),signinName);
+        String protocolName=pps.getProtocolName();
         for (        Contact contact : contacts) {
           PresenceStatus contactPresenceStatus=contact.getPresenceStatus();
           if (contactPresenceStatus != null) {
-            int contactStatus=contactPresenceStatus.getStatus();
-            if (presenceStatus < contactStatus) {
-              presenceStatus=contactStatus;
-              if (presenceStatus >= PresenceStatus.MAX_STATUS_VALUE)               break;
+            if (presenceStatus == null) {
+              presenceStatus=new ProtocolPresenceStatus(protocolName,contactPresenceStatus);
             }
+ else             if (presenceStatus.compareTo(contactPresenceStatus) < 0) {
+              presenceStatus.setPresenceStatus(protocolName,contactPresenceStatus);
+            }
+            if (presenceStatus.toInt() >= PresenceStatus.MAX_STATUS_VALUE)             break;
           }
         }
-        if (presenceStatus >= PresenceStatus.MAX_STATUS_VALUE)         break;
+        if ((presenceStatus != null) && (presenceStatus.toInt() >= PresenceStatus.MAX_STATUS_VALUE))         break;
       }
  catch (      Throwable t) {
         if (t instanceof ThreadDeath)         throw (ThreadDeath)t;

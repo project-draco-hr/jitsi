@@ -1,10 +1,17 @@
 {
-  PresenceStatus presenceStatus=null;
-  for (  OperationSetPresence presenceOpSet : ppss.values()) {
+  ProtocolPresenceStatus protocolPresenceStatus=null;
+  for (  Map.Entry<ProtocolProviderService,OperationSetPresence> e : ppss.entrySet()) {
+    OperationSetPresence presenceOpSet=e.getValue();
     PresenceStatus presenceOpSetStatus=presenceOpSet.getPresenceStatus();
     if (presenceOpSetStatus != null) {
-      if ((presenceStatus == null) || (presenceStatus.compareTo(presenceOpSetStatus) < 0))       presenceStatus=presenceOpSetStatus;
+      if (protocolPresenceStatus == null) {
+        protocolPresenceStatus=new ProtocolPresenceStatus(e.getKey().getProtocolName(),presenceOpSetStatus);
+      }
+ else       if (protocolPresenceStatus.compareTo(presenceOpSetStatus) < 0) {
+        protocolPresenceStatus.setPresenceStatus(e.getKey().getProtocolName(),presenceOpSetStatus);
+      }
+      if (protocolPresenceStatus.toInt() >= PresenceStatus.MAX_STATUS_VALUE)       break;
     }
   }
-  setPresenceStatus(presenceStatus);
+  setPresenceStatus(protocolPresenceStatus);
 }
