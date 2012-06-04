@@ -1,20 +1,41 @@
 {
-  SwingUtilities.invokeLater(new Runnable(){
-    public void run(){
-      BundleContext bundleContext=Messenger.bundleContext;
-      if (bundleContext != null) {
-        UIService uiService=ServiceUtils.getService(bundleContext,UIService.class);
-        if (uiService != null) {
+  Class<? extends OperationSet> opSetClass;
 switch (conversationType) {
 case CONVERSATION_TYPE_AUDIO:
 case CONVERSATION_TYPE_PHONE:
 case CONVERSATION_TYPE_PSTN:
-            uiService.createCall(participants);
-          break;
+    opSetClass=OperationSetBasicTelephony.class;
+  break;
 case CONVERSATION_TYPE_IM:
-        uiService.startChat(participants);
-      break;
-  }
+opSetClass=OperationSetBasicInstantMessaging.class;
+break;
+default :
+throw new UnsupportedOperationException();
+}
+List<String> contactList=new ArrayList<String>();
+for (String participant : participants) {
+List<Contact> participantContacts=findContactsBySigninName(participant,opSetClass);
+if (participantContacts.size() > 0) {
+contactList.add(getSigninName(participantContacts.get(0),null));
+}
+}
+final String[] contactArray=contactList.toArray(new String[contactList.size()]);
+SwingUtilities.invokeLater(new Runnable(){
+public void run(){
+BundleContext bundleContext=Messenger.bundleContext;
+if (bundleContext != null) {
+UIService uiService=ServiceUtils.getService(bundleContext,UIService.class);
+if (uiService != null) {
+switch (conversationType) {
+case CONVERSATION_TYPE_AUDIO:
+case CONVERSATION_TYPE_PHONE:
+case CONVERSATION_TYPE_PSTN:
+  uiService.createCall(contactArray);
+break;
+case CONVERSATION_TYPE_IM:
+uiService.startChat(contactArray);
+break;
+}
 }
 }
 }
