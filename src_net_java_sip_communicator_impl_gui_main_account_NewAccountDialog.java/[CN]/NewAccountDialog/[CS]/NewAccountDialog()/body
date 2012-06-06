@@ -1,27 +1,33 @@
 {
   super(GuiActivator.getUIService().getMainFrame(),false);
-  String title=GuiActivator.getResources().getI18NString("service.gui.NEW_ACCOUNT");
+  ResourceManagementService resources=GuiActivator.getResources();
+  TransparentPanel mainPanel=new TransparentPanel(new BorderLayout(5,5));
+  TransparentPanel networkPanel=new TransparentPanel(new BorderLayout());
+  JLabel networkLabel=new JLabel(resources.getI18NString("service.gui.NETWORK"));
+  TransparentPanel rightButtonPanel=new TransparentPanel(new FlowLayout(FlowLayout.RIGHT,0,0));
+  TransparentPanel buttonPanel=new TransparentPanel(new BorderLayout());
+  String title=resources.getI18NString("service.gui.NEW_ACCOUNT");
   if ((title != null) && title.endsWith("..."))   title=title.substring(0,title.length() - 3);
   this.setTitle(title);
   this.getContentPane().add(mainPanel);
-  this.mainPanel.setBorder(BorderFactory.createEmptyBorder(15,15,15,15));
-  this.networkPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+  mainPanel.setBorder(BorderFactory.createEmptyBorder(15,15,15,15));
+  networkPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
   JPanel statusPanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
   statusPanel.add(statusLabel);
-  this.mainPanel.add(buttonPanel,BorderLayout.SOUTH);
+  mainPanel.add(buttonPanel,BorderLayout.SOUTH);
   if (!ConfigurationManager.isAdvancedAccountConfigDisabled()) {
-    this.buttonPanel.add(advancedButton,BorderLayout.WEST);
+    buttonPanel.add(advancedButton,BorderLayout.WEST);
     this.advancedButton.addActionListener(this);
   }
-  this.buttonPanel.add(rightButtonPanel,BorderLayout.EAST);
-  this.buttonPanel.add(statusPanel,BorderLayout.CENTER);
-  this.rightButtonPanel.add(addAccountButton);
-  this.rightButtonPanel.add(cancelButton);
+  buttonPanel.add(rightButtonPanel,BorderLayout.EAST);
+  buttonPanel.add(statusPanel,BorderLayout.CENTER);
+  rightButtonPanel.add(addAccountButton);
+  rightButtonPanel.add(cancelButton);
   this.addAccountButton.addActionListener(this);
   this.cancelButton.addActionListener(this);
-  this.mainPanel.add(networkPanel,BorderLayout.NORTH);
-  this.networkPanel.add(networkLabel,BorderLayout.WEST);
-  this.networkPanel.add(networkComboBox,BorderLayout.CENTER);
+  mainPanel.add(networkPanel,BorderLayout.NORTH);
+  networkPanel.add(networkLabel,BorderLayout.WEST);
+  networkPanel.add(networkComboBox,BorderLayout.CENTER);
   this.getRootPane().setDefaultButton(addAccountButton);
   this.networkComboBox.setRenderer(new NetworkListCellRenderer());
   this.networkComboBox.addActionListener(new ActionListener(){
@@ -31,7 +37,8 @@
     }
   }
 );
-  this.mainPanel.add(accountPanel,BorderLayout.CENTER);
+  mainPanel.add(accountPanel,BorderLayout.CENTER);
   this.initNetworkList();
-  ((AccountRegWizardContainerImpl)GuiActivator.getUIService().getAccountRegWizardContainer()).getModel().addPropertyChangeListener(this);
+  wizardContainer=(AccountRegWizardContainerImpl)GuiActivator.getUIService().getAccountRegWizardContainer();
+  wizardContainer.getModel().addPropertyChangeListener(this);
 }
