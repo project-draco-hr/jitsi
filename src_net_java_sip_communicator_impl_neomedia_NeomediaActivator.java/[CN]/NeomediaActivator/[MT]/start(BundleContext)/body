@@ -40,12 +40,16 @@
   if (!getConfigurationService().getBoolean(VIDEO_CONFIG_DISABLED_PROP,false)) {
     bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm(VideoConfigurationPanel.class.getName(),getClass().getClassLoader(),"plugin.mediaconfig.VIDEO_ICON","impl.neomedia.configform.VIDEO",4),mediaProps);
   }
-  Dictionary<String,String> h264Props=new Hashtable<String,String>();
-  h264Props.put(ConfigurationForm.FORM_TYPE,ConfigurationForm.ADVANCED_TYPE);
-  bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm(ConfigurationPanel.class.getName(),getClass().getClassLoader(),"plugin.mediaconfig.VIDEO_ICON","impl.neomedia.configform.H264",-1,true),h264Props);
-  Dictionary<String,String> securityProps=new Hashtable<String,String>();
-  securityProps.put(ConfigurationForm.FORM_TYPE,ConfigurationForm.SECURITY_TYPE);
-  bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm(SecurityConfigForm.class.getName(),getClass().getClassLoader(),"impl.media.security.zrtp.CONF_ICON","impl.media.security.zrtp.TITLE",0),securityProps);
+  if (!getConfigurationService().getBoolean(H264_CONFIG_DISABLED_PROP,false)) {
+    Dictionary<String,String> h264Props=new Hashtable<String,String>();
+    h264Props.put(ConfigurationForm.FORM_TYPE,ConfigurationForm.ADVANCED_TYPE);
+    bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm(ConfigurationPanel.class.getName(),getClass().getClassLoader(),"plugin.mediaconfig.VIDEO_ICON","impl.neomedia.configform.H264",-1,true),h264Props);
+  }
+  if (!getConfigurationService().getBoolean(ZRTP_CONFIG_DISABLED_PROP,false)) {
+    Dictionary<String,String> securityProps=new Hashtable<String,String>();
+    securityProps.put(ConfigurationForm.FORM_TYPE,ConfigurationForm.SECURITY_TYPE);
+    bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm(SecurityConfigForm.class.getName(),getClass().getClassLoader(),"impl.media.security.zrtp.CONF_ICON","impl.media.security.zrtp.TITLE",0),securityProps);
+  }
   GatherEntropy entropy=new GatherEntropy(mediaServiceImpl.getDeviceConfiguration());
   entropy.setEntropy();
   System.setProperty("gov.nist.core.STRIP_ADDR_SCOPES","true");
@@ -53,7 +57,9 @@
   audioNotifier.setMute(!getConfigurationService().getBoolean("net.java.sip.communicator.impl.sound.isSoundEnabled",true));
   getBundleContext().registerService(AudioNotifierService.class.getName(),audioNotifier,null);
   if (logger.isInfoEnabled())   logger.info("Audio Notifier Service ...[REGISTERED]");
-  Dictionary<String,String> callRecordingProps=new Hashtable<String,String>();
-  callRecordingProps.put(ConfigurationForm.FORM_TYPE,ConfigurationForm.ADVANCED_TYPE);
-  bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm(CallRecordingConfigForm.class.getName(),getClass().getClassLoader(),null,"plugin.callrecordingconfig.CALL_RECORDING_CONFIG",1100,true),callRecordingProps);
+  if (!getConfigurationService().getBoolean(CALL_RECORDING_CONFIG_DISABLED_PROP,false)) {
+    Dictionary<String,String> callRecordingProps=new Hashtable<String,String>();
+    callRecordingProps.put(ConfigurationForm.FORM_TYPE,ConfigurationForm.ADVANCED_TYPE);
+    bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm(CallRecordingConfigForm.class.getName(),getClass().getClassLoader(),null,"plugin.callrecordingconfig.CALL_RECORDING_CONFIG",1100,true),callRecordingProps);
+  }
 }
