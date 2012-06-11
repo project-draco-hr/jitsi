@@ -20,34 +20,36 @@
   setEncodingPreference("SILK",8000,0);
   setEncodingPreference("G729",8000,0);
   setEncodingPreference(Constants.TELEPHONE_EVENT,8000,1);
-  ConfigurationService config=NeomediaActivator.getConfigurationService();
-  for (  String pName : config.getPropertyNamesByPrefix(PROP_SDP_PREFERENCE,false)) {
-    String prefStr=config.getString(pName);
-    String fmtName=pName.substring(pName.lastIndexOf('.') + 1);
-    if (fmtName.contains("sdp")) {
-      fmtName=fmtName.replaceAll("sdp","");
-      if (config.getString(PROP_SDP_PREFERENCE + "." + fmtName) != null)       continue;
-    }
-    int preference=-1;
-    String encoding;
-    double clockRate;
-    try {
-      preference=Integer.parseInt(prefStr);
-      int encodingClockRateSeparator=fmtName.lastIndexOf('/');
-      if (encodingClockRateSeparator > -1) {
-        encoding=fmtName.substring(0,encodingClockRateSeparator);
-        clockRate=Double.parseDouble(fmtName.substring(encodingClockRateSeparator + 1));
+  ConfigurationService cfg=NeomediaActivator.getConfigurationService();
+  if (cfg != null) {
+    for (    String pName : cfg.getPropertyNamesByPrefix(PROP_SDP_PREFERENCE,false)) {
+      String prefStr=cfg.getString(pName);
+      String fmtName=pName.substring(pName.lastIndexOf('.') + 1);
+      if (fmtName.contains("sdp")) {
+        fmtName=fmtName.replaceAll("sdp","");
+        if (cfg.getString(PROP_SDP_PREFERENCE + "." + fmtName) != null)         continue;
       }
+      int preference=-1;
+      String encoding;
+      double clockRate;
+      try {
+        preference=Integer.parseInt(prefStr);
+        int encodingClockRateSeparator=fmtName.lastIndexOf('/');
+        if (encodingClockRateSeparator > -1) {
+          encoding=fmtName.substring(0,encodingClockRateSeparator);
+          clockRate=Double.parseDouble(fmtName.substring(encodingClockRateSeparator + 1));
+        }
  else {
-        encoding=fmtName;
-        clockRate=MediaFormatFactory.CLOCK_RATE_NOT_SPECIFIED;
+          encoding=fmtName;
+          clockRate=MediaFormatFactory.CLOCK_RATE_NOT_SPECIFIED;
+        }
       }
+ catch (      NumberFormatException nfe) {
+        logger.warn("Failed to parse format (" + fmtName + ") or preference ("+ prefStr+ ").",nfe);
+        continue;
+      }
+      setEncodingPreference(encoding,clockRate,preference);
     }
- catch (    NumberFormatException nfe) {
-      logger.warn("Failed to parse format (" + fmtName + ") or preference ("+ prefStr+ ").",nfe);
-      continue;
-    }
-    setEncodingPreference(encoding,clockRate,preference);
   }
   updateSupportedEncodings();
 }

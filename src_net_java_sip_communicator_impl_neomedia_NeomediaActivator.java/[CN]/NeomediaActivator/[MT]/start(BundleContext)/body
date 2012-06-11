@@ -6,9 +6,10 @@
   mediaServiceImpl.start();
   mediaServiceRegistration=bundleContext.registerService(MediaService.class.getName(),mediaServiceImpl,null);
   if (logger.isDebugEnabled())   logger.debug("Media Service ... [REGISTERED]");
+  ConfigurationService cfg=NeomediaActivator.getConfigurationService();
   Dictionary<String,String> mediaProps=new Hashtable<String,String>();
   mediaProps.put(ConfigurationForm.FORM_TYPE,ConfigurationForm.GENERAL_TYPE);
-  if (!getConfigurationService().getBoolean(AUDIO_CONFIG_DISABLED_PROP,false)) {
+  if ((cfg == null) || !cfg.getBoolean(AUDIO_CONFIG_DISABLED_PROP,false)) {
     final ConfigurationForm audioConfigurationForm=new LazyConfigurationForm(AudioConfigurationPanel.class.getName(),getClass().getClassLoader(),"plugin.mediaconfig.AUDIO_ICON","impl.neomedia.configform.AUDIO",3);
     bundleContext.registerService(ConfigurationForm.class.getName(),audioConfigurationForm,mediaProps);
     if (deviceConfigurationPropertyChangeListener == null) {
@@ -23,15 +24,15 @@
       mediaServiceImpl.getDeviceConfiguration().addPropertyChangeListener(deviceConfigurationPropertyChangeListener);
     }
   }
-  if (!getConfigurationService().getBoolean(VIDEO_CONFIG_DISABLED_PROP,false)) {
+  if ((cfg == null) || !cfg.getBoolean(VIDEO_CONFIG_DISABLED_PROP,false)) {
     bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm(VideoConfigurationPanel.class.getName(),getClass().getClassLoader(),"plugin.mediaconfig.VIDEO_ICON","impl.neomedia.configform.VIDEO",4),mediaProps);
   }
-  if (!getConfigurationService().getBoolean(H264_CONFIG_DISABLED_PROP,false)) {
+  if ((cfg == null) || !cfg.getBoolean(H264_CONFIG_DISABLED_PROP,false)) {
     Dictionary<String,String> h264Props=new Hashtable<String,String>();
     h264Props.put(ConfigurationForm.FORM_TYPE,ConfigurationForm.ADVANCED_TYPE);
     bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm(ConfigurationPanel.class.getName(),getClass().getClassLoader(),"plugin.mediaconfig.VIDEO_ICON","impl.neomedia.configform.H264",-1,true),h264Props);
   }
-  if (!getConfigurationService().getBoolean(ZRTP_CONFIG_DISABLED_PROP,false)) {
+  if ((cfg == null) || !cfg.getBoolean(ZRTP_CONFIG_DISABLED_PROP,false)) {
     Dictionary<String,String> securityProps=new Hashtable<String,String>();
     securityProps.put(ConfigurationForm.FORM_TYPE,ConfigurationForm.SECURITY_TYPE);
     bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm(SecurityConfigForm.class.getName(),getClass().getClassLoader(),"impl.media.security.zrtp.CONF_ICON","impl.media.security.zrtp.TITLE",0),securityProps);
@@ -40,10 +41,10 @@
   entropy.setEntropy();
   System.setProperty("gov.nist.core.STRIP_ADDR_SCOPES","true");
   AudioNotifierServiceImpl audioNotifier=new AudioNotifierServiceImpl(mediaServiceImpl.getDeviceConfiguration());
-  audioNotifier.setMute(!getConfigurationService().getBoolean("net.java.sip.communicator.impl.sound.isSoundEnabled",true));
+  audioNotifier.setMute((cfg == null) || !cfg.getBoolean("net.java.sip.communicator" + ".impl.sound.isSoundEnabled",true));
   getBundleContext().registerService(AudioNotifierService.class.getName(),audioNotifier,null);
   if (logger.isInfoEnabled())   logger.info("Audio Notifier Service ...[REGISTERED]");
-  if (!getConfigurationService().getBoolean(CALL_RECORDING_CONFIG_DISABLED_PROP,false)) {
+  if ((cfg == null) || !cfg.getBoolean(CALL_RECORDING_CONFIG_DISABLED_PROP,false)) {
     Dictionary<String,String> callRecordingProps=new Hashtable<String,String>();
     callRecordingProps.put(ConfigurationForm.FORM_TYPE,ConfigurationForm.ADVANCED_TYPE);
     bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm(CallRecordingConfigForm.class.getName(),getClass().getClassLoader(),null,"plugin.callrecordingconfig.CALL_RECORDING_CONFIG",1100,true),callRecordingProps);
