@@ -70,13 +70,26 @@
     startButton.addActionListener(new ActionListener(){
       public void actionPerformed(      ActionEvent e){
         Point location=sharingRegion.getLocationOnScreen();
-        initialFrameX=frame.getX();
-        initialFrameY=frame.getY();
-        sharingRegionWidth=sharingRegion.getWidth();
-        sharingRegionHeight=sharingRegion.getHeight();
+        int cropX=location.x < SHARING_REGION_INDENT ? location.x - SHARING_REGION_INDENT : 0;
+        int cropY=location.y < SHARING_REGION_INDENT ? location.y - SHARING_REGION_INDENT : 0;
+        initialFrameX=frame.getX() - cropX;
+        sharingRegionWidth=sharingRegion.getWidth() + cropX;
+        int x=location.x - cropX;
+        initialFrameY=frame.getY() - cropY;
+        sharingRegionHeight=sharingRegion.getHeight() + cropY;
+        int y=location.y - cropY;
+        DisplayMode dm=sharingRegion.getGraphicsConfiguration().getDevice().getDisplayMode();
+        int maxWidth=dm.getWidth() - x;
+        int maxHeight=dm.getHeight() - y;
+        if (sharingRegionWidth > maxWidth) {
+          sharingRegionWidth=maxWidth;
+        }
+        if (sharingRegionHeight > maxHeight) {
+          sharingRegionHeight=maxHeight;
+        }
         frame.dispose();
-        if (call != null)         CallManager.enableRegionDesktopSharing(call,location.x,location.y,sharingRegionWidth,sharingRegionHeight);
- else         CallManager.createRegionDesktopSharing(protocolProvider,contact,location.x,location.y,sharingRegionWidth,sharingRegionHeight);
+        if (call != null)         CallManager.enableRegionDesktopSharing(call,x,y,sharingRegionWidth,sharingRegionHeight);
+ else         CallManager.createRegionDesktopSharing(protocolProvider,contact,x,y,sharingRegionWidth,sharingRegionHeight);
       }
     }
 );
