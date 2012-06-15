@@ -1,0 +1,20 @@
+{
+synchronized (jingleNodesSyncRoot) {
+    long start=System.currentTimeMillis();
+    if (logger.isInfoEnabled()) {
+      logger.info("Start Jingle Nodes discovery!");
+    }
+    SmackServiceNode.MappedNodes nodes;
+    String searchNodesWithPrefix=JabberActivator.getResources().getSettingsString(JINGLE_NODES_SEARCH_PREFIX_PROP);
+    if (searchNodesWithPrefix == null || searchNodesWithPrefix.length() == 0)     searchNodesWithPrefix=JabberActivator.getConfigurationService().getString(JINGLE_NODES_SEARCH_PREFIX_PROP);
+    if (searchNodesWithPrefix == null || searchNodesWithPrefix.length() == 0 || searchNodesWithPrefix.equalsIgnoreCase("off")) {
+      searchNodesWithPrefix="";
+    }
+    nodes=searchServicesWithPrefix(service,connection,6,3,20,JingleChannelIQ.UDP,accountID.isJingleNodesSearchBuddiesEnabled(),accountID.isJingleNodesAutoDiscoveryEnabled(),searchNodesWithPrefix);
+    if (logger.isInfoEnabled()) {
+      logger.info("Jingle Nodes discovery terminated!");
+      logger.info("Found " + nodes.getRelayEntries().size() + " Jingle Nodes relay for account: "+ accountID.getAccountAddress()+ " in "+ (System.currentTimeMillis() - start)+ " ms.");
+    }
+    service.addEntries(nodes);
+  }
+}

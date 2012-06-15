@@ -1,0 +1,32 @@
+{
+  String[] prefixes=prefix.split(",");
+  boolean stopOnFirst=true;
+  String stopOnFirstDefaultValue=JabberActivator.getResources().getSettingsString(JINGLE_NODES_SEARCH_PREFIXES_STOP_ON_FIRST_PROP);
+  if (stopOnFirstDefaultValue != null) {
+    stopOnFirst=Boolean.parseBoolean(stopOnFirstDefaultValue);
+  }
+  stopOnFirst=JabberActivator.getConfigurationService().getBoolean(JINGLE_NODES_SEARCH_PREFIXES_STOP_ON_FIRST_PROP,stopOnFirst);
+  final DiscoverItems items=new DiscoverItems();
+  items.setTo(startPoint);
+  PacketCollector collector=xmppConnection.createPacketCollector(new PacketIDFilter(items.getPacketID()));
+  xmppConnection.sendPacket(items);
+  DiscoverItems result=(DiscoverItems)collector.nextResult(Math.round(SmackConfiguration.getPacketReplyTimeout() * 1.5));
+  if (result != null) {
+    Iterator<DiscoverItems.Item> i=result.getItems();
+    for (DiscoverItems.Item item=i.hasNext() ? i.next() : null; item != null; item=i.hasNext() ? i.next() : null) {
+      for (      String pref : prefixes) {
+        if (!StringUtils.isNullOrEmpty(pref) && item.getEntityID().startsWith(pref.trim())) {
+          service.deepSearch(xmppConnection,maxEntries,item.getEntityID(),mappedNodes,maxDepth,maxSearchNodes,protocol,visited);
+          if (stopOnFirst)           return false;
+        }
+      }
+    }
+    i=result.getItems();
+    for (DiscoverItems.Item item=i.hasNext() ? i.next() : null; item != null; item=i.hasNext() ? i.next() : null) {
+      if (!visited.containsKey(item.getEntityID()))       service.deepSearch(xmppConnection,maxEntries,item.getEntityID(),mappedNodes,maxDepth,maxSearchNodes,protocol,visited);
+      if (stopOnFirst)       return false;
+    }
+  }
+  collector.cancel();
+  return true;
+}
