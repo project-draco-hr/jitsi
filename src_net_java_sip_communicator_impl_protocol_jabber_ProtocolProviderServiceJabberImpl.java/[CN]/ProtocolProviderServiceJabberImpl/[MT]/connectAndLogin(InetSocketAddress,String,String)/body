@@ -14,7 +14,10 @@
   }
  catch (  XMPPException ex) {
     disconnectAndCleanConnection();
-    if (ex.getWrappedThrowable() instanceof ConnectException || ex.getWrappedThrowable() instanceof NoRouteToHostException)     throw ex;
+    if (ex.getWrappedThrowable() instanceof ConnectException || ex.getWrappedThrowable() instanceof NoRouteToHostException) {
+      fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,null);
+      throw ex;
+    }
     if (!qualifiedUserID) {
       try {
         return connectAndLogin(currentAddress,serviceName,userID + "@" + serviceName,password,resource);
