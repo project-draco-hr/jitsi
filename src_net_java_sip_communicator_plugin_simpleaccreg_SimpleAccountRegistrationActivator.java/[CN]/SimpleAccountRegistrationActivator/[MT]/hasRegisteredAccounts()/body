@@ -1,5 +1,4 @@
 {
-  boolean hasRegisteredAccounts=false;
   ServiceReference[] serRefs=null;
   try {
     serRefs=bundleContext.getServiceReferences(ProtocolProviderFactory.class.getName(),null);
@@ -7,17 +6,20 @@
  catch (  InvalidSyntaxException e) {
     logger.error("Unable to obtain service references. " + e);
   }
-  for (int serRefIndex=0; serRefIndex < serRefs.length; serRefIndex++) {
-    ProtocolProviderFactory providerFactory=(ProtocolProviderFactory)bundleContext.getService(serRefs[serRefIndex]);
-    for (Iterator<AccountID> registeredAccountIter=providerFactory.getRegisteredAccounts().iterator(); registeredAccountIter.hasNext(); ) {
-      AccountID accountID=registeredAccountIter.next();
-      boolean isHidden=accountID.getAccountProperty(ProtocolProviderFactory.IS_PROTOCOL_HIDDEN) != null;
-      if (!isHidden) {
-        hasRegisteredAccounts=true;
-        break;
+  boolean hasRegisteredAccounts=false;
+  if (serRefs != null) {
+    for (    ServiceReference serRef : serRefs) {
+      ProtocolProviderFactory providerFactory=(ProtocolProviderFactory)bundleContext.getService(serRef);
+      for (Iterator<AccountID> registeredAccountIter=providerFactory.getRegisteredAccounts().iterator(); registeredAccountIter.hasNext(); ) {
+        AccountID accountID=registeredAccountIter.next();
+        boolean isHidden=accountID.getAccountProperty(ProtocolProviderFactory.IS_PROTOCOL_HIDDEN) != null;
+        if (!isHidden) {
+          hasRegisteredAccounts=true;
+          break;
+        }
       }
+      if (hasRegisteredAccounts)       break;
     }
-    if (hasRegisteredAccounts)     break;
   }
   return hasRegisteredAccounts;
 }
