@@ -1,3 +1,13 @@
 {
-  return filterDeviceListByLocatorProtocol(NeomediaActivator.getMediaServiceImpl().getDeviceConfiguration().getAvailableAudioCaptureDevices(),getLocatorProtocol());
+  MediaServiceImpl mediaServiceImpl=NeomediaActivator.getMediaServiceImpl();
+  DeviceConfiguration deviceConfiguration=(mediaServiceImpl == null) ? null : mediaServiceImpl.getDeviceConfiguration();
+  List<CaptureDeviceInfo> deviceList;
+  if (deviceConfiguration == null) {
+    @SuppressWarnings("unchecked") Vector<CaptureDeviceInfo> audioCaptureDeviceInfos=CaptureDeviceManager.getDeviceList(new AudioFormat(AudioFormat.LINEAR,-1,16,-1));
+    deviceList=audioCaptureDeviceInfos;
+  }
+ else {
+    deviceList=deviceConfiguration.getAvailableAudioCaptureDevices();
+  }
+  return filterDeviceListByLocatorProtocol(deviceList,getLocatorProtocol());
 }

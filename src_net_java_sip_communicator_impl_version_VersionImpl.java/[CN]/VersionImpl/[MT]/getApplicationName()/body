@@ -1,15 +1,15 @@
 {
   if (applicationName == null) {
     try {
-      if (resourcesService == null) {
-        ServiceReference serviceReference=VersionActivator.bundleContext.getServiceReference(ResourceManagementService.class.getName());
-        if (serviceReference == null)         return null;
-        resourcesService=(ResourceManagementService)VersionActivator.bundleContext.getService(serviceReference);
+      ResourceManagementService resources=ServiceUtils.getService(VersionActivator.getBundleContext(),ResourceManagementService.class);
+      if (resources != null) {
+        applicationName=resources.getSettingsString("service.gui.APPLICATION_NAME");
       }
-      applicationName=resourcesService.getSettingsString("service.gui.APPLICATION_NAME");
     }
  catch (    Exception e) {
-      applicationName=DEFAULT_APPLICATION_NAME;
+    }
+ finally {
+      if (applicationName == null)       applicationName=DEFAULT_APPLICATION_NAME;
     }
   }
   return applicationName;

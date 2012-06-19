@@ -1,10 +1,8 @@
 {
   if (logger.isDebugEnabled())   logger.debug("Started.");
   NeomediaActivator.bundleContext=bundleContext;
-  setupFMJ();
   mediaServiceImpl=new MediaServiceImpl();
-  mediaServiceImpl.start();
-  mediaServiceRegistration=bundleContext.registerService(MediaService.class.getName(),mediaServiceImpl,null);
+  bundleContext.registerService(MediaService.class.getName(),mediaServiceImpl,null);
   if (logger.isDebugEnabled())   logger.debug("Media Service ... [REGISTERED]");
   ConfigurationService cfg=NeomediaActivator.getConfigurationService();
   Dictionary<String,String> mediaProps=new Hashtable<String,String>();
@@ -37,12 +35,10 @@
     securityProps.put(ConfigurationForm.FORM_TYPE,ConfigurationForm.SECURITY_TYPE);
     bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm(SecurityConfigForm.class.getName(),getClass().getClassLoader(),"impl.media.security.zrtp.CONF_ICON","impl.media.security.zrtp.TITLE",0),securityProps);
   }
-  GatherEntropy entropy=new GatherEntropy(mediaServiceImpl.getDeviceConfiguration());
-  entropy.setEntropy();
   System.setProperty("gov.nist.core.STRIP_ADDR_SCOPES","true");
-  AudioNotifierServiceImpl audioNotifier=new AudioNotifierServiceImpl(mediaServiceImpl.getDeviceConfiguration());
-  audioNotifier.setMute((cfg == null) || !cfg.getBoolean("net.java.sip.communicator" + ".impl.sound.isSoundEnabled",true));
-  getBundleContext().registerService(AudioNotifierService.class.getName(),audioNotifier,null);
+  AudioNotifierService audioNotifierService=new AudioNotifierServiceImpl(mediaServiceImpl.getDeviceConfiguration());
+  audioNotifierService.setMute((cfg == null) || !cfg.getBoolean("net.java.sip.communicator" + ".impl.sound.isSoundEnabled",true));
+  bundleContext.registerService(AudioNotifierService.class.getName(),audioNotifierService,null);
   if (logger.isInfoEnabled())   logger.info("Audio Notifier Service ...[REGISTERED]");
   if ((cfg == null) || !cfg.getBoolean(CALL_RECORDING_CONFIG_DISABLED_PROP,false)) {
     Dictionary<String,String> callRecordingProps=new Hashtable<String,String>();

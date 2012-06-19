@@ -1,10 +1,15 @@
 {
   if (logger.isDebugEnabled())   logger.debug("Started.");
   VersionActivator.bundleContext=context;
-  VersionServiceImpl versionServiceImpl=new VersionServiceImpl();
-  versionServReg=context.registerService(VersionService.class.getName(),versionServiceImpl,null);
+  context.registerService(VersionService.class.getName(),new VersionServiceImpl(),null);
   if (logger.isDebugEnabled())   logger.debug("Jitsi Version Service ... [REGISTERED]");
-  if (logger.isInfoEnabled())   logger.info("Jitsi Version: " + VersionImpl.currentVersion().getApplicationName() + " "+ VersionImpl.currentVersion().toString());
-  getConfigurationService().setProperty("sip-communicator.version",VersionImpl.currentVersion().toString(),true);
-  getConfigurationService().setProperty("sip-communicator.application.name",VersionImpl.currentVersion().getApplicationName(),true);
+  Version version=VersionImpl.currentVersion();
+  String applicationName=version.getApplicationName();
+  String versionString=version.toString();
+  if (logger.isInfoEnabled()) {
+    logger.info("Jitsi Version: " + applicationName + " "+ versionString);
+  }
+  ConfigurationService cfg=getConfigurationService();
+  cfg.setProperty(Version.PNAME_APPLICATION_NAME,applicationName,true);
+  cfg.setProperty(Version.PNAME_APPLICATION_VERSION,versionString,true);
 }
