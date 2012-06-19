@@ -1,0 +1,19 @@
+{
+  InputEvtIQ inputIQ=(InputEvtIQ)packet;
+  if (inputIQ.getType() == IQ.Type.SET && inputIQ.getAction() != InputEvtAction.NOTIFY) {
+    IQ ack=IQ.createResultIQ(inputIQ);
+    parentProvider.getConnection().sendPacket(ack);
+    String callPeerID=inputIQ.getFrom();
+    if (callPeerID != null) {
+      CallPeer callPeer=getListenerCallPeer(callPeerID);
+      if (callPeer != null) {
+        if (inputIQ.getAction() == InputEvtAction.START) {
+          fireRemoteControlGranted(callPeer);
+        }
+ else         if (inputIQ.getAction() == InputEvtAction.STOP) {
+          fireRemoteControlRevoked(callPeer);
+        }
+      }
+    }
+  }
+}

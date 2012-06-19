@@ -9,13 +9,11 @@ synchronized (listeners) {
     }
     if (!contains) {
       listeners.add(new WeakReference<RemoteControlListener>(listener));
+      listener.getCallPeer().addCallPeerListener(callPeerListener);
     }
   }
-  this.removesNullAndRevokedControlPeer(null);
-  CallPeer peer;
-  for (int i=0; i < this.grantedRemoteControlPeers.size(); ++i) {
-    peer=this.grantedRemoteControlPeers.get(i);
-    RemoteControlGrantedEvent event=new RemoteControlGrantedEvent(peer);
-    listener.remoteControlGranted(event);
+  CallPeer peer=listener.getCallPeer();
+  if (this.removesNullAndRevokedControlPeer(peer.getPeerID()) != -1) {
+    listener.remoteControlGranted(new RemoteControlGrantedEvent(peer));
   }
 }

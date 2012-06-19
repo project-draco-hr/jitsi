@@ -1,10 +1,12 @@
 {
-  this.grantedRemoteControlPeers.add(peer);
-  List<RemoteControlListener> listeners=getListeners();
-  if (!listeners.isEmpty()) {
-    RemoteControlGrantedEvent event=new RemoteControlGrantedEvent(peer);
-    for (    RemoteControlListener l : listeners) {
-      l.remoteControlGranted(event);
+  RemoteControlListener listener=getListener(peer);
+  if (listener != null) {
+    listener.remoteControlGranted(new RemoteControlGrantedEvent(peer));
+  }
+ else {
+    this.removesNullAndRevokedControlPeer(peer.getPeerID());
+synchronized (this.grantedRemoteControlPeers) {
+      this.grantedRemoteControlPeers.add(peer);
     }
   }
 }

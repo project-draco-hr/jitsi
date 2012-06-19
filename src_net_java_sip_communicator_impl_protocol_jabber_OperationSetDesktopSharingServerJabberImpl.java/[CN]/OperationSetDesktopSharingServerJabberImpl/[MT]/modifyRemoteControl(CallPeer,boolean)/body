@@ -1,0 +1,32 @@
+{
+  DiscoverInfo discoverInfo=((CallPeerJabberImpl)callPeer).getDiscoverInfo();
+  if (this.parentProvider.getDiscoveryManager().includesFeature(InputEvtIQ.NAMESPACE_SERVER) && discoverInfo != null && discoverInfo.containsFeature(InputEvtIQ.NAMESPACE_CLIENT)) {
+    if (logger.isInfoEnabled())     logger.info("Enable remote control");
+    CallJabberImpl call=(CallJabberImpl)callPeer.getCall();
+synchronized (callPeers) {
+      if (callPeers.contains(callPeer.getAddress()) != enables) {
+        InputEvtIQ inputIQ=new InputEvtIQ();
+        if (enables) {
+          inputIQ.setAction(InputEvtAction.START);
+        }
+ else {
+          inputIQ.setAction(InputEvtAction.STOP);
+        }
+        inputIQ.setType(IQ.Type.SET);
+        inputIQ.setFrom(parentProvider.getOurJID());
+        inputIQ.setTo(callPeer.getAddress());
+        Connection connection=parentProvider.getConnection();
+        PacketCollector collector=connection.createPacketCollector(new PacketIDFilter(inputIQ.getPacketID()));
+        connection.sendPacket(inputIQ);
+        Packet p=collector.nextResult(SmackConfiguration.getPacketReplyTimeout());
+        if (enables) {
+          receivedResponseToIqStart(callPeer,p);
+        }
+ else {
+          receivedResponseToIqStop(callPeer,p);
+        }
+        collector.cancel();
+      }
+    }
+  }
+}
