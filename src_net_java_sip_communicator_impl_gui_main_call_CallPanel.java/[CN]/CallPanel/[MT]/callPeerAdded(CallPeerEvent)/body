@@ -5,17 +5,23 @@
   SwingUtilities.invokeLater(new Runnable(){
     public void run(){
       if (isLastConference) {
-        ((ConferenceCallPanel)callPanel).addCallPeerPanel(callPeer);
+        if (CallManager.isVideoStreaming(call)) {
+          if (!(callPanel instanceof VideoConferenceCallPanel)) {
+            enableConferenceInterface(true);
+          }
+ else           ((VideoConferenceCallPanel)callPanel).addCallPeerPanel(callPeer);
+        }
+ else {
+          if (callPanel instanceof VideoConferenceCallPanel) {
+            enableConferenceInterface(false);
+          }
+ else           ((ConferenceCallPanel)callPanel).addCallPeerPanel(callPeer);
+        }
       }
  else {
         isLastConference=isConference();
         if (isLastConference) {
-          remove(callPanel);
-          ConferenceCallPanel callPanel;
-          if (CallManager.isVideoStreaming(call))           callPanel=new VideoConferenceCallPanel(CallPanel.this,call);
- else           callPanel=new ConferenceCallPanel(CallPanel.this,call);
-          updateCurrentCallPanel(callPanel);
-          add(callPanel,BorderLayout.CENTER);
+          enableConferenceInterface(CallManager.isVideoStreaming(call));
         }
  else {
           CallPeer onlyCallPeer=null;

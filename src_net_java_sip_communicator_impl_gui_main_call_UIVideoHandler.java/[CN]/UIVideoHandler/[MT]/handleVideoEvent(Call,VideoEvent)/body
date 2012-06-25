@@ -1,0 +1,53 @@
+{
+  if (event != null && logger.isTraceEnabled())   logger.trace("UI video event received originated in: " + event.getOrigin() + " and is of type: "+ event.getType());
+  if ((event != null) && !event.isConsumed()) {
+    int origin=event.getOrigin();
+    Component video=event.getVisualComponent();
+synchronized (videoContainers) {
+switch (event.getType()) {
+case VideoEvent.VIDEO_ADDED:
+switch (origin) {
+case VideoEvent.LOCAL:
+          this.localVideo=video;
+        this.closeButton=new CloseButton();
+      break;
+case VideoEvent.REMOTE:
+    this.remoteVideo=video;
+  break;
+}
+addMouseListeners(origin);
+event.consume();
+break;
+case VideoEvent.VIDEO_REMOVED:
+switch (origin) {
+case VideoEvent.LOCAL:
+if (localVideo == video) {
+this.localVideo=null;
+this.closeButton=null;
+}
+break;
+case VideoEvent.REMOTE:
+if (remoteVideo == video) this.remoteVideo=null;
+break;
+}
+break;
+}
+}
+}
+if (!SwingUtilities.isEventDispatchThread()) {
+SwingUtilities.invokeLater(new Runnable(){
+public void run(){
+handleVideoEvent(call,event);
+}
+}
+);
+return;
+}
+synchronized (videoContainers) {
+int videoContainerCount;
+if ((videoTelephony != null) && ((videoContainerCount=videoContainers.size()) > 0)) {
+Container videoContainer=videoContainers.get(videoContainerCount - 1);
+handleVideoEvent(call,event,videoContainer);
+}
+}
+}

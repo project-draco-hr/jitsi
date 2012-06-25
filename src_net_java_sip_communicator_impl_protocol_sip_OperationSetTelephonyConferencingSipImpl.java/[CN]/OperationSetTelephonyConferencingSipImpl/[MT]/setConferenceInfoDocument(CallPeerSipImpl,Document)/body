@@ -31,22 +31,34 @@
         int userChildCount=userChildList.getLength();
         String displayName=null;
         String endpointStatus=null;
-        String ssrc=null;
+        String audioSsrc=null;
+        String videoSsrc=null;
         for (int userChildIndex=0; userChildIndex < userChildCount; userChildIndex++) {
           Node userChild=userChildList.item(userChildIndex);
           String userChildName=userChild.getNodeName();
           if (ELEMENT_DISPLAY_TEXT.equals(userChildName))           displayName=userChild.getTextContent();
  else           if (ELEMENT_ENDPOINT.equals(userChildName)) {
             endpointStatus=getEndpointStatus(userChild);
-            ssrc=getEndpointMediaSrcId(userChild,MediaType.AUDIO);
+            audioSsrc=getEndpointMediaSrcId(userChild,MediaType.AUDIO);
+            videoSsrc=getEndpointMediaSrcId(userChild,MediaType.VIDEO);
           }
         }
         existingConferenceMember.setDisplayName(displayName);
         existingConferenceMember.setEndpointStatus(endpointStatus);
-        if (ssrc != null) {
-          long newSsrc=Long.parseLong(ssrc);
-          if (existingConferenceMember.getSSRC() != newSsrc)           changed=true;
-          existingConferenceMember.setSSRC(newSsrc);
+        if (audioSsrc != null) {
+          long newSsrc=Long.parseLong(audioSsrc);
+          if (existingConferenceMember.getAudioSsrc() != newSsrc)           changed=true;
+          existingConferenceMember.setAudioSsrc(newSsrc);
+        }
+        if (videoSsrc != null) {
+          long newSsrc=Long.parseLong(videoSsrc);
+          long currentSsrc=existingConferenceMember.getVideoSsrc();
+          if (currentSsrc != -1 && currentSsrc == newSsrc)           continue;
+          if (existingConferenceMember.getVideoSsrc() != newSsrc)           changed=true;
+          existingConferenceMember.setVideoSsrc(newSsrc);
+          VideoMediaStream peerVideoStream=(VideoMediaStream)callPeer.getMediaHandler().getStream(MediaType.VIDEO);
+          Component visualComponent=peerVideoStream.getVisualComponent(newSsrc);
+          if (visualComponent != null)           callPeer.getMediaHandler().fireVisualComponentResolveEvent(visualComponent,existingConferenceMember);
         }
         if (addConferenceMember)         callPeer.addConferenceMember(existingConferenceMember);
       }

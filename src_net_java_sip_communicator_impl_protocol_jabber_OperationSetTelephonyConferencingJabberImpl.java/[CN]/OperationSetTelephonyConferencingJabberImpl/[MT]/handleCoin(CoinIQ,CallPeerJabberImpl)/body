@@ -44,7 +44,8 @@
       String displayName=u.getDisplayText();
       List<EndpointPacketExtension> endpoints=u.getChildExtensionsOfType(EndpointPacketExtension.class);
       String endpointStatus=null;
-      String ssrc=null;
+      String audioSsrc=null;
+      String videoSsrc=null;
       if (endpoints.size() > 0) {
         EndpointPacketExtension endpoint=endpoints.get(0);
         if (endpoint.getStatus() == null) {
@@ -54,16 +55,24 @@
         List<MediaPacketExtension> medias=endpoint.getChildExtensionsOfType(MediaPacketExtension.class);
         for (        MediaPacketExtension media : medias) {
           if (media.getType().equalsIgnoreCase(MediaType.AUDIO.toString())) {
-            ssrc=media.getSrcID();
+            audioSsrc=media.getSrcID();
+          }
+          if (media.getType().equalsIgnoreCase(MediaType.VIDEO.toString())) {
+            videoSsrc=media.getSrcID();
           }
         }
       }
       existingConferenceMember.setDisplayName(displayName);
       existingConferenceMember.setEndpointStatus(endpointStatus);
-      if (ssrc != null) {
-        long newSsrc=Long.parseLong(ssrc);
-        if (existingConferenceMember.getSSRC() != newSsrc)         changed=true;
-        existingConferenceMember.setSSRC(newSsrc);
+      if (audioSsrc != null) {
+        long newSsrc=Long.parseLong(audioSsrc);
+        if (existingConferenceMember.getAudioSsrc() != newSsrc)         changed=true;
+        existingConferenceMember.setAudioSsrc(newSsrc);
+      }
+      if (videoSsrc != null) {
+        long newSsrc=Long.parseLong(videoSsrc);
+        if (existingConferenceMember.getVideoSsrc() != newSsrc)         changed=true;
+        existingConferenceMember.setVideoSsrc(newSsrc);
       }
       if (addConferenceMember) {
         callPeer.addConferenceMember(existingConferenceMember);

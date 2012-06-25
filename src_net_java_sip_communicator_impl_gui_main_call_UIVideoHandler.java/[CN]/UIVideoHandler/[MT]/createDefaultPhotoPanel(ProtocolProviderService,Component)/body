@@ -1,0 +1,37 @@
+{
+  JPanel defaultPanel=new TransparentPanel(new BorderLayout());
+  JPanel photoPanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER)){
+    /** 
+ * @{inheritDoc}
+ */
+    @Override public void paintComponent(    Graphics g){
+      super.paintComponent(g);
+      g=g.create();
+      try {
+        AntialiasingManager.activateAntialiasing(g);
+        g.setColor(Color.GRAY);
+        g.fillRoundRect(0,0,this.getWidth(),this.getHeight(),6,6);
+      }
+  finally {
+        g.dispose();
+      }
+    }
+  }
+;
+  JLabel photoLabel=new JLabel();
+  final OperationSetServerStoredAccountInfo accountInfoOpSet=pps.getOperationSet(OperationSetServerStoredAccountInfo.class);
+  if (accountInfoOpSet != null) {
+    byte[] accountImage=AccountInfoUtils.getImage(accountInfoOpSet);
+    if ((accountImage != null) && (accountImage.length > 0)) {
+      photoLabel.setIcon(new ImageIcon(accountImage));
+    }
+  }
+  if (photoLabel.getIcon() == null) {
+    photoLabel.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.DEFAULT_USER_PHOTO)));
+  }
+  photoPanel.add(photoLabel);
+  photoLabel.setPreferredSize(new Dimension(320,240));
+  defaultPanel.add(photoPanel,BorderLayout.CENTER);
+  defaultPanel.add(localVideoToolbar,BorderLayout.SOUTH);
+  return defaultPanel;
+}

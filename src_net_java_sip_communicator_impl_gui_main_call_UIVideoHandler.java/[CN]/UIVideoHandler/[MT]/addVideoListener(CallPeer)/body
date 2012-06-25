@@ -3,17 +3,18 @@
   if (call == null)   return null;
   final OperationSetVideoTelephony telephony=call.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
   if (telephony == null)   return null;
-  videoTelephonyListener=new VideoTelephonyListener(callPeer);
+  final VideoTelephonyListener videoTelephonyListener=new VideoTelephonyListener(callPeer);
   CallChangeListener callListener=new CallChangeListener(){
     private void addVideoListener(    CallPeer callPeer){
       telephony.addVideoListener(callPeer,videoTelephonyListener);
+      telephony.addVisualComponentResolveListener(callPeer,videoTelephonyListener);
       if (!isLocalVideoListenerAdded) {
         telephony.addPropertyChangeListener(call,videoTelephonyListener);
         isLocalVideoListenerAdded=true;
       }
 synchronized (videoContainers) {
         videoTelephony=telephony;
-        handleVideoEvent(callPeer,null);
+        handleVideoEvent(call,null);
         handleLocalVideoStreamingChange(callPeer,videoTelephonyListener);
       }
     }
@@ -37,7 +38,7 @@ synchronized (videoContainers) {
  */
     public synchronized void callPeerRemoved(    CallPeerEvent event){
       if (callPeer.equals(event.getSourceCallPeer())) {
-        if (callPeer.getCall() != null)         removeVideoListener(event.getSourceCallPeer());
+        if (callPeer.getCall() != null)         removeVideoListener(event.getSourceCallPeer(),videoTelephonyListener);
       }
     }
     /** 
@@ -52,7 +53,7 @@ synchronized (videoContainers) {
       if (!event.getEventType().equals(CallChangeEvent.CALL_STATE_CHANGE))       return;
       CallState newCallState=(CallState)event.getNewValue();
       if (CallState.CALL_ENDED.equals(newCallState)) {
-        removeVideoListener(callPeer);
+        removeVideoListener(callPeer,videoTelephonyListener);
         call.removeCallChangeListener(this);
         if (allowRemoteControl) {
           allowRemoteControl=false;

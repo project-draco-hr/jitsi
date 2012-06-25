@@ -1,0 +1,39 @@
+{
+  super(callPanel,call,videoHandler,true);
+  this.call=call;
+  addVideoContainer();
+  getVideoHandler().setLocalVideoToolbar(createLocalVideoToolBar());
+  Iterator<? extends CallPeer> iterator;
+  iterator=call.getCallPeers();
+  while (iterator.hasNext()) {
+    CallPeer peer=iterator.next();
+    ConferenceCallPeerRenderer peerRenderer=createVideoToolBar(peer);
+    getVideoHandler().addVideoToolbar(peer,peerRenderer.getComponent());
+    for (    ConferenceMember member : peer.getConferenceMembers()) {
+      conferenceMemberAdded(peer,member,true);
+    }
+    callPeerPanels.put(peer,peerRenderer);
+  }
+  iterator=call.getCrossProtocolCallPeers();
+  while (iterator.hasNext()) {
+    CallPeer peer=iterator.next();
+    ConferenceCallPeerRenderer peerRenderer=createVideoToolBar(peer);
+    getVideoHandler().addVideoToolbar(peer,peerRenderer.getComponent());
+    for (    ConferenceMember member : peer.getConferenceMembers()) {
+      conferenceMemberAdded(peer,member,true);
+    }
+    callPeerPanels.put(peer,peerRenderer);
+  }
+  iterator=call.getCallPeers();
+  while (iterator.hasNext()) {
+    CallPeer callPeer=iterator.next();
+    ConferenceCallPeerRenderer peerRenderer=callPeerPanels.get(callPeer);
+    addCallPeerPanel(callPeer,peerRenderer);
+  }
+  iterator=call.getCrossProtocolCallPeers();
+  while (iterator.hasNext()) {
+    CallPeer callPeer=iterator.next();
+    ConferenceCallPeerRenderer peerRenderer=callPeerPanels.get(callPeer);
+    addCallPeerPanel(callPeer,peerRenderer);
+  }
+}
