@@ -32,6 +32,8 @@
   List<ProtocolProviderService> providers=CallManager.getTelephonyProviders();
   boolean hasPhones=false;
   boolean separator=false;
+  boolean routingForVideoEnabled=false;
+  boolean routingForDesktopEnabled=false;
   while (contacts.hasNext()) {
     Contact contact=contacts.next();
     ProtocolProviderService protocolProvider=contact.getProtocolProvider();
@@ -70,15 +72,17 @@
         logger.error("Error obtaining server stored contact info");
       }
     }
+    routingForVideoEnabled=ConfigurationManager.isRouteVideoAndDesktopUsingPhoneNumberEnabled() && phones.size() > 0 && GuiActivator.getOpSetRegisteredProviders(OperationSetVideoTelephony.class,null,null).size() > 0;
+    routingForDesktopEnabled=ConfigurationManager.isRouteVideoAndDesktopUsingPhoneNumberEnabled() && phones.size() > 0 && GuiActivator.getOpSetRegisteredProviders(OperationSetDesktopSharingServer.class,null,null).size() > 0;
     if (metaContact.getContactCount() > 1 || phones.size() > 0) {
       if (protocolProvider.getOperationSet(OperationSetBasicTelephony.class) != null && hasContactCapabilities(contact,OperationSetBasicTelephony.class)) {
         callContactMenu.add(createMenuItem(contactAddress,callContactPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
         separator=true;
       }
-      if (protocolProvider.getOperationSet(OperationSetVideoTelephony.class) != null && hasContactCapabilities(contact,OperationSetVideoTelephony.class)) {
+      if (protocolProvider.getOperationSet(OperationSetVideoTelephony.class) != null && hasContactCapabilities(contact,OperationSetVideoTelephony.class) || routingForVideoEnabled) {
         videoCallMenu.add(createMenuItem(contactAddress,videoCallPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
       }
-      if (protocolProvider.getOperationSet(OperationSetDesktopSharingServer.class) != null && hasContactCapabilities(contact,OperationSetDesktopSharingServer.class)) {
+      if (protocolProvider.getOperationSet(OperationSetDesktopSharingServer.class) != null && hasContactCapabilities(contact,OperationSetDesktopSharingServer.class) || routingForDesktopEnabled) {
         multiContactFullShareMenu.add(createMenuItem(contactAddress,fullDesktopSharingPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
         multiContactRegionShareMenu.add(createMenuItem(contactAddress,regionDesktopSharingPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
       }
@@ -182,8 +186,10 @@
   addContactItem.addActionListener(this);
   if (metaContact.getDefaultContact(OperationSetFileTransfer.class) == null)   this.sendFileItem.setEnabled(false);
   if (metaContact.getDefaultContact(OperationSetBasicTelephony.class) == null && (!hasPhones || CallManager.getTelephonyProviders().size() == 0))   this.callItem.setEnabled(false);
-  if (metaContact.getDefaultContact(OperationSetVideoTelephony.class) == null)   this.videoCallItem.setEnabled(false);
-  if (metaContact.getDefaultContact(OperationSetDesktopSharingServer.class) == null) {
+  if (metaContact.getDefaultContact(OperationSetVideoTelephony.class) == null && !routingForVideoEnabled) {
+    this.videoCallItem.setEnabled(false);
+  }
+  if (metaContact.getDefaultContact(OperationSetDesktopSharingServer.class) == null && !routingForDesktopEnabled) {
     fullShareMenuItem.setEnabled(false);
     regionShareMenuItem.setEnabled(false);
   }
