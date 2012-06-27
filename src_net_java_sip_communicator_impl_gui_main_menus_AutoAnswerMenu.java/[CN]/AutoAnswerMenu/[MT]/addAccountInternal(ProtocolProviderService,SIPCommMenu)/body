@@ -6,27 +6,43 @@
   boolean isHidden=protocolProvider.getAccountID().getAccountProperty(ProtocolProviderFactory.IS_PROTOCOL_HIDDEN) != null;
   if (isHidden)   return;
   AutoAnswerMenuItem providerMenu=new AutoAnswerMenuItem(protocolProvider);
+  int lastAutoAnswerIx=0;
   boolean isMenuAdded=false;
   AccountID accountId=protocolProvider.getAccountID();
-  for (int i=0; i < getItemCount(); i++) {
-    JMenuItem c=getItem(i);
+  for (int i=0; i < parentMenu.getItemCount(); i++) {
+    JMenuItem c=parentMenu.getItem(i);
     if (!(c instanceof AutoAnswerMenuItem))     continue;
     AutoAnswerMenuItem menu=(AutoAnswerMenuItem)c;
-    int menuIndex=getPopupMenu().getComponentIndex(menu);
+    int menuIndex=parentMenu.getPopupMenu().getComponentIndex(menu);
+    lastAutoAnswerIx=menuIndex;
     AccountID menuAccountID=menu.getProtocolProvider().getAccountID();
     int protocolCompare=accountId.getProtocolDisplayName().compareTo(menuAccountID.getProtocolDisplayName());
     if (protocolCompare < 0) {
-      insert(providerMenu,menuIndex);
+      parentMenu.insert(providerMenu,menuIndex);
       isMenuAdded=true;
       break;
     }
  else     if (protocolCompare == 0) {
       if (accountId.getDisplayName().compareTo(menuAccountID.getDisplayName()) < 0) {
-        insert(providerMenu,menuIndex);
+        parentMenu.insert(providerMenu,menuIndex);
         isMenuAdded=true;
         break;
       }
     }
   }
-  if (!isMenuAdded)   add(providerMenu);
+  if (!isMenuAdded) {
+    if (lastAutoAnswerIx != 0)     parentMenu.insert(providerMenu,lastAutoAnswerIx);
+ else {
+      int lastMenuItemIx=0;
+      for (int i=0; i < parentMenu.getMenuComponentCount(); i++) {
+        if (parentMenu.getMenuComponent(i) instanceof JSeparator) {
+          parentMenu.insert(providerMenu,lastMenuItemIx + 1);
+          isMenuAdded=true;
+          break;
+        }
+ else         lastMenuItemIx++;
+      }
+      if (!isMenuAdded)       parentMenu.add(providerMenu);
+    }
+  }
 }

@@ -1,0 +1,19 @@
+{
+  if (protocolProviderListener == null) {
+    protocolProviderListener=new ProtocolProviderListener(parentMenu);
+    GuiActivator.bundleContext.addServiceListener(protocolProviderListener);
+  }
+  for (  ProtocolProviderFactory providerFactory : GuiActivator.getProtocolProviderFactories().values()) {
+    ServiceReference serRef;
+    ProtocolProviderService protocolProvider;
+    for (    AccountID accountID : providerFactory.getRegisteredAccounts()) {
+      serRef=providerFactory.getProviderForAccount(accountID);
+      protocolProvider=(ProtocolProviderService)GuiActivator.bundleContext.getService(serRef);
+      addAccountInternal(protocolProvider,parentMenu);
+    }
+  }
+  if (ConfigurationManager.isAutoAnswerDisableSubmenu() && getAutoAnswerItemCount(parentMenu) == 1) {
+    AutoAnswerMenuItem item=getAutoAnswerItem(parentMenu,0);
+    if (item != null)     item.setText(GuiActivator.getResources().getI18NString("service.gui.AUTO_ANSWER"));
+  }
+}
