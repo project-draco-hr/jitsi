@@ -32,21 +32,23 @@
     }
     boolean containsDate=false;
     long milisecondsPerDay=24 * 60 * 60* 1000;
-    for (int j=0; !containsDate && j < datesVector.size(); j++) {
-      Date date1=datesVector.get(j);
-      containsDate=Math.floor(date1.getTime() / milisecondsPerDay) == Math.floor(date / milisecondsPerDay);
+    Iterator<Date> iterator=datesDisplayed.iterator();
+    while (iterator.hasNext()) {
+      Date curr=iterator.next();
+      containsDate=Math.floor(curr.getTime() / milisecondsPerDay) == Math.floor(date / milisecondsPerDay);
+      if (containsDate)       break;
     }
     if (!containsDate) {
-      datesVector.add(new Date(date - date % milisecondsPerDay));
+      datesDisplayed.add(new Date(date - date % milisecondsPerDay));
     }
   }
   if ((msgList != null) && (msgList.size() > 0)) {
     Runnable updateDatesPanel=new Runnable(){
       public void run(){
         Date date=null;
-        for (int i=0; i < datesVector.size(); i++) {
-          date=datesVector.get(i);
-          datesPanel.addDate(date);
+        for (        Date curr : datesDisplayed) {
+          date=curr;
+          if (!datesPanel.containsDate(date))           datesPanel.addDate(date);
         }
         if (date != null) {
           ignoreProgressDate=date;
