@@ -14,23 +14,26 @@
       this.menu=new Menu(text);
     }
   }
+  PresenceStatus offlineStatus=null;
   Iterator<PresenceStatus> statusIterator=this.presence.getSupportedStatusSet();
   while (statusIterator.hasNext()) {
     PresenceStatus status=statusIterator.next();
+    if (status.getStatus() < 1)     offlineStatus=status;
     String text=status.getStatusName();
     if (menu instanceof Container) {
-      JMenuItem item=new JMenuItem(text);
+      JCheckBoxMenuItem item=new JCheckBoxMenuItem(text);
       byte[] icBytes=status.getStatusIcon();
       if (icBytes != null)       item.setIcon(new ImageIcon(icBytes));
       item.addActionListener(this);
       ((Container)menu).add(item);
     }
  else {
-      MenuItem item=new MenuItem(text);
-      item.addActionListener(this);
+      CheckboxMenuItem item=new CheckboxMenuItem(text);
+      item.addItemListener(this);
       ((Menu)menu).add(item);
     }
   }
   addSeparator();
   StatusSubMenu.addMenuItem(menu,new StatusMessageMenu(provider,swing).getMenu());
+  if (offlineStatus != null)   updateStatus(offlineStatus);
 }

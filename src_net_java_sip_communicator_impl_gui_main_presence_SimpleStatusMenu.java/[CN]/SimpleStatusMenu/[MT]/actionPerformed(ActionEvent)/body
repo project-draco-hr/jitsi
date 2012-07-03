@@ -1,22 +1,10 @@
 {
   JMenuItem menuItem=(JMenuItem)e.getSource();
   String itemName=menuItem.getName();
-  if (itemName.equals(Constants.ONLINE_STATUS)) {
-    if (!protocolProvider.isRegistered()) {
-      GuiActivator.getUIService().getLoginManager().login(protocolProvider);
-    }
+  if (itemName.equals(GlobalStatusEnum.ONLINE_STATUS)) {
+    GuiActivator.getGlobalStatusService().publishStatus(protocolProvider,GlobalStatusEnum.ONLINE,true);
   }
  else {
-    RegistrationState registrationState=protocolProvider.getRegistrationState();
-    if (!registrationState.equals(RegistrationState.UNREGISTERED) && !registrationState.equals(RegistrationState.UNREGISTERING)) {
-      try {
-        GuiActivator.getUIService().getLoginManager().setManuallyDisconnected(true);
-        protocolProvider.unregister();
-      }
- catch (      OperationFailedException e1) {
-        logger.error("Unable to unregister the protocol provider: " + protocolProvider + " due to the following exception: "+ e1);
-      }
-    }
+    GuiActivator.getGlobalStatusService().publishStatus(protocolProvider,GlobalStatusEnum.OFFLINE,true);
   }
-  saveStatusInformation(protocolProvider,itemName);
 }

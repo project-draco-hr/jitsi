@@ -1,18 +1,7 @@
 {
   OsDependentActivator.bundleContext.addServiceListener(new ProtocolProviderServiceListener());
-  ServiceReference[] protocolProviderRefs;
-  try {
-    protocolProviderRefs=OsDependentActivator.bundleContext.getServiceReferences(ProtocolProviderService.class.getName(),null);
-  }
- catch (  InvalidSyntaxException ex) {
-    logger.error("Error while retrieving service refs",ex);
-    return;
-  }
-  if (protocolProviderRefs != null) {
-    for (    ServiceReference protocolProviderRef : protocolProviderRefs) {
-      ProtocolProviderService provider=(ProtocolProviderService)OsDependentActivator.bundleContext.getService(protocolProviderRef);
-      boolean isHidden=provider.getAccountID().getAccountProperty(ProtocolProviderFactory.IS_PROTOCOL_HIDDEN) != null;
-      if (!isHidden)       this.addAccount(provider);
-    }
+  for (  ProtocolProviderService provider : getProtocolProviders()) {
+    boolean isHidden=provider.getAccountID().getAccountProperty(ProtocolProviderFactory.IS_PROTOCOL_HIDDEN) != null;
+    if (!isHidden)     this.addAccount(provider);
   }
 }

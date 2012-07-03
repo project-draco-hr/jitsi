@@ -1,32 +1,12 @@
 {
   if (e.getSource() instanceof JMenuItem) {
     String menuItemText=((JMenuItem)e.getSource()).getText();
-    LoginManager loginManager=GuiActivator.getUIService().getLoginManager();
     Iterator<PresenceStatus> statusSet=presence.getSupportedStatusSet();
     while (statusSet.hasNext()) {
       PresenceStatus status=statusSet.next();
       if (status.getStatusName().equals(menuItemText)) {
-        RegistrationState registrationState=protocolProvider.getRegistrationState();
-        if (registrationState == RegistrationState.REGISTERED && !presence.getPresenceStatus().equals(status)) {
-          if (status.isOnline()) {
-            new PublishPresenceStatusThread(protocolProvider,status).start();
-          }
- else {
-            loginManager.setManuallyDisconnected(true);
-            loginManager.logoff(protocolProvider);
-          }
-          setSelectedStatus(status);
-        }
- else         if (registrationState != RegistrationState.REGISTERED && registrationState != RegistrationState.REGISTERING && registrationState != RegistrationState.AUTHENTICATING && status.isOnline()) {
-          lastSelectedStatus=status;
-          loginManager.login(protocolProvider);
-        }
- else         if (!status.isOnline() && !(registrationState == RegistrationState.UNREGISTERING)) {
-          loginManager.setManuallyDisconnected(true);
-          loginManager.logoff(protocolProvider);
-          setSelectedStatus(status);
-        }
-        saveStatusInformation(protocolProvider,status.getStatusName());
+        GuiActivator.getGlobalStatusService().publishStatus(protocolProvider,status,true);
+        setSelectedStatus(status);
         break;
       }
     }
