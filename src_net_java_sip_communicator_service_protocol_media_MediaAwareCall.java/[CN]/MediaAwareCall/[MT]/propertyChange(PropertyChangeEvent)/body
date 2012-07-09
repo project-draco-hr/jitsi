@@ -1,24 +1,22 @@
 {
   if (MediaService.DEFAULT_DEVICE.equals(event.getPropertyName())) {
-    if (getCallGroup() != null && this != getCallGroup().getCalls().get(0)) {
-      return;
-    }
-    MediaDevice oldValue=null;
+    CallGroup callGroup=getCallGroup();
+    if ((callGroup != null) && (this != callGroup.getCalls().get(0)))     return;
+    MediaDevice oldValue=(conferenceAudioMixer instanceof MediaDeviceWrapper) ? ((MediaDeviceWrapper)conferenceAudioMixer).getWrappedDevice() : null;
     MediaDevice newValue=(audioDevice == null) ? ProtocolMediaActivator.getMediaService().getDefaultDevice(MediaType.AUDIO,mediaUseCase) : audioDevice;
-    if (conferenceAudioMixer instanceof MediaDeviceWrapper) {
-      oldValue=((MediaDeviceWrapper)conferenceAudioMixer).getWrappedDevice();
-    }
     if (oldValue != newValue) {
       conferenceAudioMixer=null;
       propertyChangeSupport.firePropertyChange(DEFAULT_DEVICE,oldValue,newValue);
-    }
-    if (getCallGroup() != null) {
-      List<Call> calls=getCallGroup().getCalls();
-      for (      Call c : calls) {
-        if (c == this)         continue;
-        MediaAwareCall<?,?,?> call=(MediaAwareCall<?,?,?>)c;
-        call.conferenceAudioMixer=null;
-        call.propertyChangeSupport.firePropertyChange(DEFAULT_DEVICE,oldValue,newValue);
+      callGroup=getCallGroup();
+      if (callGroup != null) {
+        List<Call> calls=callGroup.getCalls();
+        for (        Call c : calls) {
+          if (c != this) {
+            MediaAwareCall<?,?,?> call=(MediaAwareCall<?,?,?>)c;
+            call.conferenceAudioMixer=null;
+            call.propertyChangeSupport.firePropertyChange(DEFAULT_DEVICE,oldValue,newValue);
+          }
+        }
       }
     }
   }
