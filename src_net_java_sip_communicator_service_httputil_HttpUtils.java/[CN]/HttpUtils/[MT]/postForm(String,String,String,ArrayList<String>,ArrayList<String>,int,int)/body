@@ -2,31 +2,25 @@
   DefaultHttpClient httpClient;
   HttpPost postMethod;
   HttpEntity resEntity=null;
-  try {
-    AuthenticationException authEx;
-    HTTPCredentialsProvider credentialsProvider=null;
-    do {
-      postMethod=new HttpPost(address);
-      httpClient=getHttpClient(usernamePropertyName,passwordPropertyName,postMethod.getURI().getHost(),credentialsProvider);
-      try {
-        resEntity=postForm(httpClient,postMethod,address,usernamePropertyName,passwordPropertyName,formParamNames,formParamValues,usernameParamIx,passwordParamIx);
-        authEx=null;
-      }
- catch (      AuthenticationException ex) {
-        authEx=ex;
-        credentialsProvider=(HTTPCredentialsProvider)httpClient.getCredentialsProvider();
-        String userName=credentialsProvider.authUsername;
-        credentialsProvider.clear();
-        credentialsProvider.authUsername=userName;
-        credentialsProvider.errorMessage=HttpUtilActivator.getResources().getI18NString("service.gui.AUTHENTICATION_FAILED",new String[]{credentialsProvider.usedScope.getHost()});
-      }
+  AuthenticationException authEx;
+  HTTPCredentialsProvider credentialsProvider=null;
+  do {
+    postMethod=new HttpPost(address);
+    httpClient=getHttpClient(usernamePropertyName,passwordPropertyName,postMethod.getURI().getHost(),credentialsProvider);
+    try {
+      resEntity=postForm(httpClient,postMethod,address,usernamePropertyName,passwordPropertyName,formParamNames,formParamValues,usernameParamIx,passwordParamIx);
+      authEx=null;
     }
+ catch (    AuthenticationException ex) {
+      authEx=ex;
+      credentialsProvider=(HTTPCredentialsProvider)httpClient.getCredentialsProvider();
+      String userName=credentialsProvider.authUsername;
+      credentialsProvider.clear();
+      credentialsProvider.authUsername=userName;
+      credentialsProvider.errorMessage=HttpUtilActivator.getResources().getI18NString("service.gui.AUTHENTICATION_FAILED",new String[]{credentialsProvider.usedScope.getHost()});
+    }
+  }
  while (authEx != null);
-    if (resEntity == null)     return null;
-    return new HTTPResponseResult(resEntity,httpClient);
-  }
- catch (  Throwable e) {
-    logger.error("Error posting form",e);
-  }
-  return null;
+  if (resEntity == null)   return null;
+  return new HTTPResponseResult(resEntity,httpClient);
 }

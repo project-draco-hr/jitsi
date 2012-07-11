@@ -98,12 +98,26 @@
         }
       }
     }
-    HttpUtils.HTTPResponseResult res=HttpUtils.postForm(url,PROPERTY_PROVISIONING_USERNAME,PROPERTY_PROVISIONING_PASSWORD,paramNames,paramValues,usernameIx,passwordIx);
+    HttpUtils.HTTPResponseResult res=null;
+    Throwable errorWhileProvisioning=null;
+    try {
+      res=HttpUtils.postForm(url,PROPERTY_PROVISIONING_USERNAME,PROPERTY_PROVISIONING_PASSWORD,paramNames,paramValues,usernameIx,passwordIx);
+    }
+ catch (    Throwable t) {
+      logger.error("Error posting form",t);
+      errorWhileProvisioning=t;
+    }
     if (res == null) {
       boolean provisioningMandatory=false;
       String defaultSettingsProp=ProvisioningActivator.getResourceService().getSettingsString(PROPERTY_PROVISIONING_MANDATORY);
       if (defaultSettingsProp != null && Boolean.parseBoolean(defaultSettingsProp))       provisioningMandatory=true;
       if (ProvisioningActivator.getConfigurationService().getBoolean(PROPERTY_PROVISIONING_MANDATORY,provisioningMandatory)) {
+        String errorMsg;
+        if (errorWhileProvisioning != null)         errorMsg=errorWhileProvisioning.getLocalizedMessage();
+ else         errorMsg="";
+        ErrorDialog ed=new ErrorDialog(null,ProvisioningActivator.getResourceService().getI18NString("plugin.provisioning.PROV_FAILED"),ProvisioningActivator.getResourceService().getI18NString("plugin.provisioning.PROV_FAILED_MSG",new String[]{errorMsg}),errorWhileProvisioning);
+        ed.setModal(true);
+        ed.showDialog();
 {
           for (          Bundle b : ProvisioningActivator.bundleContext.getBundles()) {
             try {
