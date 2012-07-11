@@ -1,0 +1,19 @@
+{
+  for (  Map.Entry<ProtocolProviderService,OperationSetPresence> e : ppss.entrySet()) {
+    ProtocolProviderService pps=e.getKey();
+    OperationSetServerStoredContactInfo serverStoredContactInfoOpSet=pps.getOperationSet(OperationSetServerStoredContactInfo.class);
+    if (serverStoredContactInfoOpSet == null)     continue;
+    for (    Contact contact : Messenger.findContactsBySigninName(pps,e.getValue(),signinName)) {
+      Iterator<PhoneNumberDetail> iter=serverStoredContactInfoOpSet.getDetailsAndDescendants(contact,PhoneNumberDetail.class);
+      if (iter == null)       continue;
+      while (iter.hasNext()) {
+        PhoneNumberDetail phoneNumber=iter.next();
+        if (getMPHONE_TYPE(phoneNumber) != MPHONE_TYPE_CUSTOM) {
+          phoneNumbers.add(phoneNumber);
+          if (phoneNumbers.size() >= limit)           break;
+        }
+      }
+    }
+    if (phoneNumbers.size() >= limit)     break;
+  }
+}
