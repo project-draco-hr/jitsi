@@ -1,23 +1,26 @@
 {
-  if (logger.isTraceEnabled())   logger.trace("Add desktop sharing related components.");
-  if (enableDesktopRemoteControl == null) {
-    enableDesktopRemoteControl=new JCheckBox(GuiActivator.getResources().getI18NString("service.gui.ENABLE_DESKTOP_REMOTE_CONTROL"));
-    southPanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
-    southPanel.add(enableDesktopRemoteControl);
-    enableDesktopRemoteControl.setAlignmentX(CENTER_ALIGNMENT);
-    enableDesktopRemoteControl.setOpaque(false);
-    enableDesktopRemoteControl.addItemListener(new ItemListener(){
-      public void itemStateChanged(      ItemEvent e){
-        CallManager.enableDesktopRemoteControl(callPeer,e.getStateChange() == ItemEvent.SELECTED);
+  OperationSetDesktopSharingServer opSetDesktopSharingServer=callPeer.getProtocolProvider().getOperationSet(OperationSetDesktopSharingServer.class);
+  if (opSetDesktopSharingServer != null && opSetDesktopSharingServer.isRemoteControlAvailable(callPeer)) {
+    if (logger.isTraceEnabled())     logger.trace("Add desktop sharing related components.");
+    if (enableDesktopRemoteControl == null) {
+      enableDesktopRemoteControl=new JCheckBox(GuiActivator.getResources().getI18NString("service.gui.ENABLE_DESKTOP_REMOTE_CONTROL"));
+      southPanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
+      southPanel.add(enableDesktopRemoteControl);
+      enableDesktopRemoteControl.setAlignmentX(CENTER_ALIGNMENT);
+      enableDesktopRemoteControl.setOpaque(false);
+      enableDesktopRemoteControl.addItemListener(new ItemListener(){
+        public void itemStateChanged(        ItemEvent e){
+          CallManager.enableDesktopRemoteControl(callPeer,e.getStateChange() == ItemEvent.SELECTED);
+        }
       }
-    }
 );
+    }
+    if (OSUtils.IS_MAC) {
+      southPanel.setOpaque(true);
+      southPanel.setBackground(new Color(GuiActivator.getResources().getColor("service.gui.MAC_PANEL_BACKGROUND")));
+    }
+    add(southPanel,BorderLayout.SOUTH);
   }
-  if (OSUtils.IS_MAC) {
-    southPanel.setOpaque(true);
-    southPanel.setBackground(new Color(GuiActivator.getResources().getColor("service.gui.MAC_PANEL_BACKGROUND")));
-  }
-  add(southPanel,BorderLayout.SOUTH);
   revalidate();
   repaint();
 }
