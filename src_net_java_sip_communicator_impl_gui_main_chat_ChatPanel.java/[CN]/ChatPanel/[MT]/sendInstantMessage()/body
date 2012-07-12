@@ -4,7 +4,7 @@
 synchronized (writeMessagePanel) {
     if (isWriteAreaEmpty())     return;
     htmlText=getTextFromWriteArea(OperationSetBasicInstantMessaging.HTML_MIME_TYPE).trim();
-    plainText=getTextFromWriteArea(OperationSetBasicInstantMessaging.DEFAULT_MIME_TYPE);
+    plainText=getTextFromWriteArea(OperationSetBasicInstantMessaging.DEFAULT_MIME_TYPE).trim();
     this.refreshWriteArea();
   }
   String messageText;
@@ -18,7 +18,13 @@ synchronized (writeMessagePanel) {
     mimeType=OperationSetBasicInstantMessaging.DEFAULT_MIME_TYPE;
   }
   try {
-    chatSession.getCurrentChatTransport().sendInstantMessage(messageText,mimeType);
+    if (isMessageCorrectionActive() && chatSession.getCurrentChatTransport().allowsMessageCorrections()) {
+      chatSession.getCurrentChatTransport().correctInstantMessage(messageText,mimeType,correctedMessageUID);
+    }
+ else {
+      chatSession.getCurrentChatTransport().sendInstantMessage(messageText,mimeType);
+    }
+    stopMessageCorrection();
   }
  catch (  IllegalStateException ex) {
     logger.error("Failed to send message.",ex);

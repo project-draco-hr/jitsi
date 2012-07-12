@@ -8,7 +8,7 @@
   if (logger.isDebugEnabled()) {
     if (logger.isDebugEnabled())     logger.debug("Received from " + fromUserID + " the message "+ msg.toXML());
   }
-  Message newMessage=createMessage(msg.getBody());
+  Message newMessage=createMessage(msg.getBody(),DEFAULT_MIME_TYPE,msg.getPacketID());
   PacketExtension ext=msg.getExtension("http://jabber.org/protocol/xhtml-im");
   if (ext != null) {
     XHTMLExtension xhtmlExt=(XHTMLExtension)ext;
@@ -21,8 +21,13 @@
     if (messageBuff.length() > 0) {
       String receivedMessage=messageBuff.toString().replaceAll("\\<[bB][oO][dD][yY].*?>","").replaceAll("\\</[bB][oO][dD][yY].*?>","");
       receivedMessage=receivedMessage.replaceAll("&apos;","&#39;");
-      newMessage=createMessage(receivedMessage,HTML_MIME_TYPE);
+      newMessage=createMessage(receivedMessage,HTML_MIME_TYPE,msg.getPacketID());
     }
+  }
+  PacketExtension correctionExtension=msg.getExtension(MessageCorrectionExtension.NAMESPACE);
+  String correctedMessageUID=null;
+  if (correctionExtension != null) {
+    correctedMessageUID=((MessageCorrectionExtension)correctionExtension).getCorrectedMessageUID();
   }
   Contact sourceContact=opSetPersPresence.findContactByID(fromUserID);
   if (msg.getType() == org.jivesoftware.smack.packet.Message.Type.error) {
@@ -35,7 +40,7 @@
         errorResultCode=MessageDeliveryFailedEvent.OFFLINE_MESSAGES_NOT_SUPPORTED;
       }
     }
-    MessageDeliveryFailedEvent ev=new MessageDeliveryFailedEvent(newMessage,sourceContact,errorResultCode);
+    MessageDeliveryFailedEvent ev=new MessageDeliveryFailedEvent(newMessage,sourceContact,correctedMessageUID,errorResultCode);
     if (ev != null)     fireMessageEvent(ev);
     return;
   }
@@ -45,6 +50,6 @@
     if (logger.isDebugEnabled())     logger.debug("received a message from an unknown contact: " + fromUserID);
     sourceContact=opSetPersPresence.createVolatileContact(fromUserID);
   }
-  MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(newMessage,sourceContact,System.currentTimeMillis());
+  MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(newMessage,sourceContact,correctedMessageUID);
   if (msgReceivedEvt != null)   fireMessageEvent(msgReceivedEvt);
 }

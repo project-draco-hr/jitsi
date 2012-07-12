@@ -7,12 +7,16 @@
   String messageType=chatMessage.getMessageType();
   String messageTitle=chatMessage.getMessageTitle();
   String message=chatMessage.getMessage();
+  String messageUID=chatMessage.getMessageUID();
   String msgID="message";
   String msgHeaderID="messageHeader";
   String chatString="";
   String endHeaderTag="";
   String dateString=getDateString(date);
-  String startDivTag="<DIV identifier=\"" + msgID + "\">";
+  String idAttr=messageUID == null ? "" : " id='" + messageUID + "'";
+  String dateAttr=" date='" + date + "'";
+  String editedAtTag=generateEditedAtTag(messageUID,-1);
+  String startDivTag="<DIV identifier=\"" + msgID + "\""+ idAttr+ ">";
   String startHistoryDivTag="<DIV identifier=\"" + msgID + "\" style=\"color:#707070;\">";
   String startSystemDivTag="<DIV identifier=\"systemMessage\" style=\"color:#627EB7;\">";
   String endDivTag="</DIV>";
@@ -28,9 +32,9 @@
   }
   if (messageType.equals(Chat.INCOMING_MESSAGE)) {
     this.lastIncomingMsgTimestamp=System.currentTimeMillis();
-    chatString="<h2 identifier=\"" + msgHeaderID + "\""+ " date=\""+ date+ "\">"+ "<a style=\"color:#ef7b1e;"+ "font-weight:bold;"+ "text-decoration:none;\" "+ "href=\""+ contactName+ "\">";
+    chatString="<h2 identifier=\"" + msgHeaderID + "\""+ dateAttr+ ">"+ "<a style=\"color:#ef7b1e;"+ "font-weight:bold;"+ "text-decoration:none;\" "+ "href=\""+ contactName+ "\">";
     endHeaderTag="</a></h2>";
-    chatString+=dateString + contactDisplayName + " at "+ GuiUtils.formatTime(date)+ endHeaderTag+ startDivTag+ startPlainTextTag+ formatMessage(message,contentType,keyword)+ endPlainTextTag+ endDivTag;
+    chatString+=dateString + contactDisplayName + " at "+ GuiUtils.formatTime(date)+ editedAtTag+ endHeaderTag+ startDivTag+ startPlainTextTag+ formatMessage(message,contentType,keyword)+ endPlainTextTag+ endDivTag;
   }
  else   if (messageType.equals(Chat.SMS_MESSAGE)) {
     chatString="<h2 identifier=\"" + msgHeaderID + "\" date=\""+ date+ "\">";
@@ -38,9 +42,9 @@
     chatString+="SMS: " + dateString + contactName+ " at "+ GuiUtils.formatTime(date)+ endHeaderTag+ startDivTag+ startPlainTextTag+ formatMessage(message,contentType,keyword)+ endPlainTextTag+ endDivTag;
   }
  else   if (messageType.equals(Chat.OUTGOING_MESSAGE)) {
-    chatString="<h3 identifier=\"" + msgHeaderID + "\""+ " date=\""+ date+ "\">"+ "<a style=\"color:#2e538b;"+ "font-weight:bold;"+ "text-decoration:none;\" "+ "href=\""+ contactName+ "\">";
+    chatString="<h3 identifier=\"" + msgHeaderID + "\""+ dateAttr+ ">"+ "<a style=\"color:#2e538b;"+ "font-weight:bold;"+ "text-decoration:none;\" "+ "href=\""+ contactName+ "\">";
     endHeaderTag="</a></h3>";
-    chatString+=dateString + contactDisplayName + " at "+ GuiUtils.formatTime(date)+ endHeaderTag+ startDivTag+ startPlainTextTag+ formatMessage(message,contentType,keyword)+ endPlainTextTag+ endDivTag;
+    chatString+=dateString + contactDisplayName + " at "+ GuiUtils.formatTime(date)+ editedAtTag+ endHeaderTag+ startDivTag+ startPlainTextTag+ formatMessage(message,contentType,keyword)+ endPlainTextTag+ endDivTag;
   }
  else   if (messageType.equals(Chat.STATUS_MESSAGE)) {
     chatString="<h4 identifier=\"statusMessage\" date=\"" + date + "\">";
@@ -62,14 +66,14 @@
     chatString+=errorIcon + messageTitle + endHeaderTag+ "<h5>"+ message+ "</h5>";
   }
  else   if (messageType.equals(Chat.HISTORY_INCOMING_MESSAGE)) {
-    chatString="<h2 identifier=\"" + msgHeaderID + "\""+ " date=\""+ date+ "\">"+ "<a style=\"color:#ef7b1e;"+ "font-weight:bold;"+ "text-decoration:none;\" "+ "href=\""+ contactName+ "\">";
+    chatString="<h2 identifier=\"" + msgHeaderID + "\""+ dateAttr+ ">"+ "<a style=\"color:#ef7b1e;"+ "font-weight:bold;"+ "text-decoration:none;\" "+ "href=\""+ contactName+ "\">";
     endHeaderTag="</a></h2>";
-    chatString+=dateString + contactDisplayName + " at "+ GuiUtils.formatTime(date)+ endHeaderTag+ startHistoryDivTag+ startPlainTextTag+ formatMessage(message,contentType,keyword)+ endPlainTextTag+ endDivTag;
+    chatString+=dateString + contactDisplayName + " at "+ GuiUtils.formatTime(date)+ endHeaderTag+ editedAtTag+ startHistoryDivTag+ startPlainTextTag+ formatMessage(message,contentType,keyword)+ endPlainTextTag+ endDivTag;
   }
  else   if (messageType.equals(Chat.HISTORY_OUTGOING_MESSAGE)) {
-    chatString="<h3 identifier=\"" + msgHeaderID + "\""+ " date=\""+ date+ "\">"+ "<a style=\"color:#2e538b;"+ "font-weight:bold;"+ "text-decoration:none;\" "+ "href=\""+ contactName+ "\">";
+    chatString="<h3 identifier=\"" + msgHeaderID + "\""+ dateAttr+ ">"+ "<a style=\"color:#2e538b;"+ "font-weight:bold;"+ "text-decoration:none;\" "+ "href=\""+ contactName+ "\">";
     endHeaderTag="</h3>";
-    chatString+=dateString + contactDisplayName + " at "+ GuiUtils.formatTime(date)+ endHeaderTag+ startHistoryDivTag+ startPlainTextTag+ formatMessage(message,contentType,keyword)+ endPlainTextTag+ endDivTag;
+    chatString+=dateString + contactDisplayName + " at "+ GuiUtils.formatTime(date)+ editedAtTag+ endHeaderTag+ startHistoryDivTag+ startPlainTextTag+ formatMessage(message,contentType,keyword)+ endPlainTextTag+ endDivTag;
   }
   return chatString;
 }

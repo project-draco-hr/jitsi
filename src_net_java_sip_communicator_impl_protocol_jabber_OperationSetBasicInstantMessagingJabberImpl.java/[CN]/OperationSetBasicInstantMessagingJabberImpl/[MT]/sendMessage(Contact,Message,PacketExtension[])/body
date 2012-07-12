@@ -1,0 +1,37 @@
+{
+  if (!(to instanceof ContactJabberImpl))   throw new IllegalArgumentException("The specified contact is not a Jabber contact." + to);
+  try {
+    assertConnected();
+    org.jivesoftware.smack.packet.Message msg=new org.jivesoftware.smack.packet.Message();
+    String toJID=getJidForAddress(to.getAddress());
+    if (toJID == null)     toJID=to.getAddress();
+    Chat chat=obtainChatInstance(toJID);
+    msg.setPacketID(message.getMessageUID());
+    msg.setTo(toJID);
+    for (    PacketExtension ext : extensions) {
+      msg.addExtension(ext);
+    }
+    if (logger.isTraceEnabled())     logger.trace("Will send a message to:" + toJID + " chat.jid="+ chat.getParticipant()+ " chat.tid="+ chat.getThreadID());
+    MessageDeliveredEvent msgDeliveryPendingEvt=new MessageDeliveredEvent(message,to);
+    msgDeliveryPendingEvt=messageDeliveryPendingTransform(msgDeliveryPendingEvt);
+    if (msgDeliveryPendingEvt == null)     return null;
+    String content=msgDeliveryPendingEvt.getSourceMessage().getContent();
+    if (message.getContentType().equals(HTML_MIME_TYPE)) {
+      msg.setBody(Html2Text.extractText(content));
+      if (jabberProvider.isFeatureListSupported(chat.getParticipant(),HTML_NAMESPACE)) {
+        XHTMLManager.addBody(msg,OPEN_BODY_TAG + content + CLOSE_BODY_TAG);
+      }
+    }
+ else {
+      msg.setBody(content);
+    }
+    MessageEventManager.addNotificationsRequests(msg,true,false,false,true);
+    chat.sendMessage(msg);
+    MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(message,to);
+    return msgDeliveredEvt;
+  }
+ catch (  XMPPException ex) {
+    logger.error("message not sent",ex);
+    return null;
+  }
+}

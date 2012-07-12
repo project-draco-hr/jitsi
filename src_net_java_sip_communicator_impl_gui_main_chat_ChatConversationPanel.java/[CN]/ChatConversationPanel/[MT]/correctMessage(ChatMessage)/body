@@ -1,0 +1,40 @@
+{
+  String correctedUID=chatMessage.getCorrectedMessageUID();
+  Element root=document.getDefaultRootElement();
+  Element e=document.getElement(root,Attribute.ID,correctedUID);
+  if (e == null) {
+    logger.warn("Could not find message with ID " + correctedUID);
+    return;
+  }
+  int len=e.getEndOffset() - e.getStartOffset();
+  StringBuilder newContents=new StringBuilder();
+  String bgColor=GuiActivator.getResources().getColorString("service.gui.CHAT_EDIT_MESSAGE_BACKGROUND");
+  newContents.append("<div identifier='message' id='");
+  newContents.append(chatMessage.getMessageUID());
+  newContents.append("' bgcolor='");
+  newContents.append(bgColor);
+  newContents.append("'>");
+  if (chatMessage.getContentType().equals(TEXT_CONTENT_TYPE)) {
+    newContents.append(START_PLAINTEXT_TAG);
+    newContents.append(chatMessage.getMessage());
+    newContents.append(END_PLAINTEXT_TAG);
+  }
+ else {
+    newContents.append(chatMessage.getMessage());
+  }
+  newContents.append("</div>");
+  Element header=document.getElement(root,Attribute.ID,correctedUID + "-editedAt");
+  try {
+    if (header != null) {
+      String newHeaderContents=generateEditedAtTag(chatMessage.getMessageUID(),chatMessage.getDate());
+      document.setOuterHTML(header,newHeaderContents);
+    }
+    document.setOuterHTML(e,newContents.toString());
+  }
+ catch (  BadLocationException ex) {
+    logger.error("Could not replace chat message",ex);
+  }
+catch (  IOException ex) {
+    logger.error("Could not replace chat message",ex);
+  }
+}
