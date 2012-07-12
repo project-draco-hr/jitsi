@@ -25,10 +25,25 @@
     }
   }
 );
+  serverAutoCheckBox.addActionListener(new ActionListener(){
+    /** 
+ * Invoked when an action occurs.
+ */
+    public void actionPerformed(    ActionEvent e){
+      enablesServerAutoConfigure(serverAutoCheckBox.isSelected());
+    }
+  }
+);
+  serverAutoCheckBox.setSelected(parentForm.getRegistration().isServerOverridden());
+  enablesServerAutoConfigure(serverAutoCheckBox.isSelected());
   labelsAdvOpPanel.add(serverLabel);
   labelsAdvOpPanel.add(portLabel);
   valuesAdvOpPanel.add(serverField);
   valuesAdvOpPanel.add(portField);
+  serverOpPanel.add(serverAutoCheckBox,BorderLayout.NORTH);
+  serverOpPanel.add(labelsAdvOpPanel,BorderLayout.WEST);
+  serverOpPanel.add(valuesAdvOpPanel,BorderLayout.CENTER);
+  serverOpPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("plugin.jabberaccregwizz.SERVER_OPTIONS")));
   JPanel checkBoxesPanel=new TransparentPanel(new GridLayout(0,1,10,10));
   checkBoxesPanel.add(gmailNotificationsBox);
   checkBoxesPanel.add(googleContactsBox);
@@ -46,8 +61,7 @@
   resourcePanel.add(resSubPanelValue,BorderLayout.CENTER);
   googleContactsBox.setSelected(true);
   advancedOpPanel.add(checkBoxesPanel,BorderLayout.NORTH);
-  advancedOpPanel.add(labelsAdvOpPanel,BorderLayout.WEST);
-  advancedOpPanel.add(valuesAdvOpPanel,BorderLayout.CENTER);
+  advancedOpPanel.add(serverOpPanel,BorderLayout.CENTER);
   advancedOpPanel.add(resourcePanel,BorderLayout.SOUTH);
   if (autoGenerateResource.isSelected()) {
     resourceField.setEnabled(false);
@@ -61,6 +75,6 @@
   mainPanel.add(advancedOpPanel);
   mainPanel.add(createDTMFPanel());
   String serverAddress=parentForm.getServerAddress();
-  if (serverAddress != null)   serverField.setText(serverAddress);
+  if (!StringUtils.isNullOrEmpty(serverAddress))   serverField.setText(serverAddress);
   add(mainPanel,BorderLayout.NORTH);
 }
