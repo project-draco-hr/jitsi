@@ -1,0 +1,95 @@
+{
+  Class<? extends OperationSet> opSetClass;
+switch (conversationType) {
+case CONVERSATION_TYPE_AUDIO:
+case CONVERSATION_TYPE_PHONE:
+case CONVERSATION_TYPE_PSTN:
+    opSetClass=OperationSetBasicTelephony.class;
+  if ((conversationData != null) && (conversationData.length() != 0)) {
+    if (logger.isTraceEnabled()) {
+      logger.trace("conversationData = \"" + conversationData + "\"");
+    }
+    if (conversationData.startsWith("<")) {
+      try {
+        Document document=XMLUtils.createDocument(conversationData);
+        Element documentElement=document.getDocumentElement();
+        if ("TelURIs".equalsIgnoreCase(documentElement.getTagName())) {
+          NodeList childNodes=documentElement.getChildNodes();
+          if (childNodes != null) {
+            int childNodeCount=childNodes.getLength();
+            List<String> phoneNumbers=new ArrayList<String>(childNodeCount);
+            for (int childNodeIndex=0; childNodeIndex < childNodeCount; childNodeIndex++) {
+              Node childNode=childNodes.item(childNodeIndex);
+              if (childNode.getNodeType() == Node.ELEMENT_NODE) {
+                phoneNumbers.add(childNode.getTextContent());
+              }
+            }
+            int count=participants.length;
+            if (phoneNumbers.size() == count) {
+              for (int i=0; i < count; i++) {
+                String phoneNumber=phoneNumbers.get(i);
+                if ((phoneNumber != null) && (phoneNumber.length() != 0)) {
+                  if (phoneNumber.toLowerCase().startsWith("tel:")) {
+                    phoneNumber=phoneNumber.substring(4);
+                  }
+                  participants[i]=phoneNumber;
+                }
+              }
+            }
+          }
+        }
+      }
+ catch (      Exception e) {
+        logger.error("Failed to parse" + " IMessengerAdvanced::StartConversation" + " vConversationData: "+ conversationData,e);
+      }
+    }
+ else {
+      if (participants.length == 1)       participants[0]=conversationData;
+    }
+  }
+break;
+case CONVERSATION_TYPE_IM:
+opSetClass=OperationSetBasicInstantMessaging.class;
+break;
+default :
+throw new UnsupportedOperationException();
+}
+List<String> contactList=new ArrayList<String>();
+for (String participant : participants) {
+List<Contact> participantContacts=findContactsBySigninName(participant,opSetClass,1);
+if (participantContacts.size() > 0) {
+contactList.add(getSigninName(participantContacts.get(0),null));
+}
+ else if (opSetClass.equals(OperationSetBasicTelephony.class)) {
+participantContacts=findContactsBySigninName(participant,null,1);
+if (participantContacts.size() > 0) {
+contactList.add(getSigninName(participantContacts.get(0),null));
+}
+ else {
+contactList.add(participant);
+}
+}
+}
+final String[] contactArray=contactList.toArray(new String[contactList.size()]);
+SwingUtilities.invokeLater(new Runnable(){
+public void run(){
+BundleContext bundleContext=Messenger.bundleContext;
+if (bundleContext != null) {
+UIService uiService=ServiceUtils.getService(bundleContext,UIService.class);
+if (uiService != null) {
+switch (conversationType) {
+case CONVERSATION_TYPE_AUDIO:
+case CONVERSATION_TYPE_PHONE:
+case CONVERSATION_TYPE_PSTN:
+uiService.createCall(contactArray);
+break;
+case CONVERSATION_TYPE_IM:
+uiService.startChat(contactArray);
+break;
+}
+}
+}
+}
+}
+);
+}
