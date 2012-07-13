@@ -1,10 +1,13 @@
 {
-  if (logger.isInfoEnabled())   logger.info("Try to open port on NAT if any");
+  logger.info("Send NAT hole punch packets");
+  int packetCount=ProtocolMediaActivator.getConfigurationService().getInt(HOLE_PUNCH_PKT_COUNT_PROPERTY,DEFAULT_HOLE_PUNCH_PKT_COUNT);
+  if (packetCount < 0)   packetCount=DEFAULT_HOLE_PUNCH_PKT_COUNT;
   try {
     StreamConnector connector=getStreamConnector(type);
 synchronized (connector) {
-      if (connector.getProtocol() != StreamConnector.Protocol.TCP) {
-        DatagramSocket socket;
+      if (connector.getProtocol() == StreamConnector.Protocol.TCP)       return;
+      DatagramSocket socket;
+      for (int i=0; i < packetCount; i++) {
         if ((socket=connector.getDataSocket()) != null) {
           socket.send(new DatagramPacket(new byte[0],0,target.getDataAddress().getAddress(),target.getDataAddress().getPort()));
         }
