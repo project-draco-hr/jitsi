@@ -1,5 +1,13 @@
 {
-  if (OsDependentActivator.getUIService() == null)   return;
+  UIService uiService=OsDependentActivator.getUIService();
+  if (uiService == null) {
+    try {
+      OsDependentActivator.bundleContext.addServiceListener(new DelayedInitSystrayServiceListener(),'(' + Constants.OBJECTCLASS + '='+ UIService.class.getName()+ ')');
+    }
+ catch (    InvalidSyntaxException ise) {
+    }
+    return;
+  }
   menu=TrayMenuFactory.createTrayMenu(this,systray.isSwing());
   boolean isMac=OSUtils.IS_MAC;
   if (OSUtils.IS_WINDOWS) {
@@ -37,8 +45,8 @@
   trayIcon.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
       UIService uiService=OsDependentActivator.getUIService();
-      ExportedWindow win=uiService.getExportedWindow(ExportedWindow.MAIN_WINDOW);
-      boolean setIsVisible=!win.isVisible();
+      ExportedWindow mainWindow=uiService.getExportedWindow(ExportedWindow.MAIN_WINDOW);
+      boolean setIsVisible=!mainWindow.isVisible();
       uiService.setVisible(setIsVisible);
     }
   }
@@ -61,11 +69,11 @@
     }
 );
   }
-  PopupMessageHandler pph=null;
+  PopupMessageHandler pmh=null;
   if (!isMac) {
-    pph=new PopupMessageHandlerTrayIconImpl(trayIcon);
-    popupHandlerSet.put(pph.getClass().getName(),pph);
-    OsDependentActivator.bundleContext.registerService(PopupMessageHandler.class.getName(),pph,null);
+    pmh=new PopupMessageHandlerTrayIconImpl(trayIcon);
+    popupHandlerSet.put(pmh.getClass().getName(),pmh);
+    OsDependentActivator.bundleContext.registerService(PopupMessageHandler.class.getName(),pmh,null);
   }
   try {
     OsDependentActivator.bundleContext.addServiceListener(new ServiceListenerImpl(),"(objectclass=" + PopupMessageHandler.class.getName() + ")");
@@ -77,29 +85,28 @@
   try {
     handlerRefs=OsDependentActivator.bundleContext.getServiceReferences(PopupMessageHandler.class.getName(),null);
   }
- catch (  InvalidSyntaxException ex) {
-    logger.error("Error while retrieving service refs",ex);
+ catch (  InvalidSyntaxException ise) {
+    logger.error("Error while retrieving service refs",ise);
   }
   if (handlerRefs != null) {
-    String configuredHandler=(String)configService.getProperty("systray.POPUP_HANDLER");
-    for (int i=0; i < handlerRefs.length; i++) {
-      PopupMessageHandler handler=(PopupMessageHandler)OsDependentActivator.bundleContext.getService(handlerRefs[i]);
+    String configuredHandler=(String)cfg.getProperty("systray.POPUP_HANDLER");
+    for (    ServiceReference handlerRef : handlerRefs) {
+      PopupMessageHandler handler=(PopupMessageHandler)OsDependentActivator.bundleContext.getService(handlerRef);
       String handlerName=handler.getClass().getName();
       if (!popupHandlerSet.containsKey(handlerName)) {
         popupHandlerSet.put(handlerName,handler);
-        if (logger.isInfoEnabled())         logger.info("added the following popup handler : " + handler);
-        if (configuredHandler != null && configuredHandler.equals(handler.getClass().getName())) {
+        if (logger.isInfoEnabled()) {
+          logger.info("added the following popup handler : " + handler);
+        }
+        if ((configuredHandler != null) && configuredHandler.equals(handler.getClass().getName())) {
           setActivePopupMessageHandler(handler);
         }
       }
     }
-    if (configuredHandler == null) {
-      selectBestPopupMessageHandler();
-    }
+    if (configuredHandler == null)     selectBestPopupMessageHandler();
   }
-  if (activePopupHandler == null && pph != null) {
-    setActivePopupMessageHandler(pph);
-  }
+  if ((activePopupHandler == null) && (pmh != null))   setActivePopupMessageHandler(pmh);
   systray.addTrayIcon(trayIcon);
   initialized=true;
+  uiService.setExitOnMainWindowClose(false);
 }

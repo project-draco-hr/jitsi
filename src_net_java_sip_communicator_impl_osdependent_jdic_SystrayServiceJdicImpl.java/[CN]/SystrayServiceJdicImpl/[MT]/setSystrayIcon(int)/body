@@ -1,57 +1,61 @@
 {
   if (!checkInitialized())   return;
   boolean isMac=OSUtils.IS_MAC;
-  ImageIcon toChangeSystrayIcon=null;
-  if (imageType == SystrayService.SC_IMG_TYPE) {
-    toChangeSystrayIcon=(isMac && TrayMenuFactory.isVisible(menu)) ? logoIconWhite : logoIcon;
-  }
- else   if (imageType == SystrayService.SC_IMG_OFFLINE_TYPE) {
-    if (!isMac)     toChangeSystrayIcon=logoIconOffline;
-  }
- else   if (imageType == SystrayService.SC_IMG_AWAY_TYPE) {
-    if (!isMac)     toChangeSystrayIcon=logoIconAway;
-  }
- else   if (imageType == SystrayService.SC_IMG_FFC_TYPE) {
-    if (!isMac)     toChangeSystrayIcon=logoIconFFC;
-  }
- else   if (imageType == SystrayService.SC_IMG_DND_TYPE) {
-    if (!isMac)     toChangeSystrayIcon=logoIconDND;
-  }
- else   if (imageType == SystrayService.ENVELOPE_IMG_TYPE) {
-    toChangeSystrayIcon=(isMac && TrayMenuFactory.isVisible(menu)) ? envelopeIconWhite : envelopeIcon;
-  }
-  if (toChangeSystrayIcon != null) {
-    this.trayIcon.setIcon(toChangeSystrayIcon);
-    this.currentIcon=toChangeSystrayIcon;
-  }
-  if (isMac) {
-    URL toChangeDockIcon=null;
+  ImageIcon systrayIconToSet=null;
 switch (imageType) {
 case SystrayService.SC_IMG_TYPE:
-      toChangeDockIcon=dockIconOnline;
-    break;
+    systrayIconToSet=(isMac && TrayMenuFactory.isVisible(menu)) ? logoIconWhite : logoIcon;
+  break;
 case SystrayService.SC_IMG_OFFLINE_TYPE:
-  toChangeDockIcon=dockIconOffline;
+if (!isMac) systrayIconToSet=logoIconOffline;
 break;
 case SystrayService.SC_IMG_AWAY_TYPE:
-toChangeDockIcon=dockIconAway;
+if (!isMac) systrayIconToSet=logoIconAway;
 break;
 case SystrayService.SC_IMG_FFC_TYPE:
-toChangeDockIcon=dockIconFFC;
+if (!isMac) systrayIconToSet=logoIconFFC;
 break;
 case SystrayService.SC_IMG_DND_TYPE:
-toChangeDockIcon=dockIconDND;
+if (!isMac) systrayIconToSet=logoIconDND;
+break;
+case SystrayService.ENVELOPE_IMG_TYPE:
+systrayIconToSet=(isMac && TrayMenuFactory.isVisible(menu)) ? envelopeIconWhite : envelopeIcon;
+break;
+}
+if (systrayIconToSet != null) {
+this.trayIcon.setIcon(systrayIconToSet);
+this.currentIcon=systrayIconToSet;
+}
+if (isMac) {
+URL dockIconURLToSet;
+switch (imageType) {
+case SystrayService.SC_IMG_TYPE:
+dockIconURLToSet=dockIconOnline;
+break;
+case SystrayService.SC_IMG_OFFLINE_TYPE:
+dockIconURLToSet=dockIconOffline;
+break;
+case SystrayService.SC_IMG_AWAY_TYPE:
+dockIconURLToSet=dockIconAway;
+break;
+case SystrayService.SC_IMG_FFC_TYPE:
+dockIconURLToSet=dockIconFFC;
+break;
+case SystrayService.SC_IMG_DND_TYPE:
+dockIconURLToSet=dockIconDND;
+break;
+default :
+dockIconURLToSet=null;
 break;
 }
 try {
-if (OSUtils.IS_MAC) {
-if (originalDockImage == null) originalDockImage=Application.getApplication().getDockIconImage();
-if (toChangeDockIcon != null) {
-Application.getApplication().setDockIconImage(Toolkit.getDefaultToolkit().getImage(toChangeDockIcon));
+Application application=Application.getApplication();
+if (originalDockImage == null) originalDockImage=application.getDockIconImage();
+if (dockIconURLToSet != null) {
+application.setDockIconImage(Toolkit.getDefaultToolkit().getImage(dockIconURLToSet));
 }
- else {
-if (originalDockImage != null) Application.getApplication().setDockIconImage(originalDockImage);
-}
+ else if (originalDockImage != null) {
+application.setDockIconImage(originalDockImage);
 }
 }
  catch (Exception e) {
