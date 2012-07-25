@@ -55,18 +55,28 @@ default :
 throw new UnsupportedOperationException();
 }
 List<String> contactList=new ArrayList<String>();
+ConfigurationService cfg=ServiceUtils.getService(bundleContext,ConfigurationService.class);
+boolean createCallByPhoneNumber=(cfg != null) && cfg.getBoolean(PNAME_CREATE_CALL_BY_PHONE_NUMBER,false);
 for (String participant : participants) {
 List<Contact> participantContacts=findContactsBySigninName(participant,opSetClass,1);
 if (participantContacts.size() > 0) {
 contactList.add(getSigninName(participantContacts.get(0),null));
 }
  else if (opSetClass.equals(OperationSetBasicTelephony.class)) {
+if (createCallByPhoneNumber) {
+Set<PhoneNumberDetail> participantPhoneNumbers=findPhoneNumbersBySigninName(participant,1);
+if (participantPhoneNumbers.size() > 0) {
+contactList.add(participantPhoneNumbers.iterator().next().getNumber());
+}
+}
+ else {
 participantContacts=findContactsBySigninName(participant,null,1);
 if (participantContacts.size() > 0) {
 contactList.add(getSigninName(participantContacts.get(0),null));
 }
  else {
 contactList.add(participant);
+}
 }
 }
 }
