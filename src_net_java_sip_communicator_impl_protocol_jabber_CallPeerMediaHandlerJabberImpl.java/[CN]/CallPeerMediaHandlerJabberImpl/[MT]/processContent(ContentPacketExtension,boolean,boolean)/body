@@ -19,6 +19,8 @@
   if (supportedFormats.isEmpty()) {
     ProtocolProviderServiceJabberImpl.throwOperationFailedException("Remote party sent an invalid Jingle answer.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
   }
+  addZRTPAdvertisedEncryptions(true,description,mediaType);
+  addSDESAdvertisedEncryptions(true,description,mediaType);
   StreamConnector connector=transportManager.getStreamConnector(mediaType);
   MediaDirection remoteDirection=JingleUtils.getDirection(content,getPeer().isInitiator());
   MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
@@ -48,13 +50,6 @@
       receiveQualityPreset=qualityControls.getRemoteReceivePreset();
       sendQualityPreset=qualityControls.getRemoteSendMaxPreset();
       supportedFormats=(dev == null) ? null : intersectFormats(supportedFormats,dev.getSupportedFormats(sendQualityPreset,receiveQualityPreset));
-    }
-  }
-  EncryptionPacketExtension encryptionPacketExtension=description.getFirstChildOfType(EncryptionPacketExtension.class);
-  if (encryptionPacketExtension != null) {
-    ZrtpHashPacketExtension zrtpHashPacketExtension=encryptionPacketExtension.getFirstChildOfType(ZrtpHashPacketExtension.class);
-    if (zrtpHashPacketExtension != null && zrtpHashPacketExtension.getValue() != null) {
-      addAdvertisedEncryptionMethod(SrtpControlType.ZRTP);
     }
   }
   initStream(content.getName(),connector,dev,supportedFormats.get(0),target,direction,rtpExtensions,masterStream);

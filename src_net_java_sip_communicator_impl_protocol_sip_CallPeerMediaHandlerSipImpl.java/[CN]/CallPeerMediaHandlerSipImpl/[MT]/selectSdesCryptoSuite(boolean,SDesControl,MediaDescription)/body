@@ -1,0 +1,22 @@
+{
+  @SuppressWarnings("unchecked") Vector<Attribute> attrs=mediaDescription.getAttributes(true);
+  Vector<SrtpCryptoAttribute> peerAttributes=new Vector<SrtpCryptoAttribute>(attrs.size());
+  Attribute a;
+  for (int i=0; i < attrs.size(); ++i) {
+    try {
+      a=attrs.get(i);
+      if (a.getName().equals("crypto")) {
+        peerAttributes.add(SrtpCryptoAttribute.create(a.getValue()));
+      }
+    }
+ catch (    SdpParseException e) {
+      logger.error("received an unparsable sdp attribute",e);
+    }
+  }
+  if (isInitiator) {
+    return sDesControl.initiatorSelectAttribute(peerAttributes);
+  }
+ else {
+    return sDesControl.responderSelectAttribute(peerAttributes);
+  }
+}

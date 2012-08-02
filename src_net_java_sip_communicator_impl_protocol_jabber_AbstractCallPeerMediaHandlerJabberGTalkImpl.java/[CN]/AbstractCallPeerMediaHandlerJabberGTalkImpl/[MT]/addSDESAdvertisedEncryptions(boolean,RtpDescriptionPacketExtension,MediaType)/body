@@ -1,0 +1,45 @@
+{
+  EncryptionPacketExtension encryptionPacketExtension=description.getFirstChildOfType(EncryptionPacketExtension.class);
+  if (encryptionPacketExtension != null) {
+    AccountID accountID=getPeer().getProtocolProvider().getAccountID();
+    if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.SDES_ENABLED,false) && accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true)) {
+      Map<MediaTypeSrtpControl,SrtpControl> srtpControls=getSrtpControls();
+      MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.SDES);
+      SrtpControl control=srtpControls.get(key);
+      if (control == null) {
+        control=JabberActivator.getMediaService().createSDesControl();
+        srtpControls.put(key,control);
+      }
+      SDesControl tmpSDesControl=(SDesControl)control;
+      SrtpCryptoAttribute selectedSdes=selectSdesCryptoSuite(isInitiator,tmpSDesControl,encryptionPacketExtension);
+      if (selectedSdes != null) {
+        Iterator<Map.Entry<MediaTypeSrtpControl,SrtpControl>> iter=srtpControls.entrySet().iterator();
+        while (iter.hasNext()) {
+          Map.Entry<MediaTypeSrtpControl,SrtpControl> entry=iter.next();
+          MediaTypeSrtpControl mtsc=entry.getKey();
+          if ((mtsc.mediaType == mediaType) && (mtsc.srtpControlType != SrtpControlType.SDES)) {
+            entry.getValue().cleanup();
+            iter.remove();
+          }
+        }
+        addAdvertisedEncryptionMethod(SrtpControlType.SDES);
+      }
+ else {
+        control.cleanup();
+        srtpControls.remove(key);
+      }
+    }
+  }
+ else   if (isInitiator) {
+    AccountID accountID=getPeer().getProtocolProvider().getAccountID();
+    if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.SDES_ENABLED,false) && accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true)) {
+      Map<MediaTypeSrtpControl,SrtpControl> srtpControls=getSrtpControls();
+      MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.SDES);
+      SrtpControl control=srtpControls.get(key);
+      if (control != null) {
+        control.cleanup();
+        srtpControls.remove(key);
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 {
+  this.remoteDescription=offer;
   List<PayloadTypePacketExtension> payloadTypes=offer.getPayloadTypes();
   boolean atLeastOneValidDescription=false;
   List<PayloadTypePacketExtension> answer=new ArrayList<PayloadTypePacketExtension>();
@@ -13,18 +14,10 @@
       isVideo=true;
     }
   }
-  EncryptionPacketExtension encryptionPacketExtension=offer.getFirstChildOfType(EncryptionPacketExtension.class);
-  if (encryptionPacketExtension != null) {
-    ZrtpHashPacketExtension zrtpHashPacketExtension=encryptionPacketExtension.getFirstChildOfType(ZrtpHashPacketExtension.class);
-    if (zrtpHashPacketExtension != null && zrtpHashPacketExtension.getValue() != null) {
-      addAdvertisedEncryptionMethod(SrtpControlType.ZRTP);
-    }
-  }
   for (  MediaType mediaType : MediaType.values()) {
     if (!(isAudio && mediaType == MediaType.AUDIO) && !(isVideo && mediaType == MediaType.VIDEO)) {
       continue;
     }
-    remoteContentMap.put(mediaType.toString(),payloadTypes);
     MediaDevice dev=getDefaultDevice(mediaType);
     MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
     devDirection=devDirection.and(getDirectionUserPreference(mediaType));

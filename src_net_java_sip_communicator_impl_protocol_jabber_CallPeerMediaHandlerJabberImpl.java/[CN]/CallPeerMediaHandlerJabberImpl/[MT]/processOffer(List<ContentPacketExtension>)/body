@@ -30,24 +30,14 @@
       continue;
     }
     ContentPacketExtension ourContent=JingleUtils.createDescription(content.getCreator(),content.getName(),JingleUtils.getSenders(direction,!getPeer().isInitiator()),mutuallySupportedFormats,rtpExtensions,getDynamicPayloadTypes(),getRtpExtensionsRegistry());
-    if (getPeer().getCall().isSipZrtpAttribute()) {
-      Map<MediaTypeSrtpControl,SrtpControl> srtpControls=getSrtpControls();
-      MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.ZRTP);
-      SrtpControl control=srtpControls.get(key);
-      if (control == null) {
-        control=JabberActivator.getMediaService().createZrtpControl();
-        srtpControls.put(key,control);
-      }
-      String helloHash[]=((ZrtpControl)control).getHelloHashSep();
-      if (helloHash != null && helloHash[1].length() > 0) {
-        EncryptionPacketExtension encryption=new EncryptionPacketExtension();
-        ZrtpHashPacketExtension hash=new ZrtpHashPacketExtension();
-        hash.setVersion(helloHash[0]);
-        hash.setValue(helloHash[1]);
-        encryption.addChildExtension(hash);
-        RtpDescriptionPacketExtension rtpDescription=JingleUtils.getRtpDescription(ourContent);
-        rtpDescription.setEncryption(encryption);
-      }
+    RtpDescriptionPacketExtension localDescription=JingleUtils.getRtpDescription(ourContent);
+    boolean isZRTPAddedToDescription=setZrtpEncryptionToDescription(mediaType,localDescription,description);
+    if (isZRTPAddedToDescription) {
+      addZRTPAdvertisedEncryptions(false,description,mediaType);
+    }
+ else {
+      addSDESAdvertisedEncryptions(false,description,mediaType);
+      setSDesEncryptionToDescription(mediaType,localDescription,description);
     }
     if (content.getChildExtensionsOfType(InputEvtPacketExtension.class) != null) {
       ourContent.addChildExtension(new InputEvtPacketExtension());
@@ -55,13 +45,6 @@
     answer.add(ourContent);
     localContentMap.put(content.getName(),ourContent);
     atLeastOneValidDescription=true;
-    EncryptionPacketExtension encryptionPacketExtension=description.getFirstChildOfType(EncryptionPacketExtension.class);
-    if (encryptionPacketExtension != null) {
-      ZrtpHashPacketExtension zrtpHashPacketExtension=encryptionPacketExtension.getFirstChildOfType(ZrtpHashPacketExtension.class);
-      if (zrtpHashPacketExtension != null && zrtpHashPacketExtension.getValue() != null) {
-        addAdvertisedEncryptionMethod(SrtpControlType.ZRTP);
-      }
-    }
   }
   if (!atLeastOneValidDescription) {
     ProtocolProviderServiceJabberImpl.throwOperationFailedException("Offer contained no media formats" + " or no valid media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);

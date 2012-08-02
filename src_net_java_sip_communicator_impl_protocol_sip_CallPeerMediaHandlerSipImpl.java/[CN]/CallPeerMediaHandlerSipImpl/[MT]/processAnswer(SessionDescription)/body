@@ -2,8 +2,6 @@
   List<MediaDescription> remoteDescriptions=SdpUtils.extractMediaDescriptions(answer);
   this.setCallInfoURL(SdpUtils.getCallInfoURL(answer));
   boolean masterStreamSet=false;
-  boolean hasZrtp=false;
-  boolean hasSdes=false;
   List<MediaType> seenMediaTypes=new ArrayList<MediaType>();
   for (  MediaDescription mediaDescription : remoteDescriptions) {
     MediaType mediaType;
@@ -46,22 +44,10 @@
     MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.SDES);
     SrtpControl scontrol=srtpControls.get(key);
     if (scontrol != null) {
-      List<String> peerAttributes=new LinkedList<String>();
-      @SuppressWarnings("unchecked") Vector<Attribute> attrs=mediaDescription.getAttributes(true);
-      for (      Attribute a : attrs) {
-        try {
-          if (a.getName().equals("crypto")) {
-            peerAttributes.add(a.getValue());
-          }
-        }
- catch (        SdpParseException e) {
-          logger.error("received an unparsable sdp attribute",e);
-        }
-      }
-      if (!((SDesControl)scontrol).initiatorSelectAttribute(peerAttributes)) {
+      if (selectSdesCryptoSuite(true,(SDesControl)scontrol,mediaDescription) == null) {
         scontrol.cleanup();
         srtpControls.remove(key);
-        if (peerAttributes.size() > 0)         logger.warn("Received unsupported sdes crypto attribute: " + peerAttributes);
+        logger.warn("Received unsupported sdes crypto attribute.");
       }
  else {
         Iterator<Map.Entry<MediaTypeSrtpControl,SrtpControl>> iter=srtpControls.entrySet().iterator();
@@ -73,7 +59,7 @@
             iter.remove();
           }
         }
-        hasSdes=true;
+        addAdvertisedEncryptionMethod(SrtpControlType.SDES);
       }
     }
     boolean masterStream=false;
@@ -90,13 +76,13 @@
       }
     }
     try {
-      hasZrtp=mediaDescription.getAttribute(SdpUtils.ZRTP_HASH_ATTR) != null;
+      if (mediaDescription.getAttribute(SdpUtils.ZRTP_HASH_ATTR) != null) {
+        addAdvertisedEncryptionMethod(SrtpControlType.ZRTP);
+      }
     }
  catch (    SdpParseException e) {
       logger.error("received an unparsable sdp attribute",e);
     }
     initStream(connector,dev,supportedFormats.get(0),target,direction,rtpExtensions,masterStream);
   }
-  if (hasSdes)   addAdvertisedEncryptionMethod(SrtpControlType.SDES);
-  if (hasZrtp)   addAdvertisedEncryptionMethod(SrtpControlType.ZRTP);
 }
