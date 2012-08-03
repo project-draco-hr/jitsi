@@ -4,7 +4,7 @@
       long idleTime=0;
       if (idleChangeListeners.size() > 0) {
         idleTime=SystemActivityNotifications.getLastInput();
-        if (idleTime < idleStateCheckDelay && listenersInIdleState.size() > 0) {
+        if ((idleTime < idleStateCheckDelay) && (listenersInIdleState.size() > 0)) {
           for (          SystemActivityChangeListener l : listenersInIdleState) {
             fireSystemIdleEndEvent(l);
           }
@@ -12,8 +12,7 @@
         }
         for (        Map.Entry<SystemActivityChangeListener,Long> entry : idleChangeListeners.entrySet()) {
           SystemActivityChangeListener listener=entry.getKey();
-          if (listenersInIdleState.contains(listener))           continue;
-          if (entry.getValue() <= idleTime) {
+          if (!listenersInIdleState.contains(listener) && (entry.getValue() <= idleTime)) {
             fireSystemIdleEvent(listener);
             listenersInIdleState.add(listener);
           }
