@@ -4,6 +4,13 @@
   this.remove(callVideoButton);
   this.remove(desktopSharingButton);
   this.remove(addContactButton);
+  if (customActionButtons != null && customActionButtons.size() > 0) {
+    Iterator<JButton> buttonsIter=customActionButtons.iterator();
+    while (buttonsIter.hasNext()) {
+      remove(buttonsIter.next());
+    }
+    customActionButtons.clear();
+  }
   if (!isSelected)   return;
   int statusMessageLabelHeight=0;
   if (displayDetailsLabel.getText().length() > 0)   statusMessageLabelHeight=20;
@@ -11,6 +18,7 @@
   UIContactDetail imContact=null;
   if (uiContact.getDescriptor() instanceof MetaContact)   imContact=uiContact.getDefaultContactDetail(OperationSetBasicInstantMessaging.class);
   int x=(statusIcon == null ? 0 : statusIcon.getIconWidth()) + (statusLabel == null ? 0 : statusLabel.getIconTextGap()) + LEFT_BORDER+ STATUS_RIGHT_BORDER;
+  constraints.gridx=0;
   if (imContact != null) {
     constraints.anchor=GridBagConstraints.WEST;
     constraints.fill=GridBagConstraints.NONE;
@@ -111,6 +119,10 @@
     this.add(addContactButton,constraints);
     addContactButton.setBounds(x,nameLabel.getHeight() + statusMessageLabelHeight,28,28);
     x+=addContactButton.getWidth();
+  }
+  Collection<SIPCommButton> contactActions=uiContact.getContactCustomActionButtons();
+  if (contactActions != null) {
+    initContactActionButtons(contactActions,constraints.gridx,x);
   }
   this.setBounds(0,0,tree.getWidth(),getPreferredSize().height);
 }

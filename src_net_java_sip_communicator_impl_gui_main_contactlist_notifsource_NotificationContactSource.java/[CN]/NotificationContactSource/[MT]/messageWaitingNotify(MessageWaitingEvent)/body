@@ -1,9 +1,27 @@
 {
-  MessageType type=evt.getMessageType();
-  NotificationGroup group=groups.get(type);
-  if (group == null) {
-    group=new NotificationGroup(type);
-    groups.put(type,group);
+  Iterator<NotificationMessage> messages=evt.getMessages();
+  if (messages != null) {
+    while (messages.hasNext()) {
+      NotificationMessage message=messages.next();
+      String messageGroupName=message.getMessageGroup();
+      NotificationGroup messageGroup=groups.get(messageGroupName);
+      if (messageGroup == null) {
+        messageGroup=new NotificationGroup(messageGroupName);
+        groups.put(messageGroupName,messageGroup);
+      }
+      messageGroup.messageWaitingNotify(evt);
+    }
   }
-  group.messageWaitingNotify(evt);
+ else {
+    MessageType type=evt.getMessageType();
+    NotificationGroup group=groups.get(type.toString());
+    if (group == null) {
+      String displayName;
+      if (type.equals(MessageType.VOICE))       displayName=GuiActivator.getResources().getI18NString("service.gui.VOICEMAIL_TITLE");
+ else       displayName=type.toString();
+      group=new NotificationGroup(displayName);
+      groups.put(type.toString(),group);
+    }
+    group.messageWaitingNotify(evt);
+  }
 }

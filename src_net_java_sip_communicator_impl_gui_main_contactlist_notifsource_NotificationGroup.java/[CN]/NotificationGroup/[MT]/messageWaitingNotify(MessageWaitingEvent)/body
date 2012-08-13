@@ -1,22 +1,36 @@
 {
-  ProtocolProviderService protocolProvider=event.getSourceProvider();
-  NotificationContact contact=contacts.get(protocolProvider);
-  TreeContactList contactList=GuiActivator.getContactList();
-  boolean isNew=false;
-  if (contact == null) {
-    contact=new NotificationContact(this,protocolProvider);
-    contacts.put(protocolProvider,contact);
-    isNew=true;
+  Iterator<NotificationMessage> messages=event.getMessages();
+  if (messages != null) {
+    while (messages.hasNext()) {
+      NotificationMessage message=messages.next();
+      if (message.getMessageGroup().equals(groupName)) {
+        String messageIdentifier=message.getFromContact() + message.getMessageDetails();
+        NotificationContact contact=contacts.get(messageIdentifier);
+        boolean isNew=false;
+        if (contact == null) {
+          contact=new NotificationContact(this,event.getSourceProvider(),event.getMessageType(),message);
+          contacts.put(messageIdentifier,contact);
+          isNew=true;
+        }
+        contact.setMessageAccount(event.getAccount());
+        contact.setUnreadMessageCount(event.getUnreadMessages());
+        contact.setReadMessageCount(event.getReadMessages());
+        addNotificationContact(contact,isNew);
+      }
+    }
   }
-  contact.setMessageAccount(event.getAccount());
-  contact.setUnreadMessageCount(event.getUnreadMessages());
-  contact.setReadMessageCount(event.getReadMessages());
-  if (contactList.getCurrentFilter().isMatching(contact)) {
-    if (isNew)     contactList.addContact(contact,this,true,true);
- else     contactList.refreshContact(contact);
-  }
-  if (contact.getUnreadMessageCount() > 0) {
-    if (uiNotificationGroup == null)     uiNotificationGroup=new UINotificationGroup(getDisplayName(),GuiActivator.getResources().getI18NString("service.gui.VOICEMAIL_TOOLTIP"));
-    UINotificationManager.addNotification(new UINotification(contact.getDisplayName() + " : " + contact.getDisplayDetails(),new Date(),uiNotificationGroup));
+ else {
+    ProtocolProviderService protocolProvider=event.getSourceProvider();
+    NotificationContact contact=contacts.get(protocolProvider.toString());
+    boolean isNew=false;
+    if (contact == null) {
+      contact=new NotificationContact(this,protocolProvider,event.getMessageType(),null);
+      contacts.put(protocolProvider.toString(),contact);
+      isNew=true;
+    }
+    contact.setMessageAccount(event.getAccount());
+    contact.setUnreadMessageCount(event.getUnreadMessages());
+    contact.setReadMessageCount(event.getReadMessages());
+    addNotificationContact(contact,isNew);
   }
 }

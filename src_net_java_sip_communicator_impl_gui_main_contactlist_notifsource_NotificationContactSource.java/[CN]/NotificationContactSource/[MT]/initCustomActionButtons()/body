@@ -1,0 +1,21 @@
+{
+  customActionButtons=new Hashtable<ContactAction<NotificationMessage>,SIPCommButton>();
+  for (  CustomContactActionsService<NotificationMessage> ccas : getNotificationActionsServices()) {
+    Iterator<ContactAction<NotificationMessage>> actionIterator=ccas.getCustomContactActions();
+    while (actionIterator != null && actionIterator.hasNext()) {
+      final ContactAction<NotificationMessage> ca=actionIterator.next();
+      SIPCommButton actionButton=customActionButtons.get(ca);
+      if (actionButton == null) {
+        actionButton=new SIPCommButton(new ImageIcon(ca.getIcon()).getImage(),new ImageIcon(ca.getPressedIcon()).getImage(),null);
+        actionButton.addActionListener(new ActionListener(){
+          public void actionPerformed(          ActionEvent e){
+            ChooseUIContactDetailPopupMenu detailsPopupMenu=new ChooseUIContactDetailPopupMenu(GuiActivator.getContactList(),customActionContact.getContactDetails(),new NotificationContactSource.UIContactDetailCustomAction(ca));
+            detailsPopupMenu.showPopupMenu();
+          }
+        }
+);
+        customActionButtons.put(ca,actionButton);
+      }
+    }
+  }
+}
