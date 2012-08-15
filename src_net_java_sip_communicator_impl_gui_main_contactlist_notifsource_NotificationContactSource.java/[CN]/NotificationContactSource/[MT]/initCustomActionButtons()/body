@@ -1,5 +1,5 @@
 {
-  customActionButtons=new Hashtable<ContactAction<NotificationMessage>,SIPCommButton>();
+  customActionButtons=new LinkedHashMap<ContactAction<NotificationMessage>,SIPCommButton>();
   for (  CustomContactActionsService<NotificationMessage> ccas : getNotificationActionsServices()) {
     Iterator<ContactAction<NotificationMessage>> actionIterator=ccas.getCustomContactActions();
     while (actionIterator != null && actionIterator.hasNext()) {
@@ -16,7 +16,11 @@
               detailsPopupMenu.showPopupMenu();
             }
  else             if (contactDetails.size() == 1) {
-              contactAction.actionPerformed(contactDetails.get(0));
+              JButton button=(JButton)e.getSource();
+              Point location=new Point(button.getX(),button.getY() + button.getHeight());
+              SwingUtilities.convertPointToScreen(location,GuiActivator.getContactList());
+              location.y=location.y + GuiActivator.getContactList().getPathBounds(GuiActivator.getContactList().getSelectionPath()).y;
+              contactAction.actionPerformed(contactDetails.get(0),location.x,location.y);
             }
           }
         }
