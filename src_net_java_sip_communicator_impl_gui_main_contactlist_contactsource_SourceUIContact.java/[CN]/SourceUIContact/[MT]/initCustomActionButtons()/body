@@ -1,0 +1,33 @@
+{
+  customActionButtons=new LinkedHashMap<ContactAction<SourceContact>,SIPCommButton>();
+  for (  CustomContactActionsService<SourceContact> ccas : getContactActionsServices()) {
+    Iterator<ContactAction<SourceContact>> actionIterator=ccas.getCustomContactActions();
+    while (actionIterator != null && actionIterator.hasNext()) {
+      final ContactAction<SourceContact> ca=actionIterator.next();
+      SIPCommButton actionButton=customActionButtons.get(ca);
+      if (actionButton == null) {
+        actionButton=new SIPCommButton(new ImageIcon(ca.getIcon()).getImage(),new ImageIcon(ca.getPressedIcon()).getImage(),null);
+        actionButton.addActionListener(new ActionListener(){
+          public void actionPerformed(          ActionEvent e){
+            List<UIContactDetail> contactDetails=getContactDetails();
+            contactDetails.add(new SourceContactDetail(sourceContact.getDisplayName()));
+            UIContactDetailCustomAction contactAction=new UIContactDetailCustomAction(ca);
+            if (contactDetails.size() > 1) {
+              ChooseUIContactDetailPopupMenu detailsPopupMenu=new ChooseUIContactDetailPopupMenu((JButton)e.getSource(),contactDetails,contactAction);
+              detailsPopupMenu.showPopupMenu();
+            }
+ else             if (contactDetails.size() == 1) {
+              JButton button=(JButton)e.getSource();
+              Point location=new Point(button.getX(),button.getY() + button.getHeight());
+              SwingUtilities.convertPointToScreen(location,GuiActivator.getContactList());
+              location.y=location.y + GuiActivator.getContactList().getPathBounds(GuiActivator.getContactList().getSelectionPath()).y;
+              contactAction.actionPerformed(contactDetails.get(0),location.x,location.y);
+            }
+          }
+        }
+);
+        customActionButtons.put(ca,actionButton);
+      }
+    }
+  }
+}
