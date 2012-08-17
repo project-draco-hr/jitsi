@@ -1,6 +1,8 @@
 {
   customActionButtons=new LinkedHashMap<ContactAction<SourceContact>,SIPCommButton>();
+  CustomContactActionsChangeListener changeListener=new CustomContactActionsChangeListener();
   for (  CustomContactActionsService<SourceContact> ccas : getContactActionsServices()) {
+    ccas.addCustomContactActionsListener(changeListener);
     Iterator<ContactAction<SourceContact>> actionIterator=ccas.getCustomContactActions();
     while (actionIterator != null && actionIterator.hasNext()) {
       final ContactAction<SourceContact> ca=actionIterator.next();
@@ -9,8 +11,8 @@
         actionButton=new SIPCommButton(new ImageIcon(ca.getIcon()).getImage(),new ImageIcon(ca.getPressedIcon()).getImage(),null);
         actionButton.addActionListener(new ActionListener(){
           public void actionPerformed(          ActionEvent e){
-            List<UIContactDetail> contactDetails=getContactDetails();
-            contactDetails.add(new SourceContactDetail(sourceContact.getDisplayName()));
+            List<UIContactDetail> contactDetails=SourceUIContact.getContactDetails(customActionContact);
+            contactDetails.add(new SourceUIContact.SourceContactDetail(customActionContact.getDisplayName(),customActionContact));
             UIContactDetailCustomAction contactAction=new UIContactDetailCustomAction(ca);
             if (contactDetails.size() > 1) {
               ChooseUIContactDetailPopupMenu detailsPopupMenu=new ChooseUIContactDetailPopupMenu((JButton)e.getSource(),contactDetails,contactAction);
