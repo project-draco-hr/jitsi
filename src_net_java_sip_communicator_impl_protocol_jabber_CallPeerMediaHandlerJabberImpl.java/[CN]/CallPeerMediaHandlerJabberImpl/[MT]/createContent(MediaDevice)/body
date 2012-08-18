@@ -1,5 +1,7 @@
 {
-  MediaDirection direction=dev.getDirection().and(getDirectionUserPreference(dev.getMediaType()));
+  MediaType mediaType=dev.getMediaType();
+  MediaDirection direction=dev.getDirection();
+  if (!(MediaType.VIDEO.equals(mediaType) && isRTPTranslationEnabled()))   direction=direction.and(getDirectionUserPreference(mediaType));
   if (isLocallyOnHold())   direction=direction.and(MediaDirection.SENDONLY);
   QualityPreset sendQualityPreset=null;
   QualityPreset receiveQualityPreset=null;
@@ -10,8 +12,8 @@
   if (direction != MediaDirection.INACTIVE) {
     ContentPacketExtension content=createContentForOffer(dev.getSupportedFormats(sendQualityPreset,receiveQualityPreset),direction,dev.getSupportedExtensions());
     RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(content);
-    setSDesEncryptionToDescription(dev.getMediaType(),description,null);
-    setZrtpEncryptionToDescription(dev.getMediaType(),description,null);
+    setSDesEncryptionToDescription(mediaType,description,null);
+    setZrtpEncryptionToDescription(mediaType,description,null);
     return content;
   }
   return null;

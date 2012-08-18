@@ -6,6 +6,7 @@
   boolean noCands=false;
   logger.info("nocand " + noCands);
   logger.info("run code");
+  MediaStream oldVideoStream=mediaHandler.getStream(MediaType.VIDEO);
   try {
     if (!contentAddWithNoCands)     mediaHandler.processOffer(contents);
     if (contentAddWithNoCands == false) {
@@ -49,4 +50,15 @@ synchronized (candSyncRoot) {
   }
   getProtocolProvider().getConnection().sendPacket(contentIQ);
   mediaHandler.start();
+  if (oldVideoStream == null) {
+    MediaStream newVideoStream=mediaHandler.getStream(MediaType.VIDEO);
+    if ((newVideoStream != null) && mediaHandler.isRTPTranslationEnabled()) {
+      try {
+        getCall().modifyVideoContent(true);
+      }
+ catch (      OperationFailedException ofe) {
+        logger.error("Failed to enable RTP translation",ofe);
+      }
+    }
+  }
 }

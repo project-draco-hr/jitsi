@@ -5,18 +5,18 @@
   SmackServiceNode.MappedNodes mappedNodes=new SmackServiceNode.MappedNodes();
   ConcurrentHashMap<String,String> visited=new ConcurrentHashMap<String,String>();
   for (  Map.Entry<String,TrackerEntry> entry : service.getTrackerEntries().entrySet()) {
-    service.deepSearch(xmppConnection,maxEntries,entry.getValue().getJid(),mappedNodes,maxDepth - 1,maxSearchNodes,protocol,visited);
+    SmackServiceNode.deepSearch(xmppConnection,maxEntries,entry.getValue().getJid(),mappedNodes,maxDepth - 1,maxSearchNodes,protocol,visited);
   }
   if (autoDiscover) {
     boolean continueSearch=searchDiscoItems(service,xmppConnection,maxEntries,xmppConnection.getServiceName(),mappedNodes,maxDepth - 1,maxSearchNodes,protocol,visited,prefix);
     if (!continueSearch)     return mappedNodes;
-    service.deepSearch(xmppConnection,maxEntries,xmppConnection.getHost(),mappedNodes,maxDepth - 1,maxSearchNodes,protocol,visited);
+    SmackServiceNode.deepSearch(xmppConnection,maxEntries,xmppConnection.getHost(),mappedNodes,maxDepth - 1,maxSearchNodes,protocol,visited);
     if (xmppConnection.getRoster() != null && searchBuddies) {
       for (      final RosterEntry re : xmppConnection.getRoster().getEntries()) {
         for (final Iterator<Presence> i=xmppConnection.getRoster().getPresences(re.getUser()); i.hasNext(); ) {
           final Presence presence=i.next();
           if (presence.isAvailable()) {
-            service.deepSearch(xmppConnection,maxEntries,presence.getFrom(),mappedNodes,maxDepth - 1,maxSearchNodes,protocol,visited);
+            SmackServiceNode.deepSearch(xmppConnection,maxEntries,presence.getFrom(),mappedNodes,maxDepth - 1,maxSearchNodes,protocol,visited);
           }
         }
       }

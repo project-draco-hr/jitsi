@@ -14,18 +14,14 @@
       isGoogleVoice=true;
     }
   }
-  if (calleeAddress.indexOf('@') == -1) {
-    String serviceName=null;
-    String phoneSuffix=(String)getProtocolProvider().getAccountID().getAccountProperty("OVERRIDE_PHONE_SUFFIX");
-    if (phoneSuffix == null || phoneSuffix.length() == 0) {
-      serviceName="@" + StringUtils.parseServer(getProtocolProvider().getAccountID().getUserID());
-    }
- else {
-      serviceName="@" + phoneSuffix;
-    }
-    calleeAddress+=serviceName;
-  }
   AccountID accountID=getProtocolProvider().getAccountID();
+  if (calleeAddress.indexOf('@') == -1) {
+    String phoneSuffix=accountID.getAccountPropertyString("OVERRIDE_PHONE_SUFFIX");
+    String serviceName=null;
+    if ((phoneSuffix == null) || (phoneSuffix.length() == 0))     serviceName=StringUtils.parseServer(accountID.getUserID());
+ else     serviceName=phoneSuffix;
+    calleeAddress=calleeAddress + "@" + serviceName;
+  }
   String bypassDomain=accountID.getAccountPropertyString("TELEPHONY_BYPASS_GTALK_CAPS");
   boolean alwaysCallGtalk=((bypassDomain != null) && bypassDomain.equals(calleeAddress.substring(calleeAddress.indexOf('@') + 1))) || isGoogleVoice;
   String fullCalleeURI=null;

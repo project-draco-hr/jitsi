@@ -3,7 +3,10 @@
   for (  MediaType mediaType : MediaType.values()) {
     MediaDevice dev=getDefaultDevice(mediaType);
     if (dev != null) {
-      MediaDirection direction=dev.getDirection().and(getDirectionUserPreference(mediaType));
+      MediaDirection direction=dev.getDirection();
+      if (!(MediaType.VIDEO.equals(mediaType) && isRTPTranslationEnabled())) {
+        direction=direction.and(getDirectionUserPreference(mediaType));
+      }
       if (isLocallyOnHold())       direction=direction.and(MediaDirection.SENDONLY);
       if (MediaDirection.RECVONLY.equals(direction))       direction=MediaDirection.INACTIVE;
       if (direction != MediaDirection.INACTIVE) {
