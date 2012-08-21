@@ -20,7 +20,15 @@
     return;
   }
   if (sessAcceptedWithNoCands != null) {
-    if (!isInitiator) {
+    if (isInitiator()) {
+      try {
+        answer();
+      }
+ catch (      OperationFailedException e) {
+        logger.info("Failed to answer call (FreeSwitch hack)");
+      }
+    }
+ else {
       final SessionIQ sess=sessAcceptedWithNoCands;
       sessAcceptedWithNoCands=null;
       new Thread(){
@@ -29,14 +37,6 @@
         }
       }
 .start();
-    }
- else {
-      try {
-        answer();
-      }
- catch (      OperationFailedException e) {
-        logger.info("Failed to answer call (FreeSwitch hack)");
-      }
     }
     sessAcceptedWithNoCands=null;
   }

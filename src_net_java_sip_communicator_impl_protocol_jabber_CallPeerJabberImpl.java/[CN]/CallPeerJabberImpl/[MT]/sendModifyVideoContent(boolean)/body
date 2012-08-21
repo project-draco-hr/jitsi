@@ -1,40 +1,45 @@
 {
-  ContentPacketExtension ext=new ContentPacketExtension();
-  ContentPacketExtension remoteContent=getMediaHandler().getRemoteContent(MediaType.VIDEO.toString());
+  CallPeerMediaHandlerJabberImpl mediaHandler=getMediaHandler();
+  if (!allowed && mediaHandler.isRTPTranslationEnabled())   allowed=true;
+  ContentPacketExtension remoteContent=mediaHandler.getRemoteContent(MediaType.VIDEO.toString());
   if (remoteContent == null) {
     if (allowed)     sendAddVideoContent();
     return;
   }
- else   if (!allowed && ((!isInitiator && (remoteContent.getSenders() == SendersEnum.initiator)) || (isInitiator && (remoteContent.getSenders() == SendersEnum.responder)))) {
-    sendRemoveVideoContent();
-    return;
-  }
   SendersEnum senders=remoteContent.getSenders();
-  if (allowed) {
-    if (senders != SendersEnum.none) {
-      senders=SendersEnum.both;
+  if (!allowed) {
+    boolean initiator=isInitiator();
+    if ((!initiator && (senders == SendersEnum.initiator)) || (initiator && (senders == SendersEnum.responder))) {
+      sendRemoveVideoContent();
+      return;
     }
- else     if (senders == SendersEnum.none) {
-      senders=isInitiator ? SendersEnum.responder : SendersEnum.initiator;
+  }
+  if (allowed) {
+    if (senders == SendersEnum.none) {
+      senders=isInitiator() ? SendersEnum.responder : SendersEnum.initiator;
+    }
+ else {
+      senders=SendersEnum.both;
     }
   }
  else {
-    if (senders == SendersEnum.both || senders == null) {
-      senders=isInitiator ? SendersEnum.initiator : SendersEnum.responder;
+    if ((senders == SendersEnum.both) || (senders == null)) {
+      senders=isInitiator() ? SendersEnum.initiator : SendersEnum.responder;
     }
  else {
       senders=SendersEnum.none;
     }
   }
+  ContentPacketExtension ext=new ContentPacketExtension();
+  String remoteContentName=remoteContent.getName();
   ext.setSenders(senders);
   ext.setCreator(remoteContent.getCreator());
-  ext.setName(remoteContent.getName());
+  ext.setName(remoteContentName);
   ProtocolProviderServiceJabberImpl protocolProvider=getProtocolProvider();
   JingleIQ contentIQ=JinglePacketFactory.createContentModify(protocolProvider.getOurJID(),this.peerJID,getJingleSID(),ext);
   protocolProvider.getConnection().sendPacket(contentIQ);
   try {
-    CallPeerMediaHandlerJabberImpl mediaHandler=getMediaHandler();
-    mediaHandler.reinitContent(remoteContent.getName(),ext,false);
+    mediaHandler.reinitContent(remoteContentName,ext,false);
     mediaHandler.start();
   }
  catch (  Exception e) {
