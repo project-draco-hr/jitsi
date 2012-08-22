@@ -3,14 +3,21 @@
   if (serviceRef.getBundle().getState() == Bundle.STOPPING)   return;
   Object service=GuiActivator.bundleContext.getService(serviceRef);
   if (!(service instanceof ContactSourceService))   return;
+  boolean changed=false;
 switch (event.getType()) {
 case ServiceEvent.REGISTERED:
     ExternalContactSource contactSource=new ExternalContactSource((ContactSourceService)service);
   contactSources.add(contactSource);
+changed=true;
 break;
 case ServiceEvent.UNREGISTERING:
 ExternalContactSource cSource=getContactSource((ContactSourceService)service);
 if (cSource != null) contactSources.remove(cSource);
+changed=true;
 break;
+}
+if (changed) {
+if (currentFilter.equals(defaultFilter)) applyDefaultFilter();
+ else applyFilter(currentFilter);
 }
 }
