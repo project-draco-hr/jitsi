@@ -15,18 +15,18 @@
     }
   }
   if (value instanceof ContactNode) {
-    UIContact contact=((ContactNode)value).getContactDescriptor();
+    UIContactImpl contact=((ContactNode)value).getContactDescriptor();
     String displayName=contact.getDisplayName();
     if ((displayName == null || displayName.trim().length() < 1) && !(contact instanceof ShowMoreContact)) {
       displayName=GuiActivator.getResources().getI18NString("service.gui.UNKNOWN");
     }
     this.nameLabel.setText(displayName);
-    if (statusIcon != null && contactList.isContactActive(contact))     statusIcon.setImage(msgReceivedImage);
+    if (statusIcon != null && contactList.isContactActive(contact) && statusIcon instanceof ImageIcon)     ((ImageIcon)statusIcon).setImage(msgReceivedImage);
  else     statusIcon=contact.getStatusIcon();
     this.statusLabel.setIcon(statusIcon);
     this.nameLabel.setFont(this.getFont().deriveFont(Font.PLAIN));
     if (contactForegroundColor != null)     nameLabel.setForeground(contactForegroundColor);
-    this.initDisplayDetails(contact);
+    this.initDisplayDetails(contact.getDisplayDetails());
     this.initButtonsPanel(contact);
     int avatarWidth, avatarHeight;
     if (isSelected) {
@@ -37,7 +37,7 @@
       avatarWidth=AVATAR_WIDTH;
       avatarHeight=AVATAR_HEIGHT;
     }
-    ImageIcon avatar=contact.getAvatar(isSelected,avatarWidth,avatarHeight);
+    Icon avatar=contact.getAvatar(isSelected,avatarWidth,avatarHeight);
     if (avatar != null) {
       this.rightLabel.setIcon(avatar);
     }
@@ -53,7 +53,7 @@
     this.setToolTipText(contact.getDescriptor().toString());
   }
  else   if (value instanceof GroupNode) {
-    UIGroup groupItem=((GroupNode)value).getGroupDescriptor();
+    UIGroupImpl groupItem=((GroupNode)value).getGroupDescriptor();
     this.nameLabel.setText(groupItem.getDisplayName());
     this.nameLabel.setFont(this.getFont().deriveFont(Font.BOLD));
     if (groupForegroundColor != null)     this.nameLabel.setForeground(groupForegroundColor);
@@ -78,6 +78,7 @@
       this.rightLabel.setForeground(Color.BLACK);
       this.rightLabel.setText(groupItem.countOnlineChildContacts() + "/" + groupItem.countChildContacts());
     }
+    this.initDisplayDetails(groupItem.getDisplayDetails());
     this.setToolTipText(groupItem.getDescriptor().toString());
   }
   return this;

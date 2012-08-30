@@ -8,19 +8,23 @@
 );
     return;
   }
-  GroupNode groupNode;
+  GroupNode groupNode=null;
   if (group == null)   groupNode=treeModel.getRoot();
- else {
-    groupNode=group.getGroupNode();
+ else   if (group instanceof UIGroupImpl) {
+    UIGroupImpl contactImpl=(UIGroupImpl)group;
+    groupNode=contactImpl.getGroupNode();
     if (groupNode == null) {
       GroupNode parentNode=treeModel.getRoot();
-      if (isGroupSorted)       groupNode=parentNode.sortedAddContactGroup(group);
- else       groupNode=parentNode.addContactGroup(group);
+      if (isGroupSorted)       groupNode=parentNode.sortedAddContactGroup(contactImpl);
+ else       groupNode=parentNode.addContactGroup(contactImpl);
     }
   }
+  if (groupNode == null)   return;
   contact.setParentGroup(groupNode.getGroupDescriptor());
-  if (isContactSorted)   groupNode.sortedAddContact(contact);
- else   groupNode.addContact(contact);
+  if (!(contact instanceof UIContactImpl))   return;
+  UIContactImpl contactImpl=(UIContactImpl)contact;
+  if (isContactSorted)   groupNode.sortedAddContact(contactImpl);
+ else   groupNode.addContact(contactImpl);
   if ((!currentFilter.equals(presenceFilter) || !groupNode.isCollapsed()))   this.expandGroup(groupNode);
  else   this.expandGroup(treeModel.getRoot());
 }
