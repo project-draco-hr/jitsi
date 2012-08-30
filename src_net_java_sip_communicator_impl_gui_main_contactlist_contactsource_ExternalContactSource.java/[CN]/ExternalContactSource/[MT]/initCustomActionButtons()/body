@@ -8,21 +8,17 @@
       if (actionButton == null) {
         actionButton=new SIPCommButton(new ImageIcon(ca.getIcon()).getImage(),new ImageIcon(ca.getPressedIcon()).getImage(),null);
         actionButton.addActionListener(new ActionListener(){
-          public void actionPerformed(          ActionEvent e){
-            List<UIContactDetail> contactDetails=SourceUIContact.getContactDetails(customActionContact);
-            contactDetails.add(new SourceUIContact.SourceContactDetail(customActionContact.getDisplayName(),customActionContact));
-            UIContactDetailCustomAction contactAction=new UIContactDetailCustomAction(ca);
-            if (contactDetails.size() > 1) {
-              ChooseUIContactDetailPopupMenu detailsPopupMenu=new ChooseUIContactDetailPopupMenu((JButton)e.getSource(),contactDetails,contactAction);
-              detailsPopupMenu.showPopupMenu();
-            }
- else             if (contactDetails.size() == 1) {
-              JButton button=(JButton)e.getSource();
+          public void actionPerformed(          ActionEvent event){
+            try {
+              JButton button=(JButton)event.getSource();
               Point location=new Point(button.getX(),button.getY() + button.getHeight());
               SwingUtilities.convertPointToScreen(location,contactListTree);
               TreePath selectionPath=contactListTree.getSelectionPath();
               if (selectionPath != null)               location.y=location.y + contactListTree.getPathBounds(selectionPath).y;
-              contactAction.actionPerformed(contactDetails.get(0),location.x,location.y);
+              ca.actionPerformed(customActionContact,location.x,location.y);
+            }
+ catch (            OperationFailedException e) {
+              new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),e.getMessage());
             }
           }
         }
