@@ -1,0 +1,22 @@
+{
+  ServiceReference serviceRef=event.getServiceReference();
+  if (serviceRef.getBundle().getState() == Bundle.STOPPING) {
+    return;
+  }
+  Object service=GuiActivator.bundleContext.getService(serviceRef);
+  if (!(service instanceof CustomContactActionsService)) {
+    return;
+  }
+  @SuppressWarnings("unchecked") Iterator<ContactAction<SourceContact>> actionIterator=((CustomContactActionsService<SourceContact>)service).getCustomContactActions();
+  while (actionIterator != null && actionIterator.hasNext()) {
+    final ContactAction<SourceContact> ca=actionIterator.next();
+switch (event.getType()) {
+case ServiceEvent.REGISTERED:
+      initActionButton(ca);
+    break;
+case ServiceEvent.UNREGISTERING:
+  customActionButtons.remove(ca);
+break;
+}
+}
+}
