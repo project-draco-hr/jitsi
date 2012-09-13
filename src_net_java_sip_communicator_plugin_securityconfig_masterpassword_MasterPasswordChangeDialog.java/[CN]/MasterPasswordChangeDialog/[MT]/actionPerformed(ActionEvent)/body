@@ -1,28 +1,21 @@
 {
-  JButton sourceButton=(JButton)e.getSource();
   boolean close=false;
-  if (sourceButton.equals(okButton)) {
-    CredentialsStorageService credentialsStorageService=SecurityConfigActivator.getCredentialsStorageService();
-    String oldMasterPassword=null;
-    if (credentialsStorageService.isUsingMasterPassword()) {
-      oldMasterPassword=new String(((JPasswordField)currentPasswdField).getPassword());
-      if (oldMasterPassword.length() == 0) {
-        displayPopupError(resources.getI18NString("plugin.securityconfig.masterpassword.MP_CURRENT_EMPTY"));
-        return;
-      }
-      boolean verified=credentialsStorageService.verifyMasterPassword(oldMasterPassword);
-      if (!verified) {
-        displayPopupError(resources.getI18NString("plugin.securityconfig.masterpassword.MP_VERIFICATION_FAILURE_MSG"));
-        return;
-      }
+  CredentialsStorageService credentialsStorageService=SecurityConfigActivator.getCredentialsStorageService();
+  String oldMasterPassword=null;
+  if (credentialsStorageService.isUsingMasterPassword()) {
+    oldMasterPassword=getCurrentPassword();
+    if (oldMasterPassword.length() == 0) {
+      displayPopupError(resources.getI18NString("plugin.securityconfig.masterpassword.MP_CURRENT_EMPTY"));
+      return;
     }
-    if (callback != null) {
-      String newPassword=new String(newPasswordField.getPassword());
-      close=callback.execute(oldMasterPassword,newPassword);
+    boolean verified=credentialsStorageService.verifyMasterPassword(oldMasterPassword);
+    if (!verified) {
+      displayPopupError(resources.getI18NString("plugin.securityconfig.masterpassword.MP_VERIFICATION_FAILURE_MSG"));
+      return;
     }
   }
- else {
-    close=true;
+  if (callback != null) {
+    close=callback.execute(oldMasterPassword,getNewPassword());
   }
   if (close) {
     dialog=null;
