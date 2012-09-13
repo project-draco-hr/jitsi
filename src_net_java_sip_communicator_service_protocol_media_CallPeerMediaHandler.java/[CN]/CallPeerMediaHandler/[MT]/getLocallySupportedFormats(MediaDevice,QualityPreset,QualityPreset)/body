@@ -1,0 +1,22 @@
+{
+  boolean accountOverridesEncodings=false;
+  EncodingConfiguration encodingConfiguration=ProtocolMediaActivator.getMediaService().getNewEncodingConfiguration();
+  ;
+  Map<String,String> properties=getPeer().getProtocolProvider().getAccountID().getAccountProperties();
+  if (properties.containsKey(ProtocolProviderFactory.OVERRIDE_ENCODINGS) && Boolean.parseBoolean(properties.get(ProtocolProviderFactory.OVERRIDE_ENCODINGS))) {
+    accountOverridesEncodings=true;
+  }
+  if (accountOverridesEncodings) {
+    Map<String,String> encodingProperties=new HashMap<String,String>();
+    for (    String key : properties.keySet()) {
+      if (key.startsWith(ProtocolProviderFactory.ENCODING_PROP_PREFIX + ".")) {
+        encodingProperties.put(key.substring(key.indexOf(".") + 1),properties.get(key));
+      }
+    }
+    encodingConfiguration.loadProperties(encodingProperties);
+  }
+ else {
+    encodingConfiguration.loadConfig();
+  }
+  return mediaDevice.getSupportedFormats(sendPreset,receivePreset,encodingConfiguration);
+}

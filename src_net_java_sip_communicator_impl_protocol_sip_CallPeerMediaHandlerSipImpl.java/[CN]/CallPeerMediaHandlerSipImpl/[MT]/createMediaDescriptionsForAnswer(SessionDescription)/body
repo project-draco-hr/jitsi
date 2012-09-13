@@ -36,7 +36,7 @@
     devDirection=devDirection.and(getDirectionUserPreference(mediaType));
     MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
     MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
-    List<MediaFormat> mutuallySupportedFormats=(dev == null) ? null : intersectFormats(remoteFormats,dev.getSupportedFormats());
+    List<MediaFormat> mutuallySupportedFormats=(dev == null) ? null : intersectFormats(remoteFormats,getLocallySupportedFormats(dev));
     MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,offer);
     int targetDataPort=target.getDataAddress().getPort();
     if ((devDirection == MediaDirection.INACTIVE) || (mutuallySupportedFormats == null) || mutuallySupportedFormats.isEmpty()|| (targetDataPort == 0)) {
@@ -53,7 +53,7 @@
       QualityPreset receiveQualityPreset=null;
       MediaStream stream=getStream(MediaType.VIDEO);
       if (stream != null && dev != null) {
-        List<MediaFormat> fmts=intersectFormats(dev.getSupportedFormats(),remoteFormats);
+        List<MediaFormat> fmts=intersectFormats(getLocallySupportedFormats(dev),remoteFormats);
         if (fmts.size() > 0) {
           MediaFormat fmt=fmts.get(0);
           ((VideoMediaStream)stream).updateQualityControl(fmt.getAdvancedAttributes());
@@ -62,7 +62,7 @@
       if (qualityControls != null) {
         sendQualityPreset=qualityControls.getRemoteReceivePreset();
         receiveQualityPreset=qualityControls.getRemoteSendMaxPreset();
-        mutuallySupportedFormats=(dev == null) ? null : intersectFormats(mutuallySupportedFormats,dev.getSupportedFormats(sendQualityPreset,receiveQualityPreset));
+        mutuallySupportedFormats=(dev == null) ? null : intersectFormats(mutuallySupportedFormats,getLocallySupportedFormats(dev,sendQualityPreset,receiveQualityPreset));
       }
       supportQualityControls=SdpUtils.containsAttribute(mediaDescription,"imageattr");
       float frameRate=-1;
