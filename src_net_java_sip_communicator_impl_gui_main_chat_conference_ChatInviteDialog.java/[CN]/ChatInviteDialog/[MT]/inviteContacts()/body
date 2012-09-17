@@ -1,20 +1,14 @@
 {
-  java.util.List<String> selectedContactAddresses=new ArrayList<String>();
-  Enumeration<MetaContact> selectedContacts=getSelectedMetaContacts();
+  Collection<String> selectedContactAddresses=new ArrayList<String>();
+  Iterator<UIContact> selectedContacts=destContactList.getContacts(null).iterator();
   if (selectedContacts != null) {
-    while (selectedContacts.hasMoreElements()) {
-      MetaContact metaContact=selectedContacts.nextElement();
-      Iterator<Contact> contactsIter=metaContact.getContactsForProvider(inviteChatTransport.getProtocolProvider());
+    while (selectedContacts.hasNext()) {
+      UIContact uiContact=selectedContacts.next();
+      Iterator<UIContactDetail> contactsIter=uiContact.getContactDetailsForOperationSet(OperationSetMultiUserChat.class).iterator();
       if (contactsIter.hasNext()) {
-        Contact inviteContact=contactsIter.next();
-        selectedContactAddresses.add(inviteContact.getAddress());
+        UIContactDetail inviteDetail=contactsIter.next();
+        selectedContactAddresses.add(inviteDetail.getAddress());
       }
-    }
-  }
-  Enumeration<String> selectedStrings=getSelectedStrings();
-  if (selectedStrings != null) {
-    while (selectedStrings.hasMoreElements()) {
-      selectedContactAddresses.add(selectedStrings.nextElement());
     }
   }
   if (selectedContactAddresses.size() > 0) {

@@ -1,0 +1,17 @@
+{
+  filterQuery.setMaxResultShown(-1);
+  List<UIContactSource> filterSources=sourceContactList.getContactSources(ContactSourceService.DEFAULT_TYPE);
+  if (filterString != null && filterString.length() > 0) {
+    filterSources.addAll(sourceContactList.getContactSources(ContactSourceService.SEARCH_TYPE));
+  }
+  Iterator<UIContactSource> filterSourceIter=filterSources.iterator();
+  if (filterQuery.isCanceled())   return;
+  while (filterSourceIter.hasNext()) {
+    final UIContactSource filterSource=filterSourceIter.next();
+    if (filterQuery.isCanceled())     return;
+    ContactQuery query=applyFilter(filterSource);
+    if (query.getStatus() == ContactQuery.QUERY_IN_PROGRESS)     filterQuery.addContactQuery(query);
+  }
+  if (filterQuery.isRunning())   filterQuery.close();
+ else   if (!sourceContactList.isEmpty())   sourceContactList.selectFirstContact();
+}

@@ -1,6 +1,9 @@
 {
-  List<UIContactDetail> videoContacts=((ContactNode)treeNode).getContactDescriptor().getContactDetailsForOperationSet(OperationSetVideoTelephony.class);
-  if (ConfigurationManager.isRouteVideoAndDesktopUsingPhoneNumberEnabled())   videoContacts.addAll(getAdditionalNumbers());
+  UIContactImpl contactDescriptor=((ContactNode)treeNode).getContactDescriptor();
+  List<UIContactDetail> videoContacts=contactDescriptor.getContactDetailsForOperationSet(OperationSetVideoTelephony.class);
+  if (ConfigurationManager.isRouteVideoAndDesktopUsingPhoneNumberEnabled() && contactDescriptor.getDescriptor() instanceof MetaContact) {
+    videoContacts.addAll(CallManager.getAdditionalNumbers((MetaContact)contactDescriptor.getDescriptor()));
+  }
   ChooseCallAccountPopupMenu chooseAccountDialog=null;
   if (videoContacts.size() == 1) {
     UIContactDetail detail=videoContacts.get(0);
@@ -27,16 +30,16 @@
  else       if (providersCount == 1) {
         CallManager.createVideoCall(providers.get(0),detail.getAddress());
       }
- else       if (providersCount > 1)       chooseAccountDialog=new ChooseCallAccountPopupMenu(tree,detail.getAddress(),providers,OperationSetVideoTelephony.class);
+ else       if (providersCount > 1)       chooseAccountDialog=new ChooseCallAccountPopupMenu(treeContactList,detail.getAddress(),providers,OperationSetVideoTelephony.class);
     }
   }
  else   if (videoContacts.size() > 1) {
-    chooseAccountDialog=new ChooseCallAccountPopupMenu(tree,videoContacts,OperationSetVideoTelephony.class);
+    chooseAccountDialog=new ChooseCallAccountPopupMenu(treeContactList,videoContacts,OperationSetVideoTelephony.class);
   }
   if (chooseAccountDialog != null) {
     Point location=new Point(callVideoButton.getX(),callVideoButton.getY() + callVideoButton.getHeight());
-    SwingUtilities.convertPointToScreen(location,tree);
-    location.y=location.y + tree.getPathBounds(tree.getSelectionPath()).y;
+    SwingUtilities.convertPointToScreen(location,treeContactList);
+    location.y=location.y + treeContactList.getPathBounds(treeContactList.getSelectionPath()).y;
     chooseAccountDialog.showPopupMenu(location.x + 8,location.y - 8);
   }
 }

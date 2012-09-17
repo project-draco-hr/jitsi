@@ -19,69 +19,31 @@
   TransparentPanel buttonsPanel=new TransparentPanel(new FlowLayout(FlowLayout.RIGHT));
   buttonsPanel.add(inviteButton);
   buttonsPanel.add(cancelButton);
-  this.getRootPane().setDefaultButton(inviteButton);
   inviteButton.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.INVITE"));
   cancelButton.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.CANCEL"));
-  final DefaultContactList contactList=new DefaultContactList();
-  final DefaultContactList selectedContactList=new DefaultContactList();
-  contactList.setModel(contactListModel);
-  contactList.setDragEnabled(true);
-  contactList.setTransferHandler(new InviteContactTransferHandler(this,false));
-  selectedContactList.setModel(selectedContactListModel);
-  selectedContactList.setTransferHandler(new InviteContactTransferHandler(this,true));
-  selectedContactList.setDragEnabled(true);
-  contactList.addMouseListener(new MouseAdapter(){
-    public void mouseClicked(    MouseEvent e){
-      if (e.getClickCount() > 1) {
-        Object[] metaContacts=contactList.getSelectedValues();
-        moveContactsFromLeftToRight(metaContacts);
-      }
-    }
-  }
-);
-  selectedContactList.addMouseListener(new MouseAdapter(){
-    public void mouseClicked(    MouseEvent e){
-      if (e.getClickCount() > 1) {
-        Object[] metaContacts=selectedContactList.getSelectedValues();
-        moveContactsFromRightToLeft(metaContacts);
-      }
-    }
-  }
-);
-  JScrollPane contactListScrollPane=new JScrollPane();
-  contactListScrollPane.setOpaque(false);
-  contactListScrollPane.getViewport().setOpaque(false);
-  contactListScrollPane.getViewport().add(contactList);
-  contactListScrollPane.getViewport().setBorder(null);
-  contactListScrollPane.setViewportBorder(null);
-  contactListScrollPane.setBorder(null);
-  JScrollPane selectedListScrollPane=new JScrollPane();
-  selectedListScrollPane.setOpaque(false);
-  selectedListScrollPane.getViewport().setOpaque(false);
-  selectedListScrollPane.getViewport().add(selectedContactList);
-  selectedListScrollPane.getViewport().setBorder(null);
-  selectedListScrollPane.setViewportBorder(null);
-  selectedListScrollPane.setBorder(SIPCommBorders.getRoundBorder());
-  newContactField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0),"moveStringFromLeftToRight");
-  newContactField.getActionMap().put("moveStringFromLeftToRight",new MoveStringToRight());
-  newContactField.addFocusListener(new FocusAdapter(){
+  Component contactListComponent=createSrcContactListComponent();
+  ContactListSearchFilter inviteFilter=new InviteContactListFilter(srcContactList);
+  srcContactList.setDefaultFilter(inviteFilter);
+  searchField=new SearchField(null,inviteFilter);
+  searchField.setPreferredSize(new Dimension(200,25));
+  searchField.setContactList(srcContactList);
+  searchField.addFocusListener(new FocusAdapter(){
     /** 
  * Removes all other selections.
  * @param e the <tt>FocusEvent</tt> that notified us
  */
     public void focusGained(    FocusEvent e){
-      contactList.removeSelectionInterval(0,contactList.getMaxSelectionIndex());
+      srcContactList.removeSelection();
     }
   }
 );
-  TransparentPanel leftPanel=new TransparentPanel(new BorderLayout());
-  leftPanel.setBorder(SIPCommBorders.getRoundBorder());
-  leftPanel.add(contactListScrollPane);
-  leftPanel.add(newContactField,BorderLayout.SOUTH);
+  TransparentPanel leftPanel=new TransparentPanel(new BorderLayout(5,5));
+  leftPanel.add(searchField,BorderLayout.NORTH);
+  leftPanel.add(contactListComponent);
   JPanel listPanel=new JPanel(new GridLayout(0,2,5,5));
   listPanel.setPreferredSize(new Dimension(400,200));
   listPanel.add(leftPanel);
-  listPanel.add(selectedListScrollPane);
+  listPanel.add(createDestContactListComponent());
   listPanel.setOpaque(false);
   JPanel addRemoveButtonsPanel=new JPanel(new GridLayout(0,2,5,5));
   addRemoveButtonsPanel.setOpaque(false);
@@ -91,16 +53,15 @@
   addRemoveButtonsPanel.add(removeContactButton);
   addContactButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
-      Object[] metaContacts=contactList.getSelectedValues();
-      if (metaContacts != null && metaContacts.length > 0)       moveContactsFromLeftToRight(metaContacts);
-      moveStringFromLeftToRight();
+      List<UIContact> selectedContacts=srcContactList.getSelectedContacts();
+      if (selectedContacts != null && selectedContacts.size() > 0)       moveContactsFromLeftToRight(selectedContacts.iterator());
     }
   }
 );
   removeContactButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
-      Object[] metaContacts=selectedContactList.getSelectedValues();
-      if (metaContacts != null && metaContacts.length > 0)       moveContactsFromRightToLeft(metaContacts);
+      List<UIContact> selectedContacts=destContactList.getSelectedContacts();
+      if (selectedContacts != null && selectedContacts.size() > 0)       moveContactsFromRightToLeft(selectedContacts.iterator());
     }
   }
 );
@@ -114,4 +75,9 @@
   mainPanel.add(centerPanel,BorderLayout.CENTER);
   mainPanel.add(southPanel,BorderLayout.SOUTH);
   this.getContentPane().add(mainPanel);
+  initTransferHandler();
+  KeyboardFocusManager keyManager=KeyboardFocusManager.getCurrentKeyboardFocusManager();
+  ContactListSearchKeyDispatcher clKeyDispatcher=new ContactListSearchKeyDispatcher(keyManager,searchField,this);
+  clKeyDispatcher.setContactList(srcContactList);
+  keyManager.addKeyEventDispatcher(clKeyDispatcher);
 }

@@ -15,22 +15,31 @@
   okButton.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.OK"));
   cancelButton.setMnemonic(GuiActivator.getResources().getI18nMnemonic("service.gui.CANCEL"));
   Component contactListComponent=createContactListComponent();
-  newContactField.addFocusListener(new FocusAdapter(){
+  ContactListSearchFilter inviteFilter=new InviteContactListFilter(contactList);
+  contactList.setDefaultFilter(inviteFilter);
+  searchField=new SearchField(null,inviteFilter);
+  searchField.setPreferredSize(new Dimension(200,25));
+  searchField.setContactList(contactList);
+  searchField.addFocusListener(new FocusAdapter(){
     /** 
  * Removes all other selections.
  * @param e the <tt>FocusEvent</tt> that notified us
  */
     public void focusGained(    FocusEvent e){
-      contactList.removeSelectionInterval(contactList.getMinSelectionIndex(),contactList.getMaxSelectionIndex());
+      contactList.removeSelection();
     }
   }
 );
   TransparentPanel listPanel=new TransparentPanel(new BorderLayout());
   listPanel.setBorder(SIPCommBorders.getRoundBorder());
   listPanel.add(contactListComponent);
-  listPanel.add(newContactField,BorderLayout.SOUTH);
+  northPanel.add(searchField,BorderLayout.SOUTH);
   mainPanel.add(northPanel,BorderLayout.NORTH);
   mainPanel.add(listPanel,BorderLayout.CENTER);
   mainPanel.add(buttonsPanel,BorderLayout.SOUTH);
   this.getContentPane().add(mainPanel);
+  KeyboardFocusManager keyManager=KeyboardFocusManager.getCurrentKeyboardFocusManager();
+  ContactListSearchKeyDispatcher clKeyDispatcher=new ContactListSearchKeyDispatcher(keyManager,searchField,this);
+  clKeyDispatcher.setContactList(contactList);
+  keyManager.addKeyEventDispatcher(clKeyDispatcher);
 }

@@ -1,11 +1,10 @@
 {
-  this.removeAllMetaContacts();
-  MetaContactListService metaContactListService=GuiActivator.getContactListService();
-  Iterator<MetaContact> contactListIter=metaContactListService.findAllMetaContactsForProvider(protocolProvider);
-  while (contactListIter.hasNext()) {
-    MetaContact metaContact=contactListIter.next();
-    if (!containsContact(metaContact)) {
-      if (metaContact.getDefaultContact(OperationSetBasicTelephony.class) != null)       addMetaContact(metaContact);
-    }
-  }
+  this.setCurrentProvider(protocolProvider);
+  srcContactList.removeContactSource(currentProviderContactSource);
+  srcContactList.removeContactSource(currentStringContactSource);
+  currentProviderContactSource=new ProtocolContactSourceServiceImpl(protocolProvider,OperationSetBasicTelephony.class);
+  currentStringContactSource=new StringContactSourceServiceImpl(protocolProvider,OperationSetBasicTelephony.class);
+  srcContactList.addContactSource(currentProviderContactSource);
+  srcContactList.addContactSource(currentStringContactSource);
+  srcContactList.applyDefaultFilter();
 }

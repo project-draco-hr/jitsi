@@ -1,0 +1,17 @@
+{
+  Iterator<ProtocolProviderService> providers=PNContactSourceActivator.getPhoneNumberProviders().iterator();
+  while (providers.hasNext()) {
+    if (contactCount > 0 && getQueryResultCount() > contactCount)     break;
+    ProtocolProviderService provider=providers.next();
+    OperationSetPersistentPresence persPresOpSet=provider.getOperationSet(OperationSetPersistentPresence.class);
+    if (persPresOpSet == null)     continue;
+    ContactGroup rootGroup=persPresOpSet.getServerStoredContactListRoot();
+    addResultContactsForGroup(rootGroup);
+    Iterator<ContactGroup> subgroups=rootGroup.subgroups();
+    while (subgroups.hasNext()) {
+      ContactGroup group=subgroups.next();
+      addResultContactsForGroup(group);
+    }
+  }
+  if (getStatus() != QUERY_CANCELED)   setStatus(QUERY_COMPLETED);
+}

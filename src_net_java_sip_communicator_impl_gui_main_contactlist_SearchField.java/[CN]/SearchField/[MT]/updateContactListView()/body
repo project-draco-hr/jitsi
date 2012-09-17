@@ -2,17 +2,19 @@
   String filterString=getText();
   FilterQuery filterQuery=null;
   boolean isDefaultFilter=false;
+  searchFilter.setFilterString(filterString.trim());
   if (filterString != null && filterString.length() > 0) {
-    TreeContactList.searchFilter.setFilterString(filterString.trim());
-    filterQuery=GuiActivator.getContactList().applyFilter(TreeContactList.searchFilter);
+    filterQuery=contactList.applyFilter(searchFilter);
   }
  else {
-    filterQuery=GuiActivator.getContactList().applyDefaultFilter();
+    filterQuery=contactList.applyDefaultFilter();
     isDefaultFilter=true;
   }
   if (filterQuery != null && !filterQuery.isCanceled()) {
     if (isDefaultFilter || filterQuery.isSucceeded())     enableUnknownContactView(false);
  else     filterQuery.setQueryListener(this);
   }
- else   enableUnknownContactView(GuiActivator.getContactList().isEmpty());
+ else {
+    closeFilterQuery(filterQuery,!contactList.isEmpty());
+  }
 }

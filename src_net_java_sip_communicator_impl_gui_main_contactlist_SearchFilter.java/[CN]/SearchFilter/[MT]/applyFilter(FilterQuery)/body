@@ -1,15 +1,21 @@
 {
-  if (searchSourceType == DEFAULT_SOURCE) {
+  if (sourceContactList == null)   sourceContactList=GuiActivator.getContactList();
+  Iterator<UIContactSource> filterSources=sourceContactList.getContactSources().iterator();
+  if (sourceContactList.getDefaultFilter().equals(TreeContactList.presenceFilter)) {
     MetaContactQuery defaultQuery=mclSource.queryMetaContactSource(filterPattern);
-    defaultQuery.addContactQueryListener(GuiActivator.getContactList());
+    defaultQuery.addContactQueryListener(sourceContactList);
     filterQuery.addContactQuery(defaultQuery);
   }
+ else   if (sourceContactList.getDefaultFilter().equals(TreeContactList.historyFilter)) {
+    filterSources=sourceContactList.getContactSources(ContactSourceService.HISTORY_TYPE).iterator();
+  }
   if (filterQuery.isCanceled())   return;
-  Iterator<UIContactSource> filterSources=getContactSources().iterator();
   while (filterSources.hasNext()) {
     final UIContactSource filterSource=filterSources.next();
     if (filterQuery.isCanceled())     return;
-    filterQuery.addContactQuery(applyFilter(filterSource));
+    ContactQuery query=applyFilter(filterSource);
+    if (query.getStatus() == ContactQuery.QUERY_IN_PROGRESS)     filterQuery.addContactQuery(query);
   }
-  filterQuery.close();
+  if (filterQuery.isRunning())   filterQuery.close();
+ else   if (!sourceContactList.isEmpty())   sourceContactList.selectFirstContact();
 }

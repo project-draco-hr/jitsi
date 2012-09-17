@@ -1,0 +1,39 @@
+{
+  OperationSetServerStoredContactInfo infoOpSet=contact.getProtocolProvider().getOperationSet(OperationSetServerStoredContactInfo.class);
+  Iterator<GenericDetail> details;
+  if (infoOpSet != null) {
+    details=infoOpSet.getAllDetailsForContact(contact);
+    while (details.hasNext()) {
+      if (contactCount > 0 && getQueryResultCount() > contactCount)       break;
+      GenericDetail d=details.next();
+      if (d instanceof PhoneNumberDetail && !(d instanceof PagerDetail) && !(d instanceof FaxDetail)) {
+        PhoneNumberDetail pnd=(PhoneNumberDetail)d;
+        if (pnd.getNumber() != null && pnd.getNumber().length() > 0) {
+          String localizedType=null;
+          if (d instanceof WorkPhoneDetail) {
+            localizedType=PNContactSourceActivator.getResources().getI18NString("service.gui.WORK_PHONE");
+          }
+ else           if (d instanceof MobilePhoneDetail) {
+            localizedType=PNContactSourceActivator.getResources().getI18NString("service.gui.MOBILE_PHONE");
+          }
+ else {
+            localizedType=PNContactSourceActivator.getResources().getI18NString("service.gui.PHONE");
+          }
+          String contactName=contact.getDisplayName();
+          String contactAddress=contact.getAddress();
+          String numberString=pnd.getNumber();
+          if (queryString == null || (queryString != null && (numberString.startsWith(queryString) || contactName.startsWith(queryString) || contactAddress.startsWith(queryString)))) {
+            ArrayList<ContactDetail> contactDetails=new ArrayList<ContactDetail>();
+            ContactDetail detail=new ContactDetail(pnd.getNumber());
+            ArrayList<Class<? extends OperationSet>> supportedOpSets=new ArrayList<Class<? extends OperationSet>>();
+            supportedOpSets.add(OperationSetBasicTelephony.class);
+            detail.setSupportedOpSets(supportedOpSets);
+            contactDetails.add(detail);
+            PhoneNumberSourceContact numberSourceContact=new PhoneNumberSourceContact(getContactSource(),contact,contactDetails,pnd.getNumber() + "(" + localizedType+ ")");
+            addQueryResult(numberSourceContact);
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  if (!contactListContainer.isFocused() || (e.getID() != KeyEvent.KEY_PRESSED && e.getID() != KeyEvent.KEY_TYPED) || (GuiActivator.getUIService().getSingleWindowContainer() != null) && GuiActivator.getUIService().getSingleWindowContainer().containsFocus())   return false;
+  if (e.getKeyCode() == KeyEvent.VK_ENTER && (e.isControlDown() || e.isMetaDown())) {
+    contactListContainer.ctrlEnterKeyTyped();
+    return false;
+  }
+ else   if (e.getKeyCode() == KeyEvent.VK_ENTER && keyManager.getFocusOwner().equals(keyManager.getPermanentFocusOwner())) {
+    contactListContainer.enterKeyTyped();
+    return false;
+  }
+  if (searchField.isFocusOwner() && (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_PAGE_UP || e.getKeyCode() == KeyEvent.VK_PAGE_DOWN)) {
+    contactList.selectFirstContact();
+    contactList.getComponent().requestFocus();
+    return false;
+  }
+  if (contactList.getComponent().isFocusOwner() && e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+    contactList.removeSelection();
+    if (searchField.getText() != null) {
+      searchField.requestFocus();
+    }
+    return false;
+  }
+  UIGroup selectedGroup=contactList.getSelectedGroup();
+  if (e.getKeyChar() == KeyEvent.CHAR_UNDEFINED || e.getKeyCode() == KeyEvent.VK_ENTER || e.getKeyCode() == KeyEvent.VK_DELETE || e.getKeyCode() == KeyEvent.VK_BACK_SPACE || e.getKeyCode() == KeyEvent.VK_TAB || e.getKeyCode() == KeyEvent.VK_SPACE || (selectedGroup != null && (e.getKeyChar() == '+' || e.getKeyChar() == '-'))) {
+    return false;
+  }
+  boolean singleWindowRule=GuiActivator.getUIService().getSingleWindowContainer() == null || contactList.getComponent().isFocusOwner();
+  if (!searchField.isFocusOwner() && keyManager.getFocusOwner() != null && singleWindowRule && keyManager.getFocusOwner().equals(keyManager.getPermanentFocusOwner())) {
+    searchField.requestFocusInWindow();
+    keyManager.redispatchEvent(searchField,e);
+    return true;
+  }
+  return false;
+}

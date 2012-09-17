@@ -1,0 +1,20 @@
+{
+  Iterator<Contact> contacts=metaContact.getContactsForProvider(protocolProvider);
+  while (contacts.hasNext()) {
+    if (getStatus() == QUERY_CANCELED)     return;
+    if (contactCount > 0 && getQueryResultCount() > contactCount)     break;
+    Contact contact=contacts.next();
+    if (queryString == null || queryString.length() <= 0 || metaContact.getDisplayName().startsWith(queryString) || contact.getAddress().startsWith(queryString) || contact.getDisplayName().startsWith(queryString)) {
+      ArrayList<ContactDetail> contactDetails=new ArrayList<ContactDetail>();
+      ContactDetail contactDetail=new ContactDetail(contact.getAddress());
+      ArrayList<Class<? extends OperationSet>> supportedOpSets=new ArrayList<Class<? extends OperationSet>>();
+      supportedOpSets.add(opSetClass);
+      contactDetail.setSupportedOpSets(supportedOpSets);
+      contactDetails.add(contactDetail);
+      GenericSourceContact sourceContact=new GenericSourceContact(ProtocolContactSourceServiceImpl.this,contact.getDisplayName(),contactDetails);
+      sourceContact.setImage(metaContact.getAvatar());
+      sourceContact.setPresenceStatus(contact.getPresenceStatus());
+      addQueryResult(sourceContact);
+    }
+  }
+}

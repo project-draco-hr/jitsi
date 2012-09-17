@@ -1,0 +1,24 @@
+{
+  if (phoneProviders != null)   return phoneProviders;
+  phoneProviders=new LinkedList<ProtocolProviderService>();
+  bundleContext.addServiceListener(new ProtocolProviderRegListener());
+  ServiceReference[] serRefs=null;
+  try {
+    serRefs=bundleContext.getServiceReferences(ProtocolProviderFactory.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException e) {
+    logger.error("LoginManager : " + e);
+  }
+  if (serRefs != null) {
+    for (    ServiceReference serRef : serRefs) {
+      ProtocolProviderFactory providerFactory=(ProtocolProviderFactory)bundleContext.getService(serRef);
+      ProtocolProviderService protocolProvider;
+      for (      AccountID accountID : providerFactory.getRegisteredAccounts()) {
+        serRef=providerFactory.getProviderForAccount(accountID);
+        protocolProvider=(ProtocolProviderService)bundleContext.getService(serRef);
+        handleProviderAdded(protocolProvider);
+      }
+    }
+  }
+  return phoneProviders;
+}

@@ -1,4 +1,11 @@
 {
-  super(contact.getAddress(),contact.getDisplayName(),null,null,new ImageIcon(contact.getPresenceStatus().getStatusIcon()),contact.getProtocolProvider(),contact.getProtocolProvider().getProtocolName(),contact);
+  super(contact.getAddress(),contact.getDisplayName(),new ImageIcon(contact.getPresenceStatus().getStatusIcon()),contact);
   this.contact=contact;
+  ProtocolProviderService parentProvider=contact.getProtocolProvider();
+  Iterator<Class<? extends OperationSet>> opSetClasses=parentProvider.getSupportedOperationSetClasses().iterator();
+  while (opSetClasses.hasNext()) {
+    Class<? extends OperationSet> opSetClass=opSetClasses.next();
+    addPreferredProtocolProvider(opSetClass,parentProvider);
+    addPreferredProtocol(opSetClass,parentProvider.getProtocolName());
+  }
 }
