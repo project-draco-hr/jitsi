@@ -13,5 +13,18 @@
   }
   transfer.setTo(to);
   transferSessionInfo.addExtension(transfer);
+  Connection connection=protocolProvider.getConnection();
+  PacketCollector collector=connection.createPacketCollector(new PacketIDFilter(transferSessionInfo.getPacketID()));
   protocolProvider.getConnection().sendPacket(transferSessionInfo);
+  Packet result=collector.nextResult(SmackConfiguration.getPacketReplyTimeout());
+  if (result == null) {
+    throw new OperationFailedException("No response to the \"transfer\" request.",OperationFailedException.ILLEGAL_ARGUMENT);
+  }
+ else   if (((IQ)result).getType() != IQ.Type.RESULT) {
+    throw new OperationFailedException("Remote peer does not manage call \"transfer\"." + "Response to the \"transfer\" request is: " + ((IQ)result).getType(),OperationFailedException.ILLEGAL_ARGUMENT);
+  }
+ else {
+    String message=((sid == null) ? "Unattended" : "Attended") + " transfer to: " + to;
+    hangup(false,message,new ReasonPacketExtension(Reason.SUCCESS,message,new TransferredPacketExtension()));
+  }
 }

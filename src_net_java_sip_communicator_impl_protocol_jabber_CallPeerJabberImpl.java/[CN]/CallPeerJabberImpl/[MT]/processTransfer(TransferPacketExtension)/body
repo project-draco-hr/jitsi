@@ -7,7 +7,12 @@
   if (calleeAddress == null) {
     throw new OperationFailedException("Session transfer must contain a \'to\' attribute value.",OperationFailedException.ILLEGAL_ARGUMENT);
   }
-  putOnHold(true);
+  Roster roster=getProtocolProvider().getConnection().getRoster();
+  if (!roster.contains(StringUtils.parseBareAddress(calleeAddress))) {
+    String failedMessage="Tranfer impossible:\n" + "Account roster does not contain tansfer peer: " + StringUtils.parseBareAddress(calleeAddress);
+    setState(CallPeerState.FAILED,failedMessage);
+    logger.info(failedMessage);
+  }
   OperationSetBasicTelephonyJabberImpl basicTelephony=(OperationSetBasicTelephonyJabberImpl)getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
   CallJabberImpl calleeCall=new CallJabberImpl(basicTelephony);
   TransferPacketExtension calleeTransfer=new TransferPacketExtension();
@@ -18,5 +23,4 @@
     calleeTransfer.setTo(calleeAddress);
   }
   basicTelephony.createOutgoingCall(calleeCall,calleeAddress,Arrays.asList(new PacketExtension[]{calleeTransfer}));
-  hangup(false,((sid == null) ? "Unattended" : "Attended") + " transfer success",new TransferredPacketExtension());
 }
