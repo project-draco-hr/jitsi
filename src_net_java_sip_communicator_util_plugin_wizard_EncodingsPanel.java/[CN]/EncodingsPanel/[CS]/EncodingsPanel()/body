@@ -2,9 +2,8 @@
   super(new BorderLayout());
   overrideCheckBox=new SIPCommCheckBox(resourceService.getI18NString("plugin.jabberaccregwizz.OVERRIDE_ENCODINGS"),false);
   mediaConfiguration=UtilActivator.getMediaConfiguration();
-  encodingConfiguration=mediaConfiguration.getNewEncodingConfiguration();
-  encodingConfiguration.loadConfig();
-  encodingProperties=encodingConfiguration.getEncodingProperties();
+  encodingConfiguration=mediaConfiguration.getMediaService().createEmptyEncodingConfiguration();
+  encodingConfiguration.loadEncodingConfiguration(mediaConfiguration.getMediaService().getCurrentEncodingConfiguration());
   audioControls=mediaConfiguration.createEncodingControls(MediaType.AUDIO,encodingConfiguration,false);
   videoControls=mediaConfiguration.createEncodingControls(MediaType.VIDEO,encodingConfiguration,false);
   JPanel mainPanel=new TransparentPanel();
@@ -17,9 +16,9 @@
   checkBoxPanel.add(resetButton,BorderLayout.EAST);
   resetButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
-      encodingConfiguration=mediaConfiguration.getNewEncodingConfiguration();
-      encodingConfiguration.loadConfig();
-      resetTables(encodingConfiguration);
+      encodingConfiguration.loadEncodingConfiguration(mediaConfiguration.getMediaService().getCurrentEncodingConfiguration());
+      encodingConfiguration.storeProperties(encodingProperties,ProtocolProviderFactory.ENCODING_PROP_PREFIX + ".");
+      resetTables();
     }
   }
 );
