@@ -10,6 +10,16 @@
   if (sid != null) {
     transfer.setFrom(protocolProvider.getOurJID());
     transfer.setSID(sid);
+    OperationSetBasicTelephonyJabberImpl basicTelephony=(OperationSetBasicTelephonyJabberImpl)protocolProvider.getOperationSet(OperationSetBasicTelephony.class);
+    CallPeerJabberImpl callPeer=basicTelephony.getActiveCallPeer(sid);
+    if (callPeer != null) {
+      if (!CallPeerState.isOnHold(callPeer.getState())) {
+        callPeer.putOnHold(true);
+      }
+    }
+    if (!CallPeerState.isOnHold(this.getState())) {
+      this.putOnHold(true);
+    }
   }
   transfer.setTo(to);
   transferSessionInfo.addExtension(transfer);
