@@ -1,0 +1,56 @@
+{
+  hangupButton=new HangupButton(this);
+  initButtonIndexes();
+  showHideVideoButton.setPeerRenderer(((CallRenderer)callPanel).getCallPeerRenderer(call.getCallPeers().next()));
+  videoButton.addChangeListener(new ChangeListener(){
+    public void stateChanged(    ChangeEvent e){
+      boolean isVideoSelected=videoButton.isSelected();
+      if (isVideoSelected)       settingsPanel.add(showHideVideoButton,GuiUtils.getComponentIndex(videoButton,settingsPanel) + 1);
+ else       settingsPanel.remove(showHideVideoButton);
+      showHideVideoButton.setEnabled(isVideoSelected);
+      showHideVideoButton.setSelected(isVideoSelected);
+      settingsPanel.revalidate();
+      settingsPanel.repaint();
+    }
+  }
+);
+  chatButton.addActionListener(this);
+  dialButton.addActionListener(this);
+  conferenceButton.addActionListener(this);
+  mergeButton.addActionListener(this);
+  dialButton.setEnabled(false);
+  conferenceButton.setEnabled(false);
+  holdButton.setEnabled(false);
+  recordButton.setEnabled(false);
+  settingsPanel.add(dialButton);
+  settingsPanel.add(conferenceButton);
+  settingsPanel.add(holdButton);
+  settingsPanel.add(recordButton);
+  settingsPanel.add(mergeButton);
+  mergeButton.setVisible(false);
+  if (!isLastConference) {
+    transferCallButton.setEnabled(false);
+    desktopSharingButton.setEnabled(false);
+    videoButton.setEnabled(false);
+    showHideVideoButton.setEnabled(false);
+    fullScreenButton.setEnabled(false);
+    addOneToOneSpecificComponents();
+    if (getIMCapableCallPeers().size() == 1) {
+      settingsPanel.add(chatButton);
+    }
+  }
+ else {
+    localLevel.setEnabled(false);
+    remoteLevel.setEnabled(false);
+    addConferenceSpecificComponents();
+  }
+  if (GuiActivator.getConfigurationService().getBoolean(SHOW_CALL_INFO_BUTON_PROP,true)) {
+    infoButton=new CallToolBarButton(ImageLoader.getImage(ImageLoader.CALL_INFO),INFO_BUTTON,GuiActivator.getResources().getI18NString("service.gui.PRESS_FOR_CALL_INFO"));
+    infoButton.addActionListener(this);
+    settingsPanel.add(infoButton);
+  }
+  settingsPanel.add(hangupButton);
+  dtmfHandler=new DTMFHandler(this);
+  add(callPanel,BorderLayout.CENTER);
+  add(createBottomBar(),BorderLayout.SOUTH);
+}

@@ -1,16 +1,21 @@
 {
-  ProtocolProviderService protocolProvider=evt.getProvider();
+  final ProtocolProviderService protocolProvider=evt.getProvider();
   this.updateStatus(protocolProvider);
   if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
     final OperationSetServerStoredAccountInfo accountInfoOpSet=protocolProvider.getOperationSet(OperationSetServerStoredAccountInfo.class);
     if (accountInfoOpSet != null)     new Thread(){
       public void run(){
         if (currentImage == null) {
-          byte[] accountImage=AccountInfoUtils.getImage(accountInfoOpSet);
-          if ((accountImage != null) && (accountImage.length > 0)) {
-            currentImage=accountImage;
-            accountImageLabel.setImageIcon(currentImage);
+          currentImage=AvatarCacheUtils.getCachedAvatar(protocolProvider);
+          if (currentImage == null) {
+            byte[] accountImage=AccountInfoUtils.getImage(accountInfoOpSet);
+            if ((accountImage != null) && (accountImage.length > 0)) {
+              currentImage=accountImage;
+              AvatarCacheUtils.cacheAvatar(protocolProvider,accountImage);
+              accountImageLabel.setImageIcon(currentImage);
+            }
           }
+ else           accountImageLabel.setImageIcon(currentImage);
         }
         if (!StringUtils.isNullOrEmpty(globalDisplayName))         return;
         String accountName=null;

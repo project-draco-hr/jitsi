@@ -1,21 +1,11 @@
 {
   String contentType=chatMessage.getContentType();
   String message=chatMessage.getMessage();
-  String msgID="message";
+  String msgID=ChatHtmlUtils.MESSAGE_TEXT_ID + chatMessage.getMessageUID();
   String chatString="";
   String endHeaderTag="";
-  String startDivTag="<DIV identifier=\"" + msgID + "\">";
+  String startDivTag="<DIV id=\"" + msgID + "\">";
   String endDivTag="</DIV>";
-  String startPlainTextTag;
-  String endPlainTextTag;
-  if (HTML_CONTENT_TYPE.equals(contentType)) {
-    startPlainTextTag="";
-    endPlainTextTag="";
-  }
- else {
-    startPlainTextTag=START_PLAINTEXT_TAG;
-    endPlainTextTag=END_PLAINTEXT_TAG;
-  }
   if (message.length() > 4 && message.substring(0,4).equals("/me ")) {
     chatString=startDivTag + "<B><I>";
     endHeaderTag="</I></B>" + endDivTag;
@@ -33,8 +23,8 @@
         Matcher m=p.matcher(msgStore);
         StringBuffer msgTemp=new StringBuffer(chatString);
         while (m.find()) {
-          msgTemp.insert(m.start(),startPlainTextTag);
-          msgTemp.insert(m.end() + startPlainTextTag.length(),endPlainTextTag);
+          msgTemp.insert(m.start(),ChatHtmlUtils.createStartPlainTextTag(contentType));
+          msgTemp.insert(m.end() + ChatHtmlUtils.createStartPlainTextTag(contentType).length(),ChatHtmlUtils.createEndPlainTextTag(contentType));
         }
         if (msgTemp.length() != msgStore.length())         msgStore=msgTemp;
       }

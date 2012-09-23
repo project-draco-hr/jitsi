@@ -1,7 +1,15 @@
 {
   TreePath mousePath=this.getPathForLocation(event.getX(),event.getY());
-  if (mousePath == null || !mousePath.equals(this.getSelectionPath()))   return;
-  JPanel renderer=(JPanel)getCellRenderer().getTreeCellRendererComponent(this,mousePath.getLastPathComponent(),true,true,true,this.getRowForPath(mousePath),true);
+  ContactListTreeCellRenderer renderer=(ContactListTreeCellRenderer)getCellRenderer().getTreeCellRendererComponent(this,mousePath.getLastPathComponent(),true,true,true,this.getRowForPath(mousePath),true);
+  if (mousePath == null || !mousePath.equals(this.getSelectionPath())) {
+    renderer.getChatButton().getModel().setRollover(false);
+    renderer.getCallButton().getModel().setRollover(false);
+    renderer.getCallVideoButton().getModel().setRollover(false);
+    renderer.getDesktopSharingButton().getModel().setRollover(false);
+    renderer.getAddContactButton().getModel().setRollover(false);
+    this.repaint();
+    return;
+  }
   Rectangle r=this.getPathBounds(mousePath);
   int translatedX=event.getX() - r.x;
   int translatedY=event.getY() - r.y;
@@ -9,7 +17,20 @@
   if (logger.isDebugEnabled() && mouseComponent != null)   logger.debug("DISPATCH MOUSE EVENT TO COMPONENT: " + mouseComponent.getClass().getName() + " with bounds: "+ mouseComponent.getBounds()+ " for x: "+ translatedX+ " and y: "+ translatedY);
   if (mouseComponent instanceof SIPCommButton) {
     MouseEvent evt=new MouseEvent(mouseComponent,event.getID(),event.getWhen(),event.getModifiers(),5,5,event.getClickCount(),event.isPopupTrigger());
+    ((SIPCommButton)mouseComponent).getModel().setRollover(event.getID() == MouseEvent.MOUSE_MOVED);
+    if (!mouseComponent.equals(renderer.getChatButton()))     renderer.getChatButton().getModel().setRollover(false);
+    if (!mouseComponent.equals(renderer.getCallButton()))     renderer.getCallButton().getModel().setRollover(false);
+    if (!mouseComponent.equals(renderer.getCallVideoButton()))     renderer.getCallVideoButton().getModel().setRollover(false);
+    if (!mouseComponent.equals(renderer.getDesktopSharingButton()))     renderer.getDesktopSharingButton().getModel().setRollover(false);
+    if (!mouseComponent.equals(renderer.getAddContactButton()))     renderer.getAddContactButton().getModel().setRollover(false);
     mouseComponent.dispatchEvent(evt);
-    this.repaint();
   }
+ else {
+    renderer.getChatButton().getModel().setRollover(false);
+    renderer.getCallButton().getModel().setRollover(false);
+    renderer.getCallVideoButton().getModel().setRollover(false);
+    renderer.getDesktopSharingButton().getModel().setRollover(false);
+    renderer.getAddContactButton().getModel().setRollover(false);
+  }
+  this.repaint();
 }

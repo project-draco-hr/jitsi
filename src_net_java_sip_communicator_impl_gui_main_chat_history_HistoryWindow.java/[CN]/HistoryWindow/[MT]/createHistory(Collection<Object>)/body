@@ -5,31 +5,36 @@
     while (i.hasNext()) {
       Object o=i.next();
       ChatMessage chatMessage=null;
+      ProtocolProviderService protocolProvider=null;
       if (o instanceof MessageDeliveredEvent) {
         MessageDeliveredEvent evt=(MessageDeliveredEvent)o;
-        ProtocolProviderService protocolProvider=evt.getDestinationContact().getProtocolProvider();
+        protocolProvider=evt.getDestinationContact().getProtocolProvider();
         chatMessage=new ChatMessage(GuiActivator.getUIService().getMainFrame().getAccountAddress(protocolProvider),GuiActivator.getUIService().getMainFrame().getAccountDisplayName(protocolProvider),evt.getTimestamp(),Chat.OUTGOING_MESSAGE,null,evt.getSourceMessage().getContent(),evt.getSourceMessage().getContentType(),evt.getSourceMessage().getMessageUID(),null);
       }
  else       if (o instanceof MessageReceivedEvent) {
         MessageReceivedEvent evt=(MessageReceivedEvent)o;
+        protocolProvider=evt.getSourceContact().getProtocolProvider();
         chatMessage=new ChatMessage(evt.getSourceContact().getAddress(),evt.getSourceContact().getDisplayName(),evt.getTimestamp(),Chat.INCOMING_MESSAGE,null,evt.getSourceMessage().getContent(),evt.getSourceMessage().getContentType(),evt.getSourceMessage().getMessageUID(),null);
       }
  else       if (o instanceof ChatRoomMessageReceivedEvent) {
         ChatRoomMessageReceivedEvent evt=(ChatRoomMessageReceivedEvent)o;
+        protocolProvider=evt.getSourceChatRoom().getParentProvider();
         chatMessage=new ChatMessage(evt.getSourceChatRoomMember().getName(),evt.getTimestamp(),Chat.INCOMING_MESSAGE,evt.getMessage().getContent(),evt.getMessage().getContentType());
       }
  else       if (o instanceof ChatRoomMessageDeliveredEvent) {
         ChatRoomMessageDeliveredEvent evt=(ChatRoomMessageDeliveredEvent)o;
+        protocolProvider=evt.getSourceChatRoom().getParentProvider();
         chatMessage=new ChatMessage(evt.getSourceChatRoom().getParentProvider().getAccountID().getUserID(),evt.getTimestamp(),Chat.INCOMING_MESSAGE,evt.getMessage().getContent(),evt.getMessage().getContentType());
       }
  else       if (o instanceof FileRecord) {
         FileRecord fileRecord=(FileRecord)o;
+        protocolProvider=fileRecord.getContact().getProtocolProvider();
         FileHistoryConversationComponent component=new FileHistoryConversationComponent(this,fileRecord);
         chatConvPanel.addComponent(component);
       }
       if (chatMessage != null) {
-        processedMessage=chatConvPanel.processMessage(chatMessage,searchKeyword);
-        chatConvPanel.appendMessageToEnd(processedMessage,ChatConversationPanel.TEXT_CONTENT_TYPE);
+        processedMessage=chatConvPanel.processMessage(chatMessage,searchKeyword,protocolProvider,chatMessage.getContactName());
+        chatConvPanel.appendMessageToEnd(processedMessage,ChatHtmlUtils.TEXT_CONTENT_TYPE);
       }
     }
   }

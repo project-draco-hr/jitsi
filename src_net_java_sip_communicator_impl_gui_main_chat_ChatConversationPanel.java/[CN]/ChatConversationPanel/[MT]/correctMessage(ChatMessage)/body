@@ -1,40 +1,25 @@
 {
   String correctedUID=chatMessage.getCorrectedMessageUID();
   Element root=document.getDefaultRootElement();
-  Element e=document.getElement(root,Attribute.ID,correctedUID);
-  if (e == null) {
+  Element correctedMsgElement=document.getElement(root,Attribute.ID,ChatHtmlUtils.MESSAGE_TEXT_ID + correctedUID);
+  if (correctedMsgElement == null) {
     logger.warn("Could not find message with ID " + correctedUID);
     return;
   }
-  int len=e.getEndOffset() - e.getStartOffset();
-  StringBuilder newContents=new StringBuilder();
-  String bgColor=GuiActivator.getResources().getColorString("service.gui.CHAT_EDIT_MESSAGE_BACKGROUND");
-  newContents.append("<div identifier='message' id='");
-  newContents.append(chatMessage.getMessageUID());
-  newContents.append("' bgcolor='");
-  newContents.append(bgColor);
-  newContents.append("'>");
-  if (chatMessage.getContentType().equals(TEXT_CONTENT_TYPE)) {
-    newContents.append(START_PLAINTEXT_TAG);
-    newContents.append(chatMessage.getMessage());
-    newContents.append(END_PLAINTEXT_TAG);
-  }
- else {
-    newContents.append(chatMessage.getMessage());
-  }
-  newContents.append("</div>");
-  Element header=document.getElement(root,Attribute.ID,correctedUID + "-editedAt");
-  try {
-    if (header != null) {
-      String newHeaderContents=generateEditedAtTag(chatMessage.getMessageUID(),chatMessage.getDate());
-      document.setOuterHTML(header,newHeaderContents);
+  String contactAddress=(String)correctedMsgElement.getAttributes().getAttribute(Attribute.NAME);
+  String newMessage=ChatHtmlUtils.createMessageTag(ChatHtmlUtils.MESSAGE_TEXT_ID + chatMessage.getMessageUID(),contactAddress,formatMessage(chatMessage.getMessage(),chatMessage.getContentType(),""),chatMessage.getContentType(),chatMessage.getDate(),true);
+synchronized (scrollToBottomRunnable) {
+    try {
+      document.setOuterHTML(correctedMsgElement,newMessage);
+      lastMessageUID=chatMessage.getMessageUID();
+      SwingUtilities.invokeLater(scrollToBottomRunnable);
     }
-    document.setOuterHTML(e,newContents.toString());
+ catch (    BadLocationException ex) {
+      logger.error("Could not replace chat message",ex);
+    }
+catch (    IOException ex) {
+      logger.error("Could not replace chat message",ex);
+    }
   }
- catch (  BadLocationException ex) {
-    logger.error("Could not replace chat message",ex);
-  }
-catch (  IOException ex) {
-    logger.error("Could not replace chat message",ex);
-  }
+  finishMessageAdd(newMessage,chatMessage.getContentType());
 }
