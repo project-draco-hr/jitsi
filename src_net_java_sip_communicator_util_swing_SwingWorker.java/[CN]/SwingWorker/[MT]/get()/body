@@ -1,15 +1,27 @@
 {
-  while (true) {
-    Thread t=threadVar.get();
-    if (t == null) {
-      return getValue();
-    }
-    try {
-      t.join();
-    }
- catch (    InterruptedException e) {
-      Thread.currentThread().interrupt();
-      return null;
-    }
+  Future<?> future;
+synchronized (this) {
+    future=this.future;
   }
+  Object value=null;
+  if (future != null) {
+    boolean interrupted=false;
+    while (!future.isDone()) {
+      value=null;
+      try {
+        value=future.get();
+      }
+ catch (      CancellationException ce) {
+        break;
+      }
+catch (      ExecutionException ee) {
+        break;
+      }
+catch (      InterruptedException ie) {
+        interrupted=true;
+      }
+    }
+    if (interrupted)     Thread.currentThread().interrupt();
+  }
+  return value;
 }
