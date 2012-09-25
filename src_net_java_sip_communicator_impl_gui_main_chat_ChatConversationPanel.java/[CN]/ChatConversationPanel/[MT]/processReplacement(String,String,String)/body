@@ -1,5 +1,27 @@
 {
   SwingWorker worker=new SwingWorker(){
+    /** 
+ * Called on the event dispatching thread (not on the worker thread)
+ * after the <code>construct</code> method has returned.
+ */
+    public void finished(){
+      String newMessage=(String)get();
+      if (newMessage != null && !newMessage.equals(chatString)) {
+synchronized (scrollToBottomRunnable) {
+          scrollToBottomIsPending=true;
+          try {
+            Element elem=document.getElement(messageID);
+            document.setOuterHTML(elem,newMessage);
+          }
+ catch (          BadLocationException ex) {
+            logger.error("Could not replace chat message",ex);
+          }
+catch (          IOException ex) {
+            logger.error("Could not replace chat message",ex);
+          }
+        }
+      }
+    }
     public Object construct() throws Exception {
       ConfigurationService cfg=GuiActivator.getConfigurationService();
       boolean isEnabled=cfg.getBoolean(ReplacementProperty.REPLACEMENT_ENABLE,true);
@@ -41,15 +63,7 @@
         String msgBuffString=msgBuff.toString();
         if (!msgBuffString.equals(msgStore))         msgStore=msgBuffString;
       }
-      if (!msgStore.equals(chatString)) {
-synchronized (scrollToBottomRunnable) {
-          scrollToBottomIsPending=true;
-          int msgBeginIndex=msgStore.indexOf("<div id");
-          int msgEndIndex=msgStore.indexOf("</div>",msgBeginIndex);
-          document.setOuterHTML(elem,msgStore.substring(msgBeginIndex,msgEndIndex));
-        }
-      }
-      return "";
+      return msgStore;
     }
   }
 ;

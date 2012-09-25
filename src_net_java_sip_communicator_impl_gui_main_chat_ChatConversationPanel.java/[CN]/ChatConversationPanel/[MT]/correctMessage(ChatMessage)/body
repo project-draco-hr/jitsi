@@ -1,4 +1,13 @@
 {
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        correctMessage(chatMessage);
+      }
+    }
+);
+    return;
+  }
   String correctedUID=chatMessage.getCorrectedMessageUID();
   Element root=document.getDefaultRootElement();
   Element correctedMsgElement=document.getElement(root,Attribute.ID,ChatHtmlUtils.MESSAGE_TEXT_ID + correctedUID);
@@ -7,7 +16,7 @@
     return;
   }
   String contactAddress=(String)correctedMsgElement.getAttributes().getAttribute(Attribute.NAME);
-  String newMessage=ChatHtmlUtils.createMessageTag(ChatHtmlUtils.MESSAGE_TEXT_ID + chatMessage.getMessageUID(),contactAddress,formatMessage(chatMessage.getMessage(),chatMessage.getContentType(),""),chatMessage.getContentType(),chatMessage.getDate(),true);
+  String newMessage=ChatHtmlUtils.createMessageTag(chatMessage.getMessageUID(),contactAddress,formatMessage(chatMessage.getMessage(),chatMessage.getContentType(),""),chatMessage.getContentType(),chatMessage.getDate(),true,isSimpleTheme);
 synchronized (scrollToBottomRunnable) {
     try {
       document.setOuterHTML(correctedMsgElement,newMessage);

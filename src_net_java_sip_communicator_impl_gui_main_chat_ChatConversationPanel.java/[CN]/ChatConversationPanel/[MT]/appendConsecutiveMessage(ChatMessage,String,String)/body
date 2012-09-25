@@ -1,30 +1,30 @@
 {
-  if (lastMessageUID == null)   return false;
-  Element root=document.getDefaultRootElement();
-  Element lastMsgElement=document.getElement(root,Attribute.ID,ChatHtmlUtils.MESSAGE_TEXT_ID + lastMessageUID);
-  if (lastMsgElement == null) {
-    logger.warn("Could not find message with ID " + lastMessageUID);
-    return false;
-  }
-  String contactAddress=(String)lastMsgElement.getAttributes().getAttribute(Attribute.NAME);
-  if (contactAddress != null && contactAddress.equals(chatMessage.getContactName()) && ((chatMessage.getDate() - lastMessageTimestamp) < 60000)) {
-    String newMessage=ChatHtmlUtils.createMessageTag(ChatHtmlUtils.MESSAGE_TEXT_ID + chatMessage.getMessageUID(),contactAddress,formatMessage(chatMessage.getMessage(),contentType,keyword),contentType,chatMessage.getDate(),false);
-synchronized (scrollToBottomRunnable) {
-      try {
-        Element parentElement=lastMsgElement.getParentElement();
-        document.insertBeforeEnd(parentElement,newMessage);
-        lastMessageUID=chatMessage.getMessageUID();
-        SwingUtilities.invokeLater(scrollToBottomRunnable);
-      }
- catch (      BadLocationException ex) {
-        logger.error("Could not replace chat message",ex);
-      }
-catch (      IOException ex) {
-        logger.error("Could not replace chat message",ex);
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        appendConsecutiveMessage(chatMessage,keyword,contentType);
       }
     }
-    finishMessageAdd(newMessage,contentType);
-    return true;
+);
+    return;
   }
-  return false;
+  Element lastMsgElement=document.getElement(ChatHtmlUtils.MESSAGE_TEXT_ID + lastMessageUID);
+  String contactAddress=(String)lastMsgElement.getAttributes().getAttribute(Attribute.NAME);
+  String newMessage=ChatHtmlUtils.createMessageTag(chatMessage.getMessageUID(),contactAddress,formatMessage(chatMessage.getMessage(),contentType,keyword),contentType,chatMessage.getDate(),false,isSimpleTheme);
+synchronized (scrollToBottomRunnable) {
+    try {
+      Element parentElement=lastMsgElement.getParentElement();
+      document.insertBeforeEnd(parentElement,newMessage);
+      replaceMessageDivID(document.getElement(ChatHtmlUtils.MESSAGE_DIV_ID + lastMessageUID),lastMessageUID,chatMessage.getMessageUID());
+      lastMessageUID=chatMessage.getMessageUID();
+      SwingUtilities.invokeLater(scrollToBottomRunnable);
+    }
+ catch (    BadLocationException ex) {
+      logger.error("Could not replace chat message",ex);
+    }
+catch (    IOException ex) {
+      logger.error("Could not replace chat message",ex);
+    }
+  }
+  finishMessageAdd(newMessage,contentType);
 }

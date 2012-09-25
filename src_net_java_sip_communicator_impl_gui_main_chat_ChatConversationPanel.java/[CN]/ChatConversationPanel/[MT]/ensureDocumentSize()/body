@@ -2,27 +2,19 @@
   if (document.getLength() > Chat.CHAT_BUFFER_SIZE) {
     int msgElementCount=0;
     Element firstMsgElement=null;
-    int firstMsgIndex=0;
-    Element rootElement=this.document.getDefaultRootElement();
-    for (int i=0; i < rootElement.getElementCount(); i++) {
-      String idAttr=(String)rootElement.getElement(i).getAttributes().getAttribute("identifier");
-      if (idAttr != null && (idAttr.startsWith(ChatHtmlUtils.MESSAGE_TEXT_ID) || idAttr.equals("statusMessage") || idAttr.equals("systemMessage"))) {
+    Element root=document.getDefaultRootElement();
+    Element bodyElement=root.getElement(root.getElementCount() - 1);
+    for (int i=0; i < bodyElement.getElementCount(); i++) {
+      String idAttr=(String)bodyElement.getElement(i).getAttributes().getAttribute(Attribute.ID);
+      if (idAttr != null && (idAttr.startsWith(ChatHtmlUtils.MESSAGE_DIV_ID) || idAttr.equals("statusMessage") || idAttr.equals("systemMessage")|| idAttr.equals("actionMessage"))) {
         if (firstMsgElement == null) {
-          firstMsgElement=rootElement.getElement(i);
-          firstMsgIndex=i;
+          firstMsgElement=bodyElement.getElement(i);
         }
         msgElementCount++;
       }
     }
     if (firstMsgElement == null || msgElementCount < 2)     return;
     try {
-      if (firstMsgIndex > 0) {
-        Element headerElement=rootElement.getElement(firstMsgIndex - 1);
-        String idAttr=(String)headerElement.getAttributes().getAttribute("identifier");
-        if (idAttr != null && idAttr.equals("messageHeader")) {
-          this.document.remove(headerElement.getStartOffset(),headerElement.getEndOffset() - headerElement.getStartOffset());
-        }
-      }
       this.document.remove(firstMsgElement.getStartOffset(),firstMsgElement.getEndOffset() - firstMsgElement.getStartOffset());
     }
  catch (    BadLocationException e) {
