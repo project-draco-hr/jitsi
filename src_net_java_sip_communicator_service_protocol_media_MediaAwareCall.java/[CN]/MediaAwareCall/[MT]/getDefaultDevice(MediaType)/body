@@ -1,35 +1,3 @@
 {
-  MediaDevice device;
-switch (mediaType) {
-case AUDIO:
-{
-      List<Call> callGroupCalls;
-      if ((conferenceAudioMixer == null) && (callGroup != null) && ((callGroupCalls=callGroup.getCalls()).size() > 0)) {
-        conferenceAudioMixer=((MediaAwareCall<?,?,?>)callGroupCalls.get(0)).conferenceAudioMixer;
-        device=conferenceAudioMixer;
-      }
-      device=audioDevice;
-    }
-  break;
-case VIDEO:
-device=videoDevice;
-break;
-default :
-return null;
-}
-MediaService mediaService=ProtocolMediaActivator.getMediaService();
-if (device == null) device=mediaService.getDefaultDevice(mediaType,mediaUseCase);
-switch (mediaType) {
-case AUDIO:
-if ((conferenceAudioMixer == null) && (device != null) && (!OSUtils.IS_ANDROID || isConferenceFocus())&& device.getDirection().allowsSending()) conferenceAudioMixer=mediaService.createMixer(device);
-if (conferenceAudioMixer != null) device=conferenceAudioMixer;
-break;
-case VIDEO:
-if (isConferenceFocus()) {
-if ((conferenceVideoMixer == null) && (device != null)) conferenceVideoMixer=mediaService.createMixer(device);
-if (conferenceVideoMixer != null) device=conferenceVideoMixer;
-}
-break;
-}
-return device;
+  return getConference().getDefaultDevice(mediaType,mediaUseCase);
 }

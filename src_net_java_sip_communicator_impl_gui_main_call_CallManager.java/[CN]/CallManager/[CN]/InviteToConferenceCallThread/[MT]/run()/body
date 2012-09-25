@@ -1,24 +1,40 @@
 {
-  OperationSetTelephonyConferencing confOpSet=call.getProtocolProvider().getOperationSet(OperationSetTelephonyConferencing.class);
-  if (confOpSet == null)   return;
-  if (ConfigurationManager.isNormalizePhoneNumber())   normalizePhoneNumbers(callees);
-  for (  String callee : callees) {
-    Throwable exception=null;
+  CallConference conference=(call == null) ? null : call.getConference();
+  for (  Map.Entry<ProtocolProviderService,List<String>> entry : callees.entrySet()) {
+    ProtocolProviderService pps=entry.getKey();
+    OperationSetBasicTelephony<?> basicTelephony=pps.getOperationSet(OperationSetBasicTelephony.class);
+    if (basicTelephony == null)     continue;
+    List<String> contactList=entry.getValue();
+    String[] contactArray=contactList.toArray(new String[contactList.size()]);
+    if (ConfigurationManager.isNormalizePhoneNumber())     normalizePhoneNumbers(contactArray);
+    Call ppsCall;
+    if ((call != null) && pps.equals(call.getProtocolProvider()))     ppsCall=call;
+ else {
+      ppsCall=null;
+      if (conference != null) {
+        for (        Call conferenceCall : conference.getCalls()) {
+          if (pps.equals(conferenceCall.getProtocolProvider())) {
+            ppsCall=conferenceCall;
+            break;
+          }
+        }
+      }
+    }
+    OperationSetTelephonyConferencing telephonyConferencing=pps.getOperationSet(OperationSetTelephonyConferencing.class);
     try {
-      confOpSet.inviteCalleeToCall(callee,call);
+      if (ppsCall == null) {
+        ppsCall=telephonyConferencing.createConfCall(contactArray,conference);
+        if (conference == null)         conference=ppsCall.getConference();
+      }
+ else {
+        for (        String contact : contactArray) {
+          telephonyConferencing.inviteCalleeToCall(contact,ppsCall);
+        }
+      }
     }
- catch (    OperationFailedException ofe) {
-      exception=ofe;
-    }
-catch (    OperationNotSupportedException onse) {
-      exception=onse;
-    }
-catch (    IllegalArgumentException iae) {
-      exception=iae;
-    }
-    if (exception != null) {
-      logger.error("Failed to invite callee: " + callee,exception);
-      new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),exception.getMessage(),ErrorDialog.ERROR).showDialog();
+ catch (    Exception e) {
+      logger.error("Failed to invite callees: " + Arrays.toString(contactArray),e);
+      new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),e.getMessage(),ErrorDialog.ERROR).showDialog();
     }
   }
 }

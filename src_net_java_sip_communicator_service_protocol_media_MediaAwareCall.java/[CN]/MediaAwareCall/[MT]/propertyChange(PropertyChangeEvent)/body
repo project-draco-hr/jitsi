@@ -1,23 +1,11 @@
 {
-  if (MediaService.DEFAULT_DEVICE.equals(event.getPropertyName())) {
-    CallGroup callGroup=getCallGroup();
-    if ((callGroup != null) && (this != callGroup.getCalls().get(0)))     return;
-    MediaDevice oldValue=(conferenceAudioMixer instanceof MediaDeviceWrapper) ? ((MediaDeviceWrapper)conferenceAudioMixer).getWrappedDevice() : null;
-    MediaDevice newValue=(audioDevice == null) ? ProtocolMediaActivator.getMediaService().getDefaultDevice(MediaType.AUDIO,mediaUseCase) : audioDevice;
-    if (oldValue != newValue) {
-      conferenceAudioMixer=null;
-      propertyChangeSupport.firePropertyChange(DEFAULT_DEVICE,oldValue,newValue);
-      callGroup=getCallGroup();
-      if (callGroup != null) {
-        List<Call> calls=callGroup.getCalls();
-        for (        Call c : calls) {
-          if (c != this) {
-            MediaAwareCall<?,?,?> call=(MediaAwareCall<?,?,?>)c;
-            call.conferenceAudioMixer=null;
-            call.propertyChangeSupport.firePropertyChange(DEFAULT_DEVICE,oldValue,newValue);
-          }
-        }
-      }
+  if (event.getSource() instanceof CallConference) {
+    String propertyName=event.getPropertyName();
+    if (CONFERENCE_FOCUS.equals(propertyName)) {
+      conferenceFocusChanged((Boolean)event.getOldValue(),(Boolean)event.getNewValue());
+    }
+ else     if (DEFAULT_DEVICE.equals(propertyName)) {
+      firePropertyChange(DEFAULT_DEVICE,event.getOldValue(),event.getNewValue());
     }
   }
 }

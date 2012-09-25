@@ -1,0 +1,20 @@
+{
+  Iterator<? extends CallPeer> peers=call.getCallPeers();
+  OperationSetBasicTelephony<?> telephony=call.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
+  while (peers.hasNext()) {
+    CallPeer callPeer=peers.next();
+    boolean putOffHold=true;
+    if (callPeer instanceof MediaAwareCallPeer) {
+      putOffHold=((MediaAwareCallPeer<?,?,?>)callPeer).getMediaHandler().isLocallyOnHold();
+    }
+    if (putOffHold) {
+      try {
+        telephony.putOffHold(callPeer);
+        Thread.sleep(400);
+      }
+ catch (      Exception ofe) {
+        logger.error("Failed to put off hold.",ofe);
+      }
+    }
+  }
+}

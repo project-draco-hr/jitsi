@@ -1,23 +1,11 @@
 {
   Call sourceCall=event.getSourceCall();
-  if (activeCalls.get(sourceCall) != null) {
-    CallPanel callContainer=activeCalls.get(sourceCall);
-    CallGroup group=sourceCall.getCallGroup();
-    if (group != null) {
-      for (      Call c : group.getCalls()) {
-        if (c == sourceCall)         continue;
-        CallPanel container=activeCalls.get(c);
-        if (container != null) {
-          activeCalls.remove(c);
-          container.getCallWindow().close(container);
-        }
-      }
-    }
-    activeCalls.remove(sourceCall);
-    callContainer.getCallWindow().closeWait(callContainer);
-    List<CallPanel> calls=new ArrayList<CallPanel>(activeCalls.values());
-    for (    CallPanel cp : calls) {
-      if (cp != null)       cp.incomingCallReceived(event);
+  CallPanel callContainer=getActiveCallContainer(sourceCall);
+  if (callContainer != null) {
+    closeCallContainerIfNotNecessary(sourceCall,true);
+    List<CallPanel> callPanels=new ArrayList<CallPanel>(activeCalls.values());
+    for (    CallPanel callPanel : callPanels) {
+      if (callPanel != null)       callPanel.callEnded(event);
     }
   }
 }

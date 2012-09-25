@@ -4,35 +4,36 @@
   for (  Map.Entry<String,List<AWTKeyStroke>> entry : set.getBindings().entrySet()) {
     for (    AWTKeyStroke ks : entry.getValue()) {
       if (ks == null)       continue;
-      if (entry.getKey().equals("answer") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
+      String entryKey=entry.getKey();
+      if (entryKey.equals("answer") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
         manageNextIncomingCall(CallAction.ANSWER);
       }
- else       if (entry.getKey().equals("hangup") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
+ else       if (entryKey.equals("hangup") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
         if (!manageNextIncomingCall(CallAction.HANGUP)) {
           if (!closeAnsweredCalls(true)) {
             closeAnsweredCalls(false);
           }
         }
       }
- else       if (entry.getKey().equals("answer_hangup") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
+ else       if (entryKey.equals("answer_hangup") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
         if (!manageNextIncomingCall(CallAction.ANSWER)) {
           if (!closeAnsweredCalls(true)) {
             closeAnsweredCalls(false);
           }
         }
       }
- else       if (entry.getKey().equals("mute") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
+ else       if (entryKey.equals("mute") && keystroke.getKeyCode() == ks.getKeyCode() && keystroke.getModifiers() == ks.getModifiers()) {
+        try {
 synchronized (incomingCalls) {
-          for (          Call c : incomingCalls) {
-            handleMute(c);
+            for (            Call c : incomingCalls)             handleMute(c);
           }
-        }
 synchronized (answeredCalls) {
-          for (          Call c : answeredCalls) {
-            handleMute(c);
+            for (            Call c : answeredCalls)             handleMute(c);
           }
         }
-        mute=!mute;
+  finally {
+          mute=!mute;
+        }
       }
     }
   }

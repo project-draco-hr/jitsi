@@ -1,51 +1,12 @@
 {
-  Iterator<? extends CallPeer> peers=first.getCallPeers();
-  OperationSetBasicTelephony<?> telephony=first.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
-  while (peers.hasNext()) {
-    CallPeer callPeer=peers.next();
-    boolean putOffHold=true;
-    if (callPeer instanceof MediaAwareCallPeer) {
-      putOffHold=((MediaAwareCallPeer<?,?,?>)callPeer).getMediaHandler().isLocallyOnHold();
+  putOffHold(first);
+  if (!calls.isEmpty()) {
+    CallConference conference=first.getConference();
+    for (    Call call : calls) {
+      if (call == first)       continue;
+      putOffHold(call);
+      closeCallContainerIfNotNecessary(call,false);
+      call.setConference(conference);
     }
-    if (putOffHold) {
-      try {
-        telephony.putOffHold(callPeer);
-        Thread.sleep(400);
-      }
- catch (      Exception ofex) {
-        logger.error("Failed to put off hold.",ofex);
-      }
-    }
-  }
-  for (  Call c : calls) {
-    if (c == first || (first.getCallGroup() != null && c.getCallGroup() == first.getCallGroup()))     continue;
-    peers=c.getCallPeers();
-    telephony=c.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
-    while (peers.hasNext()) {
-      CallPeer callPeer=peers.next();
-      boolean putOffHold=true;
-      if (callPeer instanceof MediaAwareCallPeer) {
-        putOffHold=((MediaAwareCallPeer<?,?,?>)callPeer).getMediaHandler().isLocallyOnHold();
-      }
-      if (putOffHold) {
-        try {
-          telephony.putOffHold(callPeer);
-          Thread.sleep(400);
-        }
- catch (        Exception ofex) {
-          logger.error("Failed to put off hold.",ofex);
-        }
-      }
-    }
-    CallPanel callPanel=CallManager.getActiveCallContainer(c);
-    callPanel.getCallWindow().close(callPanel);
-    CallGroup group=first.getCallGroup();
-    if (group == null) {
-      group=new CallGroup();
-      group.addCall(first);
-      first.setCallGroup(group);
-    }
-    group.addCall(c);
-    group.fireCallGroupEvent(c,CallGroupEvent.CALLGROUP_CALL_ADDED);
   }
 }

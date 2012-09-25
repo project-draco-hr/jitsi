@@ -1,0 +1,24 @@
+{
+  int mediaTypeIndex=mediaType.ordinal();
+  MediaDevice device=devices[mediaTypeIndex];
+  MediaService mediaService=ProtocolMediaActivator.getMediaService();
+  if (device == null)   device=mediaService.getDefaultDevice(mediaType,mediaUseCase);
+  if (device != null) {
+    MediaDevice mixer=mixers[mediaTypeIndex];
+    if (mixer == null) {
+switch (mediaType) {
+case AUDIO:
+        if ((!OSUtils.IS_ANDROID || isConferenceFocus()) && device.getDirection().allowsSending()) {
+          mixer=mediaService.createMixer(device);
+        }
+      break;
+case VIDEO:
+    if (isConferenceFocus())     mixer=mediaService.createMixer(device);
+  break;
+}
+mixers[mediaTypeIndex]=mixer;
+}
+if (mixer != null) device=mixer;
+}
+return device;
+}

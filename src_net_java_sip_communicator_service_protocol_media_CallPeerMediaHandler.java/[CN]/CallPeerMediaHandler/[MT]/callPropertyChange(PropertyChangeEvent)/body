@@ -1,13 +1,21 @@
 {
-  if (MediaAwareCall.DEFAULT_DEVICE.equals(event.getPropertyName())) {
-    MediaStream stream=getStream(MediaType.AUDIO);
-    MediaDevice oldValue=stream.getDevice();
-    if (oldValue != null) {
-      MediaDevice newValue=getDefaultDevice(MediaType.AUDIO);
-      if (oldValue != newValue) {
-        stream.setDevice(newValue);
-        registerAudioLevelListeners((AudioMediaStream)stream);
+  String propertyName=event.getPropertyName();
+  if (MediaAwareCall.CONFERENCE.equals(propertyName) || MediaAwareCall.DEFAULT_DEVICE.equals(propertyName)) {
+    MediaAwareCall<?,?,?> call=getPeer().getCall();
+    if (call == null)     return;
+    for (    MediaType mediaType : MediaType.values()) {
+      MediaStream stream=getStream(mediaType);
+      MediaDevice oldDevice=stream.getDevice();
+      if (oldDevice != null) {
+        MediaDevice newDevice=getDefaultDevice(mediaType);
+        if (oldDevice != newDevice) {
+          stream.setDevice(newDevice);
+          if (stream instanceof AudioMediaStream) {
+            registerAudioLevelListeners((AudioMediaStream)stream);
+          }
+        }
       }
+      stream.setRTPTranslator(call.getRTPTranslator(mediaType));
     }
   }
 }

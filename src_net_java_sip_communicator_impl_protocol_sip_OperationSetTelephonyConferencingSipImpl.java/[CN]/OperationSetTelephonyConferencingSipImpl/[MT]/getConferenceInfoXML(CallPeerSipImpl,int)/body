@@ -6,23 +6,6 @@
     if (localPartyAddress != null)     localParty=stripParametersFromAddress(localPartyAddress.getURI().toString());
   }
   StringBuffer xml=new StringBuffer();
-  CallSipImpl call=callPeer.getCall();
-  List<CallPeer> crossPeers=new ArrayList<CallPeer>();
-  Iterator<CallPeer> crossProtocolCallPeerIter=call.getCrossProtocolCallPeers();
-  while (crossProtocolCallPeerIter.hasNext()) {
-    MediaAwareCallPeer<?,?,?> crossPeer=(MediaAwareCallPeer<?,?,?>)crossProtocolCallPeerIter.next();
-    Iterator<CallPeerSipImpl> it=call.getCallPeers();
-    boolean found=false;
-    while (it.hasNext()) {
-      CallPeerSipImpl cpsip=it.next();
-      if (cpsip.getAddress().equals(crossPeer.getAddress())) {
-        found=true;
-        break;
-      }
-    }
-    if (found)     continue;
-    if (!crossPeers.contains(crossPeer))     crossPeers.add(crossPeer);
-  }
   xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
   append(xml,"<",ELEMENT_CONFERENCE_INFO);
   append(xml," entity=\"",domElementWriter.encode(localParty),"\"");
@@ -31,7 +14,9 @@
   append(xml,"<",ELEMENT_CONFERENCE_DESCRIPTION,"/>");
   append(xml,"<",ELEMENT_CONFERENCE_STATE,">");
   append(xml,"<",ELEMENT_USER_COUNT,">");
-  xml.append(call.getCallPeerCount() + 1 + call.getCrossProtocolCallPeerCount());
+  CallSipImpl call=callPeer.getCall();
+  List<CallPeer> conferenceCallPeers=CallConference.getCallPeers(call);
+  xml.append(1 + conferenceCallPeers.size());
   append(xml,"</",ELEMENT_USER_COUNT,">");
   append(xml,"</",ELEMENT_CONFERENCE_STATE,">");
   append(xml,"<",ELEMENT_USERS,">");
@@ -51,12 +36,7 @@
   getMediaXML(callPeer,false,xml);
   append(xml,"</",ELEMENT_ENDPOINT,">");
   append(xml,"</",ELEMENT_USER,">");
-  Iterator<CallPeerSipImpl> callPeerIter=call.getCallPeers();
-  while (callPeerIter.hasNext())   getUserXML(callPeerIter.next(),xml);
-  for (  CallPeer cp : crossPeers) {
-    MediaAwareCallPeer<?,?,?> crossPeer=(MediaAwareCallPeer<?,?,?>)cp;
-    getUserXML(crossPeer,xml);
-  }
+  for (  CallPeer conferenceCallPeer : conferenceCallPeers)   getUserXML(conferenceCallPeer,xml);
   append(xml,"</",ELEMENT_USERS,">");
   append(xml,"</",ELEMENT_CONFERENCE_INFO,">");
   return xml.toString();

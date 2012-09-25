@@ -1,0 +1,19 @@
+{
+  String propertyName=event.getPropertyName();
+  if (MediaService.DEFAULT_DEVICE.equals(propertyName)) {
+    Object source=event.getSource();
+    if (source instanceof MediaService) {
+      int mediaTypeIndex=MediaType.AUDIO.ordinal();
+      MediaDevice mixer=mixers[mediaTypeIndex];
+      MediaDevice oldValue=(mixer instanceof MediaDeviceWrapper) ? ((MediaDeviceWrapper)mixer).getWrappedDevice() : null;
+      MediaDevice newValue=devices[mediaTypeIndex];
+      if (newValue == null) {
+        newValue=ProtocolMediaActivator.getMediaService().getDefaultDevice(MediaType.AUDIO,MediaUseCase.ANY);
+      }
+      if (oldValue != newValue) {
+        mixers[mediaTypeIndex]=null;
+        firePropertyChange(MediaAwareCall.DEFAULT_DEVICE,oldValue,newValue);
+      }
+    }
+  }
+}

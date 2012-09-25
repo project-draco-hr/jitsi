@@ -1,15 +1,32 @@
 {
-  OperationSetBasicTelephony<?> telephonyOpSet=protocolProvider.getOperationSet(OperationSetBasicTelephony.class);
-  if (telephonyOpSet == null)   return;
-  String callString=null;
-  if (contact != null)   callString=contact.getAddress();
- else   if (stringContact != null)   callString=stringContact;
-  if (ConfigurationManager.isNormalizePhoneNumber())   callString=normalizePhoneNumber(callString);
-  try {
-    telephonyOpSet.createCall(callString);
+  Contact contact=this.contact;
+  String stringContact=this.stringContact;
+  if (ConfigurationManager.isNormalizePhoneNumber()) {
+    if (contact != null) {
+      stringContact=contact.getAddress();
+      contact=null;
+    }
+    stringContact=normalizePhoneNumber(stringContact);
   }
- catch (  Throwable exception) {
-    logger.error("The call could not be created: ",exception);
-    new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),exception.getMessage(),exception).showDialog();
+  try {
+    if (video) {
+      OperationSetVideoTelephony telephony=protocolProvider.getOperationSet(OperationSetVideoTelephony.class);
+      if (telephony != null) {
+        if (contact != null)         telephony.createVideoCall(contact);
+ else         if (stringContact != null)         telephony.createVideoCall(stringContact);
+      }
+    }
+ else {
+      OperationSetBasicTelephony<?> telephony=protocolProvider.getOperationSet(OperationSetBasicTelephony.class);
+      if (telephony != null) {
+        if (contact != null)         telephony.createCall(contact);
+ else         if (stringContact != null)         telephony.createCall(stringContact);
+      }
+    }
+  }
+ catch (  Throwable t) {
+    if (t instanceof ThreadDeath)     throw (ThreadDeath)t;
+    logger.error("The call could not be created: ",t);
+    new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),t.getMessage(),t).showDialog();
   }
 }
