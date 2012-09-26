@@ -1,7 +1,22 @@
 {
   super(call,fullScreen,true,selected,ImageLoader.LOCAL_VIDEO_BUTTON,ImageLoader.LOCAL_VIDEO_BUTTON_PRESSED,"service.gui.LOCAL_VIDEO_BUTTON_TOOL_TIP");
+  OperationSetVideoTelephony videoTelephony=call.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
   MediaDevice videoDevice=GuiActivator.getMediaService().getDefaultDevice(MediaType.VIDEO,MediaUseCase.CALL);
   if (videoDevice == null || videoDevice.getDirection().equals(MediaDirection.RECVONLY)) {
-    this.setEnabled(false);
+    setToolTipText(GuiActivator.getResources().getI18NString("service.gui.NO_CAMERA_AVAILABLE"));
+    videoAvailable=false;
   }
+ else   if (videoTelephony == null) {
+    setToolTipText(GuiActivator.getResources().getI18NString("service.gui.NO_VIDEO_FOR_PROTOCOL"));
+    videoAvailable=false;
+  }
+ else   if (!ConfigurationManager.hasEnabledVideoFormat(call.getProtocolProvider())) {
+    setToolTipText(GuiActivator.getResources().getI18NString("service.gui.NO_VIDEO_ENCODINGS"));
+    videoAvailable=false;
+  }
+ else {
+    setToolTipText(GuiActivator.getResources().getI18NString("service.gui.LOCAL_VIDEO_BUTTON_TOOL_TIP"));
+    videoAvailable=true;
+  }
+  super.setEnabled(videoAvailable);
 }
