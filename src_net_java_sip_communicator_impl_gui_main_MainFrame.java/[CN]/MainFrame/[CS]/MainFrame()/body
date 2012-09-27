@@ -6,21 +6,6 @@
   this.accountStatusPanel=new AccountStatusPanel(this);
   this.searchField=new SearchField(this,TreeContactList.searchFilter,true);
   menu=new MainMenu(this);
-  this.addWindowListener(new WindowAdapter(){
-    /** 
- * Invoked when a window has been closed.
- */
-    public void windowClosed(    WindowEvent event){
-      MainFrame.this.windowClosed(event);
-    }
-    /** 
- * Invoked when a window has been opened.
- */
-    public void windowOpened(    WindowEvent e){
-      GuiActivator.getContactList().requestFocusInWindow();
-    }
-  }
-);
   this.initTitleFont();
   ResourceManagementService resources=GuiActivator.getResources();
   String applicationName=resources.getSettingsString("service.gui.APPLICATION_NAME");
@@ -34,9 +19,30 @@
  catch (  Throwable t) {
   }
   this.mainPanel.setBackground(new Color(GuiActivator.getResources().getColor("service.gui.MAIN_WINDOW_BACKGROUND")));
-  KeyboardFocusManager keyManager=KeyboardFocusManager.getCurrentKeyboardFocusManager();
+  keyManager=KeyboardFocusManager.getCurrentKeyboardFocusManager();
   clKeyDispatcher=new ContactListSearchKeyDispatcher(keyManager,searchField,this);
   keyManager.addKeyEventDispatcher(clKeyDispatcher);
+  this.addWindowListener(new WindowAdapter(){
+    /** 
+ * Invoked when a window has been closed.
+ */
+    public void windowClosed(    WindowEvent event){
+      MainFrame.this.windowClosed(event);
+    }
+    /** 
+ * Invoked when a window has been opened.
+ */
+    public void windowOpened(    WindowEvent e){
+      Window focusedWindow=keyManager.getFocusedWindow();
+      if (focusedWindow == null) {
+        requestFocusInContactList();
+      }
+ else       if (!focusedWindow.equals(MainFrame.this)) {
+        requestFocusLater(focusedWindow);
+      }
+    }
+  }
+);
   this.init();
   this.initPluginComponents();
 }
