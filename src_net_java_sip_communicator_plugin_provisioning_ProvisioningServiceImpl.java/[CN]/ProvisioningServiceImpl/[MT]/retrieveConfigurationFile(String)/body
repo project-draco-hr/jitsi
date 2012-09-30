@@ -7,6 +7,34 @@
     tmpFile=temp;
     URL u=new URL(url);
     InetAddress ipaddr=ProvisioningActivator.getNetworkAddressManagerService().getLocalHost(InetAddress.getByName(u.getHost()));
+    Pattern p=Pattern.compile("\\$\\{env\\.([^\\}]*)\\}");
+    Matcher m=p.matcher(url);
+    StringBuffer sb=new StringBuffer();
+    while (m.find()) {
+      String value=System.getenv(m.group(1));
+      if (value != null) {
+        m.appendReplacement(sb,Matcher.quoteReplacement(value));
+      }
+    }
+    m.appendTail(sb);
+    url=sb.toString();
+    p=Pattern.compile("\\$\\{system\\.([^\\}]*)\\}");
+    m=p.matcher(url);
+    sb=new StringBuffer();
+    while (m.find()) {
+      String value=System.getProperty(m.group(1));
+      if (value != null) {
+        m.appendReplacement(sb,Matcher.quoteReplacement(value));
+      }
+    }
+    m.appendTail(sb);
+    url=sb.toString();
+    if (url.indexOf("${home.location}") != -1) {
+      url=url.replace("${home.location}",ProvisioningActivator.getConfigurationService().getScHomeDirLocation());
+    }
+    if (url.indexOf("${home.name}") != -1) {
+      url=url.replace("${home.name}",ProvisioningActivator.getConfigurationService().getScHomeDirName());
+    }
     if (url.indexOf("${uuid}") != -1) {
       url=url.replace("${uuid}",(String)ProvisioningActivator.getConfigurationService().getProperty(PROVISIONING_UUID_PROP));
     }
