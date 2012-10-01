@@ -1,8 +1,38 @@
 {
-  CallPanel callPanel=activeCalls.remove(call);
-  if ((callPanel != null) && !activeCalls.containsValue(callPanel)) {
-    CallContainer callContainer=callPanel.getCallWindow();
-    if (wait)     callContainer.closeWait(callPanel);
- else     callContainer.close(callPanel);
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        closeCallContainerIfNotNecessary(call,wait);
+      }
+    }
+);
+    return;
+  }
+  CallConference conference=call.getConference();
+  for (Iterator<Map.Entry<CallConference,CallPanel>> entryIter=callPanels.entrySet().iterator(); entryIter.hasNext(); ) {
+    Map.Entry<CallConference,CallPanel> entry=entryIter.next();
+    CallConference aConference=entry.getKey();
+    List<Call> calls=aConference.getCalls();
+    boolean notNecessary=true;
+    for (    Call aCall : calls) {
+      if (!CallState.CALL_ENDED.equals(aCall.getCallState())) {
+        notNecessary=false;
+        break;
+      }
+    }
+    if (notNecessary) {
+      CallPanel aCallPanel=entry.getValue();
+      CallContainer window=aCallPanel.getCallWindow();
+      try {
+        if (wait && (aConference == conference))         window.closeWait(aCallPanel);
+ else         window.close(aCallPanel);
+      }
+  finally {
+synchronized (callPanels) {
+          entryIter.remove();
+        }
+        aCallPanel.dispose();
+      }
+    }
   }
 }

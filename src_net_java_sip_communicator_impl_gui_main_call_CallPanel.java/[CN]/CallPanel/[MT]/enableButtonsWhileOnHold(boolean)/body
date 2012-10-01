@@ -1,10 +1,29 @@
 {
   dialButton.setEnabled(!hold);
   videoButton.setEnabled(!hold);
-  ProtocolProviderService protocolProvider=call.getProtocolProvider();
-  OperationSetVideoTelephony videoTelephony=protocolProvider.getOperationSet(OperationSetVideoTelephony.class);
-  if (videoTelephony != null && videoTelephony.isLocalVideoAllowed(call) && !videoButton.isSelected())   setVideoButtonSelected(!hold);
-  OperationSetDesktopSharingServer desktopSharing=protocolProvider.getOperationSet(OperationSetDesktopSharingServer.class);
+  boolean videoTelephonyAllowsLocalVideo=false;
+  boolean desktopSharingServerAllowsLocalVideo=false;
+  for (  Call call : callConference.getCalls()) {
+    ProtocolProviderService protocolProvider=call.getProtocolProvider();
+    if (!videoTelephonyAllowsLocalVideo) {
+      OperationSetVideoTelephony videoTelephony=protocolProvider.getOperationSet(OperationSetVideoTelephony.class);
+      if ((videoTelephony != null) && videoTelephony.isLocalVideoAllowed(call)) {
+        videoTelephonyAllowsLocalVideo=true;
+      }
+    }
+    if (!desktopSharingServerAllowsLocalVideo) {
+      OperationSetDesktopSharingServer desktopSharingServer=protocolProvider.getOperationSet(OperationSetDesktopSharingServer.class);
+      if ((desktopSharingServer != null) && desktopSharingServer.isLocalVideoAllowed(call)) {
+        desktopSharingServerAllowsLocalVideo=true;
+      }
+    }
+    if (videoTelephonyAllowsLocalVideo && desktopSharingServerAllowsLocalVideo) {
+      break;
+    }
+  }
+  if (videoTelephonyAllowsLocalVideo && !videoButton.isSelected())   setVideoButtonSelected(!hold);
   desktopSharingButton.setEnabled(!hold);
-  if (desktopSharing != null && desktopSharing.isLocalVideoAllowed(call) && !desktopSharingButton.isSelected())   setDesktopSharingButtonSelected(!hold);
+  if (desktopSharingServerAllowsLocalVideo && !desktopSharingButton.isSelected()) {
+    setDesktopSharingButtonSelected(!hold);
+  }
 }

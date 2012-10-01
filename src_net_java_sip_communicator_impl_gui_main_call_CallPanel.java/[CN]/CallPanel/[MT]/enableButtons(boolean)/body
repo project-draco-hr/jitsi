@@ -5,23 +5,35 @@
   localLevel.setEnabled(enable);
   remoteLevel.setEnabled(enable);
   mergeButton.setEnabled(enable);
-  ProtocolProviderService protocolProvider=call.getProtocolProvider();
-  if (protocolProvider.getOperationSet(OperationSetTelephonyConferencing.class) != null && conferenceButton != null) {
-    conferenceButton.setEnabled(enable);
+  List<Call> calls=callConference.getCalls();
+  boolean enableConferenceButton=false;
+  boolean enableTransferCallButton=!calls.isEmpty();
+  boolean enableVideoButtons=false;
+  for (  Call call : calls) {
+    ProtocolProviderService protocolProvider=call.getProtocolProvider();
+    if (!enableConferenceButton && (protocolProvider.getOperationSet(OperationSetTelephonyConferencing.class) != null)) {
+      enableConferenceButton=true;
+    }
+    if (enableTransferCallButton && (protocolProvider.getOperationSet(OperationSetAdvancedTelephony.class) == null)) {
+      enableTransferCallButton=false;
+    }
+    if (!enableVideoButtons && (protocolProvider.getOperationSet(OperationSetVideoTelephony.class) != null)) {
+      enableVideoButtons=true;
+    }
   }
+  if (enableConferenceButton && (conferenceButton != null))   conferenceButton.setEnabled(enable);
   if (videoButton != null)   videoButton.setEnabled(enable);
   if (!isLastConference) {
-    if (call.getCallPeers().hasNext()) {
-      CallPeer callPeer=call.getCallPeers().next();
-      enableButtonsWhileOnHold(callPeer.getState() == CallPeerState.ON_HOLD_LOCALLY || callPeer.getState() == CallPeerState.ON_HOLD_MUTUALLY || callPeer.getState() == CallPeerState.ON_HOLD_REMOTELY);
+    List<CallPeer> callPeers=callConference.getCallPeers();
+    if (callPeers.size() > 0) {
+      CallPeer callPeer=callPeers.get(0);
+      CallPeerState callPeerState=callPeer.getState();
+      enableButtonsWhileOnHold(callPeerState == CallPeerState.ON_HOLD_LOCALLY || callPeerState == CallPeerState.ON_HOLD_MUTUALLY || callPeerState == CallPeerState.ON_HOLD_REMOTELY);
     }
-    if (protocolProvider.getOperationSet(OperationSetAdvancedTelephony.class) != null && transferCallButton != null) {
-      transferCallButton.setEnabled(enable);
-    }
-    if (protocolProvider.getOperationSet(OperationSetVideoTelephony.class) != null && fullScreenButton != null && videoButton != null && desktopSharingButton != null) {
-      fullScreenButton.setEnabled(enable);
-      videoButton.setEnabled(enable);
-      desktopSharingButton.setEnabled(enable);
+    if (enableTransferCallButton && (transferCallButton != null))     transferCallButton.setEnabled(enable);
+    if (enableVideoButtons) {
+      if (fullScreenButton != null)       fullScreenButton.setEnabled(enable);
+      if (desktopSharingButton != null)       desktopSharingButton.setEnabled(enable);
     }
   }
 }

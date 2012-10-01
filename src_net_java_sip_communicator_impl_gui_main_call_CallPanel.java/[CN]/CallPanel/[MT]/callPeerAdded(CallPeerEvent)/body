@@ -1,32 +1,34 @@
 {
-  if (evt.getSourceCall() != call)   return;
+  if (!callConference.containsCall(evt.getSourceCall()))   return;
   final CallPeer callPeer=evt.getSourceCallPeer();
   callPeer.addCallPeerConferenceListener(this);
   SwingUtilities.invokeLater(new Runnable(){
     public void run(){
       if (isLastConference) {
-        if (CallManager.isVideoStreaming(call)) {
-          if (!(callPanel instanceof VideoConferenceCallPanel)) {
-            enableConferenceInterface(true);
+        if (CallManager.isVideoStreaming(callConference)) {
+          if (!(callPanel instanceof VideoConferenceCallPanel))           enableConferenceInterface(true);
+ else {
+            ((VideoConferenceCallPanel)callPanel).addCallPeerPanel(callPeer);
           }
- else           ((VideoConferenceCallPanel)callPanel).addCallPeerPanel(callPeer);
         }
  else {
-          if (callPanel instanceof VideoConferenceCallPanel) {
-            enableConferenceInterface(false);
+          if (callPanel instanceof VideoConferenceCallPanel)           enableConferenceInterface(false);
+ else {
+            ((ConferenceCallPanel)callPanel).addCallPeerPanel(callPeer);
           }
- else           ((ConferenceCallPanel)callPanel).addCallPeerPanel(callPeer);
         }
       }
  else {
         isLastConference=isConference();
         if (isLastConference) {
-          enableConferenceInterface(CallManager.isVideoStreaming(call));
+          enableConferenceInterface(CallManager.isVideoStreaming(callConference));
         }
  else {
-          CallPeer onlyCallPeer=null;
-          if (call.getCallPeers().hasNext())           onlyCallPeer=call.getCallPeers().next();
-          if (onlyCallPeer != null)           ((OneToOneCallPanel)callPanel).addCallPeerPanel(onlyCallPeer);
+          List<CallPeer> callPeers=callConference.getCallPeers();
+          if (!callPeers.isEmpty()) {
+            CallPeer onlyCallPeer=callPeers.get(0);
+            ((OneToOneCallPanel)callPanel).addCallPeerPanel(onlyCallPeer);
+          }
         }
       }
       refreshContainer();

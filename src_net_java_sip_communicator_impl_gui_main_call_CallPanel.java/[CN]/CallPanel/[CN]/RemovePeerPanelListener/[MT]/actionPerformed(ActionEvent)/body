@@ -1,19 +1,16 @@
 {
   SwingUtilities.invokeLater(new Runnable(){
     public void run(){
+      int callPeerCount=callConference.getCallPeerCount();
       if (isLastConference) {
-        if (call.getCallPeerCount() == 1) {
+        if (callPeerCount == 1) {
           isLastConference=false;
           remove(callPanel);
-          CallPeer singlePeer=call.getCallPeers().next();
-          if (singlePeer != null && !singlePeer.isConferenceFocus()) {
+          CallPeer singlePeer=callConference.getCallPeers().get(0);
+          if (!singlePeer.isConferenceFocus()) {
             CallRenderer callRenderer=(CallRenderer)callPanel;
             UIVideoHandler videoHandler=callRenderer.getVideoHandler();
-            JComponent newPanel=null;
-            if (videoHandler != null) {
-              newPanel=new OneToOneCallPanel(CallPanel.this,call,singlePeer,videoHandler);
-            }
- else             newPanel=new OneToOneCallPanel(CallPanel.this,call,singlePeer);
+            JComponent newPanel=new OneToOneCallPanel(CallPanel.this,singlePeer,videoHandler);
             updateCurrentCallPanel(newPanel);
           }
  else           if (singlePeer.isConferenceFocus()) {
@@ -21,7 +18,7 @@
           }
           add(callPanel,BorderLayout.CENTER);
         }
- else         if (call.getCallPeerCount() > 1) {
+ else         if (callPeerCount > 1) {
           ((ConferenceCallPanel)callPanel).removeCallPeerPanel(peer);
         }
  else {
@@ -30,7 +27,7 @@
         refreshContainer();
       }
  else {
-        if (call.getCallPeerCount() < 1)         callWindow.close(CallPanel.this);
+        if (callPeerCount < 1)         callWindow.close(CallPanel.this);
       }
     }
   }

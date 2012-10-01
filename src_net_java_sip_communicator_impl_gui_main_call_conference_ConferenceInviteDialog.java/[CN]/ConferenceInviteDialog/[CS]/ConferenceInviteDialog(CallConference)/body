@@ -1,0 +1,59 @@
+{
+  super(GuiActivator.getResources().getI18NString("service.gui.INVITE_CONTACT_TO_CALL"));
+  this.conference=conference;
+  JLabel accountSelectorLabel=new JLabel(GuiActivator.getResources().getI18NString("service.gui.CALL_VIA"));
+  TransparentPanel accountSelectorPanel=new TransparentPanel(new BorderLayout());
+  accountSelectorPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+  accountSelectorPanel.add(accountSelectorLabel,BorderLayout.WEST);
+  accountSelectorPanel.add(accountSelectorBox,BorderLayout.CENTER);
+  this.initAccountListData();
+  SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
+      initContactListData((ProtocolProviderService)accountSelectorBox.getSelectedItem());
+    }
+  }
+);
+  this.getContentPane().add(accountSelectorPanel,BorderLayout.NORTH);
+  this.accountSelectorBox.setRenderer(new DefaultListCellRenderer(){
+    private static final long serialVersionUID=0L;
+    public Component getListCellRendererComponent(    JList list,    Object value,    int index,    boolean isSelected,    boolean cellHasFocus){
+      ProtocolProviderService protocolProvider=(ProtocolProviderService)value;
+      if (protocolProvider != null) {
+        this.setText(protocolProvider.getAccountID().getDisplayName());
+        this.setIcon(ImageLoader.getAccountStatusImage(protocolProvider));
+      }
+      return this;
+    }
+  }
+);
+  this.accountSelectorBox.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      Object accountSelectorBoxSelectedItem=accountSelectorBox.getSelectedItem();
+      if (lastSelectedAccount == null || !lastSelectedAccount.equals(accountSelectorBoxSelectedItem)) {
+        lastSelectedAccount=accountSelectorBoxSelectedItem;
+        initContactListData((ProtocolProviderService)accountSelectorBox.getSelectedItem());
+      }
+    }
+  }
+);
+  this.addInviteButtonListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      Collection<UIContact> selectedContacts=destContactList.getContacts(null);
+      if (selectedContacts != null && selectedContacts.size() > 0) {
+        ProtocolProviderService selectedProvider=(ProtocolProviderService)accountSelectorBox.getSelectedItem();
+        inviteContacts(selectedContacts);
+        ConfigurationManager.setLastCallConferenceProvider(selectedProvider);
+        dispose();
+      }
+ else {
+      }
+    }
+  }
+);
+  this.addCancelButtonListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      dispose();
+    }
+  }
+);
+}

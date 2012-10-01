@@ -1,15 +1,18 @@
 {
-  for (  Call conferenceCall : CallConference.getCalls(call)) {
-    Iterator<? extends CallPeer> peerIter=conferenceCall.getCallPeers();
-    OperationSetBasicTelephony<?> basicTelephony=conferenceCall.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
-    while (peerIter.hasNext()) {
-      CallPeer peer=peerIter.next();
-      try {
-        basicTelephony.hangupCallPeer(peer);
-      }
- catch (      OperationFailedException ofe) {
-        logger.error("Could not hang up: " + peer,ofe);
-      }
+  Set<CallPeer> peers=new HashSet<CallPeer>();
+  if (call != null) {
+    Iterator<? extends CallPeer> peerIter=call.getCallPeers();
+    while (peerIter.hasNext())     peers.add(peer);
+  }
+  if (conference != null)   peers.addAll(conference.getCallPeers());
+  if (peer != null)   peers.add(peer);
+  for (  CallPeer peer : peers) {
+    OperationSetBasicTelephony<?> basicTelephony=peer.getProtocolProvider().getOperationSet(OperationSetBasicTelephony.class);
+    try {
+      basicTelephony.hangupCallPeer(peer);
+    }
+ catch (    OperationFailedException ofe) {
+      logger.error("Could not hang up: " + peer,ofe);
     }
   }
 }
