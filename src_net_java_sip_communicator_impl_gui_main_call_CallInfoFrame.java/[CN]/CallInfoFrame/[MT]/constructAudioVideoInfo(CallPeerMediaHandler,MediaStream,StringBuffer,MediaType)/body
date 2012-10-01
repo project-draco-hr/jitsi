@@ -1,0 +1,63 @@
+{
+  MediaStreamStats mediaStreamStats=mediaStream.getMediaStreamStats();
+  if (mediaStreamStats == null)   return;
+  mediaStreamStats.updateStats();
+  if (mediaType == MediaType.VIDEO) {
+    Dimension downloadVideoSize=mediaStreamStats.getDownloadVideoSize();
+    Dimension uploadVideoSize=mediaStreamStats.getUploadVideoSize();
+    if (downloadVideoSize != null || uploadVideoSize != null) {
+      stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.VIDEO_SIZE"),"&darr; " + this.videoSizeToString(downloadVideoSize) + " &uarr; "+ this.videoSizeToString(uploadVideoSize)));
+    }
+ else {
+      return;
+    }
+  }
+  stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.CODEC"),mediaStreamStats.getEncoding() + " / " + mediaStreamStats.getEncodingClockRate()+ " Hz"));
+  boolean displayedIpPort=false;
+  String iceCandidateExtendedType=callPeerMediaHandler.getICECandidateExtendedType(mediaType.toString());
+  if (iceCandidateExtendedType != null) {
+    stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.ICE_CANDIDATE_EXTENDED_TYPE"),iceCandidateExtendedType));
+    displayedIpPort=true;
+  }
+  InetSocketAddress iceLocalHostAddress=callPeerMediaHandler.getICELocalHostAddress(mediaType.toString());
+  if (iceLocalHostAddress != null) {
+    stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.ICE_LOCAL_HOST_ADDRESS"),iceLocalHostAddress.getAddress().getHostAddress() + "/" + iceLocalHostAddress.getPort()));
+    displayedIpPort=true;
+  }
+  InetSocketAddress iceLocalReflexiveAddress=callPeerMediaHandler.getICELocalReflexiveAddress(mediaType.toString());
+  if (iceLocalReflexiveAddress != null) {
+    stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.ICE_LOCAL_REFLEXIVE_ADDRESS"),iceLocalReflexiveAddress.getAddress().getHostAddress() + "/" + iceLocalReflexiveAddress.getPort()));
+    displayedIpPort=true;
+  }
+  InetSocketAddress iceLocalRelayedAddress=callPeerMediaHandler.getICELocalRelayedAddress(mediaType.toString());
+  if (iceLocalRelayedAddress != null) {
+    stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.ICE_LOCAL_RELAYED_ADDRESS"),iceLocalRelayedAddress.getAddress().getHostAddress() + "/" + iceLocalRelayedAddress.getPort()));
+    displayedIpPort=true;
+  }
+  InetSocketAddress iceRemoteRelayedAddress=callPeerMediaHandler.getICERemoteRelayedAddress(mediaType.toString());
+  if (iceRemoteRelayedAddress != null) {
+    stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.ICE_REMOTE_RELAYED_ADDRESS"),iceRemoteRelayedAddress.getAddress().getHostAddress() + "/" + iceRemoteRelayedAddress.getPort()));
+    displayedIpPort=true;
+  }
+  InetSocketAddress iceRemoteReflexiveAddress=callPeerMediaHandler.getICERemoteReflexiveAddress(mediaType.toString());
+  if (iceRemoteReflexiveAddress != null) {
+    stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.ICE_REMOTE_REFLEXIVE_ADDRESS"),iceRemoteReflexiveAddress.getAddress().getHostAddress() + "/" + iceRemoteReflexiveAddress.getPort()));
+    displayedIpPort=true;
+  }
+  InetSocketAddress iceRemoteHostAddress=callPeerMediaHandler.getICERemoteHostAddress(mediaType.toString());
+  if (iceRemoteHostAddress != null) {
+    stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.ICE_REMOTE_HOST_ADDRESS"),iceRemoteHostAddress.getAddress().getHostAddress() + "/" + iceRemoteHostAddress.getPort()));
+    displayedIpPort=true;
+  }
+  if (!displayedIpPort) {
+    stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.LOCAL_IP"),mediaStreamStats.getLocalIPAddress() + " / " + String.valueOf(mediaStreamStats.getLocalPort())));
+    stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.REMOTE_IP"),mediaStreamStats.getRemoteIPAddress() + " / " + String.valueOf(mediaStreamStats.getRemotePort())));
+  }
+  stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.BANDWITH"),"&darr; " + (int)mediaStreamStats.getDownloadRateKiloBitPerSec() + " Kbps "+ " &uarr; "+ (int)mediaStreamStats.getUploadRateKiloBitPerSec()+ " Kbps"));
+  stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.LOSS_RATE"),"&darr; " + (int)mediaStreamStats.getDownloadPercentLoss() + "% &uarr; "+ (int)mediaStreamStats.getUploadPercentLoss()+ "%"));
+  long rttMs=mediaStreamStats.getRttMs();
+  if (rttMs != -1) {
+    stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.RTT"),rttMs + " ms"));
+  }
+  stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.JITTER"),"&darr; " + (int)mediaStreamStats.getDownloadJitterMs() + " ms &uarr; "+ (int)mediaStreamStats.getUploadJitterMs()+ " ms"));
+}
