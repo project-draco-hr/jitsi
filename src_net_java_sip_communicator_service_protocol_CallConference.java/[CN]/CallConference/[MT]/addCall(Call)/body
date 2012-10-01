@@ -1,6 +1,13 @@
 {
-synchronized (calls) {
-    if (calls.contains(call) || !calls.add(call))     return false;
+  if (call == null)   throw new NullPointerException("call");
+synchronized (callsSyncRoot) {
+    if (mutableCalls.contains(call))     return false;
+    List<Call> newMutableCalls=new ArrayList<Call>(mutableCalls);
+    if (newMutableCalls.add(call)) {
+      mutableCalls=newMutableCalls;
+      immutableCalls=Collections.unmodifiableList(mutableCalls);
+    }
+ else     return false;
   }
   callAdded(call);
   return true;

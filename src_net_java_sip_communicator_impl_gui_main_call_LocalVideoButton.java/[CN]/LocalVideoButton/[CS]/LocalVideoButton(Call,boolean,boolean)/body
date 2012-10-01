@@ -1,22 +1,39 @@
 {
-  super(call,fullScreen,true,selected,ImageLoader.LOCAL_VIDEO_BUTTON,ImageLoader.LOCAL_VIDEO_BUTTON_PRESSED,"service.gui.LOCAL_VIDEO_BUTTON_TOOL_TIP");
-  OperationSetVideoTelephony videoTelephony=call.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
+  super(null,fullScreen,true,selected,ImageLoader.LOCAL_VIDEO_BUTTON,ImageLoader.LOCAL_VIDEO_BUTTON_PRESSED,"service.gui.LOCAL_VIDEO_BUTTON_TOOL_TIP");
+  this.callConference=call.getConference();
   MediaDevice videoDevice=GuiActivator.getMediaService().getDefaultDevice(MediaType.VIDEO,MediaUseCase.CALL);
-  if (videoDevice == null || videoDevice.getDirection().equals(MediaDirection.RECVONLY)) {
-    setToolTipText(GuiActivator.getResources().getI18NString("service.gui.NO_CAMERA_AVAILABLE"));
-    videoAvailable=false;
-  }
- else   if (videoTelephony == null) {
-    setToolTipText(GuiActivator.getResources().getI18NString("service.gui.NO_VIDEO_FOR_PROTOCOL"));
-    videoAvailable=false;
-  }
- else   if (!ConfigurationManager.hasEnabledVideoFormat(call.getProtocolProvider())) {
-    setToolTipText(GuiActivator.getResources().getI18NString("service.gui.NO_VIDEO_ENCODINGS"));
+  String toolTipTextKey;
+  if ((videoDevice == null) || !videoDevice.getDirection().allowsSending()) {
+    toolTipTextKey="service.gui.NO_CAMERA_AVAILABLE";
     videoAvailable=false;
   }
  else {
-    setToolTipText(GuiActivator.getResources().getI18NString("service.gui.LOCAL_VIDEO_BUTTON_TOOL_TIP"));
-    videoAvailable=true;
+    boolean hasVideoTelephony=false;
+    boolean hasEnabledVideoFormat=false;
+    for (    Call conferenceCall : callConference.getCalls()) {
+      ProtocolProviderService protocolProvider=conferenceCall.getProtocolProvider();
+      if (!hasVideoTelephony) {
+        OperationSetVideoTelephony videoTelephony=protocolProvider.getOperationSet(OperationSetVideoTelephony.class);
+        if (videoTelephony != null)         hasVideoTelephony=true;
+      }
+      if (!hasEnabledVideoFormat && ConfigurationManager.hasEnabledVideoFormat(protocolProvider)) {
+        hasEnabledVideoFormat=true;
+      }
+      if (hasVideoTelephony && hasEnabledVideoFormat)       break;
+    }
+    if (!hasVideoTelephony) {
+      toolTipTextKey="service.gui.NO_VIDEO_FOR_PROTOCOL";
+      videoAvailable=false;
+    }
+ else     if (!hasEnabledVideoFormat) {
+      toolTipTextKey="service.gui.NO_VIDEO_ENCODINGS";
+      videoAvailable=false;
+    }
+ else {
+      toolTipTextKey="service.gui.LOCAL_VIDEO_BUTTON_TOOL_TIP";
+      videoAvailable=true;
+    }
   }
+  setToolTipText(GuiActivator.getResources().getI18NString(toolTipTextKey));
   super.setEnabled(videoAvailable);
 }

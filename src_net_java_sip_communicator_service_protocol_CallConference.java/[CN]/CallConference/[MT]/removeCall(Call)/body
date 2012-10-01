@@ -1,6 +1,13 @@
 {
-synchronized (calls) {
-    if (!calls.remove(call))     return false;
+  if (call == null)   return false;
+synchronized (callsSyncRoot) {
+    if (!mutableCalls.contains(call))     return false;
+    List<Call> newMutableCalls=new ArrayList<Call>(mutableCalls);
+    if (newMutableCalls.remove(call)) {
+      mutableCalls=newMutableCalls;
+      immutableCalls=Collections.unmodifiableList(mutableCalls);
+    }
+ else     return false;
   }
   callRemoved(call);
   return true;

@@ -1,6 +1,13 @@
 {
   Call call=ev.getSourceCall();
-  if (containsCall(call) && CallState.CALL_ENDED.equals(ev.getNewValue())) {
-    removeCall(call);
+  if (containsCall(call)) {
+    try {
+      for (      CallChangeListener l : getCallChangeListeners())       l.callStateChanged(ev);
+    }
+  finally {
+      if (CallState.CALL_ENDED.equals(ev.getNewValue())) {
+        removeCall(call);
+      }
+    }
   }
 }
