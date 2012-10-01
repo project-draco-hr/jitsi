@@ -4,15 +4,17 @@
     if (getStatus() == QUERY_CANCELED)     return;
     if (contactCount > 0 && getQueryResultCount() > contactCount)     break;
     Contact contact=contacts.next();
-    if (queryString == null || queryString.length() <= 0 || metaContact.getDisplayName().startsWith(queryString) || contact.getAddress().startsWith(queryString) || contact.getDisplayName().startsWith(queryString)) {
-      ArrayList<ContactDetail> contactDetails=new ArrayList<ContactDetail>();
-      ContactDetail contactDetail=new ContactDetail(contact.getAddress());
-      ArrayList<Class<? extends OperationSet>> supportedOpSets=new ArrayList<Class<? extends OperationSet>>();
+    String contactAddress=contact.getAddress();
+    String contactDisplayName=contact.getDisplayName();
+    if (queryString == null || queryString.length() <= 0 || metaContact.getDisplayName().startsWith(queryString) || contactAddress.startsWith(queryString) || contactDisplayName.startsWith(queryString)) {
+      ContactDetail contactDetail=new ContactDetail(contactAddress);
+      List<Class<? extends OperationSet>> supportedOpSets=new ArrayList<Class<? extends OperationSet>>();
       supportedOpSets.add(opSetClass);
       contactDetail.setSupportedOpSets(supportedOpSets);
+      List<ContactDetail> contactDetails=new ArrayList<ContactDetail>();
       contactDetails.add(contactDetail);
-      GenericSourceContact sourceContact=new GenericSourceContact(ProtocolContactSourceServiceImpl.this,contact.getDisplayName(),contactDetails);
-      if (!contact.getAddress().equals(contact.getDisplayName()))       sourceContact.setDisplayDetails(contact.getAddress());
+      GenericSourceContact sourceContact=new GenericSourceContact(ProtocolContactSourceServiceImpl.this,contactDisplayName,contactDetails);
+      if (!contactAddress.equals(contactDisplayName))       sourceContact.setDisplayDetails(contactAddress);
       sourceContact.setImage(metaContact.getAvatar());
       sourceContact.setPresenceStatus(contact.getPresenceStatus());
       addQueryResult(sourceContact);
