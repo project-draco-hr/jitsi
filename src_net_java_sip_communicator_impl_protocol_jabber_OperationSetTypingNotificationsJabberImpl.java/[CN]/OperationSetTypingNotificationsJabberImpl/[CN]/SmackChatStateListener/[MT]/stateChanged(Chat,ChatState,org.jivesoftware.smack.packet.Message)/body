@@ -5,13 +5,17 @@
   if (sourceContact == null) {
     sourceContact=opSetPersPresence.createVolatileContact(fromID);
   }
+  int evtCode=STATE_UNKNOWN;
   if (ChatState.composing.equals(state)) {
-    fireTypingNotificationsEvent(sourceContact,STATE_TYPING);
+    evtCode=STATE_TYPING;
   }
  else   if (ChatState.paused.equals(state) || ChatState.active.equals(state)) {
-    fireTypingNotificationsEvent(sourceContact,STATE_PAUSED);
+    evtCode=STATE_PAUSED;
   }
  else   if (ChatState.inactive.equals(state) || ChatState.gone.equals(state)) {
-    fireTypingNotificationsEvent(sourceContact,STATE_STOPPED);
+    evtCode=STATE_STOPPED;
   }
+  if (message.getError() != null)   fireTypingNotificationsDeliveryFailedEvent(sourceContact,evtCode);
+ else   if (evtCode != STATE_UNKNOWN)   fireTypingNotificationsEvent(sourceContact,STATE_STOPPED);
+ else   logger.warn("Unknown typing state!");
 }
