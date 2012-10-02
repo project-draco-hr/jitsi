@@ -7,10 +7,6 @@
   if (callPeer instanceof MediaAwareCallPeer) {
     CallPeerMediaHandler<?> callPeerMediaHandler=((MediaAwareCallPeer<?,?,?>)callPeer).getMediaHandler();
     if (callPeerMediaHandler != null) {
-      String iceState=callPeerMediaHandler.getICEState();
-      if (iceState != null && !iceState.equals("Terminated")) {
-        stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.ICE_STATE"),resources.getI18NString("service.gui.callinfo.ICE_STATE." + iceState)));
-      }
       MediaStream mediaStream=callPeerMediaHandler.getStream(MediaType.AUDIO);
       if (mediaStream != null && mediaStream.isStarted()) {
         stringBuffer.append("<br/>");
@@ -24,6 +20,19 @@
         stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.VIDEO_INFO"),""));
         this.appendStreamEncryptionMethod(stringBuffer,callPeerMediaHandler,mediaStream,MediaType.VIDEO);
         constructAudioVideoInfo(callPeerMediaHandler,mediaStream,stringBuffer,MediaType.VIDEO);
+      }
+      stringBuffer.append("<br/>");
+      String iceState=callPeerMediaHandler.getICEState();
+      if (iceState != null && !iceState.equals("Terminated")) {
+        stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.ICE_STATE"),resources.getI18NString("service.gui.callinfo.ICE_STATE." + iceState)));
+      }
+      String[] harvesterNames={"GoogleTurnCandidateHarvester","GoogleTurnSSLCandidateHarvester","HostCandidateHarvester","JingleNodesHarvester","StunCandidateHarvester","TurnCandidateHarvester","UPNPHarvester"};
+      long harvestingTime;
+      for (int i=0; i < harvesterNames.length; ++i) {
+        harvestingTime=callPeerMediaHandler.getHarvestingTime(harvesterNames[i]);
+        if (harvestingTime != -1) {
+          stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.HARVESTING_TIME") + " " + harvesterNames[i]+ ":",harvestingTime + " ms"));
+        }
       }
     }
   }
