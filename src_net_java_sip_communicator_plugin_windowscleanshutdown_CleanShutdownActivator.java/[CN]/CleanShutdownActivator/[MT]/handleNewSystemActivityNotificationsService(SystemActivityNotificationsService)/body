@@ -1,0 +1,26 @@
+{
+  sysActivityService=newService;
+  if (newService != null)   newService.addSystemActivityChangeListener(new SystemActivityChangeListener(){
+    public void activityChanged(    SystemActivityEvent event){
+      if (event.getEventID() == SystemActivityEvent.EVENT_QUERY_ENDSESSION) {
+        System.setProperty("org.jitsi.shutdown.SHUTDOWN_TIMEOUT","3000");
+        getShutdownService().beginShutdown();
+        try {
+synchronized (this) {
+            synchShutdown.await(1500,TimeUnit.MILLISECONDS);
+          }
+        }
+ catch (        Throwable t) {
+        }
+      }
+ else       if (event.getEventID() == SystemActivityEvent.EVENT_ENDSESSION) {
+        try {
+          synchShutdown.await();
+        }
+ catch (        Throwable t) {
+        }
+      }
+    }
+  }
+);
+}

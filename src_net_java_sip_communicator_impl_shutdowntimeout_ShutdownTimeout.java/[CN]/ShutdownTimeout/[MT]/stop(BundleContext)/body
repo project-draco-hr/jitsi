@@ -3,8 +3,17 @@
     public void run(){
 synchronized (this) {
         try {
-          if (logger.isTraceEnabled())           logger.trace("Starting shutdown countdown of " + SHUTDOWN_TIMEOUT + "ms.");
-          wait(SHUTDOWN_TIMEOUT);
+          long shutDownTimeout=SHUTDOWN_TIMEOUT_DEFAULT;
+          try {
+            String shutdownCustomValue=System.getProperty(SHUTDOWN_TIMEOUT_PROP);
+            if (shutdownCustomValue != null && shutdownCustomValue.length() > 0) {
+              shutDownTimeout=Long.valueOf(shutdownCustomValue);
+            }
+          }
+ catch (          Throwable t) {
+          }
+          if (logger.isTraceEnabled())           logger.trace("Starting shutdown countdown of " + shutDownTimeout + "ms.");
+          wait(shutDownTimeout);
           logger.error("Failed to gently shutdown. Forcing exit.");
           System.exit(SYSTEM_EXIT_CODE);
         }
