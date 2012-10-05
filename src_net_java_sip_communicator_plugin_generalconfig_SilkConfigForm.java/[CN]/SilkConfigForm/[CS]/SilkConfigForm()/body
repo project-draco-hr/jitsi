@@ -1,0 +1,50 @@
+{
+  super(new BorderLayout());
+  Box box=Box.createVerticalBox();
+  add(box,BorderLayout.NORTH);
+  TransparentPanel contentPanel=new TransparentPanel();
+  contentPanel.setLayout(new BorderLayout(10,10));
+  box.add(contentPanel);
+  TransparentPanel labelPanel=new TransparentPanel(new GridLayout(0,1,2,2));
+  TransparentPanel valuePanel=new TransparentPanel(new GridLayout(0,1,2,2));
+  TransparentPanel southPanel=new TransparentPanel(new GridLayout(0,1,2,2));
+  contentPanel.add(labelPanel,BorderLayout.WEST);
+  contentPanel.add(valuePanel,BorderLayout.CENTER);
+  contentPanel.add(southPanel,BorderLayout.SOUTH);
+  labelPanel.add(new JLabel(Resources.getString("plugin.generalconfig.SILK_USE_FEC")));
+  labelPanel.add(new JLabel(Resources.getString("plugin.generalconfig.SILK_FORCE_FEC_PACKET_LOSS")));
+  labelPanel.add(new JLabel(Resources.getString("plugin.generalconfig.SILK_SAT")));
+  fecCheckbox.addActionListener(new ActionListener(){
+    @Override public void actionPerformed(    ActionEvent actionEvent){
+      configurationService.setProperty(FEC_PROP,fecCheckbox.isSelected());
+    }
+  }
+);
+  fecCheckbox.setSelected(configurationService.getBoolean(FEC_PROP,FEC_DEFAULT));
+  valuePanel.add(fecCheckbox);
+  fecForcePLCheckbox.addActionListener(new ActionListener(){
+    @Override public void actionPerformed(    ActionEvent actionEvent){
+      configurationService.setProperty(FEC_PROP,fecForcePLCheckbox.isSelected());
+    }
+  }
+);
+  fecForcePLCheckbox.setSelected(configurationService.getBoolean(FEC_FORCE_PL_PROP,FEC_FORCE_PL_DEFAULT));
+  valuePanel.add(fecForcePLCheckbox);
+  SATField.addFocusListener(new FocusListener(){
+    @Override public void focusGained(    FocusEvent focusEvent){
+    }
+    @Override public void focusLost(    FocusEvent focusEvent){
+      configurationService.setProperty(FEC_SAT_PROP,SATField.getText());
+    }
+  }
+);
+  SATField.setText(configurationService.getString(FEC_SAT_PROP,FEC_SAT_DEFAULT));
+  valuePanel.add(SATField);
+  southPanel.add(restoreButton);
+  restoreButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      restoreDefaults();
+    }
+  }
+);
+}
