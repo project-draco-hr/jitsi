@@ -1,4 +1,6 @@
 {
+  String previousMessageUID=lastMessageUID;
+  lastMessageUID=chatMessage.getMessageUID();
   if (!SwingUtilities.isEventDispatchThread()) {
     SwingUtilities.invokeLater(new Runnable(){
       public void run(){
@@ -8,15 +10,14 @@
 );
     return;
   }
-  Element lastMsgElement=document.getElement(ChatHtmlUtils.MESSAGE_TEXT_ID + lastMessageUID);
+  Element lastMsgElement=document.getElement(ChatHtmlUtils.MESSAGE_TEXT_ID + previousMessageUID);
   String contactAddress=(String)lastMsgElement.getAttributes().getAttribute(Attribute.NAME);
-  String newMessage=ChatHtmlUtils.createMessageTag(chatMessage.getMessageUID(),contactAddress,formatMessage(chatMessage.getMessage(),contentType,keyword),contentType,chatMessage.getDate(),false,isSimpleTheme);
+  boolean isHistory=(chatMessage.getMessageType().equals(Chat.HISTORY_INCOMING_MESSAGE) || chatMessage.getMessageType().equals(Chat.HISTORY_OUTGOING_MESSAGE)) ? true : false;
+  String newMessage=ChatHtmlUtils.createMessageTag(chatMessage.getMessageUID(),contactAddress,formatMessage(chatMessage.getMessage(),contentType,keyword),contentType,chatMessage.getDate(),false,isHistory,isSimpleTheme);
 synchronized (scrollToBottomRunnable) {
     try {
       Element parentElement=lastMsgElement.getParentElement();
       document.insertBeforeEnd(parentElement,newMessage);
-      replaceMessageDivID(document.getElement(ChatHtmlUtils.MESSAGE_DIV_ID + lastMessageUID),lastMessageUID,chatMessage.getMessageUID());
-      lastMessageUID=chatMessage.getMessageUID();
       SwingUtilities.invokeLater(scrollToBottomRunnable);
     }
  catch (    BadLocationException ex) {
