@@ -1,3 +1,15 @@
 {
-  contactReceived(event.getQuerySource(),event.getContact());
+  ContactQuery query=event.getQuerySource();
+  SourceContact contact=event.getContact();
+  if (!isSucceeded() && !query.getQueryResults().isEmpty())   setSucceeded(true);
+  fireFilterQueryEvent();
+  List<SourceContact> queryResults=filterQueries.get(query);
+  queryResults.add(contact);
+  if (getMaxResultShown() > -1 && queryResults.size() == getMaxResultShown()) {
+    query.removeContactQueryListener(contactList);
+    ShowMoreContact moreInfoContact=new ShowMoreContact(query,queryResults,getMaxResultShown());
+    showMoreContactMap.put(query,moreInfoContact);
+    ContactSourceService contactSource=query.getContactSource();
+    contactList.addContact(query,moreInfoContact,contactList.getContactSource(contactSource).getUIGroup(),false);
+  }
 }
