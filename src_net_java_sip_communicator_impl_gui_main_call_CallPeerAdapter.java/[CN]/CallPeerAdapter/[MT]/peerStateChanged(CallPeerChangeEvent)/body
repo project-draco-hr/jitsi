@@ -1,18 +1,16 @@
 {
-  CallPeer sourcePeer=evt.getSourceCallPeer();
-  if (!sourcePeer.equals(callPeer))   return;
-  CallPeerState newState=(CallPeerState)evt.getNewValue();
-  CallPeerState oldState=(CallPeerState)evt.getOldValue();
+  CallPeer sourcePeer=ev.getSourceCallPeer();
+  if (!sourcePeer.equals(peer))   return;
+  CallPeerState newState=(CallPeerState)ev.getNewValue();
+  CallPeerState oldState=(CallPeerState)ev.getOldValue();
   String newStateString=sourcePeer.getState().getLocalizedStateString();
   if (newState == CallPeerState.CONNECTED) {
     if (!CallPeerState.isOnHold(oldState)) {
       if (!renderer.getCallPanel().isCallTimerStarted())       renderer.getCallPanel().startCallTimer();
-      renderer.getCallPanel().enableButtons(true);
     }
  else {
       renderer.setOnHold(false);
       renderer.getCallPanel().updateHoldButtonState();
-      renderer.getCallPanel().enableButtonsWhileOnHold(false);
     }
   }
  else   if (newState == CallPeerState.DISCONNECTED) {
@@ -21,10 +19,9 @@
   }
  else   if (CallPeerState.isOnHold(newState)) {
     renderer.setOnHold(true);
-    renderer.getCallPanel().enableButtonsWhileOnHold(true);
     renderer.getCallPanel().updateHoldButtonState();
   }
   renderer.setPeerState(oldState,newState,newStateString);
-  String reasonString=evt.getReasonString();
+  String reasonString=ev.getReasonString();
   if (reasonString != null)   renderer.setErrorReason(reasonString);
 }

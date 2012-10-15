@@ -1,0 +1,61 @@
+{
+  if (callPeer == null) {
+    Component video=null;
+    for (    Call aCall : callConference.getCalls()) {
+      Iterator<? extends CallPeer> callPeerIter=aCall.getCallPeers();
+      OperationSetVideoTelephony videoTelephony=aCall.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
+      while (callPeerIter.hasNext()) {
+        callPeer=callPeerIter.next();
+        if (videoTelephony == null)         break;
+        try {
+          video=videoTelephony.getLocalVisualComponent(callPeer);
+        }
+ catch (        OperationFailedException ofe) {
+          logger.error("Failed to retrieve the local video" + " for display",ofe);
+        }
+        if (video != null)         break;
+      }
+      if (video != null)       break;
+    }
+    if (callPeer == null)     callPeerPanel=null;
+ else {
+      Call call=callPeer.getCall();
+      if (callPeerPanel instanceof ConferenceParticipantContainer) {
+        ConferenceParticipantContainer cpc=(ConferenceParticipantContainer)callPeerPanel;
+        if (cpc.getParticipant() == call)         cpc.setVideo(video);
+ else         callPeerPanel=null;
+      }
+ else       callPeerPanel=null;
+      if (callPeerPanel == null) {
+        callPeerPanel=new ConferenceParticipantContainer(call,video);
+      }
+    }
+  }
+ else {
+    OperationSetVideoTelephony videoTelephony=callPeer.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
+    List<Component> videos=null;
+    Component video=null;
+    if (videoTelephony != null) {
+      videos=videoTelephony.getVisualComponents(callPeer);
+      if ((videos != null) && !videos.isEmpty()) {
+        for (        Component aVideo : videos) {
+          ConferenceMember conferenceMember=videoTelephony.getConferenceMember(callPeer,aVideo);
+          if (isConferenceMemberCallPeer(conferenceMember,callPeer)) {
+            video=aVideo;
+            break;
+          }
+        }
+      }
+    }
+    ConferenceParticipantContainer cpc=null;
+    if (callPeerPanel instanceof ConferenceParticipantContainer) {
+      cpc=(ConferenceParticipantContainer)callPeerPanel;
+      if (cpc.getParticipant() == callPeer)       cpc.setVideo(video);
+ else       cpc=null;
+    }
+    if (cpc == null)     cpc=new ConferenceParticipantContainer(callPeer,video);
+    callPeerPanel=cpc;
+    updateConferenceMemberContainers(cpc,videos,videoTelephony);
+  }
+  return callPeerPanel;
+}

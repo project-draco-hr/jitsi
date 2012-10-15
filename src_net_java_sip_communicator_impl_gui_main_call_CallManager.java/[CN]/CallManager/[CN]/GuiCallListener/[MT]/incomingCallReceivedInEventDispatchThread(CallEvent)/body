@@ -3,13 +3,13 @@
   boolean isVideoCall=ev.isVideoCall() && ConfigurationManager.hasEnabledVideoFormat(sourceCall.getProtocolProvider());
   final ReceivedCallDialog receivedCallDialog=new ReceivedCallDialog(sourceCall,isVideoCall,(CallManager.getInProgressCalls().size() > 0));
   receivedCallDialog.setVisible(true);
-  Iterator<? extends CallPeer> peerIterator=sourceCall.getCallPeers();
-  if (!peerIterator.hasNext()) {
+  Iterator<? extends CallPeer> peerIter=sourceCall.getCallPeers();
+  if (!peerIter.hasNext()) {
     if (receivedCallDialog.isVisible())     receivedCallDialog.setVisible(false);
     return;
   }
-  final String peerName=peerIterator.next().getDisplayName();
-  final Date callDate=new Date();
+  final String peerName=peerIter.next().getDisplayName();
+  final long callTime=System.currentTimeMillis();
   sourceCall.addCallChangeListener(new CallChangeAdapter(){
     @Override public void callStateChanged(    final CallChangeEvent ev){
       if (!SwingUtilities.isEventDispatchThread()) {
@@ -31,10 +31,10 @@
         if (ev.getOldValue().equals(CallState.CALL_INITIALIZATION)) {
           CallPeerChangeEvent cause=ev.getCause();
           if ((cause == null) || (cause.getReasonCode() != CallPeerChangeEvent.NORMAL_CALL_CLEARING)) {
-            addMissedCallNotification(peerName,callDate);
+            addMissedCallNotification(peerName,callTime);
           }
-          call.removeCallChangeListener(this);
         }
+        call.removeCallChangeListener(this);
         TreeContactList contactList=GuiActivator.getContactList();
         if (contactList.getCurrentFilter().equals(TreeContactList.historyFilter)) {
           contactList.applyFilter(TreeContactList.historyFilter);

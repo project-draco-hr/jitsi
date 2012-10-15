@@ -1,4 +1,6 @@
 {
+  String callee=null;
+  ProtocolProviderService provider=null;
   if (t.isDataFlavorSupported(uiContactDataFlavor)) {
     Object o=null;
     try {
@@ -12,10 +14,7 @@ catch (    IOException e) {
     }
     if (o instanceof ContactNode) {
       UIContact uiContact=((ContactNode)o).getContactDescriptor();
-      ProtocolProviderService callProvider=call.getProtocolProvider();
       Iterator<UIContactDetail> contactDetails=uiContact.getContactDetailsForOperationSet(OperationSetBasicTelephony.class).iterator();
-      String callee=null;
-      ProtocolProviderService provider=null;
       while (contactDetails.hasNext()) {
         UIContactDetail detail=contactDetails.next();
         ProtocolProviderService detailProvider=detail.getPreferredProtocolProvider(OperationSetBasicTelephony.class);
@@ -25,13 +24,8 @@ catch (    IOException e) {
           break;
         }
       }
-      if (callee != null) {
-        Map<ProtocolProviderService,List<String>> callees=new HashMap<ProtocolProviderService,List<String>>();
-        callees.put(provider,Arrays.asList(callee));
-        CallManager.inviteToConferenceCall(callees,call);
-        return true;
-      }
- else {
+      if (callee == null) {
+        ProtocolProviderService callProvider=callConference.getCalls().get(0).getProtocolProvider();
         ResourceManagementService resources=GuiActivator.getResources();
         AccountID accountID=callProvider.getAccountID();
         new ErrorDialog(null,resources.getI18NString("service.gui.ERROR"),resources.getI18NString("service.gui.CALL_NOT_SUPPORTING_PARTICIPANT",new String[]{accountID.getService(),accountID.getUserID(),uiContact.getDisplayName()})).showDialog();
@@ -40,16 +34,18 @@ catch (    IOException e) {
   }
  else   if (t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
     InputContext inputContext=comp.getInputContext();
-    if (inputContext != null) {
-      inputContext.endComposition();
-    }
+    if (inputContext != null)     inputContext.endComposition();
     try {
       BufferedReader reader=new BufferedReader(DataFlavor.stringFlavor.getReaderForText(t));
-      final StringBuffer buffToCall=new StringBuffer();
-      String str;
-      while ((str=reader.readLine()) != null)       buffToCall.append(str);
-      CallManager.inviteToConferenceCall(new String[]{buffToCall.toString()},call);
-      return true;
+      try {
+        String line;
+        StringBuilder calleeBuilder=new StringBuilder();
+        while ((line=reader.readLine()) != null)         calleeBuilder.append(line);
+        callee=calleeBuilder.toString();
+      }
+  finally {
+        reader.close();
+      }
     }
  catch (    UnsupportedFlavorException e) {
       if (logger.isDebugEnabled())       logger.debug("Failed to drop string.",e);
@@ -58,5 +54,11 @@ catch (    IOException e) {
       if (logger.isDebugEnabled())       logger.debug("Failed to drop string.",e);
     }
   }
-  return false;
+  if (callee == null)   return false;
+ else {
+    Map<ProtocolProviderService,List<String>> callees=new HashMap<ProtocolProviderService,List<String>>();
+    callees.put(provider,Arrays.asList(callee));
+    CallManager.inviteToConferenceCall(callees,callConference);
+    return true;
+  }
 }

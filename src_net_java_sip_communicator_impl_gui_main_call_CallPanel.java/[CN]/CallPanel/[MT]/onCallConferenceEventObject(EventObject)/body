@@ -1,0 +1,18 @@
+{
+  try {
+    boolean tryStopCallTimer=false;
+    if (ev instanceof CallPeerEvent) {
+      tryStopCallTimer=(CallPeerEvent.CALL_PEER_REMOVED == ((CallPeerEvent)ev).getEventID());
+    }
+ else     if (ev instanceof PropertyChangeEvent) {
+      PropertyChangeEvent pcev=(PropertyChangeEvent)ev;
+      tryStopCallTimer=(CallConference.CALLS.equals(pcev) && (pcev.getOldValue() instanceof Call) && (pcev.getNewValue() == null));
+    }
+    if (tryStopCallTimer && (callConference.isEnded() || callConference.getCallPeerCount() == 0)) {
+      stopCallTimer();
+    }
+  }
+  finally {
+    updateViewFromModel();
+  }
+}

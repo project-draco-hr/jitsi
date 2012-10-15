@@ -1,5 +1,6 @@
 {
-  if (containsCall(ev.getSourceCall())) {
+  Call call=ev.getSourceCall();
+  if (containsCall(call)) {
     int eventID=ev.getEventID();
     boolean conferenceFocus=isConferenceFocus(getCalls());
 switch (eventID) {
@@ -12,6 +13,7 @@ break;
 default :
 break;
 }
+try {
 for (CallChangeListener l : getCallChangeListeners()) {
 switch (eventID) {
 case CallPeerEvent.CALL_PEER_ADDED:
@@ -19,6 +21,20 @@ l.callPeerAdded(ev);
 break;
 case CallPeerEvent.CALL_PEER_REMOVED:
 l.callPeerRemoved(ev);
+break;
+default :
+break;
+}
+}
+}
+  finally {
+CallPeer callPeer=ev.getSourceCallPeer();
+switch (eventID) {
+case CallPeerEvent.CALL_PEER_ADDED:
+callPeer.addCallPeerConferenceListener(callPeerConferenceListener);
+break;
+case CallPeerEvent.CALL_PEER_REMOVED:
+callPeer.removeCallPeerConferenceListener(callPeerConferenceListener);
 break;
 default :
 break;

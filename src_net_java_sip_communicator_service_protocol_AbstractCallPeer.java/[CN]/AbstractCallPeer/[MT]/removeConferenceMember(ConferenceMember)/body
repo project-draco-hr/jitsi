@@ -1,7 +1,16 @@
 {
-  if (conferenceMember == null)   throw new NullPointerException("conferenceMember");
-synchronized (conferenceMembers) {
-    if (!conferenceMembers.remove(conferenceMember))     return;
+  if (conferenceMember != null) {
+synchronized (conferenceMembersSyncRoot) {
+      if (conferenceMembers.contains(conferenceMember)) {
+        List<ConferenceMember> newConferenceMembers=new ArrayList<ConferenceMember>(conferenceMembers);
+        if (newConferenceMembers.remove(conferenceMember)) {
+          conferenceMembers=newConferenceMembers;
+          unmodifiableConferenceMembers=Collections.unmodifiableList(conferenceMembers);
+        }
+ else         return;
+      }
+ else       return;
+    }
+    fireCallPeerConferenceEvent(new CallPeerConferenceEvent(this,CallPeerConferenceEvent.CONFERENCE_MEMBER_REMOVED,conferenceMember));
   }
-  fireCallPeerConferenceEvent(new CallPeerConferenceEvent(this,CallPeerConferenceEvent.CONFERENCE_MEMBER_REMOVED,conferenceMember));
 }

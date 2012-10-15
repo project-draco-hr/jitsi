@@ -12,20 +12,12 @@
   for (Iterator<Map.Entry<CallConference,CallPanel>> entryIter=callPanels.entrySet().iterator(); entryIter.hasNext(); ) {
     Map.Entry<CallConference,CallPanel> entry=entryIter.next();
     CallConference aConference=entry.getKey();
-    List<Call> calls=aConference.getCalls();
-    boolean notNecessary=true;
-    for (    Call aCall : calls) {
-      if (!CallState.CALL_ENDED.equals(aCall.getCallState())) {
-        notNecessary=false;
-        break;
-      }
-    }
+    boolean notNecessary=aConference.isEnded();
     if (notNecessary) {
       CallPanel aCallPanel=entry.getValue();
       CallContainer window=aCallPanel.getCallWindow();
       try {
-        if (wait && (aConference == conference))         window.closeWait(aCallPanel);
- else         window.close(aCallPanel);
+        window.close(aCallPanel,wait && (aConference == conference));
       }
   finally {
 synchronized (callPanels) {

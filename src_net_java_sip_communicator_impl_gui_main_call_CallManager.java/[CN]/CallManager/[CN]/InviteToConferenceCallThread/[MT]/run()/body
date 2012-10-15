@@ -1,21 +1,62 @@
 {
-  CallConference conference=(call == null) ? null : call.getConference();
+  CallConference conference;
+  if (call == null) {
+    conference=null;
+    if (callees.size() == 1) {
+      Iterator<Map.Entry<ProtocolProviderService,List<String>>> iter=callees.entrySet().iterator();
+      Map.Entry<ProtocolProviderService,List<String>> entry=iter.next();
+      ProtocolProviderService pps=entry.getKey();
+      if ((pps != null) && ProtocolNames.JABBER.equals(pps.getProtocolName())) {
+        Object jitsiVideoBridge=null;
+        try {
+          jitsiVideoBridge=pps.getClass().getMethod("getJitsiVideoBridge").invoke(pps);
+        }
+ catch (        Throwable t) {
+          if (t instanceof ThreadDeath)           throw (ThreadDeath)t;
+ else {
+            logger.error("Failed to determine whether Jitsi" + " VideoBridge is available for " + pps.getAccountID());
+          }
+        }
+        if ((jitsiVideoBridge instanceof String) && (((String)jitsiVideoBridge).length() != 0)) {
+          conference=new MediaAwareCallConference(true);
+        }
+      }
+    }
+  }
+ else   conference=call.getConference();
   for (  Map.Entry<ProtocolProviderService,List<String>> entry : callees.entrySet()) {
     ProtocolProviderService pps=entry.getKey();
-    OperationSetBasicTelephony<?> basicTelephony=pps.getOperationSet(OperationSetBasicTelephony.class);
-    if (basicTelephony == null)     continue;
+    if (pps != null) {
+      OperationSetBasicTelephony<?> basicTelephony=pps.getOperationSet(OperationSetBasicTelephony.class);
+      if (basicTelephony == null)       continue;
+    }
     List<String> contactList=entry.getValue();
     String[] contactArray=contactList.toArray(new String[contactList.size()]);
     if (ConfigurationManager.isNormalizePhoneNumber())     normalizePhoneNumbers(contactArray);
     Call ppsCall;
-    if ((call != null) && pps.equals(call.getProtocolProvider()))     ppsCall=call;
+    if ((call != null) && call.getProtocolProvider().equals(pps))     ppsCall=call;
  else {
       ppsCall=null;
       if (conference != null) {
-        for (        Call conferenceCall : conference.getCalls()) {
-          if (pps.equals(conferenceCall.getProtocolProvider())) {
-            ppsCall=conferenceCall;
-            break;
+        List<Call> conferenceCalls=conference.getCalls();
+        if (pps == null) {
+          if (call == null) {
+            if (!conferenceCalls.isEmpty()) {
+              ppsCall=conferenceCalls.get(0);
+              pps=ppsCall.getProtocolProvider();
+            }
+          }
+ else {
+            ppsCall=call;
+            pps=ppsCall.getProtocolProvider();
+          }
+        }
+ else {
+          for (          Call conferenceCall : conferenceCalls) {
+            if (pps.equals(conferenceCall.getProtocolProvider())) {
+              ppsCall=conferenceCall;
+              break;
+            }
           }
         }
       }

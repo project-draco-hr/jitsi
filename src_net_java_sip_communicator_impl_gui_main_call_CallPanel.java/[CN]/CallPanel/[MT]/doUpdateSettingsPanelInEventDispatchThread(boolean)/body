@@ -1,0 +1,47 @@
+{
+  boolean isConference=(callPanel instanceof BasicConferenceCallPanel);
+  if (isConference) {
+    settingsPanel.add(localLevel);
+    settingsPanel.add(remoteLevel);
+  }
+ else {
+    settingsPanel.remove(localLevel);
+    settingsPanel.remove(remoteLevel);
+  }
+  chatButton.setVisible(getIMCapableCallPeers(1).size() == 1);
+  fullScreenButton.setEnabled(false);
+  updateHoldButtonState();
+  updateMergeButtonState();
+  List<Call> calls=callConference.getCalls();
+  boolean advancedTelephony=!calls.isEmpty();
+  boolean telephonyConferencing=false;
+  boolean videoTelephony=false;
+  boolean videoTelephonyIsLocalVideoAllowed=false;
+  boolean videoTelephonyIsLocalVideoStreaming=false;
+  for (  Call call : calls) {
+    ProtocolProviderService pps=call.getProtocolProvider();
+    if (advancedTelephony) {
+      OperationSetAdvancedTelephony<?> osat=pps.getOperationSet(OperationSetAdvancedTelephony.class);
+      if (osat == null)       advancedTelephony=false;
+    }
+    if (!telephonyConferencing) {
+      OperationSetTelephonyConferencing ostc=pps.getOperationSet(OperationSetTelephonyConferencing.class);
+      if (ostc != null)       telephonyConferencing=true;
+    }
+    if (!videoTelephony || !videoTelephonyIsLocalVideoAllowed || !videoTelephonyIsLocalVideoStreaming) {
+      OperationSetVideoTelephony osvt=pps.getOperationSet(OperationSetVideoTelephony.class);
+      if (osvt != null) {
+        if (!videoTelephony)         videoTelephony=true;
+        if (!videoTelephonyIsLocalVideoAllowed && osvt.isLocalVideoAllowed(call))         videoTelephonyIsLocalVideoAllowed=true;
+        if (!videoTelephonyIsLocalVideoStreaming && osvt.isLocalVideoStreaming(call))         videoTelephonyIsLocalVideoStreaming=true;
+      }
+    }
+  }
+  conferenceButton.setEnabled(telephonyConferencing);
+  transferCallButton.setEnabled(advancedTelephony);
+  videoButton.setEnabled(videoTelephony);
+  videoButton.setSelected(videoTelephonyIsLocalVideoAllowed);
+  showHideVideoButton.setEnabled(videoButton.isEnabled() && videoTelephonyIsLocalVideoAllowed);
+  showHideVideoButton.setSelected(showHideVideoButton.isEnabled() && uiVideoHandler.isLocalVideoVisible());
+  showHideVideoButton.setVisible(showHideVideoButton.isEnabled());
+}

@@ -1,0 +1,44 @@
+{
+  OperationSetVideoTelephony videoTelephony=callPeer.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
+  Component remoteVideo=null;
+  Component localVideo=null;
+  if (videoTelephony != null) {
+    List<Component> remoteVideos=videoTelephony.getVisualComponents(callPeer);
+    if ((remoteVideos != null) && !remoteVideos.isEmpty()) {
+      remoteVideo=remoteVideos.get(0);
+    }
+    if (uiVideoHandler.isLocalVideoVisible()) {
+      try {
+        localVideo=videoTelephony.getLocalVisualComponent(callPeer);
+      }
+ catch (      OperationFailedException ofe) {
+      }
+    }
+    boolean localVideoChanged=((localVideo != this.localVideo) || ((localVideo != null) && !UIVideoHandler2.isAncestor(center,localVideo)));
+    boolean remoteVideoChanged=((remoteVideo != this.remoteVideo) || ((remoteVideo != null) && !UIVideoHandler2.isAncestor(center,remoteVideo)));
+    if (localVideoChanged || remoteVideoChanged) {
+      if (localVideoChanged && !remoteVideoChanged && (localVideo == null)) {
+        if (this.localVideo != null) {
+          center.remove(this.localVideo);
+          this.localVideo=null;
+          if (closeLocalVisualComponentButton != null)           center.remove(closeLocalVisualComponentButton);
+        }
+      }
+ else {
+        center.removeAll();
+        if (remoteVideo != null)         center.add(remoteVideo,VideoLayout.CENTER_REMOTE);
+        this.remoteVideo=remoteVideo;
+        if (localVideo != null) {
+          center.add(localVideo,VideoLayout.LOCAL);
+          if (closeLocalVisualComponentButton == null) {
+            closeLocalVisualComponentButton=new CloseLocalVisualComponentButton(uiVideoHandler);
+          }
+          center.add(closeLocalVisualComponentButton,VideoLayout.CLOSE_LOCAL_BUTTON);
+        }
+        this.localVideo=localVideo;
+      }
+      center.validate();
+      center.repaint();
+    }
+  }
+}

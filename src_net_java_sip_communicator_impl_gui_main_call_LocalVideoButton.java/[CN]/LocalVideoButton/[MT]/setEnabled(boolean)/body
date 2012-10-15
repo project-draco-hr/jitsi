@@ -1,3 +1,38 @@
 {
-  if (videoAvailable)   super.setEnabled(enable);
+  MediaDevice videoDevice=GuiActivator.getMediaService().getDefaultDevice(MediaType.VIDEO,MediaUseCase.CALL);
+  String toolTipTextKey;
+  boolean videoAvailable;
+  if ((videoDevice == null) || !videoDevice.getDirection().allowsSending()) {
+    toolTipTextKey="service.gui.NO_CAMERA_AVAILABLE";
+    videoAvailable=false;
+  }
+ else {
+    boolean hasVideoTelephony=false;
+    boolean hasEnabledVideoFormat=false;
+    for (    Call conferenceCall : callConference.getCalls()) {
+      ProtocolProviderService protocolProvider=conferenceCall.getProtocolProvider();
+      if (!hasVideoTelephony) {
+        OperationSetVideoTelephony videoTelephony=protocolProvider.getOperationSet(OperationSetVideoTelephony.class);
+        if (videoTelephony != null)         hasVideoTelephony=true;
+      }
+      if (!hasEnabledVideoFormat && ConfigurationManager.hasEnabledVideoFormat(protocolProvider)) {
+        hasEnabledVideoFormat=true;
+      }
+      if (hasVideoTelephony && hasEnabledVideoFormat)       break;
+    }
+    if (!hasVideoTelephony) {
+      toolTipTextKey="service.gui.NO_VIDEO_FOR_PROTOCOL";
+      videoAvailable=false;
+    }
+ else     if (!hasEnabledVideoFormat) {
+      toolTipTextKey="service.gui.NO_VIDEO_ENCODINGS";
+      videoAvailable=false;
+    }
+ else {
+      toolTipTextKey="service.gui.LOCAL_VIDEO_BUTTON_TOOL_TIP";
+      videoAvailable=true;
+    }
+  }
+  setToolTipText(GuiActivator.getResources().getI18NString(toolTipTextKey));
+  super.setEnabled(videoAvailable && enabled);
 }

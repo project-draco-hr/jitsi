@@ -1,0 +1,36 @@
+{
+  VideoEvent maybeEnsureSize=null;
+  if (arg instanceof VideoEvent) {
+    try {
+      VideoEvent vev=(VideoEvent)arg;
+      int vevType=vev.getType();
+      if (vevType == VideoEvent.VIDEO_ADDED) {
+        Component video=vev.getVisualComponent();
+        if ((video != null) && !UIVideoHandler2.isAncestor(this,video)) {
+          maybeEnsureSize=vev;
+        }
+      }
+ else       if (vevType == SizeChangeVideoEvent.VIDEO_SIZE_CHANGE) {
+        maybeEnsureSize=vev;
+      }
+    }
+ catch (    Throwable t) {
+      if (t instanceof ThreadDeath)       throw (ThreadDeath)t;
+ else       if (logger.isDebugEnabled()) {
+        logger.debug("Failed to determine whether it is necessary to" + " adjust a Frame's size in response to a" + " VideoEvent.",t);
+      }
+    }
+  }
+  updateViewFromModel();
+  if (maybeEnsureSize != null) {
+    try {
+      maybeEnsureSize(maybeEnsureSize);
+    }
+ catch (    Throwable t) {
+      if (t instanceof ThreadDeath)       throw (ThreadDeath)t;
+ else {
+        logger.error("Failed to adjust a Frame's size" + " in response to a VideoEvent.",t);
+      }
+    }
+  }
+}

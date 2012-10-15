@@ -3,15 +3,15 @@
   if (!firstCallPeerIsGV)   firstCallPeerIsGV=calleeJID.endsWith(ProtocolProviderServiceJabberImpl.GOOGLE_VOICE_DOMAIN);
   addCallPeer(callPeer);
   callPeer.setState(CallPeerState.INITIATING_CALL);
-  if (getCallPeerCount() == 1 && !calleeJID.endsWith(ProtocolProviderServiceJabberImpl.GOOGLE_VOICE_DOMAIN) || getCallPeerCount() == 2 && firstCallPeerIsGV) {
+  List<CallPeerGTalkImpl> callPeers=getCallPeerList();
+  int callPeerCount=callPeers.size();
+  if (((callPeerCount == 1) && !calleeJID.endsWith(ProtocolProviderServiceJabberImpl.GOOGLE_VOICE_DOMAIN)) || ((callPeerCount == 2) && firstCallPeerIsGV)) {
     if (firstCallPeerIsGV) {
       firstCallPeerIsGV=false;
-      Iterator<CallPeerGTalkImpl> it=getCallPeersVector().iterator();
       String sub=calleeJID.substring(0,calleeJID.indexOf("/"));
-      while (it.hasNext()) {
-        CallPeer p=it.next();
+      for (      CallPeerGTalkImpl p : callPeers) {
         if (p.getAddress().equals(sub)) {
-          it.remove();
+          doRemoveCallPeer(p);
           break;
         }
       }
@@ -25,11 +25,9 @@
   try {
     callPeer.initiateSession(sessionInitiateExtensions);
     sessionInitiated=true;
-    return callPeer;
   }
   finally {
-    if (!sessionInitiated) {
-      callPeer.setState(CallPeerState.FAILED);
-    }
+    if (!sessionInitiated)     callPeer.setState(CallPeerState.FAILED);
   }
+  return callPeer;
 }

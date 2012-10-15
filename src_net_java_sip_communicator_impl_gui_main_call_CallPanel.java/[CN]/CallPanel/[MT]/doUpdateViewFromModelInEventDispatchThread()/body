@@ -1,0 +1,65 @@
+{
+  if (callConference.isEnded() || (callConference.getCallPeerCount() == 0)) {
+    updateSettingsPanelInEventDispatchThread(true);
+    return;
+  }
+  boolean isConference=isConference();
+  boolean isVideo=CallManager.isVideoStreaming(callConference);
+  CallPeer callPeer=null;
+  if (callPanel != null) {
+    boolean removeCallPanel;
+    if (isConference) {
+      if (callPanel instanceof BasicConferenceCallPanel) {
+        if (isVideo) {
+          removeCallPanel=!(callPanel instanceof VideoConferenceCallPanel);
+        }
+ else {
+          removeCallPanel=(callPanel instanceof VideoConferenceCallPanel);
+        }
+      }
+ else {
+        removeCallPanel=true;
+      }
+    }
+ else {
+      if (callPanel instanceof OneToOneCallPanel) {
+        if (callPeer == null) {
+          List<CallPeer> callPeers=callConference.getCallPeers();
+          if (!callPeers.isEmpty())           callPeer=callPeers.get(0);
+        }
+        removeCallPanel=!((OneToOneCallPanel)callPanel).getCallPeer().equals(callPeer);
+      }
+ else       removeCallPanel=true;
+    }
+    if (removeCallPanel) {
+      remove(callPanel);
+      try {
+        ((CallRenderer)callPanel).dispose();
+      }
+  finally {
+        callPanel=null;
+      }
+    }
+  }
+  if (callPanel == null) {
+    if (isConference) {
+      if (isVideo) {
+        callPanel=new VideoConferenceCallPanel(this,callConference,uiVideoHandler);
+      }
+ else {
+        callPanel=new AudioConferenceCallPanel(this,callConference);
+      }
+    }
+ else {
+      if (callPeer == null) {
+        List<CallPeer> callPeers=callConference.getCallPeers();
+        if (!callPeers.isEmpty())         callPeer=callPeers.get(0);
+      }
+      if (callPeer != null) {
+        callPanel=new OneToOneCallPanel(this,callPeer,uiVideoHandler);
+      }
+    }
+    if (callPanel != null)     add(callPanel,BorderLayout.CENTER);
+  }
+  updateSettingsPanelInEventDispatchThread(false);
+}

@@ -1,0 +1,80 @@
+{
+  CallPeer callPeer=(CallPeer)cpc.getParticipant();
+  List<ConferenceParticipantContainer> cmcs=cpc.conferenceMemberContainers;
+  if (cmcs != null) {
+    for (    ConferenceParticipantContainer cmc : cmcs)     cmc.toBeRemoved=true;
+  }
+  if (videos != null) {
+    Component video=cpc.getVideo();
+    for (    Component conferenceMemberVideo : videos) {
+      if (conferenceMemberVideo == video)       continue;
+      boolean addNewConferenceParticipantContainer=true;
+      ConferenceMember conferenceMember=videoTelephony.getConferenceMember(callPeer,conferenceMemberVideo);
+      if (cmcs == null) {
+        cmcs=new LinkedList<ConferenceParticipantContainer>();
+        cpc.conferenceMemberContainers=cmcs;
+      }
+ else {
+        for (        ConferenceParticipantContainer cmc : cmcs) {
+          Object cmcParticipant=cmc.getParticipant();
+          if (conferenceMember == null) {
+            if (cmcParticipant == callPeer) {
+              Component cmcVideo=cmc.getVideo();
+              if (cmcVideo == null) {
+                cmc.setVideo(conferenceMemberVideo);
+                cmc.toBeRemoved=false;
+                addNewConferenceParticipantContainer=false;
+                break;
+              }
+ else               if (cmcVideo == conferenceMemberVideo) {
+                cmc.toBeRemoved=false;
+                addNewConferenceParticipantContainer=false;
+                break;
+              }
+            }
+          }
+ else           if (cmcParticipant == conferenceMember) {
+            cmc.setVideo(conferenceMemberVideo);
+            cmc.toBeRemoved=false;
+            addNewConferenceParticipantContainer=false;
+            break;
+          }
+        }
+      }
+      if (addNewConferenceParticipantContainer) {
+        ConferenceParticipantContainer cmc=(conferenceMember == null) ? new ConferenceParticipantContainer(callPeer,conferenceMemberVideo) : new ConferenceParticipantContainer(conferenceMember,conferenceMemberVideo);
+        cmcs.add(cmc);
+      }
+    }
+  }
+  List<ConferenceMember> conferenceMembers=callPeer.getConferenceMembers();
+  if (!conferenceMembers.isEmpty()) {
+    if (cmcs == null) {
+      cmcs=new LinkedList<ConferenceParticipantContainer>();
+      cpc.conferenceMemberContainers=cmcs;
+    }
+    for (    ConferenceMember conferenceMember : conferenceMembers) {
+      if (isConferenceMemberCallPeer(conferenceMember,callPeer))       continue;
+      if (isConferenceMemberLocalUser(conferenceMember))       continue;
+      boolean addNewConferenceParticipantContainer=true;
+      for (      ConferenceParticipantContainer cmc : cmcs) {
+        if (cmc.getParticipant() == conferenceMember) {
+          if (cmc.toBeRemoved) {
+            cmc.setVideo(null);
+            cmc.toBeRemoved=false;
+          }
+          addNewConferenceParticipantContainer=false;
+          break;
+        }
+      }
+      if (addNewConferenceParticipantContainer) {
+        ConferenceParticipantContainer cmc=new ConferenceParticipantContainer(conferenceMember,null);
+        cmcs.add(cmc);
+      }
+    }
+  }
+  if ((cmcs != null) && !cmcs.isEmpty()) {
+    removeConferenceMemberContainers(cpc,false);
+    if (UIVideoHandler2.isAncestor(this,cpc.getComponent()))     addConferenceMemberContainers(cpc);
+  }
+}

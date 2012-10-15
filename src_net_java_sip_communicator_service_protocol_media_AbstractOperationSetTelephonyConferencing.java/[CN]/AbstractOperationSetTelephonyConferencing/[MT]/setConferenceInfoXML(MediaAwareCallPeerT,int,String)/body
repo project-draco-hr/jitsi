@@ -1,0 +1,34 @@
+{
+  byte[] bytes;
+  try {
+    bytes=conferenceInfoXML.getBytes("UTF-8");
+  }
+ catch (  UnsupportedEncodingException uee) {
+    logger.warn("Failed to gets bytes from String for the UTF-8 charset",uee);
+    bytes=conferenceInfoXML.getBytes();
+  }
+  Document doc=null;
+  Throwable exception=null;
+  try {
+    doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(bytes));
+  }
+ catch (  IOException ioe) {
+    exception=ioe;
+  }
+catch (  ParserConfigurationException pce) {
+    exception=pce;
+  }
+catch (  SAXException saxe) {
+    exception=saxe;
+  }
+  if (exception != null)   logger.error("Failed to parse conference-info XML",exception);
+ else {
+    callPeer.setConferenceFocus(true);
+    int documentVersion=Integer.parseInt(doc.getDocumentElement().getAttribute("version"));
+    if ((version == -1) || (documentVersion >= version)) {
+      setConferenceInfoDocument(callPeer,doc);
+      return documentVersion;
+    }
+  }
+  return -1;
+}
