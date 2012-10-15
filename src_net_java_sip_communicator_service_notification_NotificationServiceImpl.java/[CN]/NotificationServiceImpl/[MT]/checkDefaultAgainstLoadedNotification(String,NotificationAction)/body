@@ -1,0 +1,26 @@
+{
+  if (defaultAction instanceof SoundNotificationAction) {
+    SoundNotificationAction soundDefaultAction=(SoundNotificationAction)defaultAction;
+    SoundNotificationAction soundAction=(SoundNotificationAction)getEventNotificationAction(eventType,ACTION_SOUND);
+    boolean isSoundNotificationEnabledPropExist=getNotificationActionProperty(eventType,defaultAction,"isSoundNotificationEnabled") != null;
+    if (!isSoundNotificationEnabledPropExist) {
+      soundAction.setSoundNotificationEnabled(soundDefaultAction.isSoundNotificationEnabled());
+    }
+    boolean isSoundPlaybackEnabledPropExist=getNotificationActionProperty(eventType,defaultAction,"isSoundPlaybackEnabled") != null;
+    if (!isSoundPlaybackEnabledPropExist) {
+      soundAction.setSoundPlaybackEnabled(soundDefaultAction.isSoundPlaybackEnabled());
+    }
+    boolean isSoundPCSpeakerEnabledPropExist=getNotificationActionProperty(eventType,defaultAction,"isSoundPCSpeakerEnabled") != null;
+    if (!isSoundPCSpeakerEnabledPropExist) {
+      soundAction.setSoundPCSpeakerEnabled(soundDefaultAction.isSoundPCSpeakerEnabled());
+    }
+    boolean fixDialingLoop=false;
+    if (eventType.equals("Dialing") && soundAction.getLoopInterval() == 0) {
+      soundAction.setLoopInterval(soundDefaultAction.getLoopInterval());
+      fixDialingLoop=true;
+    }
+    if (!(isSoundNotificationEnabledPropExist && isSoundPCSpeakerEnabledPropExist && isSoundPlaybackEnabledPropExist) || fixDialingLoop) {
+      saveNotification(eventType,soundAction,soundAction.isEnabled(),false);
+    }
+  }
+}
