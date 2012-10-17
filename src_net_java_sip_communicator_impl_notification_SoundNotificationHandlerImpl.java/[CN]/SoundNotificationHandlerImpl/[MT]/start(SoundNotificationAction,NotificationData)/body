@@ -1,10 +1,20 @@
 {
   if (isMute())   return;
-  if (action.isSoundNotificationEnabled()) {
-    play(action,data,false);
+  boolean playOnlyOnPlayback=true;
+  AudioNotifierService audioNotifService=NotificationActivator.getAudioNotifier();
+  if (audioNotifService != null)   playOnlyOnPlayback=audioNotifService.audioOutAndNotificationsShareSameDevice();
+  if (playOnlyOnPlayback) {
+    if (action.isSoundNotificationEnabled() || action.isSoundPlaybackEnabled()) {
+      play(action,data,true);
+    }
   }
-  if (action.isSoundPlaybackEnabled()) {
-    play(action,data,true);
+ else {
+    if (action.isSoundNotificationEnabled()) {
+      play(action,data,false);
+    }
+    if (action.isSoundPlaybackEnabled()) {
+      play(action,data,true);
+    }
   }
   if (action.isSoundPCSpeakerEnabled()) {
     PCSpeakerClip audio=new PCSpeakerClip();
