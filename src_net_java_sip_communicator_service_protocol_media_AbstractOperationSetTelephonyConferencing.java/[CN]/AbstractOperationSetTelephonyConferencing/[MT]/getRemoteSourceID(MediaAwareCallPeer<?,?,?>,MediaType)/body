@@ -1,0 +1,30 @@
+{
+  MediaStream stream=callPeer.getMediaHandler().getStream(mediaType);
+  long remoteSourceID;
+  if (stream != null) {
+    remoteSourceID=stream.getRemoteSourceID();
+    if (remoteSourceID != -1) {
+      MediaAwareCall<?,?,?> call=callPeer.getCall();
+      if (call != null) {
+        for (        MediaAwareCallPeer<?,?,?> aCallPeer : call.getCallPeerList()) {
+          if (aCallPeer != callPeer) {
+            MediaStream aStream=aCallPeer.getMediaHandler().getStream(mediaType);
+            if (aStream == stream) {
+              remoteSourceID=-1;
+              break;
+            }
+ else {
+              long aRemoteSourceID=stream.getRemoteSourceID();
+              if (aRemoteSourceID == remoteSourceID) {
+                remoteSourceID=-1;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+ else   remoteSourceID=-1;
+  return remoteSourceID;
+}

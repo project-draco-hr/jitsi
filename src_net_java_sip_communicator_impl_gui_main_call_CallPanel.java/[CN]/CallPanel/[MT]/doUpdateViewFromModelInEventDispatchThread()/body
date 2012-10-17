@@ -6,6 +6,7 @@
   boolean isConference=isConference();
   boolean isVideo=CallManager.isVideoStreaming(callConference);
   CallPeer callPeer=null;
+  boolean validateAndRepaint=false;
   if (callPanel != null) {
     boolean removeCallPanel;
     if (isConference) {
@@ -33,6 +34,7 @@
     }
     if (removeCallPanel) {
       remove(callPanel);
+      validateAndRepaint=true;
       try {
         ((CallRenderer)callPanel).dispose();
       }
@@ -59,7 +61,21 @@
         callPanel=new OneToOneCallPanel(this,callPeer,uiVideoHandler);
       }
     }
-    if (callPanel != null)     add(callPanel,BorderLayout.CENTER);
+    if (callPanel != null) {
+      add(callPanel,BorderLayout.CENTER);
+      validateAndRepaint=true;
+    }
   }
-  updateSettingsPanelInEventDispatchThread(false);
+  try {
+    updateSettingsPanelInEventDispatchThread(false);
+  }
+  finally {
+    if (validateAndRepaint) {
+      if (isDisplayable()) {
+        validate();
+        repaint();
+      }
+ else       doLayout();
+    }
+  }
 }

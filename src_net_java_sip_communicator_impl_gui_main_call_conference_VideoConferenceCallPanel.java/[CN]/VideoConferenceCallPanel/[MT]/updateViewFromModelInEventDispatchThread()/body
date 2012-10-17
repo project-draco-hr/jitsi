@@ -1,0 +1,36 @@
+{
+  Component localVideo=null;
+  Set<Component> videos=new HashSet<Component>();
+  for (  Call call : callConference.getCalls()) {
+    OperationSetVideoTelephony videoTelephony=call.getProtocolProvider().getOperationSet(OperationSetVideoTelephony.class);
+    if (videoTelephony == null)     continue;
+    Iterator<? extends CallPeer> callPeerIter=call.getCallPeers();
+    while (callPeerIter.hasNext()) {
+      CallPeer callPeer=callPeerIter.next();
+      if (uiVideoHandler.isLocalVideoVisible() && (localVideo == null)) {
+        try {
+          localVideo=videoTelephony.getLocalVisualComponent(callPeer);
+        }
+ catch (        OperationFailedException ofe) {
+        }
+        if (localVideo != null)         videos.add(localVideo);
+      }
+      List<Component> callPeerRemoteVideos=videoTelephony.getVisualComponents(callPeer);
+      videos.addAll(callPeerRemoteVideos);
+    }
+  }
+  Iterator<Component> thisVideoIter=this.videos.iterator();
+  while (thisVideoIter.hasNext()) {
+    Component thisVideo=thisVideoIter.next();
+    if (!videos.contains(thisVideo)) {
+      thisVideoIter.remove();
+      videoContainer.remove(thisVideo);
+    }
+  }
+  for (  Component video : videos) {
+    if (!UIVideoHandler2.isAncestor(videoContainer,video)) {
+      this.videos.add(video);
+      videoContainer.add(video,VideoLayout.CENTER_REMOTE);
+    }
+  }
+}
