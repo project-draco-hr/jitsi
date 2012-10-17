@@ -11,17 +11,11 @@
   Dictionary<String,String> mediaProps=new Hashtable<String,String>();
   mediaProps.put(ConfigurationForm.FORM_TYPE,ConfigurationForm.GENERAL_TYPE);
   if ((cfg == null) || !cfg.getBoolean(AUDIO_CONFIG_DISABLED_PROP,false)) {
-    final ConfigurationForm audioConfigurationForm=new LazyConfigurationForm(AudioConfigurationPanel.class.getName(),getClass().getClassLoader(),"plugin.mediaconfig.AUDIO_ICON","impl.neomedia.configform.AUDIO",3);
+    audioConfigurationForm=new LazyConfigurationForm(AudioConfigurationPanel.class.getName(),getClass().getClassLoader(),"plugin.mediaconfig.AUDIO_ICON","impl.neomedia.configform.AUDIO",3);
     bundleContext.registerService(ConfigurationForm.class.getName(),audioConfigurationForm,mediaProps);
     if (deviceConfigurationPropertyChangeListener == null) {
-      deviceConfigurationPropertyChangeListener=new PropertyChangeListener(){
-        public void propertyChange(        PropertyChangeEvent event){
-          if (DeviceConfiguration.PROP_AUDIO_SYSTEM_DEVICES.equals(event.getPropertyName())) {
-            showAudioConfiguration();
-          }
-        }
-      }
-;
+      getNotificationService();
+      deviceConfigurationPropertyChangeListener=new AudioDeviceConfigurationListener();
       mediaServiceImpl.getDeviceConfiguration().addPropertyChangeListener(deviceConfigurationPropertyChangeListener);
     }
   }
