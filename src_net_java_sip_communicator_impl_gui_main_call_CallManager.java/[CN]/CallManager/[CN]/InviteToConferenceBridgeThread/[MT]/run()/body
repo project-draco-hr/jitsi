@@ -1,0 +1,19 @@
+{
+  OperationSetVideoBridge opSetVideoBridge=callProvider.getOperationSet(OperationSetVideoBridge.class);
+  if (opSetVideoBridge == null || !opSetVideoBridge.isActive())   return;
+  if (ConfigurationManager.isNormalizePhoneNumber())   normalizePhoneNumbers(callees);
+  try {
+    if (call == null) {
+      opSetVideoBridge.createConfCall(callees);
+    }
+ else {
+      for (      String contact : callees) {
+        opSetVideoBridge.inviteCalleeToCall(contact,call);
+      }
+    }
+  }
+ catch (  Exception e) {
+    logger.error("Failed to invite callees: " + Arrays.toString(callees),e);
+    new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),e.getMessage(),ErrorDialog.ERROR).showDialog();
+  }
+}

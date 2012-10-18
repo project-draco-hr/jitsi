@@ -1,0 +1,31 @@
+{
+  JLabel accountSelectorLabel=new JLabel(GuiActivator.getResources().getI18NString("service.gui.CALL_VIA"));
+  TransparentPanel accountSelectorPanel=new TransparentPanel(new BorderLayout());
+  accountSelectorPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+  accountSelectorPanel.add(accountSelectorLabel,BorderLayout.WEST);
+  accountSelectorPanel.add(accountSelectorBox,BorderLayout.CENTER);
+  this.initAccountListData();
+  this.accountSelectorBox.setRenderer(new DefaultListCellRenderer(){
+    private static final long serialVersionUID=0L;
+    public Component getListCellRendererComponent(    JList list,    Object value,    int index,    boolean isSelected,    boolean cellHasFocus){
+      ProtocolProviderService protocolProvider=(ProtocolProviderService)value;
+      if (protocolProvider != null) {
+        this.setText(protocolProvider.getAccountID().getDisplayName());
+        this.setIcon(ImageLoader.getAccountStatusImage(protocolProvider));
+      }
+      return this;
+    }
+  }
+);
+  this.accountSelectorBox.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      Object accountSelectorBoxSelectedItem=accountSelectorBox.getSelectedItem();
+      if (lastSelectedAccount == null || !lastSelectedAccount.equals(accountSelectorBoxSelectedItem)) {
+        lastSelectedAccount=accountSelectorBoxSelectedItem;
+        initContactListData((ProtocolProviderService)accountSelectorBox.getSelectedItem());
+      }
+    }
+  }
+);
+  this.getContentPane().add(accountSelectorPanel,BorderLayout.NORTH);
+}
