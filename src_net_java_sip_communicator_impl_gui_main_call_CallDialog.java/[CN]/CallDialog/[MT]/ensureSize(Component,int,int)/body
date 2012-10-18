@@ -16,36 +16,21 @@
     Dimension componentSize=component.getSize();
     int newFrameWidth=frameSize.width + width - componentSize.width;
     int newFrameHeight=frameSize.height + height - componentSize.height;
-    Rectangle screenBounds=frame.getGraphicsConfiguration().getBounds();
-    if (newFrameWidth > screenBounds.width)     newFrameWidth=screenBounds.width;
-    if (newFrameHeight > screenBounds.height)     newFrameHeight=screenBounds.height;
-    Point frameLocation=frame.getLocation();
-    int newFrameX=frameLocation.x;
-    int newFrameY=frameLocation.y;
-    int xDelta=(newFrameX + newFrameWidth) - (screenBounds.x + screenBounds.width);
-    int yDelta=(newFrameY + newFrameHeight) - (screenBounds.y + screenBounds.height);
-    if (xDelta > 0) {
-      newFrameX-=xDelta;
-      if (newFrameX < screenBounds.x)       newFrameX=screenBounds.x;
-    }
-    if (yDelta > 0) {
-      newFrameY-=yDelta;
-      if (newFrameY < screenBounds.y)       newFrameY=screenBounds.y;
-    }
     Dimension minSize=frame.getMinimumSize();
     if (newFrameWidth < minSize.width)     newFrameWidth=minSize.width;
     if (newFrameHeight < minSize.height)     newFrameHeight=minSize.height;
-    int frameWidthDelta=newFrameWidth - frameSize.width;
-    int frameHeightDelta=newFrameHeight - frameSize.height;
-    if ((frameWidthDelta > 1) || (frameHeightDelta > 1)) {
-      if (!(frameWidthDelta > 1)) {
-        newFrameX=frameLocation.x;
-        newFrameWidth=frameSize.width;
-      }
- else       if (!(frameHeightDelta > 1)) {
-        newFrameY=frameLocation.y;
-        newFrameHeight=frameSize.height;
-      }
+    Rectangle screenBounds=frame.getGraphicsConfiguration().getBounds();
+    if (newFrameWidth > screenBounds.width)     newFrameWidth=screenBounds.width;
+    if (newFrameHeight > screenBounds.height)     newFrameHeight=screenBounds.height;
+    boolean changeWidth=((newFrameWidth - frameSize.width) > 1);
+    boolean changeHeight=((newFrameHeight - frameSize.height) > 1);
+    if (changeWidth || changeHeight) {
+      if (!changeWidth)       newFrameWidth=frameSize.width;
+ else       if (!changeHeight)       newFrameHeight=frameSize.height;
+      int newFrameX=screenBounds.x + (screenBounds.width - newFrameWidth) / 2;
+      int newFrameY=screenBounds.y + (screenBounds.height - newFrameHeight) / 2;
+      if (newFrameX < screenBounds.x)       newFrameX=screenBounds.x;
+      if (newFrameY < screenBounds.y)       newFrameY=screenBounds.y;
       frame.setBounds(newFrameX,newFrameY,newFrameWidth,newFrameHeight);
     }
   }
