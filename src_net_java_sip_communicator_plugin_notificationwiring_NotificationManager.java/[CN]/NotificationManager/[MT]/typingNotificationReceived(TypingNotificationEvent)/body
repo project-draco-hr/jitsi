@@ -1,20 +1,22 @@
 {
   try {
-    Contact contact=event.getSourceContact();
-    if (event.getTypingState() != OperationSetTypingNotifications.STATE_TYPING)     return;
+    Contact contact=ev.getSourceContact();
+    if (ev.getTypingState() != OperationSetTypingNotifications.STATE_TYPING) {
+      return;
+    }
     UIService uiService=NotificationWiringActivator.getUIService();
     if (uiService != null) {
       Chat chat=uiService.getCurrentChat();
       if (chat != null) {
         MetaContact metaContact=uiService.getChatContact(chat);
-        if (metaContact != null && metaContact.containsContact(contact) && chat.isChatFocused()) {
+        if ((metaContact != null) && metaContact.containsContact(contact) && chat.isChatFocused()) {
           return;
         }
       }
     }
     long currentTime=System.currentTimeMillis();
-    if (this.proactiveTimer.size() > 0) {
-      Iterator<Map.Entry<Contact,Long>> entries=this.proactiveTimer.entrySet().iterator();
+    if (proactiveTimer.size() > 0) {
+      Iterator<Map.Entry<Contact,Long>> entries=proactiveTimer.entrySet().iterator();
       while (entries.hasNext()) {
         Map.Entry<Contact,Long> entry=entries.next();
         Long lastNotificationDate=entry.getValue();
@@ -22,14 +24,17 @@
           entries.remove();
         }
       }
-      if (this.proactiveTimer.containsKey(contact)) {
+      if (proactiveTimer.containsKey(contact)) {
         return;
       }
     }
-    this.proactiveTimer.put(contact,currentTime);
+    proactiveTimer.put(contact,currentTime);
     fireChatNotification(contact,PROACTIVE_NOTIFICATION,contact.getDisplayName(),NotificationWiringActivator.getResources().getI18NString("service.gui.PROACTIVE_NOTIFICATION"));
   }
  catch (  Throwable t) {
-    logger.error("Error notifying for typing evt received",t);
+    if (t instanceof ThreadDeath)     throw (ThreadDeath)t;
+ else {
+      logger.error("An error occurred while handling" + " a typing notification.",t);
+    }
   }
 }

@@ -1,0 +1,22 @@
+{
+  AudioNotifierService audioNotifService=NotificationActivator.getAudioNotifier();
+  if ((audioNotifService == null) || StringUtils.isNullOrEmpty(action.getDescriptor(),true))   return;
+  if (SCAudioClipDevice.PLAYBACK.equals(device)) {
+    UIService uiService=NotificationActivator.getUIService();
+    if (uiService.getInProgressCalls().size() > 0)     return;
+  }
+  SCAudioClip audio=null;
+switch (device) {
+case NOTIFICATION:
+case PLAYBACK:
+    audio=audioNotifService.createAudio(action.getDescriptor(),SCAudioClipDevice.PLAYBACK.equals(device));
+  break;
+case PC_SPEAKER:
+audio=new PCSpeakerClip();
+break;
+}
+if (audio == null) return;
+playedClips.put(audio,data);
+@SuppressWarnings("unchecked") Callable<Boolean> loopCondition=(Callable<Boolean>)data.getExtra(NotificationData.SOUND_NOTIFICATION_HANDLER_LOOP_CONDITION_EXTRA);
+audio.play(action.getLoopInterval(),loopCondition);
+}

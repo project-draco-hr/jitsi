@@ -1,23 +1,38 @@
 {
   try {
-    Call call=event.getSourceCall();
-    CallPeer firstPeer=call.getCallPeers().next();
-    String peerName=firstPeer.getDisplayName();
+    final Call call=ev.getSourceCall();
+    CallPeer peer=call.getCallPeers().next();
     Map<String,String> peerInfo=new HashMap<String,String>();
-    peerInfo.put("caller.uri",firstPeer.getURI());
-    peerInfo.put("caller.address",firstPeer.getAddress());
-    peerInfo.put("caller.name",firstPeer.getDisplayName());
-    peerInfo.put("caller.id",firstPeer.getPeerID());
-    callNotifications.put(event.getSourceCall(),fireNotification(INCOMING_CALL,"",NotificationWiringActivator.getResources().getI18NString("service.gui.INCOMING_CALL",new String[]{peerName}),peerInfo));
-    call.addCallChangeListener(this);
-    if (call.getCallPeers().hasNext()) {
-      CallPeer peer=call.getCallPeers().next();
-      peer.addCallPeerListener(this);
-      peer.addCallPeerSecurityListener(this);
-      peer.addCallPeerConferenceListener(this);
+    String peerName=peer.getDisplayName();
+    peerInfo.put("caller.uri",peer.getURI());
+    peerInfo.put("caller.address",peer.getAddress());
+    peerInfo.put("caller.name",peerName);
+    peerInfo.put("caller.id",peer.getPeerID());
+    NotificationData notification=fireNotification(INCOMING_CALL,"",NotificationWiringActivator.getResources().getI18NString("service.gui.INCOMING_CALL",new String[]{peerName}),peerInfo,new Callable<Boolean>(){
+      public Boolean call(){
+        Iterator<? extends CallPeer> peerIter=call.getCallPeers();
+        boolean loop=false;
+        while (peerIter.hasNext()) {
+          CallPeer peer=peerIter.next();
+          if (CallPeerState.INCOMING_CALL.equals(peer.getState())) {
+            loop=true;
+            break;
+          }
+        }
+        return loop;
+      }
     }
+);
+    if (notification != null)     callNotifications.put(call,notification);
+    call.addCallChangeListener(this);
+    peer.addCallPeerListener(this);
+    peer.addCallPeerSecurityListener(this);
+    peer.addCallPeerConferenceListener(this);
   }
  catch (  Throwable t) {
-    logger.error("Error notifying for incoming call received",t);
+    if (t instanceof ThreadDeath)     throw (ThreadDeath)t;
+ else {
+      logger.error("An error occurred while trying to notify" + " about an incoming call",t);
+    }
   }
 }
