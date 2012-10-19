@@ -1,11 +1,17 @@
 {
   AudioNotifierService audioNotifService=NotificationActivator.getAudioNotifier();
-  if (audioNotifService == null)   return;
-  for (  Map.Entry<SCAudioClip,NotificationData> entry : playedClips.entrySet()) {
-    if (entry.getValue() == data) {
-      SCAudioClip audio=entry.getKey();
-      audio.stop();
-      audioNotifService.destroyAudio(audio);
+  if (audioNotifService != null) {
+    Iterator<Map.Entry<SCAudioClip,NotificationData>> i=playedClips.entrySet().iterator();
+    while (i.hasNext()) {
+      Map.Entry<SCAudioClip,NotificationData> e=i.next();
+      if (e.getValue() == data) {
+        try {
+          e.getKey().stop();
+        }
+  finally {
+          i.remove();
+        }
+      }
     }
   }
 }
