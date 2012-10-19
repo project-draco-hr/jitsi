@@ -1,6 +1,6 @@
 {
   try {
-    final Call call=ev.getSourceCall();
+    Call call=ev.getSourceCall();
     CallPeer peer=call.getCallPeers().next();
     Map<String,String> peerInfo=new HashMap<String,String>();
     String peerName=peer.getDisplayName();
@@ -8,8 +8,11 @@
     peerInfo.put("caller.address",peer.getAddress());
     peerInfo.put("caller.name",peerName);
     peerInfo.put("caller.id",peer.getPeerID());
+    final WeakReference<Call> weakCall=new WeakReference<Call>(call);
     NotificationData notification=fireNotification(INCOMING_CALL,"",NotificationWiringActivator.getResources().getI18NString("service.gui.INCOMING_CALL",new String[]{peerName}),peerInfo,new Callable<Boolean>(){
       public Boolean call(){
+        Call call=weakCall.get();
+        if (call == null)         return false;
         Iterator<? extends CallPeer> peerIter=call.getCallPeers();
         boolean loop=false;
         while (peerIter.hasNext()) {

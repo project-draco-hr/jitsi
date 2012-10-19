@@ -1,26 +1,31 @@
 {
   try {
-    final CallPeer peer=ev.getSourceCallPeer();
+    CallPeer peer=ev.getSourceCallPeer();
     Call call=peer.getCall();
     CallPeerState newState=(CallPeerState)ev.getNewValue();
     CallPeerState oldState=(CallPeerState)ev.getOldValue();
     if ((newState == CallPeerState.INITIATING_CALL) || (newState == CallPeerState.CONNECTING)) {
-      NotificationData notification=fireNotification(DIALING,new Callable<Boolean>(){
-        public Boolean call(){
-          CallPeerState state=peer.getState();
-          return CallPeerState.INITIATING_CALL.equals(state) || CallPeerState.CONNECTING.equals(state);
+      final WeakReference<CallPeer> weakPeer=new WeakReference<CallPeer>(peer);
+      if (shouldPlayDialingSound(weakPeer)) {
+        NotificationData notification=fireNotification(DIALING,new Callable<Boolean>(){
+          public Boolean call(){
+            return shouldPlayDialingSound(weakPeer);
+          }
         }
-      }
 );
-      if (notification != null)       callNotifications.put(call,notification);
+        if (notification != null)         callNotifications.put(call,notification);
+      }
     }
  else {
-      stopSound(callNotifications.get(call));
+      NotificationData notification=callNotifications.get(call);
+      if (notification != null)       stopSound(notification);
     }
     if (newState == CallPeerState.ALERTING_REMOTE_SIDE && oldState != CallPeerState.CONNECTING_WITH_EARLY_MEDIA) {
+      final WeakReference<CallPeer> weakPeer=new WeakReference<CallPeer>(peer);
       NotificationData notification=fireNotification(OUTGOING_CALL,new Callable<Boolean>(){
         public Boolean call(){
-          return CallPeerState.ALERTING_REMOTE_SIDE.equals(peer.getState());
+          CallPeer peer=weakPeer.get();
+          return (peer != null) && CallPeerState.ALERTING_REMOTE_SIDE.equals(peer.getState());
         }
       }
 );
@@ -28,9 +33,11 @@
     }
  else     if (newState == CallPeerState.BUSY) {
       if (!isConference(call)) {
+        final WeakReference<CallPeer> weakPeer=new WeakReference<CallPeer>(peer);
         NotificationData notification=fireNotification(BUSY_CALL,new Callable<Boolean>(){
           public Boolean call(){
-            return CallPeerState.BUSY.equals(peer.getState());
+            CallPeer peer=weakPeer.get();
+            return (peer != null) && CallPeerState.BUSY.equals(peer.getState());
           }
         }
 );

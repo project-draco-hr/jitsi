@@ -1,0 +1,24 @@
+{
+  CallPeer peer=weakPeer.get();
+  if (peer == null)   return false;
+  Call call=peer.getCall();
+  if (call == null)   return false;
+  CallConference conference=call.getConference();
+  if (conference == null)   return false;
+  boolean play=false;
+  for (  Call aCall : conference.getCalls()) {
+    Iterator<? extends CallPeer> peerIter=aCall.getCallPeers();
+    while (peerIter.hasNext()) {
+      CallPeer aPeer=peerIter.next();
+      if (peer == aPeer)       play=true;
+      CallPeerState state=peer.getState();
+      if (CallPeerState.INITIATING_CALL.equals(state) || CallPeerState.CONNECTING.equals(state)) {
+        if (peer != aPeer)         return false;
+      }
+ else {
+        return false;
+      }
+    }
+  }
+  return play;
+}
