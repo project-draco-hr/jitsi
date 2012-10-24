@@ -12,8 +12,32 @@
     return;
   }
  else {
-    Dimension frameSize=frame.getSize();
+    if (callPanel != null) {
+      Container ancestor=findClosestAncestorWithSetPreferredSize(component);
+      if (ancestor == null)       ancestor=callPanel;
+      if (ancestor.isPreferredSizeSet()) {
+        LayoutManager ancestorLayout=ancestor.getLayout();
+        if (ancestorLayout != null) {
+          Dimension preferredLayoutSize=ancestorLayout.preferredLayoutSize(ancestor);
+          if (preferredLayoutSize != null) {
+            component=ancestor;
+            width=preferredLayoutSize.width;
+            height=preferredLayoutSize.height;
+          }
+        }
+      }
+ else {
+        Dimension preferredSize=ancestor.getPreferredSize();
+        if (preferredSize != null) {
+          component=ancestor;
+          width=preferredSize.width;
+          height=preferredSize.height;
+        }
+      }
+    }
     Dimension componentSize=component.getSize();
+    if ((componentSize.width < 1) || (componentSize.height < 1))     return;
+    Dimension frameSize=frame.getSize();
     int newFrameWidth=frameSize.width + width - componentSize.width;
     int newFrameHeight=frameSize.height + height - componentSize.height;
     Dimension minSize=frame.getMinimumSize();
