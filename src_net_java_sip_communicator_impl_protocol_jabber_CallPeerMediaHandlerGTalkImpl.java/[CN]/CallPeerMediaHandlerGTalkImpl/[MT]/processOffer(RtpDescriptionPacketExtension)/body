@@ -3,7 +3,8 @@
   List<PayloadTypePacketExtension> payloadTypes=offer.getPayloadTypes();
   boolean atLeastOneValidDescription=false;
   List<PayloadTypePacketExtension> answer=new ArrayList<PayloadTypePacketExtension>();
-  List<MediaFormat> remoteFormats=JingleUtils.extractFormats(offer,getDynamicPayloadTypes());
+  HashMap<Byte,Byte> overridePTMapping=new HashMap<Byte,Byte>();
+  List<MediaFormat> remoteFormats=JingleUtils.extractFormats(offer,getDynamicPayloadTypes(),overridePTMapping);
   boolean isAudio=false;
   boolean isVideo=false;
   for (  PayloadTypePacketExtension ext : payloadTypes) {
@@ -25,6 +26,10 @@
     List<PayloadTypePacketExtension> contents=createPayloadTypesForOffer(getNameForMediaType(mediaType),mutuallySupportedFormats);
     answer.addAll(contents);
     localContentMap.put(mediaType.toString(),answer);
+    MediaStream stream=getStream(mediaType);
+    if (stream != null) {
+      stream.setPTMappingOverrides(overridePTMapping);
+    }
     atLeastOneValidDescription=true;
   }
   if (!atLeastOneValidDescription) {

@@ -8,7 +8,8 @@
     closeStream(mediaType);
     return;
   }
-  List<MediaFormat> supportedFormats=JingleUtils.extractFormats(description,getDynamicPayloadTypes());
+  HashMap<Byte,Byte> overridePTMapping=new HashMap<Byte,Byte>();
+  List<MediaFormat> supportedFormats=JingleUtils.extractFormats(description,getDynamicPayloadTypes(),overridePTMapping);
   MediaDevice dev=getDefaultDevice(mediaType);
   if (!isDeviceActive(dev)) {
     closeStream(mediaType);
@@ -51,4 +52,8 @@
     }
   }
   initStream(content.getName(),connector,dev,supportedFormats.get(0),target,direction,rtpExtensions,masterStream);
+  MediaStream stream=getStream(mediaType);
+  if (stream != null) {
+    stream.setPTMappingOverrides(overridePTMapping);
+  }
 }

@@ -48,6 +48,18 @@
     MediaFormat mediaFormat=null;
     try {
       mediaFormat=createFormat(pt,rtpmap,fmtp,frameRate,advp,ptRegistry);
+      MediaFormat addedFormat=ptRegistry.findFormat(pt);
+      if (addedFormat == null) {
+        overridePTMapping.put(ptRegistry.obtainPayloadTypeNumber(mediaFormat),pt);
+      }
+ else {
+        if (mediaFormat != null && !mediaFormat.equals(addedFormat)) {
+          byte ourPT=ptRegistry.obtainPayloadTypeNumber(mediaFormat);
+          if (ourPT != pt) {
+            overridePTMapping.put(ourPT,pt);
+          }
+        }
+      }
     }
  catch (    SdpException e) {
       if (logger.isDebugEnabled())       logger.debug("A funny thing just happened ...",e);

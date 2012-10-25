@@ -5,9 +5,10 @@
     String ns=getNamespaceForMediaType(mediaType);
     String mediaName=getNameForMediaType(mediaType);
     MediaFormat format=null;
+    HashMap<Byte,Byte> overridePTMapping=new HashMap<Byte,Byte>();
     for (    PayloadTypePacketExtension ext : lst) {
       if (ext.getNamespace().equals(ns)) {
-        format=JingleUtils.payloadTypeToMediaFormat(ext,getDynamicPayloadTypes());
+        format=JingleUtils.payloadTypeToMediaFormat(ext,getDynamicPayloadTypes(),overridePTMapping);
         if (format != null)         break;
       }
     }
@@ -34,5 +35,9 @@
       }
     }
     initStream(mediaName,connector,dev,format,target,direction,rtpExtensions,masterStream);
+    MediaStream stream=getStream(mediaType);
+    if (stream != null) {
+      stream.setPTMappingOverrides(overridePTMapping);
+    }
   }
 }

@@ -25,8 +25,9 @@
     ContentPacketExtension theirContent=this.remoteContentMap.get(contentName);
     RtpDescriptionPacketExtension theirDescription=JingleUtils.getRtpDescription(theirContent);
     MediaFormat format=null;
+    HashMap<Byte,Byte> overridePTMapping=new HashMap<Byte,Byte>();
     for (    PayloadTypePacketExtension payload : theirDescription.getPayloadTypes()) {
-      format=JingleUtils.payloadTypeToMediaFormat(payload,getDynamicPayloadTypes());
+      format=JingleUtils.payloadTypeToMediaFormat(payload,getDynamicPayloadTypes(),overridePTMapping);
       if (format != null)       break;
     }
     if (format == null) {
@@ -53,6 +54,10 @@
       }
     }
     initStream(contentName,connector,dev,format,target,direction,rtpExtensions,masterStream);
+    MediaStream stream=getStream(type);
+    if (stream != null) {
+      stream.setPTMappingOverrides(overridePTMapping);
+    }
   }
   return sessAccept;
 }
