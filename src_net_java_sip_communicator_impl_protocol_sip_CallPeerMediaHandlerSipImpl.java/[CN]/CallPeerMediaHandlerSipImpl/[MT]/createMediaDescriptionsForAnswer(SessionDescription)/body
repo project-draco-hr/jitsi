@@ -30,7 +30,8 @@
       answerDescriptions.add(SdpUtils.createDisablingAnswer(mediaDescription));
       continue;
     }
-    HashMap<Byte,Byte> overridePTMapping=new HashMap<Byte,Byte>();
+    HashMap<Byte,Byte> overridePTMapping=null;
+    if (localSess != null)     overridePTMapping=new HashMap<Byte,Byte>();
     List<MediaFormat> remoteFormats=SdpUtils.extractFormats(mediaDescription,getDynamicPayloadTypes(),overridePTMapping);
     MediaDevice dev=getDefaultDevice(mediaType);
     MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
@@ -97,7 +98,7 @@
     }
     initStream(connector,dev,fmt,target,direction,rtpExtensions,masterStream);
     MediaStream stream=getStream(mediaType);
-    if (stream != null) {
+    if (overridePTMapping != null && stream != null) {
       stream.setPTMappingOverrides(overridePTMapping);
     }
     answerDescriptions.add(md);

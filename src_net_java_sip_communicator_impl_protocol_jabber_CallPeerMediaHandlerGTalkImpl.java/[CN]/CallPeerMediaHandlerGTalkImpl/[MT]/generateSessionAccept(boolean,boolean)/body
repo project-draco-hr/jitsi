@@ -7,7 +7,8 @@
     MediaFormat format=null;
     String ns=getNamespaceForMediaType(mediaType);
     String mediaName=getNameForMediaType(mediaType);
-    HashMap<Byte,Byte> overridePTMapping=new HashMap<Byte,Byte>();
+    HashMap<Byte,Byte> overridePTMappingMap=null;
+    if (overrideMapping)     overridePTMappingMap=new HashMap<Byte,Byte>();
     for (    PayloadTypePacketExtension ext : lst) {
       if (ext.getNamespace().equals(ns)) {
         if (mediaType.equals(MediaType.VIDEO)) {
@@ -17,7 +18,7 @@
           ext.setAttribute("height",200);
           ext.setAttribute("framerate",30);
         }
-        format=JingleUtils.payloadTypeToMediaFormat(ext,getDynamicPayloadTypes(),overridePTMapping);
+        format=JingleUtils.payloadTypeToMediaFormat(ext,getDynamicPayloadTypes(),overridePTMappingMap);
         description.addPayloadType(ext);
         if (format != null)         break;
       }
@@ -46,8 +47,8 @@
     setAndAddPreferredEncryptionProtocol(mediaType,description,remoteDescription);
     initStream(mediaName,connector,dev,format,target,direction,rtpExtensions,masterStream);
     MediaStream stream=getStream(mediaType);
-    if (stream != null) {
-      stream.setPTMappingOverrides(overridePTMapping);
+    if (overrideMapping && stream != null) {
+      stream.setPTMappingOverrides(overridePTMappingMap);
     }
   }
   return description;

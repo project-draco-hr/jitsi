@@ -5,8 +5,9 @@
     remoteContentMap.put(content.getName(),content);
     RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(content);
     MediaType mediaType=MediaType.parseString(description.getMedia());
-    HashMap<Byte,Byte> overridePTMapping=new HashMap<Byte,Byte>();
-    List<MediaFormat> remoteFormats=JingleUtils.extractFormats(description,getDynamicPayloadTypes(),overridePTMapping);
+    HashMap<Byte,Byte> overridePTMappingMap=null;
+    if (overrideMapping)     overridePTMappingMap=new HashMap<Byte,Byte>();
+    List<MediaFormat> remoteFormats=JingleUtils.extractFormats(description,getDynamicPayloadTypes(),overridePTMappingMap);
     MediaDevice dev=getDefaultDevice(mediaType);
     MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
     devDirection=devDirection.and(getDirectionUserPreference(mediaType));
@@ -39,8 +40,8 @@
     answer.add(ourContent);
     localContentMap.put(content.getName(),ourContent);
     MediaStream stream=getStream(mediaType);
-    if (stream != null) {
-      stream.setPTMappingOverrides(overridePTMapping);
+    if (overrideMapping && stream != null) {
+      stream.setPTMappingOverrides(overridePTMappingMap);
     }
     atLeastOneValidDescription=true;
   }
