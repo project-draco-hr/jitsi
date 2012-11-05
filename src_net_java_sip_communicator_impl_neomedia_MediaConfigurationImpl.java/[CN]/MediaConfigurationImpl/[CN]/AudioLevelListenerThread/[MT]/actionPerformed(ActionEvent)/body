@@ -1,0 +1,43 @@
+{
+synchronized (syncPendingDeviceSession) {
+    this.pendingDeviceSession=null;
+    syncPendingDeviceSession.notify();
+  }
+  CaptureDeviceInfo cdi;
+  if (comboBox == null) {
+    cdi=soundLevelIndicator.isShowing() ? audioSystem.getDevice(AudioSystem.CAPTURE_INDEX) : null;
+  }
+ else {
+    Object selectedItem=soundLevelIndicator.isShowing() ? comboBox.getSelectedItem() : null;
+    cdi=(selectedItem instanceof DeviceConfigurationComboBoxModel.CaptureDevice) ? ((DeviceConfigurationComboBoxModel.CaptureDevice)selectedItem).info : null;
+  }
+  if (cdi != null) {
+    for (    MediaDevice md : mediaService.getDevices(MediaType.AUDIO,MediaUseCase.ANY)) {
+      if (md instanceof AudioMediaDeviceImpl) {
+        AudioMediaDeviceImpl amd=(AudioMediaDeviceImpl)md;
+        if (cdi.equals(amd.getCaptureDeviceInfo())) {
+          try {
+            MediaDeviceSession deviceSession=amd.createSession();
+            boolean setDeviceSession=false;
+            try {
+              if (deviceSession instanceof AudioMediaDeviceSession) {
+synchronized (syncPendingDeviceSession) {
+                  this.pendingDeviceSession=(AudioMediaDeviceSession)deviceSession;
+                  syncPendingDeviceSession.notify();
+                }
+                setDeviceSession=true;
+              }
+            }
+  finally {
+              if (!setDeviceSession)               deviceSession.close();
+            }
+          }
+ catch (          Throwable t) {
+            if (t instanceof ThreadDeath)             throw (ThreadDeath)t;
+          }
+          break;
+        }
+      }
+    }
+  }
+}
