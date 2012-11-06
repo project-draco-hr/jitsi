@@ -1,16 +1,23 @@
 {
   AudioNotifierService audioNotifService=NotificationActivator.getAudioNotifier();
   if (audioNotifService != null) {
-    Iterator<Map.Entry<SCAudioClip,NotificationData>> i=playedClips.entrySet().iterator();
-    while (i.hasNext()) {
-      Map.Entry<SCAudioClip,NotificationData> e=i.next();
-      if (e.getValue() == data) {
-        try {
-          e.getKey().stop();
-        }
-  finally {
+    List<SCAudioClip> clipsToStop=new ArrayList<SCAudioClip>();
+synchronized (playedClips) {
+      Iterator<Map.Entry<SCAudioClip,NotificationData>> i=playedClips.entrySet().iterator();
+      while (i.hasNext()) {
+        Map.Entry<SCAudioClip,NotificationData> e=i.next();
+        if (e.getValue() == data) {
+          clipsToStop.add(e.getKey());
           i.remove();
         }
+      }
+    }
+    for (    SCAudioClip clip : clipsToStop) {
+      try {
+        clip.stop();
+      }
+ catch (      Throwable t) {
+        logger.error("Error stopping audio clip",t);
       }
     }
   }
