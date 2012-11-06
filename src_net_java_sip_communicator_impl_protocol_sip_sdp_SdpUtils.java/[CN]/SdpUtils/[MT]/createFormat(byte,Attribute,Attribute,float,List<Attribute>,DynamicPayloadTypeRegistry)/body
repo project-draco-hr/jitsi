@@ -1,0 +1,38 @@
+{
+  String encoding=null;
+  double clockRate=-1;
+  int numChannels=1;
+  if (rtpmap != null) {
+    String rtpmapValue=rtpmap.getValue();
+    StringTokenizer tokenizer=new StringTokenizer(rtpmapValue," /",false);
+    if (tokenizer.hasMoreTokens()) {
+      tokenizer.nextToken();
+    }
+    if (tokenizer.hasMoreTokens()) {
+      encoding=tokenizer.nextToken();
+    }
+    if (tokenizer.hasMoreTokens()) {
+      clockRate=Double.parseDouble(tokenizer.nextToken());
+    }
+    if (tokenizer.hasMoreTokens()) {
+      String nChansStr=tokenizer.nextToken();
+      try {
+        numChannels=Integer.parseInt(nChansStr);
+      }
+ catch (      NumberFormatException exc) {
+        if (logger.isDebugEnabled())         logger.debug(nChansStr + " is not a valid number of channels.",exc);
+      }
+    }
+  }
+ else {
+    MediaFormat fmt=ptRegistry.findFormat(payloadType);
+    if (fmt != null)     return fmt;
+  }
+  Map<String,String> fmtParamsMap=null;
+  Map<String,String> advancedAttrMap=null;
+  if (fmtp != null)   fmtParamsMap=parseFmtpAttribute(fmtp);
+  if (advp != null)   advancedAttrMap=parseAdvancedAttributes(advp);
+  MediaFormat format=SipActivator.getMediaService().getFormatFactory().createMediaFormat(payloadType,encoding,clockRate,numChannels,frameRate,fmtParamsMap,advancedAttrMap);
+  if ((payloadType >= MediaFormat.MIN_DYNAMIC_PAYLOAD_TYPE) && (payloadType <= MediaFormat.MAX_DYNAMIC_PAYLOAD_TYPE) && (format != null)&& (ptRegistry.findFormat(payloadType) == null))   ptRegistry.addMapping(format,payloadType);
+  return format;
+}

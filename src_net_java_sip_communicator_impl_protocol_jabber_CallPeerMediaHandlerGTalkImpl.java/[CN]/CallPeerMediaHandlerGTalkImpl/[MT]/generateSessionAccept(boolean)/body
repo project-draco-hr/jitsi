@@ -1,19 +1,28 @@
 {
-  List<PayloadTypePacketExtension> lst=answer.getPayloadTypes();
-  boolean masterStreamSet=true;
+  RtpDescriptionPacketExtension description=new RtpDescriptionPacketExtension();
+  List<PayloadTypePacketExtension> lst=localContentMap.get("audio");
+  description.setNamespace(SessionIQProvider.GTALK_AUDIO_NAMESPACE);
+  boolean masterStreamSet=false;
   for (  MediaType mediaType : MediaType.values()) {
+    MediaFormat format=null;
     String ns=getNamespaceForMediaType(mediaType);
     String mediaName=getNameForMediaType(mediaType);
-    MediaFormat format=null;
     for (    PayloadTypePacketExtension ext : lst) {
       if (ext.getNamespace().equals(ns)) {
+        if (mediaType.equals(MediaType.VIDEO)) {
+          description.setNamespace(SessionIQProvider.GTALK_VIDEO_NAMESPACE);
+          getPeer().getCall().setLocalVideoAllowed(true,MediaUseCase.CALL);
+          ext.setAttribute("width",320);
+          ext.setAttribute("height",200);
+          ext.setAttribute("framerate",30);
+        }
         format=JingleUtils.payloadTypeToMediaFormat(ext,getDynamicPayloadTypes());
+        description.addPayloadType(ext);
         if (format != null)         break;
       }
     }
     if (format == null)     continue;
-    addZRTPAdvertisedEncryptions(true,answer,mediaType);
-    addSDESAdvertisedEncryptions(true,answer,mediaType);
+    if (!initStream)     continue;
     StreamConnector connector=transportManager.getStreamConnector(mediaType);
     MediaDevice dev=getDefaultDevice(mediaType);
     if (!isDeviceActive(dev))     continue;
@@ -33,6 +42,8 @@
         masterStreamSet=true;
       }
     }
+    setAndAddPreferredEncryptionProtocol(mediaType,description,remoteDescription);
     initStream(mediaName,connector,dev,format,target,direction,rtpExtensions,masterStream);
   }
+  return description;
 }

@@ -1,0 +1,61 @@
+{
+  List<MediaFormat> mediaFmts=new ArrayList<MediaFormat>();
+  Vector<String> formatStrings;
+  try {
+    formatStrings=(Vector<String>)mediaDesc.getMedia().getMediaFormats(true);
+  }
+ catch (  SdpParseException exc) {
+    if (logger.isDebugEnabled())     logger.debug("A funny thing just happened ...",exc);
+    return mediaFmts;
+  }
+  float frameRate=-1;
+  try {
+    String frStr=mediaDesc.getAttribute("framerate");
+    if (frStr != null)     frameRate=Float.parseFloat(frStr);
+  }
+ catch (  SdpParseException e) {
+  }
+  for (  String ptStr : formatStrings) {
+    byte pt=-1;
+    try {
+      pt=Byte.parseByte(ptStr);
+    }
+ catch (    NumberFormatException e) {
+      if (logger.isDebugEnabled())       logger.debug(ptStr + " is not a valid payload type",e);
+      continue;
+    }
+    Attribute rtpmap=null;
+    try {
+      rtpmap=findPayloadTypeSpecificAttribute(mediaDesc.getAttributes(false),SdpConstants.RTPMAP,Byte.toString(pt));
+    }
+ catch (    SdpException e) {
+      if (logger.isDebugEnabled())       logger.debug(rtpmap + " does not seem like a valid rtpmap: attribute",e);
+    }
+    Attribute fmtp=null;
+    try {
+      fmtp=findPayloadTypeSpecificAttribute(mediaDesc.getAttributes(false),"fmtp",ptStr);
+    }
+ catch (    SdpException exc) {
+      if (logger.isDebugEnabled())       logger.debug(fmtp + " does not seem like a valid fmtp: attribute",exc);
+    }
+    List<Attribute> advp=null;
+    try {
+      advp=findAdvancedAttributes(mediaDesc.getAttributes(false),ptStr);
+    }
+ catch (    SdpException exc) {
+      if (logger.isDebugEnabled())       logger.debug("Problem parsing advanced attributes",exc);
+    }
+    MediaFormat mediaFormat=null;
+    try {
+      mediaFormat=createFormat(pt,rtpmap,fmtp,frameRate,advp,ptRegistry);
+    }
+ catch (    SdpException e) {
+      if (logger.isDebugEnabled())       logger.debug("A funny thing just happened ...",e);
+      continue;
+    }
+    if (mediaFormat != null) {
+      mediaFmts.add(mediaFormat);
+    }
+  }
+  return mediaFmts;
+}

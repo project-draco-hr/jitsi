@@ -1,0 +1,58 @@
+{
+  TransportManagerJabberImpl transportManager=getTransportManager();
+  Iterable<ContentPacketExtension> sessAccept=transportManager.wrapupCandidateHarvest();
+  CallPeerJabberImpl peer=getPeer();
+  Map<ContentPacketExtension,RtpDescriptionPacketExtension> contents=new HashMap<ContentPacketExtension,RtpDescriptionPacketExtension>();
+  for (  ContentPacketExtension ourContent : sessAccept) {
+    RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(ourContent);
+    contents.put(ourContent,description);
+  }
+  boolean masterStreamSet=false;
+  for (  Map.Entry<ContentPacketExtension,RtpDescriptionPacketExtension> en : contents.entrySet()) {
+    ContentPacketExtension ourContent=en.getKey();
+    RtpDescriptionPacketExtension description=en.getValue();
+    MediaType type=MediaType.parseString(description.getMedia());
+    StreamConnector connector=transportManager.getStreamConnector(type);
+    MediaDevice dev=getDefaultDevice(type);
+    if (!isDeviceActive(dev))     continue;
+    MediaStreamTarget target=transportManager.getStreamTarget(type);
+    MediaDirection direction=JingleUtils.getDirection(ourContent,!peer.isInitiator());
+    if (MediaType.VIDEO.equals(type) && (isLocalVideoTransmissionEnabled() || isRTPTranslationEnabled(type)) && dev.getDirection().allowsSending()) {
+      direction=MediaDirection.SENDRECV;
+      ourContent.setSenders(ContentPacketExtension.SendersEnum.both);
+    }
+    String contentName=ourContent.getName();
+    ContentPacketExtension theirContent=this.remoteContentMap.get(contentName);
+    RtpDescriptionPacketExtension theirDescription=JingleUtils.getRtpDescription(theirContent);
+    MediaFormat format=null;
+    for (    PayloadTypePacketExtension payload : theirDescription.getPayloadTypes()) {
+      format=JingleUtils.payloadTypeToMediaFormat(payload,getDynamicPayloadTypes());
+      if (format != null)       break;
+    }
+    if (format == null) {
+      ProtocolProviderServiceJabberImpl.throwOperationFailedException("No matching codec.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
+    }
+    List<RTPExtension> rtpExtensions=JingleUtils.extractRTPExtensions(description,this.getRtpExtensionsRegistry());
+    Map<String,String> adv=format.getAdvancedAttributes();
+    if (adv != null) {
+      for (      Map.Entry<String,String> f : adv.entrySet()) {
+        if (f.getKey().equals("imageattr"))         supportQualityControls=true;
+      }
+    }
+    boolean masterStream=false;
+    if (!masterStreamSet) {
+      if (contents.size() > 1) {
+        if (type.equals(MediaType.AUDIO)) {
+          masterStream=true;
+          masterStreamSet=true;
+        }
+      }
+ else {
+        masterStream=true;
+        masterStreamSet=true;
+      }
+    }
+    initStream(contentName,connector,dev,format,target,direction,rtpExtensions,masterStream);
+  }
+  return sessAccept;
+}
