@@ -1,0 +1,36 @@
+{
+  super((isVideoBridge ? GuiActivator.getResources().getI18NString("service.gui.INVITE_CONTACT_TO_VIDEO_BRIDGE") : GuiActivator.getResources().getI18NString("service.gui.INVITE_CONTACT_TO_CALL")),false);
+  this.conference=conference;
+  this.preselectedProtocolProvider=preselectedProvider;
+  this.isVideoBridge=isVideoBridge;
+  if (preselectedProtocolProvider == null)   initAccountSelectorPanel(protocolProviders);
+  SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
+      initContactSources();
+      if (preselectedProtocolProvider != null)       initContactListData(preselectedProtocolProvider);
+ else       initContactListData((ProtocolProviderService)accountSelectorBox.getSelectedItem());
+    }
+  }
+);
+  this.addInviteButtonListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      Collection<UIContact> selectedContacts=destContactList.getContacts(null);
+      if (selectedContacts != null && selectedContacts.size() > 0) {
+        if (preselectedProtocolProvider == null)         preselectedProtocolProvider=(ProtocolProviderService)accountSelectorBox.getSelectedItem();
+        if (isVideoBridge)         inviteVideoBridgeContacts(preselectedProtocolProvider,selectedContacts);
+ else         inviteContacts(selectedContacts);
+        ConfigurationManager.setLastCallConferenceProvider(preselectedProtocolProvider);
+        dispose();
+      }
+ else {
+      }
+    }
+  }
+);
+  this.addCancelButtonListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      dispose();
+    }
+  }
+);
+}

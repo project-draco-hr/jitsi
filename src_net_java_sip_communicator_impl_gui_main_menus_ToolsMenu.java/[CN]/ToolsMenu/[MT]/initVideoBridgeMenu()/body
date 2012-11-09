@@ -1,42 +1,23 @@
 {
-  if (videoBridgeMenuItem != null) {
-    remove(videoBridgeMenuItem);
-    videoBridgeMenuItem=null;
-  }
- else {
-    addMenuListener(new MenuListener(){
-      public void menuSelected(      MenuEvent arg0){
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
         initVideoBridgeMenu();
-      }
-      public void menuDeselected(      MenuEvent arg0){
-      }
-      public void menuCanceled(      MenuEvent arg0){
       }
     }
 );
+    return;
   }
-  List<ProtocolProviderService> videoBridgeProviders=getVideoBridgeProviders();
-  GuiActivator.bundleContext.addServiceListener(this);
-  int videoBridgeProviderCount=(videoBridgeProviders == null) ? 0 : videoBridgeProviders.size();
-  ResourceManagementService r=GuiActivator.getResources();
-  if (videoBridgeProviderCount <= 0) {
-    videoBridgeMenuItem=new VideoBridgeProviderMenuItem(r.getI18NString("service.gui.CREATE_VIDEO_BRIDGE"),null);
+  if (videoBridgeMenuItem == null) {
+    videoBridgeMenuItem=new VideoBridgeProviderMenuItem(GuiActivator.getResources().getI18NString("service.gui.CREATE_VIDEO_BRIDGE"),null);
     videoBridgeMenuItem.setEnabled(false);
+    insert(videoBridgeMenuItem,1);
   }
- else   if (videoBridgeProviderCount == 1) {
-    videoBridgeMenuItem=new VideoBridgeProviderMenuItem(r.getI18NString("service.gui.CREATE_VIDEO_BRIDGE"),videoBridgeProviders.get(0));
-    videoBridgeMenuItem.setName("videoBridge");
-    videoBridgeMenuItem.addActionListener(this);
+  if (videoBridgeMenuListener == null) {
+    videoBridgeMenuListener=new VideoBridgeMenuListener();
+    addMenuListener(videoBridgeMenuListener);
   }
- else   if (videoBridgeProviderCount > 1) {
-    videoBridgeMenuItem=new SIPCommMenu(r.getI18NString("service.gui.CREATE_VIDEO_BRIDGE_MENU"));
-    for (    ProtocolProviderService videoBridgeProvider : videoBridgeProviders) {
-      VideoBridgeProviderMenuItem videoBridgeItem=new VideoBridgeProviderMenuItem(videoBridgeProvider);
-      ((JMenu)videoBridgeMenuItem).add(videoBridgeItem);
-      videoBridgeItem.setIcon(ImageLoader.getAccountStatusImage(videoBridgeProvider));
-    }
-  }
-  videoBridgeMenuItem.setIcon(r.getImage("service.gui.icons.VIDEO_BRIDGE"));
-  videoBridgeMenuItem.setMnemonic(r.getI18nMnemonic("service.gui.CREATE_VIDEO_BRIDGE"));
-  insert(videoBridgeMenuItem,1);
+  if (initVideoBridgeMenuWorker == null)   initVideoBridgeMenuWorker=(OSUtils.IS_MAC) ? new InitVideoBridgeMenuWorkerMacOSX() : new InitVideoBridgeMenuWorker();
+ else   initVideoBridgeMenuWorker.interrupt();
+  initVideoBridgeMenuWorker.start();
 }
