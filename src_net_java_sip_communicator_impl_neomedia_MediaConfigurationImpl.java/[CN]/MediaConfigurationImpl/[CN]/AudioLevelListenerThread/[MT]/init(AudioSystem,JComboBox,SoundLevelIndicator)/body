@@ -1,0 +1,30 @@
+{
+  this.audioSystem=audioSystem;
+  if (this.comboBox != null)   this.comboBox.removeActionListener(this);
+  this.comboBox=comboBox;
+  if (comboBox != null)   comboBox.addActionListener(this);
+  if (this.soundLevelIndicator != null) {
+    HierarchyListener[] hierarchyListeners=soundLevelIndicator.getHierarchyListeners();
+    for (int i=0; i < hierarchyListeners.length; ++i) {
+      soundLevelIndicator.removeHierarchyListener(hierarchyListeners[i]);
+    }
+  }
+  this.soundLevelIndicator=soundLevelIndicator;
+  soundLevelIndicator.addHierarchyListener(new HierarchyListener(){
+    public void hierarchyChanged(    HierarchyEvent event){
+      if ((event.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
+        SwingUtilities.invokeLater(new Runnable(){
+          public void run(){
+            actionPerformed(null);
+          }
+        }
+);
+      }
+    }
+  }
+);
+  if (this.runDeviceSession == null) {
+    this.runDeviceSession=new Thread(this);
+    this.runDeviceSession.start();
+  }
+}
