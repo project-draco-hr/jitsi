@@ -1,0 +1,56 @@
+{
+  super(new BorderLayout());
+  Box box=Box.createVerticalBox();
+  add(box,BorderLayout.NORTH);
+  TransparentPanel contentPanel=new TransparentPanel();
+  contentPanel.setLayout(new BorderLayout(10,10));
+  box.add(contentPanel);
+  TransparentPanel labelPanel=new TransparentPanel(new GridLayout(0,1,2,2));
+  TransparentPanel valuePanel=new TransparentPanel(new GridLayout(0,1,2,2));
+  TransparentPanel southPanel=new TransparentPanel(new GridLayout(0,1,2,2));
+  contentPanel.add(labelPanel,BorderLayout.WEST);
+  contentPanel.add(valuePanel,BorderLayout.CENTER);
+  contentPanel.add(southPanel,BorderLayout.SOUTH);
+  labelPanel.add(new JLabel(Resources.getString("plugin.generalconfig.OPUS_AUDIO_BANDWIDTH")));
+  for (  String str : BANDWIDTHS_LONG)   bandwidthCombobox.addItem(str);
+  bandwidthCombobox.setSelectedIndex(getBandwidthIndex(configurationService.getString(Constants.PROP_OPUS_BANDWIDTH,BANDWIDTH_DEFAULT)));
+  bandwidthCombobox.addActionListener(this);
+  valuePanel.add(bandwidthCombobox);
+  labelPanel.add(new JLabel(Resources.getString("plugin.generalconfig.OPUS_BITRATE")));
+  bitrateField.setText(((Integer)configurationService.getInt(Constants.PROP_OPUS_BITRATE,BITRATE_DEFAULT)).toString());
+  bitrateField.addFocusListener(new FocusListener(){
+    public void focusGained(    FocusEvent focusEvent){
+    }
+    public void focusLost(    FocusEvent focusEvent){
+      configurationService.setProperty(Constants.PROP_OPUS_BITRATE,bitrateField.getText());
+    }
+  }
+);
+  valuePanel.add(bitrateField);
+  labelPanel.add(new JLabel(Resources.getString("plugin.generalconfig.OPUS_USE_DTX")));
+  dtxCheckbox.setSelected(configurationService.getBoolean(Constants.PROP_OPUS_DTX,DTX_DEFAULT));
+  dtxCheckbox.addActionListener(this);
+  valuePanel.add(dtxCheckbox);
+  labelPanel.add(new JLabel(Resources.getString("plugin.generalconfig.OPUS_USE_FEC")));
+  fecCheckbox.setSelected(configurationService.getBoolean(Constants.PROP_OPUS_FEC,FEC_DEFAULT));
+  fecCheckbox.addActionListener(this);
+  valuePanel.add(fecCheckbox);
+  fecCheckbox.setEnabled(false);
+  labelPanel.add(new JLabel(Resources.getString("plugin.generalconfig.OPUS_MIN_EXPECTED_PACKET_LOSS")));
+  minExpectedPLField.setText(configurationService.getString(Constants.PROP_OPUS_MIN_EXPECTED_PACKET_LOSS,((Integer)MIN_EXPECTED_PL_DEFAULT).toString()));
+  minExpectedPLField.addFocusListener(new FocusListener(){
+    public void focusGained(    FocusEvent focusEvent){
+    }
+    public void focusLost(    FocusEvent focusEvent){
+      configurationService.setProperty(Constants.PROP_OPUS_MIN_EXPECTED_PACKET_LOSS,minExpectedPLField.getText());
+    }
+  }
+);
+  valuePanel.add(minExpectedPLField);
+  labelPanel.add(new JLabel(Resources.getString("plugin.generalconfig.OPUS_COMPLEXITY")));
+  for (int i=10; i > 0; i--)   complexityCombobox.addItem(((Integer)i).toString());
+  complexityCombobox.addActionListener(this);
+  valuePanel.add(complexityCombobox);
+  restoreButton.addActionListener(this);
+  southPanel.add(restoreButton);
+}
