@@ -2,19 +2,15 @@
   Element root=document.getDefaultRootElement();
   Element e=document.getElement(root,Attribute.ID,ChatHtmlUtils.MESSAGE_TEXT_ID + messageUID);
   if (e == null) {
-    logger.warn("Could not find message with ID" + messageUID);
+    logger.warn("Could not find message with ID " + messageUID);
     return null;
   }
-  int elemLen=e.getEndOffset() - e.getStartOffset();
-  String res=null;
-  try {
-    res=document.getText(e.getStartOffset(),elemLen);
-    String editedAtString=GuiActivator.getResources().getI18NString("service.gui.EDITED_AT");
-    int editedAtIndex=res.indexOf("(" + editedAtString.substring(0,editedAtString.indexOf("{0}")));
-    if (editedAtIndex > 0)     res=res.substring(0,editedAtIndex);
+  Object original_message=e.getAttributes().getAttribute(ChatHtmlUtils.ORIGINAL_MESSAGE_ATTRIBUTE);
+  if (original_message == null) {
+    logger.warn("Message with ID " + messageUID + " does not have original_message attribute");
+    return null;
   }
- catch (  BadLocationException exc) {
-    logger.warn("Could not get message contents for message " + "with ID" + messageUID,exc);
-  }
+  String res=original_message.toString();
+  res=res.replace("&#10;","");
   return res;
 }

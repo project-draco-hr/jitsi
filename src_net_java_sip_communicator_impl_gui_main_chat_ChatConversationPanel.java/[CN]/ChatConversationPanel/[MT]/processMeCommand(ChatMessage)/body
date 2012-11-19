@@ -1,35 +1,23 @@
 {
   String contentType=chatMessage.getContentType();
   String message=chatMessage.getMessage();
-  String msgID=ChatHtmlUtils.MESSAGE_TEXT_ID + chatMessage.getMessageUID();
-  String chatString="";
-  String endHeaderTag="";
-  String startDivTag="<DIV id=\"" + msgID + "\">";
-  String endDivTag="</DIV>";
-  if (message.length() > 4 && message.substring(0,4).equals("/me ")) {
-    chatString=startDivTag + "<B><I>";
-    endHeaderTag="</I></B>" + endDivTag;
-    chatString+=processHTMLChars("*** " + chatMessage.getContactName() + " "+ message.substring(4)) + endHeaderTag;
-    Map<String,ReplacementService> listSources=GuiActivator.getReplacementSources();
-    Iterator<Map.Entry<String,ReplacementService>> entrySetIter=listSources.entrySet().iterator();
-    StringBuffer msgStore=new StringBuffer(chatString);
-    for (int i=0; i < listSources.size(); i++) {
-      Map.Entry<String,ReplacementService> entry=entrySetIter.next();
-      ReplacementService source=entry.getValue();
-      boolean isSmiley=source instanceof SmiliesReplacementService;
-      if (isSmiley) {
-        String sourcePattern=source.getPattern();
-        Pattern p=Pattern.compile(sourcePattern,Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-        Matcher m=p.matcher(msgStore);
-        StringBuffer msgTemp=new StringBuffer(chatString);
-        while (m.find()) {
-          msgTemp.insert(m.start(),ChatHtmlUtils.createStartPlainTextTag(contentType));
-          msgTemp.insert(m.end() + ChatHtmlUtils.createStartPlainTextTag(contentType).length(),ChatHtmlUtils.createEndPlainTextTag(contentType));
-        }
-        if (msgTemp.length() != msgStore.length())         msgStore=msgTemp;
-      }
-    }
-    return msgStore.toString();
+  if (message.length() <= 4 || !message.startsWith("/me ")) {
+    return "";
   }
- else   return "";
+  String msgID=ChatHtmlUtils.MESSAGE_TEXT_ID + chatMessage.getMessageUID();
+  String chatString="<DIV ID='" + msgID + "'><B><I>";
+  String endHeaderTag="</I></B></DIV>";
+  chatString+=ChatHtmlUtils.escapeHTMLChars("*** " + chatMessage.getContactName() + " "+ message.substring(4)) + endHeaderTag;
+  Map<String,ReplacementService> listSources=GuiActivator.getReplacementSources();
+  for (  ReplacementService source : listSources.values()) {
+    boolean isSmiley=source instanceof SmiliesReplacementService;
+    if (!isSmiley) {
+      continue;
+    }
+    String sourcePattern=source.getPattern();
+    Pattern p=Pattern.compile(sourcePattern,Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    Matcher m=p.matcher(chatString);
+    chatString=m.replaceAll(ChatHtmlUtils.createStartPlainTextTag(contentType) + "$0" + ChatHtmlUtils.createEndPlainTextTag(contentType));
+  }
+  return chatString;
 }

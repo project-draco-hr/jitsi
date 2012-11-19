@@ -25,7 +25,15 @@ catch (          IOException ex) {
     public Object construct() throws Exception {
       ConfigurationService cfg=GuiActivator.getConfigurationService();
       boolean isEnabled=cfg.getBoolean(ReplacementProperty.REPLACEMENT_ENABLE,true);
+      Matcher divMatcher=DIV_PATTERN.matcher(chatString);
+      String openingTag="";
       String msgStore=chatString;
+      String closingTag="";
+      if (divMatcher.find()) {
+        openingTag=divMatcher.group(1);
+        msgStore=divMatcher.group(2);
+        closingTag=divMatcher.group(3);
+      }
       for (      Map.Entry<String,ReplacementService> entry : GuiActivator.getReplacementSources().entrySet()) {
         ReplacementService source=entry.getValue();
         boolean isSmiley=source instanceof SmiliesReplacementService;
@@ -63,7 +71,7 @@ catch (          IOException ex) {
         String msgBuffString=msgBuff.toString();
         if (!msgBuffString.equals(msgStore))         msgStore=msgBuffString;
       }
-      return msgStore;
+      return openingTag + msgStore + closingTag;
     }
   }
 ;
