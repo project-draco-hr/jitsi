@@ -1,7 +1,22 @@
 {
   AuthorizationRequest request=new AuthorizationRequest();
-  RequestAuthorizationDialog dialog=new RequestAuthorizationDialog(mainFrame,contact,request);
-  int returnCode=dialog.showDialog();
+  RequestAuthorizationDialog dialog=null;
+  if (!SwingUtilities.isEventDispatchThread()) {
+    RequestAuthorizationRunnable runnable=new RequestAuthorizationRunnable(contact,request);
+    try {
+      SwingUtilities.invokeAndWait(runnable);
+    }
+ catch (    Throwable t) {
+      if (dialog == null) {
+        runnable.run();
+      }
+    }
+    dialog=runnable.getDialog();
+  }
+ else {
+    dialog=createAndShowRequestAuthorizationDialog(contact,request);
+  }
+  int returnCode=dialog.getReturnCode();
   if (returnCode == RequestAuthorizationDialog.OK_RETURN_CODE) {
     request.setReason(dialog.getRequestReason());
   }

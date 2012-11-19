@@ -1,4 +1,21 @@
 {
-  if (configurationFrame == null)   configurationFrame=new ConfigurationFrame(mainFrame);
+  if (configurationFrame == null) {
+    if (!SwingUtilities.isEventDispatchThread()) {
+      try {
+        SwingUtilities.invokeAndWait(new Runnable(){
+          public void run(){
+            getConfigurationContainer();
+          }
+        }
+);
+      }
+ catch (      Throwable e) {
+        logger.error("Error creating config frame in swing thread");
+        if (configurationFrame == null)         configurationFrame=new ConfigurationFrame(mainFrame);
+      }
+      return configurationFrame;
+    }
+    configurationFrame=new ConfigurationFrame(mainFrame);
+  }
   return configurationFrame;
 }

@@ -6,16 +6,26 @@
     if (logger.isInfoEnabled())     logger.info("GlobalStatus Service ...[REGISTERED]");
     bundleContext.registerService(GlobalStatusService.class.getName(),new GlobalStatusServiceImpl(),null);
     uiService=new UIServiceImpl();
-    uiService.loadApplicationGui();
-    if (logger.isInfoEnabled())     logger.info("UI Service...[  STARTED ]");
-    bundleContext.registerService(UIService.class.getName(),uiService,null);
-    if (logger.isInfoEnabled())     logger.info("UI Service ...[REGISTERED]");
-    bundleContext.registerService(ShutdownService.class.getName(),(ShutdownService)uiService,null);
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        uiService.loadApplicationGui();
+        GuiActivator.getConfigurationService().addPropertyChangeListener(uiService);
+        bundleContext.addServiceListener(uiService);
+        new Thread(new Runnable(){
+          public void run(){
+            if (logger.isInfoEnabled())             logger.info("UI Service...[  STARTED ]");
+            bundleContext.registerService(UIService.class.getName(),uiService,null);
+            if (logger.isInfoEnabled())             logger.info("UI Service ...[REGISTERED]");
+            bundleContext.registerService(ShutdownService.class.getName(),uiService,null);
+          }
+        }
+).start();
+      }
+    }
+);
     logger.logEntry();
   }
   finally {
     logger.logExit();
   }
-  GuiActivator.getConfigurationService().addPropertyChangeListener(uiService);
-  bundleContext.addServiceListener(uiService);
 }

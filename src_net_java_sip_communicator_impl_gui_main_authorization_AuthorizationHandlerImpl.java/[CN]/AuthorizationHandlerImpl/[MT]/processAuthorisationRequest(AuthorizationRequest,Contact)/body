@@ -1,7 +1,22 @@
 {
   AuthorizationResponse response=null;
-  AuthorizationRequestedDialog dialog=new AuthorizationRequestedDialog(mainFrame,sourceContact,req);
-  int result=dialog.showDialog();
+  AuthorizationRequestedDialog dialog=null;
+  if (!SwingUtilities.isEventDispatchThread()) {
+    ProcessAuthorizationRequestRunnable runnable=new ProcessAuthorizationRequestRunnable(sourceContact,req);
+    try {
+      SwingUtilities.invokeAndWait(runnable);
+    }
+ catch (    Throwable t) {
+      if (dialog == null) {
+        runnable.run();
+      }
+    }
+    dialog=runnable.getDialog();
+  }
+ else {
+    dialog=createAndShowAuthorizationRequestDialog(sourceContact,req);
+  }
+  int result=dialog.getReturnCode();
   if (result == AuthorizationRequestedDialog.ACCEPT_CODE) {
     response=new AuthorizationResponse(AuthorizationResponse.ACCEPT,null);
     if (dialog.isAddContact()) {

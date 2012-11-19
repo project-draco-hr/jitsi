@@ -1,43 +1,4 @@
 {
-  int range=1;
-  if ((minSoundLevel > -1) && (maxSoundLevel > -1) && (minSoundLevel < maxSoundLevel)) {
-    range=maxSoundLevel - minSoundLevel;
-    if (soundLevel < 40)     soundLevel=minSoundLevel;
- else     if (soundLevel > 85)     soundLevel=maxSoundLevel;
- else {
-      soundLevel=(int)(((soundLevel - 40.0) / 45.0) * range);
-      if (soundLevel < minSoundLevel)       soundLevel=minSoundLevel;
- else       if (soundLevel > maxSoundLevel)       soundLevel=maxSoundLevel;
-    }
-  }
-  this.soundLevel=(int)(this.soundLevel * 0.8 + soundLevel * 0.2);
-  int activeSoundBarCount=Math.round(this.soundLevel * soundBarCount / (float)range);
-  Component[] components=getComponents();
-  for (int i=0; i < components.length; i++) {
-    Component c=getComponent(i);
-    if (c instanceof JLabel) {
-      Icon activeIcon=null;
-      Icon inactiveIcon=null;
-      if (i == 0) {
-        if (activeSoundBarCount == 1)         activeIcon=soundLevelActiveImageLeftGradient;
- else {
-          activeIcon=soundLevelActiveImageLeft;
-          inactiveIcon=soundLevelInactiveImageLeft;
-        }
-      }
- else       if (i == activeSoundBarCount - 1) {
-        if (i == components.length - 1)         activeIcon=soundLevelActiveImageRight;
- else         activeIcon=soundLevelActiveImageRightGradient;
-      }
- else       if (i == components.length - 1) {
-        inactiveIcon=soundLevelInactiveImageRight;
-      }
- else {
-        activeIcon=soundLevelActiveImageMiddle;
-        inactiveIcon=soundLevelInactiveImageMiddle;
-      }
-      ((JLabel)c).setIcon((i < activeSoundBarCount) ? activeIcon : inactiveIcon);
-    }
-  }
-  repaint();
+  levelUpdate.setSoundLevel(soundLevel);
+  LowPriorityEventQueue.invokeLater(levelUpdate);
 }

@@ -1,47 +1,11 @@
 {
-  final ProtocolProviderService protocolProvider=evt.getProvider();
+  ProtocolProviderService protocolProvider=evt.getProvider();
   this.updateStatus(protocolProvider);
   if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
-    final OperationSetServerStoredAccountInfo accountInfoOpSet=protocolProvider.getOperationSet(OperationSetServerStoredAccountInfo.class);
-    if (accountInfoOpSet != null)     new Thread(){
-      public void run(){
-        if (currentImage == null) {
-          currentImage=AvatarCacheUtils.getCachedAvatar(protocolProvider);
-          if (currentImage == null) {
-            byte[] accountImage=AccountInfoUtils.getImage(accountInfoOpSet);
-            if ((accountImage != null) && (accountImage.length > 0)) {
-              currentImage=accountImage;
-              AvatarCacheUtils.cacheAvatar(protocolProvider,accountImage);
-              accountImageLabel.setImageIcon(currentImage);
-            }
-          }
- else           accountImageLabel.setImageIcon(currentImage);
-        }
-        if (!StringUtils.isNullOrEmpty(globalDisplayName))         return;
-        String accountName=null;
-        if (currentFirstName == null) {
-          String firstName=AccountInfoUtils.getFirstName(accountInfoOpSet);
-          if (firstName != null && firstName.length() > 0) {
-            currentFirstName=firstName;
-            accountName=currentFirstName;
-          }
-        }
-        if (currentLastName == null) {
-          String lastName=AccountInfoUtils.getLastName(accountInfoOpSet);
-          if (lastName != null && lastName.length() > 0) {
-            currentLastName=lastName;
-            if ((accountName == null) || (accountName.length() == 0))             accountName=currentLastName;
- else             accountName+=" " + currentLastName;
-          }
-        }
-        if (currentFirstName == null && currentLastName == null) {
-          String displayName=AccountInfoUtils.getDisplayName(accountInfoOpSet);
-          if (displayName != null)           accountName=displayName;
-        }
-        if (accountName != null && accountName.length() > 0)         accountNameLabel.setText(accountName);
-      }
+    OperationSetServerStoredAccountInfo accountInfoOpSet=protocolProvider.getOperationSet(OperationSetServerStoredAccountInfo.class);
+    if (accountInfoOpSet != null) {
+      new UpdateAccountInfo(protocolProvider,accountInfoOpSet).start();
     }
-.start();
     OperationSetAvatar avatarOpSet=protocolProvider.getOperationSet(OperationSetAvatar.class);
     if (avatarOpSet != null)     avatarOpSet.addAvatarListener(this);
     OperationSetServerStoredAccountInfo serverStoredAccountInfo=protocolProvider.getOperationSet(OperationSetServerStoredAccountInfo.class);

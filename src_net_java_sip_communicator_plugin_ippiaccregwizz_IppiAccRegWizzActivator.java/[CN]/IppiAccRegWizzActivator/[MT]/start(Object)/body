@@ -1,0 +1,17 @@
+{
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        start(dependentService);
+      }
+    }
+);
+    return;
+  }
+  uiService=(UIService)dependentService;
+  System.setProperty("http.agent",System.getProperty("sip-communicator.application.name") + "/" + System.getProperty("sip-communicator.version"));
+  IppiAccountRegistrationWizard wizard=new IppiAccountRegistrationWizard(uiService.getAccountRegWizardContainer());
+  Hashtable<String,String> containerFilter=new Hashtable<String,String>();
+  containerFilter.put(ProtocolProviderFactory.PROTOCOL,IppiAccountRegistrationWizard.PROTOCOL);
+  bundleContext.registerService(AccountRegistrationWizard.class.getName(),wizard,containerFilter);
+}
