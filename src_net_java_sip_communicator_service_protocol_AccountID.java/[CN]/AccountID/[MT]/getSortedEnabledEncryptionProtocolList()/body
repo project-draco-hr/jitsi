@@ -1,0 +1,34 @@
+{
+  Map<String,Integer> encryptionProtocols=this.getIntegerPropertiesByPrefix(ProtocolProviderFactory.ENCRYPTION_PROTOCOL,true);
+  Map<String,Boolean> encryptionProtocolStatus=this.getBooleanPropertiesByPrefix(ProtocolProviderFactory.ENCRYPTION_PROTOCOL_STATUS,true,false);
+  if (encryptionProtocols.size() == 0) {
+    encryptionProtocols.put(ProtocolProviderFactory.ENCRYPTION_PROTOCOL + ".ZRTP",0);
+    encryptionProtocolStatus.put(ProtocolProviderFactory.ENCRYPTION_PROTOCOL_STATUS + ".ZRTP",true);
+  }
+  List<String> sortedEncryptionProtocolList=new ArrayList<String>(encryptionProtocols.size());
+  Iterator<String> names=encryptionProtocols.keySet().iterator();
+  String name;
+  int index;
+  while (names.hasNext()) {
+    name=names.next();
+    index=encryptionProtocols.get(name);
+    if (index != -1) {
+      if (index > sortedEncryptionProtocolList.size()) {
+        index=sortedEncryptionProtocolList.size();
+      }
+      sortedEncryptionProtocolList.add(index,name);
+    }
+  }
+  String encryptionProtocolPropertyName;
+  int prefixeLength=ProtocolProviderFactory.ENCRYPTION_PROTOCOL.length() + 1;
+  names=encryptionProtocols.keySet().iterator();
+  while (names.hasNext()) {
+    encryptionProtocolPropertyName=names.next();
+    index=encryptionProtocols.get(encryptionProtocolPropertyName);
+    name=encryptionProtocolPropertyName.substring(prefixeLength);
+    if (index != -1 && !encryptionProtocolStatus.get(ProtocolProviderFactory.ENCRYPTION_PROTOCOL_STATUS + "." + name)) {
+      sortedEncryptionProtocolList.remove(index);
+    }
+  }
+  return sortedEncryptionProtocolList;
+}
