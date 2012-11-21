@@ -1,8 +1,7 @@
 {
-  bundleContext=bc;
+  super.start(bc);
   ConfigurationService config=getConfigurationService();
   boolean showSplashScreen=(config == null) ? true : config.getBoolean(PNAME_SHOW_SPLASH_SCREEN,false);
-  final WelcomeWindow welcomeWindow;
   if (showSplashScreen) {
     welcomeWindow=new WelcomeWindow();
     welcomeWindow.pack();
@@ -10,27 +9,5 @@
   }
  else   welcomeWindow=null;
   if (getResources().getSettingsString("service.gui.APPLICATION_NAME").equals("SIP Communicator"))   new JitsiWarningWindow(null).setVisible(true);
-  bundleContext.addBundleListener(new BundleListener(){
-    /** 
- * The indicator which determines whether the job of this listener
- * is done and no other <tt>BundleEvent</tt>s should be handled.
- * <p>
- * After{@link BrandingActivator#bundleChanged(BundleEvent,WelcomeWindow)}reports it's done, it's not enough to remove this listener from
- * the notifying <tt>BundleContext</tt> in order to not handle more
- * <tt>BundleEvent</tt>s because the notifications get triggered on
- * packs of events without consulting the currently registered
- * <tt>BundleListener</tt> and, if an event in the pack concludes
- * the job of this listener, the subsequent events from the same
- * pack will still be handled without the indicator.
- * </p>
- */
-    private boolean done;
-    public void bundleChanged(    BundleEvent evt){
-      if (!done && !BrandingActivator.this.bundleChanged(evt,welcomeWindow)) {
-        bundleContext.removeBundleListener(this);
-        done=true;
-      }
-    }
-  }
-);
+  bundleContext.addBundleListener(this);
 }

@@ -1,13 +1,5 @@
 {
   UIService uiService=OsDependentActivator.getUIService();
-  if (uiService == null) {
-    try {
-      OsDependentActivator.bundleContext.addServiceListener(new DelayedInitSystrayServiceListener(),'(' + Constants.OBJECTCLASS + '='+ UIService.class.getName()+ ')');
-    }
- catch (    InvalidSyntaxException ise) {
-    }
-    return;
-  }
   menu=TrayMenuFactory.createTrayMenu(this,systray.isSwing());
   boolean isMac=OSUtils.IS_MAC;
   if (OSUtils.IS_WINDOWS) {
@@ -106,7 +98,12 @@
     if (configuredHandler == null)     selectBestPopupMessageHandler();
   }
   if ((activePopupHandler == null) && (pmh != null))   setActivePopupMessageHandler(pmh);
-  systray.addTrayIcon(trayIcon);
+  SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
+      systray.addTrayIcon(trayIcon);
+    }
+  }
+);
   initialized=true;
   uiService.setExitOnMainWindowClose(false);
 }
