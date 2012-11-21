@@ -11,19 +11,19 @@
       String inputLine, holder="";
       while ((inputLine=in.readLine()) != null)       holder=inputLine;
       in.close();
-      JSONObject wrapper=new JSONObject(holder);
-      if (wrapper.getString("stat").equals("ok")) {
-        JSONObject result=wrapper.getJSONObject("photo");
-        if (!(result.length() == 0)) {
-          String farmID=result.getString("farm");
-          String serverID=result.getString("server");
-          String secret=result.getString("secret");
+      JSONObject wrapper=(JSONObject)JSONValue.parseWithException(holder);
+      if (wrapper.get("stat").equals("ok")) {
+        JSONObject result=(JSONObject)wrapper.get("photo");
+        if (!(result.isEmpty())) {
+          String farmID=(String)result.get("farm");
+          String serverID=(String)result.get("server");
+          String secret=(String)result.get("secret");
           thumbUrl="http://farm" + farmID + ".static.flickr.com/"+ serverID+ "/"+ m.group(1)+ "_"+ secret+ "_t.jpg";
         }
       }
     }
- catch (    Exception e) {
-      e.printStackTrace();
+ catch (    Throwable e) {
+      logger.error("Error parsing",e);
     }
   }
   return thumbUrl;

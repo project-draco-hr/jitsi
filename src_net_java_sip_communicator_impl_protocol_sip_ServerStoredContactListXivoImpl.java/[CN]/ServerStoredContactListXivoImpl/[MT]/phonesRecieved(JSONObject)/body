@@ -1,18 +1,18 @@
 {
   try {
-    if (!objReceived.getString("function").equals("sendlist") || !objReceived.has("payload"))     return;
-    JSONObject payload=objReceived.getJSONObject("payload");
-    Iterator iter=payload.keys();
+    if (!objReceived.get("function").equals("sendlist") || !objReceived.containsKey("payload"))     return;
+    JSONObject payload=(JSONObject)objReceived.get("payload");
+    Iterator iter=payload.keySet().iterator();
     List<JSONObject> phoneList=new ArrayList<JSONObject>();
     while (iter.hasNext()) {
-      JSONObject obj=(JSONObject)payload.get((String)iter.next());
-      Iterator phonesIter=obj.keys();
-      while (phonesIter.hasNext())       phoneList.add((JSONObject)obj.get((String)phonesIter.next()));
+      JSONObject obj=(JSONObject)payload.get(iter.next());
+      Iterator phonesIter=obj.keySet().iterator();
+      while (phonesIter.hasNext())       phoneList.add((JSONObject)obj.get(phonesIter.next()));
     }
     for (    JSONObject phone : phoneList) {
       try {
-        if (!phone.getString("tech").equalsIgnoreCase("sip"))         continue;
-        String groupName=phone.getString("context");
+        if (!((String)phone.get("tech")).equalsIgnoreCase("sip"))         continue;
+        String groupName=(String)phone.get("context");
         ContactGroupSipImpl parentGroup=findGroupByName(groupName);
         if (parentGroup == null) {
           parentGroup=new ContactGroupSipImpl(groupName,sipProvider);
@@ -20,18 +20,18 @@
           getRootGroup().addSubgroup(parentGroup);
           fireGroupEvent(parentGroup,ServerStoredGroupEvent.GROUP_CREATED_EVENT);
         }
-        String number=phone.getString("number");
+        String number=(String)phone.get("number");
         Address address=sipProvider.parseAddressString(number);
         ContactSipImpl contact=parentOperationSet.resolveContactID(address.toString());
         if (contact == null) {
           contact=new ContactSipImpl(address,sipProvider);
-          contact.setDisplayName(phone.getString("firstname") + " " + phone.getString("lastname"));
+          contact.setDisplayName(phone.get("firstname") + " " + phone.get("lastname"));
           contact.setResolved(true);
           parentGroup.addContact(contact);
           fireContactAdded(parentGroup,contact);
         }
  else {
-          contact.setDisplayName(phone.getString("firstname") + " " + phone.getString("lastname"));
+          contact.setDisplayName(phone.get("firstname") + " " + phone.get("lastname"));
           contact.setResolved(true);
           fireContactResolved(parentGroup,contact);
         }
