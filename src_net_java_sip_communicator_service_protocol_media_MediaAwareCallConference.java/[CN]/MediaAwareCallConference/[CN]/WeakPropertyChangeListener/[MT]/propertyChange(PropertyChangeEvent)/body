@@ -1,0 +1,21 @@
+{
+  PropertyChangeListener[] ls;
+  int n;
+synchronized (this) {
+    Iterator<WeakReference<PropertyChangeListener>> i=listeners.iterator();
+    ls=new PropertyChangeListener[listeners.size()];
+    n=0;
+    while (i.hasNext()) {
+      PropertyChangeListener l=i.next().get();
+      if (l == null)       i.remove();
+ else       ls[n++]=l;
+    }
+    if ((n == 0) && this.added) {
+      removeThisFromNotifier();
+      this.added=false;
+    }
+  }
+  if (n != 0) {
+    for (    PropertyChangeListener l : ls)     l.propertyChange(ev);
+  }
+}
