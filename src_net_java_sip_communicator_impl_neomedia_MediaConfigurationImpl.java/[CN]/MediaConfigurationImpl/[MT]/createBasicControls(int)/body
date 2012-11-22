@@ -7,13 +7,16 @@
   deviceLabel.setLabelFor(deviceComboBox);
   final Container devicePanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
   devicePanel.setMaximumSize(new Dimension(WIDTH,25));
-  devicePanel.add(deviceLabel);
-  devicePanel.add(deviceComboBox);
+  final boolean isAudioSystemComboDisabled=NeomediaActivator.getConfigurationService().getBoolean(AUDIO_SYSTEM_DISABLED_PROP,false);
+  if (type != DeviceConfigurationComboBoxModel.AUDIO || !isAudioSystemComboDisabled) {
+    devicePanel.add(deviceLabel);
+    devicePanel.add(deviceComboBox);
+  }
   final JPanel deviceAndPreviewPanel=new TransparentPanel(new BorderLayout());
   int preferredDeviceAndPreviewPanelHeight;
 switch (type) {
 case DeviceConfigurationComboBoxModel.AUDIO:
-    preferredDeviceAndPreviewPanelHeight=225;
+    preferredDeviceAndPreviewPanelHeight=(isAudioSystemComboDisabled) ? 180 : 225;
   break;
 case DeviceConfigurationComboBoxModel.VIDEO:
 preferredDeviceAndPreviewPanelHeight=305;
@@ -24,6 +27,16 @@ break;
 }
 if (preferredDeviceAndPreviewPanelHeight > 0) deviceAndPreviewPanel.setPreferredSize(new Dimension(WIDTH,preferredDeviceAndPreviewPanelHeight));
 deviceAndPreviewPanel.add(devicePanel,BorderLayout.NORTH);
+if (type == DeviceConfigurationComboBoxModel.AUDIO && isAudioSystemComboDisabled) {
+Component preview=null;
+if (mediaService.getDeviceConfiguration().getAudioSystem() != null) {
+preview=createPreview(type,deviceComboBox,deviceAndPreviewPanel.getPreferredSize());
+}
+if (preview != null) {
+deviceAndPreviewPanel.add(preview,BorderLayout.CENTER);
+}
+}
+ else {
 final ActionListener deviceComboBoxActionListener=new ActionListener(){
 public void actionPerformed(ActionEvent event){
 boolean revalidateAndRepaint=false;
@@ -55,7 +68,7 @@ public void hierarchyChanged(HierarchyEvent event){
 if ((event.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
 SwingUtilities.invokeLater(new Runnable(){
 public void run(){
-deviceComboBoxActionListener.actionPerformed(null);
+  deviceComboBoxActionListener.actionPerformed(null);
 }
 }
 );
@@ -63,5 +76,6 @@ deviceComboBoxActionListener.actionPerformed(null);
 }
 }
 );
+}
 return deviceAndPreviewPanel;
 }

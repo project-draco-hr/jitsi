@@ -1,13 +1,17 @@
 {
   JComponent preview=null;
   if (type == DeviceConfigurationComboBoxModel.AUDIO) {
-    Object selectedItem=comboBox.getSelectedItem();
-    if (selectedItem instanceof AudioSystem) {
-      AudioSystem audioSystem=(AudioSystem)selectedItem;
-      if (!NoneAudioSystem.LOCATOR_PROTOCOL.equalsIgnoreCase(audioSystem.getLocatorProtocol())) {
-        preview=new TransparentPanel(new GridBagLayout());
-        createAudioSystemControls(audioSystem,preview);
-      }
+    AudioSystem audioSystem=null;
+    if (NeomediaActivator.getConfigurationService().getBoolean(AUDIO_SYSTEM_DISABLED_PROP,false) && mediaService.getDeviceConfiguration().getAudioSystem() != null) {
+      audioSystem=mediaService.getDeviceConfiguration().getAudioSystem();
+    }
+ else {
+      Object selectedItem=comboBox.getSelectedItem();
+      if (selectedItem instanceof AudioSystem)       audioSystem=(AudioSystem)selectedItem;
+    }
+    if (audioSystem != null && !NoneAudioSystem.LOCATOR_PROTOCOL.equalsIgnoreCase(audioSystem.getLocatorProtocol())) {
+      preview=new TransparentPanel(new GridBagLayout());
+      createAudioSystemControls(audioSystem,preview);
     }
   }
  else   if (type == DeviceConfigurationComboBoxModel.VIDEO) {

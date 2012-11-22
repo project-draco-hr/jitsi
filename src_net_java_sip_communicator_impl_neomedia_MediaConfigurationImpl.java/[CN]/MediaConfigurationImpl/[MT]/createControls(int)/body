@@ -1,15 +1,45 @@
 {
   ConfigurationService cfg=NeomediaActivator.getConfigurationService();
-  SIPCommTabbedPane container=new SIPCommTabbedPane();
+  Component devicesComponent=null;
+  Component encodingsComponent=null;
+  Component videoComponent=null;
+  int compCount=0;
+  if (cfg == null || !cfg.getBoolean(DEVICES_DISABLED_PROP,false)) {
+    compCount++;
+    devicesComponent=createBasicControls(type);
+  }
+  if (cfg == null || !cfg.getBoolean(ENCODINGS_DISABLED_PROP,false)) {
+    compCount++;
+    encodingsComponent=createEncodingControls(type,null);
+  }
+  if (type == DeviceConfigurationComboBoxModel.VIDEO && (cfg == null || !cfg.getBoolean(VIDEO_MORE_SETTINGS_DISABLED_PROP,false))) {
+    compCount++;
+    videoComponent=createVideoAdvancedSettings();
+  }
   ResourceManagementService res=NeomediaActivator.getResources();
-  if ((cfg == null) || !cfg.getBoolean(DEVICES_DISABLED_PROP,false)) {
-    container.insertTab(res.getI18NString("impl.media.configform.DEVICES"),null,createBasicControls(type),null,0);
+  Container container;
+  if (compCount < 2) {
+    container=new TransparentPanel(new BorderLayout());
+    if (devicesComponent != null)     container.add(devicesComponent);
+ else     if (encodingsComponent != null)     container.add(encodingsComponent);
+ else     if (videoComponent != null)     container.add(videoComponent);
   }
-  if ((cfg == null) || !cfg.getBoolean(ENCODINGS_DISABLED_PROP,false)) {
-    container.insertTab(res.getI18NString("impl.media.configform.ENCODINGS"),null,createEncodingControls(type,null),null,1);
-  }
-  if ((type == DeviceConfigurationComboBoxModel.VIDEO) && ((cfg == null) || !cfg.getBoolean(VIDEO_MORE_SETTINGS_DISABLED_PROP,false))) {
-    container.insertTab(res.getI18NString("impl.media.configform.VIDEO_MORE_SETTINGS"),null,createVideoAdvancedSettings(),null,2);
+ else {
+    container=new SIPCommTabbedPane();
+    SIPCommTabbedPane tabbedPane=(SIPCommTabbedPane)container;
+    int index=0;
+    if (devicesComponent != null) {
+      tabbedPane.insertTab(res.getI18NString("impl.media.configform.DEVICES"),null,devicesComponent,null,index);
+      index=1;
+    }
+    if (encodingsComponent != null) {
+      if (tabbedPane.getTabCount() >= 1)       index=1;
+      tabbedPane.insertTab(res.getI18NString("impl.media.configform.ENCODINGS"),null,encodingsComponent,null,index);
+    }
+    if (videoComponent != null) {
+      if (tabbedPane.getTabCount() >= 2)       index=2;
+      tabbedPane.insertTab(res.getI18NString("impl.media.configform.VIDEO_MORE_SETTINGS"),null,videoComponent,null,index);
+    }
   }
   return container;
 }
