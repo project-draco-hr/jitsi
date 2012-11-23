@@ -14,4 +14,17 @@
     if (cfg.getBoolean(UPDATE_ENABLED,true))     updateService.checkForUpdates(false);
   }
   if (logger.isDebugEnabled())   logger.debug("Update checker [REGISTERED]");
+  if (configuration.getBoolean(CHECK_FOR_UPDATES_DAILY_ENABLED_PROP,false)) {
+    logger.info("Scheduled update checking enabled");
+    int hoursToWait=calcHoursToWait();
+    Runnable updateRunnable=new Runnable(){
+      public void run(){
+        logger.debug("Performing scheduled update check");
+        getUpdateService().checkForUpdates(false);
+      }
+    }
+;
+    mUpdateExecutor=Executors.newSingleThreadScheduledExecutor();
+    mUpdateExecutor.scheduleAtFixedRate(updateRunnable,hoursToWait,24,TimeUnit.HOURS);
+  }
 }
