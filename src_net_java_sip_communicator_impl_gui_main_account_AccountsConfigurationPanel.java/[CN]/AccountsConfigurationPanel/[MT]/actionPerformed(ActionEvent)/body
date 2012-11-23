@@ -25,8 +25,9 @@
         if (isUninstalled) {
           accountList.ensureAccountRemoved(accountID);
           AccountRegWizardContainerImpl wizardContainer=(AccountRegWizardContainerImpl)GuiActivator.getUIService().getAccountRegWizardContainer();
-          AccountRegistrationWizard wizard=wizardContainer.getProtocolWizard(account.getProtocolProvider());
-          wizard.accountRemoved(account.getProtocolProvider());
+          ProtocolProviderService protocolProvider=account.getProtocolProvider();
+          AccountRegistrationWizard wizard=wizardContainer.getProtocolWizard(protocolProvider);
+          if (wizard != null)           wizard.accountRemoved(protocolProvider);
         }
       }
     }
@@ -35,8 +36,18 @@
     Account account=accountList.getSelectedAccount();
     if (account == null)     return;
     AccountRegWizardContainerImpl wizard=(AccountRegWizardContainerImpl)GuiActivator.getUIService().getAccountRegWizardContainer();
-    wizard.setTitle(GuiActivator.getResources().getI18NString("service.gui.ACCOUNT_REGISTRATION_WIZARD"));
-    wizard.modifyAccount(account.getProtocolProvider());
-    wizard.showDialog(false);
+    AccountRegistrationWizard protocolWizard=wizard.getProtocolWizard(account.getProtocolProvider());
+    ResourceManagementService resources=GuiActivator.getResources();
+    if (protocolWizard != null) {
+      wizard.setTitle(resources.getI18NString("service.gui.ACCOUNT_REGISTRATION_WIZARD"));
+      wizard.modifyAccount(account.getProtocolProvider());
+      wizard.showDialog(false);
+    }
+ else {
+      String title=resources.getI18NString("service.gui.ERROR");
+      String message=resources.getI18NString("service.gui.EDIT_NOT_SUPPORTED");
+      ErrorDialog dialog=new ErrorDialog(null,title,message);
+      dialog.setVisible(true);
+    }
   }
 }
