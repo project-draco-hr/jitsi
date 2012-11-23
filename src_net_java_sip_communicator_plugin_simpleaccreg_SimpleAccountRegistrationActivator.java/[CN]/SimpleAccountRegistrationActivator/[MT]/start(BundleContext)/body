@@ -1,11 +1,13 @@
 {
   bundleContext=bc;
-  if (!hasStoredAccounts() && !getConfigService().getBoolean(DISABLED_PROP,false)) {
-    InitialAccountRegistrationFrame accountRegFrame=new InitialAccountRegistrationFrame();
-    accountRegFrame.pack();
-    Dimension screenSize=Toolkit.getDefaultToolkit().getScreenSize();
-    accountRegFrame.setLocation(screenSize.width / 2 - accountRegFrame.getWidth() / 2,screenSize.height / 2 - accountRegFrame.getHeight() / 2);
-    accountRegFrame.setVisible(true);
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        init();
+      }
+    }
+);
+    return;
   }
-  if (logger.isInfoEnabled())   logger.info("SIMPLE ACCOUNT REGISTRATION ...[STARTED]");
+  init();
 }
