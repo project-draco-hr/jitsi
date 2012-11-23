@@ -1,13 +1,17 @@
 {
+  configService=ServiceUtils.getService(bundleContext,ConfigurationService.class);
+  if (configService.getBoolean(OTR_DISABLED_PROP,false)) {
+    configService=null;
+    return;
+  }
+  resourceService=ResourceManagementServiceUtils.getService(bundleContext);
+  if (resourceService == null) {
+    configService=null;
+    return;
+  }
   uiService=(UIService)dependentService;
-  ServiceReference refConfigService=OtrActivator.bundleContext.getServiceReference(ConfigurationService.class.getName());
-  if (refConfigService == null)   return;
-  configService=(ConfigurationService)OtrActivator.bundleContext.getService(refConfigService);
-  if (configService.getBoolean(OTR_DISABLED_PROP,false))   return;
   scOtrEngine=new ScOtrEngineImpl();
   otrTransformLayer=new OtrTransformLayer();
-  resourceService=ResourceManagementServiceUtils.getService(OtrActivator.bundleContext);
-  if (resourceService == null)   return;
   bundleContext.addServiceListener(this);
   ServiceReference[] protocolProviderRefs=null;
   try {
