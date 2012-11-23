@@ -44,9 +44,12 @@ synchronized (initializationLock) {
       OperationSetPersistentPresence opSetPersPresence=new OperationSetPresenceSipImpl(this,enablePresence,forceP2P,pollingValue,subscriptionExpiration);
       addSupportedOperationSet(OperationSetPersistentPresence.class,opSetPersPresence);
       addSupportedOperationSet(OperationSetPresence.class,opSetPersPresence);
-      OperationSetBasicInstantMessagingSipImpl opSetBasicIM=new OperationSetBasicInstantMessagingSipImpl(this);
-      addSupportedOperationSet(OperationSetBasicInstantMessaging.class,opSetBasicIM);
-      addSupportedOperationSet(OperationSetTypingNotifications.class,new OperationSetTypingNotificationsSipImpl(this,opSetBasicIM));
+      boolean isMessagingDisabled=SipActivator.getConfigurationService().getBoolean(IS_MESSAGING_DISABLED,false);
+      if (!isMessagingDisabled) {
+        OperationSetBasicInstantMessagingSipImpl opSetBasicIM=new OperationSetBasicInstantMessagingSipImpl(this);
+        addSupportedOperationSet(OperationSetBasicInstantMessaging.class,opSetBasicIM);
+        addSupportedOperationSet(OperationSetTypingNotifications.class,new OperationSetTypingNotificationsSipImpl(this,opSetBasicIM));
+      }
       OperationSetServerStoredAccountInfoSipImpl opSetSSAccountInfo=new OperationSetServerStoredAccountInfoSipImpl(this);
       if (opSetSSAccountInfo != null)       opSetSSAccountInfo.setOurDisplayName(ourDisplayName);
       addSupportedOperationSet(OperationSetServerStoredAccountInfo.class,opSetSSAccountInfo);
