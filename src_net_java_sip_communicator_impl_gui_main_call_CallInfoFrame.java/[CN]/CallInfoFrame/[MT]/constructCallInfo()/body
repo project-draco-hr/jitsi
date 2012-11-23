@@ -3,21 +3,27 @@
   stringBuffer.append("<html><body><p align=\"left\">" + "<font color=\"" + fontColor + "\" size=\"3\">");
   stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.CALL_INFORMATION"),""));
   List<Call> calls=callConference.getCalls();
-  Call aCall=calls.get(0);
-  stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.CALL_IDENTITY"),aCall.getProtocolProvider().getAccountID().getDisplayName()));
-  int callPeerCount=callConference.getCallPeerCount();
-  if (callPeerCount > 1) {
-    stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.PEER_COUNT"),String.valueOf(callPeerCount)));
+  if (calls.size() <= 0) {
+    return false;
   }
-  boolean isConfFocus=callConference.isConferenceFocus();
-  if (isConfFocus) {
-    stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.IS_CONFERENCE_FOCUS"),String.valueOf(isConfFocus)));
+ else {
+    Call aCall=calls.get(0);
+    stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.CALL_IDENTITY"),aCall.getProtocolProvider().getAccountID().getDisplayName()));
+    int callPeerCount=callConference.getCallPeerCount();
+    if (callPeerCount > 1) {
+      stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.PEER_COUNT"),String.valueOf(callPeerCount)));
+    }
+    boolean isConfFocus=callConference.isConferenceFocus();
+    if (isConfFocus) {
+      stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.IS_CONFERENCE_FOCUS"),String.valueOf(isConfFocus)));
+    }
+    TransportProtocol preferredTransport=aCall.getProtocolProvider().getTransportProtocol();
+    if (preferredTransport != TransportProtocol.UNKNOWN)     stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.CALL_TRANSPORT"),preferredTransport.toString()));
+    constructCallPeersInfo(stringBuffer);
+    stringBuffer.append("</font></p></body></html>");
+    infoTextPane.setText(stringBuffer.toString());
+    infoTextPane.revalidate();
+    infoTextPane.repaint();
+    return true;
   }
-  TransportProtocol preferredTransport=aCall.getProtocolProvider().getTransportProtocol();
-  if (preferredTransport != TransportProtocol.UNKNOWN)   stringBuffer.append(getLineString(resources.getI18NString("service.gui.callinfo.CALL_TRANSPORT"),preferredTransport.toString()));
-  constructCallPeersInfo(stringBuffer);
-  stringBuffer.append("</font></p></body></html>");
-  infoTextPane.setText(stringBuffer.toString());
-  infoTextPane.revalidate();
-  infoTextPane.repaint();
 }
