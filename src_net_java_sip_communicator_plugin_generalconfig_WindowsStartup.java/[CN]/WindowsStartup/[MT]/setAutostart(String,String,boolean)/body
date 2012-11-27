@@ -1,6 +1,16 @@
 {
   if (isAutoStart) {
-    Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER,REGISTRY_STARTUP_KEY,appName,workingDirectory + File.separator + "run.exe");
+    String executableFileName=null;
+    String filePath=getModuleFilename();
+    if (filePath != null && filePath.length() > 0) {
+      int ix=filePath.lastIndexOf(File.separatorChar);
+      if (ix > 0)       executableFileName=filePath.substring(ix + 1);
+    }
+    if (executableFileName == null) {
+      logger.warn("Missing information for process, " + "shortcut will be created any way using defaults.");
+      executableFileName=appName.replaceAll(" ","").replaceAll("_","").replaceAll("-","") + ".exe";
+    }
+    Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER,REGISTRY_STARTUP_KEY,appName,workingDirectory + File.separator + executableFileName);
   }
  else {
     try {
