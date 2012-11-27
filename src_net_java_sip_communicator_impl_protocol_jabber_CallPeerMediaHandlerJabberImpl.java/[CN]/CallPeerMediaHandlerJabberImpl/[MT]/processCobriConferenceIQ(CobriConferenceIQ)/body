@@ -1,0 +1,29 @@
+{
+  TransportManagerJabberImpl transportManager=this.transportManager;
+  if (transportManager instanceof RawUdpTransportManager) {
+    RawUdpTransportManager rawUdpTransportManager=(RawUdpTransportManager)transportManager;
+    long oldAudioRemoteSSRC=getRemoteSSRC(MediaType.AUDIO);
+    long oldVideoRemoteSSRC=getRemoteSSRC(MediaType.VIDEO);
+    for (    MediaType mediaType : MediaType.values()) {
+      CobriConferenceIQ.Channel dst=rawUdpTransportManager.getCobriChannel(mediaType,false);
+      if (dst != null) {
+        CobriConferenceIQ.Content content=conferenceIQ.getContent(mediaType.toString());
+        if (content != null) {
+          CobriConferenceIQ.Channel src=content.getChannel(dst.getID());
+          if (src != null) {
+            long[] ssrcs=src.getSSRCs();
+            if (!Arrays.equals(dst.getSSRCs(),ssrcs))             dst.setSSRCs(src.getSSRCs());
+          }
+        }
+      }
+    }
+    long newAudioRemoteSSRC=getRemoteSSRC(MediaType.AUDIO);
+    long newVideoRemoteSSRC=getRemoteSSRC(MediaType.VIDEO);
+    if (oldAudioRemoteSSRC != newAudioRemoteSSRC) {
+      firePropertyChange(AUDIO_REMOTE_SSRC,oldAudioRemoteSSRC,newAudioRemoteSSRC);
+    }
+    if (oldVideoRemoteSSRC != newVideoRemoteSSRC) {
+      firePropertyChange(VIDEO_REMOTE_SSRC,oldVideoRemoteSSRC,newVideoRemoteSSRC);
+    }
+  }
+}

@@ -1,20 +1,25 @@
 {
-  String sid=null;
   if (!(packet instanceof JingleIQ) && !(packet instanceof SessionIQ)) {
-    AbstractCallPeer<?,?> callPeer=activeCallsRepository.findCallPeerBySessInitPacketID(packet.getPacketID());
+    String packetID=packet.getPacketID();
+    AbstractCallPeer<?,?> callPeer=activeCallsRepository.findCallPeerBySessInitPacketID(packetID);
     if (callPeer == null) {
-      callPeer=activeGTalkCallsRepository.findCallPeerBySessInitPacketID(packet.getPacketID());
+      callPeer=activeGTalkCallsRepository.findCallPeerBySessInitPacketID(packetID);
     }
     if (callPeer != null) {
       XMPPError error=packet.getError();
       if (error != null) {
-        logger.error("Received an error: code=" + error.getCode() + " message="+ error.getMessage());
-        String message="Service unavailable";
-        Roster roster=getProtocolProvider().getConnection().getRoster();
-        if (!roster.contains(packet.getFrom())) {
-          message+=": try adding the contact to your contact " + "list first.";
+        String errorMessage=error.getMessage();
+        logger.error("Received an error: code=" + error.getCode() + " message="+ errorMessage);
+        String message;
+        if (errorMessage == null) {
+          Roster roster=getProtocolProvider().getConnection().getRoster();
+          String packetFrom=packet.getFrom();
+          message="Service unavailable";
+          if (!roster.contains(packetFrom)) {
+            message+=": try adding the contact " + packetFrom + " to your contact list first.";
+          }
         }
-        if (error.getMessage() != null)         message=error.getMessage();
+ else         message=errorMessage;
         callPeer.setState(CallPeerState.FAILED,message);
       }
     }
@@ -25,7 +30,7 @@
     if (jingleIQ.getAction() == JingleAction.SESSION_INITIATE) {
       return jingleIQ.containsContentChildOfType(RtpDescriptionPacketExtension.class);
     }
-    sid=jingleIQ.getSID();
+    String sid=jingleIQ.getSID();
     return (activeCallsRepository.findSID(sid) != null);
   }
  else   if (packet instanceof SessionIQ) {
@@ -33,8 +38,10 @@
     if (sessionIQ.getGTalkType() == GTalkType.INITIATE) {
       return true;
     }
-    sid=sessionIQ.getID();
-    return (activeGTalkCallsRepository.findSID(sid) != null);
+ else {
+      String sid=sessionIQ.getID();
+      return (activeGTalkCallsRepository.findSID(sid) != null);
+    }
   }
   return false;
 }

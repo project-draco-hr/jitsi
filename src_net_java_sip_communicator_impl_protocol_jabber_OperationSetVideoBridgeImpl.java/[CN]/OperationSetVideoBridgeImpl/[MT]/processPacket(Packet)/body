@@ -1,0 +1,17 @@
+{
+  IQ iq=(IQ)packet;
+  if (iq.getType() == IQ.Type.SET)   protocolProvider.getConnection().sendPacket(IQ.createResultIQ(iq));
+  CobriConferenceIQ conferenceIQ=(CobriConferenceIQ)iq;
+  boolean interrupted=false;
+  try {
+    processCobriConferenceIQ(conferenceIQ);
+  }
+ catch (  Throwable t) {
+    logger.error("An error occurred during the processing of a " + packet.getClass().getName() + " packet",t);
+    if (t instanceof InterruptedException) {
+      interrupted=true;
+    }
+ else     if (t instanceof ThreadDeath)     throw (ThreadDeath)t;
+  }
+  if (interrupted)   Thread.currentThread().interrupt();
+}

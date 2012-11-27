@@ -1,22 +1,42 @@
 {
   xml.append('<').append(ELEMENT_NAME);
   String id=getID();
-  if (id != null)   xml.append(' ').append(ID_ATTR_NAME).append("='").append(id).append('\'');
+  if (id != null) {
+    xml.append(' ').append(ID_ATTR_NAME).append("='").append(id).append('\'');
+  }
   String host=getHost();
-  if (host != null)   xml.append(' ').append(HOST_ATTR_NAME).append("='").append(host).append('\'');
+  if (host != null) {
+    xml.append(' ').append(HOST_ATTR_NAME).append("='").append(host).append('\'');
+  }
   int rtpPort=getRTPPort();
-  if (rtpPort > 0)   xml.append(' ').append(RTP_PORT_ATTR_NAME).append("='").append(rtpPort).append('\'');
+  if (rtpPort > 0) {
+    xml.append(' ').append(RTP_PORT_ATTR_NAME).append("='").append(rtpPort).append('\'');
+  }
   int rtcpPort=getRTCPPort();
-  if (rtcpPort > 0)   xml.append(' ').append(RTCP_PORT_ATTR_NAME).append("='").append(rtcpPort).append('\'');
+  if (rtcpPort > 0) {
+    xml.append(' ').append(RTCP_PORT_ATTR_NAME).append("='").append(rtcpPort).append('\'');
+  }
   int expire=getExpire();
-  if (expire >= 0)   xml.append(' ').append(EXPIRE_ATTR_NAME).append("='").append(expire).append('\'');
+  if (expire >= 0) {
+    xml.append(' ').append(EXPIRE_ATTR_NAME).append("='").append(expire).append('\'');
+  }
   List<PayloadTypePacketExtension> payloadTypes=getPayloadTypes();
-  if (payloadTypes.size() == 0) {
-    xml.append(" />");
+  boolean hasPayloadTypes=(payloadTypes.size() != 0);
+  long[] ssrcs=getSSRCs();
+  boolean hasSSRCs=(ssrcs.length != 0);
+  if (hasPayloadTypes || hasSSRCs) {
+    xml.append('>');
+    if (hasPayloadTypes) {
+      for (      PayloadTypePacketExtension payloadType : payloadTypes)       xml.append(payloadType.toXML());
+    }
+    if (hasSSRCs) {
+      for (      long ssrc : ssrcs) {
+        xml.append('<').append(SSRC_ELEMENT_NAME).append('>').append(ssrc).append("</").append(SSRC_ELEMENT_NAME).append('>');
+      }
+    }
+    xml.append("</").append(ELEMENT_NAME).append('>');
   }
  else {
-    xml.append('>');
-    for (    PayloadTypePacketExtension payloadType : payloadTypes)     xml.append(payloadType.toXML());
-    xml.append("</").append(ELEMENT_NAME).append('>');
+    xml.append(" />");
   }
 }

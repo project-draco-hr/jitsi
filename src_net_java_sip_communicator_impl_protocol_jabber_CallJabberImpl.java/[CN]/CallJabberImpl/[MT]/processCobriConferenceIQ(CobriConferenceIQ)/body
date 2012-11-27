@@ -1,0 +1,24 @@
+{
+  if (cobri == null) {
+    return false;
+  }
+ else   if (conferenceIQ.getID().equals(cobri.getID())) {
+    for (    MediaType mediaType : MediaType.values()) {
+      String contentName=mediaType.toString();
+      CobriConferenceIQ.Content content=conferenceIQ.getContent(contentName);
+      if (content != null) {
+        CobriConferenceIQ.Content thisContent=cobri.getContent(contentName);
+        if ((thisContent != null) && (thisContent.getChannelCount() > 0)) {
+          CobriConferenceIQ.Channel thisChannel=thisContent.getChannel(0);
+          CobriConferenceIQ.Channel channel=content.getChannel(thisChannel.getID());
+          if (channel != null)           content.removeChannel(channel);
+        }
+      }
+    }
+    for (    CallPeerJabberImpl callPeer : getCallPeerList())     callPeer.processCobriConferenceIQ(conferenceIQ);
+    return true;
+  }
+ else {
+    return false;
+  }
+}

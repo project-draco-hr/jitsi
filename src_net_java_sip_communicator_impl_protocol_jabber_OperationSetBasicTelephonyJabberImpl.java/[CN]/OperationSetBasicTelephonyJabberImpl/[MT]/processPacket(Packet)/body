@@ -1,30 +1,21 @@
 {
-  if (packet instanceof JingleIQ) {
-    JingleIQ jingleIQ=(JingleIQ)packet;
-    if (jingleIQ.getType() == IQ.Type.SET) {
-      IQ ack=IQ.createResultIQ(jingleIQ);
-      protocolProvider.getConnection().sendPacket(ack);
-    }
-    try {
-      processJingleIQ(jingleIQ);
-    }
- catch (    Throwable t) {
-      logger.info("Error while handling incoming Jingle packet: ",t);
-      if (t instanceof ThreadDeath)       throw (ThreadDeath)t;
-    }
+  IQ iq=(IQ)packet;
+  if (iq.getType() == IQ.Type.SET) {
+    IQ ack=IQ.createResultIQ(iq);
+    protocolProvider.getConnection().sendPacket(ack);
   }
- else   if (packet instanceof SessionIQ) {
-    SessionIQ sessionIQ=(SessionIQ)packet;
-    if (sessionIQ.getType() == IQ.Type.SET) {
-      IQ ack=IQ.createResultIQ(sessionIQ);
-      protocolProvider.getConnection().sendPacket(ack);
+  try {
+    if (iq instanceof JingleIQ)     processJingleIQ((JingleIQ)iq);
+ else     if (iq instanceof SessionIQ)     processSessionIQ((SessionIQ)iq);
+  }
+ catch (  Throwable t) {
+    if (logger.isInfoEnabled()) {
+      String packetClass;
+      if (iq instanceof JingleIQ)       packetClass="Jingle";
+ else       if (iq instanceof SessionIQ)       packetClass="Gtalk";
+ else       packetClass=packet.getClass().getSimpleName();
+      logger.info("Error while handling incoming " + packetClass + " packet: ",t);
     }
-    try {
-      processSessionIQ(sessionIQ);
-    }
- catch (    Throwable t) {
-      logger.info("Error while handling incoming GTalk packet: ",t);
-      if (t instanceof ThreadDeath)       throw (ThreadDeath)t;
-    }
+    if (t instanceof ThreadDeath)     throw (ThreadDeath)t;
   }
 }

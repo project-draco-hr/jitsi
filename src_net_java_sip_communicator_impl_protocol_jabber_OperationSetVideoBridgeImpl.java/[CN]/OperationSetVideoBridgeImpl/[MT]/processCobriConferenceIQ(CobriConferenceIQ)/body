@@ -1,0 +1,19 @@
+{
+  if (IQ.Type.SET.equals(conferenceIQ.getType()) && conferenceIQ.getID() != null) {
+    OperationSetBasicTelephony<?> basicTelephony=protocolProvider.getOperationSet(OperationSetBasicTelephony.class);
+    if (basicTelephony != null) {
+      Iterator<? extends Call> i=basicTelephony.getActiveCalls();
+      while (i.hasNext()) {
+        Call call=i.next();
+        if (call instanceof CallJabberImpl) {
+          CallJabberImpl callJabberImpl=(CallJabberImpl)call;
+          MediaAwareCallConference conference=callJabberImpl.getConference();
+          if ((conference != null) && conference.isJitsiVideoBridge()) {
+            callJabberImpl.processCobriConferenceIQ(conferenceIQ);
+            break;
+          }
+        }
+      }
+    }
+  }
+}

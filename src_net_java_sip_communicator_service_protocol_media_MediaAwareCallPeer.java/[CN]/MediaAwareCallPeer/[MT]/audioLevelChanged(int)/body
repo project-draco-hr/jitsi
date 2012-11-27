@@ -1,7 +1,7 @@
 {
   int conferenceMemberCount;
   if (isConferenceFocus() && ((conferenceMemberCount=getConferenceMemberCount()) > 0) && (conferenceMemberCount < 3)) {
-    long audioRemoteSSRC=getMediaHandler().getAudioRemoteSSRC();
+    long audioRemoteSSRC=getMediaHandler().getRemoteSSRC(MediaType.AUDIO);
     if (audioRemoteSSRC != CallPeerMediaHandler.SSRC_UNKNOWN) {
       audioLevelsReceived(new long[]{audioRemoteSSRC,newLevel});
       return;
@@ -13,6 +13,8 @@ synchronized (streamAudioLevelListenersSyncRoot) {
   }
   if (streamAudioLevelListeners != null) {
     int streamAudioLevelListenerCount=streamAudioLevelListeners.size();
-    for (int i=0; i < streamAudioLevelListenerCount; i++)     streamAudioLevelListeners.get(i).soundLevelChanged(this,newLevel);
+    for (int i=0; i < streamAudioLevelListenerCount; i++) {
+      streamAudioLevelListeners.get(i).soundLevelChanged(this,newLevel);
+    }
   }
 }

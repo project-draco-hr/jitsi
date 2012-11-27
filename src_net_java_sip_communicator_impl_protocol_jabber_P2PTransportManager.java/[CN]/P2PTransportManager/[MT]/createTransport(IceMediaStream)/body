@@ -1,18 +1,23 @@
 {
   GTalkTransportPacketExtension trans=new GTalkTransportPacketExtension();
-  if (stream != null)   for (  Component component : stream.getComponents()) {
-    List<LocalCandidate> candToRemove=new ArrayList<LocalCandidate>();
-    List<LocalCandidate> candidates=component.getLocalCandidates();
-    for (    LocalCandidate candidate : component.getLocalCandidates()) {
-      if (candidate instanceof UPNPCandidate) {
-        LocalCandidate base=candidate.getBase();
-        candToRemove.add(base);
+  if (stream != null) {
+    for (    Component component : stream.getComponents()) {
+      List<LocalCandidate> candidates=component.getLocalCandidates();
+      List<LocalCandidate> candidatesToRemove=null;
+      for (      LocalCandidate candidate : candidates) {
+        if (candidate instanceof UPNPCandidate) {
+          LocalCandidate base=candidate.getBase();
+          if (candidatesToRemove == null) {
+            candidatesToRemove=new ArrayList<LocalCandidate>(candidates.size());
+          }
+          candidatesToRemove.add(base);
+        }
       }
+      if (candidatesToRemove != null) {
+        for (        Candidate<?> candidateToRemove : candidatesToRemove)         candidates.remove(candidateToRemove);
+      }
+      for (      Candidate<?> candidate : candidates)       trans.addCandidate(createCandidate(candidate));
     }
-    for (    Candidate candidate : candToRemove) {
-      candidates.remove(candidate);
-    }
-    for (    Candidate candidate : candidates)     trans.addCandidate(createCandidate(candidate));
   }
   return trans;
 }

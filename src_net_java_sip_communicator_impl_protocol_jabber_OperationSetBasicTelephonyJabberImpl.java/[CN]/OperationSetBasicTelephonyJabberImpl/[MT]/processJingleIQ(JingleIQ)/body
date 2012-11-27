@@ -6,16 +6,17 @@
     XMPPError error=jingleIQ.getError();
     String message="Remote party returned an error!";
     if (error != null) {
-      message+="\ncode=" + error.getCode() + " message="+ error.getMessage();
-      logger.error(" code=" + error.getCode() + " message="+ error.getMessage());
+      String errorStr="code=" + error.getCode() + " message="+ error.getMessage();
+      message+="\n" + errorStr;
+      logger.error(" " + errorStr);
     }
     if (callPeer != null)     callPeer.setState(CallPeerState.FAILED,message);
     return;
   }
   JingleAction action=jingleIQ.getAction();
   if (action == JingleAction.SESSION_INITIATE) {
-    CallJabberImpl call=null;
     TransferPacketExtension transfer=(TransferPacketExtension)jingleIQ.getExtension(TransferPacketExtension.ELEMENT_NAME,TransferPacketExtension.NAMESPACE);
+    CallJabberImpl call=null;
     if (transfer != null) {
       String sid=transfer.getSID();
       if (sid != null) {
@@ -28,13 +29,11 @@
         }
       }
     }
-    if (call == null) {
-      call=new CallJabberImpl(this);
-    }
-    final CallJabberImpl callThread=call;
+    if (call == null)     call=new CallJabberImpl(this);
+    final CallJabberImpl finalCall=call;
     new Thread(){
       @Override public void run(){
-        callThread.processSessionInitiate(jingleIQ);
+        finalCall.processSessionInitiate(jingleIQ);
       }
     }
 .start();
