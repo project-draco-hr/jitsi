@@ -2,7 +2,7 @@
   Application application=Application.getApplication();
   if (application != null) {
     application.setQuitHandler(new QuitHandler(){
-      public void handleQuitRequestWith(      AppEvent.QuitEvent quitEvent,      QuitResponse quitResponse){
+      public void handleQuitRequestWith(      AppEvent.QuitEvent quitEvent,      final QuitResponse quitResponse){
         ((FileMenu)userData).closeActionPerformed();
 synchronized (this) {
           try {
@@ -11,7 +11,12 @@ synchronized (this) {
  catch (          InterruptedException ex) {
           }
         }
-        quitResponse.performQuit();
+        new Thread(new Runnable(){
+          public void run(){
+            quitResponse.performQuit();
+          }
+        }
+).start();
       }
     }
 );
