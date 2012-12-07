@@ -1,15 +1,50 @@
 {
+  String popUpEvent=null;
+  String title=null;
+  CaptureDeviceInfo device=null;
+  ResourceManagementService resources=NeomediaActivator.getResources();
   if (DeviceConfiguration.PROP_AUDIO_SYSTEM_DEVICES.equals(event.getPropertyName())) {
+    popUpEvent=DEVICE_CONFIGURATION_HAS_CHANGED;
+    if (event.getNewValue() != null) {
+      title=resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_CONNECTED");
+      device=(CaptureDeviceInfo)event.getNewValue();
+    }
+ else     if (event.getOldValue() != null) {
+      title=resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_DISCONNECTED");
+      device=(CaptureDeviceInfo)event.getOldValue();
+    }
+  }
+ else   if (CaptureDevices.PROP_DEVICE.equals(event.getPropertyName())) {
+    if (event.getNewValue() != null) {
+      popUpEvent=NEW_SELECTED_DEVICE;
+      title=resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_SELECTED_AUDIO_IN");
+      device=(CaptureDeviceInfo)event.getNewValue();
+    }
+  }
+ else   if (PlaybackDevices.PROP_DEVICE.equals(event.getPropertyName())) {
+    if (event.getNewValue() != null) {
+      popUpEvent=NEW_SELECTED_DEVICE;
+      title=resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_SELECTED_AUDIO_OUT");
+      device=(CaptureDeviceInfo)event.getNewValue();
+    }
+  }
+ else   if (NotifyDevices.PROP_DEVICE.equals(event.getPropertyName())) {
+    if (event.getNewValue() != null) {
+      popUpEvent=NEW_SELECTED_DEVICE;
+      title=resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_SELECTED_AUDIO_NOTIFICATIONS");
+      device=(CaptureDeviceInfo)event.getNewValue();
+    }
+  }
+  if (title != null && device != null && popUpEvent != null) {
     NotificationService notificationService=getNotificationService();
     if (notificationService != null) {
       if (!isRegisteredToPopupMessageListener) {
         isRegisteredToPopupMessageListener=true;
         managePopupMessageListenerRegistration(true);
       }
-      ResourceManagementService resources=NeomediaActivator.getResources();
       Map<String,Object> extras=new HashMap<String,Object>();
       extras.put(NotificationData.POPUP_MESSAGE_HANDLER_TAG_EXTRA,this);
-      notificationService.fireNotification(DEVICE_CONFIGURATION_HAS_CHANGED,resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_CONFIG_CHANGED"),resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_CONFIG_MANAGMENT_CLICK"),null,extras);
+      notificationService.fireNotification(popUpEvent,title,device.getName() + "\r\n" + resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_CONFIG_MANAGMENT_CLICK"),null,extras);
     }
   }
 }
