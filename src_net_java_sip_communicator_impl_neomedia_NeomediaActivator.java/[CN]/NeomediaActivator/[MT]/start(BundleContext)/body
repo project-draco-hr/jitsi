@@ -13,14 +13,20 @@
   if ((cfg == null) || !cfg.getBoolean(AUDIO_CONFIG_DISABLED_PROP,false)) {
     audioConfigurationForm=new LazyConfigurationForm(AudioConfigurationPanel.class.getName(),getClass().getClassLoader(),"plugin.mediaconfig.AUDIO_ICON","impl.neomedia.configform.AUDIO",3);
     bundleContext.registerService(ConfigurationForm.class.getName(),audioConfigurationForm,mediaProps);
-    if (deviceConfigurationPropertyChangeListener == null) {
+    if (audioDeviceConfigurationPropertyChangeListener == null) {
       getNotificationService();
-      deviceConfigurationPropertyChangeListener=new AudioDeviceConfigurationListener();
-      mediaServiceImpl.getDeviceConfiguration().addPropertyChangeListener(deviceConfigurationPropertyChangeListener);
+      audioDeviceConfigurationPropertyChangeListener=new AudioDeviceConfigurationListener(audioConfigurationForm);
+      mediaServiceImpl.getDeviceConfiguration().addPropertyChangeListener(audioDeviceConfigurationPropertyChangeListener);
     }
   }
   if ((cfg == null) || !cfg.getBoolean(VIDEO_CONFIG_DISABLED_PROP,false)) {
-    bundleContext.registerService(ConfigurationForm.class.getName(),new LazyConfigurationForm(VideoConfigurationPanel.class.getName(),getClass().getClassLoader(),"plugin.mediaconfig.VIDEO_ICON","impl.neomedia.configform.VIDEO",4),mediaProps);
+    videoConfigurationForm=new LazyConfigurationForm(VideoConfigurationPanel.class.getName(),getClass().getClassLoader(),"plugin.mediaconfig.VIDEO_ICON","impl.neomedia.configform.VIDEO",4);
+    bundleContext.registerService(ConfigurationForm.class.getName(),videoConfigurationForm,mediaProps);
+    if (videoDeviceConfigurationPropertyChangeListener == null) {
+      getNotificationService();
+      videoDeviceConfigurationPropertyChangeListener=new VideoDeviceConfigurationListener(videoConfigurationForm);
+      mediaServiceImpl.getDeviceConfiguration().addPropertyChangeListener(videoDeviceConfigurationPropertyChangeListener);
+    }
   }
   if ((cfg == null) || !cfg.getBoolean(H264_CONFIG_DISABLED_PROP,false)) {
     Dictionary<String,String> h264Props=new Hashtable<String,String>();
