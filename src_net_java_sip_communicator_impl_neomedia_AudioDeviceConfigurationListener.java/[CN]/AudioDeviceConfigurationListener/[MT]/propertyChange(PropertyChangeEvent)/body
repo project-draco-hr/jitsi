@@ -16,24 +16,37 @@
   }
  else   if (CaptureDevices.PROP_DEVICE.equals(event.getPropertyName())) {
     if (event.getNewValue() != null) {
-      popUpEvent=NeomediaActivator.NEW_SELECTED_DEVICE;
-      title=resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_SELECTED_AUDIO_IN");
-      device=(CaptureDeviceInfo)event.getNewValue();
+      captureDevice=(CaptureDeviceInfo)event.getNewValue();
     }
   }
  else   if (PlaybackDevices.PROP_DEVICE.equals(event.getPropertyName())) {
     if (event.getNewValue() != null) {
-      popUpEvent=NeomediaActivator.NEW_SELECTED_DEVICE;
-      title=resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_SELECTED_AUDIO_OUT");
-      device=(CaptureDeviceInfo)event.getNewValue();
+      playbackDevice=(CaptureDeviceInfo)event.getNewValue();
     }
   }
  else   if (NotifyDevices.PROP_DEVICE.equals(event.getPropertyName())) {
     if (event.getNewValue() != null) {
-      popUpEvent=NeomediaActivator.NEW_SELECTED_DEVICE;
-      title=resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_SELECTED_AUDIO_NOTIFICATIONS");
-      device=(CaptureDeviceInfo)event.getNewValue();
+      notificationDevice=(CaptureDeviceInfo)event.getNewValue();
     }
   }
-  super.showPopUpNotification(title,device,popUpEvent);
+  String body=null;
+  if (device != null) {
+    body=device.getName();
+    if (captureDevice != null || playbackDevice != null || notificationDevice != null) {
+      body+="\r\n";
+      if (captureDevice != null) {
+        body+="\r\n" + resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_SELECTED_AUDIO_IN") + "\r\n\t"+ captureDevice.getName();
+        captureDevice=null;
+      }
+      if (playbackDevice != null) {
+        body+="\r\n" + resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_SELECTED_AUDIO_OUT") + "\r\n\t"+ playbackDevice.getName();
+        playbackDevice=null;
+      }
+      if (notificationDevice != null) {
+        body+="\r\n" + resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_SELECTED_AUDIO_NOTIFICATIONS") + "\r\n\t"+ notificationDevice.getName();
+        notificationDevice=null;
+      }
+    }
+  }
+  super.showPopUpNotification(title,body,popUpEvent);
 }
