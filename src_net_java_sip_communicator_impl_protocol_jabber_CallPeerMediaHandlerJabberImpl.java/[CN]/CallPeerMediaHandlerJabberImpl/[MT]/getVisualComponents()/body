@@ -1,0 +1,24 @@
+{
+  CallJabberImpl call;
+  MediaAwareCallConference conference;
+  if (((call=getPeer().getCall()) != null) && ((conference=call.getConference()) != null) && conference.isJitsiVideoBridge()) {
+    MediaStream stream=getStream(MediaType.VIDEO);
+    if (stream == null)     return Collections.emptyList();
+ else {
+      long[] remoteSSRCs=getRemoteSSRCs(MediaType.VIDEO);
+      if (remoteSSRCs.length == 0)       return Collections.emptyList();
+ else {
+        VideoMediaStream videoStream=(VideoMediaStream)stream;
+        List<Component> visualComponents=new LinkedList<Component>();
+        for (        long remoteSSRC : remoteSSRCs) {
+          if (remoteSSRC != -1) {
+            Component visualComponent=videoStream.getVisualComponent(remoteSSRC);
+            if (visualComponent != null)             visualComponents.add(visualComponent);
+          }
+        }
+        return visualComponents;
+      }
+    }
+  }
+  return super.getVisualComponents();
+}
