@@ -35,13 +35,15 @@
   constraints.anchor=anchor;
   constraints.gridy=GridBagConstraints.RELATIVE;
   if (featureNotifyAndPlaybackDevices) {
-    JComboBox playbackCombo=new JComboBox();
+    playbackCombo=new JComboBox();
     playbackCombo.setEditable(false);
     playbackCombo.setModel(new DeviceConfigurationComboBoxModel(captureCombo,mediaService.getDeviceConfiguration(),DeviceConfigurationComboBoxModel.AUDIO_PLAYBACK));
+    playbackCombo.addActionListener(this);
     container.add(playbackCombo,constraints);
-    JComboBox notifyCombo=new JComboBox();
+    notifyCombo=new JComboBox();
     notifyCombo.setEditable(false);
     notifyCombo.setModel(new DeviceConfigurationComboBoxModel(captureCombo,mediaService.getDeviceConfiguration(),DeviceConfigurationComboBoxModel.AUDIO_NOTIFY));
+    notifyCombo.addActionListener(this);
     container.add(notifyCombo,constraints);
   }
   if ((AudioSystem.FEATURE_ECHO_CANCELLATION & audioSystemFeatures) != 0) {
@@ -65,6 +67,29 @@
     }
 );
     container.add(denoiseCheckBox,constraints);
+  }
+  constraints.gridx=2;
+  constraints.insets=new Insets(3,3,3,0);
+  constraints.weightx=0;
+  if (featureNotifyAndPlaybackDevices) {
+    constraints.gridy=2;
+    playbackPlaySoundButton.setMinimumSize(new Dimension(30,30));
+    playbackPlaySoundButton.setPreferredSize(new Dimension(30,30));
+    if (((DeviceConfigurationComboBoxModel.CaptureDevice)playbackCombo.getSelectedItem()).info == null) {
+      playbackPlaySoundButton.setEnabled(false);
+    }
+    playbackPlaySoundButton.setOpaque(false);
+    playbackPlaySoundButton.addActionListener(this);
+    container.add(playbackPlaySoundButton,constraints);
+    constraints.gridy=3;
+    notificationPlaySoundButton.setMinimumSize(new Dimension(30,30));
+    notificationPlaySoundButton.setPreferredSize(new Dimension(30,30));
+    if (((DeviceConfigurationComboBoxModel.CaptureDevice)notifyCombo.getSelectedItem()).info == null) {
+      notificationPlaySoundButton.setEnabled(false);
+    }
+    notificationPlaySoundButton.setOpaque(false);
+    notificationPlaySoundButton.addActionListener(this);
+    container.add(notificationPlaySoundButton,constraints);
   }
   if (audioLevelListenerThread == null) {
     audioLevelListenerThread=new AudioLevelListenerThread(audioSystem,captureCombo,capturePreview);
