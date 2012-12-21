@@ -1,52 +1,72 @@
 {
-  String popUpEvent=null;
-  String title=null;
-  CaptureDeviceInfo device=null;
-  ResourceManagementService resources=NeomediaActivator.getResources();
-  if (DeviceConfiguration.PROP_AUDIO_SYSTEM_DEVICES.equals(event.getPropertyName())) {
-    popUpEvent=NeomediaActivator.DEVICE_CONFIGURATION_HAS_CHANGED;
-    if (event.getNewValue() != null) {
-      title=resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_CONNECTED");
-      device=(CaptureDeviceInfo)event.getNewValue();
+  String propertyName=ev.getPropertyName();
+  if (DeviceConfiguration.PROP_AUDIO_SYSTEM_DEVICES.equals(propertyName)) {
+    @SuppressWarnings("unchecked") List<CaptureDeviceInfo> oldDevices=(List<CaptureDeviceInfo>)ev.getOldValue();
+    @SuppressWarnings("unchecked") List<CaptureDeviceInfo> newDevices=(List<CaptureDeviceInfo>)ev.getNewValue();
+    if (oldDevices.isEmpty())     oldDevices=null;
+    if (newDevices.isEmpty())     newDevices=null;
+    String title;
+    ResourceManagementService r=NeomediaActivator.getResources();
+    List<CaptureDeviceInfo> devices;
+    boolean removal;
+    if (newDevices != null) {
+      title=r.getI18NString("impl.media.configform.AUDIO_DEVICE_CONNECTED");
+      devices=newDevices;
+      removal=false;
     }
- else     if (event.getOldValue() != null) {
-      title=resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_DISCONNECTED");
-      device=(CaptureDeviceInfo)event.getOldValue();
+ else     if (oldDevices != null) {
+      title=r.getI18NString("impl.media.configform.AUDIO_DEVICE_DISCONNECTED");
+      devices=oldDevices;
+      removal=true;
     }
-  }
- else   if (CaptureDevices.PROP_DEVICE.equals(event.getPropertyName())) {
-    if (event.getNewValue() != null) {
-      captureDevice=(CaptureDeviceInfo)event.getNewValue();
+ else {
+      capturePropertyChangeEvent=null;
+      notifyPropertyChangeEvent=null;
+      playbackPropertyChangeEvent=null;
+      return;
     }
-  }
- else   if (PlaybackDevices.PROP_DEVICE.equals(event.getPropertyName())) {
-    if (event.getNewValue() != null) {
-      playbackDevice=(CaptureDeviceInfo)event.getNewValue();
-    }
-  }
- else   if (NotifyDevices.PROP_DEVICE.equals(event.getPropertyName())) {
-    if (event.getNewValue() != null) {
-      notificationDevice=(CaptureDeviceInfo)event.getNewValue();
-    }
-  }
-  String body=null;
-  if (device != null) {
-    body=device.getName();
-    if (captureDevice != null || playbackDevice != null || notificationDevice != null) {
-      body+="\r\n";
-      if (captureDevice != null) {
-        body+="\r\n" + resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_SELECTED_AUDIO_IN") + "\r\n\t"+ captureDevice.getName();
-        captureDevice=null;
+    StringBuilder body=new StringBuilder();
+    for (    CaptureDeviceInfo device : devices)     body.append(device.getName()).append("\r\n");
+    DeviceConfiguration devConf=(DeviceConfiguration)ev.getSource();
+    AudioSystem audioSystem=devConf.getAudioSystem();
+    boolean selectedHasChanged=false;
+    if (audioSystem != null) {
+      if (capturePropertyChangeEvent != null) {
+        CaptureDeviceInfo cdi=audioSystem.getDevice(AudioSystem.CAPTURE_INDEX);
+        if ((cdi != null) && !cdi.equals(capturePropertyChangeEvent.getOldValue())) {
+          body.append("\r\n").append(r.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_SELECTED_AUDIO_IN")).append("\r\n\t").append(cdi.getName());
+          selectedHasChanged=true;
+        }
       }
-      if (playbackDevice != null) {
-        body+="\r\n" + resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_SELECTED_AUDIO_OUT") + "\r\n\t"+ playbackDevice.getName();
-        playbackDevice=null;
+      if (playbackPropertyChangeEvent != null) {
+        CaptureDeviceInfo cdi=audioSystem.getDevice(AudioSystem.PLAYBACK_INDEX);
+        if ((cdi != null) && !cdi.equals(playbackPropertyChangeEvent.getOldValue())) {
+          body.append("\r\n").append(r.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_SELECTED_AUDIO_OUT")).append("\r\n\t").append(cdi.getName());
+          selectedHasChanged=true;
+        }
       }
-      if (notificationDevice != null) {
-        body+="\r\n" + resources.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_SELECTED_AUDIO_NOTIFICATIONS") + "\r\n\t"+ notificationDevice.getName();
-        notificationDevice=null;
+      if (notifyPropertyChangeEvent != null) {
+        CaptureDeviceInfo cdi=audioSystem.getDevice(AudioSystem.NOTIFY_INDEX);
+        if ((cdi != null) && !cdi.equals(notifyPropertyChangeEvent.getOldValue())) {
+          body.append("\r\n").append(r.getI18NString("impl.media.configform" + ".AUDIO_DEVICE_SELECTED_AUDIO_NOTIFICATIONS")).append("\r\n\t").append(cdi.getName());
+          selectedHasChanged=true;
+        }
       }
     }
+    capturePropertyChangeEvent=null;
+    notifyPropertyChangeEvent=null;
+    playbackPropertyChangeEvent=null;
+    if (!removal || selectedHasChanged) {
+      showPopUpNotification(title,body.toString(),NeomediaActivator.DEVICE_CONFIGURATION_HAS_CHANGED);
+    }
   }
-  super.showPopUpNotification(title,body,popUpEvent);
+ else   if (CaptureDevices.PROP_DEVICE.equals(propertyName)) {
+    capturePropertyChangeEvent=ev;
+  }
+ else   if (NotifyDevices.PROP_DEVICE.equals(propertyName)) {
+    notifyPropertyChangeEvent=ev;
+  }
+ else   if (PlaybackDevices.PROP_DEVICE.equals(propertyName)) {
+    playbackPropertyChangeEvent=ev;
+  }
 }
