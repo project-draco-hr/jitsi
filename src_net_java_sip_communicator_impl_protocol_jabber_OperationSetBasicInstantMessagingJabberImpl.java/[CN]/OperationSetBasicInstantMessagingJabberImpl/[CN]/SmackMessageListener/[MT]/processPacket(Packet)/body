@@ -50,6 +50,15 @@
     if (logger.isDebugEnabled())     logger.debug("received a message from an unknown contact: " + fromUserID);
     sourceContact=opSetPersPresence.createVolatileContact(fromUserID);
   }
-  MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(newMessage,sourceContact,correctedMessageUID);
+  long timestamp=System.currentTimeMillis();
+  PacketExtension delay=msg.getExtension("x","jabber:x:delay");
+  if (delay != null && delay instanceof DelayInformation) {
+    timestamp=((DelayInformation)delay).getStamp().getTime();
+  }
+  delay=msg.getExtension("delay","urn:xmpp:delay");
+  if (delay != null && delay instanceof DelayInfo) {
+    timestamp=((DelayInfo)delay).getStamp().getTime();
+  }
+  MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(newMessage,sourceContact,timestamp,correctedMessageUID);
   if (msgReceivedEvt != null)   fireMessageEvent(msgReceivedEvt);
 }
