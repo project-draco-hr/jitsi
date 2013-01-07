@@ -1,6 +1,15 @@
 {
   if (this.audioStream != audioStream) {
     if (this.audioStream != null) {
+synchronized (csrcAudioLevelListenerLock) {
+        if (!csrcAudioLevelListeners.isEmpty())         this.audioStream.setCsrcAudioLevelListener(null);
+      }
+synchronized (localUserAudioLevelListenerLock) {
+        if (!localUserAudioLevelListeners.isEmpty())         this.audioStream.setLocalUserAudioLevelListener(null);
+      }
+synchronized (streamAudioLevelListenerLock) {
+        if (!streamAudioLevelListeners.isEmpty())         this.audioStream.setStreamAudioLevelListener(null);
+      }
       this.audioStream.removePropertyChangeListener(streamPropertyChangeListener);
       this.audioStream.close();
     }
@@ -11,6 +20,21 @@
       this.audioStream.addPropertyChangeListener(streamPropertyChangeListener);
       audioLocalSSRC=this.audioStream.getLocalSourceID();
       audioRemoteSSRC=this.audioStream.getRemoteSourceID();
+synchronized (csrcAudioLevelListenerLock) {
+        if (!csrcAudioLevelListeners.isEmpty()) {
+          this.audioStream.setCsrcAudioLevelListener(csrcAudioLevelListener);
+        }
+      }
+synchronized (localUserAudioLevelListenerLock) {
+        if (!localUserAudioLevelListeners.isEmpty()) {
+          this.audioStream.setLocalUserAudioLevelListener(localUserAudioLevelListener);
+        }
+      }
+synchronized (streamAudioLevelListenerLock) {
+        if (!streamAudioLevelListeners.isEmpty()) {
+          this.audioStream.setStreamAudioLevelListener(streamAudioLevelListener);
+        }
+      }
     }
  else {
       audioLocalSSRC=audioRemoteSSRC=CallPeerMediaHandler.SSRC_UNKNOWN;

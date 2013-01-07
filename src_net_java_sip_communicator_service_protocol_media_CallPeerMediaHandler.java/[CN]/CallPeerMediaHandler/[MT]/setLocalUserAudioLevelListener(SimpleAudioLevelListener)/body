@@ -1,9 +1,14 @@
 {
-synchronized (localAudioLevelListenerLock) {
-    this.localAudioLevelListener=listener;
-    MediaStream audioStream=getStream(MediaType.AUDIO);
-    if (audioStream != null) {
-      ((AudioMediaStream)audioStream).setLocalUserAudioLevelListener(listener);
+synchronized (localUserAudioLevelListenerLock) {
+    if (this.localUserAudioLevelListener != listener) {
+      MediaHandler mediaHandler=getMediaHandler();
+      if ((mediaHandler != null) && (this.localUserAudioLevelListener != null)) {
+        mediaHandler.removeLocalUserAudioLevelListener(this.localUserAudioLevelListener);
+      }
+      this.localUserAudioLevelListener=listener;
+      if ((mediaHandler != null) && (this.localUserAudioLevelListener != null)) {
+        mediaHandler.addLocalUserAudioLevelListener(this.localUserAudioLevelListener);
+      }
     }
   }
 }
