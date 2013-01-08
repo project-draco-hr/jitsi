@@ -1,7 +1,11 @@
 {
   MediaFormat alreadyMappedFmt=findFormat(payloadType);
   if (alreadyMappedFmt != null) {
-    logger.warn("Remote party is trying to remap payload type " + payloadType + " and reassign it from "+ alreadyMappedFmt+ " to "+ format+ ". We'll go along but there might be issues because"+ " of this.");
+    if (alreadyMappedFmt.equals(format)) {
+      return;
+    }
+    byte newlyObtainedPT=obtainPayloadTypeNumber(format);
+    logger.warn("Remote party is trying to remap payload type " + payloadType + " and reassign it from "+ alreadyMappedFmt+ " to "+ format+ ". We'll go along but there might be issues because"+ " of this. We'll also expect to receive "+ format+ " with PT="+ newlyObtainedPT);
   }
   if (payloadType < MediaFormat.MIN_DYNAMIC_PAYLOAD_TYPE) {
     throw new IllegalArgumentException(payloadType + " is not a valid dynamic payload type number." + " (must be between "+ MediaFormat.MIN_DYNAMIC_PAYLOAD_TYPE+ " and "+ MediaFormat.MAX_DYNAMIC_PAYLOAD_TYPE);
