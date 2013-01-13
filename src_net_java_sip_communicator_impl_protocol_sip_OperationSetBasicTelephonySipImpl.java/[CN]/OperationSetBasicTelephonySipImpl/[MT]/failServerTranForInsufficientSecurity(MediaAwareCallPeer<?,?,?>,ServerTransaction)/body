@@ -1,0 +1,24 @@
+{
+  if (getProtocolProvider().getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.MODE_PARANOIA,false) && peer.getMediaHandler().getAdvertisedEncryptionMethods().length == 0) {
+    String reasonText=SipActivator.getResources().getI18NString("service.gui.security.encryption.required");
+    peer.setState(CallPeerState.FAILED,reasonText,Response.SESSION_NOT_ACCEPTABLE);
+    WarningHeader warning=null;
+    try {
+      warning=protocolProvider.getHeaderFactory().createWarningHeader(protocolProvider.getAccountID().getService(),399,reasonText);
+    }
+ catch (    InvalidArgumentException e) {
+      logger.error("Cannot create warning header",e);
+    }
+catch (    ParseException e) {
+      logger.error("Cannot create warning header",e);
+    }
+    try {
+      protocolProvider.sayError(serverTransaction,Response.SESSION_NOT_ACCEPTABLE,warning);
+    }
+ catch (    OperationFailedException e) {
+      logger.error("Cannot send 606 error!",e);
+    }
+    return true;
+  }
+  return false;
+}

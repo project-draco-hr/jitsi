@@ -3,48 +3,30 @@
   Dialog dialog=serverTransaction.getDialog();
   CallPeerSipImpl existingPeer=activeCallsRepository.findCallPeer(dialog);
   OperationSetAutoAnswerSipImpl autoAnswerOpSet=(OperationSetAutoAnswerSipImpl)protocolProvider.getOperationSet(OperationSetBasicAutoAnswer.class);
-  if (existingPeer == null) {
-    ReplacesHeader replacesHeader=(ReplacesHeader)invite.getHeader(ReplacesHeader.NAME);
-    if (replacesHeader == null) {
-      if (autoAnswerOpSet != null && autoAnswerOpSet.forwardCall(invite,serverTransaction))       return;
-      CallSipImpl call=new CallSipImpl(this);
-      MediaAwareCallPeer<?,?,?> peer=call.processInvite(sourceProvider,serverTransaction);
-      if (getProtocolProvider().getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.MODE_PARANOIA,false) && peer.getMediaHandler().getAdvertisedEncryptionMethods().length == 0) {
-        String reasonText=SipActivator.getResources().getI18NString("service.gui.security.encryption.required");
-        peer.setState(CallPeerState.FAILED,reasonText,Response.SESSION_NOT_ACCEPTABLE);
-        WarningHeader warning=null;
-        try {
-          warning=protocolProvider.getHeaderFactory().createWarningHeader(protocolProvider.getAccountID().getService(),399,reasonText);
-        }
- catch (        InvalidArgumentException e) {
-          logger.error("Cannot create warning header",e);
-        }
-catch (        ParseException e) {
-          logger.error("Cannot create warning header",e);
-        }
-        try {
-          protocolProvider.sayError(serverTransaction,Response.SESSION_NOT_ACCEPTABLE,warning);
-        }
- catch (        OperationFailedException e) {
-          logger.error("Cannot send 606 error!",e);
-        }
-        return;
-      }
-      if (autoAnswerOpSet != null) {
-        autoAnswerOpSet.autoAnswer(call);
-      }
-    }
- else {
-      existingPeer=activeCallsRepository.findCallPeer(replacesHeader.getCallId(),replacesHeader.getToTag(),replacesHeader.getFromTag());
-      if (existingPeer != null) {
-        existingPeer.getCall().processReplacingInvite(sourceProvider,serverTransaction,existingPeer);
-      }
- else {
-        protocolProvider.sayErrorSilently(serverTransaction,Response.CALL_OR_TRANSACTION_DOES_NOT_EXIST);
-      }
-    }
-  }
- else {
+  if (existingPeer != null) {
     existingPeer.processReInvite(serverTransaction);
+    return;
+  }
+  ReplacesHeader replacesHeader=(ReplacesHeader)invite.getHeader(ReplacesHeader.NAME);
+  if (replacesHeader != null) {
+    existingPeer=activeCallsRepository.findCallPeer(replacesHeader.getCallId(),replacesHeader.getToTag(),replacesHeader.getFromTag());
+    if (existingPeer != null) {
+      existingPeer.getCall().processReplacingInvite(sourceProvider,serverTransaction,existingPeer);
+    }
+ else {
+      protocolProvider.sayErrorSilently(serverTransaction,Response.CALL_OR_TRANSACTION_DOES_NOT_EXIST);
+    }
+    return;
+  }
+  if (autoAnswerOpSet != null && autoAnswerOpSet.forwardCall(invite,serverTransaction)) {
+    return;
+  }
+  CallSipImpl call=new CallSipImpl(this);
+  MediaAwareCallPeer<?,?,?> peer=call.processInvite(sourceProvider,serverTransaction);
+  if (failServerTranForInsufficientSecurity(peer,serverTransaction)) {
+    return;
+  }
+  if (autoAnswerOpSet != null) {
+    autoAnswerOpSet.autoAnswer(call);
   }
 }

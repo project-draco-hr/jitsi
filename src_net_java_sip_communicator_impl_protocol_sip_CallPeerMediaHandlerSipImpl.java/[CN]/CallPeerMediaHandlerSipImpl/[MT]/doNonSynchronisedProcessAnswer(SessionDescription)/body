@@ -1,0 +1,88 @@
+{
+  List<MediaDescription> remoteDescriptions=SdpUtils.extractMediaDescriptions(answer);
+  this.setCallInfoURL(SdpUtils.getCallInfoURL(answer));
+  boolean masterStreamSet=false;
+  List<MediaType> seenMediaTypes=new ArrayList<MediaType>();
+  for (  MediaDescription mediaDescription : remoteDescriptions) {
+    MediaType mediaType;
+    try {
+      mediaType=SdpUtils.getMediaType(mediaDescription);
+      if (seenMediaTypes.contains(mediaType))       continue;
+      seenMediaTypes.add(mediaType);
+    }
+ catch (    IllegalArgumentException iae) {
+      logger.info("Remote party added to answer a media type that " + "we don't understand. Ignoring stream.");
+      continue;
+    }
+    MediaStreamTarget target=SdpUtils.extractDefaultTarget(mediaDescription,answer);
+    if (target.getDataAddress().getPort() == 0) {
+      closeStream(mediaType);
+      continue;
+    }
+    List<MediaFormat> supportedFormats=SdpUtils.extractFormats(mediaDescription,getDynamicPayloadTypes());
+    MediaDevice dev=getDefaultDevice(mediaType);
+    if (!isDeviceActive(dev)) {
+      closeStream(mediaType);
+      continue;
+    }
+    MediaDirection devDirection=(dev == null) ? MediaDirection.INACTIVE : dev.getDirection();
+    devDirection=devDirection.and(getDirectionUserPreference(mediaType));
+    if (supportedFormats.isEmpty()) {
+      ProtocolProviderServiceSipImpl.throwOperationFailedException("Remote party sent an invalid SDP answer. The codecs in " + "the answer are either not present or not " + "supported",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
+    }
+    StreamConnector connector=getTransportManager().getStreamConnector(mediaType);
+    MediaDirection remoteDirection=SdpUtils.getDirection(mediaDescription);
+    MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
+    if (isLocallyOnHold())     direction=direction.and(MediaDirection.SENDONLY);
+    List<RTPExtension> remoteRTPExtensions=SdpUtils.extractRTPExtensions(mediaDescription,getRtpExtensionsRegistry());
+    List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
+    List<RTPExtension> rtpExtensions=intersectRTPExtensions(remoteRTPExtensions,supportedExtensions);
+    if (mediaType.equals(MediaType.VIDEO)) {
+      supportQualityControls=SdpUtils.containsAttribute(mediaDescription,"imageattr");
+    }
+    Map<MediaTypeSrtpControl,SrtpControl> srtpControls=getSrtpControls();
+    MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.SDES);
+    SrtpControl scontrol=srtpControls.get(key);
+    if (scontrol != null) {
+      if (selectSdesCryptoSuite(true,(SDesControl)scontrol,mediaDescription) == null) {
+        scontrol.cleanup();
+        srtpControls.remove(key);
+        logger.warn("Received unsupported sdes crypto attribute.");
+      }
+ else {
+        Iterator<Map.Entry<MediaTypeSrtpControl,SrtpControl>> iter=srtpControls.entrySet().iterator();
+        while (iter.hasNext()) {
+          Map.Entry<MediaTypeSrtpControl,SrtpControl> entry=iter.next();
+          MediaTypeSrtpControl mtsc=entry.getKey();
+          if ((mtsc.mediaType == mediaType) && (mtsc.srtpControlType != SrtpControlType.SDES)) {
+            entry.getValue().cleanup();
+            iter.remove();
+          }
+        }
+        addAdvertisedEncryptionMethod(SrtpControlType.SDES);
+      }
+    }
+    boolean masterStream=false;
+    if (!masterStreamSet) {
+      if (remoteDescriptions.size() > 1) {
+        if (mediaType.equals(MediaType.AUDIO)) {
+          masterStream=true;
+          masterStreamSet=true;
+        }
+      }
+ else {
+        masterStream=true;
+        masterStreamSet=true;
+      }
+    }
+    try {
+      if (mediaDescription.getAttribute(SdpUtils.ZRTP_HASH_ATTR) != null) {
+        addAdvertisedEncryptionMethod(SrtpControlType.ZRTP);
+      }
+    }
+ catch (    SdpParseException e) {
+      logger.error("received an unparsable sdp attribute",e);
+    }
+    initStream(connector,dev,supportedFormats.get(0),target,direction,rtpExtensions,masterStream);
+  }
+}
