@@ -53,7 +53,25 @@
         }
         FileElement file=new FileElement(name,fileSize);
         file.setHash(hash);
-        if (date != null)         file.setDate(DelayInformation.XEP_0091_UTC_FORMAT.parse(date));
+        if (date != null) {
+          boolean found=false;
+          if (date.matches(".*?T\\d+:\\d+:\\d+(\\.\\d+)?(\\+|-)\\d+:\\d+")) {
+            int timeZoneColon=date.lastIndexOf(":");
+            date=date.substring(0,timeZoneColon) + date.substring(timeZoneColon + 1,date.length());
+          }
+          for (          DateFormat fmt : dateFormats) {
+            try {
+              file.setDate(fmt.parse(date));
+              found=true;
+              break;
+            }
+ catch (            ParseException ex) {
+            }
+          }
+          if (!found) {
+            logger.warn("Unknown dateformat on incoming file transfer: " + date);
+          }
+        }
         if (thumbnail != null)         file.setThumbnailElement(thumbnail);
         file.setDesc(desc);
         file.setRanged(isRanged);
