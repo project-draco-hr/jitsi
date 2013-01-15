@@ -1,7 +1,7 @@
 {
   MediaFormat alreadyMappedFmt=findFormat(payloadType);
   if (alreadyMappedFmt != null) {
-    if (alreadyMappedFmt.equals(format)) {
+    if (alreadyMappedFmt.matches(format)) {
       return;
     }
     byte newlyObtainedPT=obtainPayloadTypeNumber(format);
@@ -10,11 +10,9 @@
   if (payloadType < MediaFormat.MIN_DYNAMIC_PAYLOAD_TYPE) {
     throw new IllegalArgumentException(payloadType + " is not a valid dynamic payload type number." + " (must be between "+ MediaFormat.MIN_DYNAMIC_PAYLOAD_TYPE+ " and "+ MediaFormat.MAX_DYNAMIC_PAYLOAD_TYPE);
   }
-  if (payloadTypeMappings.containsKey(format)) {
-    byte originalPayloadType=payloadTypeMappings.get(format);
-    if (originalPayloadType != payloadType) {
-      payloadTypeOverrides.put(originalPayloadType,payloadType);
-    }
+  Byte originalPayloadType=getPayloadType(format);
+  if (originalPayloadType != null && originalPayloadType != payloadType) {
+    payloadTypeOverrides.put(originalPayloadType,payloadType);
   }
  else {
     payloadTypeMappings.put(format,Byte.valueOf(payloadType));
