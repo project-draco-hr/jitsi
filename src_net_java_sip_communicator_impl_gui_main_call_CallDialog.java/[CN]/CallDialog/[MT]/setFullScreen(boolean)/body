@@ -1,0 +1,41 @@
+{
+  GraphicsConfiguration graphicsConfiguration=getGraphicsConfiguration();
+  if (graphicsConfiguration != null) {
+    GraphicsDevice device=graphicsConfiguration.getDevice();
+    if (device != null) {
+      boolean thisIsFullScreen=equals(device.getFullScreenWindow());
+      boolean firePropertyChange=false;
+      boolean setVisible=isVisible();
+      try {
+        if (fullScreen) {
+          if (!thisIsFullScreen) {
+            windowDispose();
+            setUndecorated(true);
+            device.setFullScreenWindow(this);
+            firePropertyChange=true;
+          }
+        }
+ else         if (thisIsFullScreen) {
+          windowDispose();
+          setUndecorated(false);
+          device.setFullScreenWindow(null);
+          firePropertyChange=true;
+        }
+        if (firePropertyChange) {
+          if (fullScreen) {
+            addWindowStateListener(windowStateListener);
+            getContentPane().setBackground(Color.BLACK);
+          }
+ else {
+            removeWindowStateListener(windowStateListener);
+            getContentPane().setBackground(null);
+          }
+          firePropertyChange(PROP_FULL_SCREEN,thisIsFullScreen,fullScreen);
+        }
+      }
+  finally {
+        if (setVisible)         setVisible(true);
+      }
+    }
+  }
+}
