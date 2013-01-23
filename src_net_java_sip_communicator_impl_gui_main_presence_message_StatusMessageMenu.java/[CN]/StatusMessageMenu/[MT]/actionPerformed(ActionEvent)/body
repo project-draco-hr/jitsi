@@ -2,11 +2,25 @@
   JMenuItem menuItem=(JMenuItem)e.getSource();
   String statusMessage="";
   if (menuItem.equals(newMessageItem)) {
-    NewStatusMessageDialog dialog=new NewStatusMessageDialog(protocolProvider);
+    NewStatusMessageDialog dialog=new NewStatusMessageDialog(protocolProvider,this);
     dialog.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - dialog.getWidth() / 2,Toolkit.getDefaultToolkit().getScreenSize().height / 2 - dialog.getHeight() / 2);
     dialog.setVisible(true);
     dialog.requestFocusInField();
     return;
+  }
+ else   if (menuItem.equals(clearCustomMessageItem)) {
+    int lastIx=-1;
+    for (    Component c : getMenuComponents()) {
+      if (c instanceof CustomMessageItems) {
+        lastIx=getPopupMenu().getComponentIndex(c);
+        remove((CustomMessageItems)c);
+      }
+    }
+    if (lastIx - 1 >= 0)     getPopupMenu().remove(lastIx - 1);
+    java.util.List<String> customMessagesProps=GuiActivator.getConfigurationService().getPropertyNamesByPrefix(CUSTOM_MESSAGES_PREFIX,false);
+    for (    String p : customMessagesProps) {
+      GuiActivator.getConfigurationService().removeProperty(p);
+    }
   }
  else   if (menuItem.equals(busyMessageItem)) {
     statusMessage=BUSY_MESSAGE;
@@ -14,5 +28,11 @@
  else   if (menuItem.equals(brbMessageItem)) {
     statusMessage=BRB_MESSAGE;
   }
-  new PublishStatusMessageThread(statusMessage).start();
+ else   if (menuItem instanceof CustomMessageItems) {
+    statusMessage=menuItem.getName();
+  }
+ else   if (menuItem instanceof ProvisionedMessageItems) {
+    statusMessage=menuItem.getName();
+  }
+  publishStatusMessage(statusMessage,menuItem,false);
 }

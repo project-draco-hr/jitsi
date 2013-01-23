@@ -1,0 +1,43 @@
+{
+  if (menuItem == null)   return;
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        setCurrentMessage(message,menuItem,saveNewMessage);
+      }
+    }
+);
+    return;
+  }
+  if (StringUtils.isNullOrEmpty(message)) {
+    clearSelectedItems();
+    parentMenu.updateTitleArea();
+    return;
+  }
+  if (menuItem.equals(newMessageItem)) {
+    clearSelectedItems();
+    CustomMessageItems newMenuItem=new CustomMessageItems(message);
+    newMenuItem.setName(message);
+    newMenuItem.setSelected(true);
+    newMenuItem.addActionListener(this);
+    int ix=getLastCustomMessageIndex();
+    if (ix == -1) {
+      this.addSeparator();
+      this.add(newMenuItem);
+    }
+ else {
+      insert(newMenuItem,ix + 1);
+    }
+    parentMenu.updateTitleArea();
+    if (saveNewMessage) {
+      int saveIx=getLastCustomStatusMessageIndex();
+      GuiActivator.getConfigurationService().setProperty(CUSTOM_MESSAGES_PREFIX + "." + String.valueOf(saveIx + 1),message);
+    }
+  }
+ else   if (menuItem instanceof JCheckBoxMenuItem) {
+    clearSelectedItems();
+    menuItem.setSelected(true);
+    menuItem.setText("<html><b>" + menuItem.getName() + "</b></html>");
+    parentMenu.updateTitleArea();
+  }
+}
