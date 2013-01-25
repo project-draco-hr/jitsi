@@ -1,0 +1,31 @@
+{
+  String statusMessage="";
+  if (menuItem.equals(newMessageItem)) {
+    NewStatusMessageDialog dialog=new NewStatusMessageDialog(protocolProvider,this);
+    dialog.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - dialog.getWidth() / 2,Toolkit.getDefaultToolkit().getScreenSize().height / 2 - dialog.getHeight() / 2);
+    dialog.setVisible(true);
+    dialog.requestFocusInField();
+    return;
+  }
+ else   if (menuItem.equals(clearCustomMessageItem)) {
+    removeAllCustomStatusMessages();
+    java.util.List<String> customMessagesProps=DesktopUtilActivator.getConfigurationService().getPropertyNamesByPrefix(CUSTOM_MESSAGES_PREFIX,false);
+    for (    String p : customMessagesProps) {
+      DesktopUtilActivator.getConfigurationService().removeProperty(p);
+    }
+    fireCustomStatusMessagesUpdated();
+  }
+ else   if (menuItem.equals(busyMessageItem)) {
+    statusMessage=BUSY_MESSAGE;
+  }
+ else   if (menuItem.equals(brbMessageItem)) {
+    statusMessage=BRB_MESSAGE;
+  }
+ else   if (menuItem instanceof CustomMessageItems) {
+    statusMessage=((CustomMessageItems)menuItem).getName();
+  }
+ else   if (menuItem instanceof ProvisionedMessageItems) {
+    statusMessage=((ProvisionedMessageItems)menuItem).getName();
+  }
+  publishStatusMessage(statusMessage,menuItem,false);
+}

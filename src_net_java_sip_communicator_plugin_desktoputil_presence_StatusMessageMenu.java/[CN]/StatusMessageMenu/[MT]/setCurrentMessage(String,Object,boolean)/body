@@ -1,0 +1,39 @@
+{
+  if (menuItem == null)   return;
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        setCurrentMessage(message,menuItem,saveNewMessage);
+      }
+    }
+);
+    return;
+  }
+  String oldMesage=getCurrentMessage();
+  if (StringUtils.isNullOrEmpty(message)) {
+    clearSelectedItems();
+    fireStatusMessageUpdated(oldMesage,null);
+    return;
+  }
+  if (menuItem.equals(newMessageItem)) {
+    clearSelectedItems();
+    int ix=getLastCustomMessageIndex();
+    if (ix == -1) {
+      this.addSeparator();
+      createsCustomMessageItem(message,-1,true);
+    }
+ else {
+      createsCustomMessageItem(message,ix + 1,true);
+    }
+    if (saveNewMessage) {
+      int saveIx=getLastCustomStatusMessageIndex();
+      DesktopUtilActivator.getConfigurationService().setProperty(CUSTOM_MESSAGES_PREFIX + "." + String.valueOf(saveIx + 1),message);
+    }
+    fireCustomStatusMessagesUpdated();
+    fireStatusMessageUpdated(oldMesage,message);
+  }
+ else   if (menuItem instanceof JCheckBoxMenuItem || menuItem instanceof CheckboxMenuItem) {
+    clearSelectedItems();
+    selectMenuItem(menuItem,oldMesage);
+  }
+}
