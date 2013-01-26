@@ -2,14 +2,11 @@
   this.bundleContext=bc;
   ServiceReference refConfig=bundleContext.getServiceReference(ConfigurationService.class.getName());
   configService=(ConfigurationService)bundleContext.getService(refConfig);
-  String isMessageHistoryEnabledPropertyString="impl.msghistory.IS_MESSAGE_HISTORY_ENABLED";
-  String isMessageHistoryEnabledString=configService.getString(isMessageHistoryEnabledPropertyString);
-  if (isMessageHistoryEnabledString == null)   isMessageHistoryEnabledString=getResources().getSettingsString(isMessageHistoryEnabledPropertyString);
-  if (isMessageHistoryEnabledString == null || isMessageHistoryEnabledString.length() == 0)   return;
-  boolean isMessageHistoryEnabled=new Boolean(isMessageHistoryEnabledString).booleanValue();
-  if (!isMessageHistoryEnabled)   return;
+  boolean isMessageHistoryEnabled=configService.getBoolean(MessageHistoryService.PNAME_IS_MESSAGE_HISTORY_ENABLED,Boolean.parseBoolean(getResources().getSettingsString(MessageHistoryService.PNAME_IS_MESSAGE_HISTORY_ENABLED)));
   msgHistoryPropListener=new MessageHistoryPropertyChangeListener();
-  configService.addPropertyChangeListener("impl.msghistory.IS_MESSAGE_HISTORY_ENABLED",msgHistoryPropListener);
-  if (logger.isDebugEnabled())   logger.debug("Starting the msg history implementation.");
-  this.loadMessageHistoryService();
+  configService.addPropertyChangeListener(MessageHistoryService.PNAME_IS_MESSAGE_HISTORY_ENABLED,msgHistoryPropListener);
+  if (isMessageHistoryEnabled) {
+    if (logger.isDebugEnabled())     logger.debug("Starting the msg history implementation.");
+    this.loadMessageHistoryService();
+  }
 }
