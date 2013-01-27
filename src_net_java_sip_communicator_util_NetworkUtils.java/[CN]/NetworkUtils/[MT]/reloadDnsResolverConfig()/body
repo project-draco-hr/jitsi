@@ -1,0 +1,23 @@
+{
+  ResolverConfig.refresh();
+  try {
+    ((ParallelResolver)parallelResolver).refreshResolver();
+  }
+ catch (  Throwable t) {
+    logger.error("Error reloading dns util activator");
+  }
+  if (parallelResolver instanceof ParallelResolver) {
+synchronized (parallelResolverLock) {
+      ((ParallelResolver)parallelResolver).reset();
+    }
+  }
+  if (logger.isTraceEnabled()) {
+    StringBuilder sb=new StringBuilder();
+    sb.append("Reloaded resolver config, active DNS servers are: ");
+    for (    String s : ResolverConfig.getCurrentConfig().servers()) {
+      sb.append(s);
+      sb.append(", ");
+    }
+    logger.trace(sb.toString());
+  }
+}
