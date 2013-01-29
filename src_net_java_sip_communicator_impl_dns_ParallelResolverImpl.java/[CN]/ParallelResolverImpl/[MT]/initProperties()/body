@@ -1,9 +1,24 @@
 {
+  String rslvrAddrStr=UtilActivator.getConfigurationService().getString(DnsUtilActivator.PNAME_BACKUP_RESOLVER,DnsUtilActivator.DEFAULT_BACKUP_RESOLVER);
+  String customResolverIP=UtilActivator.getConfigurationService().getString(DnsUtilActivator.PNAME_BACKUP_RESOLVER_FALLBACK_IP,UtilActivator.getResources().getSettingsString(DnsUtilActivator.PNAME_BACKUP_RESOLVER_FALLBACK_IP));
+  InetAddress resolverAddress=null;
   try {
-    currentDnsPatience=DnsUtilActivator.getConfigurationService().getLong(PNAME_DNS_PATIENCE,DNS_PATIENCE);
-    currentDnsRedemption=DnsUtilActivator.getConfigurationService().getInt(PNAME_DNS_REDEMPTION,DNS_REDEMPTION);
+    resolverAddress=NetworkUtils.getInetAddress(rslvrAddrStr);
   }
- catch (  Throwable t) {
-    logger.info("Failed to initialize DNS resolver properties",t);
+ catch (  UnknownHostException exc) {
+    logger.warn("Oh! Seems like our primary DNS is down!" + "Don't panic! We'll try to fall back to " + customResolverIP);
   }
+  if (resolverAddress == null) {
+    try {
+      resolverAddress=NetworkUtils.getInetAddress(customResolverIP);
+    }
+ catch (    UnknownHostException e) {
+      logger.error(e);
+    }
+  }
+  int resolverPort=UtilActivator.getConfigurationService().getInt(DnsUtilActivator.PNAME_BACKUP_RESOLVER_PORT,SimpleResolver.DEFAULT_PORT);
+  InetSocketAddress resolverSockAddr=new InetSocketAddress(resolverAddress,resolverPort);
+  setBackupServers(new InetSocketAddress[]{resolverSockAddr});
+  currentDnsPatience=DnsUtilActivator.getConfigurationService().getLong(PNAME_DNS_PATIENCE,DNS_PATIENCE);
+  currentDnsRedemption=DnsUtilActivator.getConfigurationService().getInt(PNAME_DNS_REDEMPTION,DNS_REDEMPTION);
 }
