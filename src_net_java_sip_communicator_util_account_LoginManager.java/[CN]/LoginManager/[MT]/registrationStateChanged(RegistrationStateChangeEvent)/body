@@ -1,0 +1,58 @@
+{
+  RegistrationState newState=evt.getNewState();
+  ProtocolProviderService protocolProvider=evt.getProvider();
+  AccountID accountID=protocolProvider.getAccountID();
+  if (logger.isTraceEnabled())   logger.trace("Protocol provider: " + protocolProvider + " changed its state to: "+ evt.getNewState().getStateName());
+  if (newState.equals(RegistrationState.REGISTERED) || newState.equals(RegistrationState.UNREGISTERED) || newState.equals(RegistrationState.EXPIRED)|| newState.equals(RegistrationState.AUTHENTICATION_FAILED)|| newState.equals(RegistrationState.CONNECTION_FAILED)|| newState.equals(RegistrationState.CHALLENGED_FOR_AUTHENTICATION)|| newState.equals(RegistrationState.REGISTERED)) {
+    loginRenderer.stopConnectingUI(protocolProvider);
+  }
+  if (newState.equals(RegistrationState.REGISTERED)) {
+    loginRenderer.protocolProviderConnected(protocolProvider,System.currentTimeMillis());
+  }
+ else {
+    String msgText;
+    if (newState.equals(RegistrationState.AUTHENTICATION_FAILED)) {
+switch (evt.getReasonCode()) {
+case RegistrationStateChangeEvent.REASON_RECONNECTION_RATE_LIMIT_EXCEEDED:
+        msgText=UtilActivator.getResources().getI18NString("service.gui.RECONNECTION_LIMIT_EXCEEDED",new String[]{accountID.getUserID(),accountID.getService()});
+      UtilActivator.getAlertUIService().showAlertDialog(UtilActivator.getResources().getI18NString("service.gui.ERROR"),msgText);
+    break;
+case RegistrationStateChangeEvent.REASON_NON_EXISTING_USER_ID:
+  msgText=UtilActivator.getResources().getI18NString("service.gui.NON_EXISTING_USER_ID",new String[]{protocolProvider.getProtocolDisplayName()});
+UtilActivator.getAlertUIService().showAlertDialog(UtilActivator.getResources().getI18NString("service.gui.ERROR"),msgText);
+break;
+case RegistrationStateChangeEvent.REASON_TLS_REQUIRED:
+msgText=UtilActivator.getResources().getI18NString("service.gui.NON_SECURE_CONNECTION",new String[]{accountID.getAccountAddress()});
+UtilActivator.getAlertUIService().showAlertDialog(UtilActivator.getResources().getI18NString("service.gui.ERROR"),msgText);
+break;
+default :
+break;
+}
+if (logger.isTraceEnabled()) logger.trace(evt.getReason());
+}
+ else if (newState.equals(RegistrationState.EXPIRED)) {
+msgText=UtilActivator.getResources().getI18NString("service.gui.CONNECTION_EXPIRED_MSG",new String[]{protocolProvider.getProtocolDisplayName()});
+UtilActivator.getAlertUIService().showAlertDialog(UtilActivator.getResources().getI18NString("service.gui.ERROR"),msgText);
+logger.error(evt.getReason());
+}
+ else if (newState.equals(RegistrationState.UNREGISTERED)) {
+if (!manuallyDisconnected) {
+if (evt.getReasonCode() == RegistrationStateChangeEvent.REASON_MULTIPLE_LOGINS) {
+msgText=UtilActivator.getResources().getI18NString("service.gui.MULTIPLE_LOGINS",new String[]{accountID.getUserID(),accountID.getService()});
+UtilActivator.getAlertUIService().showAlertDialog(UtilActivator.getResources().getI18NString("service.gui.ERROR"),msgText);
+}
+ else if (evt.getReasonCode() == RegistrationStateChangeEvent.REASON_CLIENT_LIMIT_REACHED_FOR_IP) {
+msgText=UtilActivator.getResources().getI18NString("service.gui.LIMIT_REACHED_FOR_IP",new String[]{protocolProvider.getProtocolDisplayName()});
+UtilActivator.getAlertUIService().showAlertDialog(UtilActivator.getResources().getI18NString("service.gui.ERROR"),msgText);
+}
+ else if (evt.getReasonCode() == RegistrationStateChangeEvent.REASON_USER_REQUEST) {
+}
+ else {
+msgText=UtilActivator.getResources().getI18NString("service.gui.UNREGISTERED_MESSAGE",new String[]{accountID.getUserID(),accountID.getService()});
+UtilActivator.getAlertUIService().showAlertDialog(UtilActivator.getResources().getI18NString("service.gui.ERROR"),msgText);
+}
+if (logger.isTraceEnabled()) logger.trace(evt.getReason());
+}
+}
+}
+}
