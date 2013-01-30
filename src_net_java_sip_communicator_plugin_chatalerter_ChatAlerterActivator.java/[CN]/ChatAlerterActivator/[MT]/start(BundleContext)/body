@@ -1,26 +1,15 @@
 {
+  this.bundleContext=bc;
+  ServiceUtils.getService(bundleContext,ConfigurationService.class).addPropertyChangeListener(ConfigurationUtils.ALERTER_ENABLED_PROP,this);
   try {
+    if (!ConfigurationUtils.isAlerterEnabled()) {
+      return;
+    }
     if (!OSUtils.IS_MAC)     Alerter.newInstance();
   }
  catch (  Exception exception) {
     if (logger.isInfoEnabled())     logger.info("The Alerter not supported or problem loading it!",exception);
     return;
   }
-  this.bundleContext=bc;
-  bc.addServiceListener(this);
-  ServiceReference[] protocolProviderRefs;
-  try {
-    protocolProviderRefs=bc.getServiceReferences(ProtocolProviderService.class.getName(),null);
-  }
- catch (  InvalidSyntaxException ex) {
-    logger.error("Error while retrieving service refs",ex);
-    return;
-  }
-  if (protocolProviderRefs != null) {
-    if (logger.isDebugEnabled())     logger.debug("Found " + protocolProviderRefs.length + " already installed providers.");
-    for (    ServiceReference protocolProviderRef : protocolProviderRefs) {
-      ProtocolProviderService provider=(ProtocolProviderService)bc.getService(protocolProviderRef);
-      this.handleProviderAdded(provider);
-    }
-  }
+  startInternal(bc);
 }
