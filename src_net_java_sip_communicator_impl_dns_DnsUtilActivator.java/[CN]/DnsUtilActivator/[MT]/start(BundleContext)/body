@@ -1,12 +1,16 @@
 {
+  logger.info("DNS service ... [STARTING]");
   bundleContext=context;
   context.addServiceListener(this);
   if (UtilActivator.getConfigurationService().getBoolean(DnsUtilActivator.PNAME_BACKUP_RESOLVER_ENABLED,DnsUtilActivator.PDEFAULT_BACKUP_RESOLVER_ENABLED) && !getConfigurationService().getBoolean(CustomResolver.PNAME_DNSSEC_RESOLVER_ENABLED,CustomResolver.PDEFAULT_DNSSEC_RESOLVER_ENABLED)) {
     bundleContext.registerService(CustomResolver.class.getName(),new ParallelResolverImpl(),null);
+    logger.info("ParallelResolver ... [REGISTERED]");
   }
   if (getConfigurationService().getBoolean(CustomResolver.PNAME_DNSSEC_RESOLVER_ENABLED,CustomResolver.PDEFAULT_DNSSEC_RESOLVER_ENABLED)) {
     bundleContext.registerService(CustomResolver.class.getName(),new ConfigurableDnssecResolver(),null);
+    logger.info("DnssecResolver ... [REGISTERED]");
   }
   dnsConfigActivator=new DnsConfigActivator();
   dnsConfigActivator.start(context);
+  logger.info("DNS service ... [STARTED]");
 }
