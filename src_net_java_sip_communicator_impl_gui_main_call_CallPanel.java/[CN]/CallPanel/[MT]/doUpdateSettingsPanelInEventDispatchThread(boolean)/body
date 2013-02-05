@@ -18,6 +18,8 @@
   boolean videoTelephony=false;
   boolean videoTelephonyIsLocalVideoAllowed=false;
   boolean videoTelephonyIsLocalVideoStreaming=false;
+  boolean desktopSharing=false;
+  boolean desktopSharingIsStreamed=false;
   for (  Call call : calls) {
     ProtocolProviderService pps=call.getProtocolProvider();
     if (advancedTelephony) {
@@ -36,6 +38,15 @@
         if (!videoTelephonyIsLocalVideoStreaming && osvt.isLocalVideoStreaming(call))         videoTelephonyIsLocalVideoStreaming=true;
       }
     }
+    if (!desktopSharing) {
+      OperationSetDesktopStreaming osds=pps.getOperationSet(OperationSetDesktopStreaming.class);
+      if (osds != null) {
+        desktopSharing=true;
+        if (videoTelephonyIsLocalVideoStreaming && call instanceof MediaAwareCall && ((MediaAwareCall)call).getMediaUseCase() == MediaUseCase.DESKTOP) {
+          desktopSharingIsStreamed=true;
+        }
+      }
+    }
   }
   conferenceButton.setEnabled(telephonyConferencing);
   transferCallButton.setEnabled(advancedTelephony);
@@ -45,4 +56,11 @@
   showHideVideoButton.setEnabled(videoButton.isEnabled() && videoTelephonyIsLocalVideoAllowed);
   showHideVideoButton.setSelected(showHideVideoButton.isEnabled() && uiVideoHandler.isLocalVideoVisible());
   showHideVideoButton.setVisible(showHideVideoButton.isEnabled());
+  desktopSharingButton.setEnabled(desktopSharing);
+  desktopSharingButton.setSelected(desktopSharingIsStreamed);
+  if (callPanel instanceof OneToOneCallPanel) {
+    OneToOneCallPanel oneToOneCallPanel=(OneToOneCallPanel)callPanel;
+    if (desktopSharingIsStreamed)     oneToOneCallPanel.addDesktopSharingComponents();
+ else     oneToOneCallPanel.removeDesktopSharingComponents();
+  }
 }
