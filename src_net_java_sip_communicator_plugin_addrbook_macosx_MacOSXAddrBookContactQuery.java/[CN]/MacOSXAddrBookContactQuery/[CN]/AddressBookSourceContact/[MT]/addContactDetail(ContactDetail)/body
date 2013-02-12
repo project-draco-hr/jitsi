@@ -1,0 +1,60 @@
+{
+  String id=(String)getData(SOURCE_CONTACT_ID_DATA_KEY);
+  if (id == null) {
+    logger.warn("No id or wrong ContactDetail");
+    return;
+  }
+  int property=getProperty(detail.getCategory(),detail.getSubCategories());
+  if (isMultiline(detail.getCategory())) {
+    String subProperty=null;
+    if (detail instanceof AddressBookContactDetail) {
+      subProperty=((AddressBookContactDetail)detail).getSubPropertyLabel();
+    }
+    List<ContactDetail> details=getContactDetails(detail.getCategory());
+    ArrayList values=new ArrayList();
+    for (    ContactDetail cd : details) {
+      if (subProperty != null && cd instanceof AddressBookContactDetail && !subProperty.equals(((AddressBookContactDetail)cd).getSubPropertyLabel())) {
+        continue;
+      }
+      String det=cd.getDetail();
+      for (      ContactDetail.SubCategory sub : cd.getSubCategories()) {
+        String label=getLabel(property,sub);
+        if (label != null) {
+          if (property == kABInstantMessageProperty) {
+            values.add(det);
+            values.add(kABInstantMessageUsernameKey());
+            values.add(label);
+            values.add(kABInstantMessageServiceKey());
+          }
+ else {
+            values.add(det);
+            values.add(label);
+          }
+        }
+ else         logger.warn("Missing label fo prop:" + property + " and sub:"+ sub);
+      }
+    }
+    for (    ContactDetail.SubCategory sub : detail.getSubCategories()) {
+      String label=getLabel(property,sub);
+      if (label != null) {
+        if (property == kABInstantMessageProperty) {
+          values.add(detail.getDetail());
+          values.add(kABInstantMessageUsernameKey());
+          values.add(label);
+          values.add(kABInstantMessageServiceKey());
+        }
+ else {
+          values.add(detail.getDetail());
+          values.add(label);
+        }
+      }
+ else       logger.warn("Missing label fo prop:" + property + " and sub:"+ sub);
+    }
+    setProperty(id,ABPERSON_PROPERTIES[property],subProperty,values.toArray(new Object[values.size()]));
+  }
+ else {
+    setProperty(id,ABPERSON_PROPERTIES[property],null,detail.getDetail());
+  }
+  Collection<ContactDetail.SubCategory> subCategories=detail.getSubCategories();
+  contactDetails.add(new AddressBookContactDetail(property,detail.getDetail(),detail.getCategory(),subCategories.toArray(new ContactDetail.SubCategory[subCategories.size()]),null));
+}

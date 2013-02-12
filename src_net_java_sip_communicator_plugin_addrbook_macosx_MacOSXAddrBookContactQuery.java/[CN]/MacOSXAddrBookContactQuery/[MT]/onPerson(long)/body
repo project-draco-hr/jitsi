@@ -1,10 +1,15 @@
 {
   Object[] values=ABRecord_valuesForProperties(person,ABPERSON_PROPERTIES);
+  final String id=ABRecord_uniqueId(person);
   String displayName=getDisplayName(values);
   if ((displayName.length() != 0) && (query.matcher(displayName).find() || matches(values))) {
     List<ContactDetail> contactDetails=getContactDetails(values);
     if (!contactDetails.isEmpty()) {
-      GenericSourceContact sourceContact=new GenericSourceContact(getContactSource(),displayName,contactDetails);
+      final AddressBookSourceContact sourceContact=new AddressBookSourceContact(getContactSource(),displayName,contactDetails);
+      sourceContact.setData(SOURCE_CONTACT_ID_DATA_KEY,id);
+      for (      ContactDetail cd : contactDetails) {
+        if (cd instanceof AddressBookContactDetail)         ((AddressBookContactDetail)cd).setId(id);
+      }
       try {
         byte[] image=ABPerson_imageData(person);
         if (image != null)         sourceContact.setImage(image);

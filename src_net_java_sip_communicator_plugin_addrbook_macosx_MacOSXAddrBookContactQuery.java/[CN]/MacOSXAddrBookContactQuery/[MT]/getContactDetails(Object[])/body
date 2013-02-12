@@ -1,29 +1,17 @@
 {
   List<ContactDetail> contactDetails=new LinkedList<ContactDetail>();
-  for (int i=0; i < CONTACT_DETAIL_PROPERTY_INDEXES.length; i++) {
-    int property=CONTACT_DETAIL_PROPERTY_INDEXES[i];
+  for (int i=0; i < ABPERSON_PROPERTIES.length; i++) {
+    int property=i;
     Object value=values[property];
     if (value instanceof String) {
       String stringValue=(String)value;
       if (stringValue.length() != 0) {
         if (kABPhoneProperty == property)         stringValue=PhoneNumberI18nService.normalize(stringValue);
-        contactDetails.add(setCapabilities(createContactDetail(property,stringValue,null),property));
+        contactDetails.add(setCapabilities(createContactDetail(property,stringValue,null,null),property));
       }
     }
  else     if (value instanceof Object[]) {
-      Object[] multiValue=(Object[])value;
-      for (int multiValueIndex=0; multiValueIndex < multiValue.length; multiValueIndex+=2) {
-        Object subValue=multiValue[multiValueIndex];
-        if (subValue instanceof String) {
-          String stringSubValue=(String)subValue;
-          if (stringSubValue.length() != 0) {
-            if (kABPhoneProperty == property) {
-              stringSubValue=PhoneNumberI18nService.normalize(stringSubValue);
-            }
-            contactDetails.add(setCapabilities(createContactDetail(property,stringSubValue,multiValue[multiValueIndex + 1]),property));
-          }
-        }
-      }
+      parseMultiDetails(contactDetails,(Object[])value,property,null);
     }
   }
   return contactDetails;
