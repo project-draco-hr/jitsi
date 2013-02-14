@@ -1,7 +1,8 @@
 {
-synchronized (syncPendingDeviceSession) {
-    this.pendingDeviceSession=null;
-    syncPendingDeviceSession.notify();
+synchronized (this) {
+    deviceSessionToSet=null;
+    deviceSessionToSetIsNull=true;
+    setDeviceSessionExecutor.execute(setDeviceSessionTask);
   }
   CaptureDeviceInfo cdi;
   if (comboBox == null) {
@@ -18,18 +19,19 @@ synchronized (syncPendingDeviceSession) {
         if (cdi.equals(amd.getCaptureDeviceInfo())) {
           try {
             MediaDeviceSession deviceSession=amd.createSession();
-            boolean setDeviceSession=false;
+            boolean deviceSessionIsSet=false;
             try {
               if (deviceSession instanceof AudioMediaDeviceSession) {
-synchronized (syncPendingDeviceSession) {
-                  this.pendingDeviceSession=(AudioMediaDeviceSession)deviceSession;
-                  syncPendingDeviceSession.notify();
+synchronized (this) {
+                  deviceSessionToSet=(AudioMediaDeviceSession)deviceSession;
+                  deviceSessionToSetIsNull=(deviceSessionToSet == null);
+                  setDeviceSessionExecutor.execute(setDeviceSessionTask);
                 }
-                setDeviceSession=true;
+                deviceSessionIsSet=true;
               }
             }
   finally {
-              if (!setDeviceSession)               deviceSession.close();
+              if (!deviceSessionIsSet)               deviceSession.close();
             }
           }
  catch (          Throwable t) {
