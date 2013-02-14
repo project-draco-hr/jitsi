@@ -11,42 +11,25 @@
       subProperty=((AddressBookContactDetail)detail).getSubPropertyLabel();
     }
     List<ContactDetail> details=getContactDetails(detail.getCategory());
+    boolean isIM=(property == kABICQInstantProperty || property == kABAIMInstantProperty || property == kABYahooInstantProperty || property == kABMSNInstantProperty || property == kABJabberInstantProperty);
     ArrayList values=new ArrayList();
     for (    ContactDetail cd : details) {
-      if (subProperty != null && cd instanceof AddressBookContactDetail && !subProperty.equals(((AddressBookContactDetail)cd).getSubPropertyLabel())) {
-        continue;
-      }
       String det=cd.getDetail();
       for (      ContactDetail.SubCategory sub : cd.getSubCategories()) {
-        String label=getLabel(property,sub);
+        if (isIM && !detail.getSubCategories().contains(sub))         continue;
+        String label=getLabel(property,sub,subProperty);
         if (label != null) {
-          if (property == kABInstantMessageProperty) {
-            values.add(det);
-            values.add(kABInstantMessageUsernameKey());
-            values.add(label);
-            values.add(kABInstantMessageServiceKey());
-          }
- else {
-            values.add(det);
-            values.add(label);
-          }
+          values.add(det);
+          values.add(label);
         }
  else         logger.warn("Missing label fo prop:" + property + " and sub:"+ sub);
       }
     }
     for (    ContactDetail.SubCategory sub : detail.getSubCategories()) {
-      String label=getLabel(property,sub);
+      String label=getLabel(property,sub,subProperty);
       if (label != null) {
-        if (property == kABInstantMessageProperty) {
-          values.add(detail.getDetail());
-          values.add(kABInstantMessageUsernameKey());
-          values.add(label);
-          values.add(kABInstantMessageServiceKey());
-        }
- else {
-          values.add(detail.getDetail());
-          values.add(label);
-        }
+        values.add(detail.getDetail());
+        values.add(label);
       }
  else       logger.warn("Missing label fo prop:" + property + " and sub:"+ sub);
     }
