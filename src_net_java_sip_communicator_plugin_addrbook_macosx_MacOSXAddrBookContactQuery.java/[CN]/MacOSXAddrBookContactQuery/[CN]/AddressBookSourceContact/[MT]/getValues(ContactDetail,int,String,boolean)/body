@@ -1,0 +1,34 @@
+{
+  List<String> values=new ArrayList<String>();
+  List<ContactDetail> details=getContactDetails(detail.getCategory());
+  boolean isIM=(property == kABICQInstantProperty || property == kABAIMInstantProperty || property == kABYahooInstantProperty || property == kABMSNInstantProperty || property == kABJabberInstantProperty);
+  boolean isAddress=property == kABAddressProperty;
+  boolean isHomeAddress=detail.containsSubCategory(SubCategory.Home);
+  for (  ContactDetail cd : details) {
+    if (isAddress) {
+      if ((isHomeAddress && !cd.containsSubCategory(SubCategory.Home)) || (!isHomeAddress && !cd.containsSubCategory(SubCategory.Work)))       continue;
+    }
+    if (cd.equals(detail))     continue;
+    String det=cd.getDetail();
+    for (    SubCategory sub : cd.getSubCategories()) {
+      if (isIM && !detail.getSubCategories().contains(sub))       continue;
+      String label=getLabel(property,sub,subProperty);
+      if (label != null) {
+        values.add(det);
+        values.add(label);
+      }
+    }
+  }
+  if (addDetail) {
+    for (    SubCategory sub : detail.getSubCategories()) {
+      if (isAddress && (sub == SubCategory.Home || sub == SubCategory.Work))       continue;
+      String label=getLabel(property,sub,subProperty);
+      if (label != null) {
+        values.add(detail.getDetail());
+        values.add(label);
+      }
+ else       logger.warn("Missing label fo prop:" + property + " and sub:"+ sub);
+    }
+  }
+  return values;
+}

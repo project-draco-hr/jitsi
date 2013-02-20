@@ -1,0 +1,54 @@
+{
+  ServiceReference[] factoryRefs=null;
+  boolean hasStoredAccounts=false;
+  try {
+    factoryRefs=bundleContext.getServiceReferences(ProtocolProviderFactory.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException ex) {
+    logger.error("Failed to retrieve the registered ProtocolProviderFactories",ex);
+  }
+  if ((factoryRefs != null) && (factoryRefs.length > 0)) {
+    ConfigurationService configService=ProtocolProviderActivator.getConfigurationService();
+    for (    ServiceReference factoryRef : factoryRefs) {
+      ProtocolProviderFactory factory=(ProtocolProviderFactory)bundleContext.getService(factoryRef);
+      if ((protocolName != null) && !protocolName.equals(factory.getProtocolName())) {
+        continue;
+      }
+      String factoryPackage=getFactoryImplPackageName(factory);
+      List<String> storedAccounts=configService.getPropertyNamesByPrefix(factoryPackage,true);
+      for (Iterator<String> storedAccountIter=storedAccounts.iterator(); storedAccountIter.hasNext(); ) {
+        String storedAccount=storedAccountIter.next();
+        List<String> storedAccountProperties=configService.getPropertyNamesByPrefix(storedAccount,true);
+        boolean hidden=false;
+        String accountUserID=null;
+        if (!includeHidden || userID != null) {
+          for (Iterator<String> storedAccountPropertyIter=storedAccountProperties.iterator(); storedAccountPropertyIter.hasNext(); ) {
+            String property=storedAccountPropertyIter.next();
+            String value=configService.getString(property);
+            property=stripPackagePrefix(property);
+            if (ProtocolProviderFactory.IS_PROTOCOL_HIDDEN.equals(property)) {
+              hidden=(value != null);
+            }
+ else             if (ProtocolProviderFactory.USER_ID.equals(property)) {
+              accountUserID=value;
+            }
+          }
+        }
+        if (includeHidden || !hidden) {
+          if (accountUserID != null && userID != null && userID.equals(accountUserID)) {
+            hasStoredAccounts=true;
+            break;
+          }
+ else           if (userID == null) {
+            hasStoredAccounts=true;
+            break;
+          }
+        }
+      }
+      if (hasStoredAccounts || (protocolName != null)) {
+        break;
+      }
+    }
+  }
+  return hasStoredAccounts;
+}
