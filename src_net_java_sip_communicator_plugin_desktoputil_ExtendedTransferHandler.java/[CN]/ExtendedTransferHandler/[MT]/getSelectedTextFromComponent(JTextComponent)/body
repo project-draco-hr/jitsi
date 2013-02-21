@@ -1,0 +1,36 @@
+{
+  String srcData=null;
+  int startIndex=textComponent.getSelectionStart();
+  int endIndex=textComponent.getSelectionEnd();
+  if (startIndex != endIndex) {
+    Document doc=(Document)textComponent.getDocument();
+    int selectionLength=endIndex - startIndex;
+    try {
+      if (textComponent instanceof JTextPane) {
+        JTextPane textPaneComponent=(JTextPane)textComponent;
+        StringWriter stringWriter=new StringWriter();
+        textPaneComponent.getEditorKit().write(stringWriter,doc,startIndex,selectionLength);
+        String data=stringWriter.toString();
+        String smileyHtmlPattern="<\\s*[iI][mM][gG](.*?)" + "[aA][lL][tT]\\s*=\\s*[\\\"']([^\\\"]*)" + "[\\\"'](.*?)>";
+        Pattern p=Pattern.compile(smileyHtmlPattern,Pattern.DOTALL);
+        Matcher m=p.matcher(data);
+        if (m.find()) {
+          data=data.replaceAll("<[/]*PLAINTEXT>.*<[/]*PLAINTEXT>","");
+          data=data.replaceAll("<\\s*[bB][rR][^>]*>","<a></a>");
+          data=data.replaceAll(smileyHtmlPattern,"$2");
+          htmlDoc.remove(0,htmlDoc.getLength());
+          htmlKit.read(new StringReader(data),htmlDoc,0);
+          srcData=htmlDoc.getText(0,htmlDoc.getLength());
+        }
+      }
+      if (srcData == null) {
+        srcData=doc.getText(startIndex,selectionLength);
+      }
+    }
+ catch (    BadLocationException ble) {
+    }
+catch (    IOException ioe) {
+    }
+  }
+  return srcData;
+}
