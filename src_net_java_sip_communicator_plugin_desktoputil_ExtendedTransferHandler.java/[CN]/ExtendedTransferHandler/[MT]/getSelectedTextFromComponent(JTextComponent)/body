@@ -15,11 +15,18 @@
         Pattern p=Pattern.compile(smileyHtmlPattern,Pattern.DOTALL);
         Matcher m=p.matcher(data);
         if (m.find()) {
-          data=data.replaceAll("<[/]*PLAINTEXT>.*<[/]*PLAINTEXT>","");
-          data=data.replaceAll("<\\s*[bB][rR][^>]*>","<a></a>");
-          data=data.replaceAll(smileyHtmlPattern,"$2");
+          int start=0;
+          String tempData="";
+          do {
+            tempData+=data.substring(start,m.start()) + GuiUtils.escapeHTMLChars(m.group(2));
+            start=m.end();
+          }
+ while (m.find());
+          tempData+=data.substring(start);
+          tempData=tempData.replaceAll("<[/]*PLAINTEXT>.*<[/]*PLAINTEXT>","");
+          tempData=tempData.replaceAll("<\\s*[bB][rR][^>]*>","<a></a>");
           htmlDoc.remove(0,htmlDoc.getLength());
-          htmlKit.read(new StringReader(data),htmlDoc,0);
+          htmlKit.read(new StringReader(tempData),htmlDoc,0);
           srcData=htmlDoc.getText(0,htmlDoc.getLength());
         }
       }
