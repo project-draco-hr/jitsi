@@ -105,7 +105,13 @@ byte[] aiaBytes=current.getExtensionValue(X509Extension.authorityInfoAccess.getI
 if (aiaBytes == null) break;
 DEROctetString octs=(DEROctetString)ASN1Object.fromByteArray(aiaBytes);
 ASN1InputStream as=new ASN1InputStream(octs.getOctets());
-AuthorityInformationAccess aia=AuthorityInformationAccess.getInstance(as.readObject());
+AuthorityInformationAccess aia;
+try {
+aia=AuthorityInformationAccess.getInstance(as.readObject());
+}
+  finally {
+as.close();
+}
 for (AccessDescription ad : aia.getAccessDescriptions()) {
 if (!ad.getAccessMethod().equals(AccessDescription.id_ad_caIssuers)) continue;
 GeneralName gn=ad.getAccessLocation();
