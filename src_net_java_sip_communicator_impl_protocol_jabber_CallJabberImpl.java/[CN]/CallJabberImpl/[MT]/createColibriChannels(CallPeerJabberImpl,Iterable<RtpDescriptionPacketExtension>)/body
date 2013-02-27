@@ -1,0 +1,77 @@
+{
+  if (!getConference().isJitsiVideoBridge())   return null;
+  CallPeerMediaHandler<?> peerMediaHandler=peer.getMediaHandler();
+  if (peerMediaHandler.getMediaHandler() != colibriMediaHandler) {
+    for (    MediaType mediaType : MediaType.values())     if (peerMediaHandler.getStream(mediaType) != null)     return null;
+  }
+  ProtocolProviderServiceJabberImpl protocolProvider=getProtocolProvider();
+  String jitsiVideoBridge=(colibri == null) ? protocolProvider.getJitsiVideoBridge() : colibri.getFrom();
+  if ((jitsiVideoBridge == null) || (jitsiVideoBridge.length() == 0))   return null;
+  ColibriConferenceIQ conferenceRequest=new ColibriConferenceIQ();
+  if (colibri != null)   conferenceRequest.setID(colibri.getID());
+  for (  RtpDescriptionPacketExtension rdpe : rdpes) {
+    MediaType mediaType=MediaType.parseString(rdpe.getMedia());
+    String contentName=mediaType.toString();
+    ColibriConferenceIQ.Content contentRequest=new ColibriConferenceIQ.Content(contentName);
+    conferenceRequest.addContent(contentRequest);
+    boolean requestLocalChannel=true;
+    if (colibri != null) {
+      ColibriConferenceIQ.Content content=colibri.getContent(contentName);
+      if ((content != null) && (content.getChannelCount() > 0))       requestLocalChannel=false;
+    }
+    if (requestLocalChannel) {
+      ColibriConferenceIQ.Channel localChannelRequest=new ColibriConferenceIQ.Channel();
+      for (      PayloadTypePacketExtension ptpe : rdpe.getPayloadTypes())       localChannelRequest.addPayloadType(ptpe);
+      contentRequest.addChannel(localChannelRequest);
+    }
+    ColibriConferenceIQ.Channel remoteChannelRequest=new ColibriConferenceIQ.Channel();
+    for (    PayloadTypePacketExtension ptpe : rdpe.getPayloadTypes())     remoteChannelRequest.addPayloadType(ptpe);
+    contentRequest.addChannel(remoteChannelRequest);
+  }
+  XMPPConnection connection=protocolProvider.getConnection();
+  PacketCollector packetCollector=connection.createPacketCollector(new PacketIDFilter(conferenceRequest.getPacketID()));
+  conferenceRequest.setTo(jitsiVideoBridge);
+  conferenceRequest.setType(IQ.Type.GET);
+  connection.sendPacket(conferenceRequest);
+  Packet response=packetCollector.nextResult(SmackConfiguration.getPacketReplyTimeout());
+  packetCollector.cancel();
+  if ((response == null) || (response.getError() != null) || !(response instanceof ColibriConferenceIQ))   return null;
+  ColibriConferenceIQ conferenceResponse=(ColibriConferenceIQ)response;
+  String conferenceResponseID=conferenceResponse.getID();
+  if (colibri == null) {
+    colibri=conferenceResponse;
+  }
+ else {
+    String colibriID=colibri.getID();
+    if (colibriID == null)     colibri.setID(conferenceResponseID);
+ else     if (!colibriID.equals(conferenceResponseID))     throw new IllegalStateException("conference.id");
+    for (    ColibriConferenceIQ.Content contentResponse : conferenceResponse.getContents()) {
+      ColibriConferenceIQ.Content content=colibri.getOrCreateContent(contentResponse.getName());
+      for (      ColibriConferenceIQ.Channel channelResponse : contentResponse.getChannels())       content.addChannel(channelResponse);
+    }
+  }
+  ColibriConferenceIQ conferenceResult=new ColibriConferenceIQ();
+  conferenceResult.setID(conferenceResponseID);
+  for (  RtpDescriptionPacketExtension rdpe : rdpes) {
+    MediaType mediaType=MediaType.parseString(rdpe.getMedia());
+    ColibriConferenceIQ.Content contentResponse=conferenceResponse.getContent(mediaType.toString());
+    if (contentResponse != null) {
+      String contentName=contentResponse.getName();
+      ColibriConferenceIQ.Content contentResult=new ColibriConferenceIQ.Content(contentName);
+      conferenceResult.addContent(contentResult);
+      ColibriConferenceIQ.Content content=colibri.getContent(contentName);
+      ColibriConferenceIQ.Channel localChannel=null;
+      if ((content != null) && (content.getChannelCount() > 0)) {
+        localChannel=content.getChannel(0);
+        contentResult.addChannel(localChannel);
+      }
+      String localChannelID=(localChannel == null) ? null : localChannel.getID();
+      for (      ColibriConferenceIQ.Channel channelResponse : contentResponse.getChannels()) {
+        if ((localChannelID == null) || !localChannelID.equals(channelResponse.getID()))         contentResult.addChannel(channelResponse);
+      }
+    }
+  }
+  if (colibriMediaHandler == null)   colibriMediaHandler=new MediaHandler();
+  peerMediaHandler.setMediaHandler(colibriMediaHandler);
+  return conferenceResult;
+}

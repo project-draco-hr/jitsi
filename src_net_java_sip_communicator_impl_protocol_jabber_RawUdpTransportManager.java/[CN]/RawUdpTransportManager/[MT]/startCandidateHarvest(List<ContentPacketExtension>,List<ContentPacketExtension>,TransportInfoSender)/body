@@ -7,22 +7,22 @@
     for (    ContentPacketExtension cpe : cpes) {
       RtpDescriptionPacketExtension rtpDesc=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
       MediaType mediaType=MediaType.parseString(rtpDesc.getMedia());
-      if ((cobri == null) || (cobri.getContent(mediaType.toString()) == null)) {
+      if ((colibri == null) || (colibri.getContent(mediaType.toString()) == null)) {
         if (!mediaTypes.contains(rtpDesc))         mediaTypes.add(rtpDesc);
       }
     }
     if (mediaTypes.size() != 0) {
-      if (cobri == null)       cobri=new CobriConferenceIQ();
-      for (      RtpDescriptionPacketExtension mediaType : mediaTypes)       cobri.getOrCreateContent(mediaType.getMedia());
-      CobriConferenceIQ conferenceResult=call.createCobriChannels(peer,mediaTypes);
+      if (colibri == null)       colibri=new ColibriConferenceIQ();
+      for (      RtpDescriptionPacketExtension mediaType : mediaTypes)       colibri.getOrCreateContent(mediaType.getMedia());
+      ColibriConferenceIQ conferenceResult=call.createColibriChannels(peer,mediaTypes);
       if (conferenceResult != null) {
-        String videoBridgeID=cobri.getID();
+        String videoBridgeID=colibri.getID();
         String conferenceResultID=conferenceResult.getID();
-        if (videoBridgeID == null)         cobri.setID(conferenceResultID);
+        if (videoBridgeID == null)         colibri.setID(conferenceResultID);
  else         if (!videoBridgeID.equals(conferenceResultID))         throw new IllegalStateException("conference.id");
-        for (        CobriConferenceIQ.Content contentResult : conferenceResult.getContents()) {
-          CobriConferenceIQ.Content content=cobri.getOrCreateContent(contentResult.getName());
-          for (          CobriConferenceIQ.Channel channelResult : contentResult.getChannels()) {
+        for (        ColibriConferenceIQ.Content contentResult : conferenceResult.getContents()) {
+          ColibriConferenceIQ.Content content=colibri.getOrCreateContent(contentResult.getName());
+          for (          ColibriConferenceIQ.Channel channelResult : contentResult.getChannels()) {
             if (content.getChannel(channelResult.getID()) == null)             content.addChannel(channelResult);
           }
         }

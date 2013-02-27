@@ -1,0 +1,43 @@
+{
+  if (colibri != null) {
+    String conferenceID=colibri.getID();
+    if (conferenceID.equals(conference.getID())) {
+      ColibriConferenceIQ conferenceRequest=new ColibriConferenceIQ();
+      conferenceRequest.setID(conferenceID);
+      for (      ColibriConferenceIQ.Content content : conference.getContents()) {
+        ColibriConferenceIQ.Content colibriContent=colibri.getContent(content.getName());
+        if (colibriContent != null) {
+          ColibriConferenceIQ.Content contentRequest=conferenceRequest.getOrCreateContent(colibriContent.getName());
+          for (          ColibriConferenceIQ.Channel channel : content.getChannels()) {
+            ColibriConferenceIQ.Channel colibriChannel=colibriContent.getChannel(channel.getID());
+            if (colibriChannel != null) {
+              ColibriConferenceIQ.Channel channelRequest=new ColibriConferenceIQ.Channel();
+              channelRequest.setExpire(0);
+              channelRequest.setID(colibriChannel.getID());
+              contentRequest.addChannel(channelRequest);
+            }
+          }
+        }
+      }
+      for (      ColibriConferenceIQ.Content contentRequest : conferenceRequest.getContents()) {
+        ColibriConferenceIQ.Content colibriContent=colibri.getContent(contentRequest.getName());
+        for (        ColibriConferenceIQ.Channel channelRequest : contentRequest.getChannels()) {
+          ColibriConferenceIQ.Channel colibriChannel=colibriContent.getChannel(channelRequest.getID());
+          colibriContent.removeChannel(colibriChannel);
+          if (colibriContent.getChannelCount() == 1) {
+            colibriChannel=colibriContent.getChannel(0);
+            channelRequest=new ColibriConferenceIQ.Channel();
+            channelRequest.setExpire(0);
+            channelRequest.setID(colibriChannel.getID());
+            contentRequest.addChannel(channelRequest);
+            colibriContent.removeChannel(colibriChannel);
+            break;
+          }
+        }
+      }
+      conferenceRequest.setTo(colibri.getFrom());
+      conferenceRequest.setType(IQ.Type.SET);
+      getProtocolProvider().getConnection().sendPacket(conferenceRequest);
+    }
+  }
+}

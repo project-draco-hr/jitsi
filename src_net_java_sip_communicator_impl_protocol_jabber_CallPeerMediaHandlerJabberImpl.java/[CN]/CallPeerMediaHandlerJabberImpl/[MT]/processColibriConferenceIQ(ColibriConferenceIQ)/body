@@ -1,0 +1,35 @@
+{
+  TransportManagerJabberImpl transportManager=this.transportManager;
+  if (transportManager instanceof RawUdpTransportManager) {
+    RawUdpTransportManager rawUdpTransportManager=(RawUdpTransportManager)transportManager;
+    long oldAudioRemoteSSRC=getRemoteSSRC(MediaType.AUDIO);
+    long oldVideoRemoteSSRC=getRemoteSSRC(MediaType.VIDEO);
+    for (    MediaType mediaType : MediaType.values()) {
+      ColibriConferenceIQ.Channel dst=rawUdpTransportManager.getColibriChannel(mediaType,false);
+      if (dst != null) {
+        ColibriConferenceIQ.Content content=conferenceIQ.getContent(mediaType.toString());
+        if (content != null) {
+          ColibriConferenceIQ.Channel src=content.getChannel(dst.getID());
+          if (src != null) {
+            long[] ssrcs=src.getSSRCs();
+            long[] dstSsrcs=dst.getSSRCs();
+            if (!Arrays.equals(dstSsrcs,ssrcs)) {
+              dst.setSSRCs(ssrcs);
+              if (logger.isDebugEnabled()) {
+                logger.debug("SSRCs changed for colibri " + mediaType.toString() + " channel "+ dst.getID()+ ". From: "+ dstSsrcs+ ", to: "+ ssrcs);
+              }
+            }
+          }
+        }
+      }
+    }
+    long newAudioRemoteSSRC=getRemoteSSRC(MediaType.AUDIO);
+    long newVideoRemoteSSRC=getRemoteSSRC(MediaType.VIDEO);
+    if (oldAudioRemoteSSRC != newAudioRemoteSSRC) {
+      firePropertyChange(AUDIO_REMOTE_SSRC,oldAudioRemoteSSRC,newAudioRemoteSSRC);
+    }
+    if (oldVideoRemoteSSRC != newVideoRemoteSSRC) {
+      firePropertyChange(VIDEO_REMOTE_SSRC,oldVideoRemoteSSRC,newVideoRemoteSSRC);
+    }
+  }
+}

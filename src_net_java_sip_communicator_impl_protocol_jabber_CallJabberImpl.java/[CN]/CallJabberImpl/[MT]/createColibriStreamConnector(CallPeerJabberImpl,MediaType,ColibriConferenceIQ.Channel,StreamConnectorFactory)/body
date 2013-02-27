@@ -1,0 +1,22 @@
+{
+  String channelID=channel.getID();
+  if (channelID == null)   throw new IllegalArgumentException("channel");
+  if (colibri == null)   throw new IllegalStateException("colibri");
+  ColibriConferenceIQ.Content content=colibri.getContent(mediaType.toString());
+  if (content == null)   throw new IllegalArgumentException("mediaType");
+  if ((content.getChannelCount() < 1) || !channelID.equals((channel=content.getChannel(0)).getID()))   throw new IllegalArgumentException("channel");
+  ColibriStreamConnector colibriStreamConnector;
+synchronized (colibriStreamConnectors) {
+    int index=mediaType.ordinal();
+    WeakReference<ColibriStreamConnector> weakReference=colibriStreamConnectors.get(index);
+    colibriStreamConnector=(weakReference == null) ? null : weakReference.get();
+    if (colibriStreamConnector == null) {
+      StreamConnector streamConnector=factory.createStreamConnector();
+      if (streamConnector != null) {
+        colibriStreamConnector=new ColibriStreamConnector(streamConnector);
+        colibriStreamConnectors.set(index,new WeakReference<ColibriStreamConnector>(colibriStreamConnector));
+      }
+    }
+  }
+  return colibriStreamConnector;
+}
