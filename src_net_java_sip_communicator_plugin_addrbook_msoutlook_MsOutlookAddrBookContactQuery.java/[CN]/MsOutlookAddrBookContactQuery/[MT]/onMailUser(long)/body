@@ -12,27 +12,11 @@
     propIndex++;
   }
   if (matches) {
-    List<Class<? extends OperationSet>> supportedOpSets=new ArrayList<Class<? extends OperationSet>>(2);
-    supportedOpSets.add(OperationSetBasicTelephony.class);
-    supportedOpSets.add(OperationSetPersistentPresence.class);
-    List<ContactDetail> contactDetails=new LinkedList<ContactDetail>();
-    for (int i=0; i < CONTACT_DETAIL_PROP_INDEXES.length; i++) {
-      propIndex=CONTACT_DETAIL_PROP_INDEXES[i];
-      Object prop=props[propIndex];
-      if (prop instanceof String) {
-        String stringProp=(String)prop;
-        if (stringProp.length() != 0) {
-          if (isPhoneNumber(propIndex))           stringProp=PhoneNumberI18nService.normalize(stringProp);
-          ContactDetail contactDetail=new ContactDetail(stringProp,getCategory(propIndex),getSubCategories(propIndex));
-          contactDetail.setSupportedOpSets(supportedOpSets);
-          contactDetails.add(contactDetail);
-        }
-      }
-    }
+    List<ContactDetail> contactDetails=getContactDetails(props);
     if (!contactDetails.isEmpty()) {
       String displayName=(String)props[PR_DISPLAY_NAME];
       if ((displayName == null) || (displayName.length() == 0))       displayName=(String)props[PR_COMPANY_NAME];
-      GenericSourceContact sourceContact=new GenericSourceContact(getContactSource(),displayName,contactDetails);
+      MsOutlookAddrBookSourceContact sourceContact=new MsOutlookAddrBookSourceContact(getContactSource(),(String)props[PR_ORIGINAL_ENTRYID],displayName,contactDetails);
       if (MAPI_MESSAGE == objType) {
         ++mapiMessageCount;
         try {

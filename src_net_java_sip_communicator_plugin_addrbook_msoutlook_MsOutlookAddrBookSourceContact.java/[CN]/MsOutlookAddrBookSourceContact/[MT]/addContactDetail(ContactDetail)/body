@@ -1,0 +1,21 @@
+{
+synchronized (this.contactDetails) {
+    MsOutlookAddrBookContactDetail addDetail;
+    if (!(detail instanceof MsOutlookAddrBookContactDetail)) {
+      long property=MsOutlookAddrBookContactQuery.getProperty(detail.getCategory(),detail.getSubCategories());
+      Collection<ContactDetail.SubCategory> subCategories=detail.getSubCategories();
+      addDetail=new MsOutlookAddrBookContactDetail(detail.getDetail(),detail.getCategory(),subCategories.toArray(new ContactDetail.SubCategory[subCategories.size()]),property);
+    }
+ else {
+      addDetail=(MsOutlookAddrBookContactDetail)detail;
+    }
+    for (int i=0; i < this.contactDetails.size(); ++i) {
+      MsOutlookAddrBookContactDetail contactDetail=((MsOutlookAddrBookContactDetail)this.contactDetails.get(i));
+      if (contactDetail.match(addDetail)) {
+        return;
+      }
+    }
+    this.contactDetails.add(addDetail);
+    this.save();
+  }
+}
