@@ -22,6 +22,7 @@
   }
   UIContactDetail telephonyContact=uiContact.getDefaultContactDetail(OperationSetBasicTelephony.class);
   boolean hasPhone=false;
+  boolean hasVideoPhone=false;
   if (uiContact.getDescriptor() != null && uiContact.getDescriptor() instanceof MetaContact && telephonyContact == null) {
     MetaContact metaContact=(MetaContact)uiContact.getDescriptor();
     Iterator<Contact> contacts=metaContact.getContacts();
@@ -39,6 +40,7 @@
               PhoneNumberDetail pnd=(PhoneNumberDetail)d;
               if (pnd.getNumber() != null && pnd.getNumber().length() > 0) {
                 hasPhone=true;
+                if (d instanceof VideoDetail)                 hasVideoPhone=true;
                 break;
               }
             }
@@ -52,7 +54,7 @@
     x+=addButton(callButton,++gridX,x,false);
   }
   UIContactDetail videoContact=uiContact.getDefaultContactDetail(OperationSetVideoTelephony.class);
-  if (videoContact != null || (ConfigurationUtils.isRouteVideoAndDesktopUsingPhoneNumberEnabled() && hasPhone && AccountUtils.getOpSetRegisteredProviders(OperationSetVideoTelephony.class,null,null).size() > 0)) {
+  if (videoContact != null || (ConfigurationUtils.isRouteVideoAndDesktopUsingPhoneNumberEnabled() && hasPhone && AccountUtils.getOpSetRegisteredProviders(OperationSetVideoTelephony.class,null,null).size() > 0) || hasVideoPhone) {
     x+=addButton(callVideoButton,++gridX,x,false);
   }
   UIContactDetail desktopContact=uiContact.getDefaultContactDetail(OperationSetDesktopSharingServer.class);
