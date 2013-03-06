@@ -1,0 +1,81 @@
+{
+  Object sService=bundleContext.getService(event.getServiceReference());
+  if (!(sService instanceof ResourcePack)) {
+    return;
+  }
+  ResourcePack resourcePack=(ResourcePack)sService;
+  if (event.getType() == ServiceEvent.REGISTERED) {
+    if (logger.isInfoEnabled())     logger.info("Resource registered " + resourcePack);
+    Map<String,String> resources=getResources(resourcePack);
+    if (resourcePack instanceof ColorPack && colorPack == null) {
+      colorPack=resourcePack;
+      colorResources=resources;
+    }
+ else     if (resourcePack instanceof ImagePack && imagePack == null) {
+      imagePack=(ImagePack)resourcePack;
+      imageResources=resources;
+    }
+ else     if (resourcePack instanceof LanguagePack && languagePack == null) {
+      languagePack=(LanguagePack)resourcePack;
+      languageLocale=Locale.getDefault();
+      languageResources=resources;
+    }
+ else     if (resourcePack instanceof SettingsPack && settingsPack == null) {
+      settingsPack=resourcePack;
+      settingsResources=resources;
+    }
+ else     if (resourcePack instanceof SoundPack && soundPack == null) {
+      soundPack=resourcePack;
+      soundResources=resources;
+    }
+ else     if (resourcePack instanceof SkinPack && skinPack == null) {
+      skinPack=(SkinPack)resourcePack;
+      if (imagePack != null)       imageResources=getResources(imagePack);
+      if (colorPack != null)       colorResources=getResources(colorPack);
+      if (settingsPack != null)       settingsResources=getResources(settingsPack);
+      if (imageResources != null)       imageResources.putAll(skinPack.getImageResources());
+      colorResources.putAll(skinPack.getColorResources());
+      settingsResources.putAll(skinPack.getSettingsResources());
+      onSkinPackChanged();
+    }
+  }
+ else   if (event.getType() == ServiceEvent.UNREGISTERING) {
+    if (resourcePack instanceof ColorPack && colorPack.equals(resourcePack)) {
+      colorPack=getDefaultResourcePack(ColorPack.class.getName(),ColorPack.RESOURCE_NAME_DEFAULT_VALUE);
+      if (colorPack != null)       colorResources=getResources(colorPack);
+    }
+ else     if (resourcePack instanceof ImagePack && imagePack.equals(resourcePack)) {
+      imagePack=(ImagePack)getDefaultResourcePack(ImagePack.class.getName(),ImagePack.RESOURCE_NAME_DEFAULT_VALUE);
+      if (imagePack != null)       imageResources=getResources(imagePack);
+    }
+ else     if (resourcePack instanceof LanguagePack && languagePack.equals(resourcePack)) {
+      languagePack=(LanguagePack)getDefaultResourcePack(LanguagePack.class.getName(),LanguagePack.RESOURCE_NAME_DEFAULT_VALUE);
+    }
+ else     if (resourcePack instanceof SettingsPack && settingsPack.equals(resourcePack)) {
+      settingsPack=getDefaultResourcePack(SettingsPack.class.getName(),SettingsPack.RESOURCE_NAME_DEFAULT_VALUE);
+      if (settingsPack != null)       settingsResources=getResources(settingsPack);
+    }
+ else     if (resourcePack instanceof SoundPack && soundPack.equals(resourcePack)) {
+      soundPack=getDefaultResourcePack(SoundPack.class.getName(),SoundPack.RESOURCE_NAME_DEFAULT_VALUE);
+      if (soundPack != null)       soundResources=getResources(soundPack);
+    }
+ else     if (resourcePack instanceof SkinPack && skinPack.equals(resourcePack)) {
+      if (imagePack != null) {
+        imageResources=getResources(imagePack);
+      }
+      if (colorPack != null) {
+        colorResources=getResources(colorPack);
+      }
+      if (settingsPack != null) {
+        settingsResources=getResources(settingsPack);
+      }
+      skinPack=(SkinPack)getDefaultResourcePack(SkinPack.class.getName(),SkinPack.RESOURCE_NAME_DEFAULT_VALUE);
+      if (skinPack != null) {
+        imageResources.putAll(skinPack.getImageResources());
+        colorResources.putAll(skinPack.getColorResources());
+        settingsResources.putAll(skinPack.getSettingsResources());
+      }
+      onSkinPackChanged();
+    }
+  }
+}
