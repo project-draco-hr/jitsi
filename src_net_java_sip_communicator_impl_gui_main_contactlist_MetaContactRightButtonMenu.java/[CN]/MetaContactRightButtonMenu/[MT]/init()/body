@@ -87,7 +87,7 @@
       if (protocolProvider.getOperationSet(OperationSetVideoTelephony.class) != null && hasContactCapabilities(contact,OperationSetVideoTelephony.class) || routingForVideoEnabled || hasVideoDetail) {
         videoCallMenu.add(createMenuItem(contactAddress,videoCallPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
       }
-      if (protocolProvider.getOperationSet(OperationSetDesktopSharingServer.class) != null && hasContactCapabilities(contact,OperationSetDesktopSharingServer.class) || routingForDesktopEnabled) {
+      if (protocolProvider.getOperationSet(OperationSetDesktopSharingServer.class) != null && hasContactCapabilities(contact,OperationSetDesktopSharingServer.class) || routingForDesktopEnabled || hasVideoDetail) {
         multiContactFullShareMenu.add(createMenuItem(contactAddress,fullDesktopSharingPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
         multiContactRegionShareMenu.add(createMenuItem(contactAddress,regionDesktopSharingPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
       }
@@ -157,23 +157,35 @@
   }
   add(sendFileItem);
   addSeparator();
-  add(moveToMenu);
-  add(moveSubcontactMenu);
-  addSeparator();
-  if (!ConfigurationUtils.isAddContactDisabled())   add(addContactItem);
-  addSeparator();
+  if (!ConfigurationUtils.isContactMoveDisabled()) {
+    add(moveToMenu);
+    add(moveSubcontactMenu);
+    addSeparator();
+  }
+  if (!ConfigurationUtils.isAddContactDisabled()) {
+    add(addContactItem);
+    addSeparator();
+  }
+  separator=false;
   if (!ConfigurationUtils.isRemoveContactDisabled()) {
     if (metaContact.getContactCount() > 1) {
       add(removeContactMenu);
+      separator=true;
     }
  else {
       Icon deleteIcon=new ImageIcon(ImageLoader.getImage(ImageLoader.DELETE_16x16_ICON));
       JMenuItem removeContactItem=createMenuItem(removeString,removeContactPrefix + "allContacts",deleteIcon);
       add(removeContactItem);
+      separator=true;
     }
   }
-  add(renameContactItem);
-  addSeparator();
+  if (!ConfigurationUtils.isContactRenameDisabled()) {
+    add(renameContactItem);
+    separator=true;
+  }
+  if (separator) {
+    addSeparator();
+  }
   add(viewHistoryItem);
   addSeparator();
   Contact defaultContact=metaContact.getDefaultContact();
@@ -203,7 +215,7 @@
   if (metaContact.getDefaultContact(OperationSetVideoTelephony.class) == null && !routingForVideoEnabled && !hasVideoDetail) {
     this.videoCallItem.setEnabled(false);
   }
-  if (metaContact.getDefaultContact(OperationSetDesktopSharingServer.class) == null && !routingForDesktopEnabled) {
+  if (metaContact.getDefaultContact(OperationSetDesktopSharingServer.class) == null && !routingForDesktopEnabled && !hasVideoDetail) {
     fullShareMenuItem.setEnabled(false);
     regionShareMenuItem.setEnabled(false);
   }
