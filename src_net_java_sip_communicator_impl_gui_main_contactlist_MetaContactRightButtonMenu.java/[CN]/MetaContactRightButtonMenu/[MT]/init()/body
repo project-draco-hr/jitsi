@@ -31,6 +31,7 @@
   }
   List<ProtocolProviderService> providers=CallManager.getTelephonyProviders();
   boolean hasPhones=false;
+  boolean hasVideoDetail=false;
   boolean separator=false;
   boolean routingForVideoEnabled=false;
   boolean routingForDesktopEnabled=false;
@@ -60,6 +61,7 @@
                 localizedType=GuiActivator.getResources().getI18NString("service.gui.MOBILE_PHONE");
               }
  else               if (d instanceof VideoDetail) {
+                hasVideoDetail=true;
                 localizedType=GuiActivator.getResources().getI18NString("service.gui.VIDEO_PHONE");
               }
  else {
@@ -82,7 +84,7 @@
         callContactMenu.add(createMenuItem(contactAddress,callContactPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
         separator=true;
       }
-      if (protocolProvider.getOperationSet(OperationSetVideoTelephony.class) != null && hasContactCapabilities(contact,OperationSetVideoTelephony.class) || routingForVideoEnabled) {
+      if (protocolProvider.getOperationSet(OperationSetVideoTelephony.class) != null && hasContactCapabilities(contact,OperationSetVideoTelephony.class) || routingForVideoEnabled || hasVideoDetail) {
         videoCallMenu.add(createMenuItem(contactAddress,videoCallPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
       }
       if (protocolProvider.getOperationSet(OperationSetDesktopSharingServer.class) != null && hasContactCapabilities(contact,OperationSetDesktopSharingServer.class) || routingForDesktopEnabled) {
@@ -198,7 +200,7 @@
   addContactItem.addActionListener(this);
   if (metaContact.getDefaultContact(OperationSetFileTransfer.class) == null)   this.sendFileItem.setEnabled(false);
   if (metaContact.getDefaultContact(OperationSetBasicTelephony.class) == null && (!hasPhones || CallManager.getTelephonyProviders().size() == 0))   this.callItem.setEnabled(false);
-  if (metaContact.getDefaultContact(OperationSetVideoTelephony.class) == null && !routingForVideoEnabled) {
+  if (metaContact.getDefaultContact(OperationSetVideoTelephony.class) == null && !routingForVideoEnabled && !hasVideoDetail) {
     this.videoCallItem.setEnabled(false);
   }
   if (metaContact.getDefaultContact(OperationSetDesktopSharingServer.class) == null && !routingForDesktopEnabled) {
