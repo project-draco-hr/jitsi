@@ -1,0 +1,37 @@
+{
+  if (isMultiline(getCategory())) {
+    EditableSourceContact sourceContact=getSourceContact();
+    if (sourceContact != null && sourceContact instanceof MacOSXAddrBookSourceContact) {
+      List<ContactDetail> details=((MacOSXAddrBookSourceContact)sourceContact).getContactDetails(getCategory());
+      boolean isAddress=property == MacOSXAddrBookContactQuery.kABAddressProperty;
+      boolean isHomeAddress=containsSubCategory(SubCategory.Home);
+      boolean isModifiedAddressOrGenericDetail;
+      List<String> values=new ArrayList<String>();
+      for (      ContactDetail cd : details) {
+        isModifiedAddressOrGenericDetail=true;
+        if (isAddress) {
+          if ((isHomeAddress && !cd.containsSubCategory(SubCategory.Home)) || (!isHomeAddress && !cd.containsSubCategory(SubCategory.Work))) {
+            isModifiedAddressOrGenericDetail=false;
+          }
+        }
+        String det=cd.getDetail();
+        for (        SubCategory sub : cd.getSubCategories()) {
+          String label=MacOSXAddrBookContactQuery.getLabel(property,sub,subPropertyLabel);
+          if (label != null) {
+            if (getSubCategories().contains(sub) && isModifiedAddressOrGenericDetail)             values.add(value);
+ else             values.add(det);
+            values.add(label);
+            if (isAddress && cd instanceof MacOSXAddrBookContactDetail) {
+              values.add(((MacOSXAddrBookContactDetail)cd).getSubPropertyLabel());
+            }
+          }
+        }
+      }
+      MacOSXAddrBookContactQuery.setProperty(id,MacOSXAddrBookContactQuery.ABPERSON_PROPERTIES[property],subPropertyLabel,values.toArray(new Object[values.size()]));
+    }
+  }
+ else {
+    MacOSXAddrBookContactQuery.setProperty(id,MacOSXAddrBookContactQuery.ABPERSON_PROPERTIES[property],null,value);
+  }
+  super.setDetail(value);
+}

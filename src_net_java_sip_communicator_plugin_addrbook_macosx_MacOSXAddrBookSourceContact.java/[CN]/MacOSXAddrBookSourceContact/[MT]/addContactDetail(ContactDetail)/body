@@ -1,0 +1,40 @@
+{
+synchronized (this.contactDetails) {
+    String id=(String)getData(SourceContact.DATA_ID);
+    if (id == null) {
+      logger.warn("No id or wrong ContactDetail " + detail);
+      return;
+    }
+    String subProperty=null;
+    int property=MacOSXAddrBookContactQuery.getProperty(detail.getCategory(),detail.getSubCategories());
+    if (MacOSXAddrBookContactDetail.isMultiline(detail.getCategory())) {
+      if (detail instanceof MacOSXAddrBookContactDetail) {
+        subProperty=((MacOSXAddrBookContactDetail)detail).getSubPropertyLabel();
+      }
+      if (subProperty == null && property == MacOSXAddrBookContactQuery.kABAddressProperty) {
+        if (detail.containsSubCategory(SubCategory.Home))         subProperty=MacOSXAddrBookContactQuery.kABAddressHomeLabel();
+ else         subProperty=MacOSXAddrBookContactQuery.kABAddressWorkLabel();
+      }
+      List<String> values=getValues(detail,property,subProperty,true);
+      MacOSXAddrBookContactQuery.setProperty(id,MacOSXAddrBookContactQuery.ABPERSON_PROPERTIES[property],subProperty,values.toArray(new Object[values.size()]));
+    }
+ else {
+      MacOSXAddrBookContactQuery.setProperty(id,MacOSXAddrBookContactQuery.ABPERSON_PROPERTIES[property],null,detail.getDetail());
+    }
+    Collection<SubCategory> subCategories=detail.getSubCategories();
+    MacOSXAddrBookContactDetail contactDetail=new MacOSXAddrBookContactDetail(property,detail.getDetail(),detail.getCategory(),subCategories.toArray(new SubCategory[subCategories.size()]),subProperty,id);
+    contactDetail.setSourceContact(this);
+    boolean added=false;
+    int index=0;
+    for (    ContactDetail cd : contactDetails) {
+      if (cd instanceof MacOSXAddrBookContactDetail) {
+        MacOSXAddrBookContactDetail macOSXcd=(MacOSXAddrBookContactDetail)cd;
+        if (!added && contactDetail.getProperty() == macOSXcd.getProperty() && (contactDetail.getSubPropertyLabel() == null || contactDetail.getSubPropertyLabel().equals(macOSXcd.getSubPropertyLabel()))) {
+          added=true;
+        }
+      }
+      if (!added)       ++index;
+    }
+    contactDetails.add(index,contactDetail);
+  }
+}
