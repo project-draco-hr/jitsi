@@ -14,17 +14,29 @@
         String smileyHtmlPattern="<\\s*[iI][mM][gG](.*?)" + "[aA][lL][tT]\\s*=\\s*[\\\"']([^\\\"]*)" + "[\\\"'](.*?)>";
         Pattern p=Pattern.compile(smileyHtmlPattern,Pattern.DOTALL);
         Matcher m=p.matcher(data);
-        if (m.find()) {
-          int start=0;
+        boolean hasImg=m.find();
+        Pattern pMsgHeader=Pattern.compile("<\\s*h\\d.*?id=['\"]messageHeader['\"]",Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+        Matcher mMsgHeader=pMsgHeader.matcher(data);
+        boolean hasMsgHeader=mMsgHeader.find();
+        if (hasImg || hasMsgHeader) {
           String tempData="";
-          do {
-            tempData+=data.substring(start,m.start()) + GuiUtils.escapeHTMLChars(m.group(2));
-            start=m.end();
-          }
+          if (hasImg) {
+            int start=0;
+            do {
+              tempData+=data.substring(start,m.start()) + GuiUtils.escapeHTMLChars(m.group(2));
+              start=m.end();
+            }
  while (m.find());
-          tempData+=data.substring(start);
+            tempData+=data.substring(start);
+          }
+ else {
+            tempData=data;
+          }
           tempData=tempData.replaceAll("<[/]*PLAINTEXT>.*<[/]*PLAINTEXT>","");
           tempData=tempData.replaceAll("<\\s*[bB][rR][^>]*>","<a></a>");
+          if (hasMsgHeader) {
+            tempData=tempData.replaceAll("<[/]*\\s*([tT][aA][bB][lL][eE]|[tT][rR]" + "|[tT][dD]|[hH]\\d)[^>]*?>","");
+          }
           htmlDoc.remove(0,htmlDoc.getLength());
           htmlKit.read(new StringReader(tempData),htmlDoc,0);
           srcData=htmlDoc.getText(0,htmlDoc.getLength());
