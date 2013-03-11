@@ -1,0 +1,18 @@
+{
+  List<MediaFormat> res=new ArrayList<MediaFormat>();
+  Map<String,String> accountProperties=protocolProvider.getAccountID().getAccountProperties();
+  String overrideEncodings=accountProperties.get(ProtocolProviderFactory.OVERRIDE_ENCODINGS);
+  List<MediaFormat> formats;
+  if (Boolean.parseBoolean(overrideEncodings)) {
+    EncodingConfiguration encodingConfiguration=ProtocolMediaActivator.getMediaService().createEmptyEncodingConfiguration();
+    encodingConfiguration.loadProperties(accountProperties,ProtocolProviderFactory.ENCODING_PROP_PREFIX);
+    formats=device.getSupportedFormats(null,null,encodingConfiguration);
+  }
+ else {
+    formats=device.getSupportedFormats();
+  }
+  for (  MediaFormat format : formats) {
+    if (!format.getEncoding().equals(Constants.TELEPHONE_EVENT))     res.add(format);
+  }
+  return res;
+}

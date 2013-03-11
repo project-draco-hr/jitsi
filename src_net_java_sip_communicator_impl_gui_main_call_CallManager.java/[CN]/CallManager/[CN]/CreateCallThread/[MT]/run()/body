@@ -1,4 +1,19 @@
 {
+  if (!video) {
+    MediaService mediaService=GuiActivator.getMediaService();
+    MediaDevice dev=mediaService.getDefaultDevice(MediaType.AUDIO,MediaUseCase.CALL);
+    List<MediaFormat> formats=getAudioFormats(dev,protocolProvider);
+    String errorMsg=null;
+    if (!dev.getDirection().allowsSending())     errorMsg=GuiActivator.getResources().getI18NString("service.gui.CALL_NO_AUDIO_DEVICE");
+ else     if (formats.isEmpty()) {
+      errorMsg=GuiActivator.getResources().getI18NString("service.gui.CALL_NO_AUDIO_CODEC");
+    }
+    if (errorMsg != null) {
+      if (GuiActivator.getUIService().getPopupDialog().showConfirmPopupDialog(errorMsg + " " + GuiActivator.getResources().getI18NString("service.gui.CALL_NO_DEVICE_CODECS_Q"),GuiActivator.getResources().getI18NString("service.gui.CALL"),PopupDialog.YES_NO_OPTION,PopupDialog.QUESTION_MESSAGE) == PopupDialog.NO_OPTION) {
+        return;
+      }
+    }
+  }
   Contact contact=this.contact;
   String stringContact=this.stringContact;
   if (ConfigurationUtils.isNormalizePhoneNumber()) {
