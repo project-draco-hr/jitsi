@@ -1,11 +1,46 @@
 {
   Call call=callEvent.getSourceCall();
+  ProtocolProviderService provider=call.getProtocolProvider();
 switch (type) {
 case CallEvent.CALL_ENDED:
     removeCallListener(call);
   break;
 case CallEvent.CALL_INITIATED:
 case CallEvent.CALL_RECEIVED:
+if (type == CallEvent.CALL_RECEIVED && CallState.CALL_INITIALIZATION.equals(call.getCallState()) && ProtocolProviderActivator.getConfigurationService().getBoolean(PNAME_CALL_WAITING_DISABLED,false)) {
+synchronized (calls) {
+    for (    Call otherCall : calls) {
+      if (!call.equals(otherCall) && CallState.CALL_IN_PROGRESS.equals(otherCall.getCallState())) {
+        rejectCallWithBusyHere(call);
+        return;
+      }
+    }
+  }
+}
+if (type == CallEvent.CALL_RECEIVED && CallState.CALL_INITIALIZATION.equals(call.getCallState()) && (ProtocolProviderActivator.getConfigurationService().getBoolean(PNAME_REJECT_IN_CALL_ON_DND,false) || provider.getAccountID().getAccountPropertyBoolean(ACCOUNT_PROPERTY_REJECT_IN_CALL_ON_DND,false))) {
+OperationSetPresence presence=provider.getOperationSet(OperationSetPresence.class);
+if (presence == null) {
+  String cusaxProviderID=provider.getAccountID().getAccountPropertyString(CUSAX_PROVIDER_ACCOUNT_PROP);
+  AccountID acc=ProtocolProviderActivator.getAccountManager().findAccountID(cusaxProviderID);
+  if (acc == null) {
+    logger.warn("No connected cusax account found for " + cusaxProviderID);
+  }
+ else {
+    for (    ProtocolProviderService pProvider : ProtocolProviderActivator.getProtocolProviders()) {
+      if (pProvider.getAccountID().equals(acc)) {
+        presence=pProvider.getOperationSet(OperationSetPresence.class);
+      }
+    }
+  }
+}
+if (presence != null) {
+  int presenceStatus=(presence == null) ? PresenceStatus.AVAILABLE_THRESHOLD : presence.getPresenceStatus().getStatus();
+  if (presenceStatus > PresenceStatus.ONLINE_THRESHOLD && presenceStatus <= PresenceStatus.AWAY_THRESHOLD) {
+    rejectCallWithBusyHere(call);
+    return;
+  }
+}
+}
 addCallListener(call);
 break;
 }

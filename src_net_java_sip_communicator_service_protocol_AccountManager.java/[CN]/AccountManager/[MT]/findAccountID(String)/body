@@ -1,0 +1,26 @@
+{
+  ServiceReference[] factoryRefs=null;
+  try {
+    factoryRefs=bundleContext.getServiceReferences(ProtocolProviderFactory.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException ex) {
+    logger.error("Failed to retrieve the registered ProtocolProviderFactories",ex);
+  }
+  if ((factoryRefs != null) && (factoryRefs.length > 0)) {
+    ConfigurationService configService=ProtocolProviderActivator.getConfigurationService();
+    for (    ServiceReference factoryRef : factoryRefs) {
+      ProtocolProviderFactory factory=(ProtocolProviderFactory)bundleContext.getService(factoryRef);
+      String factoryPackage=getFactoryImplPackageName(factory);
+      List<String> storedAccountsProps=configService.getPropertyNamesByPrefix(factoryPackage,true);
+      for (Iterator<String> storedAccountIter=storedAccountsProps.iterator(); storedAccountIter.hasNext(); ) {
+        String storedAccount=storedAccountIter.next();
+        if (!storedAccount.endsWith(uid))         continue;
+        String accountUID=configService.getString(storedAccount + "." + ProtocolProviderFactory.ACCOUNT_UID);
+        for (        AccountID acc : storedAccounts) {
+          if (acc.getAccountUniqueID().equals(accountUID))           return acc;
+        }
+      }
+    }
+  }
+  return null;
+}
