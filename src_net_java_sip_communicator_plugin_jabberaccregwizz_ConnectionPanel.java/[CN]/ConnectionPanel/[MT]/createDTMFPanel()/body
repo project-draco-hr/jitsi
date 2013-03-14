@@ -1,8 +1,36 @@
 {
-  JPanel dtmfPanel=new TransparentPanel(new BorderLayout(10,10));
+  JPanel emptyLabelPanel=new TransparentPanel();
+  JPanel dtmfLabels=new TransparentPanel(new GridLayout(0,1,5,5));
   JLabel dtmfMethodLabel=new JLabel(Resources.getString("plugin.sipaccregwizz.DTMF_METHOD"));
-  dtmfPanel.add(dtmfMethodLabel,BorderLayout.WEST);
+  JLabel minimalDTMFToneDurationLabel=new JLabel(Resources.getString("plugin.sipaccregwizz.DTMF_MINIMAL_TONE_DURATION"));
+  dtmfLabels.add(dtmfMethodLabel);
+  dtmfLabels.add(minimalDTMFToneDurationLabel);
+  dtmfLabels.add(emptyLabelPanel);
+  JPanel dtmfValues=new TransparentPanel(new GridLayout(0,1,5,5));
+  dtmfMethodBox.addItemListener(new ItemListener(){
+    public void itemStateChanged(    ItemEvent e){
+      boolean isEnabled=false;
+      String selectedItem=(String)dtmfMethodBox.getSelectedItem();
+      if (selectedItem != null && (selectedItem.equals(Resources.getString("plugin.sipaccregwizz.DTMF_AUTO")) || selectedItem.equals(Resources.getString("plugin.sipaccregwizz.DTMF_RTP")))) {
+        isEnabled=true;
+      }
+      dtmfMinimalToneDurationValue.setEnabled(isEnabled);
+    }
+  }
+);
   dtmfMethodBox.setSelectedItem(parentForm.getRegistration().getDefaultDTMFMethod());
-  dtmfPanel.add(dtmfMethodBox,BorderLayout.CENTER);
+  dtmfMinimalToneDurationValue.setText(JabberAccountRegistration.DEFAULT_MINIMAL_DTMF_TONE_DURATION);
+  JLabel dtmfMinimalToneDurationExampleLabel=new JLabel(Resources.getString("plugin.sipaccregwizz.DTMF_MINIMAL_TONE_DURATION_INFO"));
+  dtmfMinimalToneDurationExampleLabel.setForeground(Color.GRAY);
+  dtmfMinimalToneDurationExampleLabel.setFont(dtmfMinimalToneDurationExampleLabel.getFont().deriveFont(8));
+  dtmfMinimalToneDurationExampleLabel.setMaximumSize(new Dimension(40,35));
+  dtmfMinimalToneDurationExampleLabel.setBorder(BorderFactory.createEmptyBorder(0,0,8,0));
+  dtmfValues.add(dtmfMethodBox);
+  dtmfValues.add(dtmfMinimalToneDurationValue);
+  dtmfValues.add(dtmfMinimalToneDurationExampleLabel);
+  JPanel dtmfPanel=new TransparentPanel(new BorderLayout(10,10));
+  dtmfPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("plugin.sipaccregwizz.DTMF")));
+  dtmfPanel.add(dtmfLabels,BorderLayout.WEST);
+  dtmfPanel.add(dtmfValues,BorderLayout.CENTER);
   return dtmfPanel;
 }
