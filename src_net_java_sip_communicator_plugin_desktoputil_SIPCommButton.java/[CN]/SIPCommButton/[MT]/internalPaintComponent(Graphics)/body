@@ -4,15 +4,23 @@
     g.setColor(getBackground());
     g.fillRect(0,0,getWidth(),getHeight());
   }
-  if (this.bgImage != null) {
-    Image paintBgImage;
+  Image paintBgImage=null;
+  if (this.getModel().isPressed() && this.pressedBgImage != null) {
+    paintBgImage=this.pressedBgImage;
+  }
+ else   if (this.getModel().isRollover() && this.rolloverBgImage != null) {
+    paintBgImage=this.rolloverBgImage;
+  }
+ else   if (this.bgImage != null) {
     if (this.iconImage == null && !isEnabled()) {
       paintBgImage=new ImageIcon(LightGrayFilter.createDisabledImage(bgImage)).getImage();
     }
  else     paintBgImage=bgImage;
+  }
+  if (paintBgImage != null) {
     g.drawImage(paintBgImage,this.getWidth() / 2 - paintBgImage.getWidth(null) / 2,this.getHeight() / 2 - paintBgImage.getHeight(null) / 2,this);
   }
-  if (rolloverImage == null) {
+  if (rolloverBgImage == null) {
     FadeTracker fadeTracker=FadeTracker.getInstance();
     float visibility=this.getModel().isRollover() ? 1.0f : 0.0f;
     if (fadeTracker.isTracked(this,FadeKind.ROLLOVER)) {
@@ -23,12 +31,6 @@
     if (this.bgImage == null && (isContentAreaFilled() || (visibility != 0.0f))) {
       g.fillRoundRect(0,0,this.getWidth(),this.getHeight(),8,8);
     }
-  }
-  if (this.getModel().isPressed() && this.pressedImage != null) {
-    g.drawImage(this.pressedImage,0,0,this);
-  }
- else   if (this.getModel().isRollover() && this.rolloverImage != null) {
-    g.drawImage(this.rolloverImage,0,0,this);
   }
   Image paintIconImage=null;
   if (getModel().isPressed() && pressedIconImage != null) {
