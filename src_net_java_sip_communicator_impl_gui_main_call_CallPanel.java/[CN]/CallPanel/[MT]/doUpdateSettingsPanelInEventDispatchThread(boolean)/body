@@ -20,6 +20,7 @@
   boolean videoTelephonyIsLocalVideoStreaming=false;
   boolean desktopSharing=false;
   boolean desktopSharingIsStreamed=false;
+  boolean allCallsConnected=true;
   for (  Call call : calls) {
     ProtocolProviderService pps=call.getProtocolProvider();
     if (advancedTelephony) {
@@ -47,11 +48,14 @@
         }
       }
     }
+    if (CallState.CALL_IN_PROGRESS != call.getCallState()) {
+      allCallsConnected=false;
+    }
   }
   conferenceButton.setEnabled(telephonyConferencing);
   transferCallButton.setEnabled(advancedTelephony);
   transferCallButton.setVisible(!callConference.isConferenceFocus());
-  videoButton.setEnabled(videoTelephony);
+  videoButton.setEnabled(allCallsConnected && videoTelephony);
   videoButton.setSelected(videoTelephonyIsLocalVideoAllowed);
   showHideVideoButton.setEnabled(videoButton.isEnabled() && videoTelephonyIsLocalVideoAllowed);
   showHideVideoButton.setSelected(showHideVideoButton.isEnabled() && uiVideoHandler.isLocalVideoVisible());
