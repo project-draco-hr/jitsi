@@ -21,7 +21,7 @@ synchronized (this) {
  else {
           reconnect(pp);
         }
-        unregisteredProviders.remove(pp);
+        unregisteringProviders.remove(pp);
         if (logger.isTraceEnabled()) {
           logger.trace("Got Connection Failed for " + pp);
           traceCurrentPPState();
@@ -33,7 +33,7 @@ synchronized (this) {
         }
         autoReconnEnabledProviders.put(pp,new ArrayList<String>(connectedInterfaces));
         if (currentlyReconnecting.containsKey(pp))         currentlyReconnecting.remove(pp).cancel();
-        unregisteredProviders.remove(pp);
+        unregisteringProviders.remove(pp);
         if (logger.isTraceEnabled()) {
           logger.trace("Got Registered for " + pp);
           traceCurrentPPState();
@@ -41,10 +41,10 @@ synchronized (this) {
       }
  else       if (evt.getNewState().equals(RegistrationState.UNREGISTERED)) {
         autoReconnEnabledProviders.remove(pp);
-        if (!unregisteredProviders.contains(pp) && currentlyReconnecting.containsKey(pp)) {
+        if (!unregisteringProviders.contains(pp) && currentlyReconnecting.containsKey(pp)) {
           currentlyReconnecting.remove(pp).cancel();
         }
-        unregisteredProviders.remove(pp);
+        unregisteringProviders.remove(pp);
         if (logger.isTraceEnabled()) {
           logger.trace("Got Unregistered for " + pp);
           traceCurrentPPState();
