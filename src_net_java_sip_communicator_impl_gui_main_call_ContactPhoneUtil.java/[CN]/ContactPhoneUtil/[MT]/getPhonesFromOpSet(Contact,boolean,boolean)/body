@@ -1,0 +1,41 @@
+{
+  OperationSetServerStoredContactInfo infoOpSet=contact.getProtocolProvider().getOperationSet(OperationSetServerStoredContactInfo.class);
+  Iterator<GenericDetail> details;
+  ArrayList<String> phonesList=new ArrayList<String>();
+  if (infoOpSet != null) {
+    try {
+      DetailsResponseListener listener=responseListeners.get(contact);
+      if (listener != null) {
+        details=infoOpSet.requestAllDetailsForContact(contact,listener);
+        if (details == null)         return null;
+      }
+ else {
+        details=infoOpSet.getAllDetailsForContact(contact);
+      }
+      ArrayList<String> phoneNumbers=new ArrayList<String>();
+      while (details.hasNext()) {
+        GenericDetail d=details.next();
+        if (d instanceof PhoneNumberDetail && !(d instanceof PagerDetail) && !(d instanceof FaxDetail)) {
+          PhoneNumberDetail pnd=(PhoneNumberDetail)d;
+          String number=pnd.getNumber();
+          if (number != null && number.length() > 0) {
+            hasPhones=true;
+            if (d instanceof VideoDetail)             hasVideoDetail=true;
+ else             if (onlyVideo)             continue;
+            if (phoneNumbers.contains(number))             continue;
+            phoneNumbers.add(number);
+            if (!localized) {
+              phonesList.add(number);
+              continue;
+            }
+            phonesList.add(number + " (" + getLocalizedPhoneNumber(d)+ ")");
+          }
+        }
+      }
+    }
+ catch (    Throwable t) {
+      logger.error("Error obtaining server stored contact info");
+    }
+  }
+  return phonesList;
+}

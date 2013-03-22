@@ -29,11 +29,8 @@
     this.moveSubcontactMenu.addSeparator();
   }
   List<ProtocolProviderService> providers=CallManager.getTelephonyProviders();
-  boolean hasPhones=false;
-  boolean hasVideoDetail=false;
   boolean separator=false;
-  boolean routingForVideoEnabled=false;
-  boolean routingForDesktopEnabled=false;
+  contactPhoneUtil=ContactPhoneUtil.getPhoneUtil(metaContact);
   while (contacts.hasNext()) {
     Contact contact=contacts.next();
     ProtocolProviderService protocolProvider=contact.getProtocolProvider();
@@ -41,52 +38,16 @@
     Icon protocolIcon=new ImageIcon(createContactStatusImage(contact));
     this.removeContactMenu.add(createMenuItem(contactAddress,removeContactPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
     this.moveSubcontactMenu.add(createMenuItem(contactAddress,moveSubcontactPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
-    OperationSetServerStoredContactInfo infoOpSet=contact.getProtocolProvider().getOperationSet(OperationSetServerStoredContactInfo.class);
-    Iterator<GenericDetail> details=null;
-    ArrayList<String> phones=new ArrayList<String>();
-    if (infoOpSet != null) {
-      try {
-        details=infoOpSet.getAllDetailsForContact(contact);
-        while (details.hasNext()) {
-          GenericDetail d=details.next();
-          if (d instanceof PhoneNumberDetail && !(d instanceof PagerDetail) && !(d instanceof FaxDetail)) {
-            PhoneNumberDetail pnd=(PhoneNumberDetail)d;
-            if (pnd.getNumber() != null && pnd.getNumber().length() > 0) {
-              String localizedType;
-              if (d instanceof WorkPhoneDetail) {
-                localizedType=GuiActivator.getResources().getI18NString("service.gui.WORK_PHONE");
-              }
- else               if (d instanceof MobilePhoneDetail) {
-                localizedType=GuiActivator.getResources().getI18NString("service.gui.MOBILE_PHONE");
-              }
- else               if (d instanceof VideoDetail) {
-                hasVideoDetail=true;
-                localizedType=GuiActivator.getResources().getI18NString("service.gui.VIDEO_PHONE");
-              }
- else {
-                localizedType=GuiActivator.getResources().getI18NString("service.gui.PHONE");
-              }
-              phones.add(pnd.getNumber() + " (" + localizedType+ ")");
-              hasPhones=true;
-            }
-          }
-        }
-      }
- catch (      Throwable t) {
-        logger.error("Error obtaining server stored contact info");
-      }
-    }
-    routingForVideoEnabled=ConfigurationUtils.isRouteVideoAndDesktopUsingPhoneNumberEnabled() && phones.size() > 0 && AccountUtils.getOpSetRegisteredProviders(OperationSetVideoTelephony.class,null,null).size() > 0;
-    routingForDesktopEnabled=ConfigurationUtils.isRouteVideoAndDesktopUsingPhoneNumberEnabled() && phones.size() > 0 && AccountUtils.getOpSetRegisteredProviders(OperationSetDesktopSharingServer.class,null,null).size() > 0;
+    List<String> phones=contactPhoneUtil.getPhones(contact);
     if (metaContact.getContactCount() > 1 || phones.size() > 0) {
-      if (protocolProvider.getOperationSet(OperationSetBasicTelephony.class) != null && hasContactCapabilities(contact,OperationSetBasicTelephony.class)) {
+      if (contactPhoneUtil.isCallEnabled(contact)) {
         callContactMenu.add(createMenuItem(contactAddress,callContactPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
         separator=true;
       }
-      if (protocolProvider.getOperationSet(OperationSetVideoTelephony.class) != null && hasContactCapabilities(contact,OperationSetVideoTelephony.class) || routingForVideoEnabled || hasVideoDetail) {
+      if (contactPhoneUtil.isVideoCallEnabled(contact)) {
         videoCallMenu.add(createMenuItem(contactAddress,videoCallPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
       }
-      if (protocolProvider.getOperationSet(OperationSetDesktopSharingServer.class) != null && hasContactCapabilities(contact,OperationSetDesktopSharingServer.class) || routingForDesktopEnabled || hasVideoDetail) {
+      if (contactPhoneUtil.isDesktopSharingEnabled(contact)) {
         multiContactFullShareMenu.add(createMenuItem(contactAddress,fullDesktopSharingPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
         multiContactRegionShareMenu.add(createMenuItem(contactAddress,regionDesktopSharingPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
       }
@@ -101,6 +62,19 @@
       if (providers.size() > 0) {
         JMenuItem menu=createMenuItem(phone,callPhonePrefix + p,null);
         callContactMenu.add(menu);
+        separator=true;
+      }
+    }
+    List<String> videoPhones=contactPhoneUtil.getVideoPhones(contact);
+    for (    String vphone : videoPhones) {
+      String p=vphone.substring(0,vphone.lastIndexOf("(") - 1);
+      if (providers.size() > 0) {
+        JMenuItem vmenu=createMenuItem(vphone,videoCallPrefix + p,null);
+        videoCallMenu.add(vmenu);
+        JMenuItem shdmenu=createMenuItem(vphone,fullDesktopSharingPrefix + p,null);
+        multiContactFullShareMenu.add(shdmenu);
+        JMenuItem rshdmenu=createMenuItem(vphone,regionDesktopSharingPrefix + p,null);
+        multiContactRegionShareMenu.add(rshdmenu);
         separator=true;
       }
     }
@@ -124,7 +98,7 @@
     this.add(callContactMenu);
   }
  else {
-    if ((hasPhones && callContactMenu.getItemCount() > 0)) {
+    if (callContactMenu.getItemCount() > 0) {
       JMenuItem item=callContactMenu.getItem(0);
       this.callItem.setName(item.getName());
     }
@@ -138,21 +112,35 @@
     this.add(videoCallMenu);
   }
  else {
-    this.add(videoCallItem);
-    this.videoCallItem.setName("videoCall");
+    if (videoCallMenu.getItemCount() > 0) {
+      JMenuItem item=videoCallMenu.getItem(0);
+      this.videoCallItem.setName(item.getName());
+    }
+ else {
+      this.videoCallItem.setName("videoCall");
+    }
     this.videoCallItem.addActionListener(this);
+    this.add(videoCallItem);
   }
   if (multiContactFullShareMenu.getItemCount() > 1) {
     add(multiContactFullShareMenu);
     add(multiContactRegionShareMenu);
   }
  else {
-    fullShareMenuItem.setName("shareFullScreen");
-    fullShareMenuItem.addActionListener(this);
-    add(fullShareMenuItem);
-    regionShareMenuItem.setName("shareRegion");
-    regionShareMenuItem.addActionListener(this);
-    add(regionShareMenuItem);
+    if (multiContactFullShareMenu.getItemCount() > 0) {
+      JMenuItem item=multiContactFullShareMenu.getItem(0);
+      this.fullShareMenuItem.setName(item.getName());
+      JMenuItem ritem=multiContactRegionShareMenu.getItem(0);
+      this.regionShareMenuItem.setName(ritem.getName());
+    }
+ else {
+      this.fullShareMenuItem.setName("shareFullScreen");
+      this.regionShareMenuItem.setName("shareRegion");
+    }
+    this.fullShareMenuItem.addActionListener(this);
+    this.regionShareMenuItem.addActionListener(this);
+    this.add(fullShareMenuItem);
+    this.add(regionShareMenuItem);
   }
   add(sendFileItem);
   addSeparator();
@@ -210,11 +198,13 @@
   viewHistoryItem.addActionListener(this);
   addContactItem.addActionListener(this);
   if (metaContact.getDefaultContact(OperationSetFileTransfer.class) == null)   this.sendFileItem.setEnabled(false);
-  if (metaContact.getDefaultContact(OperationSetBasicTelephony.class) == null && (!hasPhones || CallManager.getTelephonyProviders().size() == 0))   this.callItem.setEnabled(false);
-  if (metaContact.getDefaultContact(OperationSetVideoTelephony.class) == null && !routingForVideoEnabled && !hasVideoDetail) {
+  if (!contactPhoneUtil.isCallEnabled()) {
+    this.callItem.setEnabled(false);
+  }
+  if (!contactPhoneUtil.isVideoCallEnabled()) {
     this.videoCallItem.setEnabled(false);
   }
-  if (metaContact.getDefaultContact(OperationSetDesktopSharingServer.class) == null && !routingForDesktopEnabled && !hasVideoDetail) {
+  if (!contactPhoneUtil.isDesktopSharingEnabled()) {
     fullShareMenuItem.setEnabled(false);
     regionShareMenuItem.setEnabled(false);
   }

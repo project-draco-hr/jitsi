@@ -1,29 +1,7 @@
 {
-  List<ChatTransport> chatTransports=this.chatSession.getTransportsForOperationSet(OperationSetBasicTelephony.class);
-  hasTelephony=!getOperationSetForCapabilities(chatTransports,OperationSetBasicTelephony.class).isEmpty();
-  if (!hasTelephony && contact != null) {
-    Iterator<Contact> contacts=contact.getContacts();
-    while (contacts.hasNext()) {
-      Contact c=contacts.next();
-      if (!c.getProtocolProvider().isRegistered())       continue;
-      OperationSetServerStoredContactInfo infoOpSet=c.getProtocolProvider().getOperationSet(OperationSetServerStoredContactInfo.class);
-      Iterator<GenericDetail> details;
-      if (infoOpSet != null) {
-        details=infoOpSet.requestAllDetailsForContact(c,new DetailsListener(this.chatSession,callButton));
-        if (details != null) {
-          while (details.hasNext()) {
-            GenericDetail d=details.next();
-            if (d instanceof PhoneNumberDetail && !(d instanceof PagerDetail) && !(d instanceof FaxDetail)) {
-              PhoneNumberDetail pnd=(PhoneNumberDetail)d;
-              if (pnd.getNumber() != null && pnd.getNumber().length() > 0) {
-                hasPhone=true;
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+  contactPhoneUtil=ContactPhoneUtil.getPhoneUtil(contact);
+  isCallEnabled=contactPhoneUtil.isCallEnabled();
+  isVideoCallEnabled=contactPhoneUtil.isVideoCallEnabled();
+  isDesktopSharingEnabled=contactPhoneUtil.isDesktopSharingEnabled();
   return null;
 }

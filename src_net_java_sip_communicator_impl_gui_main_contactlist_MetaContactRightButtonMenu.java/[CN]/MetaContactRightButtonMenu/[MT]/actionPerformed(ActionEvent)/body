@@ -16,20 +16,16 @@
     GuiActivator.getUIService().getChatWindowManager().startChat(metaContact,defaultSmsContact,true);
   }
  else   if (itemName.equals("call")) {
-    contact=metaContact.getDefaultContact(OperationSetBasicTelephony.class);
-    CallManager.createCall(contact.getProtocolProvider(),contact);
+    call(false,false,false,null);
   }
  else   if (itemName.equals("videoCall")) {
-    contact=metaContact.getDefaultContact(OperationSetVideoTelephony.class);
-    CallManager.createVideoCall(contact.getProtocolProvider(),contact);
+    call(true,false,false,null);
   }
  else   if (itemName.equals("shareFullScreen")) {
-    contact=metaContact.getDefaultContact(OperationSetVideoTelephony.class);
-    CallManager.createDesktopSharing(contact.getProtocolProvider(),contact.getAddress());
+    call(true,true,false,null);
   }
  else   if (itemName.equals("shareRegion")) {
-    contact=metaContact.getDefaultContact(OperationSetVideoTelephony.class);
-    CallManager.createRegionDesktopSharing(contact.getProtocolProvider(),contact.getAddress());
+    call(true,true,true,null);
   }
  else   if (itemName.equals("sendFile")) {
     SipCommFileChooser scfc=GenericFileDialog.create(null,"Send file...",SipCommFileChooser.LOAD_FILE_OPERATION,ConfigurationUtils.getSendFileLastDir());
@@ -98,34 +94,23 @@
     }
   }
  else   if (itemName.startsWith(callContactPrefix)) {
-    contact=getContactFromMetaContact(itemName.substring(callContactPrefix.length()));
-    CallManager.createCall(contact.getProtocolProvider(),contact);
+    call(false,false,false,itemName.substring(callContactPrefix.length()));
   }
  else   if (itemName.startsWith(videoCallPrefix)) {
-    contact=getContactFromMetaContact(itemName.substring(videoCallPrefix.length()));
-    CallManager.createVideoCall(contact.getProtocolProvider(),contact.getAddress());
+    call(true,false,false,itemName.substring(videoCallPrefix.length()));
   }
  else   if (itemName.startsWith(fullDesktopSharingPrefix)) {
-    contact=getContactFromMetaContact(itemName.substring(fullDesktopSharingPrefix.length()));
-    CallManager.createDesktopSharing(contact.getProtocolProvider(),contact.getAddress());
+    call(true,true,false,itemName.substring(fullDesktopSharingPrefix.length()));
   }
  else   if (itemName.startsWith(regionDesktopSharingPrefix)) {
-    contact=getContactFromMetaContact(itemName.substring(regionDesktopSharingPrefix.length()));
-    CallManager.createRegionDesktopSharing(contact.getProtocolProvider(),contact.getAddress());
+    call(true,true,true,itemName.substring(regionDesktopSharingPrefix.length()));
   }
  else   if (itemName.startsWith(requestAuthPrefix)) {
     contact=getContactFromMetaContact(itemName.substring(requestAuthPrefix.length()));
     requestAuthorization(contact);
   }
  else   if (itemName.startsWith(callPhonePrefix)) {
-    List<ProtocolProviderService> providers=CallManager.getTelephonyProviders();
     String phone=itemName.substring(callPhonePrefix.length());
-    if (providers.size() > 1) {
-      ChooseCallAccountDialog chooseAccount=new ChooseCallAccountDialog(phone,OperationSetBasicTelephony.class,providers);
-      chooseAccount.setVisible(true);
-    }
- else {
-      CallManager.createCall(providers.get(0),phone);
-    }
+    call(false,false,false,phone);
   }
 }

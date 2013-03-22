@@ -1,0 +1,29 @@
+{
+  ChatPanel chatPanel=chatContainer.getCurrentChat();
+  ChatSession chatSession=chatPanel.getChatSession();
+  Class<? extends OperationSet> opSetClass;
+  if (isVideo) {
+    if (isDesktopSharing)     opSetClass=OperationSetDesktopSharingServer.class;
+ else     opSetClass=OperationSetVideoTelephony.class;
+  }
+ else   opSetClass=OperationSetBasicTelephony.class;
+  List<ChatTransport> telTransports=null;
+  if (chatSession != null)   telTransports=chatSession.getTransportsForOperationSet(opSetClass);
+  List<ChatTransport> contactOpSetSupported;
+  contactOpSetSupported=getOperationSetForCapabilities(telTransports,opSetClass);
+  List<UIContactDetail> res=new ArrayList<UIContactDetail>();
+  for (  ChatTransport ct : contactOpSetSupported) {
+    HashMap<Class<? extends OperationSet>,ProtocolProviderService> m=new HashMap<Class<? extends OperationSet>,ProtocolProviderService>();
+    m.put(opSetClass,ct.getProtocolProvider());
+    UIContactDetailImpl d=new UIContactDetailImpl(ct.getName(),ct.getDisplayName(),null,null,null,m,null,ct.getName());
+    PresenceStatus status=ct.getStatus();
+    byte[] statusIconBytes=status.getStatusIcon();
+    if (statusIconBytes != null && statusIconBytes.length > 0) {
+      d.setStatusIcon(new ImageIcon(ImageLoader.getIndexedProtocolImage(ImageUtils.getBytesInImage(statusIconBytes),ct.getProtocolProvider())));
+    }
+    res.add(d);
+  }
+  Point location=new Point(callButton.getX(),callButton.getY() + callButton.getHeight());
+  SwingUtilities.convertPointToScreen(location,this);
+  CallManager.call(contactPhoneUtil,res,isVideo,isDesktopSharing,callButton,location);
+}
