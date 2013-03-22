@@ -23,14 +23,17 @@
     getProtocolProvider().getConnection().sendPacket(errResp);
     return;
   }
-  if (this.getDiscoverInfo() == null) {
+  if (this.getDiscoveryInfo() == null) {
     String calleeURI=sessionInitIQ.getFrom();
-    retrieveDiscoverInfo(calleeURI);
+    retrieveDiscoveryInfo(calleeURI);
   }
   if (logger.isTraceEnabled())   logger.trace("will send ringing response: ");
   getProtocolProvider().getConnection().sendPacket(JinglePacketFactory.createRinging(sessionInitIQ));
 synchronized (sessionInitiateSyncRoot) {
     sessionInitiateProcessed=true;
     sessionInitiateSyncRoot.notify();
+  }
+  if (getDiscoveryInfo() != null && getDiscoveryInfo().containsFeature(ProtocolProviderServiceJabberImpl.URN_IETF_RFC_3264)) {
+    getProtocolProvider().getConnection().sendPacket(JinglePacketFactory.createDescriptionInfo(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getSID(),getMediaHandler().getLocalContentList()));
   }
 }
