@@ -10,11 +10,16 @@
         srtpControls.put(key,scontrol);
       }
       ZrtpControl zcontrol=(ZrtpControl)scontrol;
-      String helloHash=zcontrol.getHelloHash();
-      if (helloHash != null && helloHash.length() > 0) {
-        md.setAttribute(SdpUtils.ZRTP_HASH_ATTR,helloHash);
-        return true;
+      int versionIndex=zcontrol.getNumberSupportedVersions();
+      boolean zrtpHashSet=false;
+      for (int i=0; i < versionIndex; i++) {
+        String helloHash=zcontrol.getHelloHash(i);
+        if (helloHash != null && helloHash.length() > 0) {
+          md.setAttribute(SdpUtils.ZRTP_HASH_ATTR,helloHash);
+          zrtpHashSet=true;
+        }
       }
+      return zrtpHashSet;
     }
  catch (    SdpException ex) {
       logger.error("Cannot add zrtp-hash to sdp",ex);
