@@ -5,28 +5,17 @@ synchronized (mapActions) {
     if (keyStroke == null) {
       return;
     }
-    if (keystrokes != null) {
-      if (keyStroke.getModifiers() != SPECIAL_KEY_MODIFIERS) {
-        ok=keyboardHook.registerShortcut(keyStroke.getKeyCode(),getModifiers(keyStroke));
-      }
- else {
-        ok=keyboardHook.registerSpecial(keyStroke.getKeyCode());
-      }
-      if (ok && add) {
-        keystrokes.add(keyStroke);
-      }
+    if (keystrokes == null) {
+      keystrokes=new ArrayList<AWTKeyStroke>();
+    }
+    if (keyStroke.getModifiers() != SPECIAL_KEY_MODIFIERS) {
+      ok=keyboardHook.registerShortcut(keyStroke.getKeyCode(),getModifiers(keyStroke),keyStroke.isOnKeyRelease());
     }
  else {
-      keystrokes=new ArrayList<AWTKeyStroke>();
-      if (keyStroke.getModifiers() != SPECIAL_KEY_MODIFIERS) {
-        ok=keyboardHook.registerShortcut(keyStroke.getKeyCode(),getModifiers(keyStroke));
-      }
- else {
-        ok=keyboardHook.registerSpecial(keyStroke.getKeyCode());
-      }
-      if (ok && add) {
-        keystrokes.add(keyStroke);
-      }
+      ok=keyboardHook.registerSpecial(keyStroke.getKeyCode(),keyStroke.isOnKeyRelease());
+    }
+    if (ok && add) {
+      keystrokes.add(keyStroke);
     }
     if (add)     mapActions.put(listener,keystrokes);
   }
