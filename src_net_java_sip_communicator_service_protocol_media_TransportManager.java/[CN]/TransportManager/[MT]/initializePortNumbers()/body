@@ -1,24 +1,15 @@
 {
-  minMediaPort=5000;
-  maxMediaPort=6000;
   ConfigurationService configuration=ProtocolMediaActivator.getConfigurationService();
   String minPortNumberStr=configuration.getString(OperationSetBasicTelephony.MIN_MEDIA_PORT_NUMBER_PROPERTY_NAME);
-  if (minPortNumberStr != null) {
-    try {
-      minMediaPort=Integer.parseInt(minPortNumberStr);
-    }
- catch (    NumberFormatException ex) {
-      logger.warn(minPortNumberStr + " is not a valid min port number value. " + "using min port "+ minMediaPort);
-    }
-  }
   String maxPortNumberStr=configuration.getString(OperationSetBasicTelephony.MAX_MEDIA_PORT_NUMBER_PROPERTY_NAME);
-  if (maxPortNumberStr != null) {
-    try {
-      maxMediaPort=Integer.parseInt(maxPortNumberStr);
-    }
- catch (    NumberFormatException ex) {
-      logger.warn(maxPortNumberStr + " is not a valid max port number value. " + "using max port "+ maxMediaPort,ex);
-    }
-  }
-  if ((minMediaPort <= maxMediaPort) && ((nextMediaPortToTry < minMediaPort) || (nextMediaPortToTry > maxMediaPort)))   nextMediaPortToTry=minMediaPort;
+  defaultPortTracker.tryRange(minPortNumberStr,maxPortNumberStr);
+  minPortNumberStr=configuration.getString(OperationSetBasicTelephony.MIN_VIDEO_PORT_NUMBER_PROPERTY_NAME);
+  maxPortNumberStr=configuration.getString(OperationSetBasicTelephony.MAX_VIDEO_PORT_NUMBER_PROPERTY_NAME);
+  videoPortTracker=PortTracker.createTracker(minPortNumberStr,maxPortNumberStr);
+  minPortNumberStr=configuration.getString(OperationSetBasicTelephony.MIN_AUDIO_PORT_NUMBER_PROPERTY_NAME);
+  maxPortNumberStr=configuration.getString(OperationSetBasicTelephony.MAX_AUDIO_PORT_NUMBER_PROPERTY_NAME);
+  audioPortTracker=PortTracker.createTracker(minPortNumberStr,maxPortNumberStr);
+  minPortNumberStr=configuration.getString(OperationSetBasicTelephony.MIN_DATA_CHANNEL_PORT_NUMBER_PROPERTY_NAME);
+  maxPortNumberStr=configuration.getString(OperationSetBasicTelephony.MAX_DATA_CHANNEL_PORT_NUMBER_PROPERTY_NAME);
+  dataChannelPortTracker=PortTracker.createTracker(minPortNumberStr,maxPortNumberStr);
 }

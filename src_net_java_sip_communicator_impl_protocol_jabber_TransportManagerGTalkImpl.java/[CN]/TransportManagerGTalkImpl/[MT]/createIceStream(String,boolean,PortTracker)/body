@@ -2,15 +2,15 @@
   IceMediaStream stream;
   try {
     stream=iceAgent.createMediaStream(media);
-    int rtpPort=getNextMediaPortToTry();
+    int rtpPort=portTracker.getPort();
     iceAgent.createComponent(stream,Transport.UDP,rtpPort,rtpPort,rtpPort + 100);
-    if (rtcp)     iceAgent.createComponent(stream,Transport.UDP,rtpPort + 1,rtpPort + 1,rtpPort + 101);
+    if (rtcp)     iceAgent.createComponent(stream,Transport.UDP,rtpPort,portTracker.getMinPort(),portTracker.getMaxPort());
   }
  catch (  Exception ex) {
     throw new OperationFailedException("Failed to initialize stream " + media,OperationFailedException.INTERNAL_ERROR,ex);
   }
   try {
-    setNextMediaPortToTry(1 + stream.getComponent(rtcp ? Component.RTCP : Component.RTP).getLocalCandidates().get(0).getTransportAddress().getPort());
+    portTracker.setNextPort(1 + stream.getComponent(rtcp ? Component.RTCP : Component.RTP).getLocalCandidates().get(0).getTransportAddress().getPort());
   }
  catch (  Throwable t) {
     logger.debug("Determining next port didn't work: ",t);

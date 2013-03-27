@@ -3,22 +3,22 @@
   InetAddress intendedDestination=getIntendedDestination(getCallPeer());
   InetAddress localHostForPeer=nam.getLocalHost(intendedDestination);
   initializePortNumbers();
+  PortTracker portTracker=getPortTracker(mediaType);
   DatagramSocket rtpSocket=null;
   try {
-    rtpSocket=nam.createDatagramSocket(localHostForPeer,nextMediaPortToTry,minMediaPort,maxMediaPort);
+    rtpSocket=nam.createDatagramSocket(localHostForPeer,portTracker.getPort(),portTracker.getMinPort(),portTracker.getMaxPort());
   }
  catch (  Exception exc) {
     throw new OperationFailedException("Failed to allocate the network ports necessary for the call.",OperationFailedException.INTERNAL_ERROR,exc);
   }
-  nextMediaPortToTry=rtpSocket.getLocalPort() + 1;
+  portTracker.setNextPort(rtpSocket.getLocalPort() + 1,false);
   DatagramSocket rtcpSocket=null;
   try {
-    rtcpSocket=nam.createDatagramSocket(localHostForPeer,nextMediaPortToTry,minMediaPort,maxMediaPort);
+    rtcpSocket=nam.createDatagramSocket(localHostForPeer,portTracker.getPort(),portTracker.getMinPort(),portTracker.getMaxPort());
   }
  catch (  Exception exc) {
     throw new OperationFailedException("Failed to allocate the network ports necessary for the call.",OperationFailedException.INTERNAL_ERROR,exc);
   }
-  nextMediaPortToTry=rtcpSocket.getLocalPort() + 1;
-  if (nextMediaPortToTry > maxMediaPort - 1)   nextMediaPortToTry=minMediaPort;
+  portTracker.setNextPort(rtcpSocket.getLocalPort() + 1);
   return new DefaultStreamConnector(rtpSocket,rtcpSocket);
 }
