@@ -1,0 +1,28 @@
+{
+  super.actionPerformed(e);
+  JMenuItem menuItem=(JMenuItem)e.getSource();
+  String itemText=menuItem.getName();
+  if (itemText.equalsIgnoreCase("myChatRooms")) {
+    ChatRoomTableDialog.showChatRoomTableDialog();
+  }
+ else   if (itemText.equals("history")) {
+    HistoryWindow history;
+    HistoryWindowManager historyWindowManager=GuiActivator.getUIService().getHistoryWindowManager();
+    ChatPanel chatPanel=this.chatWindow.getCurrentChat();
+    ChatSession chatSession=chatPanel.getChatSession();
+    if (historyWindowManager.containsHistoryWindowForContact(chatSession.getDescriptor())) {
+      history=historyWindowManager.getHistoryWindowForContact(chatSession.getDescriptor());
+      if (history.getState() == JFrame.ICONIFIED)       history.setState(JFrame.NORMAL);
+      history.toFront();
+    }
+ else {
+      history=new HistoryWindow(chatPanel.getChatSession().getDescriptor());
+      history.setVisible(true);
+      historyWindowManager.addHistoryWindowForContact(chatSession.getDescriptor(),history);
+    }
+  }
+ else   if (itemText.equalsIgnoreCase("close")) {
+    this.chatWindow.setVisible(false);
+    this.chatWindow.dispose();
+  }
+}

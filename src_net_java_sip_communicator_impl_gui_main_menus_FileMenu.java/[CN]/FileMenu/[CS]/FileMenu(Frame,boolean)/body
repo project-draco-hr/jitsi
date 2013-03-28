@@ -1,0 +1,52 @@
+{
+  super(GuiActivator.getResources().getI18NString("service.gui.FILE"));
+  this.isChatMenu=isChatMenu;
+  ResourceManagementService resources=GuiActivator.getResources();
+  createGroupItem=new JMenuItem(resources.getI18NString("service.gui.CREATE_GROUP"));
+  myChatRoomsItem=new JMenuItem(resources.getI18NString("service.gui.MY_CHAT_ROOMS"));
+  this.parentWindow=parentWindow;
+  boolean endsWithSeparator=false;
+  if (ConfigurationUtils.isShowAccountConfig()) {
+    newAccountMenuItem=new JMenuItem(resources.getI18NString("service.gui.NEW_ACCOUNT"));
+    this.add(newAccountMenuItem);
+    newAccountMenuItem.setName("newAccount");
+    newAccountMenuItem.addActionListener(this);
+    newAccountMenuItem.setMnemonic(resources.getI18nMnemonic("service.gui.NEW_ACCOUNT"));
+    if (!ConfigurationUtils.isAddContactDisabled() || !ConfigurationUtils.isCreateGroupDisabled() || !ConfigurationUtils.isGoToChatroomDisabled()) {
+      this.addSeparator();
+      endsWithSeparator=true;
+    }
+  }
+  if (!isChatMenu && !ConfigurationUtils.isAddContactDisabled()) {
+    addContactItem=new JMenuItem(resources.getI18NString("service.gui.ADD_CONTACT") + "...");
+    this.add(addContactItem);
+    addContactItem.setName("addContact");
+    addContactItem.addActionListener(this);
+    addContactItem.setMnemonic(resources.getI18nMnemonic("service.gui.ADD_CONTACT"));
+    if (ConfigurationUtils.isCreateGroupDisabled() && !ConfigurationUtils.isGoToChatroomDisabled()) {
+      this.addSeparator();
+      endsWithSeparator=true;
+    }
+ else     endsWithSeparator=false;
+  }
+  if (!isChatMenu && !ConfigurationUtils.isCreateGroupDisabled()) {
+    this.add(createGroupItem);
+    if (!ConfigurationUtils.isGoToChatroomDisabled()) {
+      this.addSeparator();
+      endsWithSeparator=true;
+    }
+  }
+  if (!ConfigurationUtils.isGoToChatroomDisabled()) {
+    this.add(myChatRoomsItem);
+    endsWithSeparator=false;
+  }
+  registerCloseMenuItem(!endsWithSeparator);
+  loadSkin();
+  createGroupItem.setName("createGroup");
+  myChatRoomsItem.setName("myChatRooms");
+  createGroupItem.addActionListener(this);
+  myChatRoomsItem.addActionListener(this);
+  this.setMnemonic(resources.getI18nMnemonic("service.gui.FILE"));
+  createGroupItem.setMnemonic(resources.getI18nMnemonic("service.gui.CREATE_GROUP"));
+  myChatRoomsItem.setMnemonic(resources.getI18nMnemonic("service.gui.MY_CHAT_ROOMS"));
+}
