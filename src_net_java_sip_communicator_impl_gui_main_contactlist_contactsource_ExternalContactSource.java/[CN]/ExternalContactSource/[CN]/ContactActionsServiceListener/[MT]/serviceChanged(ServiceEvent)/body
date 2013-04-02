@@ -7,15 +7,18 @@
   if (!(service instanceof CustomContactActionsService)) {
     return;
   }
-  @SuppressWarnings("unchecked") Iterator<ContactAction<SourceContact>> actionIterator=((CustomContactActionsService<SourceContact>)service).getCustomContactActions();
+  CustomContactActionsService cContactActionsService=(CustomContactActionsService)service;
+  if (!cContactActionsService.getContactSourceClass().equals(contactSourceClass))   return;
+  @SuppressWarnings("unchecked") Iterator<ContactAction<SourceContact>> actionIterator=cContactActionsService.getCustomContactActions();
   while (actionIterator != null && actionIterator.hasNext()) {
     final ContactAction<SourceContact> ca=actionIterator.next();
 switch (event.getType()) {
 case ServiceEvent.REGISTERED:
-      initActionButton(ca);
+      initActionButton(ca,contactSourceClass);
     break;
 case ServiceEvent.UNREGISTERING:
-  customActionButtons.remove(ca);
+  if (contactSourceClass.equals(SourceContact.class))   customContactActionButtons.remove(ca);
+ else   if (contactSourceClass.equals(ContactSourceService.class))   customServiceActionButtons.remove(ca);
 break;
 }
 }

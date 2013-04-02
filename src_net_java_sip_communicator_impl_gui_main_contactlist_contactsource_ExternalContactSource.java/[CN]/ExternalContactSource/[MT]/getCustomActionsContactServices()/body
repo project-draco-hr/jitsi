@@ -1,0 +1,19 @@
+{
+  List<CustomContactActionsService<ContactSourceService>> contactActionsServices=new ArrayList<CustomContactActionsService<ContactSourceService>>();
+  ServiceReference[] serRefs=null;
+  try {
+    serRefs=GuiActivator.bundleContext.getServiceReferences(CustomContactActionsService.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException e) {
+  }
+  if (serRefs != null) {
+    for (    ServiceReference serRef : serRefs) {
+      CustomContactActionsService<ContactSourceService> customActionService=(CustomContactActionsService<ContactSourceService>)GuiActivator.bundleContext.getService(serRef);
+      if (customActionService.getContactSourceClass().equals(ContactSourceService.class)) {
+        contactActionsServices.add(customActionService);
+      }
+    }
+  }
+  GuiActivator.bundleContext.addServiceListener(new ContactActionsServiceListener(ContactSourceService.class));
+  return contactActionsServices;
+}
