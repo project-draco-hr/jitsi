@@ -4,15 +4,17 @@
     notificationList.clear();
     NotificationConfigurationActivator.getNotificationService().restoreDefaults();
   }
- else   if (e.getSource() == soundFileChooser) {
+ else   if (e.getSource() == soundFileButton) {
     if (row < 0)     return;
     NotificationEntry entry=notificationList.getNotificationEntry(row);
-    File file=fileChooserSound.getFileFromDialog();
+    File file=soundFileChooser.getFileFromDialog();
     if (file != null) {
       try {
-        if (logger.isDebugEnabled())         logger.debug("Opening: " + file.toURI().toURL().toExternalForm());
-        entry.setSoundFile(file.toURI().toURL().toExternalForm());
-        soundFileTextField.setText(file.toURI().toURL().toExternalForm());
+        setLastSoundPath(file.getParent());
+        String fileUri=file.toURI().toURL().toExternalForm();
+        if (logger.isDebugEnabled())         logger.debug("Opening: " + fileUri);
+        entry.setSoundFile(fileUri);
+        soundFileTextField.setText(fileUri);
       }
  catch (      MalformedURLException ex) {
         logger.error("Error file path parsing",ex);
@@ -22,11 +24,12 @@
       if (logger.isDebugEnabled())       logger.debug("Open command cancelled by user.");
     }
   }
- else   if (e.getSource() == programFileChooser) {
+ else   if (e.getSource() == programFileButton) {
     if (row < 0)     return;
     NotificationEntry entry=notificationList.getNotificationEntry(row);
-    File file=fileChooserProgram.getFileFromDialog();
+    File file=programFileChooser.getFileFromDialog();
     if (file != null) {
+      setLastProgramPath(file.getParent());
       if (logger.isDebugEnabled())       logger.debug("Opening: " + file.getAbsolutePath());
       entry.setProgramFile(file.getAbsolutePath());
       programFileTextField.setText(file.getAbsolutePath());
