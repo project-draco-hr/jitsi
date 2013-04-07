@@ -1,13 +1,12 @@
 {
   if (OSUtils.IS_WINDOWS) {
-    if (!SystemActivityNotifications.isLoaded())     return false;
 switch (eventID) {
 case SystemActivityEvent.EVENT_SLEEP:
 case SystemActivityEvent.EVENT_WAKE:
 case SystemActivityEvent.EVENT_NETWORK_CHANGE:
 case SystemActivityEvent.EVENT_SYSTEM_IDLE:
 case SystemActivityEvent.EVENT_SYSTEM_IDLE_END:
-      return true;
+      return SystemActivityNotifications.isLoaded();
 default :
     return false;
 }
@@ -20,24 +19,20 @@ switch (eventID) {
 case SystemActivityEvent.EVENT_SLEEP:
 case SystemActivityEvent.EVENT_NETWORK_CHANGE:
 {
-    return getCurrentRunningManager() != null ? getCurrentRunningManager().isConnected() : false;
+    SystemActivityManager currentRunningManager=getCurrentRunningManager();
+    return (currentRunningManager == null) ? false : currentRunningManager.isConnected();
   }
 case SystemActivityEvent.EVENT_SYSTEM_IDLE:
 case SystemActivityEvent.EVENT_SYSTEM_IDLE_END:
-{
-  return SystemActivityNotifications.isLoaded();
-}
+return SystemActivityNotifications.isLoaded();
 default :
 return false;
 }
 }
  else if (OSUtils.IS_ANDROID) {
-switch (eventID) {
-case SystemActivityEvent.EVENT_NETWORK_CHANGE:
-return true;
-default :
+return (eventID == SystemActivityEvent.EVENT_NETWORK_CHANGE);
+}
+ else {
 return false;
 }
-}
- else return false;
 }
