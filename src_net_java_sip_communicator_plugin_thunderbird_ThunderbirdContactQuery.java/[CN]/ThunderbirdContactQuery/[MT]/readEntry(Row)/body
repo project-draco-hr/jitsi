@@ -1,0 +1,34 @@
+{
+  boolean hadMatch=false;
+  for (  Alias value : r.getAliases().values()) {
+    if (value != null && (super.query.matcher(value.getValue()).find() || super.phoneNumberMatches(value.getValue()))) {
+      hadMatch=true;
+      break;
+    }
+  }
+  if (!hadMatch) {
+    return;
+  }
+  List<ContactDetail> details=new LinkedList<ContactDetail>();
+  for (  String email : getPropertySet(r,"PrimaryEmail","SecondEmail","DefaultEmail")) {
+    ContactDetail detail=new ContactDetail(email,Category.Email);
+    detail.addSupportedOpSet(OperationSetPersistentPresence.class);
+    details.add(detail);
+  }
+  this.addPhoneDetail(details,r,"HomePhone",SubCategory.Home);
+  this.addPhoneDetail(details,r,"WorkPhone",SubCategory.Work);
+  this.addPhoneDetail(details,r,"CellularNumber",SubCategory.Mobile);
+  String displayName=r.getValue("DisplayName");
+  if (StringUtils.isNullOrEmpty(displayName,true)) {
+    displayName=r.getValue("LastName");
+    if (displayName != null) {
+      displayName=displayName.trim();
+    }
+    String firstName=r.getValue("FirstName");
+    if (!StringUtils.isNullOrEmpty(firstName,true)) {
+      displayName=firstName + " " + displayName;
+    }
+  }
+  GenericSourceContact sc=new GenericSourceContact(super.getContactSource(),displayName,details);
+  addQueryResult(sc);
+}

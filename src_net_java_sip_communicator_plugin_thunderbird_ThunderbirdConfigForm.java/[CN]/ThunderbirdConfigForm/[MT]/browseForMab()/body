@@ -1,0 +1,47 @@
+{
+  FilenameFilter ff=new FilenameFilter(){
+    public boolean accept(    File dir,    String name){
+      String extension="";
+      int i=name.lastIndexOf('.');
+      if (i > 0) {
+        extension=name.substring(i + 1);
+      }
+      return "mab".equals(extension);
+    }
+  }
+;
+  FileDialog fd=new FileDialog((Frame)null);
+  fd.setFilenameFilter(ff);
+  fd.setMultipleMode(false);
+  if (OSUtils.IS_WINDOWS) {
+    File f=new File(new File(System.getenv("APPDATA"),"Thunderbird"),"Profiles");
+    if (f.exists()) {
+      fd.setDirectory(f.getAbsolutePath());
+    }
+  }
+ else   if (OSUtils.IS_LINUX) {
+    File f=new File(System.getProperty("user.home"),".thunderbird");
+    if (!f.exists()) {
+      f=new File(System.getProperty("user.home"),".mozilla-thunderbird");
+    }
+    if (f.exists()) {
+      fd.setDirectory(f.getAbsolutePath());
+    }
+  }
+ else   if (OSUtils.IS_MAC) {
+    File f=new File(System.getProperty("user.home"),"/Library/Profiles");
+    if (!f.exists()) {
+      f=new File(System.getProperty("user.home"),"Application Support/Thunderbird/Profiles");
+    }
+    if (f.exists()) {
+      fd.setDirectory(f.getAbsolutePath());
+    }
+  }
+  fd.setVisible(true);
+  if (fd.getFile() != null) {
+    File f=new File(fd.getDirectory(),fd.getFile());
+    if (f.exists()) {
+      txtFilename.setText(f.getAbsolutePath());
+    }
+  }
+}

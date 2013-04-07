@@ -1,0 +1,29 @@
+{
+  if (e.getSource() == cmdBrowse) {
+    browseForMab();
+    ThunderbirdActivator.getActiveServices().get(0).setFilename(txtFilename.getText());
+  }
+ else   if (e.getSource() == chkEnabled) {
+    if (chkEnabled.isSelected()) {
+      browseForMab();
+      if (txtFilename.getText() != null) {
+        String bprop=PNAME_BASE_THUNDERBIRD_CONFIG + ".1";
+        ConfigurationService config=ThunderbirdActivator.getConfigService();
+        config.setProperty(bprop,"1");
+        config.setProperty(bprop + "." + PNAME_INDEX,1);
+        config.setProperty(bprop + "." + PNAME_FILENAME,txtFilename.getText());
+        config.setProperty(bprop + "." + PNAME_DISPLAYNAME,"Thunderbird");
+        config.setProperty(bprop + "." + PNAME_PREFIX,txtPrefix.getText());
+        ThunderbirdActivator.add(bprop);
+      }
+    }
+ else {
+      for (      ThunderbirdContactSourceService svc : ThunderbirdActivator.getActiveServices()) {
+        ThunderbirdActivator.remove(svc);
+      }
+      txtFilename.setText(null);
+      txtPrefix.setText(null);
+    }
+    updateStates();
+  }
+}
