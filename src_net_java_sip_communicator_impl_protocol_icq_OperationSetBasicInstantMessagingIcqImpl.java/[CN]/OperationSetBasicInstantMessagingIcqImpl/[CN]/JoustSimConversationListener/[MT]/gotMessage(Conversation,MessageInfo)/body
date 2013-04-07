@@ -21,9 +21,12 @@
     if (logger.isDebugEnabled())     logger.debug("received a message from a unknown contact: " + conversation.getBuddy());
     sourceContact=opSetPersPresence.createVolatileContact(conversation.getBuddy().getFormatted());
   }
-  long current=System.currentTimeMillis();
-  long msgDate=minfo.getTimestamp().getTime();
-  if ((current + ONE_DAY) > msgDate)   msgDate=current;
+  Date current=new Date();
+  Date msgDate=minfo.getTimestamp();
+  Calendar tomorrow=new GregorianCalendar();
+  tomorrow.setTime(current);
+  tomorrow.set(Calendar.DATE,tomorrow.get(Calendar.DATE) + 1);
+  if (tomorrow.after(msgDate))   msgDate=current;
   MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(newMessage,sourceContact,msgDate);
   if (logger.isDebugEnabled())   logger.debug("fire msg received for : " + newMessage);
   fireMessageEvent(msgReceivedEvt);

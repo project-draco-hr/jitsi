@@ -3,6 +3,7 @@
   TreeSet<HistoryRecord> result=new TreeSet<HistoryRecord>(new HistoryRecordComparator());
   int leftCount=count;
   int currentFile=filelist.size() - 1;
+  SimpleDateFormat sdf=new SimpleDateFormat(DATE_FORMAT);
   while (leftCount > 0 && currentFile >= 0) {
     Document doc=this.historyImpl.getDocumentForFile(filelist.get(currentFile));
     if (doc == null) {
@@ -27,8 +28,14 @@
     while (i.hasNext()) {
       Node node=i.next();
       NodeList propertyNodes=node.getChildNodes();
+      Date timestamp;
       String ts=node.getAttributes().getNamedItem("timestamp").getNodeValue();
-      long timestamp=Long.parseLong(ts);
+      try {
+        timestamp=sdf.parse(ts);
+      }
+ catch (      ParseException e) {
+        timestamp=new Date(Long.parseLong(ts));
+      }
       ArrayList<String> nameVals=new ArrayList<String>();
       int len=propertyNodes.getLength();
       for (int j=0; j < len; j++) {

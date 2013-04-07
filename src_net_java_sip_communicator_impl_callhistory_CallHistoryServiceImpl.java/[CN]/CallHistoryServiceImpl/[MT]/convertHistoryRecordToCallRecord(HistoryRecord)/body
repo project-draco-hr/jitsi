@@ -5,12 +5,23 @@
   List<String> callPeerStart=null;
   List<String> callPeerEnd=null;
   List<CallPeerState> callPeerStates=null;
+  SimpleDateFormat sdf=new SimpleDateFormat(HistoryService.DATE_FORMAT);
   for (int i=0; i < hr.getPropertyNames().length; i++) {
     String propName=hr.getPropertyNames()[i];
     String value=hr.getPropertyValues()[i];
     if (propName.equals(STRUCTURE_NAMES[0]))     result.setProtocolProvider(getProtocolProvider(value));
- else     if (propName.equals(STRUCTURE_NAMES[1]))     result.setStartTime(new Date(Long.parseLong(value)));
- else     if (propName.equals(STRUCTURE_NAMES[2]))     result.setEndTime(new Date(Long.parseLong(value)));
+ else     if (propName.equals(STRUCTURE_NAMES[1]))     try {
+      result.setStartTime(sdf.parse(value));
+    }
+ catch (    ParseException e) {
+      result.setStartTime(new Date(Long.parseLong(value)));
+    }
+ else     if (propName.equals(STRUCTURE_NAMES[2]))     try {
+      result.setEndTime(sdf.parse(value));
+    }
+ catch (    ParseException e) {
+      result.setEndTime(new Date(Long.parseLong(value)));
+    }
  else     if (propName.equals(STRUCTURE_NAMES[3]))     result.setDirection(value);
  else     if (propName.equals(STRUCTURE_NAMES[4]))     callPeerIDs=getCSVs(value);
  else     if (propName.equals(STRUCTURE_NAMES[5]))     callPeerStart=getCSVs(value);
@@ -24,14 +35,24 @@
     Date callPeerStartValue=null;
     Date callPeerEndValue=null;
     if (i < callPeerStart.size()) {
-      callPeerStartValue=new Date(Long.parseLong(callPeerStart.get(i)));
+      try {
+        callPeerStartValue=sdf.parse(callPeerStart.get(i));
+      }
+ catch (      ParseException e) {
+        callPeerStartValue=new Date(Long.parseLong(callPeerStart.get(i)));
+      }
     }
  else {
       callPeerStartValue=result.getStartTime();
       if (logger.isInfoEnabled())       logger.info("Call history start time list different from ids list: " + hr.toString());
     }
     if (i < callPeerEnd.size()) {
-      callPeerEndValue=new Date(Long.parseLong(callPeerEnd.get(i)));
+      try {
+        callPeerEndValue=sdf.parse(callPeerEnd.get(i));
+      }
+ catch (      ParseException e) {
+        callPeerEndValue=new Date(Long.parseLong(callPeerEnd.get(i)));
+      }
     }
  else {
       callPeerEndValue=result.getEndTime();

@@ -3,6 +3,7 @@
   Vector<String> filelist=filterFilesByDate(this.historyImpl.getFileList(),date,null);
   int leftCount=count;
   int currentFile=0;
+  SimpleDateFormat sdf=new SimpleDateFormat(DATE_FORMAT);
   while (leftCount > 0 && currentFile < filelist.size()) {
     Document doc=this.historyImpl.getDocumentForFile(filelist.get(currentFile));
     if (doc == null) {
@@ -14,8 +15,14 @@
     for (int i=0; i < nodes.getLength() && leftCount > 0; i++) {
       node=nodes.item(i);
       NodeList propertyNodes=node.getChildNodes();
+      Date timestamp;
       String ts=node.getAttributes().getNamedItem("timestamp").getNodeValue();
-      long timestamp=Long.parseLong(ts);
+      try {
+        timestamp=sdf.parse(ts);
+      }
+ catch (      ParseException e) {
+        timestamp=new Date(Long.parseLong(ts));
+      }
       if (!isInPeriod(timestamp,date,null))       continue;
       ArrayList<String> nameVals=new ArrayList<String>();
       boolean isRecordOK=true;

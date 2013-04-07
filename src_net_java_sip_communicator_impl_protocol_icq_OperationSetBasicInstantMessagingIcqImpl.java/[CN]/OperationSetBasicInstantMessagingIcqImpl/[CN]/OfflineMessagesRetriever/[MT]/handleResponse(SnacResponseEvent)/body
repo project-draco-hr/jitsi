@@ -9,9 +9,12 @@
       if (logger.isDebugEnabled())       logger.debug("received a message from a unknown contact: " + contactUIN);
       sourceContact=opSetPersPresence.createVolatileContact(contactUIN);
     }
-    long current=System.currentTimeMillis();
-    long msgDate=offlineMsgCmd.getDate().getTime();
-    if ((current + ONE_DAY) > msgDate)     msgDate=current;
+    Date current=new Date();
+    Date msgDate=offlineMsgCmd.getDate();
+    Calendar tomorrow=new GregorianCalendar();
+    tomorrow.setTime(current);
+    tomorrow.set(Calendar.DATE,tomorrow.get(Calendar.DATE) + 1);
+    if (tomorrow.after(msgDate))     msgDate=current;
     MessageReceivedEvent msgReceivedEvt=new MessageReceivedEvent(createMessage(offlineMsgCmd.getContents()),sourceContact,msgDate);
     if (msgReceivedEvt != null) {
       if (logger.isDebugEnabled())       logger.debug("fire msg received for : " + offlineMsgCmd.getContents());

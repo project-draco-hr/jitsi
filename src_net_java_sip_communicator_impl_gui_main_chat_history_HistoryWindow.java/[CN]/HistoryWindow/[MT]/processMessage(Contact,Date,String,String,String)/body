@@ -1,0 +1,23 @@
+{
+  if (!(historyContact instanceof MetaContact))   return;
+  Contact containedContact=((MetaContact)historyContact).getContact(contact.getAddress(),contact.getProtocolProvider());
+  if (containedContact != null) {
+    int lastDateIndex=datesPanel.getDatesNumber() - 1;
+    if (lastDateIndex < 0)     return;
+    Date lastDate=datesPanel.getDate(lastDateIndex);
+    if (lastDate != null && GuiUtils.compareDatesOnly(lastDate,timestamp) == 0) {
+      HTMLDocument document=dateHistoryTable.get(lastDate);
+      if (document != null) {
+        ChatMessage chatMessage=new ChatMessage(contact.getDisplayName(),timestamp,messageType,messageContent,messageContentType);
+        String processedMessage=chatConvPanel.processMessage(chatMessage,searchKeyword,contact.getProtocolProvider(),contact.getAddress());
+        this.appendMessageToDocument(document,processedMessage);
+      }
+    }
+ else     if (lastDate == null || GuiUtils.compareDatesOnly(lastDate,timestamp) < 0) {
+      long milisecondsPerDay=24 * 60 * 60* 1000;
+      Date date=new Date(timestamp.getTime() - timestamp.getTime() % milisecondsPerDay);
+      datesDisplayed.add(date);
+      if (!datesPanel.containsDate(date))       datesPanel.addDate(date);
+    }
+  }
+}

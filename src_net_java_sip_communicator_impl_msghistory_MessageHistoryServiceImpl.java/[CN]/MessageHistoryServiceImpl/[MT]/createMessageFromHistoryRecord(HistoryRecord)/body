@@ -5,7 +5,8 @@
   String messageUID=null;
   String subject=null;
   boolean isOutgoing=false;
-  long messageReceivedDate=0;
+  Date messageReceivedDate=new Date(0);
+  SimpleDateFormat sdf=new SimpleDateFormat(DATE_FORMAT);
   for (int i=0; i < hr.getPropertyNames().length; i++) {
     String propName=hr.getPropertyNames()[i];
     if (propName.equals("msg") || propName.equals(STRUCTURE_NAMES[1]))     textContent=hr.getPropertyValues()[i];
@@ -18,7 +19,12 @@
  else       if (hr.getPropertyValues()[i].equals("out"))       isOutgoing=true;
     }
  else     if (propName.equals(STRUCTURE_NAMES[6])) {
-      messageReceivedDate=Long.parseLong(hr.getPropertyValues()[i]);
+      try {
+        messageReceivedDate=sdf.parse(hr.getPropertyValues()[i]);
+      }
+ catch (      ParseException e) {
+        messageReceivedDate=new Date(Long.parseLong(hr.getPropertyValues()[i]));
+      }
     }
   }
   return new MessageImpl(textContent,contentType,contentEncoding,subject,messageUID,isOutgoing,messageReceivedDate);
