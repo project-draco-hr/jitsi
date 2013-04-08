@@ -1,0 +1,33 @@
+{
+  Object[] props=IMAPIProp_GetProps(id,MAPI_MAILUSER_PROP_IDS,MAPI_UNICODE);
+  long objType=(props[PR_OBJECT_TYPE] instanceof Long) ? ((Long)props[PR_OBJECT_TYPE]).longValue() : 0;
+  if ((MAPI_MAILUSER == objType) && (mapiMessageCount != 0))   return false;
+  int propIndex=0;
+  boolean matches=false;
+  for (  Object prop : props) {
+    if ((prop instanceof String) && matches(propIndex,(String)prop)) {
+      matches=true;
+      break;
+    }
+    propIndex++;
+  }
+  if (matches) {
+    List<ContactDetail> contactDetails=getContactDetails(props);
+    if (!contactDetails.isEmpty()) {
+      String displayName=getDisplayName(props);
+      MsOutlookAddrBookSourceContact sourceContact=new MsOutlookAddrBookSourceContact(getContactSource(),(String)props[PR_ORIGINAL_ENTRYID],displayName,contactDetails);
+      if (MAPI_MESSAGE == objType) {
+        ++mapiMessageCount;
+        try {
+          Object[] images=IMAPIProp_GetProps(id,new long[]{PR_ATTACHMENT_CONTACTPHOTO},0);
+          Object image=images[0];
+          if (image instanceof byte[])           sourceContact.setImage((byte[])image);
+        }
+ catch (        MsOutlookMAPIHResultException ex) {
+        }
+      }
+      addQueryResult(sourceContact);
+    }
+  }
+  return (getStatus() == QUERY_IN_PROGRESS);
+}
