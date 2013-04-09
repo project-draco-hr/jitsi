@@ -53,7 +53,11 @@
     return ConnectState.ABORT_CONNECTING;
   }
   fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERING,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
-  loginStrategy.login(connection,userName,resource);
+  if (!loginStrategy.login(connection,userName,resource)) {
+    disconnectAndCleanConnection();
+    fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_AUTHENTICATION_FAILED,loginStrategy.getClass().getName() + " requests abort");
+    return ConnectState.ABORT_CONNECTING;
+  }
   if (connection.isAuthenticated()) {
     fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
     OperationSetPersistentPresenceJabberImpl opSet=(OperationSetPersistentPresenceJabberImpl)this.getOperationSet(OperationSetPersistentPresence.class);

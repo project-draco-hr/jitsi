@@ -1,4 +1,14 @@
 {
   SASLAuthentication.supportSASLMechanism("EXTERNAL",0);
-  connection.login("","",resource);
+  try {
+    connection.login("","",resource);
+    return true;
+  }
+ catch (  XMPPException ex) {
+    if (ex.getMessage().contains("EXTERNAL failed: not-authorized")) {
+      logger.error("Certificate login failed",ex);
+      return false;
+    }
+    throw ex;
+  }
 }
