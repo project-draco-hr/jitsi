@@ -1,7 +1,7 @@
 {
   ConnectionConfiguration confConn=new ConnectionConfiguration(address.getAddress().getHostAddress(),address.getPort(),serviceName,proxy);
   confConn.setReconnectionAllowed(false);
-  boolean tlsRequired=!accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_ALLOW_NON_SECURE,false);
+  boolean tlsRequired=loginStrategy.isTlsRequired();
   confConn.setSecurityMode(tlsRequired ? ConnectionConfiguration.SecurityMode.required : ConnectionConfiguration.SecurityMode.enabled);
   if (connection != null) {
     logger.error("Connection is not null and isConnected:" + connection.isConnected(),new Exception("Trace possible duplicate connections: " + getAccountID().getAccountAddress()));
@@ -11,7 +11,8 @@
   try {
     CertificateService cvs=getCertificateVerificationService();
     if (cvs != null) {
-      connection.setCustomTrustManager(new HostTrustManager(cvs.getTrustManager(Arrays.asList(new String[]{serviceName,"_xmpp-client." + serviceName}))));
+      SSLContext sslContext=loginStrategy.createSslContext(cvs,getTrustManager(cvs,serviceName));
+      connection.setCustomSslContext(sslContext);
     }
  else     if (tlsRequired)     throw new XMPPException("Certificate verification service is " + "unavailable and TLS is required");
   }
@@ -52,14 +53,7 @@
     return ConnectState.ABORT_CONNECTING;
   }
   fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERING,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
-  SASLAuthentication.supportSASLMechanism("PLAIN",0);
-  boolean disableCustomDigestMD5=accountID.getAccountPropertyBoolean("DISABLE_CUSTOM_DIGEST_MD5",false);
-  if (!disableCustomDigestMD5) {
-    SASLAuthentication.unregisterSASLMechanism("DIGEST-MD5");
-    SASLAuthentication.registerSASLMechanism("DIGEST-MD5",SASLDigestMD5Mechanism.class);
-    SASLAuthentication.supportSASLMechanism("DIGEST-MD5");
-  }
-  connection.login(userName,password,resource);
+  loginStrategy.login(connection,userName,resource);
   if (connection.isAuthenticated()) {
     fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
     OperationSetPersistentPresenceJabberImpl opSet=(OperationSetPersistentPresenceJabberImpl)this.getOperationSet(OperationSetPersistentPresence.class);

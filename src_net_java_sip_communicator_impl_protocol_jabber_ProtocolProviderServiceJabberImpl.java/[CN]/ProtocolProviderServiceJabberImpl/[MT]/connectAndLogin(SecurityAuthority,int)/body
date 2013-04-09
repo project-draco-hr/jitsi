@@ -1,8 +1,9 @@
 {
 synchronized (initializationLock) {
+    JabberLoginStrategy loginStrategy=new LoginByPasswordStrategy(this,getAccountID());
+    userCredentials=loginStrategy.prepareLogin(authority,reasonCode);
+    if (!loginStrategy.loginPreparationSuccessful())     return;
     String serviceName=StringUtils.parseServer(getAccountID().getUserID());
-    String password=loadPassword(authority,reasonCode);
-    if (password == null)     return;
     loadResource();
     loadProxy();
     Roster.setDefaultSubscriptionMode(Roster.SubscriptionMode.manual);
@@ -10,7 +11,7 @@ synchronized (initializationLock) {
     boolean[] hadDnsSecException=new boolean[]{false};
     boolean isServerOverriden=getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.IS_SERVER_OVERRIDDEN,false);
     if (!isServerOverriden) {
-      state=connectUsingSRVRecords(serviceName,password,serviceName,hadDnsSecException);
+      state=connectUsingSRVRecords(serviceName,serviceName,hadDnsSecException,loginStrategy);
       if (hadDnsSecException[0]) {
         setDnssecLoginFailure();
         return;
@@ -20,7 +21,7 @@ synchronized (initializationLock) {
     String customXMPPDomain=getAccountID().getAccountPropertyString("CUSTOM_XMPP_DOMAIN");
     if (customXMPPDomain != null && !hadDnsSecException[0]) {
       logger.info("Connect using custom xmpp domain: " + customXMPPDomain);
-      state=connectUsingSRVRecords(customXMPPDomain,password,serviceName,hadDnsSecException);
+      state=connectUsingSRVRecords(customXMPPDomain,serviceName,hadDnsSecException,loginStrategy);
       logger.info("state for connectUsingSRVRecords: " + state);
       if (hadDnsSecException[0]) {
         setDnssecLoginFailure();
@@ -49,7 +50,7 @@ catch (    DnssecException e) {
  else {
       for (      InetSocketAddress isa : addrs) {
         try {
-          state=connectAndLogin(isa,password,serviceName);
+          state=connectAndLogin(isa,serviceName,loginStrategy);
           if (state == ConnectState.ABORT_CONNECTING || state == ConnectState.STOP_TRYING)           return;
         }
  catch (        XMPPException ex) {
