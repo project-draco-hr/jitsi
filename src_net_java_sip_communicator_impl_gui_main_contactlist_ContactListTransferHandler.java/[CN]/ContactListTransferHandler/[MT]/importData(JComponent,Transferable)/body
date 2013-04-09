@@ -38,31 +38,32 @@ catch (    IOException e) {
       if (!(transferredContact instanceof MetaUIContact))       return false;
       TreeContactList list=(TreeContactList)comp;
       Object dest=list.getSelectedValue();
-      if (transferredContact != null) {
-        if (dest instanceof ContactNode) {
-          UIContact destContact=((ContactNode)dest).getContactDescriptor();
-          if (!(destContact instanceof MetaUIContact))           return false;
-          if (transferredContact != destContact) {
-            String mergeEnabledStr=GuiActivator.getResources().getSettingsString("impl.gui.dnd.MERGE_ENABLED");
-            if (mergeEnabledStr != null && !Boolean.parseBoolean(mergeEnabledStr)) {
-              UIGroup destGroup=destContact.getParentGroup();
-              if (destGroup == null || !(destGroup instanceof MetaUIGroup))               return false;
-              MetaContactListManager.moveMetaContactToGroup((MetaContact)transferredContact.getDescriptor(),(MetaContactGroup)destGroup.getDescriptor());
-            }
+      if (transferredContact == null)       return false;
+      if (dest instanceof ContactNode) {
+        UIContact destContact=((ContactNode)dest).getContactDescriptor();
+        if (!(destContact instanceof MetaUIContact))         return false;
+        if (transferredContact != destContact) {
+          String mergeEnabledStr=GuiActivator.getResources().getSettingsString("impl.gui.dnd.MERGE_ENABLED");
+          if (mergeEnabledStr != null && !Boolean.parseBoolean(mergeEnabledStr)) {
+            UIGroup destGroup=destContact.getParentGroup();
+            if (destGroup == null || !(destGroup instanceof MetaUIGroup) || (ConfigurationUtils.isContactMoveDisabled() || ConfigurationUtils.isCreateGroupDisabled()))             return false;
+            MetaContactListManager.moveMetaContactToGroup((MetaContact)transferredContact.getDescriptor(),(MetaContactGroup)destGroup.getDescriptor());
+          }
  else {
+            if (!ConfigurationUtils.isAddContactDisabled()) {
               MetaContactListManager.moveMetaContactToMetaContact((MetaContact)transferredContact.getDescriptor(),(MetaContact)destContact.getDescriptor());
             }
           }
-          return true;
         }
- else         if (dest instanceof GroupNode) {
-          UIGroup destGroup=((GroupNode)dest).getGroupDescriptor();
-          if (!(destGroup instanceof MetaUIGroup))           return false;
-          if (!transferredContact.getParentGroup().equals(destGroup)) {
-            MetaContactListManager.moveMetaContactToGroup((MetaContact)transferredContact.getDescriptor(),(MetaContactGroup)destGroup.getDescriptor());
-          }
-          return true;
+        return true;
+      }
+ else       if (dest instanceof GroupNode) {
+        UIGroup destGroup=((GroupNode)dest).getGroupDescriptor();
+        if (!(destGroup instanceof MetaUIGroup))         return false;
+        if (!transferredContact.getParentGroup().equals(destGroup) && !(ConfigurationUtils.isContactMoveDisabled() && ConfigurationUtils.isCreateGroupDisabled())) {
+          MetaContactListManager.moveMetaContactToGroup((MetaContact)transferredContact.getDescriptor(),(MetaContactGroup)destGroup.getDescriptor());
         }
+        return true;
       }
     }
   }
