@@ -23,6 +23,23 @@
   addSDESAdvertisedEncryptions(true,description,mediaType);
   StreamConnector connector=transportManager.getStreamConnector(mediaType);
   MediaDirection remoteDirection=JingleUtils.getDirection(content,getPeer().isInitiator());
+  boolean checkUserPreference=true;
+  if (MediaType.VIDEO.equals(mediaType)) {
+    Call call=getPeer().getCall();
+    if (call != null && call.getConference().isConferenceFocus()) {
+      MediaStream mediaStream=getStream(MediaType.VIDEO);
+      if (mediaStream != null) {
+        MediaDirection streamDirection=mediaStream.getDirection();
+        if (streamDirection != null && streamDirection.allowsReceiving()) {
+          checkUserPreference=false;
+          remoteDirection=remoteDirection.or(MediaDirection.SENDONLY);
+        }
+      }
+    }
+  }
+  if (checkUserPreference) {
+    devDirection=devDirection.and(getDirectionUserPreference(mediaType));
+  }
   MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
   List<RTPExtension> remoteRTPExtensions=JingleUtils.extractRTPExtensions(description,getRtpExtensionsRegistry());
   List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
