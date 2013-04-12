@@ -6,10 +6,12 @@
   boolean changed=false;
 switch (event.getType()) {
 case ServiceEvent.REGISTERED:
-    ExternalContactSource contactSource=new ExternalContactSource((ContactSourceService)service,TreeContactList.this);
-  contactSources.add(contactSource);
-changed=true;
-break;
+    if (!(service instanceof AsyncContactSourceService) || ((AsyncContactSourceService)service).canBeUsedToSearchContacts()) {
+      ExternalContactSource contactSource=new ExternalContactSource((ContactSourceService)service,TreeContactList.this);
+      contactSources.add(contactSource);
+      changed=true;
+    }
+  break;
 case ServiceEvent.UNREGISTERING:
 UIContactSource cSource=getContactSource((ContactSourceService)service);
 if (cSource != null) contactSources.remove(cSource);
