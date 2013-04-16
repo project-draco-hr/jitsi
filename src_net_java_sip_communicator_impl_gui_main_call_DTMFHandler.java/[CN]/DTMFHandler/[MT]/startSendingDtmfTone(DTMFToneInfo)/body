@@ -1,6 +1,13 @@
 {
   if (info.sound != null) {
-    currentlyPlayingTone=GuiActivator.getNotificationService().fireNotification(DTMF_TONE_PREFIX + info.tone.getValue());
+synchronized (dmtfToneNotifications) {
+      boolean startThread=(dmtfToneNotifications.size() == 0);
+      dmtfToneNotifications.add(info);
+      if (startThread) {
+        dtmfToneNotificationThread=new Thread(this,"DTMFHandler: DTMF tone notification player");
+        dtmfToneNotificationThread.start();
+      }
+    }
   }
   if (callContainer != null) {
     startSendingDtmfTone(callContainer.getCurrentCallRenderer().getCall(),info);
