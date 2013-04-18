@@ -23,22 +23,18 @@
   addSDESAdvertisedEncryptions(true,description,mediaType);
   StreamConnector connector=transportManager.getStreamConnector(mediaType);
   MediaDirection remoteDirection=JingleUtils.getDirection(content,getPeer().isInitiator());
-  boolean checkUserPreference=true;
-  if (MediaType.VIDEO.equals(mediaType)) {
-    Call call=getPeer().getCall();
-    if (call != null && call.getConference().isConferenceFocus()) {
-      MediaStream mediaStream=getStream(MediaType.VIDEO);
-      if (mediaStream != null) {
-        MediaDirection streamDirection=mediaStream.getDirection();
-        if (streamDirection != null && streamDirection.allowsReceiving()) {
-          checkUserPreference=false;
+  CallJabberImpl call=getPeer().getCall();
+  if (call != null && call.getConference().isConferenceFocus()) {
+    for (    CallPeerJabberImpl peer : call.getCallPeerList()) {
+      ContentPacketExtension remoteContent=peer.getMediaHandler().getRemoteContent(mediaType.toString());
+      boolean initiator=peer.isInitiator();
+      if (remoteContent != null) {
+        SendersEnum senders=remoteContent.getSenders();
+        if (senders == null || (SendersEnum.both == senders) || (initiator && SendersEnum.initiator == senders) || (!initiator && SendersEnum.responder == senders)) {
           remoteDirection=remoteDirection.or(MediaDirection.SENDONLY);
         }
       }
     }
-  }
-  if (checkUserPreference) {
-    devDirection=devDirection.and(getDirectionUserPreference(mediaType));
   }
   MediaDirection direction=devDirection.getDirectionForAnswer(remoteDirection);
   List<RTPExtension> remoteRTPExtensions=JingleUtils.extractRTPExtensions(description,getRtpExtensionsRegistry());
