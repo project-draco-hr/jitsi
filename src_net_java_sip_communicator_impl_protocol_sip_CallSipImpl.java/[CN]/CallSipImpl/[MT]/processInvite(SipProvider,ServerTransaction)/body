@@ -6,24 +6,26 @@
     if (logger.isTraceEnabled())     logger.trace("will send ringing response: ");
     response=messageFactory.createResponse(Response.RINGING,invite);
     serverTran.sendResponse(response);
-    final Timer timer=new Timer();
-    CallPeerAdapter stateListener=new CallPeerAdapter(){
-      public void peerStateChanged(      CallPeerChangeEvent evt){
-        if (!evt.getNewValue().equals(CallPeerState.INCOMING_CALL)) {
-          timer.cancel();
-          peer.removeCallPeerListener(this);
+    if (serverTran instanceof SIPTransaction && !((SIPTransaction)serverTran).isReliable()) {
+      final Timer timer=new Timer();
+      CallPeerAdapter stateListener=new CallPeerAdapter(){
+        public void peerStateChanged(        CallPeerChangeEvent evt){
+          if (!evt.getNewValue().equals(CallPeerState.INCOMING_CALL)) {
+            timer.cancel();
+            peer.removeCallPeerListener(this);
+          }
         }
       }
-    }
 ;
-    int interval=retransmitsRingingInterval;
-    int delay=0;
-    for (int i=0; i < MAX_RETRANSMISSIONS; i++) {
-      delay+=interval;
-      timer.schedule(new RingingResponseTask(response,serverTran,peer,timer,stateListener),delay);
-      interval*=2;
+      int interval=retransmitsRingingInterval;
+      int delay=0;
+      for (int i=0; i < MAX_RETRANSMISSIONS; i++) {
+        delay+=interval;
+        timer.schedule(new RingingResponseTask(response,serverTran,peer,timer,stateListener),delay);
+        interval*=2;
+      }
+      peer.addCallPeerListener(stateListener);
     }
-    peer.addCallPeerListener(stateListener);
     if (logger.isDebugEnabled())     logger.debug("sent a ringing response: " + response);
   }
  catch (  Exception ex) {
