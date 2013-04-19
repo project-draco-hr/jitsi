@@ -1,0 +1,19 @@
+{
+  ProtocolProviderService protocolProvider=evt.getProvider();
+  if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
+    OperationSetServerStoredAccountInfo accountInfoOpSet=protocolProvider.getOperationSet(OperationSetServerStoredAccountInfo.class);
+    if (accountInfoOpSet != null) {
+      new UpdateAccountInfo(protocolProvider,accountInfoOpSet,false).start();
+    }
+    OperationSetAvatar avatarOpSet=protocolProvider.getOperationSet(OperationSetAvatar.class);
+    if (avatarOpSet != null)     avatarOpSet.addAvatarListener(this);
+    OperationSetServerStoredAccountInfo serverStoredAccountInfo=protocolProvider.getOperationSet(OperationSetServerStoredAccountInfo.class);
+    if (serverStoredAccountInfo != null)     serverStoredAccountInfo.addServerStoredDetailsChangeListener(this);
+  }
+ else   if (evt.getNewState().equals(RegistrationState.UNREGISTERING) || evt.getNewState().equals(RegistrationState.CONNECTION_FAILED)) {
+    OperationSetAvatar avatarOpSet=protocolProvider.getOperationSet(OperationSetAvatar.class);
+    if (avatarOpSet != null)     avatarOpSet.removeAvatarListener(this);
+    OperationSetServerStoredAccountInfo serverStoredAccountInfo=protocolProvider.getOperationSet(OperationSetServerStoredAccountInfo.class);
+    if (serverStoredAccountInfo != null)     serverStoredAccountInfo.removeServerStoredDetailsChangeListener(this);
+  }
+}
