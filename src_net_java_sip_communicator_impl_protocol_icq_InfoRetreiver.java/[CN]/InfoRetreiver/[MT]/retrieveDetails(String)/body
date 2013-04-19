@@ -1,11 +1,16 @@
 {
-  int reqID=requestID++;
-  long toICQUin=Long.parseLong(uin);
-  MetaFullInfoRequest infoRequest=new MetaFullInfoRequest(Long.parseLong(ownerUin),reqID,toICQUin);
-  UserInfoResponseRetriever responseRetriever=new UserInfoResponseRetriever(reqID);
-  icqProvider.getAimConnection().getInfoService().getOscarConnection().sendSnacRequest(infoRequest,responseRetriever);
-  responseRetriever.waitForLastInfo(60000);
-  List<GenericDetail> result=responseRetriever.result;
+  List<GenericDetail> result=null;
+  try {
+    long toICQUin=Long.parseLong(uin);
+    int reqID=requestID++;
+    MetaFullInfoRequest infoRequest=new MetaFullInfoRequest(Long.parseLong(ownerUin),reqID,toICQUin);
+    UserInfoResponseRetriever responseRetriever=new UserInfoResponseRetriever(reqID);
+    icqProvider.getAimConnection().getInfoService().getOscarConnection().sendSnacRequest(infoRequest,responseRetriever);
+    responseRetriever.waitForLastInfo(60000);
+    result=responseRetriever.result;
+  }
+ catch (  Exception e) {
+  }
   if (result == null)   result=new LinkedList<GenericDetail>();
   retreivedDetails.put(uin,result);
   return result;
