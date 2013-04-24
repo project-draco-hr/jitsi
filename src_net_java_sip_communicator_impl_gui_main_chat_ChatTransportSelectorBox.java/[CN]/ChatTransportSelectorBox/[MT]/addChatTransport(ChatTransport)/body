@@ -1,9 +1,18 @@
 {
   if (chatTransport.allowsInstantMessage() || chatTransport.allowsSmsMessage()) {
     Image img=createTransportStatusImage(chatTransport);
-    JMenuItem menuItem=new JMenuItem("From: " + chatTransport.getProtocolProvider().getAccountID().getDisplayName() + " To: "+ chatTransport.getName(),new ImageIcon(img));
+    boolean isIndent=false;
+    String toString="";
+    if (chatTransport.getResourceName() != null && chatTransport.isDisplayResourceOnly()) {
+      toString=chatTransport.getResourceName();
+      isIndent=true;
+    }
+ else     toString="<b>" + chatTransport.getName() + "</b> "+ ((chatTransport.getResourceName() == null) ? "" : chatTransport.getResourceName())+ " <i>("+ GuiActivator.getResources().getI18NString("service.gui.VIA")+ ": "+ chatTransport.getProtocolProvider().getAccountID().getDisplayName()+ ")</i>";
+    JCheckBoxMenuItem menuItem=new JCheckBoxMenuItem("<html><font size=\"3\">" + toString + "</font></html>",new ImageIcon(img));
+    if (isIndent)     menuItem.setBorder(BorderFactory.createEmptyBorder(0,20,0,0));
     menuItem.addActionListener(this);
     this.transportMenuItems.put(chatTransport,menuItem);
+    buttonGroup.add(menuItem);
     this.menu.add(menuItem);
     updateEnableStatus();
   }

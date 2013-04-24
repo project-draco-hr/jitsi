@@ -1,0 +1,80 @@
+{
+  if (logger.isInfoEnabled())   logger.info("Creating outgoing call to " + calleeAddress);
+  if (protocolProvider.getConnection() == null || call == null) {
+    throw new OperationFailedException("Failed to create OutgoingJingleSession." + " We don't have a valid XMPPConnection.",OperationFailedException.INTERNAL_ERROR);
+  }
+  boolean isGoogle=protocolProvider.isGmailOrGoogleAppsAccount();
+  boolean isGoogleVoice=false;
+  if (isGoogle) {
+    if (!calleeAddress.contains("@")) {
+      calleeAddress+="@" + GOOGLE_VOICE_DOMAIN;
+      isGoogleVoice=true;
+    }
+ else     if (calleeAddress.endsWith(GOOGLE_VOICE_DOMAIN)) {
+      isGoogleVoice=true;
+    }
+  }
+  AccountID accountID=getProtocolProvider().getAccountID();
+  if (calleeAddress.indexOf('@') == -1) {
+    String phoneSuffix=accountID.getAccountPropertyString("OVERRIDE_PHONE_SUFFIX");
+    String serviceName=null;
+    if ((phoneSuffix == null) || (phoneSuffix.length() == 0))     serviceName=StringUtils.parseServer(accountID.getUserID());
+ else     serviceName=phoneSuffix;
+    calleeAddress=calleeAddress + "@" + serviceName;
+  }
+  String bypassDomain=accountID.getAccountPropertyString("TELEPHONY_BYPASS_GTALK_CAPS");
+  boolean alwaysCallGtalk=((bypassDomain != null) && bypassDomain.equals(calleeAddress.substring(calleeAddress.indexOf('@') + 1))) || isGoogleVoice;
+  if (!getProtocolProvider().getConnection().getRoster().contains(StringUtils.parseBareAddress(calleeAddress)) && !alwaysCallGtalk) {
+    throw new OperationFailedException(calleeAddress + " does not belong to our contact list",OperationFailedException.NOT_FOUND);
+  }
+  if (fullCalleeURI == null)   fullCalleeURI=discoverFullJid(calleeAddress,alwaysCallGtalk);
+  DiscoverInfo di=null;
+  try {
+    di=protocolProvider.getDiscoveryManager().discoverInfo(fullCalleeURI);
+  }
+ catch (  XMPPException ex) {
+    logger.warn("could not retrieve info for " + fullCalleeURI,ex);
+  }
+  boolean hasGtalkCaps=getProtocolProvider().isExtFeatureListSupported(fullCalleeURI,ProtocolProviderServiceJabberImpl.CAPS_GTALK_WEB_VOICE);
+  boolean isGingle=false;
+  if (di != null && di.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE)) {
+    isGingle=false;
+  }
+ else   if (protocolProvider.isGTalkTesting() && (hasGtalkCaps || alwaysCallGtalk)) {
+    isGingle=true;
+  }
+  if (isGingle) {
+    if (logger.isInfoEnabled())     logger.info(fullCalleeURI + ": Google Talk dialect supported");
+  }
+ else   if (di != null) {
+    if (logger.isInfoEnabled())     logger.info(fullCalleeURI + ": jingle supported ");
+  }
+ else {
+    if (logger.isInfoEnabled())     logger.info(fullCalleeURI + ": jingle and Google Talk not supported?");
+    throw new OperationFailedException("Failed to create OutgoingJingleSession.\n" + fullCalleeURI + " does not support jingle or Google Talk",OperationFailedException.INTERNAL_ERROR);
+  }
+  AbstractCallPeer<?,?> peer=null;
+  try {
+    if (isGingle) {
+      logger.info("initiate Gingle call");
+      CallGTalkImpl callGTalk=new CallGTalkImpl(this);
+      CallConference conference=call.getConference();
+      MediaUseCase useCase=call.getMediaUseCase();
+      boolean video=call.isLocalVideoAllowed(useCase);
+      call.setConference(null);
+      callGTalk.setConference(conference);
+      callGTalk.setLocalVideoAllowed(video,useCase);
+      peer=callGTalk.initiateGTalkSession(fullCalleeURI,sessionInitiateExtensions);
+    }
+ else     if (di != null) {
+      peer=call.initiateSession(fullCalleeURI,di,sessionInitiateExtensions);
+    }
+  }
+ catch (  Throwable t) {
+    if (t instanceof ThreadDeath)     throw (ThreadDeath)t;
+ else {
+      ProtocolProviderServiceJabberImpl.throwOperationFailedException("Failed to create a call to " + fullCalleeURI,OperationFailedException.INTERNAL_ERROR,t,logger);
+    }
+  }
+  return peer;
+}

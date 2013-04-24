@@ -28,56 +28,35 @@
     this.removeContactMenu.addSeparator();
     this.moveSubcontactMenu.addSeparator();
   }
-  List<ProtocolProviderService> providers=CallManager.getTelephonyProviders();
-  boolean separator=false;
   contactPhoneUtil=ContactPhoneUtil.getPhoneUtil(metaContact);
   while (contacts.hasNext()) {
     Contact contact=contacts.next();
     ProtocolProviderService protocolProvider=contact.getProtocolProvider();
     String contactAddress=contact.getAddress();
     Icon protocolIcon=new ImageIcon(createContactStatusImage(contact));
-    this.removeContactMenu.add(createMenuItem(contactAddress,removeContactPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
-    this.moveSubcontactMenu.add(createMenuItem(contactAddress,moveSubcontactPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
+    this.removeContactMenu.add(new ContactMenuItem(contact,contactAddress,removeContactPrefix,protocolIcon));
+    this.moveSubcontactMenu.add(new ContactMenuItem(contact,contactAddress,moveSubcontactPrefix,protocolIcon));
     List<String> phones=contactPhoneUtil.getPhones(contact);
     if (metaContact.getContactCount() > 1 || phones.size() > 0) {
       if (contactPhoneUtil.isCallEnabled(contact)) {
-        callContactMenu.add(createMenuItem(contactAddress,callContactPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
+        addCallMenuContact(contact,protocolIcon);
         separator=true;
       }
       if (contactPhoneUtil.isVideoCallEnabled(contact)) {
-        videoCallMenu.add(createMenuItem(contactAddress,videoCallPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
+        videoCallMenu.add(new ContactMenuItem(contact,contactAddress,videoCallPrefix,protocolIcon));
       }
       if (contactPhoneUtil.isDesktopSharingEnabled(contact)) {
-        multiContactFullShareMenu.add(createMenuItem(contactAddress,fullDesktopSharingPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
-        multiContactRegionShareMenu.add(createMenuItem(contactAddress,regionDesktopSharingPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
+        multiContactFullShareMenu.add(new ContactMenuItem(contact,contactAddress,fullDesktopSharingPrefix,protocolIcon));
+        multiContactRegionShareMenu.add(new ContactMenuItem(contact,contactAddress,regionDesktopSharingPrefix,protocolIcon));
       }
       OperationSetExtendedAuthorizations authOpSet=protocolProvider.getOperationSet(OperationSetExtendedAuthorizations.class);
       if (authOpSet != null && authOpSet.getSubscriptionStatus(contact) != null && !authOpSet.getSubscriptionStatus(contact).equals(SubscriptionStatus.Subscribed)) {
         if (firstUnsubscribedContact == null)         firstUnsubscribedContact=contact;
-        multiContactRequestAuthMenu.add(createMenuItem(contactAddress,requestAuthPrefix + contact.getAddress() + protocolProvider.getProtocolName(),protocolIcon));
+        multiContactRequestAuthMenu.add(new ContactMenuItem(contact,contactAddress,requestAuthPrefix,protocolIcon));
       }
     }
-    for (    String phone : phones) {
-      String p=phone.substring(0,phone.lastIndexOf("(") - 1);
-      if (providers.size() > 0) {
-        JMenuItem menu=createMenuItem(phone,callPhonePrefix + p,null);
-        callContactMenu.add(menu);
-        separator=true;
-      }
-    }
-    List<String> videoPhones=contactPhoneUtil.getVideoPhones(contact);
-    for (    String vphone : videoPhones) {
-      String p=vphone.substring(0,vphone.lastIndexOf("(") - 1);
-      if (providers.size() > 0) {
-        JMenuItem vmenu=createMenuItem(vphone,videoCallPrefix + p,null);
-        videoCallMenu.add(vmenu);
-        JMenuItem shdmenu=createMenuItem(vphone,fullDesktopSharingPrefix + p,null);
-        multiContactFullShareMenu.add(shdmenu);
-        JMenuItem rshdmenu=createMenuItem(vphone,regionDesktopSharingPrefix + p,null);
-        multiContactRegionShareMenu.add(rshdmenu);
-        separator=true;
-      }
-    }
+    addCallMenuPhones(phones);
+    addVideoMenuPhones(contact);
     if (separator && contacts.hasNext()) {
       callContactMenu.addSeparator();
       separator=false;

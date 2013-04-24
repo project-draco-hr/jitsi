@@ -1,0 +1,27 @@
+{
+  Iterator<Contact> protocolContacts=metaContact.getContacts();
+  while (protocolContacts.hasNext()) {
+    Contact contact=protocolContacts.next();
+    MetaContactChatTransport chatTransport=null;
+    if (contact.supportResources() && contact.getResources() != null) {
+      if (contact.getResources().size() > 1) {
+        chatTransport=new MetaContactChatTransport(this,contact);
+        chatTransports.add(chatTransport);
+      }
+      Iterator<ContactResource> resourcesIter=contact.getResources().iterator();
+      while (resourcesIter.hasNext()) {
+        ContactResource resource=resourcesIter.next();
+        MetaContactChatTransport resourceTransport=new MetaContactChatTransport(this,contact,resource,(contact.getResources().size() > 1) ? true : false);
+        if (chatTransport == null || (contactResource != null && contactResource.equals(resource))) {
+          chatTransport=resourceTransport;
+        }
+        chatTransports.add(resourceTransport);
+      }
+    }
+ else {
+      chatTransport=new MetaContactChatTransport(this,contact);
+      chatTransports.add(chatTransport);
+    }
+    if (contact.equals(protocolContact))     currentChatTransport=chatTransport;
+  }
+}

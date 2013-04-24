@@ -1,0 +1,29 @@
+{
+  if (!contact.supportResources())   return;
+  Collection<ContactResource> resources=contact.getResources();
+  if (resources == null)   return;
+  String contactAddress=contact.getAddress();
+  if (contact.getResources().size() > 1) {
+    callContactMenu.add(new ContactMenuItem(contact,null,contactAddress,callContactPrefix,protocolIcon,true));
+  }
+  Iterator<ContactResource> resourceIter=contact.getResources().iterator();
+  while (resourceIter.hasNext()) {
+    ContactResource resource=resourceIter.next();
+    String resourceName;
+    boolean isBold=false;
+    Icon resourceIcon;
+    if (contact.getResources().size() > 1) {
+      resourceName=resource.getResourceName();
+      resourceIcon=ImageLoader.getIndexedProtocolIcon(ImageUtils.getBytesInImage(resource.getPresenceStatus().getStatusIcon()),contact.getProtocolProvider());
+    }
+ else {
+      resourceName=contact.getAddress() + " " + resource.getResourceName();
+      resourceIcon=ImageLoader.getIndexedProtocolIcon(ImageUtils.getBytesInImage(contact.getPresenceStatus().getStatusIcon()),contact.getProtocolProvider());
+      resource=null;
+      isBold=true;
+    }
+    JMenuItem menuItem=new ContactMenuItem(contact,resource,resourceName,callContactPrefix,resourceIcon,isBold);
+    if (contact.getResources().size() > 1)     menuItem.setBorder(BorderFactory.createEmptyBorder(0,20,0,0));
+    callContactMenu.add(menuItem);
+  }
+}
