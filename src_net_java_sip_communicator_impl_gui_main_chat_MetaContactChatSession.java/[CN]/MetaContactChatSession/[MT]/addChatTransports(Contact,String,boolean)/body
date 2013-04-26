@@ -1,0 +1,34 @@
+{
+  MetaContactChatTransport chatTransport=null;
+  Collection<ContactResource> contactResources=contact.getResources();
+  if (contact.supportResources() && contactResources != null && contactResources.size() > 0) {
+    if (contactResources.size() > 1) {
+      chatTransport=new MetaContactChatTransport(this,contact);
+      addChatTransport(chatTransport);
+    }
+    Iterator<ContactResource> resourcesIter=contactResources.iterator();
+    while (resourcesIter.hasNext()) {
+      ContactResource resource=resourcesIter.next();
+      MetaContactChatTransport resourceTransport=new MetaContactChatTransport(this,contact,resource,(contact.getResources().size() > 1) ? true : false);
+      addChatTransport(resourceTransport);
+      if ((resourceName != null && resource.getResourceName().equals(resourceName)) || contactResources.size() == 1) {
+        chatTransport=resourceTransport;
+      }
+    }
+  }
+ else {
+    chatTransport=new MetaContactChatTransport(this,contact);
+    addChatTransport(chatTransport);
+  }
+  if (isSelectedContact) {
+    currentChatTransport=chatTransport;
+    sessionRenderer.setSelectedChatTransport(chatTransport);
+  }
+  if (currentChatTransport == null) {
+    currentChatTransport=chatTransports.get(0);
+    sessionRenderer.setSelectedChatTransport(currentChatTransport);
+  }
+  if (contact.supportResources()) {
+    contact.addResourceListener(this);
+  }
+}
