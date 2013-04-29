@@ -1,12 +1,17 @@
 {
   addCrashFilesToArchive(new File(".").listFiles(),JAVA_ERROR_LOG_PREFIX,out);
+  String homeDir=System.getProperty("user.home");
   if (OSUtils.IS_WINDOWS) {
-    File[] desktopFiles=new File(System.getProperty("user.home") + File.separator + "Desktop").listFiles();
+    File[] desktopFiles=new File(homeDir + File.separator + "Desktop").listFiles();
     addCrashFilesToArchive(desktopFiles,JAVA_ERROR_LOG_PREFIX,out);
   }
   if (OSUtils.IS_MAC) {
-    addCrashFilesToArchive(new File("./Library/Logs/CrashReporter").listFiles(),null,out);
-    addCrashFilesToArchive(new File("/Library/Logs/CrashReporter").listFiles(),null,out);
+    String logDir="/Library/Logs/";
+    String[] locations={logDir + "CrashReporter",homeDir + logDir + "CrashReporter",homeDir + logDir + "DiagnosticReports"};
+    for (    String location : locations) {
+      File[] crashLogs=new File(location).listFiles();
+      addCrashFilesToArchive(crashLogs,null,out);
+    }
   }
  else {
     File[] tempFiles=new File(System.getProperty("java.io.tmpdir")).listFiles();
