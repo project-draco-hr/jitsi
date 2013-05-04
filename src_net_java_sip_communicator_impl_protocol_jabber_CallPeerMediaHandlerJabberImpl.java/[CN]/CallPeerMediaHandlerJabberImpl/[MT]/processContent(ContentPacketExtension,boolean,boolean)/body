@@ -26,13 +26,10 @@
   CallJabberImpl call=getPeer().getCall();
   if (call != null && call.getConference().isConferenceFocus()) {
     for (    CallPeerJabberImpl peer : call.getCallPeerList()) {
-      ContentPacketExtension remoteContent=peer.getMediaHandler().getRemoteContent(mediaType.toString());
+      SendersEnum senders=peer.getMediaHandler().getSenders(mediaType);
       boolean initiator=peer.isInitiator();
-      if (remoteContent != null) {
-        SendersEnum senders=remoteContent.getSenders();
-        if (senders == null || (SendersEnum.both == senders) || (initiator && SendersEnum.initiator == senders) || (!initiator && SendersEnum.responder == senders)) {
-          remoteDirection=remoteDirection.or(MediaDirection.SENDONLY);
-        }
+      if (senders == null || (SendersEnum.both == senders) || (initiator && SendersEnum.initiator == senders) || (!initiator && SendersEnum.responder == senders)) {
+        remoteDirection=remoteDirection.or(MediaDirection.SENDONLY);
       }
     }
   }

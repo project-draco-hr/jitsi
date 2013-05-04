@@ -1,0 +1,19 @@
+{
+  MediaDirection direction=MediaDirection.INACTIVE;
+  CallPeerMediaHandlerJabberImpl mediaHandler=getMediaHandler();
+  if ((MediaType.AUDIO == mediaType && mediaHandler.isLocalAudioTransmissionEnabled()) || (MediaType.VIDEO == mediaType && isLocalVideoStreaming()))   direction=direction.or(MediaDirection.SENDONLY);
+  SendersEnum senders=mediaHandler.getSenders(mediaType);
+  if (senders == null || senders == SendersEnum.both || (isInitiator() && senders == SendersEnum.initiator) || (!isInitiator() && senders == SendersEnum.responder))   direction=direction.or(MediaDirection.RECVONLY);
+  if (mediaHandler.isRTPTranslationEnabled(mediaType)) {
+    for (    CallPeerJabberImpl peer : getCall().getCallPeerList()) {
+      if (peer != this) {
+        senders=peer.getMediaHandler().getSenders(mediaType);
+        if (senders == null || senders == SendersEnum.both || (peer.isInitiator() && senders == SendersEnum.initiator) || (!peer.isInitiator() && senders == SendersEnum.responder)) {
+          direction=direction.or(MediaDirection.SENDONLY);
+          break;
+        }
+      }
+    }
+  }
+  return direction;
+}

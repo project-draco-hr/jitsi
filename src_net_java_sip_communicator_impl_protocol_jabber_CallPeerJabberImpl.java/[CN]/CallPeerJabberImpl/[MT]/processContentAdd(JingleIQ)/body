@@ -46,6 +46,7 @@ synchronized (candSyncRoot) {
   }
   if (contentIQ == null) {
     contentIQ=JinglePacketFactory.createContentAccept(getProtocolProvider().getOurJID(),this.peerJID,getSID(),answerContents);
+    for (    ContentPacketExtension c : answerContents)     mediaHandler.setSenders(MediaType.parseString(c.getName()),c.getSenders());
   }
   getProtocolProvider().getConnection().sendPacket(contentIQ);
   mediaHandler.start();
@@ -53,7 +54,7 @@ synchronized (candSyncRoot) {
     MediaStream newVideoStream=mediaHandler.getStream(MediaType.VIDEO);
     if ((newVideoStream != null) && mediaHandler.isRTPTranslationEnabled(MediaType.VIDEO)) {
       try {
-        getCall().modifyVideoContent(true);
+        getCall().modifyVideoContent();
       }
  catch (      OperationFailedException ofe) {
         logger.error("Failed to enable RTP translation",ofe);

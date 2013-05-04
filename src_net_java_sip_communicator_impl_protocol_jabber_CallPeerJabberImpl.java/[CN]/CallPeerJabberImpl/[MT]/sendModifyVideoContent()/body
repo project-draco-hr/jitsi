@@ -1,0 +1,42 @@
+{
+  CallPeerMediaHandlerJabberImpl mediaHandler=getMediaHandler();
+  MediaDirection direction=getJingleDirection(MediaType.VIDEO);
+  ContentPacketExtension remoteContent=mediaHandler.getLocalContent(MediaType.VIDEO.toString());
+  if (remoteContent == null) {
+    if (direction == MediaDirection.INACTIVE) {
+      return;
+    }
+ else {
+      if (logger.isInfoEnabled())       logger.info("Adding video content for " + this);
+      sendAddVideoContent();
+      return;
+    }
+  }
+ else {
+    if (direction == MediaDirection.INACTIVE) {
+    }
+  }
+  SendersEnum senders=mediaHandler.getSenders(MediaType.VIDEO);
+  if (senders == null)   senders=SendersEnum.both;
+  SendersEnum newSenders=SendersEnum.none;
+  if (MediaDirection.SENDRECV == direction)   newSenders=SendersEnum.both;
+ else   if (MediaDirection.RECVONLY == direction)   newSenders=isInitiator() ? SendersEnum.initiator : SendersEnum.responder;
+ else   if (MediaDirection.SENDONLY == direction)   newSenders=isInitiator() ? SendersEnum.responder : SendersEnum.initiator;
+  if (newSenders == senders)   return;
+  if (logger.isInfoEnabled())   logger.info("Sending content modify, senders: " + senders + "->"+ newSenders);
+  ContentPacketExtension ext=new ContentPacketExtension();
+  String remoteContentName=remoteContent.getName();
+  ext.setSenders(newSenders);
+  ext.setCreator(remoteContent.getCreator());
+  ext.setName(remoteContentName);
+  ProtocolProviderServiceJabberImpl protocolProvider=getProtocolProvider();
+  JingleIQ contentIQ=JinglePacketFactory.createContentModify(protocolProvider.getOurJID(),this.peerJID,getSID(),ext);
+  protocolProvider.getConnection().sendPacket(contentIQ);
+  try {
+    mediaHandler.reinitContent(remoteContentName,ext,false);
+    mediaHandler.start();
+  }
+ catch (  Exception e) {
+    logger.warn("Exception occurred during media reinitialization",e);
+  }
+}
