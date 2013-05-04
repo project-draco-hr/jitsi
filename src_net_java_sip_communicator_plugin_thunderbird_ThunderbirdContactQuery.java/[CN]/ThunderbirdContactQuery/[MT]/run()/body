@@ -1,46 +1,52 @@
 {
-  String file=super.getContactSource().getFilename();
+  String filename=super.getContactSource().getFilename();
+  File file=new File(filename);
   try {
-    InputStreamReader sr=new InputStreamReader(new FileInputStream(file));
-    MorkDocument md=new MorkDocument(sr);
-    sr.close();
-    Map<String,Map<String,Row>> db=new HashMap<String,Map<String,Row>>();
-    for (    Table t : md.getTables()) {
-      String tableId=t.getTableId() + "/" + t.getScopeName();
-      Map<String,Row> table=db.get(tableId);
-      if (table == null) {
-        table=new HashMap<String,Row>();
-        db.put(tableId,table);
+    if (file.lastModified() > getContactSource().lastDatabaseFileChange) {
+      InputStreamReader sr=new InputStreamReader(new FileInputStream(filename));
+      MorkDocument md=new MorkDocument(sr);
+      sr.close();
+      Map<String,Map<String,Row>> db=new HashMap<String,Map<String,Row>>();
+      for (      Table t : md.getTables()) {
+        String tableId=t.getTableId() + "/" + t.getScopeName();
+        Map<String,Row> table=db.get(tableId);
+        if (table == null) {
+          table=new HashMap<String,Row>();
+          db.put(tableId,table);
+        }
+        for (        Row r : t.getRows()) {
+          String scope=r.getScopeName();
+          if (scope == null) {
+            scope=t.getScopeName();
+          }
+          table.put(r.getRowId() + "/" + scope,r);
+        }
       }
-      for (      Row r : t.getRows()) {
+      String defaultScope=md.getDicts().get(0).dereference("^80");
+      for (      Row r : md.getRows()) {
         String scope=r.getScopeName();
         if (scope == null) {
-          scope=t.getScopeName();
+          scope=defaultScope;
         }
-        table.put(r.getRowId() + "/" + scope,r);
+        String tableId="1/" + scope;
+        Map<String,Row> table=db.get(tableId);
+        if (table == null) {
+          table=new HashMap<String,Row>();
+          db.put(tableId,table);
+        }
+        String rowId=r.getRowId() + "/" + scope;
+        if (rowId.startsWith("-")) {
+          rowId=rowId.substring(1);
+        }
+        table.put(rowId,r);
       }
+      super.getContactSource().database=db;
+      super.getContactSource().defaultScope=defaultScope;
+      super.getContactSource().lastDatabaseFileChange=file.lastModified();
     }
-    String defaultScope=md.getDicts().get(0).dereference("^80");
-    for (    Row r : md.getRows()) {
-      String scope=r.getScopeName();
-      if (scope == null) {
-        scope=defaultScope;
-      }
-      String tableId="1/" + scope;
-      Map<String,Row> table=db.get(tableId);
-      if (table == null) {
-        table=new HashMap<String,Row>();
-        db.put(tableId,table);
-      }
-      String rowId=r.getRowId() + "/" + scope;
-      if (rowId.startsWith("-")) {
-        rowId=rowId.substring(1);
-      }
-      table.put(rowId,r);
-    }
-    for (    Entry<String,Map<String,Row>> table : db.entrySet()) {
+    for (    Entry<String,Map<String,Row>> table : super.getContactSource().database.entrySet()) {
       for (      Map.Entry<String,Row> e : table.getValue().entrySet()) {
-        if (e.getKey().endsWith(defaultScope)) {
+        if (e.getKey().endsWith(getContactSource().defaultScope)) {
           readEntry(e.getValue());
         }
       }
