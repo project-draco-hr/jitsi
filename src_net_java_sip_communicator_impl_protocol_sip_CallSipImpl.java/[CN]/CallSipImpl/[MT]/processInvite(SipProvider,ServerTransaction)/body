@@ -1,6 +1,12 @@
 {
   Request invite=serverTran.getRequest();
   final CallPeerSipImpl peer=createCallPeerFor(serverTran,jainSipProvider);
+  CallInfoHeader infoHeader=(CallInfoHeader)invite.getHeader(CallInfoHeader.NAME);
+  String alternativeIMPPAddress=null;
+  if (infoHeader != null && infoHeader.getParameter("purpose") != null && infoHeader.getParameter("purpose").equals("impp")) {
+    alternativeIMPPAddress=infoHeader.getInfo().toString();
+  }
+  if (alternativeIMPPAddress != null)   peer.setAlternativeIMPPAddress(alternativeIMPPAddress);
   Response response=null;
   try {
     if (logger.isTraceEnabled())     logger.trace("will send ringing response: ");

@@ -1,0 +1,59 @@
+{
+  ChooseCallAccountPopupMenu chooseCallAccountPopupMenu=null;
+  Class<? extends OperationSet> opsetClass=getOperationSetForCall(isVideo,isDesktop);
+  UIPhoneUtil contactPhoneUtil=null;
+  if (uiContact != null && uiContact.getDescriptor() instanceof MetaContact)   contactPhoneUtil=UIPhoneUtil.getPhoneUtil((MetaContact)uiContact.getDescriptor());
+  if (contactPhoneUtil != null) {
+    boolean addAdditionalNumbers=false;
+    if (!isVideo || ConfigurationUtils.isRouteVideoAndDesktopUsingPhoneNumberEnabled()) {
+      addAdditionalNumbers=true;
+    }
+ else {
+      if (isVideo && contactPhoneUtil != null) {
+        addAdditionalNumbers=contactPhoneUtil.isVideoCallEnabled() ? isDesktop ? contactPhoneUtil.isDesktopSharingEnabled() : true : false;
+      }
+    }
+    if (addAdditionalNumbers) {
+      uiContactDetailList.addAll(contactPhoneUtil.getAdditionalNumbers());
+    }
+  }
+  if (uiContactDetailList.size() == 1) {
+    UIContactDetail detail=uiContactDetailList.get(0);
+    ProtocolProviderService preferredProvider=detail.getPreferredProtocolProvider(opsetClass);
+    List<ProtocolProviderService> providers=null;
+    String protocolName=null;
+    if (preferredProvider != null) {
+      if (preferredProvider.isRegistered()) {
+        createCall(opsetClass,preferredProvider,detail.getAddress(),uiContact);
+      }
+ else {
+        protocolName=preferredProvider.getProtocolName();
+        providers=AccountUtils.getRegisteredProviders(protocolName,opsetClass);
+      }
+    }
+ else {
+      protocolName=detail.getPreferredProtocol(opsetClass);
+      if (protocolName != null)       providers=AccountUtils.getRegisteredProviders(protocolName,opsetClass);
+ else       providers=AccountUtils.getRegisteredProviders(opsetClass);
+    }
+    if (providers != null) {
+      int providersCount=providers.size();
+      if (providersCount <= 0) {
+        new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.CALL_FAILED"),GuiActivator.getResources().getI18NString("service.gui.NO_ONLINE_TELEPHONY_ACCOUNT")).showDialog();
+      }
+ else       if (providersCount == 1) {
+        createCall(opsetClass,providers.get(0),detail.getAddress(),uiContact);
+      }
+ else       if (providersCount > 1) {
+        chooseCallAccountPopupMenu=new ChooseCallAccountPopupMenu(invoker,detail.getAddress(),providers,opsetClass);
+      }
+    }
+  }
+ else   if (uiContactDetailList.size() > 1) {
+    chooseCallAccountPopupMenu=new ChooseCallAccountPopupMenu(invoker,uiContactDetailList,opsetClass);
+  }
+  if (chooseCallAccountPopupMenu != null) {
+    if (uiContact != null)     chooseCallAccountPopupMenu.setUIContact(uiContact);
+    chooseCallAccountPopupMenu.showPopupMenu(location.x,location.y);
+  }
+}

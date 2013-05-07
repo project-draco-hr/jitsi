@@ -15,27 +15,22 @@
     x+=addButton(chatButton,++gridX,x,false);
   }
   UIContactDetail telephonyContact=uiContact.getDefaultContactDetail(OperationSetBasicTelephony.class);
-  ContactPhoneUtil contactPhoneUtil=null;
+  MetaContactPhoneUtil contactPhoneUtil=null;
+  DetailsResponseListener detailsListener=null;
   if (uiContact.getDescriptor() != null && uiContact.getDescriptor() instanceof MetaContact && telephonyContact == null) {
-    contactPhoneUtil=ContactPhoneUtil.getPhoneUtil((MetaContact)uiContact.getDescriptor());
-    MetaContact metaContact=(MetaContact)uiContact.getDescriptor();
-    Iterator<Contact> contacts=metaContact.getContacts();
-    while (contacts.hasNext()) {
-      Contact contact=contacts.next();
-      if (!contact.getProtocolProvider().isRegistered())       continue;
-      contactPhoneUtil.addDetailsResponseListener(contact,new DetailsListener(treeNode,callButton,uiContact));
-    }
+    contactPhoneUtil=MetaContactPhoneUtil.getPhoneUtil((MetaContact)uiContact.getDescriptor());
+    detailsListener=new DetailsListener(treeNode,callButton,uiContact);
   }
   List<ProtocolProviderService> providers=AccountUtils.getOpSetRegisteredProviders(OperationSetBasicTelephony.class,null,null);
-  if ((telephonyContact != null && telephonyContact.getAddress() != null) || (contactPhoneUtil != null && contactPhoneUtil.isCallEnabled() && providers.size() > 0)) {
+  if ((telephonyContact != null && telephonyContact.getAddress() != null) || (contactPhoneUtil != null && contactPhoneUtil.isCallEnabled(detailsListener) && providers.size() > 0)) {
     x+=addButton(callButton,++gridX,x,false);
   }
   UIContactDetail videoContact=uiContact.getDefaultContactDetail(OperationSetVideoTelephony.class);
-  if (videoContact != null || (contactPhoneUtil != null && contactPhoneUtil.isVideoCallEnabled())) {
+  if (videoContact != null || (contactPhoneUtil != null && contactPhoneUtil.isVideoCallEnabled(detailsListener))) {
     x+=addButton(callVideoButton,++gridX,x,false);
   }
   UIContactDetail desktopContact=uiContact.getDefaultContactDetail(OperationSetDesktopSharingServer.class);
-  if (desktopContact != null || (contactPhoneUtil != null && contactPhoneUtil.isDesktopSharingEnabled())) {
+  if (desktopContact != null || (contactPhoneUtil != null && contactPhoneUtil.isDesktopSharingEnabled(detailsListener))) {
     x+=addButton(desktopSharingButton,++gridX,x,false);
   }
   if (uiContact.getDescriptor() instanceof SourceContact && uiContact.getDefaultContactDetail(OperationSetPersistentPresence.class) != null && AccountUtils.getOpSetRegisteredProviders(OperationSetPersistentPresence.class,null,null).size() > 0 && !ConfigurationUtils.isAddContactDisabled()) {

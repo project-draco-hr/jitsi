@@ -1,0 +1,28 @@
+{
+  String displayName=peer.getDisplayName();
+  if (StringUtils.isNullOrEmpty(displayName,true) && peer.getContact() != null) {
+    displayName=peer.getContact().getDisplayName();
+  }
+  if (StringUtils.isNullOrEmpty(displayName,true)) {
+    UIContactImpl uiContact=CallManager.getCallUIContact(peer.getCall());
+    if (uiContact != null)     displayName=uiContact.getDisplayName();
+  }
+  if (StringUtils.isNullOrEmpty(displayName,true)) {
+    String imppAddress=peer.getAlternativeIMPPAddress();
+    if (!StringUtils.isNullOrEmpty(imppAddress)) {
+      int protocolPartIndex=imppAddress.indexOf(":");
+      imppAddress=(protocolPartIndex >= 0) ? imppAddress.substring(protocolPartIndex + 1) : imppAddress;
+      Collection<ProtocolProviderService> cusaxProviders=AccountUtils.getRegisteredProviders(OperationSetCusaxUtils.class);
+      if (cusaxProviders != null && cusaxProviders.size() > 0) {
+        Contact contact=getPeerContact(peer,cusaxProviders.iterator().next(),imppAddress);
+        displayName=(contact != null) ? contact.getDisplayName() : null;
+      }
+ else {
+        MetaContact metaContact=getPeerMetaContact(peer,imppAddress);
+        displayName=(metaContact != null) ? metaContact.getDisplayName() : null;
+      }
+    }
+  }
+  if (StringUtils.isNullOrEmpty(displayName,true))   displayName=peer.getAddress();
+  return displayName;
+}

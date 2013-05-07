@@ -31,6 +31,20 @@ catch (  ParseException exc) {
  catch (  ParseException ex) {
     ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to create invite Request!",OperationFailedException.INTERNAL_ERROR,ex,logger);
   }
+  CallInfoHeader callInfoHeader=null;
+  try {
+    ProtocolProviderService cusaxProvider=protocolProvider.getLinkedCusaxProvider();
+    String alternativeImppAddress=null;
+    if (cusaxProvider != null)     alternativeImppAddress=cusaxProvider.getAccountID().getAccountAddress();
+    if (alternativeImppAddress != null) {
+      callInfoHeader=headerFactory.createCallInfoHeader(new GenericURI("xmpp:" + alternativeImppAddress));
+      callInfoHeader.setParameter("purpose","impp");
+    }
+  }
+ catch (  ParseException e) {
+    e.printStackTrace();
+  }
+  if (callInfoHeader != null)   invite.setHeader(callInfoHeader);
   if (replacesHeader != null) {
     invite.setHeader(replacesHeader);
   }
