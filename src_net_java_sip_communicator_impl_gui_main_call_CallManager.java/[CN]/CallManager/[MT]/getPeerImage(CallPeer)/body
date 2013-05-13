@@ -1,8 +1,27 @@
 {
   byte[] image=null;
   if (peer.getContact() != null) {
-    MetaContact metaContact=GuiActivator.getContactListService().findMetaContactByContact(peer.getContact());
-    image=metaContact.getAvatar();
+    image=getContactImage(peer.getContact());
+  }
+  if (image == null || image.length == 0) {
+    UIContactImpl uiContact=CallManager.getCallUIContact(peer.getCall());
+    if (uiContact != null)     image=uiContact.getAvatar();
+  }
+  if (image == null || image.length == 0) {
+    String imppAddress=peer.getAlternativeIMPPAddress();
+    if (!StringUtils.isNullOrEmpty(imppAddress)) {
+      int protocolPartIndex=imppAddress.indexOf(":");
+      imppAddress=(protocolPartIndex >= 0) ? imppAddress.substring(protocolPartIndex + 1) : imppAddress;
+      Collection<ProtocolProviderService> cusaxProviders=AccountUtils.getRegisteredProviders(OperationSetCusaxUtils.class);
+      if (cusaxProviders != null && cusaxProviders.size() > 0) {
+        Contact contact=getPeerContact(peer,cusaxProviders.iterator().next(),imppAddress);
+        image=(contact != null) ? getContactImage(contact) : null;
+      }
+ else {
+        MetaContact metaContact=getPeerMetaContact(peer,imppAddress);
+        image=(metaContact != null) ? metaContact.getAvatar() : null;
+      }
+    }
   }
   if ((image == null || image.length == 0) && peer.getImage() != null)   image=peer.getImage();
   return image;

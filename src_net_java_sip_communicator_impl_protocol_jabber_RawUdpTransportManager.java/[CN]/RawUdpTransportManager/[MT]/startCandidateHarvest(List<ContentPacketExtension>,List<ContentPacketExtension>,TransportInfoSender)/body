@@ -3,18 +3,18 @@
   CallJabberImpl call=peer.getCall();
   List<ContentPacketExtension> cpes=(theirOffer == null) ? ourAnswer : theirOffer;
   if (call.getConference().isJitsiVideoBridge()) {
-    List<RtpDescriptionPacketExtension> mediaTypes=new ArrayList<RtpDescriptionPacketExtension>();
+    List<RtpDescriptionPacketExtension> descriptions=new ArrayList<RtpDescriptionPacketExtension>();
     for (    ContentPacketExtension cpe : cpes) {
       RtpDescriptionPacketExtension rtpDesc=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
       MediaType mediaType=MediaType.parseString(rtpDesc.getMedia());
       if ((colibri == null) || (colibri.getContent(mediaType.toString()) == null)) {
-        if (!mediaTypes.contains(rtpDesc))         mediaTypes.add(rtpDesc);
+        if (!descriptions.contains(rtpDesc))         descriptions.add(rtpDesc);
       }
     }
-    if (!mediaTypes.isEmpty()) {
+    if (!descriptions.isEmpty()) {
       if (colibri == null)       colibri=new ColibriConferenceIQ();
-      for (      RtpDescriptionPacketExtension mediaType : mediaTypes)       colibri.getOrCreateContent(mediaType.getMedia());
-      ColibriConferenceIQ conferenceResult=call.createColibriChannels(peer,mediaTypes);
+      for (      RtpDescriptionPacketExtension description : descriptions)       colibri.getOrCreateContent(description.getMedia());
+      ColibriConferenceIQ conferenceResult=call.createColibriChannels(peer,descriptions);
       if (conferenceResult != null) {
         String videoBridgeID=colibri.getID();
         String conferenceResultID=conferenceResult.getID();

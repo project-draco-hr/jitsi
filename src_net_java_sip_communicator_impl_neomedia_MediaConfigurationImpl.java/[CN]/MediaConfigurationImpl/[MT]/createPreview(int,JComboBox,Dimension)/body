@@ -2,24 +2,26 @@
   JComponent preview=null;
   if (type == DeviceConfigurationComboBoxModel.AUDIO) {
     AudioSystem audioSystem=null;
-    if (NeomediaActivator.getConfigurationService().getBoolean(AUDIO_SYSTEM_DISABLED_PROP,false) && mediaService.getDeviceConfiguration().getAudioSystem() != null) {
+    if (NeomediaActivator.getConfigurationService().getBoolean(MediaServiceImpl.DISABLE_SET_AUDIO_SYSTEM_PNAME,false)) {
       audioSystem=mediaService.getDeviceConfiguration().getAudioSystem();
     }
  else {
       Object selectedItem=comboBox.getSelectedItem();
       if (selectedItem instanceof AudioSystem)       audioSystem=(AudioSystem)selectedItem;
     }
-    if (audioSystem != null && !NoneAudioSystem.LOCATOR_PROTOCOL.equalsIgnoreCase(audioSystem.getLocatorProtocol())) {
+    if ((audioSystem != null) && !NoneAudioSystem.LOCATOR_PROTOCOL.equalsIgnoreCase(audioSystem.getLocatorProtocol())) {
       preview=new TransparentPanel(new GridBagLayout());
       createAudioSystemControls(audioSystem,preview);
     }
  else {
-      AudioSystem[] availableAudioSystems=AudioSystem.getAudioSystems();
-      AudioSystem[] activeAudioSystems=mediaService.getDeviceConfiguration().getAvailableAudioSystems();
-      if (availableAudioSystems != null && availableAudioSystems.length > 1 && activeAudioSystems != null && activeAudioSystems.length == 1) {
-        String noAvailableAudioDevice=NeomediaActivator.getResources().getI18NString("impl.media.configform.NO_AVAILABLE_AUDIO_DEVICE");
-        preview=new TransparentPanel(new GridBagLayout());
-        preview.add(new JLabel(noAvailableAudioDevice));
+      AudioSystem[] audioSystems=AudioSystem.getAudioSystems();
+      if ((audioSystems != null) && (audioSystems.length != 1)) {
+        AudioSystem[] availableAudioSystems=mediaService.getDeviceConfiguration().getAvailableAudioSystems();
+        if ((availableAudioSystems != null) && (availableAudioSystems.length == 1)) {
+          String noAvailableAudioDevice=NeomediaActivator.getResources().getI18NString("impl.media.configform.NO_AVAILABLE_AUDIO_DEVICE");
+          preview=new TransparentPanel(new GridBagLayout());
+          preview.add(new JLabel(noAvailableAudioDevice));
+        }
       }
     }
   }

@@ -1,0 +1,33 @@
+{
+  Record[] records=null;
+  try {
+    Lookup lookup=createLookup(domain,Type.SRV);
+    if (!useDNSCache) {
+      lookup.setCache(new Cache());
+    }
+    records=lookup.run();
+  }
+ catch (  TextParseException tpe) {
+    logger.error("Failed to parse domain=" + domain,tpe);
+    throw new ParseException(tpe.getMessage(),0);
+  }
+catch (  DnssecRuntimeException e) {
+    throw new DnssecException(e);
+  }
+  if (records == null) {
+    return null;
+  }
+  SRVRecord srvRecords[]=new SRVRecord[records.length];
+  for (int i=0; i < records.length; i++) {
+    org.xbill.DNS.SRVRecord srvRecord=(org.xbill.DNS.SRVRecord)records[i];
+    srvRecords[i]=new SRVRecord(srvRecord);
+  }
+  sortSrvRecord(srvRecords);
+  if (logger.isTraceEnabled()) {
+    logger.trace("DNS SRV query for domain " + domain + " returned:");
+    for (int i=0; i < srvRecords.length; i++) {
+      if (logger.isTraceEnabled())       logger.trace(srvRecords[i]);
+    }
+  }
+  return srvRecords;
+}
