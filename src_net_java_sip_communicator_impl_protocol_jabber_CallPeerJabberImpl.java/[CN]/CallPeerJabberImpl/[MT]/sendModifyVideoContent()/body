@@ -22,16 +22,17 @@
   if (MediaDirection.SENDRECV == direction)   newSenders=SendersEnum.both;
  else   if (MediaDirection.RECVONLY == direction)   newSenders=isInitiator() ? SendersEnum.initiator : SendersEnum.responder;
  else   if (MediaDirection.SENDONLY == direction)   newSenders=isInitiator() ? SendersEnum.responder : SendersEnum.initiator;
-  if (newSenders == senders)   return;
-  if (logger.isInfoEnabled())   logger.info("Sending content modify, senders: " + senders + "->"+ newSenders);
   ContentPacketExtension ext=new ContentPacketExtension();
   String remoteContentName=remoteContent.getName();
   ext.setSenders(newSenders);
   ext.setCreator(remoteContent.getCreator());
   ext.setName(remoteContentName);
-  ProtocolProviderServiceJabberImpl protocolProvider=getProtocolProvider();
-  JingleIQ contentIQ=JinglePacketFactory.createContentModify(protocolProvider.getOurJID(),this.peerJID,getSID(),ext);
-  protocolProvider.getConnection().sendPacket(contentIQ);
+  if (newSenders != senders) {
+    if (logger.isInfoEnabled())     logger.info("Sending content modify, senders: " + senders + "->"+ newSenders);
+    ProtocolProviderServiceJabberImpl protocolProvider=getProtocolProvider();
+    JingleIQ contentIQ=JinglePacketFactory.createContentModify(protocolProvider.getOurJID(),this.peerJID,getSID(),ext);
+    protocolProvider.getConnection().sendPacket(contentIQ);
+  }
   try {
     mediaHandler.reinitContent(remoteContentName,ext,false);
     mediaHandler.start();
