@@ -1,14 +1,20 @@
 {
-  final JComboBox deviceComboBox=new JComboBox();
-  deviceComboBox.setEditable(false);
-  deviceComboBox.setModel(new DeviceConfigurationComboBoxModel(deviceComboBox,mediaService.getDeviceConfiguration(),type));
-  JLabel deviceLabel=new JLabel(getLabelText(type));
-  deviceLabel.setDisplayedMnemonic(getDisplayedMnemonic(type));
-  deviceLabel.setLabelFor(deviceComboBox);
-  final Container devicePanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
-  devicePanel.setMaximumSize(new Dimension(WIDTH,25));
-  final boolean isAudioSystemComboDisabled=(type == DeviceConfigurationComboBoxModel.AUDIO) && NeomediaActivator.getConfigurationService().getBoolean(MediaServiceImpl.DISABLE_SET_AUDIO_SYSTEM_PNAME,false);
-  if (!isAudioSystemComboDisabled) {
+  final boolean setAudioSystemIsDisabled=(type == DeviceConfigurationComboBoxModel.AUDIO) && NeomediaActivator.getConfigurationService().getBoolean(MediaServiceImpl.DISABLE_SET_AUDIO_SYSTEM_PNAME,false);
+  final JComboBox deviceComboBox;
+  final Container devicePanel;
+  if (setAudioSystemIsDisabled) {
+    deviceComboBox=null;
+    devicePanel=null;
+  }
+ else {
+    deviceComboBox=new JComboBox();
+    deviceComboBox.setEditable(false);
+    deviceComboBox.setModel(new DeviceConfigurationComboBoxModel(mediaService.getDeviceConfiguration(),type));
+    JLabel deviceLabel=new JLabel(getLabelText(type));
+    deviceLabel.setDisplayedMnemonic(getDisplayedMnemonic(type));
+    deviceLabel.setLabelFor(deviceComboBox);
+    devicePanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
+    devicePanel.setMaximumSize(new Dimension(WIDTH,25));
     devicePanel.add(deviceLabel);
     devicePanel.add(deviceComboBox);
   }
@@ -16,7 +22,7 @@
   int preferredDeviceAndPreviewPanelHeight;
 switch (type) {
 case DeviceConfigurationComboBoxModel.AUDIO:
-    preferredDeviceAndPreviewPanelHeight=isAudioSystemComboDisabled ? 180 : 225;
+    preferredDeviceAndPreviewPanelHeight=(devicePanel == null) ? 180 : 225;
   break;
 case DeviceConfigurationComboBoxModel.VIDEO:
 preferredDeviceAndPreviewPanelHeight=305;
@@ -28,18 +34,9 @@ break;
 if (preferredDeviceAndPreviewPanelHeight > 0) {
 deviceAndPreviewPanel.setPreferredSize(new Dimension(WIDTH,preferredDeviceAndPreviewPanelHeight));
 }
-deviceAndPreviewPanel.add(devicePanel,BorderLayout.NORTH);
-if (isAudioSystemComboDisabled) {
-Component preview=null;
-if (mediaService.getDeviceConfiguration().getAudioSystem() != null) {
-preview=createPreview(type,deviceComboBox,deviceAndPreviewPanel.getPreferredSize());
-}
-if (preview != null) {
-deviceAndPreviewPanel.add(preview,BorderLayout.CENTER);
-}
-}
+if (devicePanel != null) deviceAndPreviewPanel.add(devicePanel,BorderLayout.NORTH);
 final ActionListener deviceComboBoxActionListener=new ActionListener(){
-public void actionPerformed(ActionEvent event){
+public void actionPerformed(ActionEvent ev){
 boolean revalidateAndRepaint=false;
 for (int i=deviceAndPreviewPanel.getComponentCount() - 1; i >= 0; i--) {
 Component c=deviceAndPreviewPanel.getComponent(i);
@@ -49,7 +46,7 @@ revalidateAndRepaint=true;
 }
 }
 Component preview=null;
-if ((deviceComboBox.getSelectedItem() != null) && (deviceComboBox.isShowing() || isAudioSystemComboDisabled)) {
+if ((deviceComboBox == null) || ((deviceComboBox.getSelectedItem() != null) && deviceComboBox.isShowing())) {
 preview=createPreview(type,deviceComboBox,deviceAndPreviewPanel.getPreferredSize());
 }
 if (preview != null) {
@@ -63,8 +60,8 @@ deviceAndPreviewPanel.repaint();
 }
 }
 ;
-deviceComboBox.addActionListener(deviceComboBoxActionListener);
-deviceComboBox.addHierarchyListener(new HierarchyListener(){
+if (deviceComboBox != null) deviceComboBox.addActionListener(deviceComboBoxActionListener);
+deviceAndPreviewPanel.addHierarchyListener(new HierarchyListener(){
 public void hierarchyChanged(HierarchyEvent event){
 if ((event.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
 SwingUtilities.invokeLater(new Runnable(){
