@@ -1,0 +1,27 @@
+{
+  SystrayService systray=GuiActivator.getSystrayService();
+  if (systray == null) {
+    logger.warn("SystrayService not available.");
+    return;
+  }
+  if (listener == null) {
+    listener=new SystrayPopupMessageListener(){
+      public void popupMessageClicked(      SystrayPopupMessageEvent evt){
+        Object tag=evt.getTag();
+        if (tag instanceof ErrorDialogParams) {
+          ErrorDialogParams params=(ErrorDialogParams)tag;
+          Throwable e=params.getEx();
+          if (e != null) {
+            showAlertDialog(params.getTitle(),params.getMessage(),e);
+          }
+ else {
+            showAlertDialog(params.getTitle(),params.getMessage());
+          }
+        }
+      }
+    }
+;
+    systray.addPopupMessageListener(listener);
+  }
+  systray.showPopupMessage(new PopupMessage(title,message,null,new ErrorDialogParams(errorDialogTitle,errorDialogMessage,e)));
+}
