@@ -1,19 +1,12 @@
 {
   if (config.getBoolean(PNAME_NO_USER_INTERACTION,false))   return DO_NOT_TRUST;
-  final VerifyCertificateDialog dialog=new VerifyCertificateDialog(chain,null,message);
-  try {
-    SwingUtilities.invokeAndWait(new Runnable(){
-      public void run(){
-        dialog.setVisible(true);
-      }
-    }
-);
-  }
- catch (  Exception e) {
-    logger.error("Cannot show certificate verification dialog",e);
+  if (CertificateVerificationActivator.getCertificateDialogService() == null) {
+    logger.error("Missing CertificateDialogService by default " + "will not trust!");
     return DO_NOT_TRUST;
   }
-  if (!dialog.isTrusted)   return DO_NOT_TRUST;
- else   if (dialog.alwaysTrustCheckBox.isSelected())   return TRUST_ALWAYS;
+  VerifyCertificateDialogService.VerifyCertificateDialog dialog=CertificateVerificationActivator.getCertificateDialogService().createDialog(chain,null,message);
+  dialog.setVisible(true);
+  if (!dialog.isTrusted())   return DO_NOT_TRUST;
+ else   if (dialog.isAlwaysTrustSelected())   return TRUST_ALWAYS;
  else   return TRUST_THIS_SESSION_ONLY;
 }
