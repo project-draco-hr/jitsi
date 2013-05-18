@@ -1,6 +1,7 @@
 {
-  DefaultHttpClient httpClient=createHttpClient();
+  DefaultHttpClient httpClient=null;
   try {
+    httpClient=createHttpClient();
     URI resourceUri=getResourceURI(resource.getId());
     HttpPut putMethod=new HttpPut(resourceUri);
     putMethod.setHeader("Connection","close");
@@ -8,8 +9,6 @@
     stringEntity.setContentType(resource.getContentType());
     stringEntity.setContentEncoding("UTF-8");
     putMethod.setEntity(stringEntity);
-    Credentials credentials=new UsernamePasswordCredentials(getUserName(),password);
-    httpClient.getCredentialsProvider().setCredentials(AuthScope.ANY,credentials);
     if (logger.isDebugEnabled()) {
       String logMessage=String.format("Puting resource %1s to the server %2s",resource.getId().toString(),resource.getContent());
       logger.debug(logMessage);
@@ -22,6 +21,6 @@
     throw new XCapException(errorMessage,e);
   }
  finally {
-    httpClient.getConnectionManager().shutdown();
+    if (httpClient != null)     httpClient.getConnectionManager().shutdown();
   }
 }

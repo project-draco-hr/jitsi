@@ -1,17 +1,5 @@
 {
-  DefaultHttpClient httpClient=new DefaultHttpClient();
-  try {
-    ClientConnectionManager ccm=httpClient.getConnectionManager();
-    SchemeRegistry sr=ccm.getSchemeRegistry();
-    SSLContext ctx=certificateVerification.getSSLContext(certificateVerification.getTrustManager(uri.getHost()));
-    org.apache.http.conn.ssl.SSLSocketFactory ssf=new org.apache.http.conn.ssl.SSLSocketFactory(ctx,SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-    sr.register(new Scheme("https",443,ssf));
-  }
- catch (  Throwable e) {
-    logger.error("Cannot add our trust manager to httpClient",e);
-  }
-  HttpParams httpParams=httpClient.getParams();
-  HttpConnectionParams.setConnectionTimeout(httpParams,timeout);
-  HttpConnectionParams.setSoTimeout(httpParams,timeout);
-  return httpClient;
+  XCapCredentialsProvider credentialsProvider=new XCapCredentialsProvider();
+  credentialsProvider.setCredentials(AuthScope.ANY,new UsernamePasswordCredentials(getUserName(),password));
+  return HttpUtils.getHttpClient(null,null,uri.getHost(),credentialsProvider);
 }

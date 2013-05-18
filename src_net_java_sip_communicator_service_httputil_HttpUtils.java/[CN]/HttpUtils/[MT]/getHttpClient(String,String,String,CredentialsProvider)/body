@@ -12,8 +12,13 @@
  catch (  GeneralSecurityException e) {
     throw new IOException(e.getMessage());
   }
-  Scheme sch=new Scheme("https",443,new SSLSocketFactory(sslCtx,SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER));
-  httpClient.getConnectionManager().getSchemeRegistry().register(sch);
+  try {
+    Scheme sch=new Scheme("https",443,new SSLSocketFactoryEx(sslCtx));
+    httpClient.getConnectionManager().getSchemeRegistry().register(sch);
+  }
+ catch (  Throwable t) {
+    logger.error("Error creating ssl socket factory",t);
+  }
   ProxySelectorRoutePlanner routePlanner=new ProxySelectorRoutePlanner(httpClient.getConnectionManager().getSchemeRegistry(),ProxySelector.getDefault());
   httpClient.setRoutePlanner(routePlanner);
   if (credentialsProvider == null)   credentialsProvider=new HTTPCredentialsProvider(usernamePropertyName,passwordPropertyName);

@@ -1,10 +1,9 @@
 {
-  DefaultHttpClient httpClient=createHttpClient();
+  DefaultHttpClient httpClient=null;
   try {
+    httpClient=createHttpClient();
     HttpGet getMethod=new HttpGet(uri);
     getMethod.setHeader("Connection","close");
-    Credentials credentials=new UsernamePasswordCredentials(getUserName(),password);
-    httpClient.getCredentialsProvider().setCredentials(AuthScope.ANY,credentials);
     HttpResponse response=httpClient.execute(getMethod);
     XCapHttpResponse result=createResponse(response);
     if (logger.isDebugEnabled()) {
@@ -28,6 +27,6 @@ catch (  IOException e) {
     throw new XCapException(errorMessage,e);
   }
  finally {
-    httpClient.getConnectionManager().shutdown();
+    if (httpClient != null)     httpClient.getConnectionManager().shutdown();
   }
 }

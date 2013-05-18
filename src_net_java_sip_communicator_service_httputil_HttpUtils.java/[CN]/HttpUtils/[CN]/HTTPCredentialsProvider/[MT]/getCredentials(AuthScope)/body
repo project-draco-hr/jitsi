@@ -4,7 +4,12 @@
   if (usernamePropertyName == null)   usernamePropertyName=getCredentialProperty(authscope);
   String pass=HttpUtilActivator.getCredentialsService().loadPassword(passwordPropertyName);
   if (pass == null) {
-    AuthenticationWindow authWindow=new AuthenticationWindow(authUsername,null,authscope.getHost(),true,null,errorMessage,HttpUtilActivator.getResources().getSettingsString("plugin.provisioning.SIGN_UP_LINK"));
+    AuthenticationWindowService authenticationWindowService=HttpUtilActivator.getAuthenticationWindowService();
+    if (authenticationWindowService == null) {
+      logger.error("No AuthenticationWindowService implementation");
+      return null;
+    }
+    AuthenticationWindowService.AuthenticationWindow authWindow=authenticationWindowService.create(authUsername,null,authscope.getHost(),true,false,null,null,null,null,null,errorMessage,HttpUtilActivator.getResources().getSettingsString("plugin.provisioning.SIGN_UP_LINK"));
     authWindow.setVisible(true);
     if (!authWindow.isCanceled()) {
       Credentials cred=new UsernamePasswordCredentials(authWindow.getUserName(),new String(authWindow.getPassword()));

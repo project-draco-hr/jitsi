@@ -1,12 +1,11 @@
 {
   assertConnected();
-  DefaultHttpClient httpClient=createHttpClient();
+  DefaultHttpClient httpClient=null;
   try {
+    httpClient=createHttpClient();
     URI resourceUri=getResourceURI(resourceId);
     HttpDelete deleteMethod=new HttpDelete(resourceUri);
     deleteMethod.setHeader("Connection","close");
-    Credentials credentials=new UsernamePasswordCredentials(getUserName(),password);
-    httpClient.getCredentialsProvider().setCredentials(AuthScope.ANY,credentials);
     if (logger.isDebugEnabled()) {
       String logMessage=String.format("Deleting resource %1s from the server",resourceId.toString());
       logger.debug(logMessage);
@@ -19,6 +18,6 @@
     throw new XCapException(errorMessage,e);
   }
  finally {
-    httpClient.getConnectionManager().shutdown();
+    if (httpClient != null)     httpClient.getConnectionManager().shutdown();
   }
 }
