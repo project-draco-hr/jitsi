@@ -1,41 +1,6 @@
 {
-  int nbEncryptionProtocols=ENCRYPTION_PROTOCOLS.length;
-  String[] encryptions=new String[nbEncryptionProtocols];
-  boolean[] selectedEncryptions=new boolean[nbEncryptionProtocols];
-  int prefixeLength=ProtocolProviderFactory.ENCRYPTION_PROTOCOL.length() + 1;
-  String encryptionProtocolPropertyName;
-  String name;
-  int index;
-  boolean enabled;
-  Iterator<String> encryptionProtocolNames=encryptionProtocols.keySet().iterator();
-  while (encryptionProtocolNames.hasNext()) {
-    encryptionProtocolPropertyName=encryptionProtocolNames.next();
-    index=encryptionProtocols.get(encryptionProtocolPropertyName);
-    if (index != -1) {
-      name=encryptionProtocolPropertyName.substring(prefixeLength);
-      if (isExistingEncryptionProtocol(name)) {
-        enabled=encryptionProtocolStatus.get(ProtocolProviderFactory.ENCRYPTION_PROTOCOL_STATUS + "." + name);
-        encryptions[index]=name;
-        selectedEncryptions[index]=enabled;
-      }
-    }
-  }
-  String encryptionProtocol;
-  boolean set;
-  int j=0;
-  for (int i=0; i < ENCRYPTION_PROTOCOLS.length; ++i) {
-    encryptionProtocol=ENCRYPTION_PROTOCOLS[i];
-    if (!encryptionProtocols.containsKey(ProtocolProviderFactory.ENCRYPTION_PROTOCOL + "." + encryptionProtocol)) {
-      set=false;
-      while (j < encryptions.length && !set) {
-        if (encryptions[j] == null) {
-          encryptions[j]=encryptionProtocol;
-          selectedEncryptions[j]=encryptionProtocol.equals("ZRTP");
-          set=true;
-        }
-        ++j;
-      }
-    }
-  }
+  Object[] result=SecurityAccountRegistration.loadEncryptionProtocols(encryptionProtocols,encryptionProtocolStatus);
+  String[] encryptions=(String[])result[0];
+  boolean[] selectedEncryptions=(boolean[])result[1];
   this.encryptionConfigurationTableModel.init(encryptions,selectedEncryptions);
 }

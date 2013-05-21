@@ -1,0 +1,93 @@
+{
+  accountProperties.put(ProtocolProviderFactory.PROTOCOL,ProtocolNames.SIP);
+  if (protocolIconPath != null)   accountProperties.put(ProtocolProviderFactory.PROTOCOL_ICON_PATH,protocolIconPath);
+  if (accountIconPath != null)   accountProperties.put(ProtocolProviderFactory.ACCOUNT_ICON_PATH,accountIconPath);
+  if (isRememberPassword()) {
+    accountProperties.put(ProtocolProviderFactory.PASSWORD,passwd);
+  }
+ else {
+    setPassword(null);
+  }
+  String serverAddress=null;
+  String serverFromUsername=SIPAccountRegistrationForm.getServerFromUserName(userName);
+  if (getServerAddress() != null)   serverAddress=getServerAddress();
+  if (serverFromUsername == null && getDefaultDomain() != null) {
+    userName=userName + "@" + getDefaultDomain();
+    if (serverAddress == null)     serverAddress=getDefaultDomain();
+  }
+ else   if (serverAddress == null && serverFromUsername != null) {
+    serverAddress=serverFromUsername;
+  }
+  if (serverAddress != null) {
+    accountProperties.put(ProtocolProviderFactory.SERVER_ADDRESS,serverAddress);
+    if (userName.indexOf(serverAddress) < 0)     accountProperties.put(ProtocolProviderFactory.IS_SERVER_OVERRIDDEN,Boolean.toString(true));
+  }
+  accountProperties.put(ProtocolProviderFactory.DISPLAY_NAME,getDisplayName());
+  accountProperties.put(ProtocolProviderFactory.AUTHORIZATION_NAME,getAuthorizationName());
+  accountProperties.put(ProtocolProviderFactory.SERVER_PORT,getServerPort());
+  if (isProxyAutoConfigure()) {
+    accountProperties.put(ProtocolProviderFactory.PROXY_AUTO_CONFIG,Boolean.TRUE.toString());
+  }
+ else {
+    accountProperties.put(ProtocolProviderFactory.PROXY_AUTO_CONFIG,Boolean.FALSE.toString());
+    accountProperties.put(ProtocolProviderFactory.PROXY_ADDRESS,getProxy());
+    accountProperties.put(ProtocolProviderFactory.PROXY_PORT,getProxyPort());
+    accountProperties.put(ProtocolProviderFactory.PREFERRED_TRANSPORT,getPreferredTransport());
+  }
+  accountProperties.put(ProtocolProviderFactory.IS_PRESENCE_ENABLED,Boolean.toString(isEnablePresence()));
+  if (serverAddress != null) {
+    accountProperties.put(ProtocolProviderFactory.FORCE_P2P_MODE,Boolean.toString(isForceP2PMode()));
+  }
+ else {
+    accountProperties.put(ProtocolProviderFactory.FORCE_P2P_MODE,Boolean.TRUE.toString());
+  }
+  securityAccountRegistration.storeProperties(accountProperties);
+  accountProperties.put(ProtocolProviderFactory.POLLING_PERIOD,getPollingPeriod());
+  accountProperties.put(ProtocolProviderFactory.SUBSCRIPTION_EXPIRATION,getSubscriptionExpiration());
+  accountProperties.put(ProtocolProviderFactory.CLIENT_TLS_CERTIFICATE,getTlsClientCertificate());
+  if (getKeepAliveMethod() != null)   accountProperties.put(ProtocolProviderFactory.KEEP_ALIVE_METHOD,getKeepAliveMethod());
+ else   accountProperties.put(ProtocolProviderFactory.KEEP_ALIVE_METHOD,getDefaultKeepAliveMethod());
+  accountProperties.put(ProtocolProviderFactory.KEEP_ALIVE_INTERVAL,getKeepAliveInterval());
+  if (getDTMFMethod() != null)   accountProperties.put("DTMF_METHOD",getDTMFMethod());
+ else   accountProperties.put("DTMF_METHOD",getDefaultDTMFMethod());
+  accountProperties.put(ProtocolProviderFactory.DTMF_MINIMAL_TONE_DURATION,getDtmfMinimalToneDuration());
+  encodingsRegistration.storeProperties(accountProperties);
+  accountProperties.put("XIVO_ENABLE",Boolean.toString(isXiVOEnable()));
+  accountProperties.put("XCAP_ENABLE",Boolean.toString(isXCapEnable()));
+  if (isXCapEnable()) {
+    accountProperties.put("XCAP_USE_SIP_CREDETIALS",Boolean.toString(isClistOptionUseSipCredentials()));
+    if (getClistOptionServerUri() != null) {
+      accountProperties.put("XCAP_SERVER_URI",getClistOptionServerUri());
+    }
+    if (getClistOptionUser() != null) {
+      accountProperties.put("XCAP_USER",getClistOptionUser());
+    }
+    if (getClistOptionPassword() != null) {
+      accountProperties.put("XCAP_PASSWORD",getClistOptionPassword());
+    }
+  }
+ else   if (isXiVOEnable()) {
+    accountProperties.put("XIVO_USE_SIP_CREDETIALS",Boolean.toString(isClistOptionUseSipCredentials()));
+    if (getClistOptionServerUri() != null) {
+      accountProperties.put("XIVO_SERVER_URI",getClistOptionServerUri());
+    }
+    if (getClistOptionUser() != null) {
+      accountProperties.put("XIVO_USER",getClistOptionUser());
+    }
+    if (getClistOptionPassword() != null) {
+      accountProperties.put("XIVO_PASSWORD",getClistOptionPassword());
+    }
+  }
+  if (isMessageWaitingIndicationsEnabled()) {
+    if (!StringUtils.isNullOrEmpty(getVoicemailURI(),true))     accountProperties.put(ProtocolProviderFactory.VOICEMAIL_URI,getVoicemailURI());
+ else     if (isModification)     accountProperties.put(ProtocolProviderFactory.VOICEMAIL_URI,"");
+    if (!StringUtils.isNullOrEmpty(getVoicemailCheckURI(),true))     accountProperties.put(ProtocolProviderFactory.VOICEMAIL_CHECK_URI,getVoicemailCheckURI());
+ else     if (isModification)     accountProperties.put(ProtocolProviderFactory.VOICEMAIL_CHECK_URI,"");
+    if (isModification) {
+      accountProperties.put(ProtocolProviderFactory.VOICEMAIL_ENABLED,null);
+    }
+  }
+ else   if (isModification) {
+    accountProperties.put(ProtocolProviderFactory.VOICEMAIL_ENABLED,Boolean.FALSE.toString());
+  }
+}
