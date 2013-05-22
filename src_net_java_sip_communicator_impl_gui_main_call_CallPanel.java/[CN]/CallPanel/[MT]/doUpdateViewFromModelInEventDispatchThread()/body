@@ -30,7 +30,14 @@
         }
         removeCallPanel=!((OneToOneCallPanel)callPanel).getCallPeer().equals(callPeer);
       }
- else       removeCallPanel=true;
+ else {
+        if ((callPanel instanceof BasicConferenceCallPanel) && ((BasicConferenceCallPanel)callPanel).hasDelayedCallPeers()) {
+          removeCallPanel=false;
+        }
+ else {
+          removeCallPanel=true;
+        }
+      }
     }
     if (removeCallPanel) {
       remove(callPanel);
@@ -51,6 +58,7 @@
  else {
         callPanel=new AudioConferenceCallPanel(this,callConference);
       }
+      ((BasicConferenceCallPanel)callPanel).addPeerViewlListener(this);
     }
  else {
       if (callPeer == null) {
