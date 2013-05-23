@@ -1,5 +1,5 @@
 {
-  Bundle providerBundle=fixture.findProtocolProviderBundle(fixture.provider1);
+  Bundle providerBundle=GibberishSlickFixture.findProtocolProviderBundle(fixture.provider1);
   GibberishSlickFixture.providerBundle=providerBundle;
   assertNotNull("Couldn't find a bundle for the tested provider",providerBundle);
   providerBundle.stop();
@@ -8,20 +8,20 @@
   assertEquals("Couldn't stop the protocol provider bundle.",Bundle.UNINSTALLED,providerBundle.getState());
   ServiceReference[] gibberishProviderRefs=null;
   try {
-    gibberishProviderRefs=fixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "=Gibberish)"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ fixture.userID1+ ")"+ ")");
+    gibberishProviderRefs=GibberishSlickFixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "=Gibberish)"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ fixture.userID1+ ")"+ ")");
   }
  catch (  InvalidSyntaxException ex) {
     fail("We apparently got our filter wrong: " + ex.getMessage());
   }
   assertTrue("A Protocol Provider Service was still regged as an osgi service " + "for Gibberish URI:" + fixture.userID1 + "After it was explicitly uninstalled",gibberishProviderRefs == null || gibberishProviderRefs.length == 0);
   assertTrue("The Gibberish provider factory kept a reference to the provider we " + "just uninstalled (uri=" + fixture.userID1 + ")",fixture.providerFactory.getRegisteredAccounts().isEmpty() && fixture.providerFactory.getProviderForAccount(fixture.provider1.getAccountID()) == null);
-  providerBundle=fixture.bc.installBundle(providerBundle.getLocation());
+  providerBundle=GibberishSlickFixture.bc.installBundle(providerBundle.getLocation());
   GibberishSlickFixture.providerBundle=providerBundle;
   assertEquals("Couldn't re-install protocol provider bundle.",Bundle.INSTALLED,providerBundle.getState());
   AccountManagerUtils.startBundleAndWaitStoredAccountsLoaded(GibberishSlickFixture.bc,providerBundle,"Gibberish");
   assertEquals("Couldn't re-start protocol provider bundle.",Bundle.ACTIVE,providerBundle.getState());
   try {
-    gibberishProviderRefs=fixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "=Gibberish)"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ fixture.userID1+ ")"+ ")");
+    gibberishProviderRefs=GibberishSlickFixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "=Gibberish)"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ fixture.userID1+ ")"+ ")");
   }
  catch (  InvalidSyntaxException ex) {
     fail("We apparently got our filter wrong " + ex.getMessage());
@@ -29,12 +29,12 @@
   assertTrue("A Protocol Provider Service was not restored after being" + "reinstalled. Gibberish URI:" + fixture.userID1,gibberishProviderRefs != null && gibberishProviderRefs.length > 0);
   ServiceReference[] gibberishFactoryRefs=null;
   try {
-    gibberishFactoryRefs=fixture.bc.getServiceReferences(ProtocolProviderFactory.class.getName(),"(" + ProtocolProviderFactory.PROTOCOL + "=Gibberish)");
+    gibberishFactoryRefs=GibberishSlickFixture.bc.getServiceReferences(ProtocolProviderFactory.class.getName(),"(" + ProtocolProviderFactory.PROTOCOL + "=Gibberish)");
   }
  catch (  InvalidSyntaxException ex) {
     fail("We apparently got our filter wrong " + ex.getMessage());
   }
-  fixture.providerFactory=(ProtocolProviderFactory)fixture.bc.getService(gibberishFactoryRefs[0]);
-  fixture.provider1=(ProtocolProviderService)fixture.bc.getService(gibberishProviderRefs[0]);
+  fixture.providerFactory=(ProtocolProviderFactory)GibberishSlickFixture.bc.getService(gibberishFactoryRefs[0]);
+  fixture.provider1=(ProtocolProviderService)GibberishSlickFixture.bc.getService(gibberishProviderRefs[0]);
   assertTrue("The Gibberish provider did not restore its own reference to the " + "provider that we just reinstalled (URI=" + fixture.userID1 + ")",!fixture.providerFactory.getRegisteredAccounts().isEmpty() && fixture.providerFactory.getProviderForAccount(fixture.provider1.getAccountID()) != null);
 }

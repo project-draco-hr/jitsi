@@ -1,5 +1,5 @@
 {
-  Bundle providerBundle=fixture.findProtocolProviderBundle(fixture.provider1);
+  Bundle providerBundle=AdHocMultiUserChatSlickFixture.findProtocolProviderBundle(fixture.provider1);
   YahooSlickFixture.providerBundle=providerBundle;
   assertNotNull("Couldn't find a bundle for the tested provider",providerBundle);
   providerBundle.stop();
@@ -8,20 +8,20 @@
   assertEquals("Couldn't stop the protocol provider bundle.",Bundle.UNINSTALLED,providerBundle.getState());
   ServiceReference[] yahooProviderRefs=null;
   try {
-    yahooProviderRefs=fixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.YAHOO+ ")"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ fixture.userID1+ ")"+ ")");
+    yahooProviderRefs=AdHocMultiUserChatSlickFixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.YAHOO+ ")"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ fixture.userID1+ ")"+ ")");
   }
  catch (  InvalidSyntaxException ex) {
     fail("We apparently got our filter wrong: " + ex.getMessage());
   }
   assertTrue("A Protocol Provider Service was still regged as an osgi service " + "for yahoo URI:" + fixture.userID1 + "After it was explicitly uninstalled",yahooProviderRefs == null || yahooProviderRefs.length == 0);
   assertTrue("The yahoo provider factory kept a reference to the provider we just " + "uninstalled (uri=" + fixture.userID1 + ")",fixture.providerFactory.getRegisteredAccounts().isEmpty() && fixture.providerFactory.getProviderForAccount(fixture.provider1.getAccountID()) == null);
-  providerBundle=fixture.bc.installBundle(providerBundle.getLocation());
+  providerBundle=AdHocMultiUserChatSlickFixture.bc.installBundle(providerBundle.getLocation());
   YahooSlickFixture.providerBundle=providerBundle;
   assertEquals("Couldn't re-install protocol provider bundle.",Bundle.INSTALLED,providerBundle.getState());
-  AccountManagerUtils.startBundleAndWaitStoredAccountsLoaded(fixture.bc,providerBundle,ProtocolNames.YAHOO);
+  AccountManagerUtils.startBundleAndWaitStoredAccountsLoaded(AdHocMultiUserChatSlickFixture.bc,providerBundle,ProtocolNames.YAHOO);
   assertEquals("Couldn't re-start protocol provider bundle.",Bundle.ACTIVE,providerBundle.getState());
   try {
-    yahooProviderRefs=fixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.YAHOO+ ")"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ fixture.userID1+ ")"+ ")");
+    yahooProviderRefs=AdHocMultiUserChatSlickFixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.YAHOO+ ")"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ fixture.userID1+ ")"+ ")");
   }
  catch (  InvalidSyntaxException ex) {
     fail("We apparently got our filter wrong " + ex.getMessage());
@@ -29,12 +29,12 @@
   assertTrue("A Protocol Provider Service was not restored after being" + "reinstalled. yahoo URI:" + fixture.userID1,yahooProviderRefs != null && yahooProviderRefs.length > 0);
   ServiceReference[] yahooFactoryRefs=null;
   try {
-    yahooFactoryRefs=fixture.bc.getServiceReferences(ProtocolProviderFactory.class.getName(),"(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.YAHOO+ ")");
+    yahooFactoryRefs=AdHocMultiUserChatSlickFixture.bc.getServiceReferences(ProtocolProviderFactory.class.getName(),"(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.YAHOO+ ")");
   }
  catch (  InvalidSyntaxException ex) {
     fail("We apparently got our filter wrong " + ex.getMessage());
   }
-  fixture.providerFactory=(ProtocolProviderFactory)fixture.bc.getService(yahooFactoryRefs[0]);
-  fixture.provider1=(ProtocolProviderService)fixture.bc.getService(yahooProviderRefs[0]);
+  fixture.providerFactory=(ProtocolProviderFactory)AdHocMultiUserChatSlickFixture.bc.getService(yahooFactoryRefs[0]);
+  fixture.provider1=(ProtocolProviderService)AdHocMultiUserChatSlickFixture.bc.getService(yahooProviderRefs[0]);
   assertTrue("The yahoo provider did not restore its own reference to the provider " + "that we just reinstalled (URI=" + fixture.userID1 + ")",!fixture.providerFactory.getRegisteredAccounts().isEmpty() && fixture.providerFactory.getProviderForAccount(fixture.provider1.getAccountID()) != null);
 }

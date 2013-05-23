@@ -1,7 +1,7 @@
 {
   Thread searchThread=new Thread(){
     int cancelState=0;
-    public void run(){
+    @Override public void run(){
       logger.trace("starting search for " + realQueryString + " (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\"");
       SearchControls searchControls=buildSearchControls(searchSettings);
       LdapEvent endEvent=null;
@@ -19,7 +19,7 @@
           SearchResult searchResult=(SearchResult)results.next();
           Map<String,Set<String>> retrievedAttributes=retrieveAttributes(searchResult);
           LdapPersonFound person=buildPerson(query,searchResult.getName(),retrievedAttributes);
-          LdapEvent resultEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.NEW_SEARCH_RESULT,(Object)person);
+          LdapEvent resultEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.NEW_SEARCH_RESULT,person);
           fireLdapEvent(resultEvent,caller);
         }
         long time1=System.currentTimeMillis();

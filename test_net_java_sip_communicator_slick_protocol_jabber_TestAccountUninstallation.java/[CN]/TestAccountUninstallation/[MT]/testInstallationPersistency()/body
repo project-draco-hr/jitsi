@@ -8,20 +8,20 @@
   assertEquals("Couldn't stop the protocol provider bundle.",Bundle.UNINSTALLED,providerBundle.getState());
   ServiceReference[] jabberProviderRefs=null;
   try {
-    jabberProviderRefs=fixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.JABBER+ ")"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ fixture.userID1+ ")"+ ")");
+    jabberProviderRefs=JabberSlickFixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.JABBER+ ")"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ fixture.userID1+ ")"+ ")");
   }
  catch (  InvalidSyntaxException ex) {
     fail("We apparently got our filter wrong: " + ex.getMessage());
   }
   assertTrue("A Protocol Provider Service was still regged as an osgi service " + "for Jabber URI:" + fixture.userID1 + "After it was explicitly uninstalled",jabberProviderRefs == null || jabberProviderRefs.length == 0);
   assertTrue("The Jabber provider factory kept a reference to the provider we just " + "uninstalled (uri=" + fixture.userID1 + ")",fixture.providerFactory.getRegisteredAccounts().isEmpty() && fixture.providerFactory.getProviderForAccount(fixture.provider1.getAccountID()) == null);
-  providerBundle=fixture.bc.installBundle(providerBundle.getLocation());
+  providerBundle=JabberSlickFixture.bc.installBundle(providerBundle.getLocation());
   JabberSlickFixture.providerBundle=providerBundle;
   assertEquals("Couldn't re-install protocol provider bundle.",Bundle.INSTALLED,providerBundle.getState());
   AccountManagerUtils.startBundleAndWaitStoredAccountsLoaded(JabberSlickFixture.bc,providerBundle,ProtocolNames.JABBER);
   assertEquals("Couldn't re-start protocol provider bundle.",Bundle.ACTIVE,providerBundle.getState());
   try {
-    jabberProviderRefs=fixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.JABBER+ ")"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ fixture.userID1+ ")"+ ")");
+    jabberProviderRefs=JabberSlickFixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.JABBER+ ")"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ fixture.userID1+ ")"+ ")");
   }
  catch (  InvalidSyntaxException ex) {
     fail("We apparently got our filter wrong " + ex.getMessage());
@@ -29,12 +29,12 @@
   assertTrue("A Protocol Provider Service was not restored after being" + "reinstalled. Jabber URI:" + fixture.userID1,jabberProviderRefs != null && jabberProviderRefs.length > 0);
   ServiceReference[] jabberFactoryRefs=null;
   try {
-    jabberFactoryRefs=fixture.bc.getServiceReferences(ProtocolProviderFactory.class.getName(),"(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.JABBER+ ")");
+    jabberFactoryRefs=JabberSlickFixture.bc.getServiceReferences(ProtocolProviderFactory.class.getName(),"(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.JABBER+ ")");
   }
  catch (  InvalidSyntaxException ex) {
     fail("We apparently got our filter wrong " + ex.getMessage());
   }
-  fixture.providerFactory=(ProtocolProviderFactory)fixture.bc.getService(jabberFactoryRefs[0]);
-  fixture.provider1=(ProtocolProviderService)fixture.bc.getService(jabberProviderRefs[0]);
+  fixture.providerFactory=(ProtocolProviderFactory)JabberSlickFixture.bc.getService(jabberFactoryRefs[0]);
+  fixture.provider1=(ProtocolProviderService)JabberSlickFixture.bc.getService(jabberProviderRefs[0]);
   assertTrue("The Jabber provider did not restore its own reference to the provider " + "that we just reinstalled (URI=" + fixture.userID1 + ")",!fixture.providerFactory.getRegisteredAccounts().isEmpty() && fixture.providerFactory.getProviderForAccount(fixture.provider1.getAccountID()) != null);
 }

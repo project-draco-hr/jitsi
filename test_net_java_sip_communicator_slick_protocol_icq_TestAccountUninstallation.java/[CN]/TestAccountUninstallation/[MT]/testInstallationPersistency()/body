@@ -1,5 +1,5 @@
 {
-  Bundle providerBundle=fixture.findProtocolProviderBundle(fixture.provider);
+  Bundle providerBundle=IcqSlickFixture.findProtocolProviderBundle(fixture.provider);
   IcqSlickFixture.providerBundle=providerBundle;
   assertNotNull("Couldn't find a bundle for the tested provider",providerBundle);
   providerBundle.stop();
@@ -8,34 +8,34 @@
   assertEquals("Couldn't stop the protocol provider bundle.",Bundle.UNINSTALLED,providerBundle.getState());
   ServiceReference[] icqProviderRefs=null;
   try {
-    icqProviderRefs=fixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.ICQ+ ")"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ fixture.icqAccountID.getUserID()+ ")"+ ")");
+    icqProviderRefs=IcqSlickFixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.ICQ+ ")"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ IcqSlickFixture.icqAccountID.getUserID()+ ")"+ ")");
   }
  catch (  InvalidSyntaxException ex) {
     fail("We apparently got our filter wrong: " + ex.getMessage());
   }
-  assertTrue("A Protocol Provider Service was still regged as an osgi service " + "for ICQ UIN:" + fixture.icqAccountID + "After it was explicitly uninstalled",icqProviderRefs == null || icqProviderRefs.length == 0);
-  assertTrue("The ICQ provider factory kept a reference to the provider we just " + "uninstalled (accID=" + fixture.icqAccountID + ")",fixture.providerFactory.getRegisteredAccounts().isEmpty() && fixture.providerFactory.getProviderForAccount(fixture.icqAccountID) == null);
-  providerBundle=fixture.bc.installBundle(providerBundle.getLocation());
+  assertTrue("A Protocol Provider Service was still regged as an osgi service " + "for ICQ UIN:" + IcqSlickFixture.icqAccountID + "After it was explicitly uninstalled",icqProviderRefs == null || icqProviderRefs.length == 0);
+  assertTrue("The ICQ provider factory kept a reference to the provider we just " + "uninstalled (accID=" + IcqSlickFixture.icqAccountID + ")",fixture.providerFactory.getRegisteredAccounts().isEmpty() && fixture.providerFactory.getProviderForAccount(IcqSlickFixture.icqAccountID) == null);
+  providerBundle=IcqSlickFixture.bc.installBundle(providerBundle.getLocation());
   IcqSlickFixture.providerBundle=providerBundle;
   assertEquals("Couldn't re-install protocol provider bundle.",Bundle.INSTALLED,providerBundle.getState());
   AccountManagerUtils.startBundleAndWaitStoredAccountsLoaded(IcqSlickFixture.bc,providerBundle,ProtocolNames.ICQ);
   assertEquals("Couldn't re-start protocol provider bundle.",Bundle.ACTIVE,providerBundle.getState());
   try {
-    icqProviderRefs=fixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.ICQ+ ")"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ fixture.icqAccountID.getUserID()+ ")"+ ")");
+    icqProviderRefs=IcqSlickFixture.bc.getServiceReferences(ProtocolProviderService.class.getName(),"(&" + "(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.ICQ+ ")"+ "("+ ProtocolProviderFactory.USER_ID+ "="+ IcqSlickFixture.icqAccountID.getUserID()+ ")"+ ")");
   }
  catch (  InvalidSyntaxException ex) {
     fail("We apparently got our filter wrong: " + ex.getMessage());
   }
-  assertTrue("A Protocol Provider Service was not restored after being" + "reinstalled. ICQ UIN:" + fixture.icqAccountID,icqProviderRefs != null && icqProviderRefs.length > 0);
+  assertTrue("A Protocol Provider Service was not restored after being" + "reinstalled. ICQ UIN:" + IcqSlickFixture.icqAccountID,icqProviderRefs != null && icqProviderRefs.length > 0);
   ServiceReference[] icqFactoryRefs=null;
   try {
-    icqFactoryRefs=fixture.bc.getServiceReferences(ProtocolProviderFactory.class.getName(),"(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.ICQ+ ")");
+    icqFactoryRefs=IcqSlickFixture.bc.getServiceReferences(ProtocolProviderFactory.class.getName(),"(" + ProtocolProviderFactory.PROTOCOL + "="+ ProtocolNames.ICQ+ ")");
   }
  catch (  InvalidSyntaxException ex) {
     fail("We apparently got our filter wrong: " + ex.getMessage());
   }
-  fixture.providerFactory=(ProtocolProviderFactory)fixture.bc.getService(icqFactoryRefs[0]);
-  fixture.provider=(ProtocolProviderService)fixture.bc.getService(icqProviderRefs[0]);
-  fixture.icqAccountID=fixture.provider.getAccountID();
-  assertTrue("The ICQ provider did not restore its own reference to the provider " + "that we just reinstalled (accID=" + fixture.icqAccountID + ")",!fixture.providerFactory.getRegisteredAccounts().isEmpty() && fixture.providerFactory.getProviderForAccount(fixture.icqAccountID) != null);
+  fixture.providerFactory=(ProtocolProviderFactory)IcqSlickFixture.bc.getService(icqFactoryRefs[0]);
+  fixture.provider=(ProtocolProviderService)IcqSlickFixture.bc.getService(icqProviderRefs[0]);
+  IcqSlickFixture.icqAccountID=fixture.provider.getAccountID();
+  assertTrue("The ICQ provider did not restore its own reference to the provider " + "that we just reinstalled (accID=" + IcqSlickFixture.icqAccountID + ")",!fixture.providerFactory.getRegisteredAccounts().isEmpty() && fixture.providerFactory.getProviderForAccount(IcqSlickFixture.icqAccountID) != null);
 }
