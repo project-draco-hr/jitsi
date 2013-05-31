@@ -3,12 +3,16 @@
   try {
     localResponse=defaultResolver.send(query);
   }
- catch (  Throwable exc) {
-    logger.info("Exception occurred during parallel DNS resolving" + exc,exc);
+ catch (  SocketTimeoutException exc) {
+    logger.info("Default DNS resolver timed out.");
     this.exception=exc;
   }
+catch (  Throwable exc) {
+    logger.info("Default DNS resolver failed",exc);
+    this.exception=exc;
+  }
+  if (done)   return;
 synchronized (this) {
-    if (done)     return;
     if (localResponse != null && isResponseSatisfactory(localResponse)) {
       response=localResponse;
       done=true;

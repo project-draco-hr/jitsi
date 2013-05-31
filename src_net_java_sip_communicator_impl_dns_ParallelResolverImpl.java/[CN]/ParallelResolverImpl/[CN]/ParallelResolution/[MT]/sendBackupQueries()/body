@@ -1,23 +1,30 @@
 {
-  logger.info("Send DNS queries to backup resolvers");
-  new Thread(){
+  backupQueriesPool.execute(new Runnable(){
     @Override public void run(){
+      if (done) {
+        return;
+      }
+      Message localResponse=null;
+      try {
+        logger.info("Sending query for " + query.getQuestion().getName() + "/"+ Type.string(query.getQuestion().getType())+ " to backup resolvers");
+        localResponse=backupResolver.send(query);
+      }
+ catch (      Throwable exc) {
+        logger.info("Exception occurred during backup " + "DNS resolving" + exc);
+        exception=exc;
+      }
+      if (done) {
+        return;
+      }
 synchronized (ParallelResolution.this) {
-        if (done)         return;
-        Message localResponse=null;
-        try {
-          localResponse=backupResolver.send(query);
+        if (response == null) {
+          response=localResponse;
+          primaryResolverRespondedFirst=false;
         }
- catch (        Throwable exc) {
-          logger.info("Exception occurred during backup " + "DNS resolving" + exc);
-          exception=exc;
-        }
-        if (done)         return;
-        response=localResponse;
         done=true;
         ParallelResolution.this.notify();
       }
     }
   }
-.start();
+);
 }

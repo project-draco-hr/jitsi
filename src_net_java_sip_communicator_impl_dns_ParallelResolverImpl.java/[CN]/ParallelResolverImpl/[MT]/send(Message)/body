@@ -1,11 +1,7 @@
 {
   ParallelResolution resolution=new ParallelResolution(query);
   resolution.sendFirstQuery();
-  boolean redundantModeCopy;
-synchronized (redemptionLock) {
-    redundantModeCopy=redundantMode;
-  }
-  if (!redundantModeCopy) {
+  if (!redundantMode) {
     if (resolution.waitForResponse(currentDnsPatience)) {
       return resolution.returnResponseOrThrowUp();
     }
@@ -13,7 +9,7 @@ synchronized (redemptionLock) {
 synchronized (redemptionLock) {
         redundantMode=true;
         redemptionStatus=currentDnsRedemption;
-        logger.info("Primary DNS seems laggy as we got no " + "response for " + currentDnsPatience + "ms. "+ "Enabling redundant mode.");
+        logger.info("Primary DNS seems laggy: " + "no response for " + query.getQuestion().getName() + "/"+ Type.string(query.getQuestion().getType())+ " after "+ currentDnsPatience+ "ms. "+ "Enabling redundant mode.");
       }
     }
   }
