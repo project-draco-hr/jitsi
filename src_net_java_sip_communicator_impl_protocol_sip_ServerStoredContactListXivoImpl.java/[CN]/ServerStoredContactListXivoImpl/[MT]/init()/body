@@ -1,17 +1,16 @@
 {
   try {
-    AccountID accountID=sipProvider.getAccountID();
-    boolean enableXivo=accountID.getAccountPropertyBoolean(XIVO_ENABLE,true);
-    if (!enableXivo)     return;
-    boolean useSipCredentials=accountID.getAccountPropertyBoolean(XIVO_USE_SIP_CREDETIALS,true);
-    String serverAddress=accountID.getAccountPropertyString(XIVO_SERVER_ADDRESS);
+    SipAccountIDImpl accountID=(SipAccountIDImpl)sipProvider.getAccountID();
+    if (!accountID.isXiVOEnable())     return;
+    boolean useSipCredentials=accountID.isClistOptionUseSipCredentials();
+    String serverAddress=accountID.getClistOptionServerUri();
     String username=accountID.getAccountPropertyString(ProtocolProviderFactory.USER_ID);
     Address userAddress=sipProvider.parseAddressString(username);
     if (useSipCredentials) {
       username=((SipUri)userAddress.getURI()).getUser();
     }
  else {
-      username=accountID.getAccountPropertyString(XIVO_USER);
+      username=accountID.getClistOptionUser();
     }
     try {
       connect(serverAddress);
