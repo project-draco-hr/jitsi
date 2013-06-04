@@ -1,4 +1,11 @@
 {
   levelUpdate.setSoundLevel(soundLevel);
-  LowPriorityEventQueue.invokeLater(levelUpdate);
+  Runnable levelUpdateScheduler;
+synchronized (this) {
+    if (this.levelUpdateScheduler == null) {
+      this.levelUpdateScheduler=LowPriorityEventQueue.createRepetitiveInvokeLater(levelUpdate);
+    }
+    levelUpdateScheduler=this.levelUpdateScheduler;
+  }
+  levelUpdateScheduler.run();
 }
