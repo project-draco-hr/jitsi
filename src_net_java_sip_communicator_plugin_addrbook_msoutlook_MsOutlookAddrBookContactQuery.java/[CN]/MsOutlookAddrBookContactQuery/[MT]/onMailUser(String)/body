@@ -2,7 +2,19 @@
   if (logger.isDebugEnabled()) {
     logger.debug("Found contact id: " + id);
   }
-  Object[] props=IMAPIProp_GetProps(id,MAPI_MAILUSER_PROP_IDS,MAPI_UNICODE);
+  Object[] props=null;
+  try {
+    props=IMAPIProp_GetProps(id,MAPI_MAILUSER_PROP_IDS,MAPI_UNICODE);
+  }
+ catch (  MsOutlookMAPIHResultException ex) {
+    if (ex.getHResult() == 0x80070057 && firstIMAPIPropGetPropFailureLogged == false) {
+      firstIMAPIPropGetPropFailureLogged=true;
+      throw ex;
+    }
+ else     if (ex.getHResult() != 0x80070057) {
+      throw ex;
+    }
+  }
   long objType=0;
   if (props != null && props[PR_OBJECT_TYPE] != null && props[PR_OBJECT_TYPE] instanceof Long) {
     objType=((Long)props[PR_OBJECT_TYPE]).longValue();
