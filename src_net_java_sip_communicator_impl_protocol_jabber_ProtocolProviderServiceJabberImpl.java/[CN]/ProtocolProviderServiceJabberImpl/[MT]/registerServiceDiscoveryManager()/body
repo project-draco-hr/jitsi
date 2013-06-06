@@ -3,7 +3,10 @@
   ServiceDiscoveryManager.setIdentityName(name);
   ServiceDiscoveryManager.setIdentityType("pc");
   discoveryManager=new ScServiceDiscoveryManager(this,new String[]{"http://jabber.org/protocol/commands"},supportedFeatures.toArray(new String[supportedFeatures.size()]));
-  if (isGTalkTesting()) {
+  boolean isCallingDisabled=JabberActivator.getConfigurationService().getBoolean(IS_CALLING_DISABLED,false);
+  boolean isCallingDisabledForAccount=false;
+  if (accountID != null && accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_CALLING_DISABLED_FOR_ACCOUNT,false))   isCallingDisabled=true;
+  if (isGTalkTesting() && !isCallingDisabled && !isCallingDisabledForAccount) {
     discoveryManager.addExtFeature(CAPS_GTALK_WEB_VOICE);
     discoveryManager.addExtFeature(CAPS_GTALK_WEB_VIDEO);
     discoveryManager.addExtFeature(CAPS_GTALK_WEB_CAMERA);
