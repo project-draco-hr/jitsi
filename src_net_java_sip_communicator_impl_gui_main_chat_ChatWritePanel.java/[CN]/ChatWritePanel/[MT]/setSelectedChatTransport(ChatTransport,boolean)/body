@@ -1,0 +1,36 @@
+{
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        setSelectedChatTransport(chatTransport,isMessageOrFileTransferReceived);
+      }
+    }
+);
+    return;
+  }
+  long timeout=-1;
+  OperationSetBasicInstantMessaging opSetBasicIM=chatTransport.getProtocolProvider().getOperationSet(OperationSetBasicInstantMessaging.class);
+  if (opSetBasicIM != null) {
+    timeout=opSetBasicIM.getInactivityTimeout();
+  }
+  if (isMessageOrFileTransferReceived) {
+    isOutdatedResource=false;
+  }
+  if (timeout != -1 && (isMessageOrFileTransferReceived || isOutdatedResource)) {
+    if (isOutdatedResource) {
+      timeout=0;
+    }
+    if (outdatedResourceTimer != null) {
+      outdatedResourceTimer.cancel();
+      outdatedResourceTimer.purge();
+    }
+    if (chatTransport.getResourceName() != null) {
+      OutdatedResourceTimerTask task=new OutdatedResourceTimerTask();
+      outdatedResourceTimer=new java.util.Timer();
+      outdatedResourceTimer.schedule(task,timeout);
+    }
+  }
+  if (transportSelectorBox != null && isMessageOrFileTransferReceived) {
+    transportSelectorBox.setSelected(chatTransport);
+  }
+}
