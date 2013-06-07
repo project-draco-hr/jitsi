@@ -1,12 +1,12 @@
 {
   String itemName=globalStatus.getStatusName();
-  Iterator<ProtocolProviderService> pProviders=GuiActivator.getUIService().getMainFrame().getProtocolProviders();
+  Iterator<ProtocolProviderService> pProviders=AccountUtils.getRegisteredProviders().iterator();
   while (pProviders.hasNext()) {
     ProtocolProviderService protocolProvider=pProviders.next();
     if (itemName.equals(GlobalStatusEnum.ONLINE_STATUS)) {
       if (!protocolProvider.isRegistered()) {
         saveStatusInformation(protocolProvider,itemName);
-        GuiActivator.getUIService().getLoginManager().login(protocolProvider);
+        GlobalDisplayDetailsActivator.getUIService().getLoginManager().login(protocolProvider);
       }
  else {
         OperationSetPresence presence=protocolProvider.getOperationSet(OperationSetPresence.class);
@@ -50,13 +50,25 @@
       }
     }
  else     if (itemName.equals(GlobalStatusEnum.FREE_FOR_CHAT_STATUS)) {
-      publishStatus(protocolProvider,PresenceStatus.AVAILABLE_THRESHOLD,PresenceStatus.MAX_STATUS_VALUE);
+      if (!protocolProvider.isRegistered()) {
+        saveStatusInformation(protocolProvider,itemName);
+        GlobalDisplayDetailsActivator.getUIService().getLoginManager().login(protocolProvider);
+      }
+ else       publishStatus(protocolProvider,PresenceStatus.AVAILABLE_THRESHOLD,PresenceStatus.MAX_STATUS_VALUE);
     }
  else     if (itemName.equals(GlobalStatusEnum.DO_NOT_DISTURB_STATUS)) {
-      publishStatus(protocolProvider,PresenceStatus.ONLINE_THRESHOLD,PresenceStatus.AWAY_THRESHOLD);
+      if (!protocolProvider.isRegistered()) {
+        saveStatusInformation(protocolProvider,itemName);
+        GlobalDisplayDetailsActivator.getUIService().getLoginManager().login(protocolProvider);
+      }
+ else       publishStatus(protocolProvider,PresenceStatus.ONLINE_THRESHOLD,PresenceStatus.AWAY_THRESHOLD);
     }
  else     if (itemName.equals(GlobalStatusEnum.AWAY_STATUS)) {
-      publishStatus(protocolProvider,PresenceStatus.AWAY_THRESHOLD,PresenceStatus.AVAILABLE_THRESHOLD);
+      if (!protocolProvider.isRegistered()) {
+        saveStatusInformation(protocolProvider,itemName);
+        GlobalDisplayDetailsActivator.getUIService().getLoginManager().login(protocolProvider);
+      }
+ else       publishStatus(protocolProvider,PresenceStatus.AWAY_THRESHOLD,PresenceStatus.AVAILABLE_THRESHOLD);
     }
   }
 }
