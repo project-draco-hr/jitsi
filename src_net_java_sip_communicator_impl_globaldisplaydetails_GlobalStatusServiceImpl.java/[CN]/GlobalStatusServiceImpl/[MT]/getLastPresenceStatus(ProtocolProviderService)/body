@@ -1,0 +1,31 @@
+{
+  String lastStatus=getLastStatusString(protocolProvider);
+  PresenceStatus status=null;
+  if (lastStatus != null) {
+    OperationSetPresence presence=protocolProvider.getOperationSet(OperationSetPresence.class);
+    if (presence == null)     return null;
+    Iterator<PresenceStatus> i=presence.getSupportedStatusSet();
+    while (i.hasNext()) {
+      PresenceStatus nextStatus=i.next();
+      if (nextStatus.getStatusName().equals(lastStatus))       status=nextStatus;
+    }
+    if (status == null) {
+      if (lastStatus.equals(GlobalStatusEnum.ONLINE_STATUS)) {
+        status=getPresenceStatus(protocolProvider,PresenceStatus.AVAILABLE_THRESHOLD,PresenceStatus.EAGER_TO_COMMUNICATE_THRESHOLD);
+      }
+ else       if (lastStatus.equals(GlobalStatusEnum.AWAY_STATUS)) {
+        status=getPresenceStatus(protocolProvider,PresenceStatus.AWAY_THRESHOLD,PresenceStatus.AVAILABLE_THRESHOLD);
+      }
+ else       if (lastStatus.equals(GlobalStatusEnum.DO_NOT_DISTURB_STATUS)) {
+        status=getPresenceStatus(protocolProvider,PresenceStatus.ONLINE_THRESHOLD,PresenceStatus.AWAY_THRESHOLD);
+      }
+ else       if (lastStatus.equals(GlobalStatusEnum.FREE_FOR_CHAT_STATUS)) {
+        status=getPresenceStatus(protocolProvider,PresenceStatus.AVAILABLE_THRESHOLD,PresenceStatus.MAX_STATUS_VALUE);
+      }
+ else       if (lastStatus.equals(GlobalStatusEnum.OFFLINE_STATUS)) {
+        status=getPresenceStatus(protocolProvider,0,GlobalStatusEnum.ONLINE_THRESHOLD);
+      }
+    }
+  }
+  return status;
+}

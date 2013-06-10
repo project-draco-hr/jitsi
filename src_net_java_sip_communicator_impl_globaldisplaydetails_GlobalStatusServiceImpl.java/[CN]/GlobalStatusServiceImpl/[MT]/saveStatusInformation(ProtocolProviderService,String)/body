@@ -1,0 +1,19 @@
+{
+  ConfigurationService configService=GlobalDisplayDetailsActivator.getConfigurationService();
+  String prefix="net.java.sip.communicator.impl.gui.accounts";
+  List<String> accounts=configService.getPropertyNamesByPrefix(prefix,true);
+  boolean savedAccount=false;
+  for (  String accountRootPropName : accounts) {
+    String accountUID=configService.getString(accountRootPropName);
+    if (accountUID.equals(protocolProvider.getAccountID().getAccountUniqueID())) {
+      configService.setProperty(accountRootPropName + ".lastAccountStatus",statusName);
+      savedAccount=true;
+    }
+  }
+  if (!savedAccount) {
+    String accNodeName="acc" + Long.toString(System.currentTimeMillis());
+    String accountPackage="net.java.sip.communicator.impl.gui.accounts." + accNodeName;
+    configService.setProperty(accountPackage,protocolProvider.getAccountID().getAccountUniqueID());
+    configService.setProperty(accountPackage + ".lastAccountStatus",statusName);
+  }
+}
