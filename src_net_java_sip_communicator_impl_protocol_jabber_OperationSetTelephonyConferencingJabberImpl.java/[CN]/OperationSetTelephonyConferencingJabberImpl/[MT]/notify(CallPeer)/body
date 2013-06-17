@@ -1,5 +1,6 @@
 {
   if (!(callPeer instanceof CallPeerJabberImpl))   return;
+  CallPeerJabberImpl callPeerJabber=(CallPeerJabberImpl)callPeer;
   String to=getBasicTelephony().getFullCalleeURI(callPeer.getAddress());
   try {
     DiscoverInfo discoverInfo=parentProvider.getDiscoveryManager().discoverInfo(to);
@@ -11,6 +12,16 @@
  catch (  XMPPException xmppe) {
     logger.warn("Failed to retrieve DiscoverInfo for " + to,xmppe);
   }
-  IQ iq=getConferenceInfo((CallPeerJabberImpl)callPeer,version);
-  if (iq != null)   parentProvider.getConnection().sendPacket(iq);
+  ConferenceInfoDocument currentConfInfo=getCurrentConferenceInfo(callPeer);
+  ConferenceInfoDocument lastSentConfInfo=callPeerJabber.getLastConferenceInfoSent();
+  ConferenceInfoDocument diff=getConferenceInfoDiff(lastSentConfInfo,currentConfInfo);
+  if (diff != null) {
+    int newVersion=lastSentConfInfo == null ? 1 : lastSentConfInfo.getVersion() + 1;
+    diff.setVersion(newVersion);
+    IQ iq=getConferenceInfo(callPeerJabber,diff);
+    parentProvider.getConnection().sendPacket(iq);
+    currentConfInfo.setVersion(newVersion);
+    callPeerJabber.setLastConferenceInfoSent(currentConfInfo);
+    callPeerJabber.setLastConferenceInfoSentTimestamp(System.currentTimeMillis());
+  }
 }
