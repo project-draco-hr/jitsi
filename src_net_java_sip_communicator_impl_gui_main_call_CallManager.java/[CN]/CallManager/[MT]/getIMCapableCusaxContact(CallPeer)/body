@@ -1,0 +1,16 @@
+{
+  String imppAddress=peer.getAlternativeIMPPAddress();
+  if (!StringUtils.isNullOrEmpty(imppAddress)) {
+    int protocolPartIndex=imppAddress.indexOf(":");
+    imppAddress=(protocolPartIndex >= 0) ? imppAddress.substring(protocolPartIndex + 1) : imppAddress;
+    Collection<ProtocolProviderService> cusaxProviders=AccountUtils.getRegisteredProviders(OperationSetCusaxUtils.class);
+    if (cusaxProviders != null && cusaxProviders.size() > 0) {
+      ProtocolProviderService cusaxProvider=cusaxProviders.iterator().next();
+      Contact contact=getPeerContact(peer,cusaxProvider,imppAddress);
+      if (contact != null && cusaxProvider.getOperationSet(OperationSetBasicInstantMessaging.class) != null) {
+        return contact;
+      }
+    }
+  }
+  return null;
+}
