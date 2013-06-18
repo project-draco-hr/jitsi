@@ -1,0 +1,27 @@
+{
+  ConferenceInfoDocument confInfo=null;
+  try {
+    confInfo=new ConferenceInfoDocument(conferenceInfoXML);
+  }
+ catch (  Exception e) {
+    logger.error("Failed to parse conference-info XML",e);
+    return -1;
+  }
+  callPeer.setConferenceFocus(true);
+  int documentVersion=confInfo.getVersion();
+  int ourVersion=callPeer.getConferenceStateVersion();
+  if (ourVersion == -1) {
+    if (confInfo.getState() == ConferenceInfoDocument.State.FULL) {
+      return setConferenceInfoDocument(callPeer,confInfo);
+    }
+ else     return -1;
+  }
+ else   if (documentVersion <= ourVersion) {
+    return -1;
+  }
+ else {
+    if (confInfo.getState() == ConferenceInfoDocument.State.FULL)     return setConferenceInfoDocument(callPeer,confInfo);
+ else     if (documentVersion == ourVersion + 1)     return updateConferenceInfoDocument(callPeer,confInfo);
+ else     return -1;
+  }
+}

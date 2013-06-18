@@ -1,19 +1,31 @@
 {
+  byte[] bytes;
   try {
-    document=XMLUtils.createDocument(xml);
+    bytes=xml.getBytes("UTF-8");
+  }
+ catch (  UnsupportedEncodingException uee) {
+    logger.warn("Failed to gets bytes from String for the UTF-8 charset",uee);
+    bytes=xml.getBytes();
+  }
+  try {
+    document=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(bytes));
   }
  catch (  Exception e) {
-    logger.error("Failed to create a new document.",e);
-  }
-  try {
-    conferenceInfo=document.getElementById("conference-info");
-    conferenceDescription=XMLUtils.findChild(conferenceInfo,"conference-description");
-    conferenceState=XMLUtils.findChild(conferenceInfo,"conference-state");
-    userCount=XMLUtils.findChild(conferenceState,"user-count");
-    users=XMLUtils.findChild(conferenceInfo,"users");
-  }
- catch (  Exception e) {
-    logger.warn("Failed to parse document: " + xml);
+    logger.error("Failed to parse conference-info XML",e);
     throw (e);
+  }
+  conferenceInfo=document.getElementById("conference-info");
+  if (conferenceInfo == null) {
+    throw (new Exception("Could not parse conference-info document," + " conference-info element not found"));
+  }
+  conferenceDescription=XMLUtils.findChild(conferenceInfo,"conference-description");
+  if (conferenceDescription == null) {
+    throw (new Exception("Could not parse conference-info document," + " conference-description element not found"));
+  }
+  conferenceState=XMLUtils.findChild(conferenceInfo,"conference-state");
+  if (conferenceState != null)   userCount=XMLUtils.findChild(conferenceState,"user-count");
+  users=XMLUtils.findChild(conferenceInfo,"users");
+  if (users == null) {
+    throw (new Exception("Could not parse conference-info document," + " users element not found"));
   }
 }
