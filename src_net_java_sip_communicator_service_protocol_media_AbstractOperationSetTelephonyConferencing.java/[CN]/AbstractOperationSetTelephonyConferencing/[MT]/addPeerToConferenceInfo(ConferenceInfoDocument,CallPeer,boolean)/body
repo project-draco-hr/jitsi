@@ -8,18 +8,16 @@
   if (callPeer instanceof MediaAwareCallPeer<?,?,?>) {
     MediaAwareCallPeer<?,?,?> mediaAwarePeer=(MediaAwareCallPeer<?,?,?>)callPeer;
     CallPeerMediaHandler<?> mediaHandler=mediaAwarePeer.getMediaHandler();
-    int id=1;
     for (    MediaType mediaType : MediaType.values()) {
       MediaStream stream=mediaHandler.getStream(mediaType);
       if (stream != null) {
-        ConferenceInfoDocument.Media media=endpoint.addNewMedia(Integer.toString(id));
+        ConferenceInfoDocument.Media media=endpoint.addNewMedia(mediaType.toString());
         long srcId=remote ? getRemoteSourceID(mediaAwarePeer,mediaType) : stream.getLocalSourceID();
         if (srcId != -1)         media.setSrcId(Long.toString(srcId));
         media.setType(mediaType.toString());
         MediaDirection direction=remote ? getRemoteDirection(mediaAwarePeer,mediaType) : stream.getDirection();
         if (direction == null)         direction=MediaDirection.INACTIVE;
         media.setStatus(direction.toString());
-        id++;
       }
     }
   }
