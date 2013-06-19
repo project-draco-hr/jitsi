@@ -27,6 +27,24 @@
         String commandDescriptor=configService.getString(actionPropName + ".commandDescriptor");
         action=new CommandNotificationAction(commandDescriptor);
       }
+ else       if (actionType.equals(ACTION_VIBRATE)) {
+        String descriptor=configService.getString(actionPropName + ".descriptor");
+        int patternLen=configService.getInt(actionPropName + ".patternLength",-1);
+        if (patternLen == -1) {
+          logger.error("Invalid pattern length: " + patternLen);
+          continue;
+        }
+        long[] pattern=new long[patternLen];
+        for (int pIdx=0; pIdx < patternLen; pIdx++) {
+          pattern[pIdx]=configService.getLong(actionPropName + ".patternItem" + pIdx,-1);
+          if (pattern[pIdx] == -1) {
+            logger.error("Invalid pattern interval: " + pattern);
+            continue;
+          }
+        }
+        int repeat=configService.getInt(actionPropName + ".repeat",-1);
+        action=new VibrateNotificationAction(descriptor,pattern,repeat);
+      }
       action.setEnabled(isEnabled(actionPropName + ".enabled"));
       Notification notification=notifications.get(eventType);
       if (notification == null) {
