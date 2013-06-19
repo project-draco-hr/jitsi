@@ -1,0 +1,26 @@
+{
+  mergeProperties(account.getAccountProperties(),accountProperties);
+  String password=ProtocolProviderFactory.getProtocolProviderFactory(bundleContext,ProtocolNames.JABBER).loadPassword(account);
+  setUserID(account.getUserID());
+  editedAccUID=account.getAccountUniqueID();
+  setPassword(password);
+  rememberPassword=password != null;
+  securityRegistration.loadAccount(account);
+  this.additionalStunServers.clear();
+  for (int i=0; i < StunServerDescriptor.MAX_STUN_SERVER_COUNT; i++) {
+    StunServerDescriptor stunServer=StunServerDescriptor.loadDescriptor(accountProperties,ProtocolProviderFactory.STUN_PREFIX + i);
+    if (stunServer == null)     break;
+    String stunPassword=loadStunPassword(bundleContext,account,ProtocolProviderFactory.STUN_PREFIX + i);
+    if (stunPassword != null) {
+      stunServer.setPassword(stunPassword);
+    }
+    addStunServer(stunServer);
+  }
+  this.additionalJingleNodes.clear();
+  for (int i=0; i < JingleNodeDescriptor.MAX_JN_RELAY_COUNT; i++) {
+    JingleNodeDescriptor jn=JingleNodeDescriptor.loadDescriptor(accountProperties,JingleNodeDescriptor.JN_PREFIX + i);
+    if (jn == null)     break;
+    addJingleNodes(jn);
+  }
+  encodingsRegistration.loadAccount(account,ServiceUtils.getService(bundleContext,MediaService.class));
+}

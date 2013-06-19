@@ -1,0 +1,36 @@
+{
+  int nbEncryptionProtocols=ENCRYPTION_PROTOCOLS.length;
+  String[] encryptions=new String[nbEncryptionProtocols];
+  boolean[] selectedEncryptions=new boolean[nbEncryptionProtocols];
+  String name;
+  int index;
+  Iterator<String> encryptionProtocolNames=encryptionProtocols.keySet().iterator();
+  while (encryptionProtocolNames.hasNext()) {
+    name=encryptionProtocolNames.next();
+    index=encryptionProtocols.get(name);
+    if (index != -1) {
+      if (isExistingEncryptionProtocol(name)) {
+        encryptions[index]=name;
+        selectedEncryptions[index]=encryptionProtocolStatus.get(name);
+      }
+    }
+  }
+  String encryptionProtocol;
+  boolean set;
+  int j=0;
+  for (int i=0; i < ENCRYPTION_PROTOCOLS.length; ++i) {
+    encryptionProtocol=ENCRYPTION_PROTOCOLS[i];
+    if (!encryptionProtocols.containsKey(encryptionProtocol)) {
+      set=false;
+      while (j < encryptions.length && !set) {
+        if (encryptions[j] == null) {
+          encryptions[j]=encryptionProtocol;
+          selectedEncryptions[j]=encryptionProtocol.equals("ZRTP");
+          set=true;
+        }
+        ++j;
+      }
+    }
+  }
+  return new Object[]{encryptions,selectedEncryptions};
+}

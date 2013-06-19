@@ -1,21 +1,20 @@
 {
   try {
-    AccountID accountID=sipProvider.getAccountID();
-    boolean enableXCap=accountID.getAccountPropertyBoolean(XCAP_ENABLE,true);
-    boolean useSipCredentials=accountID.getAccountPropertyBoolean(XCAP_USE_SIP_CREDETIALS,true);
-    String serverUri=accountID.getAccountPropertyString(XCAP_SERVER_URI);
+    SipAccountIDImpl accountID=(SipAccountIDImpl)sipProvider.getAccountID();
+    if (!accountID.isXCapEnable())     return;
+    String serverUri=accountID.getClistOptionServerUri();
     String username=accountID.getAccountPropertyString(ProtocolProviderFactory.USER_ID);
     Address userAddress=sipProvider.parseAddressString(username);
     String password;
-    if (useSipCredentials) {
+    if (accountID.isClistOptionUseSipCredentials()) {
       username=((SipUri)userAddress.getURI()).getUser();
       password=SipActivator.getProtocolProviderFactory().loadPassword(accountID);
     }
  else {
-      username=accountID.getAccountPropertyString(XCAP_USER);
-      password=accountID.getAccountPropertyString(XCAP_PASSWORD);
+      username=accountID.getClistOptionUser();
+      password=accountID.getClistOptionPassword();
     }
-    if (enableXCap && serverUri != null) {
+    if (serverUri != null) {
       URI uri=new URI(serverUri.trim());
       if (uri.getHost() != null && uri.getPath() != null) {
         xCapClient.connect(uri,userAddress,username,password);

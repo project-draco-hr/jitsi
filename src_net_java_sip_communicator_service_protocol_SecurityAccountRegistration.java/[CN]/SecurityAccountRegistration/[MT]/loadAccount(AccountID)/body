@@ -1,0 +1,21 @@
+{
+  setDefaultEncryption(accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true));
+  encryptionProtocols=new HashMap<String,Integer>();
+  encryptionProtocolStatus=new HashMap<String,Boolean>();
+  Map<String,Integer> srcEncryptionProtocols=accountID.getIntegerPropertiesByPrefix(ProtocolProviderFactory.ENCRYPTION_PROTOCOL,true);
+  Map<String,Boolean> srcEncryptionProtocolStatus=accountID.getBooleanPropertiesByPrefix(ProtocolProviderFactory.ENCRYPTION_PROTOCOL_STATUS,true,false);
+  int prefixeLength=ProtocolProviderFactory.ENCRYPTION_PROTOCOL.length() + 1;
+  String name;
+  boolean enabled;
+  for (  String protocolPropertyName : srcEncryptionProtocols.keySet()) {
+    name=protocolPropertyName.substring(prefixeLength);
+    if (isExistingEncryptionProtocol(name)) {
+      encryptionProtocols.put(name,srcEncryptionProtocols.get(protocolPropertyName));
+      enabled=srcEncryptionProtocolStatus.get(ProtocolProviderFactory.ENCRYPTION_PROTOCOL_STATUS + "." + name);
+      encryptionProtocolStatus.put(name,enabled);
+    }
+  }
+  setSipZrtpAttribute(accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_SIPZRTP_ATTRIBUTE,true));
+  setSavpOption(accountID.getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF));
+  setSDesCipherSuites(accountID.getAccountPropertyString(ProtocolProviderFactory.SDES_CIPHER_SUITES));
+}

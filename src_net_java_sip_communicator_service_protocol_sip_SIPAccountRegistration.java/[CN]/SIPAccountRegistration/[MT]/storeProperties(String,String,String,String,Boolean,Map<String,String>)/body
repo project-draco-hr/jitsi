@@ -1,0 +1,46 @@
+{
+  if (rememberPassword)   setPassword(passwd);
+ else   setPassword(null);
+  String serverAddress=null;
+  String serverFromUsername=getServerFromUserName(userName);
+  if (getServerAddress() != null)   serverAddress=getServerAddress();
+  if (serverFromUsername == null && getDefaultDomain() != null) {
+    userName=userName + "@" + getDefaultDomain();
+    if (serverAddress == null)     serverAddress=getDefaultDomain();
+  }
+ else   if (serverAddress == null && serverFromUsername != null) {
+    serverAddress=serverFromUsername;
+  }
+  if (serverAddress != null) {
+    accountProperties.put(ProtocolProviderFactory.SERVER_ADDRESS,serverAddress);
+    if (userName.indexOf(serverAddress) < 0)     accountProperties.put(ProtocolProviderFactory.IS_SERVER_OVERRIDDEN,Boolean.toString(true));
+  }
+  if (isProxyAutoConfigure()) {
+    removeAccountProperty(ProtocolProviderFactory.PROXY_ADDRESS);
+    removeAccountProperty(ProtocolProviderFactory.PROXY_PORT);
+    removeAccountProperty(ProtocolProviderFactory.PREFERRED_TRANSPORT);
+  }
+  if (serverAddress == null) {
+    setForceP2PMode(true);
+  }
+  securityAccountRegistration.storeProperties(this.accountProperties);
+  ensureDefaultValuePresent(ProtocolProviderFactory.PROXY_AUTO_CONFIG);
+  ensureDefaultValuePresent(ProtocolProviderFactory.IS_PRESENCE_ENABLED);
+  ensureDefaultValuePresent(ProtocolProviderFactory.FORCE_P2P_MODE);
+  ensureDefaultValuePresent(ProtocolProviderFactory.KEEP_ALIVE_METHOD);
+  ensureDefaultValuePresent(ProtocolProviderFactory.KEEP_ALIVE_INTERVAL);
+  ensureDefaultValuePresent(ProtocolProviderFactory.POLLING_PERIOD);
+  ensureDefaultValuePresent(ProtocolProviderFactory.SUBSCRIPTION_EXPIRATION);
+  encodingsRegistration.storeProperties(this.accountProperties);
+  if (isModification) {
+    if (isMessageWaitingIndicationsEnabled()) {
+      setVoicemailURI("");
+      setVoicemailCheckURI("");
+      removeAccountProperty(ProtocolProviderFactory.VOICEMAIL_ENABLED);
+    }
+ else {
+      accountProperties.put(ProtocolProviderFactory.VOICEMAIL_ENABLED,Boolean.FALSE.toString());
+    }
+  }
+  super.storeProperties(protocolIconPath,accountIconPath,accountProperties);
+}
