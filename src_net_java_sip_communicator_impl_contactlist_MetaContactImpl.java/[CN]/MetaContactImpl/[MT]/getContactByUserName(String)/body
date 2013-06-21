@@ -1,0 +1,22 @@
+{
+  List<Contact> contactList=new LinkedList<Contact>();
+  for (  Contact contact : protoContacts) {
+    try {
+      OperationSetServerStoredContactInfo contactInfoOpSet=contact.getProtocolProvider().getOperationSet(OperationSetServerStoredContactInfo.class);
+      Iterator<GenericDetail> contactInfo=contactInfoOpSet.getAllDetailsForContact(contact);
+      while (contactInfo.hasNext()) {
+        GenericDetail detail=contactInfo.next();
+        if (detail instanceof PhoneNumberDetail) {
+          if (userName.equalsIgnoreCase(detail.toString())) {
+            contactList.add(contact);
+            break;
+          }
+        }
+      }
+    }
+ catch (    Exception e) {
+      logger.warn("Could not get server stored details for" + "contact" + contact.getDisplayName(),e);
+    }
+  }
+  return contactList;
+}
