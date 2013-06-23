@@ -1,0 +1,21 @@
+{
+  List<StunServerDescriptor> stunServerDescriptors=accID.getStunServers(ProtocolMediaActivator.bundleContext);
+  List<CandidateHarvester> stunHarvesters=new ArrayList<CandidateHarvester>(stunServerDescriptors.size());
+  for (  StunServerDescriptor desc : stunServerDescriptors) {
+    TransportAddress address=new TransportAddress(desc.getAddress(),desc.getPort(),Transport.UDP);
+    if (address.getAddress() == null) {
+      logger.info("Unresolved address for " + address);
+      continue;
+    }
+    StunCandidateHarvester harvester;
+    if (desc.isTurnSupported()) {
+      harvester=new TurnCandidateHarvester(address,new LongTermCredential(desc.getUsername(),desc.getPassword()));
+    }
+ else {
+      harvester=new StunCandidateHarvester(address);
+    }
+    if (logger.isInfoEnabled())     logger.info("Adding pre-configured harvester " + harvester);
+    stunHarvesters.add(harvester);
+  }
+  return stunHarvesters;
+}

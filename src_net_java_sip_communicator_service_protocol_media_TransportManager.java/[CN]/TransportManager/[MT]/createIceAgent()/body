@@ -1,0 +1,32 @@
+{
+  long startGatheringHarvesterTime=System.currentTimeMillis();
+  CallPeer peer=getCallPeer();
+  ProtocolProviderService provider=peer.getProtocolProvider();
+  NetworkAddressManagerService namSer=ProtocolMediaActivator.getNetworkAddressManagerService();
+  boolean atLeastOneStunServer=false;
+  Agent agent=namSer.createIceAgent();
+  AccountID accID=provider.getAccountID();
+  for (  CandidateHarvester harvester : getStunHarvesters(accID)) {
+    if (harvester instanceof StunCandidateHarvester)     atLeastOneStunServer=true;
+    agent.addCandidateHarvester(harvester);
+  }
+  if (!atLeastOneStunServer) {
+    if (accID.isUseDefaultStunServer()) {
+      TransportAddress address=new TransportAddress(DEFAULT_STUN_SERVER_ADDRESS,DEFAULT_STUN_SERVER_PORT,Transport.UDP);
+      StunCandidateHarvester harvester=new StunCandidateHarvester(address);
+      if (harvester != null) {
+        agent.addCandidateHarvester(harvester);
+      }
+    }
+  }
+  if (accID.isUPNPEnabled()) {
+    UPNPHarvester upnpHarvester=new UPNPHarvester();
+    if (upnpHarvester != null) {
+      agent.addCandidateHarvester(upnpHarvester);
+    }
+  }
+  long stopGatheringHarvesterTime=System.currentTimeMillis();
+  long gatheringHarvesterTime=stopGatheringHarvesterTime - startGatheringHarvesterTime;
+  if (logger.isInfoEnabled())   logger.info("End gathering harvester within " + gatheringHarvesterTime + " ms");
+  return agent;
+}

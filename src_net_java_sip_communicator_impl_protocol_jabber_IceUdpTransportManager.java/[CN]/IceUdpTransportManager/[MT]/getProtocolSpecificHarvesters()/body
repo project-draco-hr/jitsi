@@ -1,0 +1,43 @@
+{
+  List<CandidateHarvester> harvesters=new LinkedList<CandidateHarvester>();
+  CallPeerJabberImpl peer=getCallPeer();
+  ProtocolProviderServiceJabberImpl provider=peer.getProtocolProvider();
+  NetworkAddressManagerService namSer=getNetAddrMgr();
+  JabberAccountIDImpl accID=(JabberAccountIDImpl)provider.getAccountID();
+  if (accID.isStunServerDiscoveryEnabled()) {
+    String username=org.jivesoftware.smack.util.StringUtils.parseName(provider.getOurJID());
+    String password=JabberActivator.getProtocolProviderFactory().loadPassword(accID);
+    if (provider.getUserCredentials() != null)     password=provider.getUserCredentials().getPasswordAsString();
+    if (password == null) {
+      UserCredentials credentials=new UserCredentials();
+      credentials.setUserName(accID.getUserID());
+      credentials=provider.getAuthority().obtainCredentials(accID.getDisplayName(),credentials,SecurityAuthority.AUTHENTICATION_REQUIRED);
+      if (credentials == null) {
+        return null;
+      }
+      char[] pass=credentials.getPassword();
+      if (pass == null) {
+        return null;
+      }
+      password=new String(pass);
+      if (credentials.isPasswordPersistent()) {
+        JabberActivator.getProtocolProviderFactory().storePassword(accID,password);
+      }
+    }
+    StunCandidateHarvester autoHarvester=namSer.discoverStunServer(accID.getService(),StringUtils.getUTF8Bytes(username),StringUtils.getUTF8Bytes(password));
+    if (logger.isInfoEnabled())     logger.info("Auto discovered harvester is " + autoHarvester);
+    if (autoHarvester != null) {
+      harvesters.add(autoHarvester);
+    }
+  }
+  if (accID.isJingleNodesRelayEnabled()) {
+    SmackServiceNode serviceNode=peer.getProtocolProvider().getJingleNodesServiceNode();
+    if (serviceNode != null) {
+      JingleNodesHarvester harvester=new JingleNodesHarvester(serviceNode);
+      if (harvester != null) {
+        harvesters.add(harvester);
+      }
+    }
+  }
+  return harvesters;
+}
