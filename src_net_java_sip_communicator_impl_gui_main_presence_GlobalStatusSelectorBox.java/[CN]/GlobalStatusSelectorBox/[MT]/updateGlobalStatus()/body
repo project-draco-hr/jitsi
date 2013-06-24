@@ -1,25 +1,9 @@
 {
-  int status=0;
-  Iterator<ProtocolProviderService> pProviders=mainFrame.getProtocolProviders();
-  boolean hasAvailableProvider=false;
-  while (pProviders.hasNext()) {
-    ProtocolProviderService protocolProvider=pProviders.next();
-    boolean isProtocolHidden=protocolProvider.getAccountID().getAccountProperty(ProtocolProviderFactory.IS_PROTOCOL_HIDDEN) != null;
-    if (isProtocolHidden)     continue;
-    if (!protocolProvider.isRegistered())     continue;
-    OperationSetPresence presence=protocolProvider.getOperationSet(OperationSetPresence.class);
-    if (presence == null) {
-      hasAvailableProvider=true;
-      continue;
-    }
-    int presenceStatus=(presence == null) ? PresenceStatus.AVAILABLE_THRESHOLD : presence.getPresenceStatus().getStatus();
-    if (status < presenceStatus)     status=presenceStatus;
-  }
-  if (status == 0 && hasAvailableProvider)   status=PresenceStatus.AVAILABLE_THRESHOLD;
-  JCheckBoxMenuItem item=getItemFromStatus(status);
+  PresenceStatus globalStatus=GuiActivator.getGlobalStatusService().getGlobalPresenceStatus();
+  JCheckBoxMenuItem item=getItemFromStatus(globalStatus);
   item.setSelected(true);
   setSelected(new SelectedObject(item.getText(),item.getIcon(),item));
   fitSizeToText();
   this.revalidate();
-  setSystrayIcon(status);
+  setSystrayIcon(globalStatus);
 }
