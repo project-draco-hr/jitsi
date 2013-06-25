@@ -4,10 +4,11 @@
     Vector<ResolveAddressToDisplayNameContactQueryListener> resolvers=new Vector<ResolveAddressToDisplayNameContactQueryListener>(1,1);
     int index=peerAddress.indexOf("@");
     String peerUserID=(index > -1) ? peerAddress.substring(0,index) : peerAddress;
-    Pattern p=Pattern.compile("^(" + peerUserID + "|"+ peerUserID+ "@.*)$");
+    peerUserID=Pattern.quote(peerUserID);
+    Pattern pattern=Pattern.compile("^(" + peerUserID + "|"+ peerUserID+ "@.*)$");
     for (    ContactSourceService contactSourceService : GuiActivator.getContactSources()) {
       if (!(contactSourceService instanceof ExtendedContactSourceService))       continue;
-      ContactQuery query=((ExtendedContactSourceService)contactSourceService).queryContactSource(p);
+      ContactQuery query=((ExtendedContactSourceService)contactSourceService).queryContactSource(pattern);
       resolvers.add(new ResolveAddressToDisplayNameContactQueryListener(query));
     }
     long startTime=System.currentTimeMillis();
