@@ -1,0 +1,53 @@
+{
+  logger.warn("Received a conference-info partial notification, which we" + " can't handle. Sending peer: " + callPeer);
+  if (true)   return -1;
+  ConferenceInfoDocument ourDocument=callPeer.getLastConferenceInfoReceived();
+  ConferenceInfoDocument newDocument;
+  ConferenceInfoDocument.State usersState=diff.getUsersState();
+  if (usersState == ConferenceInfoDocument.State.FULL) {
+    newDocument=diff;
+    newDocument.setState(ConferenceInfoDocument.State.FULL);
+  }
+ else   if (usersState == ConferenceInfoDocument.State.DELETED) {
+    try {
+      newDocument=new ConferenceInfoDocument();
+    }
+ catch (    XMLException e) {
+      logger.warn("Could not create a new ConferenceInfoDocument",e);
+      return -1;
+    }
+    newDocument.setVersion(diff.getVersion());
+    newDocument.setEntity(diff.getEntity());
+    newDocument.setUserCount(diff.getUserCount());
+  }
+ else {
+    newDocument=ourDocument;
+    newDocument.setVersion(diff.getVersion());
+    newDocument.setEntity(diff.getEntity());
+    newDocument.setUserCount(diff.getUserCount());
+    for (    ConferenceInfoDocument.User user : diff.getUsers()) {
+      ConferenceInfoDocument.State userState=user.getState();
+      if (userState == ConferenceInfoDocument.State.FULL) {
+      }
+ else       if (userState == ConferenceInfoDocument.State.DELETED) {
+        newDocument.removeUser(user.getEntity());
+      }
+ else {
+        ConferenceInfoDocument.User ourUser=newDocument.getUser(user.getEntity());
+        for (        ConferenceInfoDocument.Endpoint endpoint : user.getEndpoints()) {
+          ConferenceInfoDocument.State endpointState=endpoint.getState();
+          if (endpointState == ConferenceInfoDocument.State.FULL) {
+          }
+ else           if (endpointState == ConferenceInfoDocument.State.DELETED) {
+            ourUser.removeEndpoint(endpoint.getEntity());
+          }
+ else {
+            for (            ConferenceInfoDocument.Media media : endpoint.getMedias()) {
+            }
+          }
+        }
+      }
+    }
+  }
+  return -1;
+}

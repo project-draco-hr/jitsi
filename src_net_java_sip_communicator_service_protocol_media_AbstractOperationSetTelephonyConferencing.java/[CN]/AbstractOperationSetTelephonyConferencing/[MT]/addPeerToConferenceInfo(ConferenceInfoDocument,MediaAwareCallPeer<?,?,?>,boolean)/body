@@ -1,0 +1,21 @@
+{
+  String entity=remote ? callPeer.getEntity() : getLocalEntity(callPeer);
+  ConferenceInfoDocument.User user=confInfo.addNewUser(entity);
+  String displayName=remote ? callPeer.getDisplayName() : getLocalDisplayName();
+  user.setDisplayText(displayName);
+  ConferenceInfoDocument.Endpoint endpoint=user.addNewEndpoint(entity);
+  endpoint.setStatus(remote ? getEndpointStatus(callPeer) : ConferenceInfoDocument.EndpointStatusType.connected);
+  CallPeerMediaHandler<?> mediaHandler=callPeer.getMediaHandler();
+  for (  MediaType mediaType : MediaType.values()) {
+    MediaStream stream=mediaHandler.getStream(mediaType);
+    if (stream != null) {
+      ConferenceInfoDocument.Media media=endpoint.addNewMedia(mediaType.toString());
+      long srcId=remote ? getRemoteSourceID(callPeer,mediaType) : stream.getLocalSourceID();
+      if (srcId != -1)       media.setSrcId(Long.toString(srcId));
+      media.setType(mediaType.toString());
+      MediaDirection direction=remote ? getRemoteDirection(callPeer,mediaType) : stream.getDirection();
+      if (direction == null)       direction=MediaDirection.INACTIVE;
+      media.setStatus(direction.toString());
+    }
+  }
+}

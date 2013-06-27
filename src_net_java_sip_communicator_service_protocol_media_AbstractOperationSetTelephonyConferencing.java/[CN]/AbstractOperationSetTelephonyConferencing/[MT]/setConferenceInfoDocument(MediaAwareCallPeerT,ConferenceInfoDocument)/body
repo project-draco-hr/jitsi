@@ -1,0 +1,62 @@
+{
+  NodeList usersList=confInfo.getDocument().getElementsByTagName(ELEMENT_USERS);
+  ConferenceMember[] toRemove=callPeer.getConferenceMembers().toArray(AbstractCallPeer.NO_CONFERENCE_MEMBERS);
+  int toRemoveCount=toRemove.length;
+  boolean changed=false;
+  if (usersList.getLength() > 0) {
+    NodeList userList=usersList.item(0).getChildNodes();
+    int userCount=userList.getLength();
+    Map<String,Object> conferenceMemberProperties=new HashMap<String,Object>();
+    for (int userIndex=0; userIndex < userCount; userIndex++) {
+      Node user=userList.item(userIndex);
+      if (!ELEMENT_USER.equals(user.getNodeName()))       continue;
+      String address=stripParametersFromAddress(((Element)user).getAttribute("entity"));
+      if ((address == null) || (address.length() < 1))       continue;
+      AbstractConferenceMember conferenceMember=null;
+      for (int i=0; i < toRemoveCount; i++) {
+        ConferenceMember aConferenceMember=toRemove[i];
+        if ((aConferenceMember != null) && address.equalsIgnoreCase(aConferenceMember.getAddress())) {
+          toRemove[i]=null;
+          conferenceMember=(AbstractConferenceMember)aConferenceMember;
+          break;
+        }
+      }
+      boolean addConferenceMember;
+      if (conferenceMember == null) {
+        conferenceMember=new AbstractConferenceMember(callPeer,address);
+        addConferenceMember=true;
+      }
+ else       addConferenceMember=false;
+      if (conferenceMember != null) {
+        NodeList userChildList=user.getChildNodes();
+        int userChildCount=userChildList.getLength();
+        String displayName=null;
+        String endpointStatus=null;
+        conferenceMemberProperties.put(ConferenceMember.AUDIO_SSRC_PROPERTY_NAME,null);
+        conferenceMemberProperties.put(ConferenceMember.AUDIO_STATUS_PROPERTY_NAME,null);
+        conferenceMemberProperties.put(ConferenceMember.VIDEO_SSRC_PROPERTY_NAME,null);
+        conferenceMemberProperties.put(ConferenceMember.VIDEO_STATUS_PROPERTY_NAME,null);
+        for (int userChildIndex=0; userChildIndex < userChildCount; userChildIndex++) {
+          Node userChild=userChildList.item(userChildIndex);
+          String userChildName=userChild.getNodeName();
+          if (ELEMENT_DISPLAY_TEXT.equals(userChildName))           displayName=userChild.getTextContent();
+ else           if (ELEMENT_ENDPOINT.equals(userChildName)) {
+            endpointStatus=getEndpointStatus(userChild);
+            getEndpointMediaProperties(userChild,conferenceMemberProperties);
+          }
+        }
+        conferenceMember.setDisplayName(displayName);
+        conferenceMember.setEndpointStatus(endpointStatus);
+        changed=conferenceMember.setProperties(conferenceMemberProperties);
+        if (addConferenceMember)         callPeer.addConferenceMember(conferenceMember);
+      }
+    }
+  }
+  for (int i=0; i < toRemoveCount; i++) {
+    ConferenceMember conferenceMemberToRemove=toRemove[i];
+    if (conferenceMemberToRemove != null)     callPeer.removeConferenceMember(conferenceMemberToRemove);
+  }
+  if (changed)   notifyAll(callPeer.getCall());
+  callPeer.setLastConferenceInfoReceived(confInfo);
+  return confInfo.getVersion();
+}

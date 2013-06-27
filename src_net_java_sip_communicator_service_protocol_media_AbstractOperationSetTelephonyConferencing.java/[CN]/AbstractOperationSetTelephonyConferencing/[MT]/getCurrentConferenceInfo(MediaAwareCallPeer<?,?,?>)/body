@@ -1,0 +1,19 @@
+{
+  ConferenceInfoDocument confInfo;
+  try {
+    confInfo=new ConferenceInfoDocument();
+  }
+ catch (  XMLException e) {
+    return null;
+  }
+  confInfo.setState(ConferenceInfoDocument.State.FULL);
+  confInfo.setEntity(getLocalEntity(callPeer));
+  Call call=callPeer.getCall();
+  List<CallPeer> conferenceCallPeers=CallConference.getCallPeers(call);
+  confInfo.setUserCount(1 + conferenceCallPeers.size());
+  addPeerToConferenceInfo(confInfo,callPeer,false);
+  for (  CallPeer conferenceCallPeer : conferenceCallPeers) {
+    if (conferenceCallPeer instanceof MediaAwareCallPeer<?,?,?>)     addPeerToConferenceInfo(confInfo,(MediaAwareCallPeer<?,?,?>)conferenceCallPeer,true);
+  }
+  return confInfo;
+}

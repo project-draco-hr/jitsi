@@ -1,16 +1,51 @@
 {
   if (!(callPeer instanceof CallPeerJabberImpl))   return;
+  final CallPeerJabberImpl callPeerJabber=(CallPeerJabberImpl)callPeer;
+  final long timeSinceLastCoin=System.currentTimeMillis() - callPeerJabber.getLastConferenceInfoSentTimestamp();
+  if (timeSinceLastCoin < COIN_MIN_INTERVAL) {
+    if (callPeerJabber.isCoinScheduled())     return;
+    logger.info("Scheduling to send a COIN to " + callPeerJabber);
+    callPeerJabber.setCoinScheduled(true);
+    new Thread(new Runnable(){
+      @Override public void run(){
+        try {
+          Thread.sleep(1 + COIN_MIN_INTERVAL - timeSinceLastCoin);
+        }
+ catch (        InterruptedException ie) {
+        }
+        OperationSetTelephonyConferencingJabberImpl.this.notify(callPeerJabber);
+      }
+    }
+).start();
+    return;
+  }
   String to=getBasicTelephony().getFullCalleeURI(callPeer.getAddress());
   try {
     DiscoverInfo discoverInfo=parentProvider.getDiscoveryManager().discoverInfo(to);
     if (!discoverInfo.containsFeature(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_COIN)) {
       logger.info(callPeer.getAddress() + " does not support COIN");
+      callPeerJabber.setCoinScheduled(false);
       return;
     }
   }
  catch (  XMPPException xmppe) {
     logger.warn("Failed to retrieve DiscoverInfo for " + to,xmppe);
   }
-  IQ iq=getConferenceInfo((CallPeerJabberImpl)callPeer,version);
-  if (iq != null)   parentProvider.getConnection().sendPacket(iq);
+  ConferenceInfoDocument currentConfInfo=getCurrentConferenceInfo(callPeerJabber);
+  ConferenceInfoDocument lastSentConfInfo=callPeerJabber.getLastConferenceInfoSent();
+  ConferenceInfoDocument diff;
+  if (lastSentConfInfo == null)   diff=currentConfInfo;
+ else   diff=getConferenceInfoDiff(lastSentConfInfo,currentConfInfo);
+  if (diff != null) {
+    int newVersion=lastSentConfInfo == null ? 1 : lastSentConfInfo.getVersion() + 1;
+    diff.setVersion(newVersion);
+    IQ iq=getConferenceInfo(callPeerJabber,diff);
+    if (iq != null) {
+      parentProvider.getConnection().sendPacket(iq);
+      currentConfInfo.setVersion(newVersion);
+      callPeerJabber.setLastConferenceInfoSent(currentConfInfo);
+      callPeerJabber.setLastConferenceInfoSentTimestamp(System.currentTimeMillis());
+    }
+  }
+  callPeerJabber.setCoinScheduled(false);
 }

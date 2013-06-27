@@ -1,0 +1,35 @@
+{
+  byte[] bytes;
+  try {
+    bytes=xml.getBytes("UTF-8");
+  }
+ catch (  UnsupportedEncodingException uee) {
+    logger.warn("Failed to gets bytes from String for the UTF-8 charset",uee);
+    bytes=xml.getBytes();
+  }
+  try {
+    document=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(bytes));
+  }
+ catch (  Exception e) {
+    throw new XMLException(e.getMessage());
+  }
+  conferenceInfo=document.getDocumentElement();
+  if (conferenceInfo == null) {
+    throw new XMLException("Could not parse conference-info document," + " conference-info element not found");
+  }
+  conferenceDescription=XMLUtils.findChild(conferenceInfo,CONFERENCE_DESCRIPTION_ELEMENT_NAME);
+  if (conferenceDescription == null) {
+    throw new XMLException("Could not parse conference-info document," + " conference-description element not found");
+  }
+  conferenceState=XMLUtils.findChild(conferenceInfo,CONFERENCE_STATE_ELEMENT_NAME);
+  if (conferenceState != null)   userCount=XMLUtils.findChild(conferenceState,USER_COUNT_ELEMENT_NAME);
+  users=XMLUtils.findChild(conferenceInfo,USERS_ELEMENT_NAME);
+  if (users == null) {
+    throw new XMLException("Could not parse conference-info document," + " 'users' element not found");
+  }
+  NodeList usersNodeList=users.getElementsByTagName(USER_ELEMENT_NAME);
+  for (int i=0; i < usersNodeList.getLength(); i++) {
+    User user=new User((Element)usersNodeList.item(i));
+    usersList.add(user);
+  }
+}
