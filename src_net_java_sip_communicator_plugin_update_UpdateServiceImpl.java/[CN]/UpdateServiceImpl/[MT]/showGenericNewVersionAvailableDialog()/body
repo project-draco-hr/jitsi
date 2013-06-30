@@ -1,0 +1,63 @@
+{
+  final boolean[] exitCheckForUpdates=new boolean[]{false};
+  final JDialog dialog=new SIPCommDialog(){
+    private static final long serialVersionUID=0L;
+    @Override protected void close(    boolean escaped){
+synchronized (exitCheckForUpdates) {
+        if (exitCheckForUpdates[0])         exitCheckForUpdates(this);
+      }
+    }
+  }
+;
+  ResourceManagementService resources=Resources.getResources();
+  dialog.setTitle(resources.getI18NString("plugin.updatechecker.DIALOG_TITLE"));
+  JEditorPane contentMessage=new JEditorPane();
+  contentMessage.setContentType("text/html");
+  contentMessage.setOpaque(false);
+  contentMessage.setEditable(false);
+  String dialogMsg=resources.getI18NString("plugin.updatechecker.DIALOG_MESSAGE",new String[]{resources.getSettingsString("service.gui.APPLICATION_NAME")});
+  if (latestVersion != null)   dialogMsg+=resources.getI18NString("plugin.updatechecker.DIALOG_MESSAGE_2",new String[]{resources.getSettingsString("service.gui.APPLICATION_NAME"),latestVersion});
+  contentMessage.setText(dialogMsg);
+  JPanel contentPane=new TransparentPanel(new BorderLayout(5,5));
+  contentPane.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+  contentPane.add(contentMessage,BorderLayout.CENTER);
+  JPanel buttonPanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER,10,10));
+  final JButton closeButton=new JButton(resources.getI18NString("plugin.updatechecker.BUTTON_CLOSE"));
+  closeButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      dialog.dispose();
+      if (exitCheckForUpdates[0])       exitCheckForUpdates(dialog);
+    }
+  }
+);
+  if (downloadLink != null) {
+    JButton downloadButton=new JButton(resources.getI18NString("plugin.updatechecker.BUTTON_DOWNLOAD"));
+    downloadButton.addActionListener(new ActionListener(){
+      public void actionPerformed(      ActionEvent e){
+        if (OSUtils.IS_LINUX64)         downloadLink=downloadLink.replace("i386","amd64");
+        UpdateActivator.getBrowserLauncher().openURL(downloadLink);
+        closeButton.doClick();
+      }
+    }
+);
+    buttonPanel.add(downloadButton);
+  }
+  buttonPanel.add(closeButton);
+  contentPane.add(buttonPanel,BorderLayout.SOUTH);
+  dialog.setContentPane(contentPane);
+  dialog.pack();
+  Dimension screenSize=Toolkit.getDefaultToolkit().getScreenSize();
+  dialog.setLocation(screenSize.width / 2 - dialog.getWidth() / 2,screenSize.height / 2 - dialog.getHeight() / 2);
+synchronized (exitCheckForUpdates) {
+    enterCheckForUpdates(dialog);
+    exitCheckForUpdates[0]=true;
+  }
+  try {
+    dialog.setVisible(true);
+  }
+  finally {
+synchronized (exitCheckForUpdates) {
+      if (exitCheckForUpdates[0] && dialog.isModal())       exitCheckForUpdates(dialog);
+    }
+  }
+}
