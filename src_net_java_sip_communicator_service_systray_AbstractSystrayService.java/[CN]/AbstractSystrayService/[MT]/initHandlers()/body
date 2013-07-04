@@ -1,0 +1,27 @@
+{
+  try {
+    bundleContext.addServiceListener(new ServiceListenerImpl(),"(objectclass=" + PopupMessageHandler.class.getName() + ")");
+  }
+ catch (  Exception e) {
+    logger.warn(e);
+  }
+  ServiceReference[] handlerRefs=ServiceUtils.getServiceReferences(bundleContext,PopupMessageHandler.class);
+  if (handlerRefs != null) {
+    ConfigurationService config=ServiceUtils.getService(bundleContext,ConfigurationService.class);
+    String configuredHandler=(String)config.getProperty("systray.POPUP_HANDLER");
+    for (    ServiceReference handlerRef : handlerRefs) {
+      PopupMessageHandler handler=(PopupMessageHandler)bundleContext.getService(handlerRef);
+      String handlerName=handler.getClass().getName();
+      if (!containsHandler(handlerName)) {
+        addPopupHandler(handler);
+        if (logger.isInfoEnabled()) {
+          logger.info("added the following popup handler : " + handler);
+        }
+        if ((configuredHandler != null) && configuredHandler.equals(handler.getClass().getName())) {
+          setActivePopupMessageHandler(handler);
+        }
+      }
+    }
+    if (configuredHandler == null)     selectBestPopupMessageHandler();
+  }
+}

@@ -1,12 +1,13 @@
 {
   try {
-    PopupMessageHandler handler=(PopupMessageHandler)OsDependentActivator.bundleContext.getService(serviceEvent.getServiceReference());
+    PopupMessageHandler handler=(PopupMessageHandler)bundleContext.getService(serviceEvent.getServiceReference());
     if (serviceEvent.getType() == ServiceEvent.REGISTERED) {
       if (!containsHandler(handler.getClass().getName())) {
         if (logger.isInfoEnabled())         logger.info("adding the following popup handler : " + handler);
         addPopupHandler(handler);
       }
  else       logger.warn("the following popup handler has not " + "been added since it is already known : " + handler);
+      ConfigurationService cfg=ServiceUtils.getService(bundleContext,ConfigurationService.class);
       String configuredHandler=(String)cfg.getProperty("systray.POPUP_HANDLER");
       if ((configuredHandler == null) && ((getActivePopupHandler() == null) || (handler.getPreferenceIndex() > getActivePopupHandler().getPreferenceIndex()))) {
         setActivePopupMessageHandler(handler);
@@ -20,7 +21,6 @@
       removePopupHandler(handler);
       PopupMessageHandler activeHandler=getActivePopupHandler();
       if (activeHandler == handler) {
-        activeHandler.removePopupMessageListener(popupMessageListener);
         setActivePopupMessageHandler(null);
         selectBestPopupMessageHandler();
       }

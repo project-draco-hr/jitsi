@@ -75,36 +75,7 @@
     addPopupHandler(pmh);
     OsDependentActivator.bundleContext.registerService(PopupMessageHandler.class.getName(),pmh,null);
   }
-  try {
-    OsDependentActivator.bundleContext.addServiceListener(new ServiceListenerImpl(),"(objectclass=" + PopupMessageHandler.class.getName() + ")");
-  }
- catch (  Exception e) {
-    logger.warn(e);
-  }
-  ServiceReference[] handlerRefs=null;
-  try {
-    handlerRefs=OsDependentActivator.bundleContext.getServiceReferences(PopupMessageHandler.class.getName(),null);
-  }
- catch (  InvalidSyntaxException ise) {
-    logger.error("Error while retrieving service refs",ise);
-  }
-  if (handlerRefs != null) {
-    String configuredHandler=(String)cfg.getProperty("systray.POPUP_HANDLER");
-    for (    ServiceReference handlerRef : handlerRefs) {
-      PopupMessageHandler handler=(PopupMessageHandler)OsDependentActivator.bundleContext.getService(handlerRef);
-      String handlerName=handler.getClass().getName();
-      if (!containsHandler(handlerName)) {
-        addPopupHandler(handler);
-        if (logger.isInfoEnabled()) {
-          logger.info("added the following popup handler : " + handler);
-        }
-        if ((configuredHandler != null) && configuredHandler.equals(handler.getClass().getName())) {
-          setActivePopupMessageHandler(handler);
-        }
-      }
-    }
-    if (configuredHandler == null)     selectBestPopupMessageHandler();
-  }
+  initHandlers();
   if ((getActivePopupMessageHandler() == null) && (pmh != null))   setActivePopupMessageHandler(pmh);
   SwingUtilities.invokeLater(new Runnable(){
     public void run(){
