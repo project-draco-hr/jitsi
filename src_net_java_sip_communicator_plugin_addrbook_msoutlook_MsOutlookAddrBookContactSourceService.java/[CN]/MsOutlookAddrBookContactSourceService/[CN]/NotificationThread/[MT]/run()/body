@@ -1,0 +1,33 @@
+{
+  boolean hasMore=false;
+  NotificationIdFunction idFunction=null;
+  String id;
+  char function;
+synchronized (notificationThreadMutex) {
+    hasMore=(contactIds.size() > 0);
+    if (hasMore) {
+      idFunction=contactIds.remove(0);
+    }
+  }
+  while (hasMore) {
+    if (latestQuery != null) {
+      id=idFunction.getId();
+      function=idFunction.getFunction();
+      if (function == 'd') {
+        latestQuery.deleted(id);
+      }
+ else       if (function == 'u') {
+        latestQuery.updated(id);
+      }
+ else       if (function == 'i') {
+        latestQuery.inserted(id);
+      }
+    }
+synchronized (notificationThreadMutex) {
+      hasMore=(contactIds.size() > 0);
+      if (hasMore) {
+        idFunction=contactIds.remove(0);
+      }
+    }
+  }
+}
