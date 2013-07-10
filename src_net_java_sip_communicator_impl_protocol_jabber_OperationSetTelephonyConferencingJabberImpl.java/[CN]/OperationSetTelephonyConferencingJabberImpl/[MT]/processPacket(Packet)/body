@@ -1,14 +1,28 @@
 {
   CoinIQ coinIQ=(CoinIQ)packet;
+  String errorMessage=null;
   if (coinIQ.getType() == IQ.Type.SET) {
     IQ ack=IQ.createResultIQ(coinIQ);
     parentProvider.getConnection().sendPacket(ack);
+  }
+  if (coinIQ.getType() == IQ.Type.ERROR) {
+    logger.error("Received error in COIN packet.");
+    XMPPError error=coinIQ.getError();
+    if (error != null) {
+      String msg=error.getMessage();
+      errorMessage=((msg != null) ? (msg + " ") : "") + "Error code: " + error.getCode();
+      logger.error(errorMessage);
+    }
   }
   String sid=coinIQ.getSID();
   if (sid != null) {
     CallPeerJabberImpl callPeer=getBasicTelephony().getActiveCallsRepository().findCallPeer(sid);
     if (callPeer != null) {
       if (logger.isDebugEnabled())       logger.debug("Processing COIN from " + coinIQ.getFrom() + " (version="+ coinIQ.getVersion()+ ")");
+      if (coinIQ.getType() == IQ.Type.ERROR) {
+        callPeer.fireConferenceMemberErrorEvent(errorMessage);
+        return;
+      }
       handleCoin(callPeer,coinIQ);
     }
   }
