@@ -5,10 +5,36 @@
   if (callPeer == null) {
     throw new OperationFailedException("Failed to find the CallPeer" + " of the conference subscription " + conferenceSubscription,OperationFailedException.INTERNAL_ERROR);
   }
+  final long timeSinceLastNotify=System.currentTimeMillis() - callPeer.getLastConferenceInfoSentTimestamp();
+  if (timeSinceLastNotify < MIN_NOTIFY_INTERVAL) {
+    if (callPeer.isConfInfoScheduled())     return;
+    logger.info("Scheduling to send a conference-info NOTIFY to " + callPeer);
+    callPeer.setConfInfoScheduled(true);
+    new Thread(new Runnable(){
+      @Override public void run(){
+        try {
+          Thread.sleep(1 + MIN_NOTIFY_INTERVAL - timeSinceLastNotify);
+        }
+ catch (        InterruptedException ie) {
+        }
+        try {
+          ConferenceEventPackageNotifier.this.notify(subscription,subscriptionState,reason);
+        }
+ catch (        OperationFailedException e) {
+          logger.error("Failed to send NOTIFY request");
+        }
+      }
+    }
+).start();
+    return;
+  }
   ConferenceInfoDocument currentConfInfo=getCurrentConferenceInfo(callPeer);
   ConferenceInfoDocument lastSentConfInfo=callPeer.getLastConferenceInfoSent();
   ConferenceInfoDocument diff=lastSentConfInfo == null ? currentConfInfo : getConferenceInfoDiff(lastSentConfInfo,currentConfInfo);
-  if (diff == null)   return;
+  if (diff == null) {
+    callPeer.setConfInfoScheduled(false);
+    return;
+  }
   int newVersion=lastSentConfInfo == null ? 1 : lastSentConfInfo.getVersion() + 1;
   diff.setVersion(newVersion);
   String xml=diff.toXml();
@@ -39,4 +65,5 @@ synchronized (dialog) {
     }
   }
   if (SubscriptionState.TERMINATED.equals(subscriptionState))   removeSubscription(callId,subscription);
+  callPeer.setConfInfoScheduled(false);
 }
