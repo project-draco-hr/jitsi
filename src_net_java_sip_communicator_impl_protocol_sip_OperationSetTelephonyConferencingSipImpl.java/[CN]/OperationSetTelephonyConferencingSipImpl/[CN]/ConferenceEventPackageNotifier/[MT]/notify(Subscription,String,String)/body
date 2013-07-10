@@ -1,0 +1,42 @@
+{
+  ConferenceNotifierSubscription conferenceSubscription=(ConferenceNotifierSubscription)subscription;
+  Dialog dialog=conferenceSubscription.getDialog();
+  CallPeerSipImpl callPeer=conferenceSubscription.getCallPeer();
+  if (callPeer == null) {
+    throw new OperationFailedException("Failed to find the CallPeer" + " of the conference subscription " + conferenceSubscription,OperationFailedException.INTERNAL_ERROR);
+  }
+  ConferenceInfoDocument currentConfInfo=getCurrentConferenceInfo(callPeer);
+  ConferenceInfoDocument lastSentConfInfo=callPeer.getLastConferenceInfoSent();
+  ConferenceInfoDocument diff=lastSentConfInfo == null ? currentConfInfo : getConferenceInfoDiff(lastSentConfInfo,currentConfInfo);
+  if (diff == null)   return;
+  int newVersion=lastSentConfInfo == null ? 1 : lastSentConfInfo.getVersion() + 1;
+  diff.setVersion(newVersion);
+  String xml=diff.toXml();
+  byte[] notifyContent;
+  try {
+    notifyContent=xml.getBytes("UTF-8");
+  }
+ catch (  UnsupportedEncodingException uee) {
+    logger.warn("Failed to gets bytes from String for the " + "UTF-8 charset",uee);
+    notifyContent=xml.getBytes();
+  }
+  String callId;
+synchronized (dialog) {
+    ClientTransaction transac=createNotify(dialog,notifyContent,subscriptionState,reason);
+    callId=dialog.getCallId().getCallId();
+    try {
+      if (logger.isInfoEnabled()) {
+        logger.info("Sending conference-info NOTIFY (version " + newVersion + ") to "+ callPeer);
+      }
+      dialog.sendRequest(transac);
+      currentConfInfo.setVersion(newVersion);
+      callPeer.setLastConferenceInfoSent(currentConfInfo);
+      callPeer.setLastConferenceInfoSentTimestamp(System.currentTimeMillis());
+    }
+ catch (    SipException sex) {
+      logger.error("Failed to send NOTIFY request.",sex);
+      throw new OperationFailedException("Failed to send NOTIFY request.",OperationFailedException.NETWORK_FAILURE,sex);
+    }
+  }
+  if (SubscriptionState.TERMINATED.equals(subscriptionState))   removeSubscription(callId,subscription);
+}
