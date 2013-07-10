@@ -1,6 +1,4 @@
 {
-  logger.warn("Received a conference-info partial notification, which we" + " can't handle. Sending peer: " + callPeer);
-  if (true)   return -1;
   ConferenceInfoDocument ourDocument=callPeer.getLastConferenceInfoReceived();
   ConferenceInfoDocument newDocument;
   ConferenceInfoDocument.State usersState=diff.getUsersState();
@@ -28,6 +26,18 @@
     for (    ConferenceInfoDocument.User user : diff.getUsers()) {
       ConferenceInfoDocument.State userState=user.getState();
       if (userState == ConferenceInfoDocument.State.FULL) {
+        newDocument.removeUser(user.getEntity());
+        ConferenceInfoDocument.User newUser=newDocument.addNewUser(user.getEntity());
+        for (        ConferenceInfoDocument.Endpoint endpoint : user.getEndpoints()) {
+          ConferenceInfoDocument.Endpoint newEndpoint=newUser.addNewEndpoint(endpoint.getEntity());
+          newEndpoint.setStatus(endpoint.getStatus());
+          for (          ConferenceInfoDocument.Media media : endpoint.getMedias()) {
+            ConferenceInfoDocument.Media newMedia=newEndpoint.addNewMedia(media.getId());
+            newMedia.setStatus(media.getStatus());
+            newMedia.setSrcId(media.getSrcId());
+            newMedia.setType(media.getType());
+          }
+        }
       }
  else       if (userState == ConferenceInfoDocument.State.DELETED) {
         newDocument.removeUser(user.getEntity());
@@ -37,17 +47,34 @@
         for (        ConferenceInfoDocument.Endpoint endpoint : user.getEndpoints()) {
           ConferenceInfoDocument.State endpointState=endpoint.getState();
           if (endpointState == ConferenceInfoDocument.State.FULL) {
+            ourUser.removeEndpoint(endpoint.getEntity());
+            ConferenceInfoDocument.Endpoint newEndpoint=ourUser.addNewEndpoint(endpoint.getEntity());
+            newEndpoint.setStatus(endpoint.getStatus());
+            for (            ConferenceInfoDocument.Media media : endpoint.getMedias()) {
+              ConferenceInfoDocument.Media newMedia=newEndpoint.addNewMedia(media.getId());
+              newMedia.setStatus(media.getStatus());
+              newMedia.setSrcId(media.getSrcId());
+              newMedia.setType(media.getType());
+            }
           }
  else           if (endpointState == ConferenceInfoDocument.State.DELETED) {
             ourUser.removeEndpoint(endpoint.getEntity());
           }
  else {
+            ConferenceInfoDocument.Endpoint ourEndpoint=ourUser.getEndpoint(endpoint.getEntity());
             for (            ConferenceInfoDocument.Media media : endpoint.getMedias()) {
+              ConferenceInfoDocument.Media newMedia=ourEndpoint.addNewMedia(media.getId());
+              newMedia.setStatus(media.getStatus());
+              newMedia.setSrcId(media.getSrcId());
+              newMedia.setType(media.getType());
             }
           }
         }
       }
     }
   }
-  return -1;
+  if (logger.isDebugEnabled()) {
+    logger.debug("Applied a partial conference-info notification. " + " Base: " + ourDocument + "\nDiff: "+ diff+ "\nResult:"+ newDocument);
+  }
+  return setConferenceInfoDocument(callPeer,newDocument);
 }
