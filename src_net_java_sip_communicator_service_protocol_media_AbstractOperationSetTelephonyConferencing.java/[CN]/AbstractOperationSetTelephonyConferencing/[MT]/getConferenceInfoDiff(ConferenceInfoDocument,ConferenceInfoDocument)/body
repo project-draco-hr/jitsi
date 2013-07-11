@@ -1,6 +1,53 @@
 {
   if (from.getState() != ConferenceInfoDocument.State.FULL)   throw new IllegalArgumentException("The 'from' document needs to " + "have state=full");
   if (to.getState() != ConferenceInfoDocument.State.FULL)   throw new IllegalArgumentException("The 'to' document needs to " + "have state=full");
-  if (conferenceInfoDocumentsMatch(from,to))   return null;
-  return to;
+  if (!isPartialNotificationEnabled()) {
+    return conferenceInfoDocumentsMatch(from,to) ? null : to;
+  }
+  ConferenceInfoDocument diff;
+  try {
+    diff=new ConferenceInfoDocument();
+  }
+ catch (  XMLException e) {
+    return conferenceInfoDocumentsMatch(from,to) ? null : to;
+  }
+  diff.setState(ConferenceInfoDocument.State.PARTIAL);
+  diff.setUsersState(ConferenceInfoDocument.State.PARTIAL);
+  String sid=to.getSid();
+  if (sid != null && !sid.equals(""))   diff.setSid(to.getSid());
+  diff.setUserCount(to.getUserCount());
+  diff.setEntity(to.getEntity());
+  diff.setVersion(from.getVersion() + 1);
+  boolean needsPartial=false;
+  boolean hasDifference=false;
+  if (from.getEntity() != to.getEntity() || from.getUserCount() != to.getUserCount()) {
+    hasDifference=true;
+  }
+  for (  ConferenceInfoDocument.User user : from.getUsers()) {
+    if (to.getUser(user.getEntity()) == null) {
+      ConferenceInfoDocument.User deletedUser=diff.addNewUser(user.getEntity());
+      deletedUser.setState(ConferenceInfoDocument.State.DELETED);
+      hasDifference=true;
+      needsPartial=true;
+    }
+  }
+  for (  ConferenceInfoDocument.User toUser : to.getUsers()) {
+    ConferenceInfoDocument.User fromUser=from.getUser(toUser.getEntity());
+    if (!usersMatch(toUser,fromUser)) {
+      hasDifference=true;
+      diff.addUser(toUser);
+    }
+ else {
+      needsPartial=true;
+    }
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Generated partial notification. From: " + from + "\nTo: "+ to+ "\nDiff: "+ diff+ "(hasDifference: "+ hasDifference+ ")");
+  }
+  if (!hasDifference)   return null;
+  if (!needsPartial) {
+    diff.setState(ConferenceInfoDocument.State.FULL);
+    diff.setUsersState(ConferenceInfoDocument.State.FULL);
+  }
+  return diff;
 }
