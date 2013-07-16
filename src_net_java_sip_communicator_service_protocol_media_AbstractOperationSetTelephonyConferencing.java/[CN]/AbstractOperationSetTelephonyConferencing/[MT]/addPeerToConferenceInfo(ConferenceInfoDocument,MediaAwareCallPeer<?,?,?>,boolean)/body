@@ -13,7 +13,13 @@
       long srcId=remote ? getRemoteSourceID(callPeer,mediaType) : stream.getLocalSourceID();
       if (srcId != -1)       media.setSrcId(Long.toString(srcId));
       media.setType(mediaType.toString());
-      MediaDirection direction=remote ? getRemoteDirection(callPeer,mediaType) : stream.getDirection();
+      MediaDirection direction=MediaDirection.INACTIVE;
+      if (remote)       direction=callPeer.getDirection(mediaType).getReverseDirection();
+ else {
+        if (mediaType == MediaType.AUDIO && callPeer.getMediaHandler().isLocalAudioTransmissionEnabled())         direction=direction.or(MediaDirection.SENDONLY);
+ else         if (mediaType == MediaType.VIDEO && callPeer.isLocalVideoStreaming())         direction=direction.or(MediaDirection.SENDONLY);
+        if (callPeer.getDirection(mediaType).allowsReceiving())         direction=direction.or(MediaDirection.RECVONLY);
+      }
       if (direction == null)       direction=MediaDirection.INACTIVE;
       media.setStatus(direction.toString());
     }
