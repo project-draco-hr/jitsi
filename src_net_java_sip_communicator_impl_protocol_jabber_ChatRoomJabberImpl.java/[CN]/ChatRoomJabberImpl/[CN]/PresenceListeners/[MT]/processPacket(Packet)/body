@@ -1,0 +1,18 @@
+{
+  Presence presence=(Presence)packet;
+  if (presence == null || presence.getError() != null)   return;
+  MUCUser mucUser=getMUCUserExtension(packet);
+  if (mucUser != null && mucUser.getStatus() != null) {
+    if ("201".equals(mucUser.getStatus().getCode())) {
+      try {
+        multiUserChat.sendConfigurationForm(new Form(Form.TYPE_SUBMIT));
+      }
+ catch (      XMPPException e) {
+        logger.error("Failed to send config form.",e);
+      }
+      opSetMuc.addSmackInvitationRejectionListener(multiUserChat,chatRoom);
+      setLocalUserRole(ChatRoomMemberRole.MODERATOR);
+      provider.getConnection().removePacketListener(this);
+    }
+  }
+}
