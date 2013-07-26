@@ -4,14 +4,7 @@
     String chatRoomName=editor.getText();
     if (StringUtils.isNullOrEmpty(chatRoomName))     return;
     ChatRoomWrapper chatRoomWrapper=GuiActivator.getUIService().getConferenceChatManager().createChatRoom(chatRoomName,getSelectedProvider().getProtocolProvider(),new ArrayList<String>(),"",false,true);
-    String nickName;
-    ChatOperationReasonDialog reasonDialog=new ChatOperationReasonDialog(GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME"),GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME_LABEL"));
-    reasonDialog.setReasonFieldText("");
-    int result=reasonDialog.showDialog();
-    if (result == MessageDialog.OK_RETURN_CODE) {
-      nickName=reasonDialog.getReason().trim();
-      ConfigurationUtils.updateChatRoomProperty(getSelectedProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),"userNickName",nickName);
-    }
+    chatRoomWrapper.getNickname();
   }
  else   if (sourceButton.equals(removeButton)) {
     chatRoomsTableUI.removeSelectedRoom();
@@ -21,14 +14,8 @@
     if (selectedRoom == null) {
       if (editor.getText() != null && editor.getText().trim().length() > 0) {
         ChatRoomWrapper chatRoomWrapper=GuiActivator.getUIService().getConferenceChatManager().createChatRoom(editor.getText(),getSelectedProvider().getProtocolProvider(),new ArrayList<String>(),"",false,false);
-        String nickName=null;
-        ChatOperationReasonDialog reasonDialog=new ChatOperationReasonDialog(GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME"),GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME_LABEL"));
-        reasonDialog.setReasonFieldText(chatRoomWrapper.getChatRoom().getUserNickname());
-        int result=reasonDialog.showDialog();
-        if (result == MessageDialog.OK_RETURN_CODE) {
-          nickName=reasonDialog.getReason().trim();
-          ConfigurationUtils.updateChatRoomProperty(getSelectedProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),"userNickName",nickName);
-        }
+        String nickName=chatRoomWrapper.getNickname();
+        if (nickName == null)         return;
         GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(chatRoomWrapper,nickName,null);
         ChatWindowManager chatWindowManager=GuiActivator.getUIService().getChatWindowManager();
         ChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper,true);
@@ -39,6 +26,10 @@
       if (selectedRoom.getChatRoom() != null) {
         if (!selectedRoom.getChatRoom().isJoined()) {
           String savedNick=ConfigurationUtils.getChatRoomProperty(selectedRoom.getParentProvider().getProtocolProvider(),selectedRoom.getChatRoomID(),"userNickName");
+          if (savedNick == null) {
+            savedNick=selectedRoom.getNickname();
+            if (savedNick == null)             return;
+          }
           GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(selectedRoom,savedNick,null);
         }
  else         chatRoomsTableUI.openChatForSelection();
@@ -47,17 +38,10 @@
         ChatRoomWrapper chatRoomWrapper=GuiActivator.getUIService().getConferenceChatManager().createChatRoom(selectedRoom.getChatRoomName(),getSelectedProvider().getProtocolProvider(),new ArrayList<String>(),"",false,true);
         String savedNick=ConfigurationUtils.getChatRoomProperty(chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),"userNickName");
         if (savedNick == null) {
-          String nickName=null;
-          ChatOperationReasonDialog reasonDialog=new ChatOperationReasonDialog(GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME"),GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME_LABEL"));
-          reasonDialog.setReasonFieldText(chatRoomWrapper.getChatRoom().getUserNickname());
-          int result=reasonDialog.showDialog();
-          if (result == MessageDialog.OK_RETURN_CODE) {
-            nickName=reasonDialog.getReason().trim();
-            ConfigurationUtils.updateChatRoomProperty(getSelectedProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),"userNickName",nickName);
-          }
-          GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(chatRoomWrapper,nickName,null);
+          savedNick=chatRoomWrapper.getNickname();
+          if (savedNick == null)           return;
         }
- else         GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(chatRoomWrapper,savedNick,null);
+        GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(chatRoomWrapper,savedNick,null);
       }
     }
     dispose();
