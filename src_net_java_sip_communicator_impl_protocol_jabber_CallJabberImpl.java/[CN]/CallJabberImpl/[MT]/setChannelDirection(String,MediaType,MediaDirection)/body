@@ -1,0 +1,22 @@
+{
+  if (colibri != null && channelID != null) {
+    ColibriConferenceIQ.Content content=colibri.getContent(mediaType.toString());
+    if (content != null) {
+      ColibriConferenceIQ.Channel channel=content.getChannel(channelID);
+      if (channel != null) {
+        ColibriConferenceIQ.Channel requestChannel=new ColibriConferenceIQ.Channel();
+        requestChannel.setID(channelID);
+        requestChannel.setDirection(direction);
+        ColibriConferenceIQ.Content requestContent=new ColibriConferenceIQ.Content();
+        requestContent.setName(mediaType.toString());
+        requestContent.addChannel(requestChannel);
+        ColibriConferenceIQ conferenceRequest=new ColibriConferenceIQ();
+        conferenceRequest.setID(colibri.getID());
+        conferenceRequest.setTo(colibri.getFrom());
+        conferenceRequest.setType(IQ.Type.SET);
+        conferenceRequest.addContent(requestContent);
+        getProtocolProvider().getConnection().sendPacket(conferenceRequest);
+      }
+    }
+  }
+}
