@@ -6,18 +6,17 @@
     if (getPeer().isJitsiVideoBridge()) {
       if (remotelyOnHold) {
         ColibriConferenceIQ.Channel channel=getColibriChannel(mediaType);
-        MediaDirection direction=channel.getDirection().and(MediaDirection.RECVONLY);
-        getPeer().getCall().setChannelDirection(channel.getID(),mediaType,direction);
+        getPeer().getCall().setChannelDirection(channel.getID(),mediaType,MediaDirection.INACTIVE);
       }
  else {
         ColibriConferenceIQ.Channel channel=getColibriChannel(mediaType);
-        MediaDirection direction=channel.getDirection().or(MediaDirection.SENDONLY);
-        getPeer().getCall().setChannelDirection(channel.getID(),mediaType,direction);
+        getPeer().getCall().setChannelDirection(channel.getID(),mediaType,MediaDirection.SENDRECV);
       }
     }
  else {
       if (remotelyOnHold) {
-        stream.setDirection(stream.getDirection().and(MediaDirection.RECVONLY));
+        MediaDirection newDirection=getPeer().getCall().isConferenceFocus() ? MediaDirection.INACTIVE : stream.getDirection().and(MediaDirection.SENDRECV);
+        stream.setDirection(newDirection);
       }
  else {
         stream.setDirection(calculatePostHoldDirection(stream));
