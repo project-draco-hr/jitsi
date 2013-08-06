@@ -1,40 +1,50 @@
 {
-  String location=System.getProperty(PNAME_SC_HOME_DIR_LOCATION);
+  String profileLocation=System.getProperty(PNAME_SC_HOME_DIR_LOCATION);
+  String cacheLocation=System.getProperty(PNAME_SC_CACHE_DIR_LOCATION);
+  String logLocation=System.getProperty(PNAME_SC_LOG_DIR_LOCATION);
   String name=System.getProperty(PNAME_SC_HOME_DIR_NAME);
   boolean isHomeDirnameForced=name != null;
-  if ((location == null) || (name == null)) {
+  if (profileLocation == null || name == null) {
     String defaultLocation=System.getProperty("user.home");
     String defaultName=".jitsi";
     boolean chekLegacyDirNames=(name == null) || name.equals(OVERRIDABLE_DIR_NAME);
     if (osName.startsWith("Mac")) {
-      if (location == null)       location=System.getProperty("user.home") + File.separator + "Library"+ File.separator+ "Application Support";
+      if (profileLocation == null)       profileLocation=System.getProperty("user.home") + File.separator + "Library"+ File.separator+ "Application Support";
+      if (cacheLocation == null)       cacheLocation=System.getProperty("user.home") + File.separator + "Library"+ File.separator+ "Caches";
+      if (logLocation == null)       logLocation=System.getProperty("user.home") + File.separator + "Library"+ File.separator+ "Logs";
       if (name == null)       name="Jitsi";
     }
  else     if (osName.startsWith("Windows")) {
-      if (location == null)       location=System.getenv("APPDATA");
+      if (profileLocation == null)       profileLocation=System.getenv("APPDATA");
+      if (cacheLocation == null)       cacheLocation=System.getenv("LOCALAPPDATA");
+      if (logLocation == null)       logLocation=System.getenv("LOCALAPPDATA");
       if (name == null)       name="Jitsi";
     }
-    if (location == null)     location=defaultLocation;
+    if (profileLocation == null)     profileLocation=defaultLocation;
+    if (cacheLocation == null)     cacheLocation=profileLocation;
+    if (logLocation == null)     logLocation=profileLocation;
     if (name == null)     name=defaultName;
-    if (!isHomeDirnameForced && (new File(location,name).isDirectory() == false) && new File(defaultLocation,defaultName).isDirectory()) {
-      location=defaultLocation;
+    if (!isHomeDirnameForced && (new File(profileLocation,name).isDirectory() == false) && new File(defaultLocation,defaultName).isDirectory()) {
+      profileLocation=defaultLocation;
       name=defaultName;
     }
-    if (chekLegacyDirNames && !checkHomeFolderExist(location,name,osName)) {
+    if (chekLegacyDirNames && !checkHomeFolderExist(profileLocation,name,osName)) {
       for (      String dir : LEGACY_DIR_NAMES) {
-        if (checkHomeFolderExist(location,dir,osName)) {
+        if (checkHomeFolderExist(profileLocation,dir,osName)) {
           name=dir;
           break;
         }
         if (checkHomeFolderExist(defaultLocation,dir,osName)) {
           name=dir;
-          location=defaultLocation;
+          profileLocation=defaultLocation;
           break;
         }
       }
     }
-    System.setProperty(PNAME_SC_HOME_DIR_LOCATION,location);
+    System.setProperty(PNAME_SC_HOME_DIR_LOCATION,profileLocation);
+    System.setProperty(PNAME_SC_CACHE_DIR_LOCATION,cacheLocation);
+    System.setProperty(PNAME_SC_LOG_DIR_LOCATION,logLocation);
     System.setProperty(PNAME_SC_HOME_DIR_NAME,name);
   }
-  new File(location,name + File.separator + "log").mkdirs();
+  new File(new File(logLocation,name),"log").mkdirs();
 }
