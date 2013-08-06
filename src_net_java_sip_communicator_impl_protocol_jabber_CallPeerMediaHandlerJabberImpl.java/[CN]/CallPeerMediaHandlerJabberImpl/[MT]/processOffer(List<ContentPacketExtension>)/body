@@ -29,7 +29,8 @@
       closeStream(mediaType);
       continue;
     }
-    ContentPacketExtension ourContent=JingleUtils.createDescription(content.getCreator(),content.getName(),JingleUtils.getSenders(direction,!getPeer().isInitiator()),mutuallySupportedFormats,rtpExtensions,getDynamicPayloadTypes(),getRtpExtensionsRegistry());
+    SendersEnum senders=JingleUtils.getSenders(direction,!getPeer().isInitiator());
+    ContentPacketExtension ourContent=JingleUtils.createDescription(content.getCreator(),content.getName(),senders,mutuallySupportedFormats,rtpExtensions,getDynamicPayloadTypes(),getRtpExtensionsRegistry());
     RtpDescriptionPacketExtension localDescription=JingleUtils.getRtpDescription(ourContent);
     setAndAddPreferredEncryptionProtocol(mediaType,localDescription,description);
     if (content.getChildExtensionsOfType(InputEvtPacketExtension.class) != null) {
@@ -37,6 +38,7 @@
     }
     answer.add(ourContent);
     localContentMap.put(content.getName(),ourContent);
+    setSenders(mediaType,senders);
     atLeastOneValidDescription=true;
   }
   if (!atLeastOneValidDescription) {
