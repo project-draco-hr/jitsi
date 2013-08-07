@@ -4,8 +4,9 @@
   this.setCallInfoURL(SdpUtils.getCallInfoURL(offer));
   boolean atLeastOneValidDescription=false;
   boolean rejectedAvpOfferDueToSavpRequired=false;
-  boolean encryptionEnabled=getPeer().getProtocolProvider().getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true);
-  int savpOption=getPeer().getProtocolProvider().getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF);
+  AccountID accountID=getPeer().getProtocolProvider().getAccountID();
+  boolean encryptionEnabled=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true);
+  int savpOption=accountID.getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF);
   boolean masterStreamSet=false;
   List<MediaType> seenMediaTypes=new ArrayList<MediaType>();
   for (  MediaDescription mediaDescription : remoteDescriptions) {
@@ -16,7 +17,7 @@
  catch (    SdpParseException e) {
       throw new OperationFailedException("unable to create the media description",OperationFailedException.ILLEGAL_ARGUMENT,e);
     }
-    if (savpOption == ProtocolProviderFactory.SAVP_MANDATORY && !(transportProtocol.equals("RTP/SAVP") || transportProtocol.equals("RTP/SAVPF")) && encryptionEnabled) {
+    if ((savpOption == ProtocolProviderFactory.SAVP_MANDATORY) && !(transportProtocol.equals("RTP/SAVP") || transportProtocol.equals("RTP/SAVPF")) && encryptionEnabled) {
       rejectedAvpOfferDueToSavpRequired=true;
       continue;
     }
@@ -40,8 +41,10 @@
     if (dev == null) {
       mutuallySupportedFormats=null;
     }
- else     if (mediaType.equals(MediaType.VIDEO) && qualityControls != null) {
-      mutuallySupportedFormats=intersectFormats(remoteFormats,getLocallySupportedFormats(dev,qualityControls.getRemoteReceivePreset(),qualityControls.getRemoteSendMaxPreset()));
+ else     if (mediaType.equals(MediaType.VIDEO) && (qualityControls != null)) {
+      QualityPreset sendQualityPreset=direction.allowsSending() ? qualityControls.getRemoteReceivePreset() : null;
+      QualityPreset receiveQualityPreset=qualityControls.getRemoteSendMaxPreset();
+      mutuallySupportedFormats=intersectFormats(remoteFormats,getLocallySupportedFormats(dev,sendQualityPreset,receiveQualityPreset));
     }
  else {
       mutuallySupportedFormats=intersectFormats(remoteFormats,getLocallySupportedFormats(dev));
@@ -74,9 +77,7 @@
       }
  catch (      SdpParseException e) {
       }
-      if (frameRate > 0) {
-        qualityControls.setMaxFrameRate(frameRate);
-      }
+      if (frameRate > 0)       qualityControls.setMaxFrameRate(frameRate);
     }
     MediaDescription md=createMediaDescription(transportProtocol,mutuallySupportedFormats,connector,direction,rtpExtensions);
     this.setAndAddPreferredEncryptionProtocol(mediaType,md,mediaDescription);
