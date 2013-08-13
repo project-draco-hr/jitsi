@@ -1,18 +1,27 @@
 {
-  boolean moreToPlay=(dmtfToneNotifications.size() > 0);
-  DTMFToneInfo toneToPlay=null;
-  while (moreToPlay) {
-    toneToPlay=dmtfToneNotifications.get(0);
-    if (toneToPlay.sound != null) {
-      currentlyPlayingTone=GuiActivator.getNotificationService().fireNotification(DTMF_TONE_PREFIX + toneToPlay.tone.getValue());
-      while (GuiActivator.getNotificationService().isPlayingNotification(currentlyPlayingTone)) {
-        Thread.yield();
+  do {
+    DTMFToneInfo toneToPlay;
+synchronized (dtmfToneNotifications) {
+      if (dtmfToneNotifications.size() != 0) {
+        toneToPlay=dtmfToneNotifications.get(0);
       }
-      GuiActivator.getNotificationService().stopNotification(currentlyPlayingTone);
-synchronized (dmtfToneNotifications) {
-        dmtfToneNotifications.remove(0);
-        moreToPlay=(dmtfToneNotifications.size() > 0);
+ else       break;
+    }
+    try {
+      if (toneToPlay.sound != null) {
+        NotificationService notificationService=GuiActivator.getNotificationService();
+        NotificationData currentlyPlayingTone=notificationService.fireNotification(DTMF_TONE_PREFIX + toneToPlay.tone.getValue());
+        while (notificationService.isPlayingNotification(currentlyPlayingTone)) {
+          Thread.yield();
+        }
+        notificationService.stopNotification(currentlyPlayingTone);
+      }
+    }
+  finally {
+synchronized (dtmfToneNotifications) {
+        dtmfToneNotifications.remove(0);
       }
     }
   }
+ while (true);
 }
