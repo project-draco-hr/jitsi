@@ -1,8 +1,17 @@
 {
+  CallPeerState oldState=getState();
   try {
     if (CallPeerState.DISCONNECTED.equals(newState) || CallPeerState.FAILED.equals(newState))     getMediaHandler().getTransportManager().close();
   }
   finally {
     super.setState(newState,reason,reasonCode);
+  }
+  if (CallPeerState.isOnHold(oldState) && CallPeerState.CONNECTED.equals(newState)) {
+    try {
+      getCall().modifyVideoContent();
+    }
+ catch (    OperationFailedException ofe) {
+      logger.error("Failed to update call video state after " + "'hold' status removed for " + this);
+    }
   }
 }
