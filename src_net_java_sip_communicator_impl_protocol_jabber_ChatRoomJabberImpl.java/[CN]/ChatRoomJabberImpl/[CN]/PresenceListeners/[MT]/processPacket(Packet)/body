@@ -2,8 +2,8 @@
   Presence presence=(Presence)packet;
   if (presence == null || presence.getError() != null)   return;
   MUCUser mucUser=getMUCUserExtension(packet);
-  if (mucUser != null && mucUser.getStatus() != null) {
-    if ("201".equals(mucUser.getStatus().getCode())) {
+  if (mucUser != null) {
+    if (mucUser.getStatus() != null && "201".equals(mucUser.getStatus().getCode())) {
       try {
         multiUserChat.sendConfigurationForm(new Form(Form.TYPE_SUBMIT));
       }
@@ -12,7 +12,22 @@
       }
       opSetMuc.addSmackInvitationRejectionListener(multiUserChat,chatRoom);
       setLocalUserRole(ChatRoomMemberRole.MODERATOR);
-      provider.getConnection().removePacketListener(this);
     }
+ else {
+      String affiliation=mucUser.getItem().getAffiliation();
+      String role=mucUser.getItem().getRole();
+      if (role != null && role.equalsIgnoreCase(ChatRoomMemberRole.MODERATOR.getRoleName().toLowerCase())) {
+        setLocalUserRole(ChatRoomMemberRole.MODERATOR);
+      }
+      if (affiliation != null) {
+        if (affiliation.equalsIgnoreCase(ChatRoomMemberRole.OWNER.getRoleName().toLowerCase())) {
+          setLocalUserRole(ChatRoomMemberRole.OWNER);
+        }
+ else         if (affiliation.equalsIgnoreCase(ChatRoomMemberRole.ADMINISTRATOR.getRoleName().toLowerCase())) {
+          setLocalUserRole(ChatRoomMemberRole.ADMINISTRATOR);
+        }
+      }
+    }
+    provider.getConnection().removePacketListener(this);
   }
 }
