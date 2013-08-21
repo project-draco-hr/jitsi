@@ -2,12 +2,13 @@
   String action=url.getPath();
   if (action.equals("/AUTHENTIFICATION")) {
     UUID guid=UUID.fromString(url.getQuery());
-    for (    ScSessionID scSessionID : contactsMap.keySet()) {
-      if (scSessionID.getGUID().equals(guid)) {
-        Contact c=contactsMap.get(scSessionID.getSessionID());
-        OtrActionHandlers.openAuthDialog(c);
-        break;
-      }
+    if (guid == null)     throw new RuntimeException("No UUID found in OTR authenticate URL");
+    OtrActionHandler actionHandler=ServiceUtils.getService(OtrActivator.bundleContext,OtrActionHandler.class);
+    if (actionHandler != null) {
+      actionHandler.onAuthenticateLinkClicked(guid);
+    }
+ else {
+      logger.error("No OtrActionHandler registered");
     }
   }
 }
