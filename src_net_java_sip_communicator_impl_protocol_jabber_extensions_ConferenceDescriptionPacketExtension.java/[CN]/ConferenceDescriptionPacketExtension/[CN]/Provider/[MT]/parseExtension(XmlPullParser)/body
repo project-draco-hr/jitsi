@@ -1,0 +1,40 @@
+{
+  ConferenceDescriptionPacketExtension packetExtension=new ConferenceDescriptionPacketExtension();
+  int attrCount=parser.getAttributeCount();
+  for (int i=0; i < attrCount; i++) {
+    packetExtension.setAttribute(parser.getAttributeName(i),parser.getAttributeValue(i));
+  }
+  boolean done=false;
+  String elementName;
+  TransportPacketExtension transportExt=null;
+  while (!done) {
+switch (parser.next()) {
+case XmlPullParser.START_TAG:
+{
+        elementName=parser.getName();
+        if (TRANSPORT_ELEM_NAME.equals(elementName)) {
+          String transportStr=parser.getAttributeValue("",TransportPacketExtension.NAME_ATTR_NAME);
+          ConferenceDescription.Transport transport=ConferenceDescription.Transport.parseString(transportStr);
+          if (transport != null) {
+            transportExt=new TransportPacketExtension(transport);
+          }
+        }
+        break;
+      }
+case XmlPullParser.END_TAG:
+{
+      elementName=parser.getName();
+      if (ELEMENT_NAME.equals(elementName)) {
+        done=true;
+      }
+ else       if (TRANSPORT_ELEM_NAME.equals(elementName)) {
+        if (transportExt != null) {
+          packetExtension.addChildExtension(transportExt);
+        }
+      }
+      break;
+    }
+}
+}
+return packetExtension;
+}
