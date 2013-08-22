@@ -29,13 +29,20 @@
     reasonDialog.setReasonFieldText(chatContact.getName());
     int result=reasonDialog.showDialog();
     if (result == MessageDialog.OK_RETURN_CODE) {
+      String nickname=reasonDialog.getReason().trim();
       try {
-        String nickname=reasonDialog.getReason().trim();
         room.setUserNickname(nickname);
         ConfigurationUtils.updateChatRoomProperty(room.getParentProvider(),room.getIdentifier(),"userNickName",nickname);
       }
  catch (      OperationFailedException ex) {
-        ex.printStackTrace();
+        String errorMessage=null;
+        if (ex.getErrorCode() == OperationFailedException.IDENTIFICATION_CONFLICT) {
+          errorMessage=GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME_CONFLICT_ERROR");
+        }
+ else {
+          errorMessage=ex.getLocalizedMessage();
+        }
+        chatPanel.addErrorMessage(nickname,GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME_ERROR"),errorMessage);
       }
     }
   }
