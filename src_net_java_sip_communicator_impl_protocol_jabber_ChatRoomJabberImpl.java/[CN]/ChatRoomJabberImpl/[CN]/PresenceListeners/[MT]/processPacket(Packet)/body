@@ -3,6 +3,8 @@
   if (presence == null || presence.getError() != null)   return;
   MUCUser mucUser=getMUCUserExtension(packet);
   if (mucUser != null) {
+    String affiliation=mucUser.getItem().getAffiliation();
+    String role=mucUser.getItem().getRole();
     if (mucUser.getStatus() != null && "201".equals(mucUser.getStatus().getCode())) {
       try {
         multiUserChat.sendConfigurationForm(new Form(Form.TYPE_SUBMIT));
@@ -11,11 +13,12 @@
         logger.error("Failed to send config form.",e);
       }
       opSetMuc.addSmackInvitationRejectionListener(multiUserChat,chatRoom);
-      setLocalUserRole(ChatRoomMemberRole.MODERATOR);
+      if (affiliation.equalsIgnoreCase(ChatRoomMemberRole.OWNER.getRoleName().toLowerCase())) {
+        setLocalUserRole(ChatRoomMemberRole.OWNER);
+      }
+ else       setLocalUserRole(ChatRoomMemberRole.MODERATOR);
     }
  else {
-      String affiliation=mucUser.getItem().getAffiliation();
-      String role=mucUser.getItem().getRole();
       if (role != null && role.equalsIgnoreCase(ChatRoomMemberRole.MODERATOR.getRoleName().toLowerCase())) {
         setLocalUserRole(ChatRoomMemberRole.MODERATOR);
       }
@@ -23,7 +26,7 @@
         if (affiliation.equalsIgnoreCase(ChatRoomMemberRole.OWNER.getRoleName().toLowerCase())) {
           setLocalUserRole(ChatRoomMemberRole.OWNER);
         }
- else         if (affiliation.equalsIgnoreCase(ChatRoomMemberRole.ADMINISTRATOR.getRoleName().toLowerCase())) {
+ else         if (affiliation.equalsIgnoreCase("admin")) {
           setLocalUserRole(ChatRoomMemberRole.ADMINISTRATOR);
         }
       }
