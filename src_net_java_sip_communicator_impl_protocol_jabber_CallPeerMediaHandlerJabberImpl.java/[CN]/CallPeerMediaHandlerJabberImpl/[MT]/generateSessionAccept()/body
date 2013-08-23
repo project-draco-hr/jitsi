@@ -25,9 +25,10 @@
     ContentPacketExtension theirContent=this.remoteContentMap.get(contentName);
     RtpDescriptionPacketExtension theirDescription=JingleUtils.getRtpDescription(theirContent);
     MediaFormat format=null;
+    List<MediaFormat> localFormats=getLocallySupportedFormats(dev);
     for (    PayloadTypePacketExtension payload : theirDescription.getPayloadTypes()) {
       format=JingleUtils.payloadTypeToMediaFormat(payload,getDynamicPayloadTypes());
-      if (format != null)       break;
+      if (format != null && localFormats.contains(format))       break;
     }
     if (format == null) {
       ProtocolProviderServiceJabberImpl.throwOperationFailedException("No matching codec.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
