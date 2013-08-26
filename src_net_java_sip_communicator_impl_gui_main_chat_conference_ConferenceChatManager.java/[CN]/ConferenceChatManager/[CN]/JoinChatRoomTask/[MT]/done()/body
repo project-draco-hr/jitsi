@@ -11,8 +11,12 @@ catch (  ExecutionException ignore) {
   String errorMessage=null;
   if (AUTHENTICATION_FAILED.equals(returnCode)) {
     chatRoomWrapper.removePassword();
-    ChatRoomAuthenticationWindow authWindow=new ChatRoomAuthenticationWindow(chatRoomWrapper,nickName);
+    AuthenticationWindowService authWindowsService=ServiceUtils.getService(GuiActivator.bundleContext,AuthenticationWindowService.class);
+    AuthenticationWindowService.AuthenticationWindow authWindow=authWindowsService.create(null,null,null,false,chatRoomWrapper.isPersistent(),ImageLoader.getAuthenticationWindowIcon(chatRoomWrapper.getParentProvider().getProtocolProvider()),GuiActivator.getResources().getI18NString("service.gui.AUTHENTICATION_WINDOW_TITLE",new String[]{chatRoomWrapper.getParentProvider().getName()}),GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_REQUIRES_PASSWORD",new String[]{chatRoomWrapper.getChatRoomName()}),"",null,null,null);
     authWindow.setVisible(true);
+    if (!authWindow.isCanceled()) {
+      GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(chatRoomWrapper,nickName,new String(authWindow.getPassword()).getBytes(),authWindow.isRememberPassword());
+    }
   }
  else   if (REGISTRATION_REQUIRED.equals(returnCode)) {
     errorMessage=GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_REGISTRATION_REQUIRED",new String[]{chatRoomWrapper.getChatRoomName()});
