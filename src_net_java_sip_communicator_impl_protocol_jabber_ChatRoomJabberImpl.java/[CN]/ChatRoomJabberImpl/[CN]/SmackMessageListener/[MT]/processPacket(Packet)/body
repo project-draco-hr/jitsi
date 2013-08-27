@@ -15,7 +15,6 @@
   String msgFrom=msg.getFrom();
   ChatRoomMember member=null;
   String fromUserName=StringUtils.parseResource(msgFrom);
-  if (getUserNickname().equals(fromUserName))   return;
   if (msgFrom.equals(getName())) {
     messageReceivedEventType=ChatRoomMessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED;
     member=new ChatRoomMemberJabberImpl(ChatRoomJabberImpl.this,getName(),getName());
@@ -30,6 +29,12 @@
     if (logger.isDebugEnabled())     logger.debug("Received from " + fromUserName + " the message "+ msg.toXML());
   }
   Message newMessage=createMessage(msgBody);
+  if (getUserNickname().equals(fromUserName)) {
+    ChatRoomMessageDeliveredEvent msgDeliveredEvt=new ChatRoomMessageDeliveredEvent(ChatRoomJabberImpl.this,timeStamp,newMessage,ChatRoomMessageDeliveredEvent.CONVERSATION_MESSAGE_DELIVERED);
+    if (delay != null)     msgDeliveredEvt.setHistoryMessage(true);
+    fireMessageEvent(msgDeliveredEvt);
+    return;
+  }
   if (msg.getType() == org.jivesoftware.smack.packet.Message.Type.error) {
     if (logger.isInfoEnabled())     logger.info("Message error received from " + fromUserName);
     XMPPError error=packet.getError();
