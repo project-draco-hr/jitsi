@@ -1,6 +1,22 @@
 {
   try {
     History history=this.getHistoryForMultiChat(evt.getSourceChatRoom());
+    if (evt.isHistoryMessage()) {
+      Collection<EventObject> c=findFirstMessagesAfter(evt.getSourceChatRoom(),evt.getTimestamp(),10);
+      Iterator<EventObject> iter=c.iterator();
+      boolean isPresent=false;
+      while (iter.hasNext()) {
+        EventObject e=iter.next();
+        if (e instanceof ChatRoomMessageDeliveredEvent) {
+          ChatRoomMessageDeliveredEvent cev=(ChatRoomMessageDeliveredEvent)e;
+          if (evt.getTimestamp() != null && evt.getTimestamp().equals(cev.getTimestamp())) {
+            isPresent=true;
+            break;
+          }
+        }
+      }
+      if (isPresent)       return;
+    }
     writeMessage(history,"out",evt.getMessage(),evt.getTimestamp());
   }
  catch (  IOException e) {
