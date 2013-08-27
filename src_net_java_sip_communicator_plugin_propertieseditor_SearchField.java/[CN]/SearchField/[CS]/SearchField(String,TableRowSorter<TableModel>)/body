@@ -1,0 +1,52 @@
+{
+  super(text);
+  if (getUI() instanceof SearchFieldUI) {
+    ((SearchFieldUI)getUI()).setDeleteButtonEnabled(true);
+    ((SearchFieldUI)getUI()).setCallButtonEnabled(false);
+  }
+  this.setBorder(null);
+  this.setOpaque(false);
+  this.setPreferredSize(new Dimension(100,25));
+  this.setDragEnabled(true);
+  InputMap imap=getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+  imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0),"escape");
+  ActionMap amap=getActionMap();
+  amap.put("escape",new AbstractAction(){
+    /** 
+ * Serial Version UID.
+ */
+    private static final long serialVersionUID=1L;
+    public void actionPerformed(    ActionEvent e){
+      setText("");
+    }
+  }
+);
+  getDocument().addDocumentListener(new DocumentListener(){
+    public void insertUpdate(    DocumentEvent e){
+      RowFilter<TableModel,Object> rf=null;
+      try {
+        rf=RowFilter.regexFilter(getText(),0);
+      }
+ catch (      java.util.regex.PatternSyntaxException exception) {
+        logger.info("Failed to compile regex.",exception);
+        return;
+      }
+      sorter.setRowFilter(rf);
+    }
+    public void removeUpdate(    DocumentEvent e){
+      RowFilter<TableModel,Object> rf=null;
+      try {
+        rf=RowFilter.regexFilter(getText(),0);
+      }
+ catch (      java.util.regex.PatternSyntaxException exception) {
+        logger.info("Failed to compile regex.",exception);
+        return;
+      }
+      sorter.setRowFilter(rf);
+    }
+    public void changedUpdate(    DocumentEvent e){
+    }
+  }
+);
+  loadSkin();
+}
