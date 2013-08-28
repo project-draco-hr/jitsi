@@ -1,6 +1,6 @@
 {
   AccountID accountID=getPeer().getProtocolProvider().getAccountID();
-  if (!accountID.isEncryptionProtocolEnabled("SDES") || !accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true)) {
+  if (!accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) || !accountID.isEncryptionProtocolEnabled("SDES")) {
     return false;
   }
   Map<MediaTypeSrtpControl,SrtpControl> srtpControls=getSrtpControls();
@@ -18,7 +18,9 @@
   sdcontrol.setEnabledCiphers(Arrays.asList(ciphers.split(",")));
   if (remoteMd == null) {
     @SuppressWarnings("unchecked") Vector<Attribute> atts=localMd.getAttributes(true);
-    for (    SrtpCryptoAttribute ca : sdcontrol.getInitiatorCryptoAttributes())     atts.add(SdpUtils.createAttribute("crypto",ca.encode()));
+    for (    SrtpCryptoAttribute ca : sdcontrol.getInitiatorCryptoAttributes()) {
+      atts.add(SdpUtils.createAttribute("crypto",ca.encode()));
+    }
     return true;
   }
  else {

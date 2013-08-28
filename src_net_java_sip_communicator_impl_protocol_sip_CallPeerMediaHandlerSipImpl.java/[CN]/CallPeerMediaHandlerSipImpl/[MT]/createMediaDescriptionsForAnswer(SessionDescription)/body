@@ -3,10 +3,9 @@
   Vector<MediaDescription> answerDescriptions=new Vector<MediaDescription>(remoteDescriptions.size());
   this.setCallInfoURL(SdpUtils.getCallInfoURL(offer));
   boolean atLeastOneValidDescription=false;
-  boolean rejectedAvpOfferDueToSavpRequired=false;
+  boolean rejectedAvpOfferDueToSavpMandatory=false;
   AccountID accountID=getPeer().getProtocolProvider().getAccountID();
-  boolean encryptionEnabled=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true);
-  int savpOption=accountID.getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF);
+  int savpOption=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) ? accountID.getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF) : ProtocolProviderFactory.SAVP_OFF;
   boolean masterStreamSet=false;
   List<MediaType> seenMediaTypes=new ArrayList<MediaType>();
   for (  MediaDescription mediaDescription : remoteDescriptions) {
@@ -17,8 +16,8 @@
  catch (    SdpParseException e) {
       throw new OperationFailedException("unable to create the media description",OperationFailedException.ILLEGAL_ARGUMENT,e);
     }
-    if ((savpOption == ProtocolProviderFactory.SAVP_MANDATORY) && !(transportProtocol.equals("RTP/SAVP") || transportProtocol.equals("RTP/SAVPF")) && encryptionEnabled) {
-      rejectedAvpOfferDueToSavpRequired=true;
+    if ((savpOption == ProtocolProviderFactory.SAVP_MANDATORY) && !(transportProtocol.equals("RTP/SAVP") || transportProtocol.equals("RTP/SAVPF"))) {
+      rejectedAvpOfferDueToSavpMandatory=true;
       continue;
     }
     MediaType mediaType=null;
@@ -80,7 +79,7 @@
       if (frameRate > 0)       qualityControls.setMaxFrameRate(frameRate);
     }
     MediaDescription md=createMediaDescription(transportProtocol,mutuallySupportedFormats,connector,direction,rtpExtensions);
-    this.setAndAddPreferredEncryptionProtocol(mediaType,md,mediaDescription);
+    setAndAddPreferredEncryptionProtocol(mediaType,md,mediaDescription);
     MediaFormat fmt=findMediaFormat(remoteFormats,mutuallySupportedFormats.get(0));
     boolean masterStream=false;
     if (!masterStreamSet) {
@@ -99,7 +98,13 @@
     answerDescriptions.add(md);
     atLeastOneValidDescription=true;
   }
-  if (rejectedAvpOfferDueToSavpRequired && !atLeastOneValidDescription)   throw new OperationFailedException("Offer contained no valid " + "media descriptions. Insecure media was rejected (only " + "RTP/AVP instead of RTP/SAVP).",OperationFailedException.ILLEGAL_ARGUMENT);
-  if (!atLeastOneValidDescription)   throw new OperationFailedException("Offer contained no valid " + "media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT);
+  if (!atLeastOneValidDescription) {
+    if (rejectedAvpOfferDueToSavpMandatory) {
+      throw new OperationFailedException("Offer contained no valid media descriptions. Insecure" + " media was rejected (only RTP/AVP instead of" + " RTP/SAVP).",OperationFailedException.ILLEGAL_ARGUMENT);
+    }
+ else {
+      throw new OperationFailedException("Offer contained no valid media descriptions.",OperationFailedException.ILLEGAL_ARGUMENT);
+    }
+  }
   return answerDescriptions;
 }

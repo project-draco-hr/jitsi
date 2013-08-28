@@ -1,15 +1,20 @@
 {
+  AccountID accountID=getPeer().getProtocolProvider().getAccountID();
+  int savpOption=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) ? accountID.getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF) : ProtocolProviderFactory.SAVP_OFF;
   List<String> result=new ArrayList<String>(2);
-  int savpOption=ProtocolProviderFactory.SAVP_OFF;
-  if (getPeer().getProtocolProvider().getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true)) {
-    savpOption=getPeer().getProtocolProvider().getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF);
-  }
-  if (savpOption == ProtocolProviderFactory.SAVP_MANDATORY)   result.add("RTP/SAVP");
- else   if (savpOption == ProtocolProviderFactory.SAVP_OFF)   result.add(SdpConstants.RTP_AVP);
- else   if (savpOption == ProtocolProviderFactory.SAVP_OPTIONAL) {
+switch (savpOption) {
+case ProtocolProviderFactory.SAVP_MANDATORY:
     result.add("RTP/SAVP");
-    result.add(SdpConstants.RTP_AVP);
-  }
- else   throw new OperationFailedException("invalid value for SAVP_OPTION",OperationFailedException.GENERAL_ERROR);
-  return result;
+  break;
+case ProtocolProviderFactory.SAVP_OFF:
+result.add(SdpConstants.RTP_AVP);
+break;
+case ProtocolProviderFactory.SAVP_OPTIONAL:
+result.add("RTP/SAVP");
+result.add(SdpConstants.RTP_AVP);
+break;
+default :
+throw new OperationFailedException("invalid value for SAVP_OPTION",OperationFailedException.GENERAL_ERROR);
+}
+return result;
 }

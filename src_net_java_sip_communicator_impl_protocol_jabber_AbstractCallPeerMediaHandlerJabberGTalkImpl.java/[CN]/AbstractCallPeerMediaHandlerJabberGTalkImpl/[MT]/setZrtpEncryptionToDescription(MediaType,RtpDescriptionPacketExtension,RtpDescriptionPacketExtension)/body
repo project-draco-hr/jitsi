@@ -1,38 +1,40 @@
 {
-  boolean isRemoteZrtpCapable=(remoteDescription == null);
-  if (remoteDescription != null) {
+  boolean isRemoteZrtpCapable;
+  if (remoteDescription == null)   isRemoteZrtpCapable=true;
+ else {
     EncryptionPacketExtension remoteEncryption=remoteDescription.getFirstChildOfType(EncryptionPacketExtension.class);
-    if (remoteEncryption != null && isRemoteZrtpCapable(remoteEncryption)) {
-      isRemoteZrtpCapable=true;
-    }
+    isRemoteZrtpCapable=(remoteEncryption != null) && isRemoteZrtpCapable(remoteEncryption);
   }
-  if (getPeer().getProtocolProvider().getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && getPeer().getProtocolProvider().getAccountID().isEncryptionProtocolEnabled("ZRTP") && getPeer().getCall().isSipZrtpAttribute()&& isRemoteZrtpCapable) {
-    Map<MediaTypeSrtpControl,SrtpControl> srtpControls=getSrtpControls();
-    MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.ZRTP);
-    SrtpControl control=srtpControls.get(key);
-    if (control == null) {
-      control=JabberActivator.getMediaService().createZrtpControl();
-      srtpControls.put(key,control);
-    }
-    ZrtpControl zcontrol=(ZrtpControl)control;
-    int versionIndex=zcontrol.getNumberSupportedVersions();
-    boolean zrtpHashSet=false;
-    for (int i=0; i < versionIndex; i++) {
-      String helloHash[]=((ZrtpControl)control).getHelloHashSep(i);
-      if (helloHash != null && helloHash[1].length() > 0) {
-        ZrtpHashPacketExtension hash=new ZrtpHashPacketExtension();
-        hash.setVersion(helloHash[0]);
-        hash.setValue(helloHash[1]);
-        EncryptionPacketExtension encryption=description.getFirstChildOfType(EncryptionPacketExtension.class);
-        if (encryption == null) {
-          encryption=new EncryptionPacketExtension();
-          description.addChildExtension(encryption);
+  boolean zrtpHashSet=false;
+  if (isRemoteZrtpCapable) {
+    CallPeer peer=getPeer();
+    AccountID accountID=peer.getProtocolProvider().getAccountID();
+    if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled("ZRTP") && peer.getCall().isSipZrtpAttribute()) {
+      Map<MediaTypeSrtpControl,SrtpControl> srtpControls=getSrtpControls();
+      MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.ZRTP);
+      SrtpControl control=srtpControls.get(key);
+      if (control == null) {
+        control=JabberActivator.getMediaService().createZrtpControl();
+        srtpControls.put(key,control);
+      }
+      ZrtpControl zcontrol=(ZrtpControl)control;
+      int versionIndex=zcontrol.getNumberSupportedVersions();
+      for (int i=0; i < versionIndex; i++) {
+        String helloHash[]=((ZrtpControl)control).getHelloHashSep(i);
+        if ((helloHash != null) && (helloHash[1].length() > 0)) {
+          ZrtpHashPacketExtension hash=new ZrtpHashPacketExtension();
+          hash.setVersion(helloHash[0]);
+          hash.setValue(helloHash[1]);
+          EncryptionPacketExtension encryption=description.getFirstChildOfType(EncryptionPacketExtension.class);
+          if (encryption == null) {
+            encryption=new EncryptionPacketExtension();
+            description.addChildExtension(encryption);
+          }
+          encryption.addChildExtension(hash);
+          zrtpHashSet=true;
         }
-        encryption.addChildExtension(hash);
-        zrtpHashSet=true;
       }
     }
-    return zrtpHashSet;
   }
-  return false;
+  return zrtpHashSet;
 }
