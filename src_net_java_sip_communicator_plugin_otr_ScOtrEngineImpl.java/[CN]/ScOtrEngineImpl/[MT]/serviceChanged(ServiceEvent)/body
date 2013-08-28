@@ -1,0 +1,16 @@
+{
+  Object service=OtrActivator.bundleContext.getService(ev.getServiceReference());
+  if (!(service instanceof ProtocolProviderService))   return;
+  if (ev.getType() == ServiceEvent.UNREGISTERING) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Unregistering a ProtocolProviderService, cleaning" + " OTR's ScSessionID to Contact map.");
+    }
+    ProtocolProviderService provider=(ProtocolProviderService)service;
+synchronized (contactsMap) {
+      Iterator<Contact> i=contactsMap.values().iterator();
+      while (i.hasNext()) {
+        if (provider.equals(i.next().getProtocolProvider()))         i.remove();
+      }
+    }
+  }
+}
