@@ -1,0 +1,29 @@
+{
+  Iterator<Contact> contacts=((MetaContact)uiContact.getDescriptor()).getContactsForOperationSet(OperationSetServerStoredContactInfo.class).iterator();
+  List<WebPageDetail> res=new ArrayList<WebPageDetail>();
+  boolean foundWebLink=false;
+  while (contacts.hasNext()) {
+    Contact contact=contacts.next();
+    OperationSetServerStoredContactInfo opset=contact.getProtocolProvider().getOperationSet(OperationSetServerStoredContactInfo.class);
+    Iterator<GenericDetail> iter=opset.requestAllDetailsForContact(contact,webDetailsListener);
+    if (iter == null)     continue;
+    while (iter.hasNext()) {
+      GenericDetail d=iter.next();
+      if (d instanceof WebPageDetail) {
+        final WebPageDetail webd=(WebPageDetail)d;
+        if (webd.getDetailValue() != null) {
+          res.add(webd);
+          if (returnFirst) {
+            foundWebLink=true;
+            break;
+          }
+        }
+      }
+    }
+    if (returnFirst && foundWebLink)     break;
+  }
+  if (returnFirst) {
+    if (res.isEmpty())     return null;
+  }
+  return res;
+}
