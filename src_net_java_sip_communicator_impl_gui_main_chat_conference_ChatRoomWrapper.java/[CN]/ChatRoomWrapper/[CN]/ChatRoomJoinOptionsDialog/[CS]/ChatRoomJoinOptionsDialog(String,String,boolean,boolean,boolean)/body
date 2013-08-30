@@ -1,14 +1,28 @@
 {
   super(title,message,showReasonLabel,disableOKIfReasonIsEmpty);
-  subject.setVisible(false);
-  if (!dontDisplaySubjectFields) {
-    JPanel subjectPannel=new JPanel(new BorderLayout());
-    subjectPannel.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
-    subjectPannel.setOpaque(false);
-    subjectPannel.add(setSubject,BorderLayout.NORTH);
-    subjectPannel.add(subject,BorderLayout.CENTER);
-    addToReasonFieldPannel(subjectPannel);
-    setSubject.addActionListener(this);
-    this.pack();
+  if (dontDisplaySubjectFields)   return;
+  JPanel subjectPanel=new JPanel(new BorderLayout());
+  subjectPanel.setOpaque(false);
+  subjectPanel.setBorder(BorderFactory.createEmptyBorder(10,0,0,0));
+  subjectFieldsPannel.setBorder(BorderFactory.createEmptyBorder(10,30,0,0));
+  subjectFieldsPannel.setOpaque(false);
+  subjectFieldsPannel.add(subject,BorderLayout.CENTER);
+  subjectFieldsPannel.setVisible(false);
+  subject.setFont(getFont().deriveFont(12f));
+  cmdExpandSubjectFields=new JLabel();
+  cmdExpandSubjectFields.setBorder(new EmptyBorder(0,5,0,0));
+  cmdExpandSubjectFields.setIcon(GuiActivator.getResources().getImage("service.gui.icons.RIGHT_ARROW_ICON"));
+  cmdExpandSubjectFields.setText(GuiActivator.getResources().getI18NString("service.gui.SET_SUBJECT"));
+  cmdExpandSubjectFields.addMouseListener(new MouseAdapter(){
+    @Override public void mouseClicked(    MouseEvent e){
+      cmdExpandSubjectFields.setIcon(UtilActivator.getResources().getImage(subjectFieldsPannel.isVisible() ? "service.gui.icons.RIGHT_ARROW_ICON" : "service.gui.icons.DOWN_ARROW_ICON"));
+      subjectFieldsPannel.setVisible(!subjectFieldsPannel.isVisible());
+      pack();
+    }
   }
+);
+  subjectPanel.add(cmdExpandSubjectFields,BorderLayout.NORTH);
+  subjectPanel.add(subjectFieldsPannel,BorderLayout.CENTER);
+  addToReasonFieldPannel(subjectPanel);
+  this.pack();
 }
