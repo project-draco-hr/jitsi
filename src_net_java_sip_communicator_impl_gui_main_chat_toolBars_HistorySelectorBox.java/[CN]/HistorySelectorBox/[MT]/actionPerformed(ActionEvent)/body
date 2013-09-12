@@ -24,22 +24,34 @@
     Object desc=chatPanel.getChatSession().getDescriptor();
     if (desc instanceof MetaContact) {
       MetaContact currentContact=(MetaContact)desc;
-      boolean isHistoryEnabled=ConfigurationUtils.isHistoryLoggingEnabled(currentContact);
-      ConfigurationUtils.setHistoryLoggingEnabled(!isHistoryEnabled,currentContact);
+      boolean isHistoryEnabled=ConfigurationUtils.isHistoryLoggingEnabled(currentContact.getMetaUID());
+      ConfigurationUtils.setHistoryLoggingEnabled(!isHistoryEnabled,currentContact.getMetaUID());
+    }
+ else     if (desc instanceof ChatRoomWrapper) {
+      ChatRoom currentChatRoom=((ChatRoomWrapper)desc).getChatRoom();
+      boolean isHistoryEnabled=ConfigurationUtils.isHistoryLoggingEnabled(currentChatRoom.getIdentifier());
+      ConfigurationUtils.setHistoryLoggingEnabled(!isHistoryEnabled,currentChatRoom.getIdentifier());
     }
   }
  else   if (menuItemName.equals("eraseHistoryPerContact")) {
     Object desc=chatPanel.getChatSession().getDescriptor();
-    if (!(desc instanceof MetaContact))     return;
-    MetaContact contact=(MetaContact)desc;
-    MessageDialog dialog=new MessageDialog(null,GuiActivator.getResources().getI18NString("service.gui.WARNING"),GuiActivator.getResources().getI18NString("service.gui.HISTORY_REMOVE_PER_CONTACT_WARNING",new String[]{contact.getDisplayName()}),GuiActivator.getResources().getI18NString("service.gui.OK"),false);
+    String destination;
+    if (desc instanceof MetaContact)     destination=((MetaContact)desc).getDisplayName();
+ else     if (desc instanceof ChatRoomWrapper)     destination=((ChatRoomWrapper)desc).getChatRoomName();
+ else     return;
+    MessageDialog dialog=new MessageDialog(null,GuiActivator.getResources().getI18NString("service.gui.WARNING"),GuiActivator.getResources().getI18NString("service.gui.HISTORY_REMOVE_PER_CONTACT_WARNING",new String[]{destination}),GuiActivator.getResources().getI18NString("service.gui.OK"),false);
     if (dialog.showDialog() == MessageDialog.OK_RETURN_CODE) {
       try {
-        ServiceUtils.getService(GuiActivator.bundleContext,MessageHistoryService.class).eraseLocallyStoredHistory(contact);
+        if (desc instanceof MetaContact) {
+          ServiceUtils.getService(GuiActivator.bundleContext,MessageHistoryService.class).eraseLocallyStoredHistory((MetaContact)desc);
+        }
+ else         if (desc instanceof ChatRoomWrapper) {
+          ServiceUtils.getService(GuiActivator.bundleContext,MessageHistoryService.class).eraseLocallyStoredHistory(((ChatRoomWrapper)desc).getChatRoom());
+        }
       }
  catch (      IOException ex) {
         logger.error("Error removing history",ex);
-        chatPanel.addErrorMessage(contact.getDisplayName(),GuiActivator.getResources().getI18NString("service.gui.HISTORY_REMOVE_ERROR"),ex.getLocalizedMessage());
+        chatPanel.addErrorMessage(destination,GuiActivator.getResources().getI18NString("service.gui.HISTORY_REMOVE_ERROR"),ex.getLocalizedMessage());
       }
     }
   }
