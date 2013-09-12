@@ -5,6 +5,17 @@
   DelayInformation delay=(DelayInformation)msg.getExtension("x","jabber:x:delay");
   if (delay != null) {
     timeStamp=delay.getStamp();
+    if (lastSeenDelayedMessage == null) {
+      String timestamp=ConfigurationUtils.getChatRoomProperty(provider,getIdentifier(),LAST_SEEN_DELAYED_MESSAGE_PROP);
+      try {
+        lastSeenDelayedMessage=new Date(Long.parseLong(timestamp));
+      }
+ catch (      Throwable t) {
+      }
+    }
+    if (lastSeenDelayedMessage != null && !timeStamp.after(lastSeenDelayedMessage))     return;
+    ConfigurationUtils.updateChatRoomProperty(provider,getIdentifier(),LAST_SEEN_DELAYED_MESSAGE_PROP,String.valueOf(timeStamp.getTime()));
+    lastSeenDelayedMessage=timeStamp;
   }
  else {
     timeStamp=new Date();
