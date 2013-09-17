@@ -1,0 +1,23 @@
+{
+  if (getConfigurationService().getBoolean(ProxyInfo.CONNECTION_PROXY_FORWARD_DNS_PROPERTY_NAME,false)) {
+    try {
+      String serverAddress=(String)getConfigurationService().getProperty(ProxyInfo.CONNECTION_PROXY_FORWARD_DNS_ADDRESS_PROPERTY_NAME);
+      if (StringUtils.isNullOrEmpty(serverAddress,true))       return false;
+      int port=SimpleResolver.DEFAULT_PORT;
+      try {
+        port=getConfigurationService().getInt(ProxyInfo.CONNECTION_PROXY_FORWARD_DNS_PORT_PROPERTY_NAME,SimpleResolver.DEFAULT_PORT);
+      }
+ catch (      NumberFormatException ne) {
+        logger.error("Wrong port value",ne);
+      }
+      SimpleResolver sResolver=new SimpleResolver("0");
+      sResolver.setAddress(new InetSocketAddress(serverAddress,port));
+      Lookup.setDefaultResolver(sResolver);
+      return true;
+    }
+ catch (    Throwable t) {
+      logger.error("Creating simple forwarding resolver",t);
+    }
+  }
+  return false;
+}
