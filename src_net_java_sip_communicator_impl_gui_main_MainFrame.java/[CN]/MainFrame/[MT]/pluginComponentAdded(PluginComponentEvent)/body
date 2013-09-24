@@ -1,13 +1,13 @@
 {
-  PluginComponent pluginComponent=event.getPluginComponent();
-  Container pluginContainer=pluginComponent.getContainer();
+  PluginComponentFactory factory=event.getPluginComponentFactory();
+  Container pluginContainer=factory.getContainer();
   if (pluginContainer.equals(Container.CONTAINER_MAIN_WINDOW) || pluginContainer.equals(Container.CONTAINER_STATUS_BAR)) {
-    String pluginConstraints=pluginComponent.getConstraints();
+    String pluginConstraints=factory.getConstraints();
     Object constraints;
     if (pluginConstraints != null)     constraints=UIServiceImpl.getBorderLayoutConstraintsFromContainer(pluginConstraints);
  else     constraints=BorderLayout.SOUTH;
-    if (pluginComponent.isNativeComponent()) {
-      this.nativePluginsTable.put(pluginComponent,new JPanel());
+    if (factory.isNativeComponent()) {
+      this.nativePluginsTable.add(factory);
       if (isFrameVisible()) {
         SwingUtilities.invokeLater(new Runnable(){
           public void run(){
@@ -18,7 +18,7 @@
       }
     }
  else {
-      this.addPluginComponent((Component)pluginComponent.getComponent(),pluginContainer,constraints);
+      this.addPluginComponent((Component)factory.getPluginComponentInstance(MainFrame.this).getComponent(),pluginContainer,constraints);
     }
   }
 }
