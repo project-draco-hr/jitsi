@@ -1,12 +1,22 @@
 {
+  if (contact.getPersistableAddress() == null) {
+    logger.info("Contact cannot be moved! This contact doesn't have " + "persistant address.");
+    return;
+  }
+  ProtocolProviderService provider=contact.getProtocolProvider();
+  OperationSetMultiUserChat opSetMUC=provider.getOperationSet(OperationSetMultiUserChat.class);
+  if (opSetMUC.isPrivateMessagingContact(contact.getAddress())) {
+    addNewContactToMetaContact(provider,newParentMetaContact,contact.getPersistableAddress());
+    return;
+  }
+  OperationSetPersistentPresence opSetPresence=provider.getOperationSet(OperationSetPersistentPresence.class);
+  if (opSetPresence == null) {
+  }
   if (!(newParentMetaContact instanceof MetaContactImpl)) {
     throw new IllegalArgumentException(newParentMetaContact + " is not a MetaContactImpl instance.");
   }
   MetaContactImpl currentParentMetaContact=(MetaContactImpl)this.findMetaContactByContact(contact);
   currentParentMetaContact.removeProtoContact(contact);
-  OperationSetPersistentPresence opSetPresence=contact.getProtocolProvider().getOperationSet(OperationSetPersistentPresence.class);
-  if (opSetPresence == null) {
-  }
   MetaContactGroup newParentGroup=findParentMetaContactGroup(newParentMetaContact);
   ContactGroup parentProtoGroup=resolveProtoPath(contact.getProtocolProvider(),(MetaContactGroupImpl)newParentGroup);
   if (contact.getParentContactGroup() != parentProtoGroup && opSetPresence != null)   opSetPresence.moveContactToGroup(contact,parentProtoGroup);

@@ -1,0 +1,21 @@
+{
+  ContactGroup group=findContactGroup(contact);
+  if (group == null) {
+    if (logger.isTraceEnabled())     logger.trace("Could not find ParentGroup for deleted entry:" + contact.getAddress());
+    return;
+  }
+  if (group instanceof ContactGroupJabberImpl) {
+    ContactGroupJabberImpl groupImpl=(ContactGroupJabberImpl)group;
+    groupImpl.removeContact(contact);
+    if (groupImpl.countContacts() == 0) {
+      rootGroup.removeSubGroup(groupImpl);
+      fireContactRemoved(groupImpl,contact);
+      fireGroupEvent(groupImpl,ServerStoredGroupEvent.GROUP_REMOVED_EVENT);
+    }
+ else     fireContactRemoved(groupImpl,contact);
+  }
+ else   if (group instanceof RootContactGroupJabberImpl) {
+    rootGroup.removeContact(contact);
+    fireContactRemoved(rootGroup,contact);
+  }
+}
