@@ -9,7 +9,15 @@
     settingsPanel.remove(localLevel);
     settingsPanel.remove(remoteLevel);
   }
-  chatButton.setVisible(!isConference && (getIMCapableCallPeers(1).size() == 1));
+  List<Contact> imContacts=getIMCapableCallPeers(1);
+  chatButton.setVisible(!isConference && (imContacts.size() == 1));
+  if (chatButton.isVisible()) {
+    Contact contact=imContacts.get(0);
+    OperationSetPresence operationSetPresence=contact.getProtocolProvider().getOperationSet(OperationSetPresence.class);
+    if (operationSetPresence != null)     operationSetPresence.addContactPresenceStatusListener(this);
+    chatButton.setIconImage(Constants.getMessageStatusIcon(contact.getPresenceStatus()));
+    chatButton.repaint();
+  }
   updateHoldButtonState();
   updateMergeButtonState();
   List<Call> calls=callConference.getCalls();
