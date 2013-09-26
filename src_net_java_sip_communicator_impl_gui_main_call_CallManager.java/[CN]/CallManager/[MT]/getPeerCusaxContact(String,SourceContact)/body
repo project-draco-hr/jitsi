@@ -1,0 +1,24 @@
+{
+  ProtocolProviderService linkedCusaxProvider=null;
+  for (  ContactDetail detail : sourceContact.getContactDetails()) {
+    ProtocolProviderService pps=detail.getPreferredProtocolProvider(OperationSetBasicTelephony.class);
+    if (pps != null) {
+      OperationSetCusaxUtils cusaxOpSet=pps.getOperationSet(OperationSetCusaxUtils.class);
+      if (cusaxOpSet != null) {
+        linkedCusaxProvider=cusaxOpSet.getLinkedCusaxProvider();
+        break;
+      }
+    }
+  }
+  if (linkedCusaxProvider != null) {
+    OperationSetPersistentPresence opSetPersistentPresence=linkedCusaxProvider.getOperationSet(OperationSetPersistentPresence.class);
+    if (opSetPersistentPresence != null) {
+      int index=peerAddress.indexOf("@");
+      String peerUserID=(index > -1) ? peerAddress.substring(0,index) : peerAddress;
+      String peerUserIDQ=Pattern.quote(peerUserID);
+      Pattern pattern=Pattern.compile("^(" + peerUserIDQ + "|"+ peerUserIDQ+ "@.*)$");
+      return findContactByPeer(peerUserID,pattern,opSetPersistentPresence.getServerStoredContactListRoot(),linkedCusaxProvider.getOperationSet(OperationSetCusaxUtils.class));
+    }
+  }
+  return null;
+}
