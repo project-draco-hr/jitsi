@@ -1,0 +1,21 @@
+{
+  boolean isDirectImage=false;
+  try {
+    URL url=new URL(sourceString);
+    String protocol=url.getProtocol();
+    if (protocol.equals("http") || protocol.equals("https")) {
+      HttpURLConnection connection=(HttpURLConnection)url.openConnection();
+      isDirectImage=connection.getContentType().contains("image");
+      connection.disconnect();
+    }
+ else     if (protocol.equals("ftp")) {
+      if (sourceString.endsWith(".png") || sourceString.endsWith(".jpg") || sourceString.endsWith(".gif")) {
+        isDirectImage=true;
+      }
+    }
+  }
+ catch (  Exception e) {
+    logger.debug("Failed to retrieve content type information for" + sourceString,e);
+  }
+  return isDirectImage;
+}
