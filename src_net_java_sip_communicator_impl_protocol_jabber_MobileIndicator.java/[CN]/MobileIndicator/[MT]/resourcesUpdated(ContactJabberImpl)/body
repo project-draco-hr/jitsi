@@ -1,0 +1,27 @@
+{
+  if (isCapsMobileIndicator) {
+    updateMobileIndicatorUsingCaps(contact.getAddress());
+    return;
+  }
+  int highestPriority=Integer.MIN_VALUE;
+  List<ContactResource> highestPriorityResources=new ArrayList<ContactResource>();
+  for (  ContactResource res : contact.getResources()) {
+    if (!res.getPresenceStatus().isOnline())     continue;
+    int prio=res.getPriority();
+    if (prio >= highestPriority) {
+      if (highestPriority != prio)       highestPriorityResources.clear();
+      highestPriority=prio;
+      highestPriorityResources.add(res);
+    }
+  }
+  boolean allMobile=false;
+  for (  ContactResource res : highestPriorityResources) {
+    if (startsWithStrings(res.getResourceName(),checkStrings))     allMobile=true;
+ else {
+      allMobile=false;
+      break;
+    }
+  }
+  if (highestPriorityResources.size() > 0)   contact.setMobile(allMobile);
+ else   contact.setMobile(false);
+}

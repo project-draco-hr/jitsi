@@ -1,0 +1,31 @@
+{
+  ContactJabberImpl contact=ssclCallback.findContactById(StringUtils.parseBareAddress(user));
+  if (contact == null)   return;
+  EntityCapsManager capsManager=ssclCallback.getParentProvider().getDiscoveryManager().getCapsManager();
+  int currentMostConnectedStatus=0;
+  List<ContactResource> mostAvailableResources=new ArrayList<ContactResource>();
+  for (  ContactResource res : contact.getResources()) {
+    if (!res.getPresenceStatus().isOnline())     continue;
+    int status=res.getPresenceStatus().getStatus();
+    if (status > currentMostConnectedStatus) {
+      if (currentMostConnectedStatus != status)       mostAvailableResources.clear();
+      currentMostConnectedStatus=status;
+      mostAvailableResources.add(res);
+    }
+  }
+  boolean allMobile=false;
+  for (  ContactResource res : mostAvailableResources) {
+    EntityCapsManager.Caps caps=capsManager.getCapsByUser(((ContactResourceJabberImpl)res).getFullJid());
+    if (caps == null) {
+      allMobile=false;
+      break;
+    }
+    if (containsStrings(caps.node,checkStrings))     allMobile=true;
+ else {
+      allMobile=false;
+      break;
+    }
+  }
+  if (mostAvailableResources.size() > 0)   contact.setMobile(allMobile);
+ else   contact.setMobile(false);
+}
