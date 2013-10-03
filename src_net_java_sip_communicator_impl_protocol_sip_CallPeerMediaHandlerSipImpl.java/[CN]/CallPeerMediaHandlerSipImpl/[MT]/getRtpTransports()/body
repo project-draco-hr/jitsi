@@ -1,20 +1,28 @@
 {
   AccountID accountID=getPeer().getProtocolProvider().getAccountID();
   int savpOption=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) ? accountID.getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF) : ProtocolProviderFactory.SAVP_OFF;
-  List<String> result=new ArrayList<String>(2);
-switch (savpOption) {
-case ProtocolProviderFactory.SAVP_MANDATORY:
-    result.add("RTP/SAVP");
-  break;
-case ProtocolProviderFactory.SAVP_OFF:
-result.add(SdpConstants.RTP_AVP);
-break;
-case ProtocolProviderFactory.SAVP_OPTIONAL:
-result.add("RTP/SAVP");
-result.add(SdpConstants.RTP_AVP);
-break;
-default :
-throw new OperationFailedException("invalid value for SAVP_OPTION",OperationFailedException.GENERAL_ERROR);
-}
-return result;
+  List<String> result=new ArrayList<String>(3);
+  if (savpOption == ProtocolProviderFactory.SAVP_OFF) {
+    result.add(SdpConstants.RTP_AVP);
+  }
+ else {
+    List<String> encryptionProtocols=accountID.getSortedEnabledEncryptionProtocolList();
+    int encryptionProtocolCount=encryptionProtocols.size();
+    for (int i=encryptionProtocolCount - 1; i >= 0; i--) {
+      String encryptionProtocol=encryptionProtocols.get(i);
+      String protoName=encryptionProtocol.substring(ProtocolProviderFactory.ENCRYPTION_PROTOCOL.length() + 1);
+      String proto;
+      if (DtlsControl.PROTO_NAME.equals(protoName)) {
+        proto=DtlsControl.UDP_TLS_RTP_SAVP;
+      }
+ else {
+        proto=SrtpControl.RTP_SAVP;
+      }
+      int protoIndex=result.indexOf(proto);
+      if (protoIndex > 0)       result.remove(protoIndex);
+      result.add(0,proto);
+    }
+    if (savpOption == ProtocolProviderFactory.SAVP_OPTIONAL)     result.add(SdpConstants.RTP_AVP);
+  }
+  return result;
 }

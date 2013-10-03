@@ -9,18 +9,11 @@
   if (isRemoteZrtpCapable) {
     CallPeer peer=getPeer();
     AccountID accountID=peer.getProtocolProvider().getAccountID();
-    if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled("ZRTP") && peer.getCall().isSipZrtpAttribute()) {
-      Map<MediaTypeSrtpControl,SrtpControl> srtpControls=getSrtpControls();
-      MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.ZRTP);
-      SrtpControl control=srtpControls.get(key);
-      if (control == null) {
-        control=JabberActivator.getMediaService().createZrtpControl();
-        srtpControls.put(key,control);
-      }
-      ZrtpControl zcontrol=(ZrtpControl)control;
-      int versionIndex=zcontrol.getNumberSupportedVersions();
-      for (int i=0; i < versionIndex; i++) {
-        String helloHash[]=((ZrtpControl)control).getHelloHashSep(i);
+    if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled(ZrtpControl.PROTO_NAME) && peer.getCall().isSipZrtpAttribute()) {
+      ZrtpControl zrtpControl=(ZrtpControl)getSrtpControls().getOrCreate(mediaType,SrtpControlType.ZRTP);
+      int numberSupportedVersions=zrtpControl.getNumberSupportedVersions();
+      for (int i=0; i < numberSupportedVersions; i++) {
+        String helloHash[]=zrtpControl.getHelloHashSep(i);
         if ((helloHash != null) && (helloHash[1].length() > 0)) {
           ZrtpHashPacketExtension hash=new ZrtpHashPacketExtension();
           hash.setVersion(helloHash[0]);

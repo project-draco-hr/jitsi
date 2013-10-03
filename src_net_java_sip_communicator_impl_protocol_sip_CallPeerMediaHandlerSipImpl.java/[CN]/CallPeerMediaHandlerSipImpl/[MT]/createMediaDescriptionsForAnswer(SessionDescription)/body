@@ -9,14 +9,14 @@
   boolean masterStreamSet=false;
   List<MediaType> seenMediaTypes=new ArrayList<MediaType>();
   for (  MediaDescription mediaDescription : remoteDescriptions) {
-    String transportProtocol;
+    String proto;
     try {
-      transportProtocol=mediaDescription.getMedia().getProtocol();
+      proto=mediaDescription.getMedia().getProtocol();
     }
  catch (    SdpParseException e) {
-      throw new OperationFailedException("unable to create the media description",OperationFailedException.ILLEGAL_ARGUMENT,e);
+      throw new OperationFailedException("Unable to create the media description",OperationFailedException.ILLEGAL_ARGUMENT,e);
     }
-    if ((savpOption == ProtocolProviderFactory.SAVP_MANDATORY) && !(transportProtocol.equals("RTP/SAVP") || transportProtocol.equals("RTP/SAVPF"))) {
+    if ((savpOption == ProtocolProviderFactory.SAVP_MANDATORY) && !(proto.endsWith(SrtpControl.RTP_SAVP) || proto.endsWith(SrtpControl.RTP_SAVPF))) {
       rejectedAvpOfferDueToSavpMandatory=true;
       continue;
     }
@@ -78,7 +78,7 @@
       }
       if (frameRate > 0)       qualityControls.setMaxFrameRate(frameRate);
     }
-    MediaDescription md=createMediaDescription(transportProtocol,mutuallySupportedFormats,connector,direction,rtpExtensions);
+    MediaDescription md=createMediaDescription(proto,mutuallySupportedFormats,connector,direction,rtpExtensions);
     setAndAddPreferredEncryptionProtocol(mediaType,md,mediaDescription);
     MediaFormat fmt=findMediaFormat(remoteFormats,mutuallySupportedFormats.get(0));
     boolean masterStream=false;

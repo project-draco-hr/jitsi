@@ -1,26 +1,20 @@
 {
   AccountID accountID=getPeer().getProtocolProvider().getAccountID();
-  if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled("SDES")) {
-    Map<MediaTypeSrtpControl,SrtpControl> srtpControls=getSrtpControls();
-    MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.SDES);
-    SrtpControl control=srtpControls.get(key);
-    if (control == null) {
-      control=JabberActivator.getMediaService().createSDesControl();
-      srtpControls.put(key,control);
-    }
-    SDesControl sdcontrol=(SDesControl)control;
+  if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled(SDesControl.PROTO_NAME)) {
+    SrtpControls srtpControls=getSrtpControls();
+    SDesControl sdesControl=(SDesControl)srtpControls.getOrCreate(mediaType,SrtpControlType.SDES);
     String ciphers=accountID.getAccountPropertyString(ProtocolProviderFactory.SDES_CIPHER_SUITES);
     if (ciphers == null) {
       ciphers=JabberActivator.getResources().getSettingsString(SDesControl.SDES_CIPHER_SUITES);
     }
-    sdcontrol.setEnabledCiphers(Arrays.asList(ciphers.split(",")));
+    sdesControl.setEnabledCiphers(Arrays.asList(ciphers.split(",")));
     if (remoteDescription == null) {
       EncryptionPacketExtension localEncryption=localDescription.getFirstChildOfType(EncryptionPacketExtension.class);
       if (localEncryption == null) {
         localEncryption=new EncryptionPacketExtension();
         localDescription.addChildExtension(localEncryption);
       }
-      for (      SrtpCryptoAttribute ca : sdcontrol.getInitiatorCryptoAttributes()) {
+      for (      SrtpCryptoAttribute ca : sdesControl.getInitiatorCryptoAttributes()) {
         CryptoPacketExtension crypto=new CryptoPacketExtension(ca);
         localEncryption.addChildExtension(crypto);
       }
@@ -29,7 +23,7 @@
  else {
       EncryptionPacketExtension remoteEncryption=remoteDescription.getFirstChildOfType(EncryptionPacketExtension.class);
       if (remoteEncryption != null) {
-        SrtpCryptoAttribute selectedSdes=selectSdesCryptoSuite(false,sdcontrol,remoteEncryption);
+        SrtpCryptoAttribute selectedSdes=selectSdesCryptoSuite(false,sdesControl,remoteEncryption);
         if (selectedSdes != null) {
           EncryptionPacketExtension localEncryption=localDescription.getFirstChildOfType(EncryptionPacketExtension.class);
           if (localEncryption == null) {
@@ -41,14 +35,14 @@
           return true;
         }
  else {
-          sdcontrol.cleanup();
-          srtpControls.remove(key);
+          sdesControl.cleanup();
+          srtpControls.remove(mediaType,SrtpControlType.SDES);
           logger.warn("Received unsupported sdes crypto attribute");
         }
       }
  else {
-        sdcontrol.cleanup();
-        srtpControls.remove(key);
+        sdesControl.cleanup();
+        srtpControls.remove(mediaType,SrtpControlType.SDES);
       }
     }
   }

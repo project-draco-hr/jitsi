@@ -1,0 +1,22 @@
+{
+  MediaAwareCallPeer<?,?,?> peer=getPeer();
+  AccountID accountID=peer.getProtocolProvider().getAccountID();
+  boolean b=false;
+  if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled(ZrtpControl.PROTO_NAME) && peer.getCall().isSipZrtpAttribute()) {
+    ZrtpControl zrtpControl=(ZrtpControl)getSrtpControls().getOrCreate(mediaType,SrtpControlType.ZRTP);
+    int numberSupportedVersions=zrtpControl.getNumberSupportedVersions();
+    try {
+      for (int i=0; i < numberSupportedVersions; i++) {
+        String helloHash=zrtpControl.getHelloHash(i);
+        if ((helloHash != null) && helloHash.length() > 0) {
+          localMd.setAttribute(SdpUtils.ZRTP_HASH_ATTR,helloHash);
+          b=true;
+        }
+      }
+    }
+ catch (    SdpException ex) {
+      logger.error("Cannot add zrtp-hash to sdp",ex);
+    }
+  }
+  return b;
+}

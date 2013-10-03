@@ -40,25 +40,17 @@
     if (mediaType.equals(MediaType.VIDEO)) {
       supportQualityControls=SdpUtils.containsAttribute(mediaDescription,"imageattr");
     }
-    Map<MediaTypeSrtpControl,SrtpControl> srtpControls=getSrtpControls();
-    MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.SDES);
-    SrtpControl scontrol=srtpControls.get(key);
-    if (scontrol != null) {
-      if (selectSdesCryptoSuite(true,(SDesControl)scontrol,mediaDescription) == null) {
-        scontrol.cleanup();
-        srtpControls.remove(key);
+    updateSrtpControlsForDtls(mediaType,null,mediaDescription);
+    SrtpControls srtpControls=getSrtpControls();
+    SDesControl sdesControl=(SDesControl)srtpControls.get(mediaType,SrtpControlType.SDES);
+    if (sdesControl != null) {
+      if (selectSdesCryptoSuite(true,sdesControl,mediaDescription) == null) {
+        sdesControl.cleanup();
+        srtpControls.remove(mediaType,SrtpControlType.SDES);
         logger.warn("Received unsupported sdes crypto attribute.");
       }
  else {
-        Iterator<Map.Entry<MediaTypeSrtpControl,SrtpControl>> iter=srtpControls.entrySet().iterator();
-        while (iter.hasNext()) {
-          Map.Entry<MediaTypeSrtpControl,SrtpControl> entry=iter.next();
-          MediaTypeSrtpControl mtsc=entry.getKey();
-          if ((mtsc.mediaType == mediaType) && (mtsc.srtpControlType != SrtpControlType.SDES)) {
-            entry.getValue().cleanup();
-            iter.remove();
-          }
-        }
+        removeAndCleanupOtherSrtpControls(mediaType,SrtpControlType.SDES);
         addAdvertisedEncryptionMethod(SrtpControlType.SDES);
       }
     }

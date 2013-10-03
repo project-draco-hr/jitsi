@@ -2,44 +2,22 @@
   EncryptionPacketExtension encryptionPacketExtension=description.getFirstChildOfType(EncryptionPacketExtension.class);
   if (encryptionPacketExtension != null) {
     AccountID accountID=getPeer().getProtocolProvider().getAccountID();
-    if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled("SDES")) {
-      Map<MediaTypeSrtpControl,SrtpControl> srtpControls=getSrtpControls();
-      MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.SDES);
-      SrtpControl control=srtpControls.get(key);
-      if (control == null) {
-        control=JabberActivator.getMediaService().createSDesControl();
-        srtpControls.put(key,control);
-      }
-      SDesControl tmpSDesControl=(SDesControl)control;
-      SrtpCryptoAttribute selectedSdes=selectSdesCryptoSuite(isInitiator,tmpSDesControl,encryptionPacketExtension);
+    if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled(SDesControl.PROTO_NAME)) {
+      SrtpControls srtpControls=getSrtpControls();
+      SDesControl sdesControl=(SDesControl)srtpControls.getOrCreate(mediaType,SrtpControlType.SDES);
+      SrtpCryptoAttribute selectedSdes=selectSdesCryptoSuite(isInitiator,sdesControl,encryptionPacketExtension);
       if (selectedSdes != null) {
-        Iterator<Map.Entry<MediaTypeSrtpControl,SrtpControl>> iter=srtpControls.entrySet().iterator();
-        while (iter.hasNext()) {
-          Map.Entry<MediaTypeSrtpControl,SrtpControl> entry=iter.next();
-          MediaTypeSrtpControl mtsc=entry.getKey();
-          if ((mtsc.mediaType == mediaType) && (mtsc.srtpControlType != SrtpControlType.SDES)) {
-            entry.getValue().cleanup();
-            iter.remove();
-          }
-        }
+        removeAndCleanupOtherSrtpControls(mediaType,SrtpControlType.SDES);
         addAdvertisedEncryptionMethod(SrtpControlType.SDES);
       }
  else {
-        control.cleanup();
-        srtpControls.remove(key);
+        sdesControl.cleanup();
+        srtpControls.remove(mediaType,SrtpControlType.SDES);
       }
     }
   }
  else   if (isInitiator) {
-    AccountID accountID=getPeer().getProtocolProvider().getAccountID();
-    if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled("SDES")) {
-      Map<MediaTypeSrtpControl,SrtpControl> srtpControls=getSrtpControls();
-      MediaTypeSrtpControl key=new MediaTypeSrtpControl(mediaType,SrtpControlType.SDES);
-      SrtpControl control=srtpControls.get(key);
-      if (control != null) {
-        control.cleanup();
-        srtpControls.remove(key);
-      }
-    }
+    SrtpControl scontrol=getSrtpControls().remove(mediaType,SrtpControlType.SDES);
+    if (scontrol != null)     scontrol.cleanup();
   }
 }
