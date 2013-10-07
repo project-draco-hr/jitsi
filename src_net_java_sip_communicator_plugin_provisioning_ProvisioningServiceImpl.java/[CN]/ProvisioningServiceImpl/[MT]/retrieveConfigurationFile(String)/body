@@ -183,19 +183,24 @@
       provPassword=userPass[1];
     }
     InputStream in=res.getContent();
-    final ProgressMonitorInputStream pin=new ProgressMonitorInputStream(null,u.toString(),in);
-    ProgressMonitor pm=pin.getProgressMonitor();
-    pm.setMaximum((int)res.getContentLength());
+    InputStream usedStream=in;
+    if (!OSUtils.IS_ANDROID) {
+      final ProgressMonitorInputStream pin;
+      pin=new ProgressMonitorInputStream(null,u.toString(),in);
+      ProgressMonitor pm=pin.getProgressMonitor();
+      pm.setMaximum((int)res.getContentLength());
+      usedStream=pin;
+    }
     final BufferedOutputStream bout=new BufferedOutputStream(new FileOutputStream(temp));
     ByteArrayOutputStream logStream=new ByteArrayOutputStream();
     try {
       int read=-1;
       byte[] buff=new byte[1024];
-      while ((read=pin.read(buff)) != -1) {
+      while ((read=usedStream.read(buff)) != -1) {
         bout.write(buff,0,read);
         logStream.write(buff,0,read);
       }
-      pin.close();
+      usedStream.close();
       bout.flush();
       bout.close();
       return temp;
@@ -203,7 +208,7 @@
  catch (    Exception e) {
       logger.error("Error saving",e);
       try {
-        pin.close();
+        usedStream.close();
         bout.close();
       }
  catch (      Exception e1) {
