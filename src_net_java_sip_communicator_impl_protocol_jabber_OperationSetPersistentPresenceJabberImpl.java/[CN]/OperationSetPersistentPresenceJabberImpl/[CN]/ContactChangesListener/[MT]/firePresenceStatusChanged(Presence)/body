@@ -49,15 +49,18 @@
       return;
     }
     sourceContact.setStatusMessage(currentPresence.getStatus());
-    updateResources(sourceContact,true);
+    boolean oldMobileIndicator=sourceContact.isMobile();
+    boolean resourceUpdated=updateResources(sourceContact,true);
     mobileIndicator.resourcesUpdated(sourceContact);
     PresenceStatus oldStatus=sourceContact.getPresenceStatus();
     PresenceStatus newStatus=jabberStatusToPresenceStatus(currentPresence,parentProvider);
-    if (oldStatus.equals(newStatus))     return;
+    if (oldStatus.equals(newStatus) && oldMobileIndicator == sourceContact.isMobile()) {
+      return;
+    }
     sourceContact.updatePresenceStatus(newStatus);
     ContactGroup parent=ssContactList.findContactGroup(sourceContact);
     if (logger.isDebugEnabled())     logger.debug("Will Dispatch the contact status event.");
-    fireContactPresenceStatusChangeEvent(sourceContact,parent,oldStatus,newStatus);
+    fireContactPresenceStatusChangeEvent(sourceContact,parent,oldStatus,newStatus,resourceUpdated);
   }
  catch (  IllegalStateException ex) {
     logger.error("Failed changing status",ex);

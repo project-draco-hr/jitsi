@@ -1,5 +1,6 @@
 {
-  if (!contact.isResolved() || (contact instanceof VolatileContactJabberImpl && ((VolatileContactJabberImpl)contact).isPrivateMessagingContact()))   return;
+  if (!contact.isResolved() || (contact instanceof VolatileContactJabberImpl && ((VolatileContactJabberImpl)contact).isPrivateMessagingContact()))   return false;
+  boolean eventFired=false;
   Map<String,ContactResourceJabberImpl> resources=contact.getResourcesMap();
   Iterator<Presence> it=parentProvider.getConnection().getRoster().getPresences(contact.getAddress());
   while (it.hasNext()) {
@@ -13,19 +14,26 @@
         contactResource=new ContactResourceJabberImpl(fullJid,contact,resource,newPresenceStatus,presence.getPriority(),mobileIndicator.isMobileResource(resource,fullJid));
         resources.put(fullJid,contactResource);
         contact.fireContactResourceEvent(new ContactResourceEvent(contact,contactResource,ContactResourceEvent.RESOURCE_ADDED));
+        eventFired=true;
       }
  else {
         boolean oldIndicator=contactResource.isMobile();
         boolean newIndicator=mobileIndicator.isMobileResource(resource,fullJid);
+        int oldPriority=contactResource.getPriority();
         contactResource.setMobile(newIndicator);
-        if (contactResource.getPresenceStatus().getStatus() != newPresenceStatus.getStatus() || (oldIndicator != newIndicator)) {
+        contactResource.setPriority(presence.getPriority());
+        if (oldPriority != contactResource.getPriority()) {
+          mobileIndicator.resourcesUpdated(contact);
+        }
+        if (contactResource.getPresenceStatus().getStatus() != newPresenceStatus.getStatus() || (oldIndicator != newIndicator) || (oldPriority != contactResource.getPriority())) {
           contactResource.setPresenceStatus(newPresenceStatus);
           contact.fireContactResourceEvent(new ContactResourceEvent(contact,contactResource,ContactResourceEvent.RESOURCE_MODIFIED));
+          eventFired=true;
         }
       }
     }
   }
-  if (!removeUnavailable)   return;
+  if (!removeUnavailable)   return eventFired;
   Iterator<String> resourceIter=resources.keySet().iterator();
   while (resourceIter.hasNext()) {
     String fullJid=resourceIter.next();
@@ -34,7 +42,9 @@
       if (resources.containsKey(fullJid)) {
         resources.remove(fullJid);
         contact.fireContactResourceEvent(new ContactResourceEvent(contact,removedResource,ContactResourceEvent.RESOURCE_REMOVED));
+        eventFired=true;
       }
     }
   }
+  return eventFired;
 }
