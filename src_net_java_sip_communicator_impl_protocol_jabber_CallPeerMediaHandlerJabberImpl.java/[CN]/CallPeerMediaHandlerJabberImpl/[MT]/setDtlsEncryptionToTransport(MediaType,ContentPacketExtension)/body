@@ -1,0 +1,20 @@
+{
+  SrtpControls srtpControls=getSrtpControls();
+  DtlsControl dtlsControl=(DtlsControl)srtpControls.get(mediaType,SrtpControlType.DTLS_SRTP);
+  if (dtlsControl != null) {
+    IceUdpTransportPacketExtension localTransport=localContent.getFirstChildOfType(IceUdpTransportPacketExtension.class);
+    if (localTransport != null) {
+      String localFingerprint=dtlsControl.getLocalFingerprint();
+      String localFingerprintHashFunction=dtlsControl.getLocalFingerprintHashFunction();
+{
+        DtlsFingerprintPacketExtension localFingerprintPE=localTransport.getFirstChildOfType(DtlsFingerprintPacketExtension.class);
+        if (localFingerprintPE == null) {
+          localFingerprintPE=new DtlsFingerprintPacketExtension();
+          localTransport.addChildExtension(localFingerprintPE);
+        }
+        localFingerprintPE.setFingerprint(localFingerprint);
+        localFingerprintPE.setHash(localFingerprintHashFunction);
+      }
+    }
+  }
+}
