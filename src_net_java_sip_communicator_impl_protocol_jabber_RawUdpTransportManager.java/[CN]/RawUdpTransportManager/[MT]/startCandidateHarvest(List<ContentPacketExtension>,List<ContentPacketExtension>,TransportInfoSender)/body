@@ -3,18 +3,18 @@
   CallJabberImpl call=peer.getCall();
   List<ContentPacketExtension> cpes=(theirOffer == null) ? ourAnswer : theirOffer;
   if (call.getConference().isJitsiVideoBridge()) {
-    List<RtpDescriptionPacketExtension> descriptions=new ArrayList<RtpDescriptionPacketExtension>();
+    List<RtpDescriptionPacketExtension> rdpes=new ArrayList<RtpDescriptionPacketExtension>();
     for (    ContentPacketExtension cpe : cpes) {
-      RtpDescriptionPacketExtension rtpDesc=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
-      MediaType mediaType=MediaType.parseString(rtpDesc.getMedia());
+      RtpDescriptionPacketExtension rdpe=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+      MediaType mediaType=MediaType.parseString(rdpe.getMedia());
       if ((colibri == null) || (colibri.getContent(mediaType.toString()) == null)) {
-        if (!descriptions.contains(rtpDesc))         descriptions.add(rtpDesc);
+        if (!rdpes.contains(rdpe))         rdpes.add(rdpe);
       }
     }
-    if (!descriptions.isEmpty()) {
+    if (!rdpes.isEmpty()) {
       if (colibri == null)       colibri=new ColibriConferenceIQ();
-      for (      RtpDescriptionPacketExtension description : descriptions)       colibri.getOrCreateContent(description.getMedia());
-      ColibriConferenceIQ conferenceResult=call.createColibriChannels(peer,descriptions);
+      for (      RtpDescriptionPacketExtension rdpe : rdpes)       colibri.getOrCreateContent(rdpe.getMedia());
+      ColibriConferenceIQ conferenceResult=call.createColibriChannels(peer,rdpes);
       if (conferenceResult != null) {
         String videoBridgeID=colibri.getID();
         String conferenceResultID=conferenceResult.getID();
@@ -23,7 +23,9 @@
         for (        ColibriConferenceIQ.Content contentResult : conferenceResult.getContents()) {
           ColibriConferenceIQ.Content content=colibri.getOrCreateContent(contentResult.getName());
           for (          ColibriConferenceIQ.Channel channelResult : contentResult.getChannels()) {
-            if (content.getChannel(channelResult.getID()) == null)             content.addChannel(channelResult);
+            if (content.getChannel(channelResult.getID()) == null) {
+              content.addChannel(channelResult);
+            }
           }
         }
       }

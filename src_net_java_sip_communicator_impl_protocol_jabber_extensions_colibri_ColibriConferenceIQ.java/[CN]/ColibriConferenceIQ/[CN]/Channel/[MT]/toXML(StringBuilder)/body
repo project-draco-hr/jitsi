@@ -21,14 +21,16 @@
     xml.append(' ').append(EXPIRE_ATTR_NAME).append("='").append(expire).append('\'');
   }
   MediaDirection direction=getDirection();
-  if (direction != null && direction != MediaDirection.SENDRECV) {
+  if ((direction != null) && (direction != MediaDirection.SENDRECV)) {
     xml.append(' ').append(DIRECTION_ATTR_NAME).append("='").append(direction.toString()).append('\'');
   }
   List<PayloadTypePacketExtension> payloadTypes=getPayloadTypes();
   boolean hasPayloadTypes=(payloadTypes.size() != 0);
   long[] ssrcs=getSSRCs();
   boolean hasSSRCs=(ssrcs.length != 0);
-  if (hasPayloadTypes || hasSSRCs) {
+  IceUdpTransportPacketExtension transport=getTransport();
+  boolean hasTransport=(transport != null);
+  if (hasPayloadTypes || hasSSRCs || hasTransport) {
     xml.append('>');
     if (hasPayloadTypes) {
       for (      PayloadTypePacketExtension payloadType : payloadTypes)       xml.append(payloadType.toXML());
@@ -38,6 +40,7 @@
         xml.append('<').append(SSRC_ELEMENT_NAME).append('>').append(ssrc).append("</").append(SSRC_ELEMENT_NAME).append('>');
       }
     }
+    if (hasTransport)     xml.append(transport.toXML());
     xml.append("</").append(ELEMENT_NAME).append('>');
   }
  else {

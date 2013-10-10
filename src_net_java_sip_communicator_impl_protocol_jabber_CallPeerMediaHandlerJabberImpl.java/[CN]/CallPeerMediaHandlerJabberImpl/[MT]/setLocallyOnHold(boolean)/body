@@ -1,15 +1,18 @@
 {
-  if (!getPeer().isJitsiVideoBridge()) {
-    super.setLocallyOnHold(locallyOnHold);
+  CallPeerJabberImpl peer=getPeer();
+  if (peer.isJitsiVideoBridge()) {
+    this.locallyOnHold=locallyOnHold;
+    if (locallyOnHold || !CallPeerState.ON_HOLD_MUTUALLY.equals(peer.getState())) {
+      for (      MediaType mediaType : MediaType.values()) {
+        ColibriConferenceIQ.Channel channel=getColibriChannel(mediaType);
+        if (channel != null) {
+          MediaDirection direction=locallyOnHold ? MediaDirection.INACTIVE : MediaDirection.SENDRECV;
+          peer.getCall().setChannelDirection(channel.getID(),mediaType,direction);
+        }
+      }
+    }
   }
  else {
-    this.locallyOnHold=locallyOnHold;
-    if (!locallyOnHold && CallPeerState.ON_HOLD_MUTUALLY.equals(getPeer().getState()))     return;
-    for (    MediaType mediaType : MediaType.values()) {
-      ColibriConferenceIQ.Channel channel=getColibriChannel(mediaType);
-      if (channel == null)       continue;
-      MediaDirection direction=locallyOnHold ? MediaDirection.INACTIVE : MediaDirection.SENDRECV;
-      getPeer().getCall().setChannelDirection(channel.getID(),mediaType,direction);
-    }
+    super.setLocallyOnHold(locallyOnHold);
   }
 }
