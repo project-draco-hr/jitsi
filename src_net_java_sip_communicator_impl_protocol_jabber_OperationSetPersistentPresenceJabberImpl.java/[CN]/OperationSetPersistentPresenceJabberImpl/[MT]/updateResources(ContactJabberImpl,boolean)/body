@@ -2,6 +2,18 @@
   if (!contact.isResolved() || (contact instanceof VolatileContactJabberImpl && ((VolatileContactJabberImpl)contact).isPrivateMessagingContact()))   return false;
   boolean eventFired=false;
   Map<String,ContactResourceJabberImpl> resources=contact.getResourcesMap();
+  if (!parentProvider.getConnection().isConnected()) {
+    if (removeUnavailable) {
+      Iterator<Map.Entry<String,ContactResourceJabberImpl>> iter=resources.entrySet().iterator();
+      while (iter.hasNext()) {
+        Map.Entry<String,ContactResourceJabberImpl> entry=iter.next();
+        iter.remove();
+        contact.fireContactResourceEvent(new ContactResourceEvent(contact,entry.getValue(),ContactResourceEvent.RESOURCE_REMOVED));
+        eventFired=true;
+      }
+    }
+    return eventFired;
+  }
   Iterator<Presence> it=parentProvider.getConnection().getRoster().getPresences(contact.getAddress());
   while (it.hasNext()) {
     Presence presence=it.next();
