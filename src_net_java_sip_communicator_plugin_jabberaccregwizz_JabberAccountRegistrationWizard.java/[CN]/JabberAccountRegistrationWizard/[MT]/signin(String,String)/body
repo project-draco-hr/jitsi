@@ -1,10 +1,43 @@
 {
-  AccountPanel accPanel=(AccountPanel)firstWizardPage.getSimpleForm();
-  accPanel.setUsername(userName);
-  accPanel.setPassword(password);
-  accPanel.setRememberPassword(password != null);
+  final AccountPanel accPanel=(AccountPanel)firstWizardPage.getSimpleForm();
+  String accPanelUsername=accPanel.getUsername();
+  boolean equals=false;
+  final boolean rememberPassword=(password != null);
+  if (StringUtils.isEquals(accPanelUsername,userName)) {
+    char[] accPanelPasswordChars=accPanel.getPassword();
+    char[] passwordChars=(password == null) ? null : password.toCharArray();
+    if (accPanelPasswordChars == null)     equals=((passwordChars == null) || passwordChars.length == 0);
+ else     if (passwordChars == null)     equals=(accPanelPasswordChars.length == 0);
+ else     equals=Arrays.equals(accPanelPasswordChars,passwordChars);
+    if (equals) {
+      boolean accPanelRememberPassword=accPanel.isRememberPassword();
+      equals=(accPanelRememberPassword == rememberPassword);
+    }
+  }
+  if (!equals) {
+    try {
+      SwingUtilities.invokeAndWait(new Runnable(){
+        public void run(){
+          accPanel.setUsername(userName);
+          accPanel.setPassword(password);
+          accPanel.setRememberPassword(rememberPassword);
+        }
+      }
+);
+    }
+ catch (    Exception e) {
+      if (e instanceof OperationFailedException) {
+        throw (OperationFailedException)e;
+      }
+ else {
+        throw new OperationFailedException("Failed to set username and password on " + accPanel.getClass().getName(),OperationFailedException.INTERNAL_ERROR,e);
+      }
+    }
+  }
   if (!firstWizardPage.isCommitted())   firstWizardPage.commitPage();
-  if (!firstWizardPage.isCommitted())   throw new OperationFailedException("Could not confirm data.",OperationFailedException.GENERAL_ERROR);
+  if (!firstWizardPage.isCommitted()) {
+    throw new OperationFailedException("Could not confirm data.",OperationFailedException.GENERAL_ERROR);
+  }
   ProtocolProviderFactory factory=JabberAccRegWizzActivator.getJabberProtocolProviderFactory();
-  return this.installAccount(factory,registration.getUserID(),password);
+  return installAccount(factory,registration.getUserID(),password);
 }
