@@ -3,9 +3,10 @@
   MediaDirection direction=dev.getDirection();
   CallPeerJabberImpl peer=getPeer();
   if (!(MediaType.VIDEO.equals(mediaType) && isRTPTranslationEnabled(mediaType)))   direction=direction.and(getDirectionUserPreference(mediaType));
-  if (peer.getCall().isConferenceFocus()) {
-    for (    CallPeerJabberImpl anotherPeer : peer.getCall().getCallPeerList()) {
-      if (anotherPeer != peer && anotherPeer.getDirection(mediaType).allowsReceiving()) {
+  CallJabberImpl call=peer.getCall();
+  if (call.isConferenceFocus()) {
+    for (    CallPeerJabberImpl anotherPeer : call.getCallPeerList()) {
+      if ((anotherPeer != peer) && anotherPeer.getDirection(mediaType).allowsReceiving()) {
         direction=direction.or(MediaDirection.SENDONLY);
         break;
       }
@@ -22,8 +23,10 @@
     ContentPacketExtension content=createContentForOffer(getLocallySupportedFormats(dev,sendQualityPreset,receiveQualityPreset),direction,dev.getSupportedExtensions());
     RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(content);
     setDtlsEncryptionToContent(mediaType,content,null);
-    setSDesEncryptionToDescription(mediaType,description,null);
-    setZrtpEncryptionToDescription(mediaType,description,null);
+    if (!call.getConference().isJitsiVideoBridge()) {
+      setSDesEncryptionToDescription(mediaType,description,null);
+      setZrtpEncryptionToDescription(mediaType,description,null);
+    }
     return content;
   }
   return null;

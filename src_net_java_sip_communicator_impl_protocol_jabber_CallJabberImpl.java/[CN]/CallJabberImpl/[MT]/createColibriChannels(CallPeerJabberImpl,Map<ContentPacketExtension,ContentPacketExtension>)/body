@@ -9,14 +9,18 @@
   ProtocolProviderServiceJabberImpl protocolProvider=getProtocolProvider();
   String jitsiVideoBridge=(colibri == null) ? protocolProvider.getJitsiVideoBridge() : colibri.getFrom();
   if ((jitsiVideoBridge == null) || (jitsiVideoBridge.length() == 0)) {
-    if (logger.isInfoEnabled()) {
-      logger.info("Failed to allocate colibri channels: no videobridge" + " found.");
-    }
+    logger.error("Failed to allocate colibri channels: no videobridge" + " found.");
     return null;
   }
+  if (colibriMediaHandler == null)   colibriMediaHandler=new MediaHandler();
+  peerMediaHandler.setMediaHandler(colibriMediaHandler);
   ColibriConferenceIQ conferenceRequest=new ColibriConferenceIQ();
   if (colibri != null)   conferenceRequest.setID(colibri.getID());
-  for (  RtpDescriptionPacketExtension rdpe : rdpes) {
+  for (  Map.Entry<ContentPacketExtension,ContentPacketExtension> e : contentMap.entrySet()) {
+    ContentPacketExtension localContent=e.getKey();
+    ContentPacketExtension remoteContent=e.getValue();
+    ContentPacketExtension cpe=(remoteContent == null) ? localContent : remoteContent;
+    RtpDescriptionPacketExtension rdpe=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
     MediaType mediaType=MediaType.parseString(rdpe.getMedia());
     String contentName=mediaType.toString();
     ColibriConferenceIQ.Content contentRequest=new ColibriConferenceIQ.Content(contentName);
@@ -29,10 +33,12 @@
     if (requestLocalChannel) {
       ColibriConferenceIQ.Channel localChannelRequest=new ColibriConferenceIQ.Channel();
       for (      PayloadTypePacketExtension ptpe : rdpe.getPayloadTypes())       localChannelRequest.addPayloadType(ptpe);
+      setDtlsEncryptionToChannel(jitsiVideoBridge,peer,mediaType,localChannelRequest);
       contentRequest.addChannel(localChannelRequest);
     }
     ColibriConferenceIQ.Channel remoteChannelRequest=new ColibriConferenceIQ.Channel();
     for (    PayloadTypePacketExtension ptpe : rdpe.getPayloadTypes())     remoteChannelRequest.addPayloadType(ptpe);
+    setDtlsEncryptionToChannel(mediaType,localContent,remoteContent,remoteChannelRequest);
     contentRequest.addChannel(remoteChannelRequest);
   }
   XMPPConnection connection=protocolProvider.getConnection();
@@ -43,40 +49,47 @@
   Packet response=packetCollector.nextResult(SmackConfiguration.getPacketReplyTimeout());
   packetCollector.cancel();
   if (response == null) {
-    if (logger.isInfoEnabled()) {
-      logger.info("Failed to allocate colibri channels: response is null." + " Maybe the response timeouted.");
-    }
+    logger.error("Failed to allocate colibri channels: response is null." + " Maybe the response timed out.");
     return null;
   }
  else   if (response.getError() != null) {
-    if (logger.isInfoEnabled()) {
-      logger.info("Failed to allocate colibri channels: " + response.getError());
-    }
+    logger.error("Failed to allocate colibri channels: " + response.getError());
     return null;
   }
  else   if (!(response instanceof ColibriConferenceIQ)) {
-    if (logger.isInfoEnabled()) {
-      logger.info("Failed to allocate colibri channels: response is not a" + " colibri conference");
-    }
+    logger.error("Failed to allocate colibri channels: response is not a" + " colibri conference");
     return null;
   }
   ColibriConferenceIQ conferenceResponse=(ColibriConferenceIQ)response;
   String conferenceResponseID=conferenceResponse.getID();
-  if (colibri == null) {
-    colibri=conferenceResponse;
-  }
- else {
+{
+    if (colibri == null) {
+      colibri=new ColibriConferenceIQ();
+      colibri.setFrom(conferenceResponse.getFrom());
+    }
     String colibriID=colibri.getID();
     if (colibriID == null)     colibri.setID(conferenceResponseID);
  else     if (!colibriID.equals(conferenceResponseID))     throw new IllegalStateException("conference.id");
     for (    ColibriConferenceIQ.Content contentResponse : conferenceResponse.getContents()) {
-      ColibriConferenceIQ.Content content=colibri.getOrCreateContent(contentResponse.getName());
-      for (      ColibriConferenceIQ.Channel channelResponse : contentResponse.getChannels())       content.addChannel(channelResponse);
+      String contentName=contentResponse.getName();
+      ColibriConferenceIQ.Content content=colibri.getOrCreateContent(contentName);
+      for (      ColibriConferenceIQ.Channel channelResponse : contentResponse.getChannels()) {
+        int channelIndex=content.getChannelCount();
+        content.addChannel(channelResponse);
+        if (channelIndex == 0) {
+          MediaType mediaType=MediaType.parseString(contentName);
+          addDtlsAdvertisedEncryptions(peer,channelResponse,mediaType);
+        }
+      }
     }
   }
   ColibriConferenceIQ conferenceResult=new ColibriConferenceIQ();
   conferenceResult.setID(conferenceResponseID);
-  for (  RtpDescriptionPacketExtension rdpe : rdpes) {
+  for (  Map.Entry<ContentPacketExtension,ContentPacketExtension> e : contentMap.entrySet()) {
+    ContentPacketExtension localContent=e.getKey();
+    ContentPacketExtension remoteContent=e.getValue();
+    ContentPacketExtension cpe=(remoteContent == null) ? localContent : remoteContent;
+    RtpDescriptionPacketExtension rdpe=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
     MediaType mediaType=MediaType.parseString(rdpe.getMedia());
     ColibriConferenceIQ.Content contentResponse=conferenceResponse.getContent(mediaType.toString());
     if (contentResponse != null) {
@@ -95,7 +108,5 @@
       }
     }
   }
-  if (colibriMediaHandler == null)   colibriMediaHandler=new MediaHandler();
-  peerMediaHandler.setMediaHandler(colibriMediaHandler);
   return conferenceResult;
 }

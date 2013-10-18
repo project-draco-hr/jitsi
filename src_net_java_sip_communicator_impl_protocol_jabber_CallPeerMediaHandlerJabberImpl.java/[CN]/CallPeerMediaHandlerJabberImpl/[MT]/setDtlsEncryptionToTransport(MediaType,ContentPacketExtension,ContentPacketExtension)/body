@@ -1,0 +1,58 @@
+{
+  IceUdpTransportPacketExtension localTransport=localContent.getFirstChildOfType(IceUdpTransportPacketExtension.class);
+  boolean b=false;
+  if (localTransport == null)   return b;
+  CallPeerJabberImpl peer=getPeer();
+  if (peer.isJitsiVideoBridge()) {
+    ProtocolProviderServiceJabberImpl protocolProvider=peer.getProtocolProvider();
+    AccountID accountID=protocolProvider.getAccountID();
+    if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled(DtlsControl.PROTO_NAME)) {
+      ColibriConferenceIQ.Channel channel=getColibriChannel(mediaType);
+      List<DtlsFingerprintPacketExtension> localFingerprints=null;
+      if (channel != null) {
+        IceUdpTransportPacketExtension transport=channel.getTransport();
+        if (transport != null) {
+          localFingerprints=transport.getChildExtensionsOfType(DtlsFingerprintPacketExtension.class);
+        }
+      }
+      if ((localFingerprints != null) && !localFingerprints.isEmpty()) {
+        if (remoteContent == null) {
+          if (!protocolProvider.isFeatureSupported(peer.getAddress(),ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_DTLS_SRTP)) {
+            localFingerprints=null;
+          }
+        }
+ else {
+          IceUdpTransportPacketExtension transport=remoteContent.getFirstChildOfType(IceUdpTransportPacketExtension.class);
+          if (transport == null) {
+            localFingerprints=null;
+          }
+ else {
+            List<DtlsFingerprintPacketExtension> remoteFingerprints=transport.getChildExtensionsOfType(DtlsFingerprintPacketExtension.class);
+            if (remoteFingerprints.isEmpty())             localFingerprints=null;
+          }
+        }
+        if (localFingerprints != null) {
+          List<DtlsFingerprintPacketExtension> fingerprintPEs=localTransport.getChildExtensionsOfType(DtlsFingerprintPacketExtension.class);
+          if (fingerprintPEs.isEmpty()) {
+            for (            DtlsFingerprintPacketExtension localFingerprint : localFingerprints) {
+              DtlsFingerprintPacketExtension fingerprintPE=new DtlsFingerprintPacketExtension();
+              fingerprintPE.setFingerprint(localFingerprint.getFingerprint());
+              fingerprintPE.setHash(localFingerprint.getHash());
+              localTransport.addChildExtension(fingerprintPE);
+            }
+          }
+          b=true;
+        }
+      }
+    }
+  }
+ else {
+    SrtpControls srtpControls=getSrtpControls();
+    DtlsControl dtlsControl=(DtlsControl)srtpControls.get(mediaType,SrtpControlType.DTLS_SRTP);
+    if (dtlsControl != null) {
+      CallJabberImpl.setDtlsEncryptionToTransport(dtlsControl,localTransport);
+      b=true;
+    }
+  }
+  return b;
+}

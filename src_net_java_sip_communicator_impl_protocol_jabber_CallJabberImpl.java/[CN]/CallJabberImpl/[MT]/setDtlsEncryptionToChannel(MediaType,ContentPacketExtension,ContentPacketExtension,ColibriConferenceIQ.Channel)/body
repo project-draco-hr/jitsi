@@ -1,0 +1,24 @@
+{
+  AccountID accountID=getProtocolProvider().getAccountID();
+  if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled(DtlsControl.PROTO_NAME) && (remoteContent != null)) {
+    IceUdpTransportPacketExtension remoteTransport=remoteContent.getFirstChildOfType(IceUdpTransportPacketExtension.class);
+    if (remoteTransport != null) {
+      List<DtlsFingerprintPacketExtension> remoteFingerprints=remoteTransport.getChildExtensionsOfType(DtlsFingerprintPacketExtension.class);
+      if (!remoteFingerprints.isEmpty()) {
+        IceUdpTransportPacketExtension localTransport=channel.getTransport();
+        if (localTransport == null) {
+          localTransport=new RawUdpTransportPacketExtension();
+          channel.setTransport(localTransport);
+        }
+        List<DtlsFingerprintPacketExtension> localFingerprints=localTransport.getChildExtensionsOfType(DtlsFingerprintPacketExtension.class);
+        if (localFingerprints.isEmpty()) {
+          for (          DtlsFingerprintPacketExtension remoteFingerprint : remoteFingerprints) {
+            DtlsFingerprintPacketExtension localFingerprint=new DtlsFingerprintPacketExtension();
+            localFingerprint.setFingerprint(remoteFingerprint.getFingerprint());
+            localFingerprint.setHash(remoteFingerprint.getHash());
+          }
+        }
+      }
+    }
+  }
+}

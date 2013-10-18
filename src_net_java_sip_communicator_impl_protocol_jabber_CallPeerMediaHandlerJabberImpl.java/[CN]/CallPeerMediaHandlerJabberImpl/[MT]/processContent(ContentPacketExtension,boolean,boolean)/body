@@ -19,13 +19,16 @@
   if (supportedFormats.isEmpty()) {
     ProtocolProviderServiceJabberImpl.throwOperationFailedException("Remote party sent an invalid Jingle answer.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
   }
-  addZrtpAdvertisedEncryptions(true,description,mediaType);
-  addSDesAdvertisedEncryptions(true,description,mediaType);
+  CallJabberImpl call=getPeer().getCall();
+  CallConference conference=(call == null) ? null : call.getConference();
+  if ((conference == null) || !conference.isJitsiVideoBridge()) {
+    addZrtpAdvertisedEncryptions(true,description,mediaType);
+    addSDesAdvertisedEncryptions(true,description,mediaType);
+  }
   addDtlsAdvertisedEncryptions(true,content,mediaType);
   StreamConnector connector=transportManager.getStreamConnector(mediaType);
   MediaDirection remoteDirection=JingleUtils.getDirection(content,getPeer().isInitiator());
-  CallJabberImpl call=getPeer().getCall();
-  if ((call != null) && call.getConference().isConferenceFocus()) {
+  if ((conference != null) && conference.isConferenceFocus()) {
     for (    CallPeerJabberImpl peer : call.getCallPeerList()) {
       SendersEnum senders=peer.getSenders(mediaType);
       boolean initiator=peer.isInitiator();

@@ -1,5 +1,6 @@
 {
   List<ContentPacketExtension> mediaDescs=new ArrayList<ContentPacketExtension>();
+  boolean jitsiVideoBridge=getPeer().getCall().getConference().isJitsiVideoBridge();
   for (  MediaType mediaType : MediaType.values()) {
     MediaDevice dev=getDefaultDevice(mediaType);
     if (isDeviceActive(dev)) {
@@ -13,8 +14,10 @@
         ContentPacketExtension content=createContentForOffer(getLocallySupportedFormats(dev),direction,dev.getSupportedExtensions());
         RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(content);
         setDtlsEncryptionToContent(mediaType,content,null);
-        setSDesEncryptionToDescription(mediaType,description,null);
-        setZrtpEncryptionToDescription(mediaType,description,null);
+        if (!jitsiVideoBridge) {
+          setSDesEncryptionToDescription(mediaType,description,null);
+          setZrtpEncryptionToDescription(mediaType,description,null);
+        }
         if (description.getMedia().equals(MediaType.VIDEO.toString()) && getLocalInputEvtAware()) {
           content.addChildExtension(new InputEvtPacketExtension());
         }

@@ -1,8 +1,11 @@
 {
+  CallPeer peer=getPeer();
+  Call call=peer.getCall();
+  if (call.getConference().isJitsiVideoBridge())   return;
   EncryptionPacketExtension encryptionPacketExtension=description.getFirstChildOfType(EncryptionPacketExtension.class);
   if (encryptionPacketExtension != null) {
-    AccountID accountID=getPeer().getProtocolProvider().getAccountID();
-    if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled(ZrtpControl.PROTO_NAME) && getPeer().getCall().isSipZrtpAttribute()) {
+    AccountID accountID=peer.getProtocolProvider().getAccountID();
+    if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled(ZrtpControl.PROTO_NAME) && call.isSipZrtpAttribute()) {
       ZrtpHashPacketExtension zrtpHashPacketExtension=encryptionPacketExtension.getFirstChildOfType(ZrtpHashPacketExtension.class);
       if ((zrtpHashPacketExtension != null) && (zrtpHashPacketExtension.getValue() != null)) {
         addAdvertisedEncryptionMethod(SrtpControlType.ZRTP);

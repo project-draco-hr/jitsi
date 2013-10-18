@@ -1,0 +1,43 @@
+{
+  SrtpControls srtpControls=getSrtpControls();
+  boolean b=false;
+  if (remoteTransport != null) {
+    List<DtlsFingerprintPacketExtension> remoteFingerpintPEs=remoteTransport.getChildExtensionsOfType(DtlsFingerprintPacketExtension.class);
+    if (!remoteFingerpintPEs.isEmpty()) {
+      AccountID accountID=getPeer().getProtocolProvider().getAccountID();
+      if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled(DtlsControl.PROTO_NAME)) {
+        Map<String,String> remoteFingerprints=new LinkedHashMap<String,String>();
+        for (        DtlsFingerprintPacketExtension remoteFingerprintPE : remoteFingerpintPEs) {
+          String remoteFingerprint=remoteFingerprintPE.getFingerprint();
+          String remoteHash=remoteFingerprintPE.getHash();
+          remoteFingerprints.put(remoteHash,remoteFingerprint);
+        }
+        DtlsControl dtlsControl;
+        int dtlsProtocol;
+        if (isInitiator) {
+          dtlsControl=(DtlsControl)srtpControls.get(mediaType,SrtpControlType.DTLS_SRTP);
+          dtlsProtocol=DtlsControl.DTLS_SERVER_PROTOCOL;
+        }
+ else {
+          dtlsControl=(DtlsControl)srtpControls.getOrCreate(mediaType,SrtpControlType.DTLS_SRTP);
+          dtlsProtocol=DtlsControl.DTLS_CLIENT_PROTOCOL;
+        }
+        if (dtlsControl != null) {
+          dtlsControl.setDtlsProtocol(dtlsProtocol);
+          dtlsControl.setRemoteFingerprints(remoteFingerprints);
+          removeAndCleanupOtherSrtpControls(mediaType,SrtpControlType.DTLS_SRTP);
+          addAdvertisedEncryptionMethod(SrtpControlType.DTLS_SRTP);
+          b=true;
+        }
+      }
+    }
+  }
+  if (!b) {
+    SrtpControl dtlsControl=srtpControls.get(mediaType,SrtpControlType.DTLS_SRTP);
+    if (dtlsControl != null) {
+      srtpControls.remove(mediaType,SrtpControlType.DTLS_SRTP);
+      dtlsControl.cleanup();
+    }
+  }
+  return b;
+}

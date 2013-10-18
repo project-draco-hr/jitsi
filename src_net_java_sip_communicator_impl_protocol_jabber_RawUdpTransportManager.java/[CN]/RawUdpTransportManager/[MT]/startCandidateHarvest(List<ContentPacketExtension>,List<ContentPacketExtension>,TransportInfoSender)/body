@@ -3,18 +3,32 @@
   CallJabberImpl call=peer.getCall();
   List<ContentPacketExtension> cpes=(theirOffer == null) ? ourAnswer : theirOffer;
   if (call.getConference().isJitsiVideoBridge()) {
-    List<RtpDescriptionPacketExtension> rdpes=new ArrayList<RtpDescriptionPacketExtension>();
+    Map<ContentPacketExtension,ContentPacketExtension> contentMap=new LinkedHashMap<ContentPacketExtension,ContentPacketExtension>();
     for (    ContentPacketExtension cpe : cpes) {
       RtpDescriptionPacketExtension rdpe=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
       MediaType mediaType=MediaType.parseString(rdpe.getMedia());
       if ((colibri == null) || (colibri.getContent(mediaType.toString()) == null)) {
-        if (!rdpes.contains(rdpe))         rdpes.add(rdpe);
+        ContentPacketExtension local, remote;
+        if (cpes == ourAnswer) {
+          local=cpe;
+          remote=(theirOffer == null) ? null : findContentByName(theirOffer,cpe.getName());
+        }
+ else {
+          local=findContentByName(ourAnswer,cpe.getName());
+          remote=cpe;
+        }
+        contentMap.put(local,remote);
       }
     }
-    if (!rdpes.isEmpty()) {
+    if (!contentMap.isEmpty()) {
       if (colibri == null)       colibri=new ColibriConferenceIQ();
-      for (      RtpDescriptionPacketExtension rdpe : rdpes)       colibri.getOrCreateContent(rdpe.getMedia());
-      ColibriConferenceIQ conferenceResult=call.createColibriChannels(peer,rdpes);
+      for (      Map.Entry<ContentPacketExtension,ContentPacketExtension> e : contentMap.entrySet()) {
+        ContentPacketExtension cpe=e.getValue();
+        if (cpe == null)         cpe=e.getKey();
+        RtpDescriptionPacketExtension rdpe=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+        colibri.getOrCreateContent(rdpe.getMedia());
+      }
+      ColibriConferenceIQ conferenceResult=call.createColibriChannels(peer,contentMap);
       if (conferenceResult != null) {
         String videoBridgeID=colibri.getID();
         String conferenceResultID=conferenceResult.getID();
