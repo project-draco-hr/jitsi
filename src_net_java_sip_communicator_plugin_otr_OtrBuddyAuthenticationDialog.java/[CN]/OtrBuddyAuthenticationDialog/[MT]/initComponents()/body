@@ -7,32 +7,36 @@
   JTextArea generalInformation=new CustomTextArea();
   generalInformation.setText(OtrActivator.resourceService.getI18NString("plugin.otr.authbuddydialog.AUTHENTICATION_INFO"));
   mainPanel.add(generalInformation);
-  txtLocalFingerprint=new CustomTextArea();
-  mainPanel.add(txtLocalFingerprint);
-  txtRemoteFingerprint=new CustomTextArea();
-  mainPanel.add(txtRemoteFingerprint);
-  JPanel pnlAction=new JPanel(new GridBagLayout());
-  pnlAction.setBorder(BorderFactory.createEtchedBorder());
-  mainPanel.add(pnlAction);
+  mainPanel.add(Box.createVerticalStrut(10));
+  final String am[]=new String[]{OtrActivator.resourceService.getI18NString("plugin.otr.authbuddydialog.AUTHENTICATION_METHOD_QUESTION"),OtrActivator.resourceService.getI18NString("plugin.otr.authbuddydialog.AUTHENTICATION_METHOD_SECRET"),OtrActivator.resourceService.getI18NString("plugin.otr.authbuddydialog.AUTHENTICATION_METHOD_FINGERPRINT")};
+  final JComboBox authenticationMethodComboBox=new JComboBox(am);
+  JTextArea authMethodLabel=new CustomTextArea();
+  authMethodLabel.setText(OtrActivator.resourceService.getI18NString("plugin.otr.authbuddydialog.AUTHENTICATION_METHOD"));
+  mainPanel.add(authMethodLabel);
+  mainPanel.add(authenticationMethodComboBox);
+  mainPanel.add(Box.createVerticalStrut(10));
+  final JPanel authenticationPanel=new TransparentPanel(new CardLayout());
+  final FingerprintAuthenticationPanel fingerprintPanel=new FingerprintAuthenticationPanel(contact);
+  final SecretQuestionAuthenticationPanel secretQuestionPanel=new SecretQuestionAuthenticationPanel();
+  final SharedSecretAuthenticationPanel sharedSecretPanel=new SharedSecretAuthenticationPanel();
+  authenticationPanel.add(secretQuestionPanel,am[0]);
+  authenticationPanel.add(sharedSecretPanel,am[1]);
+  authenticationPanel.add(fingerprintPanel,am[2]);
+  authenticationMethodComboBox.addItemListener(new ItemListener(){
+    @Override public void itemStateChanged(    ItemEvent e){
+      if (e.getStateChange() == ItemEvent.SELECTED) {
+        CardLayout cl=(CardLayout)(authenticationPanel.getLayout());
+        cl.show(authenticationPanel,(String)e.getItem());
+      }
+    }
+  }
+);
+  authenticationMethodComboBox.setSelectedIndex(0);
+  mainPanel.add(authenticationPanel);
   GridBagConstraints c=new GridBagConstraints();
-  c.fill=GridBagConstraints.HORIZONTAL;
   c.insets=new Insets(5,5,5,5);
-  c.weightx=0.0;
-  cbAction=new JComboBox();
-  cbAction.addItem(actionIHave);
-  cbAction.addItem(actionIHaveNot);
-  cbAction.setSelectedItem(OtrActivator.scOtrKeyManager.isVerified(contact) ? actionIHave : actionIHaveNot);
-  pnlAction.add(cbAction,c);
-  txtAction=new CustomTextArea();
   c.weightx=1.0;
-  pnlAction.add(txtAction,c);
-  txtRemoteFingerprintComparison=new SIPCommTextField(OtrActivator.resourceService.getI18NString("plugin.otr.authbuddydialog.FINGERPRINT_CHECK",new String[]{contact.getDisplayName()}));
-  txtRemoteFingerprintComparison.getDocument().addDocumentListener(this);
-  c.gridwidth=2;
-  c.gridy=1;
-  pnlAction.add(txtRemoteFingerprintComparison,c);
   c.gridwidth=1;
-  c.gridy=0;
   JPanel buttonPanel=new TransparentPanel(new GridBagLayout());
   buttonPanel.setBorder(BorderFactory.createEmptyBorder(0,5,5,5));
   JButton helpButton=new JButton(OtrActivator.resourceService.getI18NString("plugin.otr.authbuddydialog.HELP"));
@@ -57,16 +61,31 @@
   JButton authenticateButton=new JButton(OtrActivator.resourceService.getI18NString("plugin.otr.authbuddydialog.AUTHENTICATE_BUDDY"));
   authenticateButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
-      ActionComboBoxItem actionItem=(ActionComboBoxItem)cbAction.getSelectedItem();
+      String authenticationMethod=(String)authenticationMethodComboBox.getSelectedItem();
+      if (authenticationMethod.equals(am[0])) {
+        String secret=secretQuestionPanel.getSecret();
+        String question=secretQuestionPanel.getQuestion();
+        OtrActivator.scOtrEngine.initSmp(contact,question,secret);
+        dispose();
+      }
+ else       if (authenticationMethod.equals(am[1])) {
+        String secret=secretQuestionPanel.getSecret();
+        String question=null;
+        OtrActivator.scOtrEngine.initSmp(contact,question,secret);
+        dispose();
+      }
+ else       if (authenticationMethod.equals(am[2])) {
+        ActionComboBoxItem actionItem=(ActionComboBoxItem)fingerprintPanel.getCbAction().getSelectedItem();
 switch (actionItem.action) {
 case I_HAVE:
-        OtrActivator.scOtrKeyManager.verify(contact);
-      break;
+          OtrActivator.scOtrKeyManager.verify(contact);
+        break;
 case I_HAVE_NOT:
-    OtrActivator.scOtrKeyManager.unverify(contact);
-  break;
+      OtrActivator.scOtrKeyManager.unverify(contact);
+    break;
 }
 dispose();
+}
 }
 }
 );
