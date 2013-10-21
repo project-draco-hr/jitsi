@@ -1,5 +1,6 @@
 {
 synchronized (this.locale) {
+    if (this.locale.equals(locale))     return;
     String path=locale.getDictUrl().getFile();
     int filenameStart=path.lastIndexOf('/') + 1;
     String filename=path.substring(filenameStart);
@@ -10,9 +11,11 @@ synchronized (this.attachedChats) {
       SpellDictionary dict=new OpenOfficeSpellDictionary(dictInput,this.personalDictLocation);
       this.dict=dict;
       this.dictLocation=dictLocation;
+      Parameters.Locale oldLocale=this.locale;
       this.locale=locale;
       SpellCheckActivator.getConfigService().setProperty(LOCALE_CONFIG_PARAM,locale.getIsoCode());
       for (      ChatAttachments chat : this.attachedChats)       chat.setDictionary(this.dict);
+      firePropertyChangedEvent(LOCALE_CHANGED_PROP,oldLocale,this.locale);
     }
   }
 }
