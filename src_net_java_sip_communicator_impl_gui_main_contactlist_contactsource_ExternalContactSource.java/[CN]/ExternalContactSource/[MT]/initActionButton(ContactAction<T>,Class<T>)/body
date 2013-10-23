@@ -16,9 +16,17 @@
           Point location=new Point(button.getX(),button.getY() + button.getHeight());
           SwingUtilities.convertPointToScreen(location,contactListTree);
           TreePath selectionPath=contactListTree.getSelectionPath();
-          if (selectionPath != null)           location.y=location.y + contactListTree.getPathBounds(selectionPath).y;
-          if (contactSourceClass.equals(SourceContact.class))           ca.actionPerformed(customActionContact,location.x,location.y);
- else           if (contactSourceClass.equals(ContactSourceService.class))           ca.actionPerformed(contactSource,location.x,location.y);
+          if (selectionPath != null) {
+            location.y+=contactListTree.getPathBounds(selectionPath).y;
+          }
+          if (contactSourceClass.equals(SourceContact.class)) {
+            @SuppressWarnings("unchecked") T t=(T)customActionContact;
+            ca.actionPerformed(t,location.x,location.y);
+          }
+ else           if (contactSourceClass.equals(ContactSourceService.class)) {
+            @SuppressWarnings("unchecked") T t=(T)contactSource;
+            ca.actionPerformed(t,location.x,location.y);
+          }
         }
  catch (        OperationFailedException e) {
           new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),e.getMessage());
@@ -26,7 +34,13 @@
       }
     }
 );
-    if (contactSourceClass.equals(SourceContact.class))     customContactActionButtons.put(ca,actionButton);
- else     if (contactSourceClass.equals(ContactSourceService.class))     customServiceActionButtons.put(ca,actionButton);
+    if (contactSourceClass.equals(SourceContact.class)) {
+      @SuppressWarnings("unchecked") ContactAction<SourceContact> casc=(ContactAction<SourceContact>)ca;
+      customContactActionButtons.put(casc,actionButton);
+    }
+ else     if (contactSourceClass.equals(ContactSourceService.class)) {
+      @SuppressWarnings("unchecked") ContactAction<ContactSourceService> cacss=(ContactAction<ContactSourceService>)ca;
+      customServiceActionButtons.put(cacss,actionButton);
+    }
   }
 }
