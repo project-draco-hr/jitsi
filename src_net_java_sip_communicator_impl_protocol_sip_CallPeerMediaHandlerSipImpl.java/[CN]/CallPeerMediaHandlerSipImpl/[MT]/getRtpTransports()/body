@@ -7,20 +7,22 @@
   }
  else {
     List<String> encryptionProtocols=accountID.getSortedEnabledEncryptionProtocolList();
-    int encryptionProtocolCount=encryptionProtocols.size();
-    for (int i=encryptionProtocolCount - 1; i >= 0; i--) {
-      String encryptionProtocol=encryptionProtocols.get(i);
+    for (int epi=encryptionProtocols.size() - 1; epi >= 0; epi--) {
+      String encryptionProtocol=encryptionProtocols.get(epi);
       String protoName=encryptionProtocol.substring(ProtocolProviderFactory.ENCRYPTION_PROTOCOL.length() + 1);
-      String proto;
+      String[] protos;
       if (DtlsControl.PROTO_NAME.equals(protoName)) {
-        proto=DtlsControl.UDP_TLS_RTP_SAVP;
+        protos=new String[]{DtlsControl.UDP_TLS_RTP_SAVP,SrtpControl.RTP_SAVPF};
       }
  else {
-        proto=SrtpControl.RTP_SAVP;
+        protos=new String[]{SrtpControl.RTP_SAVP};
       }
-      int protoIndex=result.indexOf(proto);
-      if (protoIndex > 0)       result.remove(protoIndex);
-      result.add(0,proto);
+      for (int pi=protos.length - 1; pi >= 0; pi--) {
+        String proto=protos[pi];
+        int ri=result.indexOf(proto);
+        if (ri > 0)         result.remove(ri);
+        result.add(0,proto);
+      }
     }
     if (savpOption == ProtocolProviderFactory.SAVP_OPTIONAL)     result.add(SdpConstants.RTP_AVP);
   }
