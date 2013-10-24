@@ -1,44 +1,6 @@
 {
-  Call sourceCall=ev.getSourceCall();
-  boolean isVideoCall=ev.isVideoCall() && ConfigurationUtils.hasEnabledVideoFormat(sourceCall.getProtocolProvider());
-  final ReceivedCallDialog receivedCallDialog=new ReceivedCallDialog(sourceCall,isVideoCall,(CallManager.getInProgressCalls().size() > 0));
-  receivedCallDialog.setVisible(true);
-  Iterator<? extends CallPeer> peerIter=sourceCall.getCallPeers();
-  if (!peerIter.hasNext()) {
-    if (receivedCallDialog.isVisible())     receivedCallDialog.setVisible(false);
-    return;
+  WeakReference<IncomingCallHandler> ihRef=inCallHandlers.remove(ev);
+  if (ihRef != null) {
+    ihRef.get().incomingCallReceivedInEventDispatchThread(ev);
   }
-  final String peerName=peerIter.next().getDisplayName();
-  final long callTime=System.currentTimeMillis();
-  sourceCall.addCallChangeListener(new CallChangeAdapter(){
-    @Override public void callStateChanged(    final CallChangeEvent ev){
-      if (!SwingUtilities.isEventDispatchThread()) {
-        SwingUtilities.invokeLater(new Runnable(){
-          public void run(){
-            callStateChanged(ev);
-          }
-        }
-);
-        return;
-      }
-      if (!CallChangeEvent.CALL_STATE_CHANGE.equals(ev.getPropertyName()))       return;
-      if (receivedCallDialog.isVisible())       receivedCallDialog.setVisible(false);
-      Object newValue=ev.getNewValue();
-      Call call=ev.getSourceCall();
-      if (CallState.CALL_INITIALIZATION.equals(newValue) || CallState.CALL_IN_PROGRESS.equals(newValue)) {
-        openCallContainerIfNecessary(call);
-      }
- else       if (CallState.CALL_ENDED.equals(newValue)) {
-        if (ev.getOldValue().equals(CallState.CALL_INITIALIZATION)) {
-          CallPeerChangeEvent cause=ev.getCause();
-          if ((cause == null) || (cause.getReasonCode() != CallPeerChangeEvent.NORMAL_CALL_CLEARING)) {
-            addMissedCallNotification(peerName,callTime);
-          }
-        }
-        call.removeCallChangeListener(this);
-      }
-    }
-  }
-);
-  forwardCallEventToCallPanels(ev);
 }
