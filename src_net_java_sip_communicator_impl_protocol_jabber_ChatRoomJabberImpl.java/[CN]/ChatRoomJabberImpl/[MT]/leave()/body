@@ -1,4 +1,26 @@
 {
+  OperationSetBasicTelephonyJabberImpl basicTelephony=(OperationSetBasicTelephonyJabberImpl)provider.getOperationSet(OperationSetBasicTelephony.class);
+  ActiveCallsRepositoryJabberGTalkImpl<CallJabberImpl,CallPeerJabberImpl> activeRepository=basicTelephony.getActiveCallsRepository();
+  if (this.publishedConference != null) {
+    String callid=publishedConference.getCallId();
+    if (callid != null) {
+      CallJabberImpl call=activeRepository.findCallId(callid);
+      for (      CallPeerJabberImpl peer : call.getCallPeerList()) {
+        peer.hangup(false,null,null);
+      }
+    }
+  }
+  List<CallJabberImpl> tmpConferenceCalls;
+synchronized (chatRoomConferenceCalls) {
+    logger.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    tmpConferenceCalls=new ArrayList<CallJabberImpl>(chatRoomConferenceCalls);
+    chatRoomConferenceCalls.clear();
+    logger.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2222222222");
+  }
+  for (  CallJabberImpl call : tmpConferenceCalls) {
+    for (    CallPeerJabberImpl peer : call.getCallPeerList())     peer.hangup(false,null,null);
+  }
+  clearCachedConferenceDescriptionList();
   XMPPConnection connection=this.provider.getConnection();
   try {
     if (connection != null)     multiUserChat.leave();

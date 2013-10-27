@@ -7,9 +7,16 @@
   if ((this.chatSession != null) && this.chatSession.isContactListSupported()) {
     topPanel.remove(conversationPanelContainer);
     TransparentPanel rightPanel=new TransparentPanel(new BorderLayout());
-    Dimension chatContactPanelSize=new Dimension(150,100);
-    rightPanel.setMinimumSize(chatContactPanelSize);
-    rightPanel.setPreferredSize(chatContactPanelSize);
+    Dimension chatConferencesListsPanelSize=new Dimension(150,25);
+    Dimension chatContactsListsPanelSize=new Dimension(150,175);
+    Dimension rightPanelSize=new Dimension(150,200);
+    rightPanel.setMinimumSize(rightPanelSize);
+    rightPanel.setPreferredSize(rightPanelSize);
+    TransparentPanel contactsPanel=new TransparentPanel(new BorderLayout());
+    contactsPanel.setMinimumSize(chatContactsListsPanelSize);
+    contactsPanel.setPreferredSize(chatContactsListsPanelSize);
+    conferencePanel.setMinimumSize(chatConferencesListsPanelSize);
+    conferencePanel.setPreferredSize(chatConferencesListsPanelSize);
     this.chatContactListPanel=new ChatRoomMemberListPanel(this);
     this.chatContactListPanel.setOpaque(false);
     topSplitPane=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -30,8 +37,18 @@
     localUserLabel.setForeground(Color.decode(ChatHtmlUtils.MSG_IN_NAME_FOREGROUND));
     localUserLabelPanel.add(localUserLabel,BorderLayout.CENTER);
     localUserLabelPanel.setBackground(msgNameBackground);
-    rightPanel.add(localUserLabelPanel,BorderLayout.NORTH);
-    rightPanel.add(chatContactListPanel,BorderLayout.CENTER);
+    JButton joinConference=new JButton(GuiActivator.getResources().getI18NString("service.gui.JOIN_VIDEO"));
+    joinConference.addActionListener(new ActionListener(){
+      @Override public void actionPerformed(      ActionEvent arg0){
+        showChatConferenceDialog();
+      }
+    }
+);
+    contactsPanel.add(localUserLabelPanel,BorderLayout.NORTH);
+    contactsPanel.add(chatContactListPanel,BorderLayout.CENTER);
+    conferencePanel.add(joinConference,BorderLayout.CENTER);
+    rightPanel.add(conferencePanel,BorderLayout.NORTH);
+    rightPanel.add(contactsPanel,BorderLayout.CENTER);
     topSplitPane.setLeftComponent(conversationPanelContainer);
     topSplitPane.setRightComponent(rightPanel);
     topPanel.add(topSplitPane);
@@ -65,7 +82,9 @@
     writeMessagePanel.setTransportSelectorBoxVisible(false);
     confSession.addLocalUserRoleListener(this);
     confSession.addMemberRoleListener(this);
-    ((ChatRoomWrapper)chatSession.getDescriptor()).getChatRoom().addMemberPropertyChangeListener(this);
+    ChatRoom room=((ChatRoomWrapper)chatSession.getDescriptor()).getChatRoom();
+    room.addMemberPropertyChangeListener(this);
+    setConferencesPanelVisible(room.getCachedConferenceDescriptionSize() > 0);
     subjectPanel=new ChatRoomSubjectPanel((ConferenceChatSession)chatSession);
     this.add(subjectPanel,BorderLayout.NORTH);
     this.revalidate();

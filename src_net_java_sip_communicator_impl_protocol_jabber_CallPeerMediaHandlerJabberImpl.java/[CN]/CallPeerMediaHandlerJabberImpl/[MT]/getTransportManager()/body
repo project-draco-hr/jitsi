@@ -19,10 +19,27 @@ synchronized (transportManagerSyncRoot) {
       boolean isJitsiVideoBridge=peer.isJitsiVideoBridge();
       boolean google=protocolProvider.isGmailOrGoogleAppsAccount() || ProtocolProviderServiceJabberImpl.isGmailOrGoogleAppsAccount(StringUtils.parseServer(peer.getAddress()));
       if (isJitsiVideoBridge)       google=false;
-      if (google && isFeatureSupported(discoveryManager,peerDiscoverInfo,ProtocolProviderServiceJabberImpl.URN_GOOGLE_TRANSPORT_P2P)) {
+synchronized (supportedTransportsSyncRoot) {
+        if (supportedTransports != null && supportedTransports.length > 0) {
+          for (int i=0; i < supportedTransports.length; i++) {
+            if (ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1.equals(supportedTransports[i])) {
+              transportManager=new IceUdpTransportManager(peer);
+              break;
+            }
+ else             if (ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0.equals(supportedTransports[i])) {
+              transportManager=new RawUdpTransportManager(peer);
+              break;
+            }
+          }
+          if (transportManager == null) {
+            logger.warn("Could not find a supported transport" + "manager in supportedTransports. Will try" + "to select one based on disco#info");
+          }
+        }
+      }
+      if (transportManager == null && google && isFeatureSupported(discoveryManager,peerDiscoverInfo,ProtocolProviderServiceJabberImpl.URN_GOOGLE_TRANSPORT_P2P)) {
         transportManager=new P2PTransportManager(peer);
       }
- else {
+ else       if (transportManager == null) {
         String[] transports=new String[]{ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1,ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0};
         if (isJitsiVideoBridge) {
           transports=new String[]{ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0};

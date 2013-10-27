@@ -16,6 +16,7 @@
   JingleAction action=jingleIQ.getAction();
   if (action == JingleAction.SESSION_INITIATE) {
     TransferPacketExtension transfer=(TransferPacketExtension)jingleIQ.getExtension(TransferPacketExtension.ELEMENT_NAME,TransferPacketExtension.NAMESPACE);
+    CallIdPacketExtension callidExt=(CallIdPacketExtension)jingleIQ.getExtension(ConferenceDescriptionPacketExtension.CALLID_ELEM_NAME,ConferenceDescriptionPacketExtension.NAMESPACE);
     CallJabberImpl call=null;
     if (transfer != null) {
       String sid=transfer.getSID();
@@ -29,6 +30,11 @@
         }
       }
     }
+    if (callidExt != null) {
+      String callid=callidExt.getText();
+      if (callid != null)       call=getActiveCallsRepository().findCallId(callid);
+    }
+    if (transfer != null && callidExt != null)     logger.warn("Received a session-initiate with both 'transfer'" + " and 'callid' extensions. Ignored 'transfer' and" + " used 'callid'.");
     if (call == null)     call=new CallJabberImpl(this);
     final CallJabberImpl finalCall=call;
     new Thread(){

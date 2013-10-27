@@ -1,0 +1,31 @@
+{
+  if (publishedConference != null) {
+    cd=publishedConference;
+    cd.setAvailable(false);
+  }
+ else {
+    String displayName;
+    if (name == null) {
+      displayName=nickname + JabberActivator.getResources().getI18NString("service.gui.CHAT_CONFERENCE_ITEM_LABEL");
+    }
+ else {
+      displayName=name;
+    }
+    cd.setDisplayName(displayName);
+  }
+  ConferenceDescriptionPacketExtension ext=new ConferenceDescriptionPacketExtension(cd);
+  if (lastPresenceSent != null) {
+    setConferenceDescriptionPacketExtension(lastPresenceSent,ext);
+    provider.getConnection().sendPacket(lastPresenceSent);
+  }
+ else {
+    logger.warn("Could not publish conference," + " lastPresenceSent is null.");
+    publishedConference=null;
+    publishedConferenceExt=null;
+    return null;
+  }
+  publishedConference=(cd == null || !cd.isAvailable()) ? null : cd;
+  publishedConferenceExt=(publishedConference == null) ? null : ext;
+  fireConferencePublishedEvent(members.get(nickname),cd,ChatRoomConferencePublishedEvent.CONFERENCE_DESCRIPTION_SENT);
+  return cd;
+}
