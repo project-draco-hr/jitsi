@@ -46,57 +46,79 @@
     notifyCombo.addActionListener(this);
     container.add(notifyCombo,cnstrnts);
   }
-  if ((AudioSystem.FEATURE_ECHO_CANCELLATION & audioSystemFeatures) != 0) {
-    final SIPCommCheckBox echoCancelCheckBox=new SIPCommCheckBox(NeomediaActivator.getResources().getI18NString("impl.media.configform.ECHOCANCEL"));
-    echoCancelCheckBox.setSelected(audioSystem.isEchoCancel());
-    echoCancelCheckBox.addItemListener(new ItemListener(){
-      public void itemStateChanged(      ItemEvent e){
-        audioSystem.setEchoCancel(echoCancelCheckBox.isSelected());
-      }
-    }
+  int[] checkBoxAudioSystemFeatures=new int[]{AudioSystem.FEATURE_ECHO_CANCELLATION,AudioSystem.FEATURE_DENOISE,AudioSystem.FEATURE_AGC};
+  for (int i=0; i < checkBoxAudioSystemFeatures.length; i++) {
+    final int f=checkBoxAudioSystemFeatures[i];
+    if ((f & audioSystemFeatures) != 0) {
+      String textKey;
+      boolean selected;
+switch (f) {
+case AudioSystem.FEATURE_AGC:
+        textKey="impl.media.configform.AUTOMATICGAINCONTROL";
+      selected=audioSystem.isAutomaticGainControl();
+    break;
+case AudioSystem.FEATURE_DENOISE:
+  textKey="impl.media.configform.DENOISE";
+selected=audioSystem.isDenoise();
+break;
+case AudioSystem.FEATURE_ECHO_CANCELLATION:
+textKey="impl.media.configform.ECHOCANCEL";
+selected=audioSystem.isEchoCancel();
+break;
+default :
+continue;
+}
+final SIPCommCheckBox checkBox=new SIPCommCheckBox(NeomediaActivator.getResources().getI18NString(textKey));
+checkBox.setSelected(selected);
+checkBox.addItemListener(new ItemListener(){
+public void itemStateChanged(ItemEvent e){
+boolean b=checkBox.isSelected();
+switch (f) {
+case AudioSystem.FEATURE_AGC:
+audioSystem.setAutomaticGainControl(b);
+break;
+case AudioSystem.FEATURE_DENOISE:
+audioSystem.setDenoise(b);
+break;
+case AudioSystem.FEATURE_ECHO_CANCELLATION:
+audioSystem.setEchoCancel(b);
+break;
+}
+}
+}
 );
-    container.add(echoCancelCheckBox,cnstrnts);
-  }
-  if ((AudioSystem.FEATURE_DENOISE & audioSystemFeatures) != 0) {
-    final SIPCommCheckBox denoiseCheckBox=new SIPCommCheckBox(NeomediaActivator.getResources().getI18NString("impl.media.configform.DENOISE"));
-    denoiseCheckBox.setSelected(audioSystem.isDenoise());
-    denoiseCheckBox.addItemListener(new ItemListener(){
-      public void itemStateChanged(      ItemEvent e){
-        audioSystem.setDenoise(denoiseCheckBox.isSelected());
-      }
-    }
-);
-    container.add(denoiseCheckBox,cnstrnts);
-  }
-  cnstrnts.gridx=2;
-  cnstrnts.insets=new Insets(3,3,3,0);
-  cnstrnts.weightx=0;
-  if (featureNotifyAndPlaybackDevices) {
-    cnstrnts.gridy=2;
-    playbackPlaySoundButton=new JButton(new ImageIcon(NeomediaActivator.getResources().getImageInBytes("plugin.notificationconfig.PLAY_ICON")));
-    playbackPlaySoundButton.setMinimumSize(new Dimension(30,30));
-    playbackPlaySoundButton.setPreferredSize(new Dimension(30,30));
-    if (((DeviceConfigurationComboBoxModel.CaptureDevice)playbackCombo.getSelectedItem()).info == null) {
-      playbackPlaySoundButton.setEnabled(false);
-    }
-    playbackPlaySoundButton.setOpaque(false);
-    playbackPlaySoundButton.addActionListener(this);
-    container.add(playbackPlaySoundButton,cnstrnts);
-    cnstrnts.gridy=3;
-    notificationPlaySoundButton=new JButton(new ImageIcon(NeomediaActivator.getResources().getImageInBytes("plugin.notificationconfig.PLAY_ICON")));
-    notificationPlaySoundButton.setMinimumSize(new Dimension(30,30));
-    notificationPlaySoundButton.setPreferredSize(new Dimension(30,30));
-    if (((DeviceConfigurationComboBoxModel.CaptureDevice)notifyCombo.getSelectedItem()).info == null) {
-      notificationPlaySoundButton.setEnabled(false);
-    }
-    notificationPlaySoundButton.setOpaque(false);
-    notificationPlaySoundButton.addActionListener(this);
-    container.add(notificationPlaySoundButton,cnstrnts);
-  }
-  if (audioLevelListenerThread == null) {
-    audioLevelListenerThread=new AudioLevelListenerThread(audioSystem,captureCombo,capturePreview);
-  }
+container.add(checkBox,cnstrnts);
+}
+}
+cnstrnts.gridx=2;
+cnstrnts.insets=new Insets(3,3,3,0);
+cnstrnts.weightx=0;
+if (featureNotifyAndPlaybackDevices) {
+cnstrnts.gridy=2;
+playbackPlaySoundButton=new JButton(new ImageIcon(NeomediaActivator.getResources().getImageInBytes("plugin.notificationconfig.PLAY_ICON")));
+playbackPlaySoundButton.setMinimumSize(new Dimension(30,30));
+playbackPlaySoundButton.setPreferredSize(new Dimension(30,30));
+if (((DeviceConfigurationComboBoxModel.CaptureDevice)playbackCombo.getSelectedItem()).info == null) {
+playbackPlaySoundButton.setEnabled(false);
+}
+playbackPlaySoundButton.setOpaque(false);
+playbackPlaySoundButton.addActionListener(this);
+container.add(playbackPlaySoundButton,cnstrnts);
+cnstrnts.gridy=3;
+notificationPlaySoundButton=new JButton(new ImageIcon(NeomediaActivator.getResources().getImageInBytes("plugin.notificationconfig.PLAY_ICON")));
+notificationPlaySoundButton.setMinimumSize(new Dimension(30,30));
+notificationPlaySoundButton.setPreferredSize(new Dimension(30,30));
+if (((DeviceConfigurationComboBoxModel.CaptureDevice)notifyCombo.getSelectedItem()).info == null) {
+notificationPlaySoundButton.setEnabled(false);
+}
+notificationPlaySoundButton.setOpaque(false);
+notificationPlaySoundButton.addActionListener(this);
+container.add(notificationPlaySoundButton,cnstrnts);
+}
+if (audioLevelListenerThread == null) {
+audioLevelListenerThread=new AudioLevelListenerThread(audioSystem,captureCombo,capturePreview);
+}
  else {
-    audioLevelListenerThread.init(audioSystem,captureCombo,capturePreview);
-  }
+audioLevelListenerThread.init(audioSystem,captureCombo,capturePreview);
+}
 }
