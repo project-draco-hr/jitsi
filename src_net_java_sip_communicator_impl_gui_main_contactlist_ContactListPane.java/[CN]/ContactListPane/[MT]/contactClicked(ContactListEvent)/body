@@ -1,26 +1,34 @@
 {
   if (evt.getClickCount() < 2)   return;
   UIContact descriptor=evt.getSourceContact();
-  if (!(descriptor.getDescriptor() instanceof MetaContact))   return;
-  MetaContact metaContact=(MetaContact)descriptor.getDescriptor();
-  Contact defaultContact=metaContact.getDefaultContact(OperationSetBasicInstantMessaging.class);
-  if (defaultContact == null)   return;
-  ProtocolProviderService defaultProvider=defaultContact.getProtocolProvider();
-  OperationSetBasicInstantMessaging defaultIM=defaultProvider.getOperationSet(OperationSetBasicInstantMessaging.class);
-  ProtocolProviderService protoContactProvider;
-  OperationSetBasicInstantMessaging protoContactIM;
-  boolean isOfflineMessagingSupported=defaultIM != null && !defaultIM.isOfflineMessagingSupported();
-  if (defaultContact.getPresenceStatus().getStatus() < 1 && (!isOfflineMessagingSupported || !defaultProvider.isRegistered())) {
-    Iterator<Contact> protoContacts=metaContact.getContacts();
-    while (protoContacts.hasNext()) {
-      Contact contact=protoContacts.next();
-      protoContactProvider=contact.getProtocolProvider();
-      protoContactIM=protoContactProvider.getOperationSet(OperationSetBasicInstantMessaging.class);
-      if (protoContactIM != null && protoContactIM.isOfflineMessagingSupported() && protoContactProvider.isRegistered()) {
-        defaultContact=contact;
+  if (descriptor.getDescriptor() instanceof MetaContact) {
+    MetaContact metaContact=(MetaContact)descriptor.getDescriptor();
+    Contact defaultContact=metaContact.getDefaultContact(OperationSetBasicInstantMessaging.class);
+    if (defaultContact == null)     return;
+    ProtocolProviderService defaultProvider=defaultContact.getProtocolProvider();
+    OperationSetBasicInstantMessaging defaultIM=defaultProvider.getOperationSet(OperationSetBasicInstantMessaging.class);
+    ProtocolProviderService protoContactProvider;
+    OperationSetBasicInstantMessaging protoContactIM;
+    boolean isOfflineMessagingSupported=defaultIM != null && !defaultIM.isOfflineMessagingSupported();
+    if (defaultContact.getPresenceStatus().getStatus() < 1 && (!isOfflineMessagingSupported || !defaultProvider.isRegistered())) {
+      Iterator<Contact> protoContacts=metaContact.getContacts();
+      while (protoContacts.hasNext()) {
+        Contact contact=protoContacts.next();
+        protoContactProvider=contact.getProtocolProvider();
+        protoContactIM=protoContactProvider.getOperationSet(OperationSetBasicInstantMessaging.class);
+        if (protoContactIM != null && protoContactIM.isOfflineMessagingSupported() && protoContactProvider.isRegistered()) {
+          defaultContact=contact;
+        }
       }
     }
+    ContactEventHandler contactHandler=mainFrame.getContactHandler(defaultContact.getProtocolProvider());
+    contactHandler.contactClicked(defaultContact,evt.getClickCount());
   }
-  ContactEventHandler contactHandler=mainFrame.getContactHandler(defaultContact.getProtocolProvider());
-  contactHandler.contactClicked(defaultContact,evt.getClickCount());
+ else   if (descriptor.getDescriptor() instanceof ChatRoomSourceContact) {
+    ConferenceChatManager conferenceChatManager=GuiActivator.getUIService().getConferenceChatManager();
+    ChatRoomList chatRoomList=conferenceChatManager.getChatRoomList();
+    ChatRoomSourceContact contact=(ChatRoomSourceContact)descriptor.getDescriptor();
+    ChatRoomWrapper room=chatRoomList.findChatRoomWrapperFromChatRoomID(contact.getChatRoomID(),contact.getProvider());
+    conferenceChatManager.openChatRoom(room);
+  }
 }

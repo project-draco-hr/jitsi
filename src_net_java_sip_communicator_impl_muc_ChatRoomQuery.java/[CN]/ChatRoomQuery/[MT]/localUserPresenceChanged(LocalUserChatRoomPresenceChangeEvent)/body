@@ -1,0 +1,28 @@
+{
+  ChatRoom sourceChatRoom=evt.getChatRoom();
+  String eventType=evt.getEventType();
+  boolean existingContact=false;
+  SourceContact foundContact=null;
+  for (  SourceContact contact : getQueryResults()) {
+    if (contact.getContactAddress().equals(sourceChatRoom.getName())) {
+      existingContact=true;
+      foundContact=contact;
+      break;
+    }
+  }
+  if (LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED.equals(eventType)) {
+    if (existingContact) {
+      ((ChatRoomSourceContact)foundContact).setPresenceStatus(ChatRoomPresenceStatus.CHAT_ROOM_ONLINE);
+      fireContactChanged(foundContact);
+    }
+ else {
+      addQueryResult(new ChatRoomSourceContact(sourceChatRoom,this));
+    }
+  }
+ else   if ((LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT.equals(eventType) || LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_KICKED.equals(eventType) || LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_DROPPED.equals(eventType))) {
+    if (existingContact) {
+      ((ChatRoomSourceContact)foundContact).setPresenceStatus(ChatRoomPresenceStatus.CHAT_ROOM_OFFLINE);
+      fireContactChanged(foundContact);
+    }
+  }
+}
