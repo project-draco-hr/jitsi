@@ -2,11 +2,12 @@
   String[] joinOptions;
   String subject=null;
   JButton sourceButton=(JButton)e.getSource();
+  ConferenceChatManager conferenceManager=GuiActivator.getUIService().getConferenceChatManager();
   if (sourceButton.equals(addButton)) {
     String chatRoomName=editor.getText();
     if (StringUtils.isNullOrEmpty(chatRoomName))     return;
-    ChatRoomWrapper chatRoomWrapper=GuiActivator.getUIService().getConferenceChatManager().createChatRoom(chatRoomName.trim(),getSelectedProvider().getProtocolProvider(),new ArrayList<String>(),"",false,true,true);
-    chatRoomWrapper.getJoinOptions(true);
+    ChatRoomWrapper chatRoomWrapper=GuiActivator.getMUCService().createChatRoom(chatRoomName.trim(),getSelectedProvider().getProtocolProvider(),new ArrayList<String>(),"",false,true,true);
+    conferenceManager.getJoinOptions(true,chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID());
   }
  else   if (sourceButton.equals(removeButton)) {
     chatRoomsTableUI.removeSelectedRoom();
@@ -15,12 +16,12 @@
     ChatRoomWrapper selectedRoom=chatRoomsTableUI.getSelectedRoom();
     if (selectedRoom == null) {
       if (editor.getText() != null && editor.getText().trim().length() > 0) {
-        ChatRoomWrapper chatRoomWrapper=GuiActivator.getUIService().getConferenceChatManager().createChatRoom(editor.getText().trim(),getSelectedProvider().getProtocolProvider(),new ArrayList<String>(),"",false,false,false);
-        joinOptions=chatRoomWrapper.getJoinOptions();
+        ChatRoomWrapper chatRoomWrapper=GuiActivator.getMUCService().createChatRoom(editor.getText().trim(),getSelectedProvider().getProtocolProvider(),new ArrayList<String>(),"",false,false,false);
+        joinOptions=conferenceManager.getJoinOptions(chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID());
         String nickName=joinOptions[0];
         subject=joinOptions[1];
         if (nickName == null)         return;
-        GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(chatRoomWrapper,nickName,null,subject);
+        GuiActivator.getMUCService().joinChatRoom(chatRoomWrapper,nickName,null,subject);
         ChatWindowManager chatWindowManager=GuiActivator.getUIService().getChatWindowManager();
         ChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper,true);
         chatWindowManager.openChat(chatPanel,true);
@@ -31,25 +32,25 @@
         if (!selectedRoom.getChatRoom().isJoined()) {
           String savedNick=ConfigurationUtils.getChatRoomProperty(selectedRoom.getParentProvider().getProtocolProvider(),selectedRoom.getChatRoomID(),"userNickName");
           if (savedNick == null) {
-            joinOptions=selectedRoom.getJoinOptions();
+            joinOptions=conferenceManager.getJoinOptions(selectedRoom.getParentProvider().getProtocolProvider(),selectedRoom.getChatRoomID());
             savedNick=joinOptions[0];
             subject=joinOptions[1];
             if (savedNick == null)             return;
           }
-          GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(selectedRoom,savedNick,null,subject);
+          GuiActivator.getMUCService().joinChatRoom(selectedRoom,savedNick,null,subject);
         }
  else         chatRoomsTableUI.openChatForSelection();
       }
  else {
-        ChatRoomWrapper chatRoomWrapper=GuiActivator.getUIService().getConferenceChatManager().createChatRoom(selectedRoom.getChatRoomName(),getSelectedProvider().getProtocolProvider(),new ArrayList<String>(),"",false,false,true);
+        ChatRoomWrapper chatRoomWrapper=GuiActivator.getMUCService().createChatRoom(selectedRoom.getChatRoomName(),getSelectedProvider().getProtocolProvider(),new ArrayList<String>(),"",false,false,true);
         String savedNick=ConfigurationUtils.getChatRoomProperty(chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),"userNickName");
         if (savedNick == null) {
-          joinOptions=selectedRoom.getJoinOptions();
+          joinOptions=conferenceManager.getJoinOptions(selectedRoom.getParentProvider().getProtocolProvider(),selectedRoom.getChatRoomID());
           savedNick=joinOptions[0];
           subject=joinOptions[1];
           if (savedNick == null)           return;
         }
-        GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(chatRoomWrapper,savedNick,null,subject);
+        GuiActivator.getMUCService().joinChatRoom(chatRoomWrapper,savedNick,null,subject);
       }
     }
     dispose();

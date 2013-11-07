@@ -1,0 +1,44 @@
+{
+  final OperationSetMultiUserChat groupChatOpSet=protocolProvider.getOperationSet(OperationSetMultiUserChat.class);
+  for (  final ChatRoomWrapper chatRoomWrapper : chatRoomsOrderedCopy) {
+    new Thread(){
+      @Override public void run(){
+        ChatRoom chatRoom=null;
+        try {
+          chatRoom=groupChatOpSet.findRoom(chatRoomWrapper.getChatRoomName());
+        }
+ catch (        OperationFailedException e1) {
+          logger.error("Failed to find chat room with name:" + chatRoomWrapper.getChatRoomName(),e1);
+        }
+catch (        OperationNotSupportedException e1) {
+          logger.error("Failed to find chat room with name:" + chatRoomWrapper.getChatRoomName(),e1);
+        }
+        if (chatRoom != null) {
+          chatRoomWrapper.setChatRoom(chatRoom);
+          if (chatRoomWrapper.isAutojoin()) {
+            String nickName=ConfigurationUtils.getChatRoomProperty(chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),"userNickName");
+            if (nickName != null) {
+              MUCActivator.getMUCService().joinChatRoom(chatRoom,nickName,null);
+            }
+ else {
+              MUCActivator.getMUCService().joinChatRoom(chatRoomWrapper);
+            }
+          }
+        }
+ else {
+          if (chatRoomWrapper.isAutojoin()) {
+            ChatRoomWrapper roomWrapper=MUCActivator.getMUCService().createChatRoom(chatRoomWrapper.getChatRoomName(),chatRoomWrapper.getParentProvider().getProtocolProvider(),new ArrayList<String>(),"",false,true);
+            String nickName=ConfigurationUtils.getChatRoomProperty(chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),"userNickName");
+            if (nickName != null) {
+              MUCActivator.getMUCService().joinChatRoom(roomWrapper.getChatRoom(),nickName,null);
+            }
+ else {
+              MUCActivator.getMUCService().joinChatRoom(roomWrapper);
+            }
+          }
+        }
+      }
+    }
+.start();
+  }
+}

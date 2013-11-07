@@ -1,0 +1,13 @@
+{
+  ChatRoom chatRoom=chatRoomWrapper.getChatRoom();
+  if (chatRoom == null) {
+    ResourceManagementService resources=MUCActivator.getResources();
+    MUCActivator.getAlertUIService().showAlertDialog(resources.getI18NString("service.gui.WARNING"),resources.getI18NString("service.gui.CHAT_ROOM_LEAVE_NOT_CONNECTED"));
+    return null;
+  }
+  if (chatRoom.isJoined())   chatRoom.leave();
+  ChatRoomWrapper existChatRoomWrapper=chatRoomList.findChatRoomWrapperFromChatRoom(chatRoom);
+  if (existChatRoomWrapper == null)   return null;
+  ConfigurationUtils.updateChatRoomStatus(chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),GlobalStatusEnum.OFFLINE_STATUS);
+  return existChatRoomWrapper;
+}
