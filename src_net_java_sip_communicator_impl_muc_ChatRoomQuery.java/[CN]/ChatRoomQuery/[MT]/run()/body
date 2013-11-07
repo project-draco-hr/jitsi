@@ -1,20 +1,14 @@
 {
-  ConfigurationService configService=MUCActivator.getConfigurationService();
-  String prefix="net.java.sip.communicator.impl.gui.accounts";
-  List<String> accounts=configService.getPropertyNamesByPrefix(prefix,true);
-  for (  ProtocolProviderService pps : MUCActivator.getChatRoomProviders()) {
-    for (    String accountRootPropName : accounts) {
-      String accountUID=configService.getString(accountRootPropName);
-      if (accountUID.equals(pps.getAccountID().getAccountUniqueID())) {
-        List<String> chatRooms=configService.getPropertyNamesByPrefix(accountRootPropName + ".chatRooms",true);
-        for (        String chatRoomPropName : chatRooms) {
-          if (count > 0 && getQueryResultCount() > count) {
-            if (getStatus() != QUERY_CANCELED)             setStatus(QUERY_COMPLETED);
-            return;
-          }
-          addChatRoom(pps,configService.getString(chatRoomPropName + ".chatRoomName"),configService.getString(chatRoomPropName));
-        }
+  Iterator<ChatRoomProviderWrapper> chatRoomProviders=MUCActivator.getMUCService().getChatRoomList().getChatRoomProviders();
+  while (chatRoomProviders.hasNext()) {
+    ChatRoomProviderWrapper provider=chatRoomProviders.next();
+    for (int i=0; i < provider.countChatRooms(); i++) {
+      if (count > 0 && getQueryResultCount() > count) {
+        if (getStatus() != QUERY_CANCELED)         setStatus(QUERY_COMPLETED);
+        return;
       }
+      ChatRoomWrapper chatRoom=provider.getChatRoom(i);
+      addChatRoom(provider.getProtocolProvider(),chatRoom.getChatRoomName(),chatRoom.getChatRoomID());
     }
   }
   if (getStatus() != QUERY_CANCELED)   setStatus(QUERY_COMPLETED);
