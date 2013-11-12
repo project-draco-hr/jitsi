@@ -1,0 +1,21 @@
+{
+  ServiceReference[] serRefs=null;
+  String osgiFilter="(" + Container.CONTAINER_ID + "="+ Container.CONTAINER_ACCOUNT_RIGHT_BUTTON_MENU.getID()+ ")";
+  try {
+    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponentFactory.class.getName(),osgiFilter);
+  }
+ catch (  InvalidSyntaxException exc) {
+    logger.error("Could not obtain plugin reference.",exc);
+  }
+  if (serRefs != null) {
+    for (int i=0; i < serRefs.length; i++) {
+      PluginComponentFactory factory=(PluginComponentFactory)GuiActivator.bundleContext.getService(serRefs[i]);
+      PluginComponent component=factory.getPluginComponentInstance(this);
+      if (component.getComponent() == null)       continue;
+      pluginComponents.add(component);
+      if (factory.getPositionIndex() != -1)       this.add((Component)component.getComponent(),factory.getPositionIndex());
+ else       this.add((Component)component.getComponent());
+    }
+  }
+  GuiActivator.getUIService().addPluginComponentListener(this);
+}

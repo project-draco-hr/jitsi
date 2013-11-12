@@ -1,18 +1,32 @@
 {
-  super(new BorderLayout());
-  JTabbedPane accountsTabbedPane=new SIPCommTabbedPane();
-  for (  ProtocolProviderFactory providerFactory : AccountInfoActivator.getProtocolProviderFactories().values()) {
-    ArrayList<AccountID> accountsList=providerFactory.getRegisteredAccounts();
-    ServiceReference serRef;
-    ProtocolProviderService protocolProvider;
-    for (    AccountID accountID : accountsList) {
-      serRef=providerFactory.getProviderForAccount(accountID);
-      protocolProvider=(ProtocolProviderService)AccountInfoActivator.bundleContext.getService(serRef);
-      detailsPanel=new AccountDetailsPanel(protocolProvider);
-      accountsTable.put(protocolProvider,detailsPanel);
-      protocolProvider.addRegistrationStateChangeListener(new RegistrationStateChangeListenerImpl());
-      accountsTabbedPane.addTab(accountID.getUserID(),detailsPanel);
+  setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+  accountsComboBox=new JComboBox();
+  accountsComboBox.addItemListener(new ItemListener(){
+    @Override public void itemStateChanged(    ItemEvent e){
+      if (e.getStateChange() == ItemEvent.SELECTED) {
+        AccountDetailsPanel panel=(AccountDetailsPanel)e.getItem();
+        panel.setOpaque(false);
+        centerPanel.removeAll();
+        centerPanel.add(panel,BorderLayout.CENTER);
+        centerPanel.revalidate();
+        centerPanel.repaint();
+        currentDetailsPanel=panel;
+      }
     }
   }
-  this.add(accountsTabbedPane,BorderLayout.CENTER);
+);
+  init();
+  centerPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+  ComboBoxRenderer renderer=new ComboBoxRenderer();
+  accountsComboBox.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+  accountsComboBox.setRenderer(renderer);
+  JLabel comboLabel=new JLabel(Resources.getString("plugin.accountinfo.SELECT_ACCOUNT"));
+  comboLabel.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+  JPanel comboBoxPanel=new TransparentPanel();
+  comboBoxPanel.setLayout(new BoxLayout(comboBoxPanel,BoxLayout.X_AXIS));
+  comboBoxPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+  comboBoxPanel.add(comboLabel);
+  comboBoxPanel.add(accountsComboBox);
+  add(comboBoxPanel);
+  add(centerPanel);
 }

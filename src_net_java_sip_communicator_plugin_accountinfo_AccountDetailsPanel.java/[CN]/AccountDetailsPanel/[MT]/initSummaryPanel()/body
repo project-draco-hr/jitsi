@@ -1,42 +1,256 @@
 {
   JPanel summaryPanel=new TransparentPanel(new BorderLayout(10,10));
   summaryPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-  summaryPanel.setSize(this.getWidth(),this.getHeight());
   JPanel leftPanel=new TransparentPanel(new BorderLayout());
   JPanel avatarPanel=new TransparentPanel(new BorderLayout());
-  JButton changeAvatarButton=new JButton(Resources.getString("plugin.accountinfo.CHANGE"));
-  JPanel changeButtonPanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
-  changeAvatarButton.addActionListener(new ChangeAvatarActionListener());
-  changeButtonPanel.add(changeAvatarButton);
-  avatarPanel.add(avatarLabel,BorderLayout.CENTER);
-  avatarPanel.add(changeButtonPanel,BorderLayout.SOUTH);
+  JPanel radioButtonPanel=new TransparentPanel(new GridLayout(2,1));
+  globalIcon=new JRadioButton(Resources.getString("plugin.accountinfo.GLOBAL_ICON"));
+  globalIcon.setSelected(true);
+  globalIcon.setOpaque(false);
+  globalIcon.setEnabled(false);
+  localIcon=new JRadioButton(Resources.getString("plugin.accountinfo.LOCAL_ICON"));
+  localIcon.setOpaque(false);
+  localIcon.setEnabled(false);
+  ButtonGroup group=new ButtonGroup();
+  group.add(globalIcon);
+  group.add(localIcon);
+  radioButtonPanel.add(globalIcon);
+  radioButtonPanel.add(localIcon);
+  avatarPanel.add(radioButtonPanel,BorderLayout.NORTH);
   leftPanel.add(avatarPanel,BorderLayout.NORTH);
   summaryPanel.add(leftPanel,BorderLayout.WEST);
-  JPanel detailsPanel=new TransparentPanel(new BorderLayout(10,10));
-  detailsPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
-  summaryPanel.add(detailsPanel,BorderLayout.CENTER);
-  JPanel labelsPanel=new TransparentPanel(new GridLayout(0,1,5,5));
-  labelsPanel.add(new JLabel(Resources.getString("plugin.accountinfo.FIRST_NAME")));
-  labelsPanel.add(new JLabel(Resources.getString("plugin.accountinfo.LAST_NAME")));
-  labelsPanel.add(new JLabel(Resources.getString("plugin.accountinfo.GENDER")));
-  labelsPanel.add(new JLabel(Resources.getString("plugin.accountinfo.AGE")));
-  labelsPanel.add(new JLabel(Resources.getString("plugin.accountinfo.BDAY")));
-  labelsPanel.add(new JLabel(Resources.getString("plugin.accountinfo.EMAIL")));
-  labelsPanel.add(new JLabel(Resources.getString("plugin.accountinfo.PHONE")));
-  detailsPanel.add(labelsPanel,BorderLayout.WEST);
-  JPanel valuesPanel=new TransparentPanel(new GridLayout(0,1,5,5));
-  valuesPanel.add(firstNameField);
-  valuesPanel.add(lastNameField);
-  valuesPanel.add(genderField);
-  valuesPanel.add(ageField);
-  valuesPanel.add(birthdayField);
-  valuesPanel.add(emailField);
-  valuesPanel.add(phoneField);
-  detailsPanel.add(valuesPanel,BorderLayout.CENTER);
-  this.mainScrollPane.getViewport().add(summaryPanel);
-  this.add(mainScrollPane,BorderLayout.NORTH);
+  detailToTextField.put(ImageDetail.class,new JTextField());
+  imageWithMenu=new FramedImageWithMenu(Resources.getImage("service.gui.DEFAULT_USER_PHOTO"),Resources.getImage("service.gui.DEFAULT_USER_PHOTO").getIconWidth(),Resources.getImage("service.gui.DEFAULT_USER_PHOTO").getIconHeight());
+  SelectAvatarMenu selectAvatarMenu=new SelectAvatarMenu(imageWithMenu);
+  selectAvatarMenu.setAccountID(protocolProvider.getAccountID());
+  imageWithMenu.setPopupMenu(selectAvatarMenu);
+  avatarPanel.add(imageWithMenu,BorderLayout.SOUTH);
+  globalIcon.addActionListener(new ActionListener(){
+    @Override public void actionPerformed(    ActionEvent e){
+      imageWithMenu.setEnabled(false);
+    }
+  }
+);
+  localIcon.addActionListener(new ActionListener(){
+    @Override public void actionPerformed(    ActionEvent e){
+      imageWithMenu.setEnabled(true);
+    }
+  }
+);
+  imageWithMenu.setEnabled(false);
+  valuesPanel=new TransparentPanel(new GridBagLayout());
+  valuesPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+  GridBagConstraints first=new GridBagConstraints();
+  first.gridx=0;
+  first.gridy=0;
+  first.weightx=0;
+  first.anchor=GridBagConstraints.LINE_START;
+  first.gridwidth=1;
+  first.insets=new Insets(4,4,4,4);
+  first.fill=GridBagConstraints.HORIZONTAL;
+  GridBagConstraints second=new GridBagConstraints();
+  second.gridx=1;
+  second.gridy=0;
+  second.weightx=2;
+  second.anchor=GridBagConstraints.LINE_START;
+  second.gridwidth=1;
+  second.insets=first.insets;
+  second.fill=GridBagConstraints.HORIZONTAL;
+  if (accountInfoOpSet.isDetailClassSupported(DisplayNameDetail.class)) {
+    displayNameField=new JTextField();
+    valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.DISPLAY_NAME")),first);
+    valuesPanel.add(displayNameField,second);
+    first.gridy=++second.gridy;
+    detailToTextField.put(DisplayNameDetail.class,displayNameField);
+  }
+  firstNameField=new JTextField();
+  valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.FIRST_NAME")),first);
+  valuesPanel.add(firstNameField,second);
+  first.gridy=++second.gridy;
+  detailToTextField.put(FirstNameDetail.class,firstNameField);
+  middleNameField=new JTextField();
+  valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.MIDDLE_NAME")),first);
+  valuesPanel.add(middleNameField,second);
+  first.gridy=++second.gridy;
+  detailToTextField.put(MiddleNameDetail.class,middleNameField);
+  lastNameField=new JTextField();
+  valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.LAST_NAME")),first);
+  valuesPanel.add(lastNameField,second);
+  first.gridy=++second.gridy;
+  detailToTextField.put(LastNameDetail.class,lastNameField);
+  if (accountInfoOpSet.isDetailClassSupported(NicknameDetail.class)) {
+    nicknameField=new JTextField();
+    valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.NICKNAME")),first);
+    valuesPanel.add(nicknameField,second);
+    first.gridy=++second.gridy;
+    detailToTextField.put(NicknameDetail.class,nicknameField);
+  }
+  if (accountInfoOpSet.isDetailClassSupported(URLDetail.class)) {
+    urlField=new JTextField();
+    valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.URL")),first);
+    valuesPanel.add(urlField,second);
+    first.gridy=++second.gridy;
+    detailToTextField.put(URLDetail.class,urlField);
+  }
+  if (accountInfoOpSet.isDetailClassSupported(GenderDetail.class)) {
+    genderField=new JTextField();
+    valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.GENDER")),first);
+    valuesPanel.add(genderField,second);
+    first.gridy=++second.gridy;
+    detailToTextField.put(GenderDetail.class,genderField);
+  }
+  birthDayCalendar=new JDateChooser();
+  valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.BDAY")),first);
+  valuesPanel.add(birthDayCalendar,second);
+  birthDayCalendar.setDateFormatString(Resources.getString("plugin.accountinfo.BDAY_FORMAT"));
+  birthDayCalendar.addPropertyChangeListener(new PropertyChangeListener(){
+    @Override public void propertyChange(    PropertyChangeEvent evt){
+      if (evt.getPropertyName().equals("date")) {
+        Date date=(Date)evt.getNewValue();
+        if (date != null) {
+          Calendar currentDate=Calendar.getInstance();
+          Calendar c=Calendar.getInstance();
+          c.setTime(date);
+          int age=currentDate.get(Calendar.YEAR) - c.get(Calendar.YEAR);
+          if (currentDate.get(Calendar.MONTH) < c.get(Calendar.MONTH))           age--;
+          if ((currentDate.get(Calendar.MONTH) == c.get(Calendar.MONTH)) && (currentDate.get(Calendar.DAY_OF_MONTH) < c.get(Calendar.DAY_OF_MONTH)))           age--;
+          String ageDetail=Integer.toString(age).trim();
+          ageField.setText(ageDetail);
+        }
+      }
+    }
+  }
+);
+  first.gridy=++second.gridy;
+  ageField=new JTextField();
+  valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.AGE")),first);
+  valuesPanel.add(ageField,second);
+  first.gridy=++second.gridy;
+  ageField.setEditable(false);
+  detailToTextField.put(BirthDateDetail.class,new JTextField());
+  if (accountInfoOpSet.isDetailClassSupported(AddressDetail.class)) {
+    streetAddressField=new JTextField();
+    valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.STREET")),first);
+    valuesPanel.add(streetAddressField,second);
+    first.gridy=++second.gridy;
+    detailToTextField.put(AddressDetail.class,streetAddressField);
+  }
+  if (accountInfoOpSet.isDetailClassSupported(CityDetail.class)) {
+    cityField=new JTextField();
+    valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.CITY")),first);
+    valuesPanel.add(cityField,second);
+    first.gridy=++second.gridy;
+    detailToTextField.put(CityDetail.class,cityField);
+  }
+  if (accountInfoOpSet.isDetailClassSupported(ProvinceDetail.class)) {
+    regionField=new JTextField();
+    valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.REGION")),first);
+    valuesPanel.add(regionField,second);
+    first.gridy=++second.gridy;
+    detailToTextField.put(ProvinceDetail.class,regionField);
+  }
+  if (accountInfoOpSet.isDetailClassSupported(PostalCodeDetail.class)) {
+    postalCodeField=new JTextField();
+    valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.POST")),first);
+    valuesPanel.add(postalCodeField,second);
+    first.gridy=++second.gridy;
+    detailToTextField.put(PostalCodeDetail.class,postalCodeField);
+  }
+  if (accountInfoOpSet.isDetailClassSupported(CountryDetail.class)) {
+    countryField=new JTextField();
+    valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.COUNTRY")),first);
+    valuesPanel.add(countryField,second);
+    first.gridy=++second.gridy;
+    detailToTextField.put(CountryDetail.class,countryField);
+  }
+  emailField=new JTextField();
+  valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.EMAIL")),first);
+  valuesPanel.add(emailField,second);
+  first.gridy=++second.gridy;
+  detailToTextField.put(EmailAddressDetail.class,emailField);
+  if (accountInfoOpSet.isDetailClassSupported(WorkEmailAddressDetail.class)) {
+    workEmailField=new JTextField();
+    valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.WORK_EMAIL")),first);
+    valuesPanel.add(workEmailField,second);
+    first.gridy=++second.gridy;
+    detailToTextField.put(WorkEmailAddressDetail.class,workEmailField);
+  }
+  phoneField=new JTextField();
+  valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.PHONE")),first);
+  valuesPanel.add(phoneField,second);
+  first.gridy=++second.gridy;
+  detailToTextField.put(PhoneNumberDetail.class,phoneField);
+  if (accountInfoOpSet.isDetailClassSupported(WorkPhoneDetail.class)) {
+    workPhoneField=new JTextField();
+    valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.WORK_PHONE")),first);
+    valuesPanel.add(workPhoneField,second);
+    first.gridy=++second.gridy;
+    detailToTextField.put(WorkPhoneDetail.class,workPhoneField);
+  }
+  if (accountInfoOpSet.isDetailClassSupported(WorkOrganizationNameDetail.class)) {
+    organizationField=new JTextField();
+    valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.ORGANIZATION")),first);
+    valuesPanel.add(organizationField,second);
+    first.gridy=++second.gridy;
+    detailToTextField.put(WorkOrganizationNameDetail.class,organizationField);
+  }
+  if (accountInfoOpSet.isDetailClassSupported(JobTitleDetail.class)) {
+    jobTitleField=new JTextField();
+    valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.JOB_TITLE")),first);
+    valuesPanel.add(jobTitleField,second);
+    first.gridy=++second.gridy;
+    detailToTextField.put(JobTitleDetail.class,jobTitleField);
+  }
+  if (accountInfoOpSet.isDetailClassSupported(AboutMeDetail.class)) {
+    aboutMeArea=new JTextArea(3,0);
+    valuesPanel.add(new JLabel(Resources.getString("plugin.accountinfo.ABOUT_ME")),first);
+    second.gridheight=3;
+    JScrollPane areaScrollPane=new JScrollPane(aboutMeArea);
+    areaScrollPane.setOpaque(false);
+    areaScrollPane.setBorder(BorderFactory.createEmptyBorder());
+    areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+    valuesPanel.add(areaScrollPane,second);
+    first.gridy=++second.gridy;
+    DefaultStyledDocument doc=new DefaultStyledDocument();
+    doc.setDocumentFilter(new DocumentFilter(){
+      private final int MAX_CHARACTERS=Integer.valueOf(Resources.getString("plugin.accountinfo.ABOUT_ME_MAX_CHARACTERS"));
+      public void insertString(      FilterBypass fb,      int offs,      String str,      AttributeSet a) throws BadLocationException {
+        if ((fb.getDocument().getLength() + str.length()) <= MAX_CHARACTERS)         super.insertString(fb,offs,str,a);
+ else         Toolkit.getDefaultToolkit().beep();
+      }
+      public void replace(      FilterBypass fb,      int offs,      int length,      String str,      AttributeSet a) throws BadLocationException {
+        if ((fb.getDocument().getLength() + str.length() - length) <= MAX_CHARACTERS)         super.replace(fb,offs,length,str,a);
+ else         Toolkit.getDefaultToolkit().beep();
+      }
+    }
+);
+    aboutMeArea.setDocument(doc);
+    aboutMeArea.setBorder(firstNameField.getBorder());
+    aboutMeArea.setLineWrap(true);
+    aboutMeArea.setWrapStyleWord(true);
+    aboutMeArea.setPreferredSize(new Dimension(50,100));
+    aboutMeArea.setMinimumSize(new Dimension(50,100));
+    detailToTextField.put(AboutMeDetail.class,new JTextField());
+  }
+  mainScrollPane=new JScrollPane(summaryPanel,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+  mainScrollPane.getViewport().setOpaque(false);
+  mainScrollPane.setOpaque(false);
+  mainScrollPane.setBorder(BorderFactory.createEmptyBorder());
+  summaryPanel.add(valuesPanel,BorderLayout.CENTER);
+  this.add(mainScrollPane);
   this.applyButton.addActionListener(new SubmitActionListener());
+  JButton cancelButton=new JButton(Resources.getString("service.gui.CANCEL"));
+  cancelButton.addActionListener(new ActionListener(){
+    @Override public void actionPerformed(    ActionEvent evt){
+      AccountInfoMenuItemComponent.dialog.setVisible(false);
+      mainScrollPane.getVerticalScrollBar().setValue(0);
+    }
+  }
+);
   this.buttonPanel.add(applyButton);
-  this.add(buttonPanel,BorderLayout.SOUTH);
-  loadSkin();
+  this.buttonPanel.add(cancelButton);
+  this.add(buttonPanel);
+  for (  Component component : valuesPanel.getComponents())   component.setEnabled(false);
+  if (aboutMeArea != null)   aboutMeArea.setEnabled(false);
+  applyButton.setEnabled(false);
 }

@@ -1,0 +1,47 @@
+{
+  assertConnected();
+  List<GenericDetail> details=infoRetreiver.getContactDetails(uin);
+  VCardXEP0153 vCard=new VCardXEP0153();
+  for (  GenericDetail detail : details) {
+    if (detail instanceof ImageDetail) {
+      byte[] avatar=((ImageDetail)detail).getBytes();
+      if (avatar == null)       vCard.setAvatar(new byte[0]);
+ else       vCard.setAvatar(avatar);
+      fireServerStoredDetailsChangeEvent(jabberProvider,ServerStoredDetailsChangeEvent.DETAIL_ADDED,null,detail);
+    }
+ else     if (detail.getClass().equals(FirstNameDetail.class))     vCard.setFirstName((String)detail.getDetailValue());
+ else     if (detail.getClass().equals(MiddleNameDetail.class))     vCard.setMiddleName((String)detail.getDetailValue());
+ else     if (detail.getClass().equals(LastNameDetail.class))     vCard.setLastName((String)detail.getDetailValue());
+ else     if (detail.getClass().equals(NicknameDetail.class))     vCard.setNickName((String)detail.getDetailValue());
+ else     if (detail.getClass().equals(URLDetail.class)) {
+      if (detail.getDetailValue() != null)       vCard.setField("URL",((URL)detail.getDetailValue()).toString());
+    }
+ else     if (detail.getClass().equals(BirthDateDetail.class)) {
+      if (detail.getDetailValue() != null) {
+        Calendar c=((BirthDateDetail)detail).getCalendar();
+        DateFormat dateFormat=new SimpleDateFormat(JabberActivator.getResources().getI18NString("plugin.accountinfo.BDAY_FORMAT"));
+        String strdate=dateFormat.format(c.getTime());
+        vCard.setField("BDAY",strdate);
+      }
+    }
+ else     if (detail.getClass().equals(AddressDetail.class))     vCard.setAddressFieldHome("STREET",(String)detail.getDetailValue());
+ else     if (detail.getClass().equals(CityDetail.class))     vCard.setAddressFieldHome("LOCALITY",(String)detail.getDetailValue());
+ else     if (detail.getClass().equals(ProvinceDetail.class))     vCard.setAddressFieldHome("REGION",(String)detail.getDetailValue());
+ else     if (detail.getClass().equals(PostalCodeDetail.class))     vCard.setAddressFieldHome("PCODE",(String)detail.getDetailValue());
+ else     if (detail.getClass().equals(CountryDetail.class))     vCard.setAddressFieldHome("CTRY",(String)detail.getDetailValue());
+ else     if (detail.getClass().equals(PhoneNumberDetail.class))     vCard.setPhoneHome("VOICE",(String)detail.getDetailValue());
+ else     if (detail.getClass().equals(WorkPhoneDetail.class))     vCard.setPhoneWork("VOICE",(String)detail.getDetailValue());
+ else     if (detail.getClass().equals(EmailAddressDetail.class))     vCard.setEmailHome((String)detail.getDetailValue());
+ else     if (detail.getClass().equals(WorkEmailAddressDetail.class))     vCard.setEmailWork((String)detail.getDetailValue());
+ else     if (detail.getClass().equals(WorkOrganizationNameDetail.class))     vCard.setOrganization((String)detail.getDetailValue());
+ else     if (detail.getClass().equals(JobTitleDetail.class))     vCard.setField("TITLE",(String)detail.getDetailValue());
+ else     if (detail.getClass().equals(AboutMeDetail.class))     vCard.setField("ABOUTME",(String)detail.getDetailValue());
+  }
+  try {
+    vCard.save(jabberProvider.getConnection());
+  }
+ catch (  XMPPException xmppe) {
+    logger.error("Error loading/saving vcard: ",xmppe);
+    throw new OperationFailedException("Error loading/saving vcard: ",1,xmppe);
+  }
+}

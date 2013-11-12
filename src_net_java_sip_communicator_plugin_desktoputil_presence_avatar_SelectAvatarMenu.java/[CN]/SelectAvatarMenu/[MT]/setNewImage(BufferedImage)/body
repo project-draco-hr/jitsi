@@ -1,0 +1,53 @@
+{
+  new Thread(){
+    @Override public void run(){
+      AccountManager accountManager=DesktopUtilActivator.getAccountManager();
+      for (      AccountID accountID : accountManager.getStoredAccounts()) {
+        if (accountManager.isAccountLoaded(accountID)) {
+          ProtocolProviderService protocolProvider=AccountUtils.getRegisteredProviderForAccount(accountID);
+          if (protocolProvider != null && protocolProvider.isRegistered()) {
+            if (SelectAvatarMenu.this.accountID != null) {
+              if (accountID.equals(SelectAvatarMenu.this.accountID)) {
+                OperationSetServerStoredAccountInfo opSet=protocolProvider.getOperationSet(OperationSetServerStoredAccountInfo.class);
+                if (opSet != null) {
+                  byte[] imageByte=null;
+                  if (image != null) {
+                    imageByte=ImageUtils.toByteArray(image);
+                  }
+                  avatarImage.setImageIcon(imageByte);
+                  ImageDetail newDetail=new ImageDetail("avatar",imageByte);
+                  Iterator<GenericDetail> oldDetail=opSet.getDetails(ImageDetail.class);
+                  try {
+                    if (oldDetail.hasNext()) {
+                      opSet.replaceDetail(oldDetail.next(),newDetail);
+                    }
+ else                     opSet.addDetail(newDetail);
+                  }
+ catch (                  Throwable t) {
+                    logger.error("Error setting image",t);
+                  }
+                }
+              }
+            }
+ else {
+              OperationSetAvatar opSetAvatar=protocolProvider.getOperationSet(OperationSetAvatar.class);
+              if (opSetAvatar != null) {
+                byte[] imageByte=null;
+                if (image != null) {
+                  imageByte=ImageUtils.toByteArray(image);
+                }
+                try {
+                  opSetAvatar.setAvatar(imageByte);
+                }
+ catch (                Throwable t) {
+                  logger.error("Error setting image",t);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+.start();
+}
