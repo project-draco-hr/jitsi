@@ -1,2 +1,30 @@
 {
+  this.params.setServer(new IRCServer(host,port,password,false));
+synchronized (this.irc) {
+    this.irc.connect(this.params,new Callback<IIRCState>(){
+      @Override public void onSuccess(      IIRCState state){
+synchronized (IrcStack.this.irc) {
+          System.out.println("IRC connected successfully!");
+          IrcStack.this.connectionState=state;
+          IrcStack.this.irc.notifyAll();
+        }
+      }
+      @Override public void onFailure(      Exception e){
+synchronized (IrcStack.this.irc) {
+          System.out.println("IRC connection FAILED!");
+          e.printStackTrace();
+          IrcStack.this.connectionState=null;
+          IrcStack.this.irc.notifyAll();
+        }
+      }
+    }
+);
+    try {
+      System.out.println("Waiting for a connection ...");
+      this.irc.wait();
+    }
+ catch (    InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
 }
