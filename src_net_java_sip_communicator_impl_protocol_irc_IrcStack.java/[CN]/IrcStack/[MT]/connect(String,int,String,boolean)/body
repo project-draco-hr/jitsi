@@ -1,6 +1,18 @@
 {
+  if (this.connectionState != null && this.connectionState.isConnected())   return;
   this.params.setServer(new IRCServer(host,port,password,false));
 synchronized (this.irc) {
+    this.irc.addListener(new IMessageListener(){
+      @Override public void onMessage(      IMessage msg){
+        if (msg instanceof ServerNotice) {
+          System.out.println("NOTICE: " + ((ServerNotice)msg).getText());
+        }
+ else         if (msg instanceof ServerNumericMessage) {
+          System.out.println("NUM MSG: " + ((ServerNumericMessage)msg).getNumericCode() + ": "+ ((ServerNumericMessage)msg).getText());
+        }
+      }
+    }
+);
     this.irc.connect(this.params,new Callback<IIRCState>(){
       @Override public void onSuccess(      IIRCState state){
 synchronized (IrcStack.this.irc) {
@@ -14,6 +26,7 @@ synchronized (IrcStack.this.irc) {
           System.out.println("IRC connection FAILED!");
           e.printStackTrace();
           IrcStack.this.connectionState=null;
+          IrcStack.this.disconnect();
           IrcStack.this.irc.notifyAll();
         }
       }
@@ -22,8 +35,15 @@ synchronized (IrcStack.this.irc) {
     try {
       System.out.println("Waiting for a connection ...");
       this.irc.wait();
+      if (this.connectionState != null && this.connectionState.isConnected()) {
+        this.provider.setCurrentRegistrationState(RegistrationState.REGISTERED);
+      }
+ else {
+        this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED);
+      }
     }
  catch (    InterruptedException e) {
+      this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED);
       e.printStackTrace();
     }
   }
