@@ -1,28 +1,26 @@
 {
   OperationSetVideoBridge videoBridge=parentProvider.getOperationSet(OperationSetVideoBridge.class);
-  boolean isVideoBridge=(videoBridge != null) && videoBridge.isActive();
+  boolean isVideobridge=(videoBridge != null) && videoBridge.isActive();
   CallJabberImpl call=new CallJabberImpl(getBasicTelephony());
   call.setAutoAnswer(true);
   String uri="xmpp:" + chatRoom.getIdentifier() + "/"+ chatRoom.getUserNickname();
   ConferenceDescription cd=new ConferenceDescription(uri,call.getCallID());
   call.addCallChangeListener(new CallChangeListener(){
-    @Override public void callStateChanged(    CallChangeEvent evt){
-      if (CallState.CALL_ENDED.equals(evt.getNewValue())) {
-        chatRoom.publishConference(null,null);
-      }
+    @Override public void callStateChanged(    CallChangeEvent ev){
+      if (CallState.CALL_ENDED.equals(ev.getNewValue()))       chatRoom.publishConference(null,null);
     }
-    @Override public void callPeerRemoved(    CallPeerEvent evt){
+    @Override public void callPeerRemoved(    CallPeerEvent ev){
     }
-    @Override public void callPeerAdded(    CallPeerEvent evt){
+    @Override public void callPeerAdded(    CallPeerEvent ev){
     }
   }
 );
-  if (isVideoBridge) {
+  if (isVideobridge) {
     call.setConference(new MediaAwareCallConference(true));
     cd.addTransport(ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0);
   }
   if (logger.isInfoEnabled()) {
-    logger.info("Setup a conference with uri=" + uri + " and callid="+ call.getCallID()+ ". Videobridge in use: "+ isVideoBridge);
+    logger.info("Setup a conference with uri=" + uri + " and callid="+ call.getCallID()+ ". Videobridge in use: "+ isVideobridge);
   }
   return cd;
 }
