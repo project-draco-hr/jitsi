@@ -2,14 +2,19 @@
   ChatRoomWrapper chatRoom=evt.getSourceChatRoom();
 switch (evt.getEventID()) {
 case ChatRoomListChangeEvent.CHAT_ROOM_ADDED:
-    if (queryString == null || ((chatRoom.getChatRoomName().startsWith(queryString) || chatRoom.getChatRoomID().startsWith(queryString))))     addQueryResult(new ChatRoomSourceContact(chatRoom.getChatRoom(),this));
+    addChatRoom(chatRoom.getChatRoom(),false);
   break;
 case ChatRoomListChangeEvent.CHAT_ROOM_REMOVED:
-for (SourceContact contact : getQueryResults()) {
+LinkedList<ChatRoomSourceContact> tmpContactResults;
+synchronized (contactResults) {
+tmpContactResults=new LinkedList<ChatRoomSourceContact>(contactResults);
+for (ChatRoomSourceContact contact : tmpContactResults) {
   if (contact.getContactAddress().equals(chatRoom.getChatRoomName())) {
+    contactResults.remove(contact);
     fireContactRemoved(contact);
     break;
   }
+}
 }
 break;
 default :

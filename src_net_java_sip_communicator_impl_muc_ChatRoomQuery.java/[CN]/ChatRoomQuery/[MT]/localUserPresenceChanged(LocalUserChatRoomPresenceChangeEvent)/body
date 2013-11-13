@@ -3,11 +3,13 @@
   String eventType=evt.getEventType();
   boolean existingContact=false;
   SourceContact foundContact=null;
-  for (  SourceContact contact : getQueryResults()) {
-    if (contact.getContactAddress().equals(sourceChatRoom.getName())) {
-      existingContact=true;
-      foundContact=contact;
-      break;
+synchronized (contactResults) {
+    for (    SourceContact contact : contactResults) {
+      if (contact.getContactAddress().equals(sourceChatRoom.getName())) {
+        existingContact=true;
+        foundContact=contact;
+        break;
+      }
     }
   }
   if (LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED.equals(eventType)) {
@@ -16,7 +18,7 @@
       fireContactChanged(foundContact);
     }
  else {
-      if (queryString == null || ((sourceChatRoom.getName().startsWith(queryString) || sourceChatRoom.getIdentifier().startsWith(queryString))))       addQueryResult(new ChatRoomSourceContact(sourceChatRoom,this));
+      addChatRoom(sourceChatRoom,false);
     }
   }
  else   if ((LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT.equals(eventType) || LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_KICKED.equals(eventType) || LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_DROPPED.equals(eventType))) {
