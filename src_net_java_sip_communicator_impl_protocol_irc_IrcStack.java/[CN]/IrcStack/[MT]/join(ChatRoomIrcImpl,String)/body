@@ -1,6 +1,24 @@
 {
   if (chatroom == null)   throw new IllegalArgumentException("chatroom cannot be null");
   if (password == null)   throw new IllegalArgumentException("password cannot be null");
-  this.irc.addListener(new ChatRoomListener(chatroom));
-  this.irc.joinChannel(chatroom.getIdentifier(),password);
+  this.irc.joinChannel(chatroom.getIdentifier(),password,new Callback<IRCChannel>(){
+    @Override public void onSuccess(    IRCChannel channel){
+      String name=channel.getName();
+      IrcStack.this.joined.put(name,channel);
+      IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
+      IrcStack.this.irc.addListener(new ChatRoomListener(chatroom));
+      IRCTopic topic=channel.getTopic();
+      ChatRoomPropertyChangeEvent topicChangeEvent=new ChatRoomPropertyChangeEvent(chatroom,ChatRoomPropertyChangeEvent.CHAT_ROOM_SUBJECT,"",topic.getValue());
+      chatroom.firePropertyChangeEvent(topicChangeEvent);
+      for (      Entry<IRCUser,Set<IRCUserStatus>> userEntry : channel.getUsers().entrySet()) {
+        IRCUser user=userEntry.getKey();
+        Set<IRCUserStatus> statuses=userEntry.getValue();
+        ChatRoomMemberIrcImpl member=new ChatRoomMemberIrcImpl(IrcStack.this.provider,chatroom,user.getNick(),ChatRoomMemberRole.MEMBER);
+        chatroom.fireMemberPresenceEvent(member,null,ChatRoomMemberPresenceChangeEvent.MEMBER_JOINED,null);
+      }
+    }
+    @Override public void onFailure(    Exception aExc){
+    }
+  }
+);
 }
