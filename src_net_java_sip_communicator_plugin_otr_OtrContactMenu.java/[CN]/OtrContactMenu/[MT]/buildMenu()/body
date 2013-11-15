@@ -10,15 +10,15 @@
   startOtr.setEnabled(policy.getEnableManual());
   startOtr.setActionCommand(ACTION_COMMAND_START_OTR);
   startOtr.addActionListener(this);
+  JMenuItem refreshOtr=new JMenuItem();
+  refreshOtr.setText(OtrActivator.resourceService.getI18NString("plugin.otr.menu.REFRESH_OTR"));
+  refreshOtr.setEnabled(policy.getEnableManual());
+  refreshOtr.setActionCommand(ACTION_COMMAND_REFRESH_OTR);
+  refreshOtr.addActionListener(this);
 switch (this.sessionStatus) {
 case ENCRYPTED:
-    JMenuItem refreshOtr=new JMenuItem();
-  refreshOtr.setText(OtrActivator.resourceService.getI18NString("plugin.otr.menu.REFRESH_OTR"));
-refreshOtr.setEnabled(policy.getEnableManual());
-refreshOtr.setActionCommand(ACTION_COMMAND_REFRESH_OTR);
-refreshOtr.addActionListener(this);
-JMenuItem authBuddy=new JMenuItem();
-authBuddy.setText(OtrActivator.resourceService.getI18NString("plugin.otr.menu.AUTHENTICATE_BUDDY"));
+    JMenuItem authBuddy=new JMenuItem();
+  authBuddy.setText(OtrActivator.resourceService.getI18NString("plugin.otr.menu.AUTHENTICATE_BUDDY"));
 authBuddy.setActionCommand(ACTION_COMMAND_AUTHENTICATE_BUDDY);
 authBuddy.addActionListener(this);
 if (separateMenu != null) {
@@ -35,11 +35,11 @@ break;
 case FINISHED:
 if (separateMenu != null) {
 separateMenu.add(endOtr);
-separateMenu.add(startOtr);
+separateMenu.add(refreshOtr);
 }
  else {
 parentMenu.add(endOtr);
-parentMenu.add(startOtr);
+parentMenu.add(refreshOtr);
 }
 break;
 case PLAINTEXT:
@@ -53,14 +53,20 @@ cbEnable.setSelected(policy.getEnableManual());
 cbEnable.setActionCommand(ACTION_COMMAND_CB_ENABLE);
 cbEnable.addActionListener(this);
 JCheckBoxMenuItem cbAlways=new JCheckBoxMenuItem();
-cbAlways.setText(OtrActivator.resourceService.getI18NString("plugin.otr.menu.CB_AUTO"));
+cbAlways.setText(String.format(OtrActivator.resourceService.getI18NString("plugin.otr.menu.CB_AUTO",new String[]{contact.getDisplayName()})));
 cbAlways.setEnabled(policy.getEnableManual());
-String autoInitPropValue=OtrActivator.configService.getString(OtrActivator.AUTO_INIT_OTR_PROP);
-boolean isAutoInit=policy.getEnableAlways();
-if (autoInitPropValue != null) isAutoInit=Boolean.parseBoolean(autoInitPropValue);
-cbAlways.setSelected(isAutoInit);
+cbAlways.setSelected(policy.getEnableAlways());
 cbAlways.setActionCommand(ACTION_COMMAND_CB_AUTO);
 cbAlways.addActionListener(this);
+JCheckBoxMenuItem cbAlwaysAll=new JCheckBoxMenuItem();
+cbAlwaysAll.setText(OtrActivator.resourceService.getI18NString("plugin.otr.menu.CB_AUTO_ALL"));
+cbAlwaysAll.setEnabled(policy.getEnableManual());
+String autoInitPropValue=OtrActivator.configService.getString(OtrActivator.AUTO_INIT_OTR_PROP);
+boolean isAutoInit=OtrActivator.scOtrEngine.getGlobalPolicy().getEnableAlways();
+if (autoInitPropValue != null) isAutoInit=Boolean.parseBoolean(autoInitPropValue);
+cbAlwaysAll.setSelected(isAutoInit);
+cbAlwaysAll.setActionCommand(ACTION_COMMAND_CB_AUTO_ALL);
+cbAlwaysAll.addActionListener(this);
 JCheckBoxMenuItem cbRequire=new JCheckBoxMenuItem();
 cbRequire.setText(OtrActivator.resourceService.getI18NString("plugin.otr.menu.CB_REQUIRE"));
 cbRequire.setEnabled(policy.getEnableManual());
@@ -80,6 +86,7 @@ if (separateMenu != null) {
 separateMenu.addSeparator();
 separateMenu.add(cbEnable);
 separateMenu.add(cbAlways);
+separateMenu.add(cbAlwaysAll);
 separateMenu.add(cbRequire);
 separateMenu.addSeparator();
 separateMenu.add(cbReset);
@@ -89,6 +96,7 @@ parentMenu.add(separateMenu);
 parentMenu.addSeparator();
 parentMenu.add(cbEnable);
 parentMenu.add(cbAlways);
+parentMenu.add(cbAlwaysAll);
 parentMenu.add(cbRequire);
 parentMenu.addSeparator();
 parentMenu.add(cbReset);
