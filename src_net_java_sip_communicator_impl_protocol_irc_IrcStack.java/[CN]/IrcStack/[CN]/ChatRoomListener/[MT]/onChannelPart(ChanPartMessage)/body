@@ -1,7 +1,14 @@
 {
-  if (this.chatroom.getIdentifier().equals(msg.getChannelName())) {
-    IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(this.chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT,null);
-    IrcStack.this.joined.remove(this.chatroom.getIdentifier());
-    IrcStack.this.irc.deleteListener(this);
+  if (isThisChatRoom(msg.getChannelName())) {
+    String user=msg.getSource().getNick();
+    if (IrcStack.this.getNick().equals(msg.getSource().getNick())) {
+      IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(this.chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT,null);
+      IrcStack.this.joined.remove(this.chatroom.getIdentifier());
+      IrcStack.this.irc.deleteListener(this);
+    }
+ else {
+      ChatRoomMember member=this.chatroom.getChatRoomMember(user);
+      this.chatroom.fireMemberPresenceEvent(member,null,ChatRoomMemberPresenceChangeEvent.MEMBER_LEFT,msg.getPartMsg());
+    }
   }
 }

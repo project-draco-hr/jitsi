@@ -5,17 +5,25 @@
     @Override public void onSuccess(    IRCChannel channel){
       String name=channel.getName();
       IrcStack.this.joined.put(name,channel);
-      IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
       IrcStack.this.irc.addListener(new ChatRoomListener(chatroom));
       IRCTopic topic=channel.getTopic();
-      ChatRoomPropertyChangeEvent topicChangeEvent=new ChatRoomPropertyChangeEvent(chatroom,ChatRoomPropertyChangeEvent.CHAT_ROOM_SUBJECT,"",topic.getValue());
-      chatroom.firePropertyChangeEvent(topicChangeEvent);
+      chatroom.updateSubject(topic.getValue());
       for (      Entry<IRCUser,Set<IRCUserStatus>> userEntry : channel.getUsers().entrySet()) {
         IRCUser user=userEntry.getKey();
         Set<IRCUserStatus> statuses=userEntry.getValue();
-        ChatRoomMemberIrcImpl member=new ChatRoomMemberIrcImpl(IrcStack.this.provider,chatroom,user.getNick(),ChatRoomMemberRole.MEMBER);
-        chatroom.fireMemberPresenceEvent(member,null,ChatRoomMemberPresenceChangeEvent.MEMBER_JOINED,null);
+        ChatRoomMemberRole role=ChatRoomMemberRole.SILENT_MEMBER;
+        for (        IRCUserStatus status : statuses) {
+          role=convertMemberMode(status.getChanModeType().charValue());
+        }
+        if (IrcStack.this.getNick().equals(user.getNick())) {
+          chatroom.prepUserRole(role);
+        }
+ else {
+          ChatRoomMemberIrcImpl member=new ChatRoomMemberIrcImpl(IrcStack.this.provider,chatroom,user.getNick(),role);
+          chatroom.addChatRoomMember(member.getContactAddress(),member);
+        }
       }
+      IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
     }
     @Override public void onFailure(    Exception aExc){
     }
