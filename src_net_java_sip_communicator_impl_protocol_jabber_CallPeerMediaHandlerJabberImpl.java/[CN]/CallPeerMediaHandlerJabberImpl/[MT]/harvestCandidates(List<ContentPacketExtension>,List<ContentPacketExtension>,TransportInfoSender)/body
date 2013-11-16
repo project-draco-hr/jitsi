@@ -13,6 +13,20 @@
     long candidateHarvestTime=stopCandidateHarvestTime - startCandidateHarvestTime;
     logger.info("End candidate harvest within " + candidateHarvestTime + " ms");
   }
-  setDtlsEncryptionToTransports(remote,local);
+  setDtlsEncryptionOnTransports(remote,local);
+  if (transportManager.startConnectivityEstablishmentWithJitsiVideobridge) {
+    Map<String,IceUdpTransportPacketExtension> map=new LinkedHashMap<String,IceUdpTransportPacketExtension>();
+    for (    MediaType mediaType : MediaType.values()) {
+      ColibriConferenceIQ.Channel channel=transportManager.getColibriChannel(mediaType,true);
+      if (channel != null) {
+        IceUdpTransportPacketExtension transport=channel.getTransport();
+        if (transport != null)         map.put(mediaType.toString(),transport);
+      }
+    }
+    if (!map.isEmpty()) {
+      transportManager.startConnectivityEstablishmentWithJitsiVideobridge=false;
+      transportManager.startConnectivityEstablishment(map);
+    }
+  }
   return transportManager.wrapupCandidateHarvest();
 }

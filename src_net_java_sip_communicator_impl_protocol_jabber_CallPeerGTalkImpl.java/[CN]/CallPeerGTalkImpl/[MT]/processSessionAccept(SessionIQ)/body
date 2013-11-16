@@ -21,7 +21,8 @@ catch (  Exception exc) {
     if (logger.isInfoEnabled())     logger.info("Failed to process a session-accept",exc);
     String reasonText="Error: " + exc.getMessage();
     SessionIQ errResp=GTalkPacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getID(),Reason.GENERAL_ERROR,reasonText);
-    getMediaHandler().getTransportManager().close();
+    TransportManagerGTalkImpl transportManager=getMediaHandler().queryTransportManager();
+    if (transportManager != null)     transportManager.close();
     setState(CallPeerState.FAILED,reasonText);
     getProtocolProvider().getConnection().sendPacket(errResp);
     return;

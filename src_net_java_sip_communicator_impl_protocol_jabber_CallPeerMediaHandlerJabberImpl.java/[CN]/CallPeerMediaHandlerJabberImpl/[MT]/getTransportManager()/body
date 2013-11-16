@@ -9,7 +9,9 @@ synchronized (transportManagerSyncRoot) {
  catch (        InterruptedException e) {
         }
       }
-      if (transportManager == null)       throw new IllegalStateException("The initiator is expected to specify the transport" + " in their offer.");
+      if (transportManager == null) {
+        throw new IllegalStateException("The initiator is expected to specify the transport" + " in their offer.");
+      }
  else       return transportManager;
     }
  else {
@@ -32,17 +34,16 @@ synchronized (supportedTransportsSyncRoot) {
             }
           }
           if (transportManager == null) {
-            logger.warn("Could not find a supported transport" + "manager in supportedTransports. Will try" + "to select one based on disco#info");
+            logger.warn("Could not find a supported" + " TransportManager in" + " supportedTransports. Will try to"+ " select one based on disco#info.");
           }
         }
       }
-      if (transportManager == null && google && isFeatureSupported(discoveryManager,peerDiscoverInfo,ProtocolProviderServiceJabberImpl.URN_GOOGLE_TRANSPORT_P2P)) {
+      if ((transportManager == null) && google && isFeatureSupported(discoveryManager,peerDiscoverInfo,ProtocolProviderServiceJabberImpl.URN_GOOGLE_TRANSPORT_P2P)) {
         transportManager=new P2PTransportManager(peer);
       }
  else       if (transportManager == null) {
         String[] transports=new String[]{ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1,ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0};
         if (isJitsiVideobridge) {
-          transports=new String[]{ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0};
         }
         for (        String transport : transports) {
           if (isFeatureSupported(discoveryManager,peerDiscoverInfo,transport)) {
@@ -56,7 +57,7 @@ synchronized (supportedTransportsSyncRoot) {
           }
         }
         if ((transportManager == null) && logger.isDebugEnabled()) {
-          logger.debug("No known Jingle transport supported" + " by Jabber call peer " + peer);
+          logger.debug("No known Jingle transport supported by Jabber" + " call peer " + peer);
         }
       }
     }

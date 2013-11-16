@@ -1,18 +1,27 @@
 {
+  ColibriConferenceIQ.Channel channel=getColibriChannel(mediaType,true);
   MediaStreamTarget streamTarget=null;
-  for (  Iterable<ContentPacketExtension> remote : remotes) {
-    for (    ContentPacketExtension content : remote) {
-      RtpDescriptionPacketExtension rtpDescription=content.getFirstChildOfType(RtpDescriptionPacketExtension.class);
-      MediaType contentMediaType=MediaType.parseString(rtpDescription.getMedia());
-      if (mediaType.equals(contentMediaType)) {
-        ColibriConferenceIQ.Channel channel=getColibriChannel(mediaType,true);
-        if (channel == null) {
+  if (channel == null) {
+    String media=mediaType.toString();
+    for (    Iterable<ContentPacketExtension> remote : remotes) {
+      for (      ContentPacketExtension content : remote) {
+        RtpDescriptionPacketExtension rtpDescription=content.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+        if (media.equals(rtpDescription.getMedia())) {
           streamTarget=JingleUtils.extractDefaultTarget(content);
+          break;
         }
+      }
+    }
+  }
  else {
-          streamTarget=new MediaStreamTarget(new InetSocketAddress(channel.getHost(),channel.getRTPPort()),new InetSocketAddress(channel.getHost(),channel.getRTCPPort()));
-        }
-        break;
+    IceUdpTransportPacketExtension transport=channel.getTransport();
+    if (transport != null)     streamTarget=JingleUtils.extractDefaultTarget(transport);
+    if (streamTarget == null) {
+      @SuppressWarnings("deprecation") String host=channel.getHost();
+      if (host != null) {
+        @SuppressWarnings("deprecation") int rtpPort=channel.getRTPPort();
+        @SuppressWarnings("deprecation") int rtcpPort=channel.getRTCPPort();
+        streamTarget=new MediaStreamTarget(new InetSocketAddress(host,rtpPort),new InetSocketAddress(host,rtcpPort));
       }
     }
   }

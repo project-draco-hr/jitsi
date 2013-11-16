@@ -29,7 +29,8 @@ catch (  Exception exc) {
     logger.info("Failed to establish a connection",exc);
     String reasonText="Error: " + exc.getMessage();
     SessionIQ errResp=GTalkPacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getID(),Reason.GENERAL_ERROR,reasonText);
-    getMediaHandler().getTransportManager().close();
+    TransportManagerGTalkImpl transportManager=getMediaHandler().queryTransportManager();
+    if (transportManager != null)     transportManager.close();
     setState(CallPeerState.FAILED,reasonText);
     getProtocolProvider().getConnection().sendPacket(errResp);
     return;

@@ -1,0 +1,67 @@
+{
+  CallPeerJabberImpl peer=getCallPeer();
+  CallJabberImpl call=peer.getCall();
+  boolean isJitsiVideobridge=call.getConference().isJitsiVideobridge();
+  List<ContentPacketExtension> cpes=(theirOffer == null) ? ourAnswer : theirOffer;
+  if (isJitsiVideobridge) {
+    Map<ContentPacketExtension,ContentPacketExtension> contentMap=new LinkedHashMap<ContentPacketExtension,ContentPacketExtension>();
+    for (    ContentPacketExtension cpe : cpes) {
+      RtpDescriptionPacketExtension rdpe=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+      MediaType mediaType=MediaType.parseString(rdpe.getMedia());
+      if ((colibri == null) || (colibri.getContent(mediaType.toString()) == null)) {
+        ContentPacketExtension local, remote;
+        if (cpes == ourAnswer) {
+          local=cpe;
+          remote=(theirOffer == null) ? null : findContentByName(theirOffer,cpe.getName());
+        }
+ else {
+          local=findContentByName(ourAnswer,cpe.getName());
+          remote=cpe;
+        }
+        contentMap.put(local,remote);
+      }
+    }
+    if (!contentMap.isEmpty()) {
+      if (colibri == null)       colibri=new ColibriConferenceIQ();
+      for (      Map.Entry<ContentPacketExtension,ContentPacketExtension> e : contentMap.entrySet()) {
+        ContentPacketExtension cpe=e.getValue();
+        if (cpe == null)         cpe=e.getKey();
+        RtpDescriptionPacketExtension rdpe=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+        colibri.getOrCreateContent(rdpe.getMedia());
+      }
+      ColibriConferenceIQ conferenceResult=call.createColibriChannels(peer,contentMap);
+      if (conferenceResult != null) {
+        String videobridgeID=colibri.getID();
+        String conferenceResultID=conferenceResult.getID();
+        if (videobridgeID == null)         colibri.setID(conferenceResultID);
+ else         if (!videobridgeID.equals(conferenceResultID))         throw new IllegalStateException("conference.id");
+        String videobridgeFrom=conferenceResult.getFrom();
+        if ((videobridgeFrom != null) && (videobridgeFrom.length() != 0)) {
+          colibri.setFrom(videobridgeFrom);
+        }
+        for (        ColibriConferenceIQ.Content contentResult : conferenceResult.getContents()) {
+          ColibriConferenceIQ.Content content=colibri.getOrCreateContent(contentResult.getName());
+          for (          ColibriConferenceIQ.Channel channelResult : contentResult.getChannels()) {
+            if (content.getChannel(channelResult.getID()) == null) {
+              content.addChannel(channelResult);
+            }
+          }
+        }
+      }
+ else {
+        ProtocolProviderServiceJabberImpl.throwOperationFailedException("Failed to allocate colibri channel.",OperationFailedException.GENERAL_ERROR,null,logger);
+      }
+    }
+  }
+  for (  ContentPacketExtension cpe : cpes) {
+    String contentName=cpe.getName();
+    ContentPacketExtension ourContent=findContentByName(ourAnswer,contentName);
+    if (ourContent != null) {
+      ContentPacketExtension theirContent=(theirOffer == null) ? null : findContentByName(theirOffer,contentName);
+      RtpDescriptionPacketExtension rtpDesc=ourContent.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+      String media=rtpDesc.getMedia();
+      PacketExtension pe=startCandidateHarvest(theirContent,ourContent,transportInfoSender,media);
+      if (pe != null)       ourContent.addChildExtension(pe);
+    }
+  }
+}

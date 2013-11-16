@@ -1,0 +1,37 @@
+{
+  CallPeerJabberImpl peer=getPeer();
+  boolean b=false;
+  if (peer.isJitsiVideobridge()) {
+    b=setDtlsEncryptionOnTransport(mediaType,localContent,remoteContent);
+    return b;
+  }
+  ProtocolProviderServiceJabberImpl protocolProvider=peer.getProtocolProvider();
+  AccountID accountID=protocolProvider.getAccountID();
+  SrtpControls srtpControls=getSrtpControls();
+  if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled(DtlsControl.PROTO_NAME)) {
+    boolean addFingerprintToLocalTransport;
+    if (remoteContent == null) {
+      addFingerprintToLocalTransport=protocolProvider.isFeatureSupported(peer.getAddress(),ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_DTLS_SRTP);
+    }
+ else {
+      addFingerprintToLocalTransport=addDtlsAdvertisedEncryptions(false,remoteContent,mediaType);
+    }
+    if (addFingerprintToLocalTransport) {
+      DtlsControl dtlsControl=(DtlsControl)srtpControls.getOrCreate(mediaType,SrtpControlType.DTLS_SRTP);
+      if (dtlsControl != null) {
+        int dtlsProtocol=(remoteContent == null) ? DtlsControl.DTLS_SERVER_PROTOCOL : DtlsControl.DTLS_CLIENT_PROTOCOL;
+        dtlsControl.setDtlsProtocol(dtlsProtocol);
+        b=true;
+        setDtlsEncryptionOnTransport(mediaType,localContent,remoteContent);
+      }
+    }
+  }
+  if (!b) {
+    SrtpControl dtlsControl=srtpControls.get(mediaType,SrtpControlType.DTLS_SRTP);
+    if (dtlsControl != null) {
+      srtpControls.remove(mediaType,SrtpControlType.DTLS_SRTP);
+      dtlsControl.cleanup();
+    }
+  }
+  return b;
+}

@@ -10,18 +10,15 @@
   if (accID.isStunServerDiscoveryEnabled()) {
     String username=org.jivesoftware.smack.util.StringUtils.parseName(provider.getOurJID());
     String password=JabberActivator.getProtocolProviderFactory().loadPassword(accID);
-    if (provider.getUserCredentials() != null)     password=provider.getUserCredentials().getPasswordAsString();
+    UserCredentials credentials=provider.getUserCredentials();
+    if (credentials != null)     password=credentials.getPasswordAsString();
     if (password == null) {
-      UserCredentials credentials=new UserCredentials();
+      credentials=new UserCredentials();
       credentials.setUserName(accID.getUserID());
       credentials=provider.getAuthority().obtainCredentials(accID.getDisplayName(),credentials,SecurityAuthority.AUTHENTICATION_REQUIRED);
-      if (credentials == null) {
-        return null;
-      }
+      if (credentials == null)       return null;
       char[] pass=credentials.getPassword();
-      if (pass == null) {
-        return null;
-      }
+      if (pass == null)       return null;
       password=new String(pass);
       if (credentials.isPasswordPersistent()) {
         JabberActivator.getProtocolProviderFactory().storePassword(accID,password);
@@ -51,32 +48,21 @@
     atLeastOneStunServer=true;
     agent.addCandidateHarvester(harvester);
   }
-  if (!atLeastOneStunServer) {
-    if (accID.isUseDefaultStunServer()) {
-      TransportAddress addr=new TransportAddress(DEFAULT_STUN_SERVER_ADDRESS,DEFAULT_STUN_SERVER_PORT,Transport.UDP);
-      StunCandidateHarvester harvester=new StunCandidateHarvester(addr);
-      if (harvester != null) {
-        agent.addCandidateHarvester(harvester);
-      }
-    }
+  if (!atLeastOneStunServer && accID.isUseDefaultStunServer()) {
+    TransportAddress addr=new TransportAddress(DEFAULT_STUN_SERVER_ADDRESS,DEFAULT_STUN_SERVER_PORT,Transport.UDP);
+    agent.addCandidateHarvester(new StunCandidateHarvester(addr));
   }
   if (accID.isJingleNodesRelayEnabled()) {
-    SmackServiceNode serviceNode=peer.getProtocolProvider().getJingleNodesServiceNode();
+    SmackServiceNode serviceNode=provider.getJingleNodesServiceNode();
     if (serviceNode != null) {
-      JingleNodesHarvester harvester=new JingleNodesHarvester(serviceNode);
-      if (harvester != null) {
-        agent.addCandidateHarvester(harvester);
-      }
+      agent.addCandidateHarvester(new JingleNodesHarvester(serviceNode));
     }
   }
-  if (accID.isUPNPEnabled()) {
-    UPNPHarvester harvester=new UPNPHarvester();
-    if (harvester != null) {
-      agent.addCandidateHarvester(harvester);
-    }
-  }
+  if (accID.isUPNPEnabled())   agent.addCandidateHarvester(new UPNPHarvester());
   long stopGatheringHarvesterTime=System.currentTimeMillis();
-  long gatheringHarvesterTime=stopGatheringHarvesterTime - startGatheringHarvesterTime;
-  if (logger.isInfoEnabled())   logger.info("End gathering harvester within " + gatheringHarvesterTime + " ms");
+  if (logger.isInfoEnabled()) {
+    long gatheringHarvesterTime=stopGatheringHarvesterTime - startGatheringHarvesterTime;
+    logger.info("End gathering harvester within " + gatheringHarvesterTime + " ms");
+  }
   return agent;
 }

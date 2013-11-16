@@ -2,17 +2,21 @@
   logger.info("Send NAT hole punch packets");
   int packetCount=ProtocolMediaActivator.getConfigurationService().getInt(HOLE_PUNCH_PKT_COUNT_PROPERTY,DEFAULT_HOLE_PUNCH_PKT_COUNT);
   if (packetCount < 0)   packetCount=DEFAULT_HOLE_PUNCH_PKT_COUNT;
+  if (packetCount == 0)   return;
   try {
     StreamConnector connector=getStreamConnector(type);
+    if (connector.getProtocol() == StreamConnector.Protocol.TCP)     return;
+    byte[] buf=new byte[0];
 synchronized (connector) {
-      if (connector.getProtocol() == StreamConnector.Protocol.TCP)       return;
-      DatagramSocket socket;
       for (int i=0; i < packetCount; i++) {
+        DatagramSocket socket;
         if ((socket=connector.getDataSocket()) != null) {
-          socket.send(new DatagramPacket(new byte[0],0,target.getDataAddress().getAddress(),target.getDataAddress().getPort()));
+          InetSocketAddress dataAddress=target.getDataAddress();
+          socket.send(new DatagramPacket(buf,buf.length,dataAddress.getAddress(),dataAddress.getPort()));
         }
         if ((socket=connector.getControlSocket()) != null) {
-          socket.send(new DatagramPacket(new byte[0],0,target.getControlAddress().getAddress(),target.getControlAddress().getPort()));
+          InetSocketAddress controlAddress=target.getControlAddress();
+          socket.send(new DatagramPacket(buf,buf.length,controlAddress.getAddress(),controlAddress.getPort()));
         }
       }
     }
