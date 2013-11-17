@@ -1,13 +1,29 @@
 {
 synchronized (this.locale) {
     if (this.locale.equals(locale))     return;
-    String path=locale.getDictUrl().getFile();
-    int filenameStart=path.lastIndexOf('/') + 1;
-    String filename=path.substring(filenameStart);
-    File dictLocation=SpellCheckActivator.getFileAccessService().getPrivatePersistentFile(DICT_DIR + filename,FileCategory.CACHE);
-    if (!dictLocation.exists())     copyDictionary(locale.getDictUrl().openStream(),dictLocation);
+    File dictLocation=getLocalDictForLocale(locale);
+    InputStream dictInput=null;
+    if (!dictLocation.exists()) {
+      boolean dictFound=false;
+      @SuppressWarnings("unchecked") Enumeration<URL> dictUrls=SpellCheckActivator.bundleContext.getBundle().findEntries(DEFAULT_DICT_PATH,"*.zip",false);
+      if (dictUrls != null) {
+        while (dictUrls.hasMoreElements()) {
+          URL dictUrl=dictUrls.nextElement();
+          if (new File(dictUrl.getFile()).getName().equals(new File(locale.getDictUrl().getFile()).getName())) {
+            dictInput=dictUrl.openStream();
+            dictFound=true;
+            break;
+          }
+        }
+      }
+      if (!dictFound) {
+        copyDictionary(locale.getDictUrl().openStream(),dictLocation);
+      }
+    }
+    if (dictInput == null) {
+      dictInput=new FileInputStream(dictLocation);
+    }
 synchronized (this.attachedChats) {
-      InputStream dictInput=new FileInputStream(dictLocation);
       SpellDictionary dict=new OpenOfficeSpellDictionary(dictInput,this.personalDictLocation);
       this.dict=dict;
       this.dictLocation=dictLocation;
