@@ -3,7 +3,16 @@ synchronized (this.locale) {
     if (this.locale.equals(locale))     return;
     File dictLocation=getLocalDictForLocale(locale);
     InputStream dictInput=null;
-    if (!dictLocation.exists()) {
+    InputStream affInput=null;
+    if (OSUtils.IS_LINUX && !dictLocation.exists()) {
+      String sysDir=SpellCheckActivator.getConfigService().getString(SYSTEM_HUNSPELL_DIR);
+      File systemDict=new File(sysDir,locale.getIcuLocale() + ".dic");
+      if (systemDict.exists()) {
+        dictInput=new FileInputStream(systemDict);
+        affInput=new FileInputStream(new File(sysDir,locale.getIcuLocale() + ".aff"));
+      }
+    }
+    if (!dictLocation.exists() && dictInput == null) {
       boolean dictFound=false;
       @SuppressWarnings("unchecked") Enumeration<URL> dictUrls=SpellCheckActivator.bundleContext.getBundle().findEntries(DEFAULT_DICT_PATH,"*.zip",false);
       if (dictUrls != null) {
@@ -24,7 +33,13 @@ synchronized (this.locale) {
       dictInput=new FileInputStream(dictLocation);
     }
 synchronized (this.attachedChats) {
-      SpellDictionary dict=new OpenOfficeSpellDictionary(dictInput,this.personalDictLocation);
+      SpellDictionary dict;
+      if (affInput == null) {
+        dict=new OpenOfficeSpellDictionary(dictInput,this.personalDictLocation);
+      }
+ else {
+        dict=new OpenOfficeSpellDictionary(affInput,dictInput,personalDictLocation,true);
+      }
       this.dict=dict;
       this.dictLocation=dictLocation;
       Parameters.Locale oldLocale=this.locale;
