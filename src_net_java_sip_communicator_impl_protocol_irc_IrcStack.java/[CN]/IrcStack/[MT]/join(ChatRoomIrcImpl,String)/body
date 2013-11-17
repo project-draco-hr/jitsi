@@ -1,4 +1,5 @@
 {
+  if (isConnected() == false)   throw new IllegalStateException("Please connect to an IRC server first");
   if (chatroom == null)   throw new IllegalArgumentException("chatroom cannot be null");
   if (password == null)   throw new IllegalArgumentException("password cannot be null");
   this.irc.joinChannel(chatroom.getIdentifier(),password,new Callback<IRCChannel>(){
@@ -25,7 +26,10 @@
       }
       IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
     }
-    @Override public void onFailure(    Exception aExc){
+    @Override public void onFailure(    Exception e){
+      e.printStackTrace();
+      MessageIrcImpl message=new MessageIrcImpl("Failed to join channel " + chatroom.getIdentifier(),"text/plain","UTF-8","Failed to join");
+      chatroom.fireMessageReceivedEvent(message,null,new Date(),MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
     }
   }
 );
