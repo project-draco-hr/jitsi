@@ -18,7 +18,6 @@ synchronized (transportManagerSyncRoot) {
       ProtocolProviderServiceJabberImpl protocolProvider=peer.getProtocolProvider();
       ScServiceDiscoveryManager discoveryManager=protocolProvider.getDiscoveryManager();
       DiscoverInfo peerDiscoverInfo=peer.getDiscoveryInfo();
-      boolean isJitsiVideobridge=peer.isJitsiVideobridge();
 synchronized (supportedTransportsSyncRoot) {
         if (supportedTransports != null && supportedTransports.length > 0) {
           for (int i=0; i < supportedTransports.length; i++) {
@@ -38,9 +37,21 @@ synchronized (supportedTransportsSyncRoot) {
       }
       if (transportManager == null) {
         String[] transports=new String[]{ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1,ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0};
-        if (isJitsiVideobridge) {
+        if (peer.isJitsiVideobridge()) {
+          CallJabberImpl call=peer.getCall();
+          if (call != null) {
+            String jitsiVideobridge=peer.getCall().getJitsiVideobridge();
+            if ((jitsiVideobridge != null) && !protocolProvider.isFeatureSupported(jitsiVideobridge,ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1)) {
+              for (int i=transports.length - 1; i >= 0; i--) {
+                if (ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1.equals(transports[i])) {
+                  transports[i]=null;
+                }
+              }
+            }
+          }
         }
         for (        String transport : transports) {
+          if (transport == null)           continue;
           if (isFeatureSupported(discoveryManager,peerDiscoverInfo,transport)) {
             if (ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1.equals(transport)) {
               transportManager=new IceUdpTransportManager(peer);
