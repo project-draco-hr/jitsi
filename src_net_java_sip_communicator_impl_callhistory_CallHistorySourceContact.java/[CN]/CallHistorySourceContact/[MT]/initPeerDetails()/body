@@ -1,9 +1,15 @@
 {
+  boolean stripAddress=false;
+  String stripAddressProp=CallHistoryActivator.getResources().getSettingsString(STRIP_ADDRESSES_TO_NUMBERS);
+  if (stripAddressProp != null && Boolean.parseBoolean(stripAddressProp))   stripAddress=true;
   Iterator<CallPeerRecord> recordsIter=callRecord.getPeerRecords().iterator();
   while (recordsIter.hasNext()) {
     CallPeerRecord peerRecord=recordsIter.next();
     String peerAddress=peerRecord.getPeerAddress();
     if (peerAddress != null) {
+      if (stripAddress && !peerAddress.startsWith("@")) {
+        peerAddress=peerAddress.split("@")[0];
+      }
       String peerRecordDisplayName=peerRecord.getDisplayName();
       if (peerRecordDisplayName == null || peerRecordDisplayName.length() == 0)       peerRecordDisplayName=peerAddress;
       ContactDetail contactDetail=new ContactDetail(peerAddress,peerRecordDisplayName);
