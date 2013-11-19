@@ -7,23 +7,51 @@
       checkForRename(entry.getName(),contact);
     }
     for (    RosterGroup gr : entry.getGroups()) {
-      if (findContactGroup(gr.getName()) == null) {
+      ContactGroup cgr=findContactGroup(gr.getName());
+      if (cgr == null) {
         ContactGroupJabberImpl group=findContactGroupByNameCopy(gr.getName());
         if (group != null) {
           group.setSourceGroup(gr);
           fireGroupEvent(group,ServerStoredGroupEvent.GROUP_RENAMED_EVENT);
         }
  else {
+          ContactGroup currentParentGroup=contact.getParentContactGroup();
+          if (currentParentGroup.countContacts() > 1) {
+            cgr=currentParentGroup;
+          }
+ else {
+            boolean present=false;
+            for (            RosterGroup entryGr : entry.getGroups()) {
+              if (entryGr.getName().equals(currentParentGroup.getGroupName())) {
+                present=true;
+                break;
+              }
+            }
+            if (!present && currentParentGroup instanceof ContactGroupJabberImpl) {
+              ContactGroupJabberImpl currentGroup=(ContactGroupJabberImpl)currentParentGroup;
+              currentGroup.setSourceGroup(gr);
+              fireGroupEvent(currentGroup,ServerStoredGroupEvent.GROUP_RENAMED_EVENT);
+            }
+          }
         }
       }
- else {
+      if (cgr != null) {
         ContactGroup contactGroup=contact.getParentContactGroup();
         if (!gr.getName().equals(contactGroup.getGroupName())) {
           if (contactGroup instanceof ContactGroupJabberImpl)           ((ContactGroupJabberImpl)contactGroup).removeContact(contact);
  else           if (contactGroup instanceof RootContactGroupJabberImpl)           ((RootContactGroupJabberImpl)contactGroup).removeContact(contact);
           ContactGroupJabberImpl newParentGroup=findContactGroup(gr.getName());
+          if (newParentGroup == null) {
+            newParentGroup=new ContactGroupJabberImpl(gr,new ArrayList<RosterEntry>().iterator(),ServerStoredContactListJabberImpl.this,true);
+            rootGroup.addSubGroup(newParentGroup);
+            fireGroupEvent(newParentGroup,ServerStoredGroupEvent.GROUP_CREATED_EVENT);
+          }
           newParentGroup.addContact(contact);
           fireContactMoved(contactGroup,newParentGroup,contact);
+          if (contactGroup instanceof ContactGroupJabberImpl && contactGroup.countContacts() == 0) {
+            rootGroup.removeSubGroup((ContactGroupJabberImpl)contactGroup);
+            fireGroupEvent((ContactGroupJabberImpl)contactGroup,ServerStoredGroupEvent.GROUP_REMOVED_EVENT);
+          }
         }
  else {
           checkForRename(entry.getName(),contact);
