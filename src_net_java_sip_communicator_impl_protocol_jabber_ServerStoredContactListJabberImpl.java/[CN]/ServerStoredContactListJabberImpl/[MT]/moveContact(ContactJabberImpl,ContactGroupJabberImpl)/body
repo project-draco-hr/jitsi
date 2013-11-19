@@ -13,15 +13,17 @@
     }
  catch (    OperationFailedException ex) {
       logger.error("Cannot move contact! ",ex);
+      throw new OperationFailedException(ex.getMessage(),OperationFailedException.GENERAL_ERROR,ex);
     }
   }
-  newParent.addContact(contact);
   try {
     SmackConfiguration.setPacketReplyTimeout(ProtocolProviderServiceJabberImpl.SMACK_PACKET_REPLY_TIMEOUT);
     roster.createEntry(contact.getSourceEntry().getUser(),contact.getDisplayName(),new String[]{newParent.getGroupName()});
     SmackConfiguration.setPacketReplyTimeout(5000);
+    newParent.addContact(contact);
   }
  catch (  XMPPException ex) {
     logger.error("Cannot move contact! ",ex);
+    throw new OperationFailedException(ex.getMessage(),OperationFailedException.GENERAL_ERROR,ex);
   }
 }

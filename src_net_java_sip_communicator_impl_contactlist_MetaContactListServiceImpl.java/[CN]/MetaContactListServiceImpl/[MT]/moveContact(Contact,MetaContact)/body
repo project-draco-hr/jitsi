@@ -16,10 +16,17 @@
     throw new IllegalArgumentException(newParentMetaContact + " is not a MetaContactImpl instance.");
   }
   MetaContactImpl currentParentMetaContact=(MetaContactImpl)this.findMetaContactByContact(contact);
-  currentParentMetaContact.removeProtoContact(contact);
   MetaContactGroup newParentGroup=findParentMetaContactGroup(newParentMetaContact);
   ContactGroup parentProtoGroup=resolveProtoPath(contact.getProtocolProvider(),(MetaContactGroupImpl)newParentGroup);
-  if (contact.getParentContactGroup() != parentProtoGroup && opSetPresence != null)   opSetPresence.moveContactToGroup(contact,parentProtoGroup);
+  try {
+    if (contact.getParentContactGroup() != parentProtoGroup && opSetPresence != null) {
+      opSetPresence.moveContactToGroup(contact,parentProtoGroup);
+    }
+    currentParentMetaContact.removeProtoContact(contact);
+  }
+ catch (  OperationFailedException ex) {
+    throw new MetaContactListException(ex.getMessage(),MetaContactListException.CODE_MOVE_CONTACT_ERROR);
+  }
   ((MetaContactImpl)newParentMetaContact).addProtoContact(contact);
   fireProtoContactEvent(contact,ProtoContactEvent.PROTO_CONTACT_MOVED,currentParentMetaContact,newParentMetaContact);
   if (currentParentMetaContact.getContactCount() == 0) {
