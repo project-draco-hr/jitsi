@@ -7,5 +7,12 @@
   MetaContactGroupImpl newParentMetaGroupImpl=(MetaContactGroupImpl)newParentMetaGroup;
   newParentMetaGroupImpl.addMetaContact(metaContactImpl);
   fireMetaContactEvent(metaContactImpl,newParentMetaGroupImpl,MetaContactEvent.META_CONTACT_ADDED);
-  moveContact(contact,metaContactImpl);
+  try {
+    moveContact(contact,metaContactImpl);
+  }
+ catch (  MetaContactListException mex) {
+    newParentMetaGroupImpl.removeMetaContact(metaContactImpl);
+    fireMetaContactEvent(metaContactImpl,newParentMetaGroupImpl,MetaContactEvent.META_CONTACT_REMOVED);
+    throw mex;
+  }
 }
