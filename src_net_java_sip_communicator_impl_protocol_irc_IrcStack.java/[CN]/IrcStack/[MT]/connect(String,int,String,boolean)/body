@@ -1,5 +1,6 @@
 {
   if (this.irc != null && this.connectionState != null && this.connectionState.isConnected())   return;
+  final Exception[] exceptionContainer=new Exception[1];
   this.irc=new IRCApiImpl(true);
   this.params.setServer(new IRCServer(host,port,password,false));
 synchronized (this.irc) {
@@ -26,6 +27,7 @@ synchronized (IrcStack.this.irc) {
 synchronized (IrcStack.this.irc) {
           System.out.println("IRC connection FAILED!");
           e.printStackTrace();
+          exceptionContainer[0]=e;
           IrcStack.this.connectionState=null;
           IrcStack.this.disconnect();
           IrcStack.this.irc.notifyAll();
@@ -41,11 +43,14 @@ synchronized (IrcStack.this.irc) {
       }
  else {
         this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED);
+        if (exceptionContainer[0] != null) {
+          throw exceptionContainer[0];
+        }
       }
     }
  catch (    InterruptedException e) {
       this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED);
-      e.printStackTrace();
+      throw e;
     }
   }
 }
