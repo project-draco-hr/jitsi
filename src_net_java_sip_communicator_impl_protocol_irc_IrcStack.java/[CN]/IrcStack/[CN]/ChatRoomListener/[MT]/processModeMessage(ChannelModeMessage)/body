@@ -3,34 +3,52 @@
   for (  Mode mode : parser.getModes()) {
 switch (mode.getMode()) {
 case 'O':
-      ChatRoomMember owner=this.chatroom.getChatRoomMember(mode.getParams()[0]);
-    if (mode.isAdded()) {
-      this.chatroom.fireMemberRoleEvent(owner,ChatRoomMemberRole.OWNER);
+      String ownerUserName=mode.getParams()[0];
+    if (isMe(ownerUserName)) {
+      System.out.println("Local user owner change! " + mode.isAdded());
     }
  else {
-      this.chatroom.fireMemberRoleEvent(owner,ChatRoomMemberRole.SILENT_MEMBER);
+      ChatRoomMember owner=this.chatroom.getChatRoomMember(mode.getParams()[0]);
+      if (mode.isAdded()) {
+        this.chatroom.fireMemberRoleEvent(owner,ChatRoomMemberRole.OWNER);
+      }
+ else {
+        this.chatroom.fireMemberRoleEvent(owner,ChatRoomMemberRole.SILENT_MEMBER);
+      }
     }
   break;
 case 'o':
-ChatRoomMember op=this.chatroom.getChatRoomMember(mode.getParams()[0]);
-if (mode.isAdded()) {
-this.chatroom.fireMemberRoleEvent(op,ChatRoomMemberRole.ADMINISTRATOR);
+String opUserName=mode.getParams()[0];
+if (isMe(opUserName)) {
+System.out.println("Local user op change! " + mode.isAdded());
 }
  else {
-this.chatroom.fireMemberRoleEvent(op,ChatRoomMemberRole.SILENT_MEMBER);
+ChatRoomMember op=this.chatroom.getChatRoomMember(opUserName);
+if (mode.isAdded()) {
+  this.chatroom.fireMemberRoleEvent(op,ChatRoomMemberRole.ADMINISTRATOR);
+}
+ else {
+  this.chatroom.fireMemberRoleEvent(op,ChatRoomMemberRole.SILENT_MEMBER);
+}
 }
 break;
 case 'v':
-ChatRoomMember voice=this.chatroom.getChatRoomMember(mode.getParams()[0]);
+String voiceUserName=mode.getParams()[0];
+if (isMe(voiceUserName)) {
+System.out.println("Local user voice change! " + mode.isAdded());
+}
+ else {
+ChatRoomMember voice=this.chatroom.getChatRoomMember(voiceUserName);
 if (mode.isAdded()) {
 this.chatroom.fireMemberRoleEvent(voice,ChatRoomMemberRole.MEMBER);
 }
  else {
 this.chatroom.fireMemberRoleEvent(voice,ChatRoomMemberRole.SILENT_MEMBER);
 }
+}
 break;
 default :
-System.out.println("Unsupported mode '" + mode.getMode() + "' (from modestring '"+ msg.getModeStr()+ "')");
+System.out.println("Unsupported mode '" + (mode.isAdded() ? "+" : "-") + mode.getMode()+ "' (from modestring '"+ msg.getModeStr()+ "')");
 break;
 }
 }
