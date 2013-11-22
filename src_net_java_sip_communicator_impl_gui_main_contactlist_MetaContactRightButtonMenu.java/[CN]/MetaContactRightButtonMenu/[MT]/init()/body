@@ -16,6 +16,19 @@
     menuItem.addActionListener(this);
     this.moveToMenu.add(menuItem);
   }
+  boolean hasOnlyReadonlyContacts=true;
+  boolean hasAnyReadonlyContact=false;
+  Iterator<Contact> iter=metaContact.getContacts();
+  while (iter.hasNext()) {
+    Contact c=iter.next();
+    OperationSetPersistentPresencePermissions opsetPermissions=c.getProtocolProvider().getOperationSet(OperationSetPersistentPresencePermissions.class);
+    if (opsetPermissions == null || !opsetPermissions.isReadOnly(c)) {
+      hasOnlyReadonlyContacts=false;
+    }
+    if (opsetPermissions != null && opsetPermissions.isReadOnly(c)) {
+      hasAnyReadonlyContact=true;
+    }
+  }
   Iterator<Contact> contacts=metaContact.getContacts();
   if (metaContact.getContactCount() > 1) {
     Icon deleteIcon=new ImageIcon(ImageLoader.getImage(ImageLoader.DELETE_16x16_ICON));
@@ -23,10 +36,12 @@
     JMenuItem allItem1=new JMenuItem(allContactsString);
     allItem1.addActionListener(this);
     allItem1.setName(moveSubcontactPrefix + "allContacts");
-    this.removeContactMenu.add(allItem);
-    this.moveSubcontactMenu.add(allItem1);
-    this.removeContactMenu.addSeparator();
-    this.moveSubcontactMenu.addSeparator();
+    if (!hasAnyReadonlyContact) {
+      this.removeContactMenu.add(allItem);
+      this.moveSubcontactMenu.add(allItem1);
+      this.removeContactMenu.addSeparator();
+      this.moveSubcontactMenu.addSeparator();
+    }
   }
   contactPhoneUtil=MetaContactPhoneUtil.getPhoneUtil(metaContact);
   boolean hasPersistableAddress=false;
@@ -36,10 +51,13 @@
     String contactPersistableAddress=contact.getPersistableAddress();
     String contactAddress=contact.getAddress();
     Icon protocolIcon=new ImageIcon(createContactStatusImage(contact));
-    this.removeContactMenu.add(new ContactMenuItem(contact,contactAddress,removeContactPrefix,protocolIcon));
+    boolean isContactReadonly=false;
+    OperationSetPersistentPresencePermissions opsetPermissions=protocolProvider.getOperationSet(OperationSetPersistentPresencePermissions.class);
+    if (opsetPermissions != null && opsetPermissions.isReadOnly(contact))     isContactReadonly=true;
+    if (!isContactReadonly)     this.removeContactMenu.add(new ContactMenuItem(contact,contactAddress,removeContactPrefix,protocolIcon));
     if (contactPersistableAddress != null) {
       hasPersistableAddress=true;
-      this.moveSubcontactMenu.add(new ContactMenuItem(contact,contactPersistableAddress,moveSubcontactPrefix,protocolIcon));
+      if (!isContactReadonly)       this.moveSubcontactMenu.add(new ContactMenuItem(contact,contactPersistableAddress,moveSubcontactPrefix,protocolIcon));
     }
     List<String> phones=contactPhoneUtil.getPhones(contact);
     if (metaContact.getContactCount() > 1 || phones.size() > 0) {
@@ -130,11 +148,18 @@
   add(sendFileItem);
   addSeparator();
   if (!ConfigurationUtils.isContactMoveDisabled() && !ConfigurationUtils.isCreateGroupDisabled() && hasPersistableAddress) {
-    add(moveToMenu);
-    add(moveSubcontactMenu);
-    addSeparator();
+    boolean addSeparator=false;
+    if (!hasAnyReadonlyContact) {
+      add(moveToMenu);
+      addSeparator=true;
+    }
+    if (moveSubcontactMenu.getItemCount() > 0) {
+      add(moveSubcontactMenu);
+      addSeparator=true;
+    }
+    if (addSeparator)     addSeparator();
   }
-  if (!ConfigurationUtils.isAddContactDisabled() && !ConfigurationUtils.isMergeContactDisabled()) {
+  if (!ConfigurationUtils.isAddContactDisabled() && !ConfigurationUtils.isMergeContactDisabled() && !hasAnyReadonlyContact) {
     add(addContactItem);
     addSeparator();
   }
@@ -144,7 +169,7 @@
       add(removeContactMenu);
       separator=true;
     }
- else {
+ else     if (!hasOnlyReadonlyContacts) {
       Icon deleteIcon=new ImageIcon(ImageLoader.getImage(ImageLoader.DELETE_16x16_ICON));
       JMenuItem removeContactItem=createMenuItem(removeString,removeContactPrefix + "allContacts",deleteIcon);
       add(removeContactItem);
