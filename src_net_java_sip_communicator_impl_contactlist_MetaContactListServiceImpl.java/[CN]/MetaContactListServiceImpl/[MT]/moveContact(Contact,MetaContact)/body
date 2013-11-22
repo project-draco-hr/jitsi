@@ -27,8 +27,15 @@
  catch (  OperationFailedException ex) {
     throw new MetaContactListException(ex.getMessage(),MetaContactListException.CODE_MOVE_CONTACT_ERROR);
   }
-  ((MetaContactImpl)newParentMetaContact).addProtoContact(contact);
-  fireProtoContactEvent(contact,ProtoContactEvent.PROTO_CONTACT_MOVED,currentParentMetaContact,newParentMetaContact);
+synchronized (contact) {
+    MetaContact checkContact=findMetaContactByContact(contact);
+    if (checkContact == null) {
+      ((MetaContactImpl)newParentMetaContact).addProtoContact(contact);
+    }
+  }
+  if (newParentMetaContact.containsContact(contact)) {
+    fireProtoContactEvent(contact,ProtoContactEvent.PROTO_CONTACT_MOVED,currentParentMetaContact,newParentMetaContact);
+  }
   if (currentParentMetaContact.getContactCount() == 0) {
     MetaContactGroupImpl parentMetaGroup=currentParentMetaContact.getParentGroup();
     parentMetaGroup.removeMetaContact(currentParentMetaContact);

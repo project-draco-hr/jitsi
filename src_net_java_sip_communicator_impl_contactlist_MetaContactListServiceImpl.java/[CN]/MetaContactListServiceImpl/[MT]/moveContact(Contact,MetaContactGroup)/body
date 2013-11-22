@@ -3,16 +3,50 @@
     logger.info("Contact cannot be moved! This contact doesn't have " + "persistant address.");
     return;
   }
-  MetaContactImpl metaContactImpl=new MetaContactImpl();
-  MetaContactGroupImpl newParentMetaGroupImpl=(MetaContactGroupImpl)newParentMetaGroup;
-  newParentMetaGroupImpl.addMetaContact(metaContactImpl);
-  fireMetaContactEvent(metaContactImpl,newParentMetaGroupImpl,MetaContactEvent.META_CONTACT_ADDED);
-  try {
-    moveContact(contact,metaContactImpl);
+  if (contact.getPersistableAddress() == null) {
+    logger.info("Contact cannot be moved! This contact doesn't have " + "persistant address.");
+    return;
   }
- catch (  MetaContactListException mex) {
-    newParentMetaGroupImpl.removeMetaContact(metaContactImpl);
-    fireMetaContactEvent(metaContactImpl,newParentMetaGroupImpl,MetaContactEvent.META_CONTACT_REMOVED);
-    throw mex;
+  ProtocolProviderService provider=contact.getProtocolProvider();
+  OperationSetMultiUserChat opSetMUC=provider.getOperationSet(OperationSetMultiUserChat.class);
+  if (opSetMUC != null && opSetMUC.isPrivateMessagingContact(contact.getAddress())) {
+    MetaContactImpl metaContactImpl=new MetaContactImpl();
+    MetaContactGroupImpl newParentMetaGroupImpl=(MetaContactGroupImpl)newParentMetaGroup;
+    newParentMetaGroupImpl.addMetaContact(metaContactImpl);
+    fireMetaContactEvent(metaContactImpl,newParentMetaGroupImpl,MetaContactEvent.META_CONTACT_ADDED);
+    addNewContactToMetaContact(provider,metaContactImpl,contact.getPersistableAddress());
+    return;
+  }
+  OperationSetPersistentPresence opSetPresence=provider.getOperationSet(OperationSetPersistentPresence.class);
+  if (opSetPresence == null) {
+  }
+  MetaContactImpl currentParentMetaContact=(MetaContactImpl)this.findMetaContactByContact(contact);
+  ContactGroup parentProtoGroup=resolveProtoPath(contact.getProtocolProvider(),(MetaContactGroupImpl)newParentMetaGroup);
+  try {
+    if (contact.getParentContactGroup() != parentProtoGroup && opSetPresence != null) {
+      opSetPresence.moveContactToGroup(contact,parentProtoGroup);
+    }
+    currentParentMetaContact.removeProtoContact(contact);
+  }
+ catch (  OperationFailedException ex) {
+    throw new MetaContactListException(ex.getMessage(),MetaContactListException.CODE_MOVE_CONTACT_ERROR);
+  }
+  MetaContactImpl metaContactImpl=null;
+synchronized (contact) {
+    MetaContact checkContact=findMetaContactByContact(contact);
+    if (checkContact == null) {
+      metaContactImpl=new MetaContactImpl();
+      ((MetaContactGroupImpl)newParentMetaGroup).addMetaContact(metaContactImpl);
+      metaContactImpl.addProtoContact(contact);
+    }
+  }
+  if (metaContactImpl != null) {
+    fireMetaContactEvent(metaContactImpl,newParentMetaGroup,MetaContactEvent.META_CONTACT_ADDED);
+    fireProtoContactEvent(contact,ProtoContactEvent.PROTO_CONTACT_MOVED,currentParentMetaContact,metaContactImpl);
+  }
+  if (currentParentMetaContact.getContactCount() == 0) {
+    MetaContactGroupImpl parentMetaGroup=currentParentMetaContact.getParentGroup();
+    parentMetaGroup.removeMetaContact(currentParentMetaContact);
+    fireMetaContactEvent(currentParentMetaContact,parentMetaGroup,MetaContactEvent.META_CONTACT_REMOVED);
   }
 }
