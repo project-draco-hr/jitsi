@@ -24,20 +24,29 @@
   if (rtcpPort > 0) {
     xml.append(' ').append(RTCP_PORT_ATTR_NAME).append("='").append(rtcpPort).append('\'');
   }
+  RTPLevelRelayType rtpLevelRelayType=getRTPLevelRelayType();
+  if (rtpLevelRelayType != null) {
+    xml.append(' ').append(RTP_LEVEL_RELAY_TYPE_ATTR_NAME).append("='").append(rtpLevelRelayType).append('\'');
+  }
   int rtpPort=getRTPPort();
   if (rtpPort > 0) {
     xml.append(' ').append(RTP_PORT_ATTR_NAME).append("='").append(rtpPort).append('\'');
   }
   List<PayloadTypePacketExtension> payloadTypes=getPayloadTypes();
-  boolean hasPayloadTypes=(payloadTypes.size() != 0);
+  boolean hasPayloadTypes=!payloadTypes.isEmpty();
+  List<SourcePacketExtension> sources=getSources();
+  boolean hasSources=!sources.isEmpty();
   long[] ssrcs=getSSRCs();
   boolean hasSSRCs=(ssrcs.length != 0);
   IceUdpTransportPacketExtension transport=getTransport();
   boolean hasTransport=(transport != null);
-  if (hasPayloadTypes || hasSSRCs || hasTransport) {
+  if (hasPayloadTypes || hasSources || hasSSRCs|| hasTransport) {
     xml.append('>');
     if (hasPayloadTypes) {
       for (      PayloadTypePacketExtension payloadType : payloadTypes)       xml.append(payloadType.toXML());
+    }
+    if (hasSources) {
+      for (      SourcePacketExtension source : sources)       xml.append(source.toXML());
     }
     if (hasSSRCs) {
       for (      long ssrc : ssrcs) {

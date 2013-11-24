@@ -50,6 +50,10 @@ case XmlPullParser.START_TAG:
           if ((initiator != null) && (initiator.length() != 0))           channel.setInitiator(Boolean.valueOf(initiator));
           String rtcpPort=parser.getAttributeValue("",ColibriConferenceIQ.Channel.RTCP_PORT_ATTR_NAME);
           if ((rtcpPort != null) && (rtcpPort.length() != 0))           channel.setRTCPPort(Integer.parseInt(rtcpPort));
+          String rtpLevelRelayType=parser.getAttributeValue("",ColibriConferenceIQ.Channel.RTP_LEVEL_RELAY_TYPE_ATTR_NAME);
+          if ((rtpLevelRelayType != null) && (rtpLevelRelayType.length() != 0)) {
+            channel.setRTPLevelRelayType(rtpLevelRelayType);
+          }
           String rtpPort=parser.getAttributeValue("",ColibriConferenceIQ.Channel.RTP_PORT_ATTR_NAME);
           if ((rtpPort != null) && (rtpPort.length() != 0))           channel.setRTPPort(Integer.parseInt(rtpPort));
         }
@@ -64,17 +68,21 @@ case XmlPullParser.START_TAG:
  else         if (channel != null) {
           String peName=null;
           String peNamespace=null;
-          if (PayloadTypePacketExtension.ELEMENT_NAME.equals(name)) {
-            peName=name;
-            peNamespace=namespace;
-          }
- else           if (IceUdpTransportPacketExtension.ELEMENT_NAME.equals(name) && IceUdpTransportPacketExtension.NAMESPACE.equals(parser.getNamespace())) {
+          if (IceUdpTransportPacketExtension.ELEMENT_NAME.equals(name) && IceUdpTransportPacketExtension.NAMESPACE.equals(parser.getNamespace())) {
             peName=name;
             peNamespace=IceUdpTransportPacketExtension.NAMESPACE;
+          }
+ else           if (PayloadTypePacketExtension.ELEMENT_NAME.equals(name)) {
+            peName=name;
+            peNamespace=namespace;
           }
  else           if (RawUdpTransportPacketExtension.ELEMENT_NAME.equals(name) && RawUdpTransportPacketExtension.NAMESPACE.equals(parser.getNamespace())) {
             peName=name;
             peNamespace=RawUdpTransportPacketExtension.NAMESPACE;
+          }
+ else           if (SourcePacketExtension.ELEMENT_NAME.equals(name) && SourcePacketExtension.NAMESPACE.equals(parser.getNamespace())) {
+            peName=name;
+            peNamespace=SourcePacketExtension.NAMESPACE;
           }
           if (peName == null) {
             throwAway(parser,name);
