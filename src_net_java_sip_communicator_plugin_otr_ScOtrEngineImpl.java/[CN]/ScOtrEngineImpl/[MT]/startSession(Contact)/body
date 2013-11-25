@@ -1,5 +1,12 @@
 {
   SessionID sessionID=getSessionID(contact);
+  ScSessionStatus scSessionStatus=getSessionStatus(contact);
+  scSessionStatus=ScSessionStatus.LOADING;
+  scSessionStatusMap.put(sessionID,scSessionStatus);
+  for (  ScOtrEngineListener l : getListeners()) {
+    l.sessionStatusChanged(contact);
+    scheduler.scheduleScSessionStatusChange(contact,ScSessionStatus.TIMED_OUT);
+  }
   try {
     otrEngine.startSession(sessionID);
   }
