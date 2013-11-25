@@ -21,11 +21,9 @@
     public void itemStateChanged(    ItemEvent e){
       if (e.getStateChange() == ItemEvent.SELECTED && roomsCombo.getSelectedIndex() > -1) {
         okButton.setEnabled(true);
-        addButton.setEnabled(true);
       }
  else       if ((roomsCombo.getSelectedIndex() == -1 || e.getStateChange() == ItemEvent.DESELECTED) && editor.getText().trim().length() <= 0) {
         okButton.setEnabled(false);
-        addButton.setEnabled(false);
       }
     }
   }
@@ -34,32 +32,18 @@
   valuesPanel.add(roomsCombo);
   northPanel.add(labels,BorderLayout.WEST);
   northPanel.add(valuesPanel,BorderLayout.CENTER);
+  northPanel.setPreferredSize(new Dimension(600,80));
   JPanel buttonPanel=new TransparentPanel(new BorderLayout(5,5));
-  buttonPanel.setBorder(BorderFactory.createEmptyBorder(0,15,10,15));
-  JPanel westButtonPanel=new TransparentPanel();
+  buttonPanel.setBorder(BorderFactory.createEmptyBorder(0,15,0,15));
   JPanel eastButtonPanel=new TransparentPanel();
-  addButton.addActionListener(this);
-  removeButton.addActionListener(this);
   okButton.addActionListener(this);
   cancelButton.addActionListener(this);
-  addButton.setToolTipText(GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_SAVE_BUTTON_TOOLTIP"));
-  removeButton.setToolTipText(GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_REMOVE_BUTTON_TOOLTIP"));
   okButton.setToolTipText(GuiActivator.getResources().getI18NString("service.gui.JOIN_CHAT_ROOM"));
-  addButton.setEnabled(false);
-  removeButton.setEnabled(false);
-  westButtonPanel.add(addButton);
-  westButtonPanel.add(removeButton);
   eastButtonPanel.add(cancelButton);
   eastButtonPanel.add(okButton);
-  buttonPanel.add(westButtonPanel,BorderLayout.WEST);
   buttonPanel.add(eastButtonPanel,BorderLayout.EAST);
-  chatRoomsTableUI=new ChatRoomTableUI(this);
-  chatRoomsTableUI.setOpaque(false);
-  chatRoomsTableUI.setBorder(BorderFactory.createEmptyBorder(5,15,5,15));
-  northPanel.setPreferredSize(new Dimension(600,80));
   this.getContentPane().add(northPanel,BorderLayout.NORTH);
-  this.getContentPane().add(buttonPanel,BorderLayout.SOUTH);
-  this.getContentPane().add(chatRoomsTableUI,BorderLayout.CENTER);
+  this.getContentPane().add(buttonPanel,BorderLayout.CENTER);
   loadProviderRooms();
   editor.addKeyListener(new KeyListener(){
     public void keyTyped(    KeyEvent e){
@@ -67,32 +51,9 @@
     public void keyPressed(    KeyEvent e){
     }
     public void keyReleased(    KeyEvent e){
-      chatRoomsTableUI.clearSelection();
-      if (editor.getText().trim().length() > 0) {
-        okButton.setEnabled(true);
-        addButton.setEnabled(true);
-      }
- else {
-        okButton.setEnabled(false);
-        addButton.setEnabled(false);
-      }
+      okButton.setEnabled((editor.getText().trim().length() > 0));
     }
   }
 );
-  chatRoomsTableUI.addSelectionListener(new ListSelectionListener(){
-    public void valueChanged(    ListSelectionEvent e){
-      if (!e.getValueIsAdjusting()) {
-        ChatRoomWrapper room=chatRoomsTableUI.getSelectedRoom();
-        if (room != null) {
-          editor.setText(room.getChatRoomName());
-          providersCombo.setSelectedItem(room.getParentProvider());
-          okButton.setEnabled(true);
-          removeButton.setEnabled(true);
-        }
- else         removeButton.setEnabled(false);
-      }
-    }
-  }
-);
-  chatRoomList.addChatRoomProviderWrapperListener(chatRoomProviderWrapperListener);
+  GuiActivator.getMUCService().addChatRoomProviderWrapperListener(chatRoomProviderWrapperListener);
 }
