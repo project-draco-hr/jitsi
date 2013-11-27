@@ -16,11 +16,8 @@
       HttpRequestBase oldreq=req;
       oldreq.abort();
       String newLocation=locationHeader.getValue();
-      HttpEntity en=((HttpPost)oldreq).getEntity();
-      if (en != null && en instanceof StringEntity) {
-        ByteArrayOutputStream out=new ByteArrayOutputStream();
-        en.writeTo(out);
-        newLocation+="?" + out.toString("UTF-8");
+      if (redirectHandler != null && redirectHandler.handleRedirect(newLocation,parameters)) {
+        return null;
       }
       req=new HttpGet(newLocation);
       req.setParams(oldreq.getParams());

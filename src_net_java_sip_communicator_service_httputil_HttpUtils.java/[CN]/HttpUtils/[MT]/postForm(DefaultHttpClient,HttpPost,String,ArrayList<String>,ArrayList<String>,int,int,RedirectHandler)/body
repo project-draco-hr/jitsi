@@ -1,6 +1,6 @@
 {
   Credentials creds=null;
-  if (usernameParamIx != -1 && usernameParamIx < formParamNames.size() && passwordParamIx != -1 && passwordParamIx < formParamNames.size()) {
+  if (usernameParamIx != -1 && usernameParamIx < formParamNames.size() && passwordParamIx != -1 && passwordParamIx < formParamNames.size() && (formParamValues.get(usernameParamIx) == null || formParamValues.get(usernameParamIx).length() == 0) && (formParamValues.get(passwordParamIx) == null || formParamValues.get(passwordParamIx).length() == 0)) {
     URL url=new URL(address);
     HTTPCredentialsProvider prov=(HTTPCredentialsProvider)httpClient.getCredentialsProvider();
     while (creds == null || creds.getUserPrincipal() == null || StringUtils.isNullOrEmpty(creds.getUserPrincipal().getName())) {
@@ -24,9 +24,10 @@
       }
     }
   }
+  httpClient.setRedirectStrategy(new CustomRedirectStrategy(redirectHandler,parameters));
   String s=URLEncodedUtils.format(parameters,"UTF-8");
   StringEntity entity=new StringEntity(s,"UTF-8");
   entity.setContentType(URLEncodedUtils.CONTENT_TYPE);
   postMethod.setEntity(entity);
-  return executeMethod(httpClient,postMethod);
+  return executeMethod(httpClient,postMethod,redirectHandler,parameters);
 }
