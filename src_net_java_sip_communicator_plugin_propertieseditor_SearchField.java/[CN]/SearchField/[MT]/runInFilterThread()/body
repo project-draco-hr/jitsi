@@ -5,7 +5,7 @@
     final String filter;
 synchronized (filterSyncRoot) {
       filter=this.filter;
-      if ((prevFilterTime != 0) && StringUtils.isEquals(filter,prevFilter)) {
+      if ((prevFilterTime != 0) && StringUtils.equalsIgnoreCase(filter,prevFilter)) {
         long timeout=FILTER_THREAD_TIMEOUT - (System.currentTimeMillis() - prevFilterTime);
         if (timeout > 0) {
           try {
@@ -22,11 +22,12 @@ synchronized (filterSyncRoot) {
     List<String> properties=confService.getAllPropertyNames();
     final List<Object[]> rows=new ArrayList<Object[]>(properties.size());
     for (    String property : properties) {
-      if ((filter == null) || property.contains(filter)) {
+      String value=(String)confService.getProperty(property);
+      if ((filter == null) || StringUtils.containsIgnoreCase(property,filter) || StringUtils.containsIgnoreCase(value,filter)) {
         rows.add(new Object[]{property,confService.getProperty(property)});
       }
     }
-    if (StringUtils.isEquals(filter,this.filter)) {
+    if (StringUtils.equalsIgnoreCase(filter,this.filter)) {
       LowPriorityEventQueue.invokeLater(new Runnable(){
         public void run(){
           DefaultTableModel model=(DefaultTableModel)table.getModel();
