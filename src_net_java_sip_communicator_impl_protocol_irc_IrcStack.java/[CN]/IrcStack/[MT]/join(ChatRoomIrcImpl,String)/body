@@ -2,35 +2,59 @@
   if (isConnected() == false)   throw new IllegalStateException("Please connect to an IRC server first");
   if (chatroom == null)   throw new IllegalArgumentException("chatroom cannot be null");
   if (password == null)   throw new IllegalArgumentException("password cannot be null");
-  this.irc.joinChannel(chatroom.getIdentifier(),password,new Callback<IRCChannel>(){
-    @Override public void onSuccess(    IRCChannel channel){
-      String name=channel.getName();
-      IrcStack.this.joined.put(name,channel);
-      IrcStack.this.irc.addListener(new ChatRoomListener(chatroom));
-      IRCTopic topic=channel.getTopic();
-      chatroom.updateSubject(topic.getValue());
-      for (      Entry<IRCUser,Set<IRCUserStatus>> userEntry : channel.getUsers().entrySet()) {
-        IRCUser user=userEntry.getKey();
-        Set<IRCUserStatus> statuses=userEntry.getValue();
-        ChatRoomMemberRole role=ChatRoomMemberRole.SILENT_MEMBER;
-        for (        IRCUserStatus status : statuses) {
-          role=convertMemberMode(status.getChanModeType().charValue());
-        }
-        if (IrcStack.this.getNick().equals(user.getNick())) {
-          chatroom.prepUserRole(role);
-        }
+  final Object joinSignal=new Object();
+synchronized (joinSignal) {
+    try {
+      this.irc.joinChannel(chatroom.getIdentifier(),password,new Callback<IRCChannel>(){
+        @Override public void onSuccess(        IRCChannel channel){
+synchronized (joinSignal) {
+            try {
+              String name=channel.getName();
+              IrcStack.this.joined.put(name,channel);
+              IrcStack.this.irc.addListener(new ChatRoomListener(chatroom));
+              IRCTopic topic=channel.getTopic();
+              chatroom.updateSubject(topic.getValue());
+              for (              Entry<IRCUser,Set<IRCUserStatus>> userEntry : channel.getUsers().entrySet()) {
+                IRCUser user=userEntry.getKey();
+                Set<IRCUserStatus> statuses=userEntry.getValue();
+                ChatRoomMemberRole role=ChatRoomMemberRole.SILENT_MEMBER;
+                for (                IRCUserStatus status : statuses) {
+                  role=convertMemberMode(status.getChanModeType().charValue());
+                }
+                if (IrcStack.this.getNick().equals(user.getNick())) {
+                  chatroom.prepUserRole(role);
+                }
  else {
-          ChatRoomMemberIrcImpl member=new ChatRoomMemberIrcImpl(IrcStack.this.provider,chatroom,user.getNick(),role);
-          chatroom.addChatRoomMember(member.getContactAddress(),member);
+                  ChatRoomMemberIrcImpl member=new ChatRoomMemberIrcImpl(IrcStack.this.provider,chatroom,user.getNick(),role);
+                  chatroom.addChatRoomMember(member.getContactAddress(),member);
+                }
+              }
+            }
+  finally {
+              joinSignal.notifyAll();
+            }
+          }
+        }
+        @Override public void onFailure(        Exception e){
+synchronized (joinSignal) {
+            try {
+              MessageIrcImpl message=new MessageIrcImpl("Failed to join channel " + chatroom.getIdentifier() + "(message: "+ e.getMessage()+ ")","text/plain","UTF-8","Failed to join");
+              chatroom.fireMessageReceivedEvent(message,null,new Date(),MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
+            }
+  finally {
+              joinSignal.notifyAll();
+            }
+          }
         }
       }
-      IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
+);
+      joinSignal.wait();
+      if (isJoined(chatroom)) {
+        IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
+      }
     }
-    @Override public void onFailure(    Exception e){
+ catch (    InterruptedException e) {
       e.printStackTrace();
-      MessageIrcImpl message=new MessageIrcImpl("Failed to join channel " + chatroom.getIdentifier(),"text/plain","UTF-8","Failed to join");
-      chatroom.fireMessageReceivedEvent(message,null,new Date(),MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
     }
   }
-);
 }
