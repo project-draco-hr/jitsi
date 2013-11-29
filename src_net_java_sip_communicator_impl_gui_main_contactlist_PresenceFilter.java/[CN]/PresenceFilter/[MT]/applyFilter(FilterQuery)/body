@@ -2,13 +2,17 @@
   MetaContactQuery query=new MetaContactQuery();
   filterQuery.addContactQuery(query);
   List<ContactQuery> contactQueryList=new ArrayList<ContactQuery>();
-  Iterator<UIContactSource> filterSources=GuiActivator.getContactList().getContactSources(ContactSourceService.PRESENCE_TYPE).iterator();
-  while (filterSources.hasNext()) {
-    UIContactSource filterSource=filterSources.next();
-    ContactSourceService sourceService=filterSource.getContactSourceService();
-    ContactQuery contactQuery=sourceService.queryContactSource(null);
-    contactQueryList.add(contactQuery);
-    filterQuery.addContactQuery(contactQuery);
+  for (  int cssType : contactSourcePreferences.keySet()) {
+    Iterator<UIContactSource> filterSources=GuiActivator.getContactList().getContactSources(cssType).iterator();
+    while (filterSources.hasNext()) {
+      UIContactSource filterSource=filterSources.next();
+      Integer prefValue=contactSourcePreferences.get(cssType);
+      if (prefValue != null)       filterSource.setContactSourceIndex(prefValue);
+      ContactSourceService sourceService=filterSource.getContactSourceService();
+      ContactQuery contactQuery=sourceService.queryContactSource(null);
+      contactQueryList.add(contactQuery);
+      filterQuery.addContactQuery(contactQuery);
+    }
   }
   filterQuery.close();
   query.addContactQueryListener(GuiActivator.getContactList());
