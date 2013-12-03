@@ -20,6 +20,15 @@
   }
   SendSmsDialog smsDialog=new SendSmsDialog(this,smsChatTransport,messageText);
   if (smsChatTransport.askForSMSNumber()) {
+    Object desc=smsChatTransport.getParentChatSession().getDescriptor();
+    if (desc instanceof MetaContact) {
+      UIPhoneUtil contactPhoneUtil=UIPhoneUtil.getPhoneUtil((MetaContact)desc);
+      List<UIContactDetail> uiContactDetailList=contactPhoneUtil.getAdditionalNumbers();
+      if (uiContactDetailList.size() != 0) {
+        SMSManager.sendSMS(this,uiContactDetailList,messageText,this);
+        return;
+      }
+    }
     smsDialog.setPreferredSize(new Dimension(400,200));
     smsDialog.setVisible(true);
   }
