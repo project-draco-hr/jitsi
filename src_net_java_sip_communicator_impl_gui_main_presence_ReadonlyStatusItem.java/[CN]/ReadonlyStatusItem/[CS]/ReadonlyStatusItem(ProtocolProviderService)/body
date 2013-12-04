@@ -1,0 +1,21 @@
+{
+  super(protocolProvider.getAccountID().getDisplayName(),ImageLoader.getAccountStatusImage(protocolProvider));
+  this.protocolProvider=protocolProvider;
+  loadSkin();
+  String tooltip="<html><b>" + protocolProvider.getAccountID().getDisplayName() + "</b><br>Connecting</html>";
+  this.setToolTipText(tooltip);
+  OperationSetPresence presence=protocolProvider.getOperationSet(OperationSetPresence.class);
+  Iterator<PresenceStatus> statusIterator=presence.getSupportedStatusSet();
+  while (statusIterator.hasNext()) {
+    PresenceStatus status=statusIterator.next();
+    int connectivity=status.getStatus();
+    if (connectivity < 1) {
+      this.offlineStatus=status;
+    }
+ else     if ((onlineStatus != null && (onlineStatus.getStatus() < connectivity)) || (onlineStatus == null && (connectivity > 50 && connectivity < 80))) {
+      this.onlineStatus=status;
+    }
+  }
+  this.setSelectedStatus(offlineStatus);
+  updateStatus(offlineStatus);
+}

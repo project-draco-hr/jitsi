@@ -1,7 +1,7 @@
 {
   super(protocolProvider.getAccountID().getDisplayName(),ImageLoader.getAccountStatusImage(protocolProvider),protocolProvider);
   this.presence=protocolProvider.getOperationSet(OperationSetPresence.class);
-  this.statusIterator=this.presence.getSupportedStatusSet();
+  Iterator<PresenceStatus> statusIterator=this.presence.getSupportedStatusSet();
   String tooltip="<html><b>" + protocolProvider.getAccountID().getDisplayName() + "</b><br>Connecting</html>";
   this.setToolTipText(tooltip);
   titleArea=new JEditorPane();
@@ -18,17 +18,10 @@
   this.addSeparator();
   while (statusIterator.hasNext()) {
     PresenceStatus status=statusIterator.next();
-    int connectivity=status.getStatus();
-    if (connectivity < 1) {
-      this.offlineStatus=status;
-    }
- else     if ((onlineStatus != null && (onlineStatus.getStatus() < connectivity)) || (onlineStatus == null && (connectivity > 50 && connectivity < 80))) {
-      this.onlineStatus=status;
-    }
     this.addItem(status.getStatusName(),new ImageIcon(status.getStatusIcon()),this);
   }
   this.addSeparator();
   this.add((JMenu)statusMessageMenu.getMenu());
-  this.setSelectedStatus(offlineStatus);
-  updateStatus(offlineStatus);
+  this.setSelectedStatus(getOfflineStatus());
+  updateStatus(getOfflineStatus());
 }
