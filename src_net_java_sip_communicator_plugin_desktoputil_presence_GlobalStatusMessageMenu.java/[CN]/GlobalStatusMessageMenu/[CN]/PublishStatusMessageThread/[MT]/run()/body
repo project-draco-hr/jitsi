@@ -1,0 +1,28 @@
+{
+  Iterator<ProtocolProviderService> pProvidersIter=AccountUtils.getRegisteredProviders().iterator();
+  while (pProvidersIter.hasNext()) {
+    try {
+      ProtocolProviderService protocolProvider=pProvidersIter.next();
+      OperationSetPresence presenceOpSet=protocolProvider.getOperationSet(OperationSetPresence.class);
+      if (presenceOpSet == null)       continue;
+      presenceOpSet.publishPresenceStatus(presenceOpSet.getPresenceStatus(),message);
+    }
+ catch (    IllegalArgumentException e1) {
+      logger.error("Error - changing status",e1);
+    }
+catch (    IllegalStateException e1) {
+      logger.error("Error - changing status",e1);
+    }
+catch (    OperationFailedException e1) {
+      if (e1.getErrorCode() == OperationFailedException.GENERAL_ERROR) {
+        logger.error("General error occured while " + "publishing presence status.",e1);
+      }
+ else       if (e1.getErrorCode() == OperationFailedException.NETWORK_FAILURE) {
+        logger.error("Network failure occured while " + "publishing presence status.",e1);
+      }
+ else       if (e1.getErrorCode() == OperationFailedException.PROVIDER_NOT_REGISTERED) {
+        logger.error("Protocol provider must be" + "registered in order to change status.",e1);
+      }
+    }
+  }
+}
