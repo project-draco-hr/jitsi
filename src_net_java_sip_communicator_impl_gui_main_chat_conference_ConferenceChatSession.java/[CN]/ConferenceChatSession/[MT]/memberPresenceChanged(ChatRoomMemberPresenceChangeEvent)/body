@@ -38,8 +38,10 @@ synchronized (chatParticipants) {
  else     if (eventType.equals(ChatRoomMemberPresenceChangeEvent.MEMBER_QUIT)) {
       statusMessage=GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_USER_QUIT",new String[]{sourceChatRoom.getName()});
     }
+    ChatContact<?> contact=null;
     for (    ChatContact<?> chatContact : chatParticipants) {
       if (chatContact.getDescriptor().equals(chatRoomMember)) {
+        contact=chatContact;
         sessionRenderer.updateChatContactStatus(chatContact,statusMessage);
         sessionRenderer.removeChatContact(chatContact);
         ChatRoom room=chatRoomWrapper.getChatRoom();
@@ -47,6 +49,11 @@ synchronized (chatParticipants) {
           room.updatePrivateContactPresenceStatus(chatRoomMember.getName());
         }
         break;
+      }
+    }
+    if (contact != null) {
+synchronized (chatParticipants) {
+        chatParticipants.remove(contact);
       }
     }
   }
