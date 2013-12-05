@@ -1,8 +1,10 @@
 {
+  super(false);
   setDefaultCloseOperation(DISPOSE_ON_CLOSE);
   TransparentPanel mainPanel=new TransparentPanel(new BorderLayout());
   mainPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
   JPanel buttonPanel=new JPanel(new FlowLayout(FlowLayout.RIGHT));
+  southPanel.add(buttonPanel,BorderLayout.EAST);
   JButton cancelButton=new JButton(Resources.getString("service.gui.CANCEL"));
   this.setTitle(Resources.getString("service.gui.SIGN_IN"));
   this.setIconImage(Resources.getImage("service.gui.SIP_COMMUNICATOR_LOGO").getImage());
@@ -10,8 +12,11 @@
   mainAccountsPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
   this.getContentPane().add(mainPanel);
   mainPanel.add(createTitleComponent(),BorderLayout.NORTH);
-  mainPanel.add(mainAccountsPanel,BorderLayout.CENTER);
-  mainPanel.add(buttonPanel,BorderLayout.SOUTH);
+  JScrollPane scroller=new JScrollPane(mainAccountsPanel);
+  scroller.setOpaque(false);
+  scroller.getViewport().setOpaque(false);
+  mainPanel.add(scroller,BorderLayout.CENTER);
+  mainPanel.add(southPanel,BorderLayout.SOUTH);
   mainAccountsPanel.add(accountsPanel,BorderLayout.CENTER);
   initProvisioningPanel();
   mainAccountsPanel.setOpaque(false);
@@ -34,5 +39,13 @@
     }
     contactList.createMetaContactGroup(contactList.getRoot(),groupName);
     getConfigurationService().setProperty("net.java.sip.communicator.impl.gui.addcontact.lastContactParent",groupName);
+  }
+  this.getRootPane().validate();
+  this.pack();
+  if (scroller.getViewport().getHeight() < Toolkit.getDefaultToolkit().getScreenSize().getHeight() - 230) {
+    this.setSize(this.getSize().width,scroller.getViewport().getHeight() + 150);
+  }
+ else {
+    this.setSize(this.getSize().width + 20,this.getSize().height - 10);
   }
 }
