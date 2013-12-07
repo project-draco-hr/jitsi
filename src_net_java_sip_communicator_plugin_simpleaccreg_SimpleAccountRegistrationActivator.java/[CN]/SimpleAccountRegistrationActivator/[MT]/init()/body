@@ -1,9 +1,35 @@
 {
   if (!hasStoredAccounts() && !getConfigService().getBoolean(DISABLED_PROP,false)) {
-    InitialAccountRegistrationFrame accountRegFrame=new InitialAccountRegistrationFrame();
-    Dimension screenSize=Toolkit.getDefaultToolkit().getScreenSize();
-    accountRegFrame.setLocation(screenSize.width / 2 - accountRegFrame.getWidth() / 2,screenSize.height / 2 - accountRegFrame.getHeight() / 2);
-    accountRegFrame.setVisible(true);
+    String protocolOrder=SimpleAccountRegistrationActivator.getConfigService().getString("plugin.simpleaccreg.PROTOCOL_ORDER");
+    if (protocolOrder == null) {
+      return;
+    }
+    String protocolFilter="";
+    protocolNames=protocolOrder.split("\\|");
+    for (int i=0; i < protocolNames.length; i++) {
+      if (i > 0) {
+        protocolFilter="(|" + protocolFilter;
+      }
+      protocolFilter+="(" + ProtocolProviderFactory.PROTOCOL + "="+ protocolNames[i]+ ")";
+      if (i > 0) {
+        protocolFilter+=")";
+      }
+    }
+    try {
+      ServiceReference[] refs=bundleContext.getAllServiceReferences(AccountRegistrationWizard.class.getName(),protocolFilter);
+      if (refs != null) {
+        numWizardsRegistered=refs.length;
+      }
+      if (numWizardsRegistered < protocolNames.length) {
+        bundleContext.addServiceListener(this,"(&(objectclass=" + AccountRegistrationWizard.class.getName() + ")"+ protocolFilter+ ")");
+      }
+ else {
+        showDialog();
+      }
+    }
+ catch (    InvalidSyntaxException e) {
+      logger.error(e);
+    }
   }
   if (logger.isInfoEnabled())   logger.info("SIMPLE ACCOUNT REGISTRATION ...[STARTED]");
 }
