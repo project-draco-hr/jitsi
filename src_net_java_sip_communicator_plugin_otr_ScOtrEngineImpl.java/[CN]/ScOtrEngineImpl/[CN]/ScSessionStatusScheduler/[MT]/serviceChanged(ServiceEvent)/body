@@ -1,0 +1,15 @@
+{
+  Object service=OtrActivator.bundleContext.getService(ev.getServiceReference());
+  if (!(service instanceof ProtocolProviderService))   return;
+  if (ev.getType() == ServiceEvent.UNREGISTERING) {
+    ProtocolProviderService provider=(ProtocolProviderService)service;
+    Iterator<Contact> i=tasks.keySet().iterator();
+    while (i.hasNext()) {
+      Contact contact=i.next();
+      if (provider.equals(contact.getProtocolProvider())) {
+        cancel(contact);
+        i.remove();
+      }
+    }
+  }
+}
