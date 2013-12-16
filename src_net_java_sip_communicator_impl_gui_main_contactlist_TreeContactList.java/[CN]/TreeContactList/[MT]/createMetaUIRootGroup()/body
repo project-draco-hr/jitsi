@@ -1,22 +1,14 @@
 {
   MetaContactGroup rootGroup=GuiActivator.getContactListService().getRoot();
-  UIGroup uiGroup;
-synchronized (rootGroup) {
-    uiGroup=MetaContactListSource.getUIGroup(rootGroup);
-    if (uiGroup != null)     return;
-    uiGroup=MetaContactListSource.createUIGroup(rootGroup);
-  }
+  UIGroup uiGroup=MetaContactListSource.getUIGroup(rootGroup);
+  if (uiGroup == null)   uiGroup=MetaContactListSource.createUIGroup(rootGroup);
   treeModel.getRoot().sortedAddContactGroup((UIGroupImpl)uiGroup);
   Iterator<MetaContact> i=rootGroup.getChildContacts();
   while (i.hasNext()) {
     MetaContact contact=i.next();
-    UIContact uiContact;
-synchronized (contact) {
-      uiContact=MetaContactListSource.getUIContact(contact);
-      if (uiContact == null)       continue;
-      removeContact(uiContact);
-      uiContact=MetaContactListSource.createUIContact(contact);
-    }
+    UIContact uiContact=MetaContactListSource.getUIContact(contact);
+    removeContact(uiContact);
+    uiContact=MetaContactListSource.createUIContact(contact);
     if (currentFilter.isMatching(uiContact))     addContact(uiContact,uiGroup,true,true);
  else     MetaContactListSource.removeUIContact(contact);
   }

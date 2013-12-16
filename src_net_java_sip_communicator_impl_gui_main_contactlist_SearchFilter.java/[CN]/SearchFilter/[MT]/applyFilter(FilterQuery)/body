@@ -2,10 +2,9 @@
   if (sourceContactList == null)   sourceContactList=GuiActivator.getContactList();
   Iterator<UIContactSource> filterSources=sourceContactList.getContactSources().iterator();
   if (sourceContactList.getDefaultFilter().equals(TreeContactList.presenceFilter)) {
-    final MetaContactQuery defaultQuery=new MetaContactQuery();
+    MetaContactQuery defaultQuery=mclSource.queryMetaContactSource(filterPattern);
     defaultQuery.addContactQueryListener(sourceContactList);
     filterQuery.addContactQuery(defaultQuery);
-    mclSource.startQuery(defaultQuery,filterPattern);
   }
  else   if (sourceContactList.getDefaultFilter().equals(TreeContactList.historyFilter)) {
     filterSources=sourceContactList.getContactSources(ContactSourceService.HISTORY_TYPE).iterator();
@@ -21,7 +20,8 @@
       }
     }
     if (filterQuery.isCanceled())     return;
-    applyFilter(filterSource,filterQuery);
+    ContactQuery query=applyFilter(filterSource);
+    if (query.getStatus() == ContactQuery.QUERY_IN_PROGRESS)     filterQuery.addContactQuery(query);
   }
   if (filterQuery.isRunning())   filterQuery.close();
  else   if (!sourceContactList.isEmpty())   sourceContactList.selectFirstContact();

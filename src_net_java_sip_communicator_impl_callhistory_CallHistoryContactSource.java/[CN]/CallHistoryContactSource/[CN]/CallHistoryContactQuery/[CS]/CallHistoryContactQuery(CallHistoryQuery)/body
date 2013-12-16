@@ -1,3 +1,21 @@
 {
   this.callHistoryQuery=callHistoryQuery;
+  callHistoryQuery.addQueryListener(new CallHistoryQueryListener(){
+    public void callRecordReceived(    CallRecordEvent event){
+      if (getStatus() == ContactQuery.QUERY_CANCELED)       return;
+      SourceContact contact=new CallHistorySourceContact(CallHistoryContactSource.this,event.getCallRecord());
+      sourceContacts.add(contact);
+      fireQueryEvent(contact);
+    }
+    public void queryStatusChanged(    CallHistoryQueryStatusEvent event){
+      status=event.getEventType();
+      fireQueryStatusEvent(status);
+    }
+  }
+);
+  Iterator<CallRecord> callRecords=callHistoryQuery.getCallRecords().iterator();
+  while (callRecords.hasNext()) {
+    SourceContact contact=new CallHistorySourceContact(CallHistoryContactSource.this,callRecords.next());
+    sourceContacts.add(contact);
+  }
 }
