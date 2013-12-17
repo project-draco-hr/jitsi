@@ -6,9 +6,15 @@
   boolean isLoading=false;
   while (i.hasNext()) {
     protocolContact=i.next();
-    if (statusMessage == null && protocolContact.getStatusMessage() != null && protocolContact.getStatusMessage().length() > 0)     statusMessage=protocolContact.getStatusMessage();
+    if (statusMessage == null) {
+      statusMessage=protocolContact.getStatusMessage();
+      if ((statusMessage != null) && (statusMessage.length() == 0))       statusMessage=null;
+    }
     if (ConfigurationUtils.isHideAccountStatusSelectorsEnabled())     break;
-    ImageIcon protocolStatusIcon=ImageLoader.getIndexedProtocolIcon(ImageUtils.getBytesInImage(protocolContact.getPresenceStatus().getStatusIcon()),protocolContact.getProtocolProvider());
+    ImageIcon protocolStatusIcon=getContactPresenceStatusIcon(protocolContact);
+    if (protocolStatusIcon != null) {
+      protocolStatusIcon=ImageLoader.getIndexedProtocolIcon(protocolStatusIcon.getImage(),protocolContact.getProtocolProvider());
+    }
     String contactAddress=protocolContact.getAddress();
     tip.addLine(protocolStatusIcon,contactAddress);
     addContactResourceTooltipLines(tip,protocolContact);
