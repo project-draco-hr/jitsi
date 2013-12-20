@@ -1,0 +1,25 @@
+{
+  ServiceReference[] serRefs=null;
+  String osgiFilter="(" + net.java.sip.communicator.service.gui.Container.CONTAINER_ID + "="+ net.java.sip.communicator.service.gui.Container.CONTAINER_CHAT_WRITE_PANEL.getID()+ ")";
+  try {
+    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponentFactory.class.getName(),osgiFilter);
+  }
+ catch (  InvalidSyntaxException exc) {
+    logger.error("Could not obtain plugin reference.",exc);
+  }
+  if (serRefs != null) {
+    for (int i=0; i < serRefs.length; i++) {
+      PluginComponentFactory factory=(PluginComponentFactory)GuiActivator.bundleContext.getService(serRefs[i]);
+      PluginComponent component=factory.getPluginComponentInstance(this);
+      ChatSession chatSession=chatPanel.getChatSession();
+      if (chatSession instanceof MetaContactChatSession) {
+        MetaContact metaContact=(MetaContact)chatSession.getDescriptor();
+        component.setCurrentContact(metaContact);
+      }
+      if (component.getComponent() == null)       continue;
+      centerPanel.add((Component)component.getComponent());
+    }
+  }
+  GuiActivator.getUIService().addPluginComponentListener(this);
+  this.centerPanel.repaint();
+}
