@@ -18,13 +18,13 @@
       ChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper,true);
       chatPanel.setChatIcon(chatPanel.getChatSession().getChatStatusIcon());
       if (chatPanel.isShown())       ((ConferenceChatSession)chatPanel.getChatSession()).loadChatRoom(sourceChatRoom);
- else       chatWindowManager.openChat(chatPanel,true);
     }
     if (sourceChatRoom.isSystem()) {
       ChatRoomProviderWrapper serverWrapper=GuiActivator.getMUCService().findServerWrapperFromProvider(sourceChatRoom.getParentProvider());
       serverWrapper.setSystemRoom(sourceChatRoom);
     }
     sourceChatRoom.addMessageListener(this);
+    sourceChatRoom.addLocalUserRoleListener(this);
   }
  else   if (LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOIN_FAILED.equals(eventType)) {
     GuiActivator.getAlertUIService().showAlertPopup(GuiActivator.getResources().getI18NString("service.gui.ERROR"),GuiActivator.getResources().getI18NString("service.gui.FAILED_TO_JOIN_CHAT_ROOM",new String[]{sourceChatRoom.getName()}) + evt.getReason());
@@ -35,5 +35,6 @@
       GuiActivator.getMUCService().fireChatRoomListChangedEvent(chatRoomWrapper,ChatRoomListChangeEvent.CHAT_ROOM_CHANGED);
     }
     sourceChatRoom.removeMessageListener(this);
+    sourceChatRoom.removelocalUserRoleListener(this);
   }
 }
