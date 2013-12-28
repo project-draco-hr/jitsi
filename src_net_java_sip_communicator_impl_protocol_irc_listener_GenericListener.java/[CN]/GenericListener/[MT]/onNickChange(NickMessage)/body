@@ -1,0 +1,22 @@
+{
+  if (msg == null)   return;
+  HashMap<ChatRoomIrcImpl,ChatRoomMemberIrcImpl> affected=new HashMap<ChatRoomIrcImpl,ChatRoomMemberIrcImpl>();
+  String oldNick=msg.getSource().getNick();
+synchronized (this.channels) {
+    for (    ChatRoomIrcImpl channel : this.channels) {
+      ChatRoomMemberIrcImpl member=(ChatRoomMemberIrcImpl)channel.getChatRoomMember(oldNick);
+      if (member != null) {
+        affected.put(channel,member);
+      }
+    }
+  }
+  String newNick=msg.getNewNick();
+  for (  Entry<ChatRoomIrcImpl,ChatRoomMemberIrcImpl> record : affected.entrySet()) {
+    ChatRoomIrcImpl channel=record.getKey();
+    ChatRoomMemberIrcImpl member=record.getValue();
+    member.setName(newNick);
+    channel.updateChatRoomMemberName(oldNick,newNick);
+    ChatRoomMemberPropertyChangeEvent evt=new ChatRoomMemberPropertyChangeEvent(member,channel,ChatRoomMemberPropertyChangeEvent.MEMBER_NICKNAME,oldNick,newNick);
+    channel.fireMemberPropertyChangeEvent(evt);
+  }
+}
