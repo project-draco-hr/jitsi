@@ -1,13 +1,18 @@
 {
-  if (IrcStack.this.getNick().equals(msg.getToUser())) {
-    String user=msg.getSource().getNick();
-    String text=msg.getText();
-    int index=IrcStack.this.joined.indexOf(user);
-    if (index == -1) {
-      initiatePrivateChatWithInitialMessage(user,text);
-    }
- else {
-      sendMessageToPrivateChat(IrcStack.this.joined.get(index),user,text);
+  ChatRoomIrcImpl chatroom=null;
+  String user=msg.getSource().getNick();
+  String text=msg.getText();
+synchronized (IrcStack.this.joined) {
+    for (    ChatRoomIrcImpl room : IrcStack.this.joined) {
+      if (room.isPrivate() == false)       continue;
+      if (user.equals(room.getIdentifier())) {
+        chatroom=room;
+        break;
+      }
     }
   }
+  if (chatroom == null) {
+    chatroom=initiatePrivateChatRoom(user);
+  }
+  deliverReceivedMessageToPrivateChat(chatroom,user,text);
 }
