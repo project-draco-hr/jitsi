@@ -7,7 +7,14 @@ switch (mode.getMode()) {
 case OWNER:
       String ownerUserName=mode.getParams()[0];
     if (isMe(ownerUserName)) {
-      System.out.println("Local user owner change! (no business logic yet, just discovery) " + mode.isAdded());
+      ChatRoomLocalUserRoleChangeEvent event;
+      if (mode.isAdded()) {
+        event=new ChatRoomLocalUserRoleChangeEvent(this.chatroom,ChatRoomMemberRole.SILENT_MEMBER,ChatRoomMemberRole.OWNER);
+      }
+ else {
+        event=new ChatRoomLocalUserRoleChangeEvent(this.chatroom,ChatRoomMemberRole.OWNER,ChatRoomMemberRole.SILENT_MEMBER);
+      }
+      this.chatroom.fireLocalUserRoleChangedEvent(event);
     }
  else {
       ChatRoomMember owner=this.chatroom.getChatRoomMember(mode.getParams()[0]);
@@ -22,7 +29,14 @@ case OWNER:
 case OPERATOR:
 String opUserName=mode.getParams()[0];
 if (isMe(opUserName)) {
-System.out.println("Local user op change! " + mode.isAdded());
+ChatRoomLocalUserRoleChangeEvent event;
+if (mode.isAdded()) {
+  event=new ChatRoomLocalUserRoleChangeEvent(this.chatroom,ChatRoomMemberRole.SILENT_MEMBER,ChatRoomMemberRole.ADMINISTRATOR);
+}
+ else {
+  event=new ChatRoomLocalUserRoleChangeEvent(this.chatroom,ChatRoomMemberRole.ADMINISTRATOR,ChatRoomMemberRole.SILENT_MEMBER);
+}
+this.chatroom.fireLocalUserRoleChangedEvent(event);
 }
  else {
 ChatRoomMember op=this.chatroom.getChatRoomMember(opUserName);
@@ -37,7 +51,14 @@ break;
 case VOICE:
 String voiceUserName=mode.getParams()[0];
 if (isMe(voiceUserName)) {
-System.out.println("Local user voice change! " + mode.isAdded());
+ChatRoomLocalUserRoleChangeEvent event;
+if (mode.isAdded()) {
+event=new ChatRoomLocalUserRoleChangeEvent(this.chatroom,ChatRoomMemberRole.SILENT_MEMBER,ChatRoomMemberRole.MEMBER);
+}
+ else {
+event=new ChatRoomLocalUserRoleChangeEvent(this.chatroom,ChatRoomMemberRole.MEMBER,ChatRoomMemberRole.SILENT_MEMBER);
+}
+this.chatroom.fireLocalUserRoleChangedEvent(event);
 }
  else {
 ChatRoomMember voice=this.chatroom.getChatRoomMember(voiceUserName);
