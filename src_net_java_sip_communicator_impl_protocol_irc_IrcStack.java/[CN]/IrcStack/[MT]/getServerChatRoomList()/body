@@ -1,3 +1,21 @@
 {
-  return new ArrayList<String>();
+synchronized (this.channellist) {
+    if (this.channellist.instance == null) {
+      List<String> list=new ArrayList<String>();
+synchronized (list) {
+        try {
+          this.irc.addListener(new ChannelListListener(this.irc,list));
+          this.irc.rawMessage("LIST");
+          System.out.println("Started waiting for list ...");
+          list.wait();
+          System.out.println("Done waiting for list.");
+        }
+ catch (        InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+      this.channellist.instance=list;
+    }
+    return Collections.unmodifiableList(this.channellist.instance);
+  }
 }
