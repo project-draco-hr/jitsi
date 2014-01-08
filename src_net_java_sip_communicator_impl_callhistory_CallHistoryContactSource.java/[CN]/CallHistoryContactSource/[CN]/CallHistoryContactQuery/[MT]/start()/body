@@ -1,0 +1,23 @@
+{
+  if (callHistoryQuery != null) {
+    callHistoryQuery.addQueryListener(new CallHistoryQueryListener(){
+      public void callRecordReceived(      CallRecordEvent event){
+        if (getStatus() == ContactQuery.QUERY_CANCELED)         return;
+        SourceContact contact=new CallHistorySourceContact(CallHistoryContactSource.this,event.getCallRecord());
+        sourceContacts.add(contact);
+        fireQueryEvent(contact);
+      }
+      public void queryStatusChanged(      CallHistoryQueryStatusEvent event){
+        status=event.getEventType();
+        fireQueryStatusEvent(status);
+      }
+    }
+);
+    recordsIter=callHistoryQuery.getCallRecords().iterator();
+  }
+  while (recordsIter.hasNext()) {
+    SourceContact contact=new CallHistorySourceContact(CallHistoryContactSource.this,recordsIter.next());
+    sourceContacts.add(contact);
+    fireQueryEvent(contact);
+  }
+}

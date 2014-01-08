@@ -11,13 +11,15 @@
   if (!(group instanceof UIGroupImpl))   return;
   UIGroupImpl parentGroup=(UIGroupImpl)group.getParentGroup();
   GroupNode parentGroupNode;
-  if (parentGroup == null) {
-    if (group.countChildContacts() == 0)     parentGroupNode=treeModel.getRoot();
- else     return;
+synchronized (parentGroup) {
+    if (parentGroup == null) {
+      if (group.countChildContacts() == 0)       parentGroupNode=treeModel.getRoot();
+ else       return;
+    }
+ else     parentGroupNode=parentGroup.getGroupNode();
+    if (parentGroupNode == null)     return;
+    parentGroupNode.removeContactGroup((UIGroupImpl)group);
   }
- else   parentGroupNode=parentGroup.getGroupNode();
-  if (parentGroupNode == null)   return;
-  parentGroupNode.removeContactGroup((UIGroupImpl)group);
   if (parentGroupNode.getChildCount() == 0) {
     GroupNode parent=(GroupNode)parentGroupNode.getParent();
     if (parent != null)     parent.removeContactGroup(parentGroup);

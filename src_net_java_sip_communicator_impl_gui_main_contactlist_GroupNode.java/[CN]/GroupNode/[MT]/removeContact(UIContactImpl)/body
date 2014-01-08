@@ -1,13 +1,18 @@
 {
-  final ContactNode contactNode=uiContact.getContactNode();
-  if (contactNode != null) {
-    int index=getIndex(contactNode);
-    int selectedIndex=getLeadSelectionRow();
-    children.removeElementAt(index);
-    contactNode.setParent(null);
+  final ContactNode contactNode;
+  int index;
+synchronized (uiContact) {
+    contactNode=uiContact.getContactNode();
+    if (contactNode == null)     return;
+    index=getIndex(contactNode);
+  }
+  int selectedIndex=getLeadSelectionRow();
+  children.removeElementAt(index);
+  contactNode.setParent(null);
+synchronized (uiContact) {
     uiContact.setContactNode(null);
     uiContact=null;
-    fireNodeRemoved(contactNode,index);
-    refreshSelection(selectedIndex,getLeadSelectionRow());
   }
+  fireNodeRemoved(contactNode,index);
+  refreshSelection(selectedIndex,getLeadSelectionRow());
 }

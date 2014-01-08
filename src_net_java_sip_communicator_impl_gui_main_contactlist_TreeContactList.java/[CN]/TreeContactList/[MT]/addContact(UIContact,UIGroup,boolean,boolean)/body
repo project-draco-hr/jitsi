@@ -14,13 +14,15 @@
   }
  else   if (group instanceof UIGroupImpl) {
     UIGroupImpl contactImpl=(UIGroupImpl)group;
-    groupNode=contactImpl.getGroupNode();
-    if (groupNode == null) {
-      GroupNode parentNode=treeModel.getRoot();
-      if (isGroupSorted)       groupNode=parentNode.sortedAddContactGroup(contactImpl);
- else       groupNode=parentNode.addContactGroup(contactImpl);
-      if (group.getSourceIndex() < GuiActivator.getContactListService().getSourceIndex() && rootUIGroup == null && (!(treeModel.getRoot().getChildAfter(groupNode) instanceof GroupNode))) {
-        createMetaUIRootGroup();
+synchronized (contactImpl) {
+      groupNode=contactImpl.getGroupNode();
+      if (groupNode == null) {
+        GroupNode parentNode=treeModel.getRoot();
+        if (isGroupSorted)         groupNode=parentNode.sortedAddContactGroup(contactImpl);
+ else         groupNode=parentNode.addContactGroup(contactImpl);
+        if (group.getSourceIndex() < GuiActivator.getContactListService().getSourceIndex() && rootUIGroup == null && (!(treeModel.getRoot().getChildAfter(groupNode) instanceof GroupNode))) {
+          createMetaUIRootGroup();
+        }
       }
     }
   }
@@ -29,6 +31,11 @@
   if (!(contact instanceof UIContactImpl))   return;
   ContactNode contactNode=null;
   UIContactImpl contactImpl=(UIContactImpl)contact;
+synchronized (contactImpl) {
+    if (contactImpl.getContactNode() != null) {
+      return;
+    }
+  }
   if (isContactSorted)   contactNode=groupNode.sortedAddContact(contactImpl);
  else   contactNode=groupNode.addContact(contactImpl);
   if (rootUIGroup == null && groupNode == treeModel.getRoot() && treeModel.getRoot().getChildBefore(contactNode) instanceof GroupNode) {
