@@ -1,15 +1,19 @@
 {
   AccountID accountID=getAccountID();
   String serverAddress=accountID.getAccountPropertyString(ProtocolProviderFactory.SERVER_ADDRESS);
-  int serverPort=accountID.getAccountPropertyInt(ProtocolProviderFactory.SERVER_PORT,6667);
+  int serverPort=accountID.getAccountPropertyInt(ProtocolProviderFactory.SERVER_PORT,6697);
   String serverPassword=IrcActivator.getProtocolProviderFactory().loadPassword(getAccountID());
   boolean autoNickChange=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.AUTO_CHANGE_USER_NAME,true);
   boolean passwordRequired=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.NO_PASSWORD_REQUIRED,true);
+  boolean secureConnection=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true);
   if (serverPassword == null && passwordRequired) {
     UserCredentials credentials=new UserCredentials();
     credentials.setUserName(getAccountID().getUserID());
     credentials=authority.obtainCredentials(ProtocolNames.IRC,credentials,SecurityAuthority.AUTHENTICATION_REQUIRED);
-    char[] pass=credentials.getPassword();
+    char[] pass=null;
+    if (credentials != null) {
+      pass=credentials.getPassword();
+    }
     if (pass == null) {
       fireRegistrationStateChanged(getRegistrationState(),RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,"");
       return;
@@ -20,7 +24,7 @@
     }
   }
   try {
-    this.ircStack.connect(serverAddress,serverPort,serverPassword,autoNickChange);
+    this.ircStack.connect(serverAddress,serverPort,serverPassword,secureConnection,autoNickChange);
   }
  catch (  Exception e) {
     throw new OperationFailedException(e.getMessage(),0,e);
