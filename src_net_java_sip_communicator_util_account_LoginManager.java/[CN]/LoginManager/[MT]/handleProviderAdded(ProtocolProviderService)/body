@@ -1,7 +1,12 @@
 {
   if (logger.isTraceEnabled())   logger.trace("The following protocol provider was just added: " + protocolProvider.getAccountID().getAccountAddress());
-  protocolProvider.addRegistrationStateChangeListener(this);
-  loginRenderer.addProtocolProviderUI(protocolProvider);
+synchronized (loginRenderer) {
+    if (!loginRenderer.containsProtocolProviderUI(protocolProvider)) {
+      protocolProvider.addRegistrationStateChangeListener(this);
+      loginRenderer.addProtocolProviderUI(protocolProvider);
+    }
+ else     return;
+  }
   Object status=AccountStatusUtils.getProtocolProviderLastStatus(protocolProvider);
   if (status == null || status.equals(GlobalStatusEnum.ONLINE_STATUS) || ((status instanceof PresenceStatus) && (((PresenceStatus)status).getStatus() >= PresenceStatus.ONLINE_THRESHOLD))) {
     login(protocolProvider);
