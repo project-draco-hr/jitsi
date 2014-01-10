@@ -74,7 +74,7 @@
       }
       OperationSetExtendedAuthorizations authOpSet=protocolProvider.getOperationSet(OperationSetExtendedAuthorizations.class);
       OperationSetMultiUserChat opSetMUC=protocolProvider.getOperationSet(OperationSetMultiUserChat.class);
-      if (authOpSet != null && authOpSet.getSubscriptionStatus(contact) != null && !authOpSet.getSubscriptionStatus(contact).equals(SubscriptionStatus.Subscribed) && !opSetMUC.isPrivateMessagingContact(contactAddress)) {
+      if (authOpSet != null && authOpSet.getSubscriptionStatus(contact) != null && !authOpSet.getSubscriptionStatus(contact).equals(SubscriptionStatus.Subscribed) && (opSetMUC == null || !opSetMUC.isPrivateMessagingContact(contactAddress))) {
         if (firstUnsubscribedContact == null)         firstUnsubscribedContact=contact;
         multiContactRequestAuthMenu.add(new ContactMenuItem(contact,contactAddress,requestAuthPrefix,protocolIcon));
       }
@@ -191,7 +191,7 @@
   if (authRequestItemCount > 1) {
     this.add(multiContactRequestAuthMenu);
   }
- else   if (authRequestItemCount == 1 || (metaContact.getContactCount() == 1 && defaultContact.getProtocolProvider().getOperationSet(OperationSetExtendedAuthorizations.class) != null && !opSetMUC.isPrivateMessagingContact(defaultContact.getAddress())) && !SubscriptionStatus.Subscribed.equals(defaultContact.getProtocolProvider().getOperationSet(OperationSetExtendedAuthorizations.class).getSubscriptionStatus(defaultContact))) {
+ else   if (authRequestItemCount == 1 || (metaContact.getContactCount() == 1 && defaultContact.getProtocolProvider().getOperationSet(OperationSetExtendedAuthorizations.class) != null && (opSetMUC == null || !opSetMUC.isPrivateMessagingContact(defaultContact.getAddress()))) && !SubscriptionStatus.Subscribed.equals(defaultContact.getProtocolProvider().getOperationSet(OperationSetExtendedAuthorizations.class).getSubscriptionStatus(defaultContact))) {
     this.add(requestAuthMenuItem);
     this.requestAuthMenuItem.setName("requestAuth");
     this.requestAuthMenuItem.addActionListener(this);
