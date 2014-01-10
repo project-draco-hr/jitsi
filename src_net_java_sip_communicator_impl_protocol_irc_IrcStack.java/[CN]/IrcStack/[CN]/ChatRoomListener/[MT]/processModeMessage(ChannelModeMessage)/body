@@ -1,6 +1,5 @@
 {
-  String sourceNick=((IRCUser)msg.getSource()).getNick();
-  ChatRoomMemberIrcImpl sourceMember=(ChatRoomMemberIrcImpl)this.chatroom.getChatRoomMember(sourceNick);
+  ChatRoomMemberIrcImpl sourceMember=extractChatRoomMember(msg);
   ModeParser parser=new ModeParser(msg);
   for (  ModeEntry mode : parser.getModes()) {
 switch (mode.getMode()) {
@@ -91,6 +90,9 @@ break;
 message=new MessageIrcImpl("channel limit removed","text/plain","UTF-8",null);
 }
 this.chatroom.fireMessageReceivedEvent(message,sourceMember,new Date(),ChatRoomMessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
+break;
+case UNKNOWN:
+System.out.println("Unknown mode: " + (mode.isAdded() ? "+" : "-") + mode.getParams()[0]+ ". Original mode string: '"+ msg.getModeStr()+ "'");
 break;
 default :
 System.out.println("Unsupported mode '" + (mode.isAdded() ? "+" : "-") + mode.getMode()+ "' (from modestring '"+ msg.getModeStr()+ "')");
