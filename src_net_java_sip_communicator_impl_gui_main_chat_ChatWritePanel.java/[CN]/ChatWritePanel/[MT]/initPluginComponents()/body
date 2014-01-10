@@ -12,9 +12,13 @@
       PluginComponentFactory factory=(PluginComponentFactory)GuiActivator.bundleContext.getService(serRefs[i]);
       PluginComponent component=factory.getPluginComponentInstance(this);
       ChatSession chatSession=chatPanel.getChatSession();
-      if (chatSession instanceof MetaContactChatSession) {
-        MetaContact metaContact=(MetaContact)chatSession.getDescriptor();
-        component.setCurrentContact(metaContact);
+      if (chatSession != null) {
+        ChatTransport currentTransport=chatSession.getCurrentChatTransport();
+        Object currentDescriptor=currentTransport.getDescriptor();
+        if (currentDescriptor instanceof Contact) {
+          Contact contact=(Contact)currentDescriptor;
+          component.setCurrentContact(contact,currentTransport.getResourceName());
+        }
       }
       if (component.getComponent() == null)       continue;
       centerPanel.add((Component)component.getComponent());

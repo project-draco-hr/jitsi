@@ -1,12 +1,16 @@
 {
   PluginComponentFactory factory=event.getPluginComponentFactory();
   if (!factory.getContainer().equals(net.java.sip.communicator.service.gui.Container.CONTAINER_CHAT_WRITE_PANEL))   return;
-  PluginComponent c=factory.getPluginComponentInstance(this);
+  PluginComponent component=factory.getPluginComponentInstance(this);
   ChatSession chatSession=chatPanel.getChatSession();
-  if (chatSession instanceof MetaContactChatSession) {
-    MetaContact metaContact=(MetaContact)chatSession.getDescriptor();
-    c.setCurrentContact(metaContact);
+  if (chatSession != null) {
+    ChatTransport currentTransport=chatSession.getCurrentChatTransport();
+    Object currentDescriptor=currentTransport.getDescriptor();
+    if (currentDescriptor instanceof Contact) {
+      Contact contact=(Contact)currentDescriptor;
+      component.setCurrentContact(contact,currentTransport.getResourceName());
+    }
   }
-  centerPanel.add((Component)c.getComponent());
+  centerPanel.add((Component)component.getComponent());
   this.centerPanel.repaint();
 }

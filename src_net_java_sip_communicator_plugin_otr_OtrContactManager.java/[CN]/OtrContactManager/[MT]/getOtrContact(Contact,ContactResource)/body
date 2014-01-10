@@ -1,0 +1,23 @@
+{
+  if (contact == null)   return null;
+  List<OtrContact> otrContactsList=contactsMap.get(contact);
+  if (otrContactsList != null) {
+    for (    OtrContact otrContact : otrContactsList) {
+      if (resource != null && resource.equals(otrContact.resource))       return otrContact;
+    }
+    OtrContact otrContact=new OtrContact(contact,resource);
+synchronized (otrContactsList) {
+      while (!otrContactsList.contains(otrContact))       otrContactsList.add(otrContact);
+    }
+    return otrContact;
+  }
+ else {
+synchronized (contactsMap) {
+      while (!contactsMap.containsKey(contact)) {
+        otrContactsList=new ArrayList<OtrContact>();
+        contactsMap.put(contact,otrContactsList);
+      }
+    }
+    return getOtrContact(contact,resource);
+  }
+}

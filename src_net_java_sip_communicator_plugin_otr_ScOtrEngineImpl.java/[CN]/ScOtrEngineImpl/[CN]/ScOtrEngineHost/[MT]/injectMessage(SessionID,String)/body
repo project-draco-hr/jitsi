@@ -1,9 +1,22 @@
 {
-  Contact contact=getContact(sessionID);
+  OtrContact otrContact=getOtrContact(sessionID);
+  Contact contact=otrContact.contact;
+  ContactResource resource=null;
+  if (contact.supportResources()) {
+    Collection<ContactResource> resources=contact.getResources();
+    if (resources != null) {
+      for (      ContactResource r : resources) {
+        if (r.equals(otrContact.resource)) {
+          resource=r;
+          break;
+        }
+      }
+    }
+  }
   OperationSetBasicInstantMessaging imOpSet=contact.getProtocolProvider().getOperationSet(OperationSetBasicInstantMessaging.class);
   String otrHtmlFallbackMessage="<a href=\"http://en.wikipedia.org/wiki/Off-the-Record_Messaging\">";
   String contentType=messageText.contains(otrHtmlFallbackMessage) ? OperationSetBasicInstantMessaging.HTML_MIME_TYPE : OperationSetBasicInstantMessaging.DEFAULT_MIME_TYPE;
   Message message=imOpSet.createMessage(messageText,contentType,OperationSetBasicInstantMessaging.DEFAULT_MIME_ENCODING,null);
   injectedMessageUIDs.add(message.getMessageUID());
-  imOpSet.sendInstantMessage(contact,message);
+  imOpSet.sendInstantMessage(contact,resource,message);
 }

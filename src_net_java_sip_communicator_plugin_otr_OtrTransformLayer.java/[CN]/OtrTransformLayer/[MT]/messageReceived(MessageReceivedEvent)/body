@@ -1,10 +1,11 @@
 {
   Contact contact=evt.getSourceContact();
+  OtrContact otrContact=OtrContactManager.getOtrContact(contact,evt.getContactResource());
   OtrPolicy policy=OtrActivator.scOtrEngine.getContactPolicy(contact);
-  ScSessionStatus sessionStatus=OtrActivator.scOtrEngine.getSessionStatus(contact);
+  ScSessionStatus sessionStatus=OtrActivator.scOtrEngine.getSessionStatus(otrContact);
   if (!policy.getEnableManual() && sessionStatus != ScSessionStatus.ENCRYPTED && sessionStatus != ScSessionStatus.FINISHED)   return evt;
   String msgContent=evt.getSourceMessage().getContent();
-  String processedMessageContent=OtrActivator.scOtrEngine.transformReceiving(contact,msgContent);
+  String processedMessageContent=OtrActivator.scOtrEngine.transformReceiving(otrContact,msgContent);
   if (processedMessageContent == null || processedMessageContent.length() < 1)   return null;
   if (processedMessageContent.equals(msgContent))   return evt;
   OperationSetBasicInstantMessaging imOpSet=contact.getProtocolProvider().getOperationSet(OperationSetBasicInstantMessaging.class);
