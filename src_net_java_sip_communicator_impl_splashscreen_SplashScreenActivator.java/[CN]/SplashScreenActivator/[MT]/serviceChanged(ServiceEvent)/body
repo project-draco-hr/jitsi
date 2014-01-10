@@ -1,0 +1,40 @@
+{
+  if (splash == null)   return;
+synchronized (splash) {
+    try {
+      if (!splash.isVisible()) {
+        stop(bundleContext);
+        return;
+      }
+      Bundle bundle=serviceEvent.getServiceReference().getBundle();
+      if (bundle == null)       return;
+      Object bundleName=bundle.getHeaders().get(Constants.BUNDLE_NAME);
+      if (bundleName == null)       return;
+      progress++;
+      int progressWidth=233;
+      int progressHeight=14;
+      int progressX=168;
+      int progressY=97;
+      int textHeight=20;
+      int textBaseX=150;
+      int textBaseY=145 + (50 - textHeight) / 2 + textHeight;
+      int currentProgressWidth=Math.min(2 * progress,progressWidth);
+      g.setComposite(AlphaComposite.Clear);
+      g.setPaintMode();
+      g.setColor(TEXT_BACKGROUND);
+      g.clearRect(textBaseX - 1,textBaseY - textHeight,(int)this.splash.getBounds().getWidth() - textBaseX,textHeight + 5);
+      g.fillRect(textBaseX - 1,textBaseY - textHeight,(int)this.splash.getBounds().getWidth() - textBaseX,textHeight + 5);
+      g.setColor(PROGRESS_FOREGROUND);
+      g.fillRect(progressX,progressY,currentProgressWidth,progressHeight);
+      g.drawRect(progressX,progressY,currentProgressWidth,progressHeight);
+      g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+      g.setColor(TEXT_FOREGROUND);
+      g.drawString(bundleName.toString(),textBaseX,textBaseY);
+      splash.update();
+    }
+ catch (    Throwable e) {
+      stop(bundleContext);
+      return;
+    }
+  }
+}
