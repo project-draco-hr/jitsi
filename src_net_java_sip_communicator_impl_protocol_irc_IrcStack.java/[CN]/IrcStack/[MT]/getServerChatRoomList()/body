@@ -1,4 +1,5 @@
 {
+  LOGGER.trace("Start retrieve server chat room list.");
 synchronized (this.channellist) {
     if (this.channellist.instance == null) {
       List<String> list=new LinkedList<String>();
@@ -6,16 +7,18 @@ synchronized (list) {
         try {
           this.irc.addListener(new ChannelListListener(this.irc,list));
           this.irc.rawMessage("LIST");
-          System.out.println("Started waiting for list ...");
+          LOGGER.trace("Start waiting for list ...");
           list.wait();
-          System.out.println("Done waiting for list.");
+          LOGGER.trace("Done waiting for list.");
         }
  catch (        InterruptedException e) {
+          LOGGER.trace("INTERRUPTED while waiting for list.");
           e.printStackTrace();
         }
       }
       this.channellist.instance=list;
     }
+    LOGGER.trace("Finished retrieve server chat room list.");
     return Collections.unmodifiableList(this.channellist.instance);
   }
 }
