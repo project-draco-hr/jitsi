@@ -1,0 +1,23 @@
+{
+  this.fas=fas;
+  File dataFile=fas.getPrivatePersistentFile("props.hsql.script",FileCategory.PROFILE);
+  File oldProps=fas.getPrivatePersistentFile("sip-communicator.properties",FileCategory.PROFILE);
+  boolean migrate=false;
+  if (!dataFile.exists() && oldProps.exists()) {
+    migrate=true;
+  }
+  Class.forName("org.hsqldb.jdbc.JDBCDriver");
+  checkConnection();
+  if (migrate) {
+    Properties p=new Properties();
+    p.load(new FileInputStream(oldProps));
+    this.connection.setAutoCommit(false);
+    for (    Map.Entry<Object,Object> e : p.entrySet()) {
+      this.setProperty(e.getKey().toString(),e.getValue(),false);
+    }
+    this.connection.commit();
+    this.connection.setAutoCommit(true);
+  }
+  loadDefaultProperties(DEFAULT_PROPS_FILE_NAME);
+  loadDefaultProperties(DEFAULT_OVERRIDES_PROPS_FILE_NAME);
+}

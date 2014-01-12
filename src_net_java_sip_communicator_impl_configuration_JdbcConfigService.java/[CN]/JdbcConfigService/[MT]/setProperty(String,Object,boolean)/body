@@ -1,0 +1,35 @@
+{
+  if (!isSystem && System.getProperty(propertyName) != null) {
+    isSystem=true;
+  }
+  if (isSystem) {
+    if (property == null) {
+      System.clearProperty(propertyName);
+      return;
+    }
+    System.setProperty(propertyName,property.toString());
+  }
+ else {
+    if (immutableDefaultProperties.containsKey(propertyName)) {
+      return;
+    }
+    try {
+      this.checkConnection();
+      Object oldValue=this.getProperty(propertyName);
+      this.fireVetoableChange(propertyName,oldValue,property);
+      if (property == null) {
+        this.delete.setString(1,propertyName);
+        this.delete.execute();
+      }
+ else {
+        this.insertOrUpdate.setString(1,propertyName);
+        this.insertOrUpdate.setString(2,property.toString());
+        this.insertOrUpdate.execute();
+      }
+      this.fireChange(propertyName,oldValue,property);
+    }
+ catch (    SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+}
