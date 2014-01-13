@@ -1,10 +1,7 @@
 {
-  File tmpFile=null;
   try {
     String arg=null;
     String args[]=null;
-    final File temp=File.createTempFile("provisioning",".properties");
-    tmpFile=temp;
     URL u=new URL(url);
     InetAddress ipaddr=ProvisioningActivator.getNetworkAddressManagerService().getLocalHost(InetAddress.getByName(u.getHost()));
     Pattern p=Pattern.compile("\\$\\{env\\.([^\\}]*)\\}");
@@ -201,42 +198,17 @@
       provPassword=userPass[1];
     }
     InputStream in=res.getContent();
-    InputStream usedStream=in;
     if (!OSUtils.IS_ANDROID) {
       final ProgressMonitorInputStream pin;
       pin=new ProgressMonitorInputStream(null,u.toString(),in);
       ProgressMonitor pm=pin.getProgressMonitor();
       pm.setMaximum((int)res.getContentLength());
-      usedStream=pin;
+      return pin;
     }
-    final BufferedOutputStream bout=new BufferedOutputStream(new FileOutputStream(temp));
-    ByteArrayOutputStream logStream=new ByteArrayOutputStream();
-    try {
-      int read=-1;
-      byte[] buff=new byte[1024];
-      while ((read=usedStream.read(buff)) != -1) {
-        bout.write(buff,0,read);
-        logStream.write(buff,0,read);
-      }
-      usedStream.close();
-      bout.flush();
-      bout.close();
-      return temp;
-    }
- catch (    Exception e) {
-      logger.error("Error saving",e);
-      try {
-        usedStream.close();
-        bout.close();
-      }
- catch (      Exception e1) {
-      }
-      return null;
-    }
+    return in;
   }
  catch (  Exception e) {
     if (logger.isInfoEnabled())     logger.info("Error retrieving provisioning file!",e);
-    tmpFile.delete();
     return null;
   }
 }
