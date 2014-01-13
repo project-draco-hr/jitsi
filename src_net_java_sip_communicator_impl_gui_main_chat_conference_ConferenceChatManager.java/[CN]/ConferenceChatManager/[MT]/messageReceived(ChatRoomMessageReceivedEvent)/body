@@ -17,13 +17,17 @@ if (logger.isTraceEnabled()) logger.trace("MESSAGE RECEIVED from contact: " + so
 Message message=evt.getMessage();
 ChatPanel chatPanel=null;
 ChatWindowManager chatWindowManager=GuiActivator.getUIService().getChatWindowManager();
+boolean createWindow=false;
+MessageHistoryService mhs=GuiActivator.getMessageHistoryService();
+if (!mhs.isHistoryLoggingEnabled() || !mhs.isHistoryLoggingEnabled(sourceChatRoom.getIdentifier())) createWindow=true;
 if (sourceChatRoom.isSystem()) {
 ChatRoomProviderWrapper serverWrapper=GuiActivator.getMUCService().findServerWrapperFromProvider(sourceChatRoom.getParentProvider());
-chatPanel=chatWindowManager.getMultiChat(serverWrapper.getSystemRoomWrapper(),true);
+chatPanel=chatWindowManager.getMultiChat(serverWrapper.getSystemRoomWrapper(),createWindow);
 }
  else {
-chatPanel=chatWindowManager.getMultiChat(sourceChatRoom,true,message.getMessageUID());
+chatPanel=chatWindowManager.getMultiChat(sourceChatRoom,createWindow,message.getMessageUID());
 }
+if (chatPanel == null) return;
 String messageContent=message.getContent();
 if (evt.isHistoryMessage()) {
 Date timeStamp=chatPanel.getChatConversationPanel().getLastIncomingMsgTimestamp();
@@ -50,5 +54,5 @@ if (isPresent) return;
 }
 }
 chatPanel.addMessage(sourceMember.getName(),null,evt.getTimestamp(),messageType,messageContent,message.getContentType(),message.getMessageUID(),null);
-if (evt.isImportantMessage()) chatWindowManager.openChat(chatPanel,true);
+if (evt.isImportantMessage() || createWindow) chatWindowManager.openChat(chatPanel,true);
 }

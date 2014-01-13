@@ -14,10 +14,20 @@
   if (LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED.equals(eventType)) {
     if (chatRoomWrapper != null) {
       GuiActivator.getMUCService().fireChatRoomListChangedEvent(chatRoomWrapper,ChatRoomListChangeEvent.CHAT_ROOM_CHANGED);
+      MessageHistoryService mhs=GuiActivator.getMessageHistoryService();
+      boolean createWindow=false;
+      if (!mhs.isHistoryLoggingEnabled() || !mhs.isHistoryLoggingEnabled(sourceChatRoom.getIdentifier()))       createWindow=true;
       ChatWindowManager chatWindowManager=GuiActivator.getUIService().getChatWindowManager();
-      ChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper,true);
-      chatPanel.setChatIcon(chatPanel.getChatSession().getChatStatusIcon());
-      if (chatPanel.isShown())       ((ConferenceChatSession)chatPanel.getChatSession()).loadChatRoom(sourceChatRoom);
+      ChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper,createWindow);
+      if (chatPanel != null) {
+        chatPanel.setChatIcon(chatPanel.getChatSession().getChatStatusIcon());
+        if (chatPanel.isShown()) {
+          ((ConferenceChatSession)chatPanel.getChatSession()).loadChatRoom(sourceChatRoom);
+        }
+ else {
+          chatWindowManager.openChat(chatPanel,true);
+        }
+      }
     }
     if (sourceChatRoom.isSystem()) {
       ChatRoomProviderWrapper serverWrapper=GuiActivator.getMUCService().findServerWrapperFromProvider(sourceChatRoom.getParentProvider());
