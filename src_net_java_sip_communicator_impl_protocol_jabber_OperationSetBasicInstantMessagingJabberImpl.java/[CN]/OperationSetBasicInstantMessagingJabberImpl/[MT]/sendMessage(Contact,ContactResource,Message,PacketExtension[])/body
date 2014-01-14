@@ -4,9 +4,19 @@
     assertConnected();
     org.jivesoftware.smack.packet.Message msg=new org.jivesoftware.smack.packet.Message();
     String toJID=null;
-    if (toResource != null)     toJID=(toResource.equals(ContactResource.BASE_RESOURCE)) ? to.getAddress() : ((ContactResourceJabberImpl)toResource).getFullJid();
+    boolean sendToBaseResource=false;
+    if (toResource != null) {
+      if (toResource.equals(ContactResource.BASE_RESOURCE)) {
+        toJID=to.getAddress();
+        sendToBaseResource=true;
+      }
+ else       toJID=((ContactResourceJabberImpl)toResource).getFullJid();
+    }
     if (toJID == null)     toJID=getJidForAddress(to.getAddress());
-    if (toJID == null)     toJID=to.getAddress();
+    if (toJID == null) {
+      sendToBaseResource=true;
+      toJID=to.getAddress();
+    }
     Chat chat=obtainChatInstance(toJID);
     msg.setPacketID(message.getMessageUID());
     msg.setTo(toJID);
@@ -29,6 +39,7 @@
     }
     MessageEventManager.addNotificationsRequests(msg,true,false,false,true);
     chat.sendMessage(msg);
+    if (sendToBaseResource)     putJidForAddress(to.getAddress(),to.getAddress());
     MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(message,to,toResource);
     return msgDeliveredEvt;
   }
