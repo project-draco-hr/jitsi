@@ -1,13 +1,13 @@
 {
   FileAccessService fas=ServiceUtils.getService(bundleContext,FileAccessService.class);
-  File useDatabaseConfig=fas.getPrivatePersistentFile(".usedatabaseconfig",FileCategory.PROFILE);
-  if (useDatabaseConfig.exists()) {
-    logger.info("Using database configuration store.");
-    this.cs=new JdbcConfigService(fas);
+  if (fas != null) {
+    File useDatabaseConfig=fas.getPrivatePersistentFile(".usedatabaseconfig",FileCategory.PROFILE);
+    if (useDatabaseConfig.exists()) {
+      logger.info("Using database configuration store.");
+      this.cs=new JdbcConfigService(fas);
+    }
   }
- else {
-    this.cs=LibJitsi.getConfigurationService();
-  }
+  if (this.cs == null)   this.cs=LibJitsi.getConfigurationService();
   bundleContext.registerService(ConfigurationService.class.getName(),this.cs,null);
   fixPermissions(this.cs);
 }
