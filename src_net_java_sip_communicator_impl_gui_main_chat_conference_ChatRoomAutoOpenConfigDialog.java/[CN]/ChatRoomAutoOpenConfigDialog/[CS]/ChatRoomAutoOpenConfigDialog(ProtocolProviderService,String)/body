@@ -1,0 +1,44 @@
+{
+  this.pps=pps;
+  this.chatRoomId=chatRoomId;
+  setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+  value=MUCService.getChatRoomAutoOpenOption(pps,chatRoomId);
+  GuiActivator.getConfigurationService().addPropertyChangeListener(MessageHistoryService.PNAME_IS_MESSAGE_HISTORY_ENABLED,propertyListener);
+  GuiActivator.getConfigurationService().addPropertyChangeListener(MessageHistoryService.PNAME_IS_MESSAGE_HISTORY_PER_CONTACT_ENABLED_PREFIX + "." + chatRoomId,propertyListener);
+  if (value == null)   value=MUCService.OPEN_ON_MESSAGE;
+  if (value.equals(MUCService.OPEN_ON_ACTIVITY)) {
+    openOnActivity.setSelected(true);
+  }
+ else   if (value.equals(MUCService.OPEN_ON_IMPORTANT_MESSAGE)) {
+    openOnImportantMessage.setSelected(true);
+  }
+ else {
+    openOnMessage.setSelected(true);
+  }
+  JPanel choicePanel=new TransparentPanel();
+  choicePanel.setLayout(new BoxLayout(choicePanel,BoxLayout.Y_AXIS));
+  openOnActivity.addActionListener(this);
+  openOnMessage.addActionListener(this);
+  openOnImportantMessage.addActionListener(this);
+  setTitle(GuiActivator.getResources().getI18NString("service.gui.OPEN_AUTOMATICALLY"));
+  openOnActivity.setOpaque(false);
+  openOnMessage.setOpaque(false);
+  openOnImportantMessage.setOpaque(false);
+  ButtonGroup buttonGroup=new ButtonGroup();
+  buttonGroup.add(openOnActivity);
+  buttonGroup.add(openOnMessage);
+  buttonGroup.add(openOnImportantMessage);
+  choicePanel.add(openOnActivity);
+  choicePanel.add(openOnMessage);
+  choicePanel.add(openOnImportantMessage);
+  JPanel buttonPanel=new TransparentPanel(new FlowLayout(FlowLayout.RIGHT));
+  updateView();
+  okButton.addActionListener(this);
+  cancelButton.addActionListener(this);
+  buttonPanel.add(okButton);
+  buttonPanel.add(cancelButton);
+  add(choicePanel,BorderLayout.CENTER);
+  add(buttonPanel,BorderLayout.SOUTH);
+  setPreferredSize(new Dimension(300,140));
+  setVisible(true);
+}
