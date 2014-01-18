@@ -2,7 +2,7 @@
   if (isConnected() == false)   throw new IllegalStateException("Please connect to an IRC server first");
   if (chatroom == null)   throw new IllegalArgumentException("chatroom cannot be null");
   if (password == null)   throw new IllegalArgumentException("password cannot be null");
-  if (this.joined.contains(chatroom) || chatroom.isPrivate()) {
+  if (this.joined.containsKey(chatroom.getIdentifier()) || chatroom.isPrivate()) {
     return;
   }
   LOGGER.trace("Start joining channel " + chatroom.getIdentifier());
@@ -14,7 +14,7 @@ synchronized (joinSignal) {
         @Override public void onSuccess(        IRCChannel channel){
 synchronized (joinSignal) {
             try {
-              IrcStack.this.joined.add(chatroom);
+              IrcStack.this.joined.put(chatroom.getIdentifier(),chatroom);
               IrcStack.this.irc.addListener(new ChatRoomListener(chatroom));
               IRCTopic topic=channel.getTopic();
               chatroom.updateSubject(topic.getValue());

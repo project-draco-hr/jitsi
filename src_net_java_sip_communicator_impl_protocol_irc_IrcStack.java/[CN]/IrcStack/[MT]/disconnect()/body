@@ -1,12 +1,14 @@
 {
   if (this.connectionState == null && this.irc == null)   return;
 synchronized (this.joined) {
-    for (    ChatRoomIrcImpl channel : this.joined) {
+    for (    ChatRoomIrcImpl channel : this.joined.values()) {
       leave(channel);
     }
   }
-  this.irc.disconnect();
-  this.irc=null;
-  this.connectionState=null;
+synchronized (this.irc) {
+    this.irc.disconnect();
+    this.irc=null;
+    this.connectionState=null;
+  }
   this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED);
 }
