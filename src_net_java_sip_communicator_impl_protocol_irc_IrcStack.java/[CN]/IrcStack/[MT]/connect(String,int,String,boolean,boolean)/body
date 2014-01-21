@@ -9,14 +9,14 @@ synchronized (this.irc) {
     this.irc.connect(this.params,new Callback<IIRCState>(){
       @Override public void onSuccess(      IIRCState state){
 synchronized (IrcStack.this.irc) {
-          System.out.println("IRC connected successfully!");
+          LOGGER.trace("IRC connected successfully!");
           IrcStack.this.connectionState=state;
           IrcStack.this.irc.notifyAll();
         }
       }
       @Override public void onFailure(      Exception e){
 synchronized (IrcStack.this.irc) {
-          System.out.println("IRC connection FAILED! (" + e.getMessage() + ")");
+          LOGGER.trace("IRC connection FAILED! (" + e.getMessage() + ")");
           exceptionContainer[0]=e;
           IrcStack.this.connectionState=null;
           IrcStack.this.irc.notifyAll();
@@ -25,7 +25,7 @@ synchronized (IrcStack.this.irc) {
     }
 );
     try {
-      System.out.println("Waiting for the connection to be established ...");
+      LOGGER.trace("Waiting for the connection to be established ...");
       this.irc.wait();
       if (this.connectionState != null && this.connectionState.isConnected()) {
         this.provider.setCurrentRegistrationState(RegistrationState.REGISTERED);
