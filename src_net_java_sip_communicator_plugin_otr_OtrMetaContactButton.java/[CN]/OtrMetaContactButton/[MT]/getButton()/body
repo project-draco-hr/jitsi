@@ -24,14 +24,21 @@
         if (otrContact == null)         return;
 switch (OtrActivator.scOtrEngine.getSessionStatus(otrContact)) {
 case ENCRYPTED:
+          OtrPolicy policy=OtrActivator.scOtrEngine.getContactPolicy(otrContact.contact);
+        policy.setSendWhitespaceTag(false);
+      OtrActivator.scOtrEngine.setContactPolicy(otrContact.contact,policy);
 case FINISHED:
 case LOADING:
-          OtrActivator.scOtrEngine.endSession(otrContact);
-        break;
+    OtrActivator.scOtrEngine.endSession(otrContact);
+  break;
 case TIMED_OUT:
 case PLAINTEXT:
-      OtrActivator.scOtrEngine.startSession(otrContact);
-    break;
+policy=OtrActivator.scOtrEngine.getContactPolicy(otrContact.contact);
+OtrPolicy globalPolicy=OtrActivator.scOtrEngine.getGlobalPolicy();
+policy.setSendWhitespaceTag(globalPolicy.getSendWhitespaceTag());
+OtrActivator.scOtrEngine.setContactPolicy(otrContact.contact,policy);
+OtrActivator.scOtrEngine.startSession(otrContact);
+break;
 }
 }
 }

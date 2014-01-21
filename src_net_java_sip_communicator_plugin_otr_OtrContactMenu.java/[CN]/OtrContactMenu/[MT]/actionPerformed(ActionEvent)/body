@@ -1,7 +1,18 @@
 {
   String actionCommand=e.getActionCommand();
-  if (ACTION_COMMAND_END_OTR.equals(actionCommand))   OtrActivator.scOtrEngine.endSession(contact);
- else   if (ACTION_COMMAND_START_OTR.equals(actionCommand))   OtrActivator.scOtrEngine.startSession(contact);
+  if (ACTION_COMMAND_END_OTR.equals(actionCommand)) {
+    OtrPolicy policy=OtrActivator.scOtrEngine.getContactPolicy(contact.contact);
+    policy.setSendWhitespaceTag(false);
+    OtrActivator.scOtrEngine.setContactPolicy(contact.contact,policy);
+    OtrActivator.scOtrEngine.endSession(contact);
+  }
+ else   if (ACTION_COMMAND_START_OTR.equals(actionCommand)) {
+    OtrPolicy policy=OtrActivator.scOtrEngine.getContactPolicy(contact.contact);
+    OtrPolicy globalPolicy=OtrActivator.scOtrEngine.getGlobalPolicy();
+    policy.setSendWhitespaceTag(globalPolicy.getSendWhitespaceTag());
+    OtrActivator.scOtrEngine.setContactPolicy(contact.contact,policy);
+    OtrActivator.scOtrEngine.startSession(contact);
+  }
  else   if (ACTION_COMMAND_REFRESH_OTR.equals(actionCommand))   OtrActivator.scOtrEngine.refreshSession(contact);
  else   if (ACTION_COMMAND_AUTHENTICATE_BUDDY.equals(actionCommand))   SwingOtrActionHandler.openAuthDialog(contact);
  else   if (ACTION_COMMAND_CB_ENABLE.equals(actionCommand)) {
@@ -13,16 +24,13 @@
  else   if (ACTION_COMMAND_CB_AUTO.equals(actionCommand)) {
     OtrPolicy policy=OtrActivator.scOtrEngine.getContactPolicy(contact.contact);
     boolean state=((JCheckBoxMenuItem)e.getSource()).isSelected();
-    policy.setEnableAlways(state);
     policy.setSendWhitespaceTag(state);
     OtrActivator.scOtrEngine.setContactPolicy(contact.contact,policy);
   }
  else   if (ACTION_COMMAND_CB_AUTO_ALL.equals(actionCommand)) {
     OtrPolicy globalPolicy=OtrActivator.scOtrEngine.getGlobalPolicy();
     boolean state=((JCheckBoxMenuItem)e.getSource()).isSelected();
-    globalPolicy.setEnableAlways(state);
     globalPolicy.setSendWhitespaceTag(state);
-    OtrActivator.configService.setProperty(OtrActivator.AUTO_INIT_OTR_PROP,Boolean.toString(state));
     OtrActivator.scOtrEngine.setGlobalPolicy(globalPolicy);
   }
  else   if (ACTION_COMMAND_CB_REQUIRE.equals(actionCommand)) {
