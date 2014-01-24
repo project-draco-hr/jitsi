@@ -6,72 +6,77 @@
     return;
   }
   LOGGER.trace("Start joining channel " + chatroom.getIdentifier());
-  final Exception[] joinSignal=new Exception[1];
+  final Result<Object,Exception> joinSignal=new Result<Object,Exception>();
 synchronized (joinSignal) {
-    try {
-      LOGGER.trace("Issue join channel command to IRC library and wait for join operation to complete (un)successfully.");
-      this.irc.joinChannel(chatroom.getIdentifier(),password,new Callback<IRCChannel>(){
-        @Override public void onSuccess(        IRCChannel channel){
-          LOGGER.trace("Started callback for successful join of channel '" + chatroom.getIdentifier() + "'.");
-          ChatRoomIrcImpl actualChatRoom=chatroom;
+    LOGGER.trace("Issue join channel command to IRC library and wait for join operation to complete (un)successfully.");
+    this.irc.joinChannel(chatroom.getIdentifier(),password,new Callback<IRCChannel>(){
+      @Override public void onSuccess(      IRCChannel channel){
+        LOGGER.trace("Started callback for successful join of channel '" + chatroom.getIdentifier() + "'.");
+        ChatRoomIrcImpl actualChatRoom=chatroom;
 synchronized (joinSignal) {
-            try {
-              if (channel.getName().equals(actualChatRoom.getIdentifier()) == false) {
-                actualChatRoom=new ChatRoomIrcImpl(channel.getName(),IrcStack.this.provider);
-                MessageIrcImpl message=new MessageIrcImpl("Forwarding to channel " + channel.getName(),"text/plain","UTF-8",null);
-                IrcStack.this.provider.getMUC().registerChatRoomInstance(actualChatRoom);
-                chatroom.fireMessageReceivedEvent(message,null,new Date(),MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
-              }
-              IrcStack.this.joined.put(actualChatRoom.getIdentifier(),actualChatRoom);
-              IrcStack.this.irc.addListener(new ChatRoomListener(actualChatRoom));
-              IRCTopic topic=channel.getTopic();
-              actualChatRoom.updateSubject(topic.getValue());
-              for (              IRCUser user : channel.getUsers()) {
-                ChatRoomMemberRole role=ChatRoomMemberRole.SILENT_MEMBER;
-                Set<IRCUserStatus> statuses=channel.getStatusesForUser(user);
-                for (                IRCUserStatus status : statuses) {
-                  role=convertMemberMode(status.getChanModeType().charValue());
-                }
-                if (IrcStack.this.getNick().equals(user.getNick())) {
-                  actualChatRoom.prepUserRole(role);
-                }
- else {
-                  ChatRoomMemberIrcImpl member=new ChatRoomMemberIrcImpl(IrcStack.this.provider,actualChatRoom,user.getNick(),role);
-                  actualChatRoom.addChatRoomMember(member.getContactAddress(),member);
-                }
-              }
-            }
-  finally {
-              IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(actualChatRoom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
-              LOGGER.trace("Finished successful join callback for channel '" + chatroom.getIdentifier() + "'. Waking up original thread.");
-              joinSignal.notifyAll();
-            }
-          }
-        }
-        @Override public void onFailure(        Exception e){
-          LOGGER.trace("Started callback for failed attempt to join channel '" + chatroom.getIdentifier() + "'.");
-synchronized (joinSignal) {
-            try {
-              joinSignal[0]=e;
-              MessageIrcImpl message=new MessageIrcImpl("Failed to join channel " + chatroom.getIdentifier() + " ("+ e.getMessage()+ ")","text/plain","UTF-8","Failed to join");
+          try {
+            if (channel.getName().equals(actualChatRoom.getIdentifier()) == false) {
+              actualChatRoom=new ChatRoomIrcImpl(channel.getName(),IrcStack.this.provider);
+              MessageIrcImpl message=new MessageIrcImpl("Forwarding to channel " + channel.getName(),"text/plain","UTF-8",null);
+              IrcStack.this.provider.getMUC().registerChatRoomInstance(actualChatRoom);
               chatroom.fireMessageReceivedEvent(message,null,new Date(),MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
             }
-  finally {
-              LOGGER.trace("Finished callback for failed attempt to join channel '" + chatroom.getIdentifier() + "'. Waking up original thread.");
-              joinSignal.notifyAll();
+            IrcStack.this.joined.put(actualChatRoom.getIdentifier(),actualChatRoom);
+            IrcStack.this.irc.addListener(new ChatRoomListener(actualChatRoom));
+            IRCTopic topic=channel.getTopic();
+            actualChatRoom.updateSubject(topic.getValue());
+            for (            IRCUser user : channel.getUsers()) {
+              ChatRoomMemberRole role=ChatRoomMemberRole.SILENT_MEMBER;
+              Set<IRCUserStatus> statuses=channel.getStatusesForUser(user);
+              for (              IRCUserStatus status : statuses) {
+                role=convertMemberMode(status.getChanModeType().charValue());
+              }
+              if (IrcStack.this.getNick().equals(user.getNick())) {
+                actualChatRoom.prepUserRole(role);
+              }
+ else {
+                ChatRoomMemberIrcImpl member=new ChatRoomMemberIrcImpl(IrcStack.this.provider,actualChatRoom,user.getNick(),role);
+                actualChatRoom.addChatRoomMember(member.getContactAddress(),member);
+              }
             }
+          }
+  finally {
+            IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(actualChatRoom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
+            LOGGER.trace("Finished successful join callback for channel '" + chatroom.getIdentifier() + "'. Waking up original thread.");
+            joinSignal.setDone();
+            joinSignal.notifyAll();
           }
         }
       }
+      @Override public void onFailure(      Exception e){
+        LOGGER.trace("Started callback for failed attempt to join channel '" + chatroom.getIdentifier() + "'.");
+synchronized (joinSignal) {
+          try {
+            MessageIrcImpl message=new MessageIrcImpl("Failed to join channel " + chatroom.getIdentifier() + " ("+ e.getMessage()+ ")","text/plain","UTF-8","Failed to join");
+            chatroom.fireMessageReceivedEvent(message,null,new Date(),MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
+          }
+  finally {
+            LOGGER.trace("Finished callback for failed attempt to join channel '" + chatroom.getIdentifier() + "'. Waking up original thread.");
+            joinSignal.setDone(e);
+            joinSignal.notifyAll();
+          }
+        }
+      }
+    }
 );
-      joinSignal.wait();
+    try {
+      while (!joinSignal.isDone()) {
+        LOGGER.trace("Waiting for channel join message ...");
+        joinSignal.wait();
+      }
       LOGGER.trace("Finished waiting for join operation for channel '" + chatroom.getIdentifier() + "' to complete.");
+      Exception e=joinSignal.getException();
+      if (e != null) {
+        throw new OperationFailedException(e.getMessage(),OperationFailedException.CHAT_ROOM_NOT_JOINED,e);
+      }
     }
  catch (    InterruptedException e) {
-      e.printStackTrace();
-    }
-    if (joinSignal[0] != null) {
-      throw new OperationFailedException(joinSignal[0].getMessage(),OperationFailedException.CHAT_ROOM_NOT_JOINED,joinSignal[0]);
+      throw new OperationFailedException(e.getMessage(),OperationFailedException.INTERNAL_ERROR,e);
     }
   }
 }

@@ -1,0 +1,41 @@
+{
+  final Result<IIRCState,Exception> result=new Result<IIRCState,Exception>();
+synchronized (result) {
+    this.irc.connect(this.params,new Callback<IIRCState>(){
+      @Override public void onSuccess(      IIRCState state){
+synchronized (result) {
+          LOGGER.trace("IRC connected successfully!");
+          result.setDone(state);
+          result.notifyAll();
+        }
+      }
+      @Override public void onFailure(      Exception e){
+synchronized (result) {
+          LOGGER.trace("IRC connection FAILED! (" + e.getMessage() + ")");
+          result.setDone(e);
+          result.notifyAll();
+        }
+      }
+    }
+);
+    try {
+      while (!result.isDone()) {
+        LOGGER.trace("Waiting for the connection to be established ...");
+        result.wait();
+      }
+      this.connectionState=result.getValue();
+      if (this.connectionState != null && this.connectionState.isConnected()) {
+        this.provider.setCurrentRegistrationState(RegistrationState.REGISTERED);
+      }
+ else {
+        this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED);
+        Exception e=result.getException();
+        if (e != null)         throw e;
+      }
+    }
+ catch (    InterruptedException e) {
+      this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED);
+      throw e;
+    }
+  }
+}

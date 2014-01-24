@@ -1,45 +1,10 @@
 {
   if (this.irc != null && this.connectionState != null && this.connectionState.isConnected())   return;
   this.joined.clear();
-  final Exception[] exceptionContainer=new Exception[1];
   this.irc=new IRCApiImpl(true);
   this.params.setServer(new IRCServer(host,port,password,secureConnection));
 synchronized (this.irc) {
     this.irc.addListener(new ServerListener());
-    this.irc.connect(this.params,new Callback<IIRCState>(){
-      @Override public void onSuccess(      IIRCState state){
-synchronized (IrcStack.this.irc) {
-          LOGGER.trace("IRC connected successfully!");
-          IrcStack.this.connectionState=state;
-          IrcStack.this.irc.notifyAll();
-        }
-      }
-      @Override public void onFailure(      Exception e){
-synchronized (IrcStack.this.irc) {
-          LOGGER.trace("IRC connection FAILED! (" + e.getMessage() + ")");
-          exceptionContainer[0]=e;
-          IrcStack.this.connectionState=null;
-          IrcStack.this.irc.notifyAll();
-        }
-      }
-    }
-);
-    try {
-      LOGGER.trace("Waiting for the connection to be established ...");
-      this.irc.wait();
-      if (this.connectionState != null && this.connectionState.isConnected()) {
-        this.provider.setCurrentRegistrationState(RegistrationState.REGISTERED);
-      }
- else {
-        this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED);
-        if (exceptionContainer[0] != null) {
-          throw exceptionContainer[0];
-        }
-      }
-    }
- catch (    InterruptedException e) {
-      this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED);
-      throw e;
-    }
+    connectSynchronized();
   }
 }
