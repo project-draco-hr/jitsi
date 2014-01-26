@@ -1,24 +1,24 @@
 {
-  if (this.channels == null)   return;
+  if (this.signal.isDone())   return;
 switch (msg.getNumericCode()) {
 case 321:
-synchronized (this.channels) {
-      this.channels.clear();
+synchronized (this.signal) {
+      this.signal.getValue().clear();
     }
   break;
 case 322:
 String channel=parse(msg.getText());
 if (channel != null) {
-synchronized (this.channels) {
-  this.channels.add(channel);
+synchronized (this.signal) {
+  this.signal.getValue().add(channel);
 }
 }
 break;
 case 323:
-synchronized (this.channels) {
-this.channels.notifyAll();
-this.channels=null;
+synchronized (this.signal) {
 this.api.deleteListener(this);
+this.signal.setDone();
+this.signal.notifyAll();
 }
 break;
 default :

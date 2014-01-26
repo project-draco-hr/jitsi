@@ -2,20 +2,22 @@
   LOGGER.trace("Start retrieve server chat room list.");
 synchronized (this.channellist) {
     if (this.channellist.instance == null) {
-      List<String> list=new LinkedList<String>();
-synchronized (list) {
+      Result<List<String>,Exception> listSignal=new Result<List<String>,Exception>(new LinkedList<String>());
+synchronized (listSignal) {
         try {
-          this.irc.addListener(new ChannelListListener(this.irc,list));
+          this.irc.addListener(new ChannelListListener(this.irc,listSignal));
           this.irc.rawMessage("LIST");
-          LOGGER.trace("Start waiting for list ...");
-          list.wait();
+          while (!listSignal.isDone()) {
+            LOGGER.trace("Start waiting for list ...");
+            listSignal.wait();
+          }
           LOGGER.trace("Done waiting for list.");
         }
  catch (        InterruptedException e) {
           LOGGER.warn("INTERRUPTED while waiting for list.",e);
         }
       }
-      this.channellist.instance=list;
+      this.channellist.instance=listSignal.getValue();
     }
     LOGGER.trace("Finished retrieve server chat room list.");
     return Collections.unmodifiableList(this.channellist.instance);
