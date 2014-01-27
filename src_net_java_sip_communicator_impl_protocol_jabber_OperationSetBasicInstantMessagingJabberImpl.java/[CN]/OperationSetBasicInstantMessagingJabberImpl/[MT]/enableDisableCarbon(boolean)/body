@@ -1,0 +1,33 @@
+{
+  IQ iq=new IQ(){
+    @Override public String getChildElementXML(){
+      return "<" + (enable ? "enable" : "disable") + " xmlns='urn:xmpp:carbons:2' />";
+    }
+  }
+;
+  Packet response=null;
+  try {
+    PacketCollector packetCollector=jabberProvider.getConnection().createPacketCollector(new PacketIDFilter(iq.getPacketID()));
+    iq.setFrom(jabberProvider.getOurJID());
+    iq.setType(IQ.Type.SET);
+    jabberProvider.getConnection().sendPacket(iq);
+    response=packetCollector.nextResult(SmackConfiguration.getPacketReplyTimeout());
+    packetCollector.cancel();
+  }
+ catch (  Exception e) {
+    logger.error("Failed to enable carbon.",e);
+  }
+  isCarbonEnabled=false;
+  if (response == null) {
+    logger.error("Failed to enable carbon. No response is received.");
+  }
+ else   if (response.getError() != null) {
+    logger.error("Failed to enable carbon: " + response.getError());
+  }
+ else   if (!(response instanceof IQ) || !((IQ)response).getType().equals(IQ.Type.RESULT)) {
+    logger.error("Failed to enable carbon. The response is not correct.");
+  }
+ else {
+    isCarbonEnabled=true;
+  }
+}
