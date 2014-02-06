@@ -11,7 +11,15 @@
     if (status.getStatus() < 1)     offlineStatus=status;
   }
   this.addSeparator();
-  GlobalStatusMessageMenu globalStatusMessageMenu=new GlobalStatusMessageMenu(true);
+  globalStatusMessageMenu=new GlobalStatusMessageMenu(true);
+  globalStatusMessageMenu.addPropertyChangeListener(new PropertyChangeListener(){
+    @Override public void propertyChange(    PropertyChangeEvent evt){
+      if (evt.getPropertyName().equals(GlobalStatusMessageMenu.STATUS_MESSAGE_UPDATED_PROP)) {
+        changeTooltip((String)evt.getNewValue());
+      }
+    }
+  }
+);
   this.add((JMenu)globalStatusMessageMenu.getMenu());
   if (!ConfigurationUtils.isHideAccountStatusSelectorsEnabled())   this.addSeparator();
   this.setFont(titleLabel.getFont().deriveFont(Font.PLAIN,11f));
@@ -19,6 +27,6 @@
   this.setIconTextGap(2);
   this.setOpaque(false);
   this.setText("Offline");
-  this.setToolTipText("<html><b>" + GuiActivator.getResources().getI18NString("service.gui.SET_GLOBAL_STATUS") + "</b></html>");
+  changeTooltip(null);
   fitSizeToText();
 }
