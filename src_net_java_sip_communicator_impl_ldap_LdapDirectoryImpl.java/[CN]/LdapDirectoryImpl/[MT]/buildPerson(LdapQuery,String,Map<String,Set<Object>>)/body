@@ -1,35 +1,35 @@
 {
   LdapPersonFound person=new LdapPersonFoundImpl(LdapDirectoryImpl.this,dn,query);
   if (retrievedAttributes.get("givenname") != null) {
-    String firstName=retrievedAttributes.get("givenname").iterator().next();
+    String firstName=(String)retrievedAttributes.get("givenname").iterator().next();
     person.setFirstName(firstName);
   }
  else   if (retrievedAttributes.get("givenName") != null) {
-    String firstName=retrievedAttributes.get("givenName").iterator().next();
+    String firstName=(String)retrievedAttributes.get("givenName").iterator().next();
     person.setFirstName(firstName);
   }
  else   if (retrievedAttributes.get("gn") != null) {
-    String firstName=retrievedAttributes.get("gn").iterator().next();
+    String firstName=(String)retrievedAttributes.get("gn").iterator().next();
     person.setFirstName(firstName);
   }
   if (retrievedAttributes.get("sn") != null) {
-    String surname=retrievedAttributes.get("sn").iterator().next();
+    String surname=(String)retrievedAttributes.get("sn").iterator().next();
     person.setSurname(surname);
   }
  else   if (retrievedAttributes.get("surname") != null) {
-    String surname=retrievedAttributes.get("surname").iterator().next();
+    String surname=(String)retrievedAttributes.get("surname").iterator().next();
     person.setSurname(surname);
   }
   if (retrievedAttributes.get("displayName") != null) {
-    String displayName=retrievedAttributes.get("displayName").iterator().next();
+    String displayName=(String)retrievedAttributes.get("displayName").iterator().next();
     person.setDisplayName(displayName);
   }
  else   if (retrievedAttributes.get("cn") != null) {
-    String displayName=retrievedAttributes.get("cn").iterator().next();
+    String displayName=(String)retrievedAttributes.get("cn").iterator().next();
     person.setDisplayName(displayName);
   }
  else   if (retrievedAttributes.get("commonname") != null) {
-    String displayName=retrievedAttributes.get("commonname").iterator().next();
+    String displayName=(String)retrievedAttributes.get("commonname").iterator().next();
     person.setDisplayName(displayName);
   }
   if (person.getDisplayName() == null) {
@@ -39,45 +39,54 @@
     throw new RuntimeException("display name is null!");
   }
   if (retrievedAttributes.get("o") != null) {
-    String organization=retrievedAttributes.get("o").iterator().next();
+    String organization=(String)retrievedAttributes.get("o").iterator().next();
     person.setOrganization(organization);
   }
  else   if (retrievedAttributes.get("organizationName") != null) {
-    String organization=retrievedAttributes.get("organizationName").iterator().next();
+    String organization=(String)retrievedAttributes.get("organizationName").iterator().next();
     person.setOrganization(organization);
   }
  else   if (retrievedAttributes.get("company") != null) {
-    String organization=retrievedAttributes.get("company").iterator().next();
+    String organization=(String)retrievedAttributes.get("company").iterator().next();
     person.setOrganization(organization);
   }
   if (retrievedAttributes.get("company") != null) {
-    String department=retrievedAttributes.get("company").iterator().next();
+    String department=(String)retrievedAttributes.get("company").iterator().next();
     person.setDepartment(department);
   }
  else   if (retrievedAttributes.get("ou") != null) {
-    String department=retrievedAttributes.get("ou").iterator().next();
+    String department=(String)retrievedAttributes.get("ou").iterator().next();
     person.setDepartment(department);
   }
  else   if (retrievedAttributes.get("orgunit") != null) {
-    String department=retrievedAttributes.get("orgunit").iterator().next();
+    String department=(String)retrievedAttributes.get("orgunit").iterator().next();
     person.setDepartment(department);
   }
  else   if (retrievedAttributes.get("organizationalUnitName") != null) {
-    String department=retrievedAttributes.get("organizationalUnitName").iterator().next();
+    String department=(String)retrievedAttributes.get("organizationalUnitName").iterator().next();
     person.setDepartment(department);
   }
  else   if (retrievedAttributes.get("department") != null) {
-    String department=retrievedAttributes.get("department").iterator().next();
+    String department=(String)retrievedAttributes.get("department").iterator().next();
     person.setDepartment(department);
   }
  else   if (retrievedAttributes.get("departmentNumber") != null) {
-    String department=retrievedAttributes.get("departmentNumber").iterator().next();
+    String department=(String)retrievedAttributes.get("departmentNumber").iterator().next();
     person.setDepartment(department);
+  }
+  if (retrievedAttributes.get("jpegPhoto") != null) {
+    byte[] photo=(byte[])retrievedAttributes.get("jpegPhoto").iterator().next();
+    person.setPhoto(photo);
+  }
+ else   if (retrievedAttributes.get("thumbnailPhoto") != null) {
+    byte[] photo=(byte[])retrievedAttributes.get("thumbnailPhoto").iterator().next();
+    person.setPhoto(photo);
   }
   List<String> attrs=attributesMap.get("mail");
   for (  String attr : attrs) {
     if (retrievedAttributes.get(attr) != null) {
-      for (      String mail : retrievedAttributes.get(attr)) {
+      for (      Object o : retrievedAttributes.get(attr)) {
+        String mail=o.toString();
         if (!mail.contains("@")) {
           if (settings.getMailSuffix() != null) {
             mail+=settings.getMailSuffix();
@@ -91,23 +100,23 @@
   attrs=attributesMap.get("workPhone");
   for (  String attr : attrs) {
     if (retrievedAttributes.get(attr) != null) {
-      String phone=retrievedAttributes.get(attr).iterator().next();
+      String phone=(String)retrievedAttributes.get(attr).iterator().next();
       person.addWorkPhone(phone);
     }
   }
   attrs=attributesMap.get("mobilePhone");
   for (  String attr : attrs) {
     if (retrievedAttributes.get(attr) != null) {
-      for (      String phone : retrievedAttributes.get(attr)) {
-        person.addMobilePhone(phone);
+      for (      Object phone : retrievedAttributes.get(attr)) {
+        person.addMobilePhone(phone.toString());
       }
     }
   }
   attrs=attributesMap.get("homePhone");
   for (  String attr : attrs) {
     if (retrievedAttributes.get(attr) != null) {
-      for (      String phone : retrievedAttributes.get(attr)) {
-        person.addHomePhone(phone);
+      for (      Object phone : retrievedAttributes.get(attr)) {
+        person.addHomePhone(phone.toString());
       }
     }
   }
