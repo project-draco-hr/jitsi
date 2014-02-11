@@ -1,0 +1,38 @@
+{
+  ReportedData data=null;
+  try {
+    data=searchManager.searchForString(searchedString);
+  }
+ catch (  XMPPException e) {
+    logger.error(e);
+    return null;
+  }
+  if (data == null) {
+    logger.error("No data have been received from server.");
+    return null;
+  }
+  Iterator<Column> columns=data.getColumns();
+  Iterator<Row> rows=data.getRows();
+  if (columns == null || rows == null) {
+    logger.error("The received data is corrupted.");
+    return null;
+  }
+  Column jidColumn=null;
+  while (columns.hasNext()) {
+    Column tmpCollumn=columns.next();
+    if (tmpCollumn.getType().equals(FormField.TYPE_JID_SINGLE)) {
+      jidColumn=tmpCollumn;
+      break;
+    }
+  }
+  if (jidColumn == null) {
+    logger.error("No jid collumn provided by the server.");
+    return null;
+  }
+  List<String> result=new ArrayList<String>();
+  while (rows.hasNext()) {
+    Row row=rows.next();
+    result.add((String)row.getValues(jidColumn.getVariable()).next());
+  }
+  return result;
+}

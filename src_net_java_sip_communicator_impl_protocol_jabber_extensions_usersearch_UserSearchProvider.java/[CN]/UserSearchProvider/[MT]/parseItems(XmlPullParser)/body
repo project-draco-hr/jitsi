@@ -1,0 +1,45 @@
+{
+  ReportedData data=new ReportedData();
+  data.addColumn(new ReportedData.Column("JID","jid",FormField.TYPE_JID_SINGLE));
+  boolean done=false;
+  List<ReportedData.Field> fields=new ArrayList<ReportedData.Field>();
+  while (!done) {
+    if (parser.getAttributeCount() > 0) {
+      String jid=parser.getAttributeValue("","jid");
+      List<String> valueList=new ArrayList<String>();
+      valueList.add(jid);
+      ReportedData.Field field=new ReportedData.Field("jid",valueList);
+      fields.add(field);
+    }
+    int eventType=parser.next();
+    if (eventType == XmlPullParser.START_TAG && parser.getName().equals("item")) {
+      fields=new ArrayList<ReportedData.Field>();
+    }
+ else     if (eventType == XmlPullParser.END_TAG && parser.getName().equals("item")) {
+      ReportedData.Row row=new ReportedData.Row(fields);
+      data.addRow(row);
+    }
+ else     if (eventType == XmlPullParser.START_TAG) {
+      String name=parser.getName();
+      String value=parser.nextText();
+      List<String> valueList=new ArrayList<String>();
+      valueList.add(value);
+      ReportedData.Field field=new ReportedData.Field(name,valueList);
+      fields.add(field);
+      boolean exists=false;
+      Iterator<Column> cols=data.getColumns();
+      while (cols.hasNext()) {
+        ReportedData.Column column=cols.next();
+        if (column.getVariable().equals(name))         exists=true;
+      }
+      if (!exists) {
+        ReportedData.Column column=new ReportedData.Column(name,name,"text-single");
+        data.addColumn(column);
+      }
+    }
+ else     if (eventType == XmlPullParser.END_TAG) {
+      if (parser.getName().equals("query"))       done=true;
+    }
+  }
+  return data;
+}

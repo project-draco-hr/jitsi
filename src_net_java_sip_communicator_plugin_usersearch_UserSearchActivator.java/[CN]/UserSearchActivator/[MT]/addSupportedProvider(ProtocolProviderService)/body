@@ -1,0 +1,16 @@
+{
+  if (!supportedProviders.contains(provider)) {
+    supportedProviders.add(provider);
+    LinkedList<UserSearchSupportedProviderListener> tmpListeners;
+synchronized (listeners) {
+      tmpListeners=new LinkedList<UserSearchSupportedProviderListener>(listeners);
+    }
+    for (    UserSearchSupportedProviderListener l : tmpListeners) {
+      l.providerAdded(provider);
+    }
+    if (supportedProviders.size() == 1) {
+      if (userSearchContactSource == null)       userSearchContactSource=new UserSearchContactSource();
+      contactSourceRegistration=bundleContext.registerService(ContactSourceService.class.getName(),userSearchContactSource,null);
+    }
+  }
+}
