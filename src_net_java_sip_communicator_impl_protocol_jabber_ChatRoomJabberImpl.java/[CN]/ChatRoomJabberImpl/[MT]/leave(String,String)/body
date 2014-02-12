@@ -30,6 +30,12 @@ synchronized (members) {
     for (    ChatRoomMember member : members.values())     fireMemberPresenceEvent(member,ChatRoomMemberPresenceChangeEvent.MEMBER_LEFT,"Local user has left the chat room.");
     members.clear();
   }
-  if (connection != null)   connection.removePacketListener(invitationRejectionListeners);
+  if (connection != null) {
+    connection.removePacketListener(invitationRejectionListeners);
+    if (presenceListener != null) {
+      connection.removePacketListener(presenceListener);
+      presenceListener=null;
+    }
+  }
   opSetMuc.fireLocalUserPresenceEvent(this,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT,reason,alternateAddress);
 }
