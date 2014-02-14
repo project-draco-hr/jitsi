@@ -2,7 +2,8 @@
   Thread searchThread=new Thread(){
     int cancelState=0;
     @Override public void run(){
-      logger.trace("starting search for " + realQueryString + " (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\"");
+      String filter=buildSearchFilter(realQueryString);
+      logger.trace("starting search for " + filter + " (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\"");
       SearchControls searchControls=buildSearchControls(searchSettings);
       LdapEvent endEvent=null;
       InitialDirContext dirContext=null;
@@ -12,7 +13,7 @@
         dirContext=connect();
         checkCancel();
         long time0=System.currentTimeMillis();
-        NamingEnumeration<?> results=dirContext.search(LdapDirectoryImpl.this.settings.getBaseDN(),buildSearchFilter(realQueryString),searchControls);
+        NamingEnumeration<?> results=dirContext.search(LdapDirectoryImpl.this.settings.getBaseDN(),filter,searchControls);
         checkCancel();
         while (results.hasMore()) {
           checkCancel();
@@ -23,29 +24,29 @@
           fireLdapEvent(resultEvent,caller);
         }
         long time1=System.currentTimeMillis();
-        logger.trace("search for real query \"" + realQueryString + "\" (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\" took "+ (time1 - time0)+ "ms");
+        logger.trace("search for real query \"" + filter + "\" (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\" took "+ (time1 - time0)+ "ms");
         endEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.SEARCH_ACHIEVED,query);
       }
  catch (      OperationNotSupportedException e) {
-        logger.error("use bind DN without password during search" + " for real query \"" + realQueryString + "\" (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\": "+ e);
+        logger.error("use bind DN without password during search" + " for real query \"" + filter + "\" (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\": "+ e);
         endEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.SEARCH_AUTH_ERROR,query);
       }
 catch (      AuthenticationException e) {
-        logger.error("authentication failed during search" + " for real query \"" + realQueryString + "\" (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\": "+ e);
+        logger.error("authentication failed during search" + " for real query \"" + filter + "\" (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\": "+ e);
         endEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.SEARCH_AUTH_ERROR,query);
       }
 catch (      NamingException e) {
-        logger.error("an external exception was thrown during search" + " for real query \"" + realQueryString + "\" (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\": "+ e);
+        logger.error("an external exception was thrown during search" + " for real query \"" + filter + "\" (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\": "+ e);
         endEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.SEARCH_ERROR,query);
       }
 catch (      LdapQueryCancelledException e) {
-        logger.trace("search for real query \"" + realQueryString + "\" (initial query: \""+ query.toString()+ "\") on "+ LdapDirectoryImpl.this+ " cancelled at state "+ cancelState);
+        logger.trace("search for real query \"" + filter + "\" (initial query: \""+ query.toString()+ "\") on "+ LdapDirectoryImpl.this+ " cancelled at state "+ cancelState);
         endEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.SEARCH_CANCELLED,query);
       }
 catch (      InterruptedException e) {
       }
 catch (      Exception e) {
-        logger.error("search for real query \"" + realQueryString + "\" (initial query: \""+ query.toString()+ "\") on "+ LdapDirectoryImpl.this+ " cancelled at state "+ cancelState,e);
+        logger.error("search for real query \"" + filter + "\" (initial query: \""+ query.toString()+ "\") on "+ LdapDirectoryImpl.this+ " cancelled at state "+ cancelState,e);
         endEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.SEARCH_ERROR,query);
       }
  finally {
