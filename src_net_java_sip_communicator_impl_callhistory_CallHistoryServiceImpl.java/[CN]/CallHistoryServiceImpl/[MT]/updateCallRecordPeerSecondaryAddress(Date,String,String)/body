@@ -1,13 +1,14 @@
 {
-  CallRecord record=findCallRecord(peer.getCall());
-  if (record != null) {
-    for (    CallPeerRecord peerRecord : record.getPeerRecords()) {
-      if (peerRecord.getPeerAddress().equals(peer.getAddress())) {
+  boolean callRecordFound=false;
+synchronized (currentCallRecords) {
+    for (    CallRecord record : currentCallRecords)     for (    CallPeerRecord peerRecord : record.getPeerRecords()) {
+      if (peerRecord.getPeerAddress().equals(peerAddress) && peerRecord.getStartTime().equals(date)) {
+        callRecordFound=true;
         peerRecord.setPeerSecondaryAddress(address);
       }
     }
-    return;
   }
+  if (callRecordFound)   return;
   History history;
   try {
     history=this.getHistory(null,null);
@@ -40,7 +41,7 @@
     @Override public boolean isMatching(){
       String[] propertyVlaues=record.getPropertyValues();
       List<String> peerIDs=getCSVs(propertyVlaues[peerIDIndex]);
-      int i=peerIDs.indexOf(peer.getAddress());
+      int i=peerIDs.indexOf(peerAddress);
       if (i == -1)       return false;
       String dateString=getCSVs(propertyVlaues[dateIndex]).get(i);
       SimpleDateFormat sdf=new SimpleDateFormat(HistoryService.DATE_FORMAT);
@@ -58,10 +59,10 @@
     @Override public Map<String,String> getUpdateChanges(){
       String[] propertyVlaues=record.getPropertyValues();
       List<String> peerIDs=getCSVs(propertyVlaues[peerIDIndex]);
-      int i=peerIDs.indexOf(peer.getAddress());
+      int i=peerIDs.indexOf(peerAddress);
       if (i == -1)       return null;
       List<String> secondaryID=getCSVs(record.getPropertyValues()[peerSecondaryIDIndex]);
-      secondaryID.set(i,peer.getAddress());
+      secondaryID.set(i,peerAddress);
       String res="";
       int j=0;
       for (      String id : secondaryID) {
