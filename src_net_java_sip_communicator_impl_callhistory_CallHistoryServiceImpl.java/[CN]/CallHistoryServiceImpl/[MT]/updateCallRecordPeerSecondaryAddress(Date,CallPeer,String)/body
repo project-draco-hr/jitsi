@@ -1,0 +1,83 @@
+{
+  CallRecord record=findCallRecord(peer.getCall());
+  if (record != null) {
+    for (    CallPeerRecord peerRecord : record.getPeerRecords()) {
+      if (peerRecord.getPeerAddress().equals(peer.getAddress())) {
+        peerRecord.setPeerSecondaryAddress(address);
+      }
+    }
+    return;
+  }
+  History history;
+  try {
+    history=this.getHistory(null,null);
+  }
+ catch (  IOException e) {
+    e.printStackTrace();
+    return;
+  }
+  HistoryWriter historyWriter=history.getWriter();
+  HistoryWriter.HistoryRecordUpdater updater=new HistoryWriter.HistoryRecordUpdater(){
+    private HistoryRecord record;
+    private int dateIndex;
+    private int peerIDIndex;
+    private int peerSecondaryIDIndex;
+    @Override public void setHistoryRecord(    HistoryRecord historyRecord){
+      record=historyRecord;
+      String propertyNames[]=record.getPropertyNames();
+      for (int i=0; i < propertyNames.length; i++) {
+        if (propertyNames[i].equals(STRUCTURE_NAMES[5])) {
+          dateIndex=i;
+        }
+        if (propertyNames[i].equals(STRUCTURE_NAMES[4])) {
+          peerIDIndex=i;
+        }
+        if (propertyNames[i].equals(STRUCTURE_NAMES[10])) {
+          peerSecondaryIDIndex=i;
+        }
+      }
+    }
+    @Override public boolean isMatching(){
+      String[] propertyVlaues=record.getPropertyValues();
+      List<String> peerIDs=getCSVs(propertyVlaues[peerIDIndex]);
+      int i=peerIDs.indexOf(peer.getAddress());
+      if (i == -1)       return false;
+      String dateString=getCSVs(propertyVlaues[dateIndex]).get(i);
+      SimpleDateFormat sdf=new SimpleDateFormat(HistoryService.DATE_FORMAT);
+      try {
+        if (!sdf.parse(dateString).equals(date))         return false;
+      }
+ catch (      ParseException e) {
+        e.printStackTrace();
+        return false;
+      }
+      String secondaryID=getCSVs(propertyVlaues[peerSecondaryIDIndex]).get(i);
+      if (secondaryID != null)       return false;
+      return true;
+    }
+    @Override public Map<String,String> getUpdateChanges(){
+      String[] propertyVlaues=record.getPropertyValues();
+      List<String> peerIDs=getCSVs(propertyVlaues[peerIDIndex]);
+      int i=peerIDs.indexOf(peer.getAddress());
+      if (i == -1)       return null;
+      List<String> secondaryID=getCSVs(record.getPropertyValues()[peerSecondaryIDIndex]);
+      secondaryID.set(i,peer.getAddress());
+      String res="";
+      int j=0;
+      for (      String id : secondaryID) {
+        if (j++ != 0)         res+=DELIM;
+        res+=id;
+      }
+      Map<String,String> changesMap=new HashMap<String,String>();
+      changesMap.put(STRUCTURE_NAMES[10],res);
+      return changesMap;
+    }
+  }
+;
+  try {
+    historyWriter.updateRecord(updater);
+  }
+ catch (  IOException e) {
+    e.printStackTrace();
+  }
+}
