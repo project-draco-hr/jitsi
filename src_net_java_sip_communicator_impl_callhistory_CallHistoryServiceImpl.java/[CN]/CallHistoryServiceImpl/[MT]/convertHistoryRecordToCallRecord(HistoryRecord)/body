@@ -5,6 +5,7 @@
   List<String> callPeerStart=null;
   List<String> callPeerEnd=null;
   List<CallPeerState> callPeerStates=null;
+  List<String> callPeerSecondaryIDs=null;
   SimpleDateFormat sdf=new SimpleDateFormat(HistoryService.DATE_FORMAT);
   for (int i=0; i < hr.getPropertyNames().length; i++) {
     String propName=hr.getPropertyNames()[i];
@@ -29,6 +30,7 @@
  else     if (propName.equals(STRUCTURE_NAMES[7]))     callPeerStates=getStates(value);
  else     if (propName.equals(STRUCTURE_NAMES[8]))     result.setEndReason(Integer.parseInt(value));
  else     if (propName.equals(STRUCTURE_NAMES[9]))     callPeerNames=getCSVs(value);
+ else     if (propName.equals(STRUCTURE_NAMES[10]))     callPeerSecondaryIDs=getCSVs(value);
   }
   final int callPeerCount=callPeerIDs == null ? 0 : callPeerIDs.size();
   for (int i=0; i < callPeerCount; i++) {
@@ -59,6 +61,10 @@
       if (logger.isInfoEnabled())       logger.info("Call history end time list different from ids list: " + hr.toString());
     }
     CallPeerRecordImpl cpr=new CallPeerRecordImpl(callPeerIDs.get(i),callPeerStartValue,callPeerEndValue);
+    String callPeerSecondaryID=callPeerSecondaryIDs.get(i);
+    if (callPeerSecondaryID != null && !callPeerSecondaryID.equals("")) {
+      cpr.setPeerSecondaryAddress(callPeerSecondaryID);
+    }
     if (callPeerStates != null && i < callPeerStates.size())     cpr.setState(callPeerStates.get(i));
  else     if (logger.isInfoEnabled())     logger.info("Call history state list different from ids list: " + hr.toString());
     result.getPeerRecords().add(cpr);
