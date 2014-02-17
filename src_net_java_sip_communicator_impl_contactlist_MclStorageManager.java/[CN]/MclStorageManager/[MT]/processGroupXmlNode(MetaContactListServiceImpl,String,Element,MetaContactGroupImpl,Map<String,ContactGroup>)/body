@@ -1,5 +1,5 @@
 {
-  MetaContactGroupImpl currentMetaGroup;
+  MetaContactGroupImpl currentMetaGroup=null;
   Map<String,ContactGroup> protoGroupsMap=new Hashtable<String,ContactGroup>();
   if (parentGroup == null) {
     currentMetaGroup=mclServImpl.rootMetaGroup;
@@ -7,7 +7,6 @@
  else {
     String groupMetaUID=XMLUtils.getAttribute(groupNode,GROUP_UID_ATTR_NAME);
     String groupDisplayName=XMLUtils.getAttribute(groupNode,GROUP_NAME_ATTR_NAME);
-    currentMetaGroup=mclServImpl.loadStoredMetaContactGroup(parentGroup,groupMetaUID,groupDisplayName);
     Node protoGroupsNode=XMLUtils.findChild(groupNode,PROTO_GROUPS_NODE_NAME);
     NodeList protoGroups=protoGroupsNode.getChildNodes();
     for (int i=0; i < protoGroups.getLength(); i++) {
@@ -24,6 +23,9 @@
       }
       ContactGroup parentProtoGroup=null;
       if (parentProtoGroups != null && parentProtoGroups.size() > 0)       parentProtoGroup=parentProtoGroups.get(parentProtoGroupUID);
+      if (currentMetaGroup == null) {
+        currentMetaGroup=mclServImpl.loadStoredMetaContactGroup(parentGroup,groupMetaUID,groupDisplayName);
+      }
       ContactGroup newProtoGroup=mclServImpl.loadStoredContactGroup(currentMetaGroup,protoGroupUID,parentProtoGroup,persistentData,accountID);
       protoGroupsMap.put(protoGroupUID,newProtoGroup);
     }
