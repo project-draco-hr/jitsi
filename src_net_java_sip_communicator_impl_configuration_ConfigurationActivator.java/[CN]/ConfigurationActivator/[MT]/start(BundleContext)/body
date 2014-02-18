@@ -1,8 +1,14 @@
 {
   FileAccessService fas=ServiceUtils.getService(bundleContext,FileAccessService.class);
   if (fas != null) {
-    File useDatabaseConfig=fas.getPrivatePersistentFile(".usedatabaseconfig",FileCategory.PROFILE);
-    if (useDatabaseConfig.exists()) {
+    File useDatabaseConfig;
+    try {
+      useDatabaseConfig=fas.getPrivatePersistentFile(".usedatabaseconfig",FileCategory.PROFILE);
+    }
+ catch (    IllegalStateException ise) {
+      useDatabaseConfig=null;
+    }
+    if ((useDatabaseConfig != null) && useDatabaseConfig.exists()) {
       logger.info("Using database configuration store.");
       this.cs=new JdbcConfigService(fas);
     }
