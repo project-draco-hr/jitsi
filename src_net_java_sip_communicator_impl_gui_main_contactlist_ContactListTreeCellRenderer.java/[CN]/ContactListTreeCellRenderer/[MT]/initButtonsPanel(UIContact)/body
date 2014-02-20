@@ -43,9 +43,22 @@
     List<URLDetail> dets=getURLDetails(uiContact,webDetailsListener,true);
     if (dets != null && dets.size() > 0) {
       x+=addButton(webButton,++gridX,x,false);
-      webButton.setLinks(dets);
+      webButton.setLinksFromURLDetail(dets);
     }
- else     webButton.setLinks(null);
+ else     webButton.clearLinks();
+  }
+ else   if (uiContact.getDescriptor() instanceof SourceContact) {
+    SourceContact srcContact=(SourceContact)uiContact.getDescriptor();
+    try {
+      List<ContactDetail> dets=srcContact.getContactDetails(ContactDetail.Category.Web);
+      if (dets != null && dets.size() > 0) {
+        x+=addButton(webButton,++gridX,x,false);
+        webButton.setLinksFromContactDetail(dets);
+      }
+ else       webButton.clearLinks();
+    }
+ catch (    OperationNotSupportedException e) {
+    }
   }
   Collection<SIPCommButton> contactActions=uiContact.getContactCustomActionButtons();
   int lastGridX=gridX;
