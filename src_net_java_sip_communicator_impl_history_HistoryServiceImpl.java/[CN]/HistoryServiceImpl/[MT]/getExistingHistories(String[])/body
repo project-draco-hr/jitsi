@@ -1,0 +1,28 @@
+{
+  File histDir=null;
+  try {
+    histDir=getFileAccessService().getPrivatePersistentDirectory(DATA_DIRECTORY,FileCategory.PROFILE);
+  }
+ catch (  Exception e) {
+    logger.error("Error opening directory",e);
+  }
+  if (histDir == null || !histDir.exists())   return new ArrayList<HistoryID>();
+  StringBuilder folderPath=new StringBuilder();
+  for (  String id : rawid)   folderPath.append(id).append(File.separator);
+  File srcFolder=new File(histDir,folderPath.toString());
+  if (!srcFolder.exists())   return new ArrayList<HistoryID>();
+  TreeMap<File,HistoryID> recentFiles=new TreeMap<File,HistoryID>(new Comparator<File>(){
+    @Override public int compare(    File o1,    File o2){
+      return o1.getName().compareTo(o2.getName());
+    }
+  }
+);
+  getExistingFiles(srcFolder,Arrays.asList(rawid),recentFiles);
+  List<HistoryID> result=new ArrayList<HistoryID>();
+  for (  Map.Entry<File,HistoryID> entry : recentFiles.entrySet()) {
+    HistoryID hid=entry.getValue();
+    if (result.contains(hid))     continue;
+    result.add(hid);
+  }
+  return result;
+}
