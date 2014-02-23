@@ -16,19 +16,26 @@
   }
   Contact contact=this.contact;
   String stringContact=this.stringContact;
-  if (ConfigurationUtils.isNormalizePhoneNumber()) {
+  if (ConfigurationUtils.isNormalizePhoneNumber() && !NetworkUtils.isValidIPAddress(stringContact)) {
     if (contact != null) {
       stringContact=contact.getAddress();
       contact=null;
     }
-    stringContact=PhoneNumberI18nService.normalize(stringContact);
+    if (stringContact != null) {
+      stringContact=PhoneNumberI18nService.normalize(stringContact);
+    }
   }
   try {
-    if (video) {
-      internalCallVideo(protocolProvider,contact,uiContact,stringContact);
+    if (conferenceDescription != null) {
+      internalCall(protocolProvider,conferenceDescription,chatRoom);
     }
  else {
-      internalCall(protocolProvider,contact,stringContact,contactResource,uiContact);
+      if (video) {
+        internalCallVideo(protocolProvider,contact,uiContact,stringContact);
+      }
+ else {
+        internalCall(protocolProvider,contact,stringContact,contactResource,uiContact);
+      }
     }
   }
  catch (  Throwable t) {

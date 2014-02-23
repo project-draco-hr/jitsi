@@ -4,8 +4,10 @@
   if (nickname.equals(getNickName(member.getName())))   nickname=getNickName(newNickname);
   ((ChatRoomMemberJabberImpl)member).setName(newNickname);
   String participantName=StringUtils.parseResource(participant);
-  ChatRoomMemberJabberImpl mem=members.remove(participantName);
-  members.put(newNickname,mem);
+synchronized (members) {
+    ChatRoomMemberJabberImpl mem=members.remove(participantName);
+    members.put(newNickname,mem);
+  }
   ChatRoomMemberPropertyChangeEvent evt=new ChatRoomMemberPropertyChangeEvent(member,ChatRoomJabberImpl.this,ChatRoomMemberPropertyChangeEvent.MEMBER_NICKNAME,participantName,newNickname);
   fireMemberPropertyChangeEvent(evt);
 }

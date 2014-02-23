@@ -1,6 +1,16 @@
 {
   if (peer == null)   return null;
   if (peer.getContact() != null)   return GuiActivator.getContactListService().findMetaContactByContact(peer.getContact());
+  UIContactImpl uiContact=CallManager.getCallUIContact(peer.getCall());
+  if (uiContact != null) {
+    if (uiContact.getDescriptor() instanceof MetaContact) {
+      return (MetaContact)uiContact.getDescriptor();
+    }
+ else     if (uiContact.getDescriptor() instanceof SourceContact) {
+      Contact contact=getPeerCusaxContact(peer,(SourceContact)uiContact.getDescriptor());
+      if (contact != null)       return GuiActivator.getContactListService().findMetaContactByContact(contact);
+    }
+  }
   String imppAddress=peer.getAlternativeIMPPAddress();
   if (!StringUtils.isNullOrEmpty(imppAddress)) {
     int protocolPartIndex=imppAddress.indexOf(":");

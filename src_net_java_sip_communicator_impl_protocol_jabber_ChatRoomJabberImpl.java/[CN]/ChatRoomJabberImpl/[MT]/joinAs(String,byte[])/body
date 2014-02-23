@@ -7,11 +7,15 @@
       if (!multiUserChat.getNickname().equals(nickname))       multiUserChat.changeNickname(nickname);
     }
  else {
+      presenceListener=new PresenceListener(this);
+      this.provider.getConnection().addPacketListener(presenceListener,new AndFilter(new FromMatchesFilter(multiUserChat.getRoom()),new PacketTypeFilter(org.jivesoftware.smack.packet.Presence.class)));
       if (password == null)       multiUserChat.join(nickname);
  else       multiUserChat.join(nickname,new String(password));
     }
     ChatRoomMemberJabberImpl member=new ChatRoomMemberJabberImpl(this,nickname,provider.getAccountID().getAccountAddress());
-    members.put(nickname,member);
+synchronized (members) {
+      members.put(nickname,member);
+    }
     opSetMuc.fireLocalUserPresenceEvent(this,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
   }
  catch (  XMPPException ex) {

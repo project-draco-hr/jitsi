@@ -1,6 +1,7 @@
 {
-  String propertyName=event.getPropertyName();
-  if (MediaAwareCall.CONFERENCE.equals(propertyName) || MediaAwareCall.DEFAULT_DEVICE.equals(propertyName)) {
+  String propertyName=ev.getPropertyName();
+  boolean callConferenceChange=MediaAwareCall.CONFERENCE.equals(propertyName);
+  if (callConferenceChange || MediaAwareCall.DEFAULT_DEVICE.equals(propertyName)) {
     MediaAwareCall<?,?,?> call=getPeer().getCall();
     if (call == null)     return;
     for (    MediaType mediaType : MediaType.values()) {
@@ -8,11 +9,10 @@
       if (stream == null)       continue;
       MediaDevice oldDevice=stream.getDevice();
       if (oldDevice != null) {
-        if (oldDevice instanceof MediaDeviceWrapper)         oldDevice=((MediaDeviceWrapper)oldDevice).getWrappedDevice();
+        MediaDevice oldValue=(!callConferenceChange && (oldDevice instanceof MediaDeviceWrapper)) ? ((MediaDeviceWrapper)oldDevice).getWrappedDevice() : oldDevice;
         MediaDevice newDevice=getDefaultDevice(mediaType);
-        MediaDevice wrappedNewDevice=newDevice;
-        if (newDevice instanceof MediaDeviceWrapper)         wrappedNewDevice=((MediaDeviceWrapper)newDevice).getWrappedDevice();
-        if (oldDevice != wrappedNewDevice)         stream.setDevice(newDevice);
+        MediaDevice newValue=(!callConferenceChange && (newDevice instanceof MediaDeviceWrapper)) ? ((MediaDeviceWrapper)newDevice).getWrappedDevice() : newDevice;
+        if (oldValue != newValue)         stream.setDevice(newDevice);
       }
       stream.setRTPTranslator(call.getRTPTranslator(mediaType));
     }

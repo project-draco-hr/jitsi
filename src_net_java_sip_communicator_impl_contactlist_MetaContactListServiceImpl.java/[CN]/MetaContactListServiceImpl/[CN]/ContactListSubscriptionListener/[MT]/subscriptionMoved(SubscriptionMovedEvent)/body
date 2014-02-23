@@ -1,6 +1,7 @@
 {
   if (logger.isTraceEnabled())   logger.trace("Subscription moved: " + evt);
-  if (isContactInEventIgnoreList(evt.getSourceContact(),evt.getSourceProvider())) {
+  Contact sourceContact=evt.getSourceContact();
+  if (isContactInEventIgnoreList(sourceContact,evt.getSourceProvider())) {
     return;
   }
   MetaContactGroupImpl oldParentGroup=(MetaContactGroupImpl)findMetaContactGroupByContactGroup(evt.getOldParentGroup());
@@ -9,7 +10,7 @@
     logger.error("Received a subscription for a group that we " + "hadn't seen before! ");
     return;
   }
-  MetaContactImpl currentMetaContact=(MetaContactImpl)findMetaContactByContact(evt.getSourceContact());
+  MetaContactImpl currentMetaContact=(MetaContactImpl)findMetaContactByContact(sourceContact);
   if (currentMetaContact == null) {
     logger.warn("Received a move event for a contact that is " + "not in our contact list.",new NullPointerException("Received a move event for a contact that " + "is not in our contact list."));
     return;
@@ -24,12 +25,20 @@
     fireMetaContactEvent(new MetaContactMovedEvent(currentMetaContact,oldParentGroup,newParentGroup));
   }
  else {
-    MetaContactImpl newMetaContact=new MetaContactImpl();
-    newMetaContact.setDisplayName(evt.getSourceContact().getDisplayName());
-    newParentGroup.addMetaContact(newMetaContact);
-    fireMetaContactEvent(newMetaContact,newParentGroup,MetaContactEvent.META_CONTACT_ADDED);
-    currentMetaContact.removeProtoContact(evt.getSourceContact());
-    newMetaContact.addProtoContact(evt.getSourceContact());
-    fireProtoContactEvent(evt.getSourceContact(),ProtoContactEvent.PROTO_CONTACT_MOVED,currentMetaContact,newMetaContact);
+    MetaContactImpl newMetaContact=null;
+synchronized (sourceContact) {
+      currentMetaContact.removeProtoContact(sourceContact);
+      MetaContact checkContact=findMetaContactByContact(sourceContact);
+      if (checkContact == null) {
+        newMetaContact=new MetaContactImpl();
+        newMetaContact.setDisplayName(sourceContact.getDisplayName());
+        newParentGroup.addMetaContact(newMetaContact);
+        newMetaContact.addProtoContact(sourceContact);
+      }
+    }
+    if (newMetaContact != null) {
+      fireMetaContactEvent(newMetaContact,newParentGroup,MetaContactEvent.META_CONTACT_ADDED);
+      fireProtoContactEvent(sourceContact,ProtoContactEvent.PROTO_CONTACT_MOVED,currentMetaContact,newMetaContact);
+    }
   }
 }

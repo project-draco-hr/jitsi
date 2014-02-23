@@ -1,0 +1,28 @@
+{
+  ChatRoom chatRoom=chatRoomWrapper.getChatRoom();
+  try {
+    if (password != null && password.length > 0)     chatRoom.joinAs(nickName,password);
+ else     if (nickName != null)     chatRoom.joinAs(nickName);
+ else     chatRoom.join();
+    done(SUCCESS);
+  }
+ catch (  OperationFailedException e) {
+    if (logger.isTraceEnabled())     logger.trace("Failed to join chat room: " + chatRoom.getName(),e);
+switch (e.getErrorCode()) {
+case OperationFailedException.AUTHENTICATION_FAILED:
+      done(AUTHENTICATION_FAILED);
+    break;
+case OperationFailedException.REGISTRATION_REQUIRED:
+  done(REGISTRATION_REQUIRED);
+break;
+case OperationFailedException.PROVIDER_NOT_REGISTERED:
+done(PROVIDER_NOT_REGISTERED);
+break;
+case OperationFailedException.SUBSCRIPTION_ALREADY_EXISTS:
+done(SUBSCRIPTION_ALREADY_EXISTS);
+break;
+default :
+done(UNKNOWN_ERROR);
+}
+}
+}

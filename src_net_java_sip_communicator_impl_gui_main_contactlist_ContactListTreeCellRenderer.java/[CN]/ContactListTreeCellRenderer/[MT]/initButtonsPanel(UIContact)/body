@@ -4,10 +4,12 @@
   this.remove(callVideoButton);
   this.remove(desktopSharingButton);
   this.remove(addContactButton);
+  this.remove(webButton);
   clearCustomActionButtons();
   if (!isSelected)   return;
   UIContactDetail imContact=null;
   if (uiContact.getDescriptor() instanceof MetaContact)   imContact=uiContact.getDefaultContactDetail(OperationSetBasicInstantMessaging.class);
+  if (imContact == null)   imContact=uiContact.getDefaultContactDetail(OperationSetMultiUserChat.class);
   int x=(statusIcon == null ? 0 : statusIcon.getIconWidth()) + LEFT_BORDER + H_GAP;
   constraints.gridx=0;
   int gridX=0;
@@ -35,6 +37,28 @@
   }
   if (uiContact.getDescriptor() instanceof SourceContact && uiContact.getDefaultContactDetail(OperationSetPersistentPresence.class) != null && AccountUtils.getOpSetRegisteredProviders(OperationSetPersistentPresence.class,null,null).size() > 0 && !ConfigurationUtils.isAddContactDisabled()) {
     x+=addButton(addContactButton,++gridX,x,false);
+  }
+  if (uiContact.getDescriptor() instanceof MetaContact) {
+    WebDetailsListener webDetailsListener=new WebDetailsListener(treeNode,webButton,uiContact);
+    List<URLDetail> dets=getURLDetails(uiContact,webDetailsListener,true);
+    if (dets != null && dets.size() > 0) {
+      x+=addButton(webButton,++gridX,x,false);
+      webButton.setLinksFromURLDetail(dets);
+    }
+ else     webButton.clearLinks();
+  }
+ else   if (uiContact.getDescriptor() instanceof SourceContact) {
+    SourceContact srcContact=(SourceContact)uiContact.getDescriptor();
+    try {
+      List<ContactDetail> dets=srcContact.getContactDetails(ContactDetail.Category.Web);
+      if (dets != null && dets.size() > 0) {
+        x+=addButton(webButton,++gridX,x,false);
+        webButton.setLinksFromContactDetail(dets);
+      }
+ else       webButton.clearLinks();
+    }
+ catch (    OperationNotSupportedException e) {
+    }
   }
   Collection<SIPCommButton> contactActions=uiContact.getContactCustomActionButtons();
   int lastGridX=gridX;

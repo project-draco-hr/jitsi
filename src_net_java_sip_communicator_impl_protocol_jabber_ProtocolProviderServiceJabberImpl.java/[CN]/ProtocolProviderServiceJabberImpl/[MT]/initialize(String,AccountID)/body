@@ -22,15 +22,13 @@ synchronized (providerCreationLock) {
     jabberStatusEnum=JabberStatusEnum.getJabberStatusEnum(protocolIconPath);
     supportedFeatures.add("http://jabber.org/protocol/disco#info");
     String keepAliveStrValue=accountID.getAccountPropertyString(ProtocolProviderFactory.KEEP_ALIVE_METHOD);
-    String resourcePriority=accountID.getAccountPropertyString(ProtocolProviderFactory.RESOURCE_PRIORITY);
     InfoRetreiver infoRetreiver=new InfoRetreiver(this,screenname);
     OperationSetPersistentPresenceJabberImpl persistentPresence=new OperationSetPersistentPresenceJabberImpl(this,infoRetreiver);
-    if (resourcePriority != null) {
-      persistentPresence.setResourcePriority(Integer.parseInt(resourcePriority));
-      supportedFeatures.add("http://www.xmpp.org/extensions/xep-0168.html#ns");
-    }
     addSupportedOperationSet(OperationSetPersistentPresence.class,persistentPresence);
     addSupportedOperationSet(OperationSetPresence.class,persistentPresence);
+    if (accountID.getAccountPropertyString(ProtocolProviderFactory.ACCOUNT_READ_ONLY_GROUPS) != null) {
+      addSupportedOperationSet(OperationSetPersistentPresencePermissions.class,new OperationSetPersistentPresencePermissionsJabberImpl(this));
+    }
     OperationSetBasicInstantMessagingJabberImpl basicInstantMessaging=new OperationSetBasicInstantMessagingJabberImpl(this);
     if (keepAliveStrValue == null || keepAliveStrValue.equalsIgnoreCase("XEP-0199")) {
       if (keepAliveManager == null)       keepAliveManager=new KeepAliveManager(this);
@@ -56,11 +54,11 @@ synchronized (providerCreationLock) {
     providerManager.addIQProvider(InputEvtIQ.ELEMENT_NAME,InputEvtIQ.NAMESPACE,new InputEvtIQProvider());
     providerManager.addIQProvider(CoinIQ.ELEMENT_NAME,CoinIQ.NAMESPACE,new CoinIQProvider());
     supportedFeatures.add(URN_XMPP_JINGLE_COIN);
-    providerManager.addIQProvider(SessionIQ.ELEMENT_NAME,SessionIQ.NAMESPACE,new SessionIQProvider());
     providerManager.addIQProvider(JingleInfoQueryIQ.ELEMENT_NAME,JingleInfoQueryIQ.NAMESPACE,new JingleInfoQueryIQProvider());
     providerManager.addIQProvider(ColibriConferenceIQ.ELEMENT_NAME,ColibriConferenceIQ.NAMESPACE,new ColibriIQProvider());
-    providerManager.addExtensionProvider(PayloadTypePacketExtension.ELEMENT_NAME,ColibriConferenceIQ.NAMESPACE,new DefaultPacketExtensionProvider<PayloadTypePacketExtension>(PayloadTypePacketExtension.class));
-    providerManager.addExtensionProvider(ParameterPacketExtension.ELEMENT_NAME,ColibriConferenceIQ.NAMESPACE,new DefaultPacketExtensionProvider<ParameterPacketExtension>(ParameterPacketExtension.class));
+    providerManager.addExtensionProvider(ConferenceDescriptionPacketExtension.ELEMENT_NAME,ConferenceDescriptionPacketExtension.NAMESPACE,new ConferenceDescriptionPacketExtension.Provider());
+    providerManager.addExtensionProvider(CarbonPacketExtension.RECEIVED_ELEMENT_NAME,CarbonPacketExtension.NAMESPACE,new CarbonPacketExtension.Provider(CarbonPacketExtension.RECEIVED_ELEMENT_NAME));
+    providerManager.addExtensionProvider(CarbonPacketExtension.SENT_ELEMENT_NAME,CarbonPacketExtension.NAMESPACE,new CarbonPacketExtension.Provider(CarbonPacketExtension.SENT_ELEMENT_NAME));
     boolean isCallingDisabled=JabberActivator.getConfigurationService().getBoolean(IS_CALLING_DISABLED,false);
     boolean isCallingDisabledForAccount=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_CALLING_DISABLED_FOR_ACCOUNT,false);
     if (!isCallingDisabled && !isCallingDisabledForAccount) {
@@ -73,8 +71,8 @@ synchronized (providerCreationLock) {
       addSupportedOperationSet(OperationSetTelephonyConferencing.class,new OperationSetTelephonyConferencingJabberImpl(this));
       addSupportedOperationSet(OperationSetBasicAutoAnswer.class,new OperationSetAutoAnswerJabberImpl(this));
       addSupportedOperationSet(OperationSetResourceAwareTelephony.class,new OperationSetResAwareTelephonyJabberImpl(basicTelephony));
-      boolean isVideoBridgeDisabled=JabberActivator.getConfigurationService().getBoolean(OperationSetVideoBridge.IS_VIDEO_BRIDGE_DISABLED,false);
-      if (!isVideoBridgeDisabled) {
+      boolean isVideobridgeDisabled=JabberActivator.getConfigurationService().getBoolean(OperationSetVideoBridge.IS_VIDEO_BRIDGE_DISABLED,false);
+      if (!isVideobridgeDisabled) {
         addSupportedOperationSet(OperationSetVideoBridge.class,new OperationSetVideoBridgeImpl(this));
       }
       OperationSetDTMFJabberImpl operationSetDTMFSip=new OperationSetDTMFJabberImpl(this);
@@ -102,6 +100,10 @@ synchronized (providerCreationLock) {
     addSupportedOperationSet(OperationSetChangePassword.class,opsetChangePassword);
     OperationSetCusaxUtils opsetCusaxCusaxUtils=new OperationSetCusaxUtilsJabberImpl(this);
     addSupportedOperationSet(OperationSetCusaxUtils.class,opsetCusaxCusaxUtils);
+    boolean isUserSearchEnabled=accountID.getAccountPropertyBoolean(IS_USER_SEARCH_ENABLED_PROPERTY,false);
+    if (isUserSearchEnabled) {
+      addSupportedOperationSet(OperationSetUserSearch.class,new OperationSetUserSearchJabberImpl(this));
+    }
     isInitialized=true;
   }
 }

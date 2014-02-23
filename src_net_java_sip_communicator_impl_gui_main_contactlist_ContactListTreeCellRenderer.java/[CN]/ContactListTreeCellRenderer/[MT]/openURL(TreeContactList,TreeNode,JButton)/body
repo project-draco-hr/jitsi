@@ -1,0 +1,61 @@
+{
+  if (treeNode != null && treeNode instanceof ContactNode) {
+    UIContact contactDescriptor=((ContactNode)treeNode).getContactDescriptor();
+    List<String> urlDetails=null;
+    if (contactDescriptor instanceof MetaUIContact) {
+      List<URLDetail> details=getURLDetails(contactDescriptor,null,false);
+      if (details == null)       return;
+      urlDetails=new ArrayList<String>();
+      Iterator<URLDetail> detailIterator=details.iterator();
+      while (detailIterator.hasNext()) {
+        final URLDetail wd=detailIterator.next();
+        urlDetails.add(wd.getDetailValue().toString());
+      }
+    }
+ else     if (contactDescriptor.getDescriptor() instanceof SourceContact) {
+      SourceContact src=(SourceContact)contactDescriptor.getDescriptor();
+      try {
+        List<ContactDetail> cDetails=src.getContactDetails(ContactDetail.Category.Web);
+        if (cDetails == null)         return;
+        urlDetails=new ArrayList<String>();
+        for (        ContactDetail det : cDetails) {
+          urlDetails.add(det.getDetail());
+        }
+      }
+ catch (      OperationNotSupportedException onse) {
+      }
+    }
+    if (urlDetails == null)     return;
+    if (urlDetails.size() == 1) {
+      GuiActivator.getBrowserLauncher().openURL(urlDetails.get(0));
+    }
+ else {
+      Point location=new Point(button.getX(),button.getY() + button.getHeight());
+      SwingUtilities.convertPointToScreen(location,treeContactList);
+      location.y=location.y + treeContactList.getPathBounds(treeContactList.getSelectionPath()).y;
+      location.x+=8;
+      location.y-=8;
+      List<JMenuItem> items=new ArrayList<JMenuItem>();
+      Iterator<String> detailIterator=urlDetails.iterator();
+      while (detailIterator.hasNext()) {
+        String url=detailIterator.next();
+        String displayStr=url;
+        if (displayStr.length() > 60) {
+          displayStr=displayStr.substring(0,60);
+          displayStr+="...";
+        }
+        final JMenuItem menuItem=new JMenuItem(displayStr);
+        menuItem.setName(url);
+        menuItem.setToolTipText(url);
+        menuItem.addActionListener(new ActionListener(){
+          public void actionPerformed(          ActionEvent e){
+            GuiActivator.getBrowserLauncher().openURL(menuItem.getName());
+          }
+        }
+);
+        items.add(menuItem);
+      }
+      new ExtendedPopupMenu(treeContactList,null,items).showPopupMenu(location.x,location.y);
+    }
+  }
+}

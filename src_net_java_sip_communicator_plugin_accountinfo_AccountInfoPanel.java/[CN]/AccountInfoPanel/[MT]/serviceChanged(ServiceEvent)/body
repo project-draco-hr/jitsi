@@ -1,0 +1,26 @@
+{
+  Object service=AccountInfoActivator.bundleContext.getService(event.getServiceReference());
+  if (!(service instanceof ProtocolProviderService))   return;
+  ProtocolProviderService protocolProvider=(ProtocolProviderService)service;
+  if (event.getType() == ServiceEvent.REGISTERED) {
+    if (accountsTable.get(protocolProvider.getAccountID()) == null) {
+      AccountDetailsPanel panel=new AccountDetailsPanel(protocolProvider);
+      accountsTable.put(protocolProvider.getAccountID(),panel);
+      accountsComboBox.addItem(panel);
+      protocolProvider.addRegistrationStateChangeListener(new RegistrationStateChangeListenerImpl());
+    }
+  }
+ else   if (event.getType() == ServiceEvent.UNREGISTERING) {
+    AccountDetailsPanel panel=accountsTable.get(protocolProvider.getAccountID());
+    if (panel != null) {
+      accountsTable.remove(protocolProvider.getAccountID());
+      accountsComboBox.removeItem(panel);
+      if (currentDetailsPanel == panel) {
+        currentDetailsPanel=null;
+        centerPanel.removeAll();
+        centerPanel.revalidate();
+        centerPanel.repaint();
+      }
+    }
+  }
+}

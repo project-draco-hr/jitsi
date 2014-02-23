@@ -4,9 +4,19 @@
     assertConnected();
     org.jivesoftware.smack.packet.Message msg=new org.jivesoftware.smack.packet.Message();
     String toJID=null;
-    if (toResource != null)     toJID=(toResource.equals(ContactResource.BASE_RESOURCE)) ? to.getAddress() : ((ContactResourceJabberImpl)toResource).getFullJid();
+    boolean sendToBaseResource=false;
+    if (toResource != null) {
+      if (toResource.equals(ContactResource.BASE_RESOURCE)) {
+        toJID=to.getAddress();
+        sendToBaseResource=true;
+      }
+ else       toJID=((ContactResourceJabberImpl)toResource).getFullJid();
+    }
     if (toJID == null)     toJID=getJidForAddress(to.getAddress());
-    if (toJID == null)     toJID=to.getAddress();
+    if (toJID == null) {
+      sendToBaseResource=true;
+      toJID=to.getAddress();
+    }
     Chat chat=obtainChatInstance(toJID);
     msg.setPacketID(message.getMessageUID());
     msg.setTo(toJID);
@@ -14,7 +24,7 @@
       msg.addExtension(ext);
     }
     if (logger.isTraceEnabled())     logger.trace("Will send a message to:" + toJID + " chat.jid="+ chat.getParticipant()+ " chat.tid="+ chat.getThreadID());
-    MessageDeliveredEvent msgDeliveryPendingEvt=new MessageDeliveredEvent(message,to);
+    MessageDeliveredEvent msgDeliveryPendingEvt=new MessageDeliveredEvent(message,to,toResource);
     msgDeliveryPendingEvt=messageDeliveryPendingTransform(msgDeliveryPendingEvt);
     if (msgDeliveryPendingEvt == null)     return null;
     String content=msgDeliveryPendingEvt.getSourceMessage().getContent();
@@ -27,9 +37,13 @@
  else {
       msg.setBody(content);
     }
+    if (msgDeliveryPendingEvt.isMessageEncrypted()) {
+      msg.addExtension(new CarbonPacketExtension.PrivateExtension());
+    }
     MessageEventManager.addNotificationsRequests(msg,true,false,false,true);
     chat.sendMessage(msg);
-    MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(message,to);
+    if (sendToBaseResource)     putJidForAddress(to.getAddress(),to.getAddress());
+    MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(message,to,toResource);
     return msgDeliveredEvt;
   }
  catch (  XMPPException ex) {

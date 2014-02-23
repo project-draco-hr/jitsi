@@ -1,0 +1,26 @@
+{
+  Object value=immutableDefaultProperties.get(propertyName);
+  if (value != null) {
+    return value;
+  }
+  try {
+    this.checkConnection();
+    this.selectExact.setString(1,propertyName);
+    ResultSet q=this.selectExact.executeQuery();
+    if (q.next()) {
+      value=q.getString(1);
+    }
+  }
+ catch (  SQLException e) {
+    logger.error(e);
+    throw new RuntimeException(e);
+  }
+  if (value != null) {
+    return value;
+  }
+  value=defaultProperties.get(propertyName);
+  if (value != null) {
+    return value;
+  }
+  return System.getProperty(propertyName);
+}

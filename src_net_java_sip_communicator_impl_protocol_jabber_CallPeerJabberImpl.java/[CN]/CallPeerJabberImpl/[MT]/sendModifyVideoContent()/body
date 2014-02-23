@@ -1,22 +1,27 @@
 {
   CallPeerMediaHandlerJabberImpl mediaHandler=getMediaHandler();
-  MediaDirection direction=getJingleDirection(MediaType.VIDEO);
+  MediaDirection direction=getDirectionForJingle(MediaType.VIDEO);
   ContentPacketExtension remoteContent=mediaHandler.getLocalContent(MediaType.VIDEO.toString());
   if (remoteContent == null) {
     if (direction == MediaDirection.INACTIVE) {
-      return;
+      return false;
     }
  else {
-      if (logger.isInfoEnabled())       logger.info("Adding video content for " + this);
-      sendAddVideoContent();
-      return;
+      if (getState() == CallPeerState.CONNECTED) {
+        if (logger.isInfoEnabled())         logger.info("Adding video content for " + this);
+        sendAddVideoContent();
+        return true;
+      }
+      return false;
     }
   }
  else {
     if (direction == MediaDirection.INACTIVE) {
+      sendRemoveVideoContent();
+      return true;
     }
   }
-  SendersEnum senders=mediaHandler.getSenders(MediaType.VIDEO);
+  SendersEnum senders=getSenders(MediaType.VIDEO);
   if (senders == null)   senders=SendersEnum.both;
   SendersEnum newSenders=SendersEnum.none;
   if (MediaDirection.SENDRECV == direction)   newSenders=SendersEnum.both;
@@ -40,4 +45,5 @@
  catch (  Exception e) {
     logger.warn("Exception occurred during media reinitialization",e);
   }
+  return (newSenders != senders);
 }

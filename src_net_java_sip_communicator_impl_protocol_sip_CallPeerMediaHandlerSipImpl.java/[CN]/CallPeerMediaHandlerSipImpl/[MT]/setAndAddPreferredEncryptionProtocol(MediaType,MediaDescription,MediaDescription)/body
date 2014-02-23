@@ -1,13 +1,19 @@
 {
   List<String> preferredEncryptionProtocols=getPeer().getProtocolProvider().getAccountID().getSortedEnabledEncryptionProtocolList();
-  for (int i=0; i < preferredEncryptionProtocols.size(); ++i) {
-    if (preferredEncryptionProtocols.get(i).equals(ProtocolProviderFactory.ENCRYPTION_PROTOCOL + ".ZRTP")) {
-      if (updateMediaDescriptionForZrtp(mediaType,localMd)) {
+  for (  String preferredEncryptionProtocol : preferredEncryptionProtocols) {
+    String protoName=preferredEncryptionProtocol.substring(ProtocolProviderFactory.ENCRYPTION_PROTOCOL.length() + 1);
+    if (DtlsControl.PROTO_NAME.equals(protoName)) {
+      if (updateMediaDescriptionForDtls(mediaType,localMd,remoteMd)) {
         return;
       }
     }
- else     if (preferredEncryptionProtocols.get(i).equals(ProtocolProviderFactory.ENCRYPTION_PROTOCOL + ".SDES")) {
+ else     if (SDesControl.PROTO_NAME.equals(protoName)) {
       if (updateMediaDescriptionForSDes(mediaType,localMd,remoteMd)) {
+        return;
+      }
+    }
+ else     if (ZrtpControl.PROTO_NAME.equals(protoName)) {
+      if (updateMediaDescriptionForZrtp(mediaType,localMd,remoteMd)) {
         return;
       }
     }

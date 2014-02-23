@@ -1,0 +1,214 @@
+{
+  try {
+    String arg=null;
+    String args[]=null;
+    URL u=new URL(url);
+    InetAddress ipaddr=ProvisioningActivator.getNetworkAddressManagerService().getLocalHost(InetAddress.getByName(u.getHost()));
+    Pattern p=Pattern.compile("\\$\\{env\\.([^\\}]*)\\}");
+    Matcher m=p.matcher(url);
+    StringBuffer sb=new StringBuffer();
+    while (m.find()) {
+      String value=System.getenv(m.group(1));
+      if (value != null) {
+        m.appendReplacement(sb,Matcher.quoteReplacement(value));
+      }
+    }
+    m.appendTail(sb);
+    url=sb.toString();
+    p=Pattern.compile("\\$\\{system\\.([^\\}]*)\\}");
+    m=p.matcher(url);
+    sb=new StringBuffer();
+    while (m.find()) {
+      String value=System.getProperty(m.group(1));
+      if (value != null) {
+        m.appendReplacement(sb,Matcher.quoteReplacement(value));
+      }
+    }
+    m.appendTail(sb);
+    url=sb.toString();
+    if (url.indexOf("${home.location}") != -1) {
+      url=url.replace("${home.location}",ProvisioningActivator.getConfigurationService().getScHomeDirLocation());
+    }
+    if (url.indexOf("${home.name}") != -1) {
+      url=url.replace("${home.name}",ProvisioningActivator.getConfigurationService().getScHomeDirName());
+    }
+    if (url.indexOf("${uuid}") != -1) {
+      url=url.replace("${uuid}",(String)ProvisioningActivator.getConfigurationService().getProperty(PROVISIONING_UUID_PROP));
+    }
+    if (url.indexOf("${osname}") != -1) {
+      url=url.replace("${osname}",System.getProperty("os.name"));
+    }
+    if (url.indexOf("${arch}") != -1) {
+      url=url.replace("${arch}",System.getProperty("os.arch"));
+    }
+    if (url.indexOf("${resx}") != -1 || url.indexOf("${resy}") != -1) {
+      Rectangle screen=ScreenInformation.getScreenBounds();
+      if (url.indexOf("${resx}") != -1) {
+        url=url.replace("${resx}",String.valueOf(screen.width));
+      }
+      if (url.indexOf("${resy}") != -1) {
+        url=url.replace("${resy}",String.valueOf(screen.height));
+      }
+    }
+    if (url.indexOf("${build}") != -1) {
+      url=url.replace("${build}",System.getProperty("sip-communicator.version"));
+    }
+    if (url.indexOf("${locale}") != -1) {
+      String locale=ProvisioningActivator.getConfigurationService().getString(ResourceManagementService.DEFAULT_LOCALE_CONFIG);
+      if (locale == null)       locale="";
+      url=url.replace("${locale}",locale);
+    }
+    if (url.indexOf("${ipaddr}") != -1) {
+      url=url.replace("${ipaddr}",ipaddr.getHostAddress());
+    }
+    if (url.indexOf("${hostname}") != -1) {
+      String name;
+      if (OSUtils.IS_WINDOWS) {
+        name=System.getenv("COMPUTERNAME");
+      }
+ else {
+        name=ipaddr.getHostName();
+      }
+      url=url.replace("${hostname}",name);
+    }
+    if (url.indexOf("${hwaddr}") != -1) {
+      if (ipaddr != null) {
+        Enumeration<NetworkInterface> en=NetworkInterface.getNetworkInterfaces();
+        while (en.hasMoreElements()) {
+          NetworkInterface iface=en.nextElement();
+          Enumeration<InetAddress> enInet=iface.getInetAddresses();
+          while (enInet.hasMoreElements()) {
+            InetAddress inet=enInet.nextElement();
+            if (inet.equals(ipaddr)) {
+              byte hw[]=ProvisioningActivator.getNetworkAddressManagerService().getHardwareAddress(iface);
+              if (hw == null)               continue;
+              StringBuffer buf=new StringBuffer();
+              for (              byte h : hw) {
+                int hi=h >= 0 ? h : h + 256;
+                String t=new String((hi <= 0xf) ? "0" : "");
+                t+=Integer.toHexString(hi);
+                buf.append(t);
+                buf.append(":");
+              }
+              buf.deleteCharAt(buf.length() - 1);
+              url=url.replace("${hwaddr}",buf.toString());
+              break;
+            }
+          }
+        }
+      }
+    }
+    if (url.contains("?")) {
+      if ((url.indexOf('?') + 1) != url.length()) {
+        arg=url.substring(url.indexOf('?') + 1);
+        args=arg.split("&");
+      }
+      url=url.substring(0,url.indexOf('?'));
+    }
+    ArrayList<String> paramNames=null;
+    ArrayList<String> paramValues=null;
+    int usernameIx=-1;
+    int passwordIx=-1;
+    if (args != null && args.length > 0) {
+      paramNames=new ArrayList<String>(args.length);
+      paramValues=new ArrayList<String>(args.length);
+      String usernameParam="${username}";
+      String passwordParam="${password}";
+      for (int i=0; i < args.length; i++) {
+        String s=args[i];
+        int equalsIndex=s.indexOf("=");
+        String currentParamName=null;
+        if (equalsIndex > -1) {
+          currentParamName=s.substring(0,equalsIndex);
+        }
+        String preloadedParamValue=getParamValue(parameters,currentParamName);
+        if (s.indexOf(usernameParam) != -1) {
+          if (preloadedParamValue != null) {
+            s=s.replace(usernameParam,preloadedParamValue);
+          }
+ else           s=s.replace(usernameParam,"");
+          usernameIx=paramNames.size();
+        }
+ else         if (s.indexOf(passwordParam) != -1) {
+          if (preloadedParamValue != null) {
+            s=s.replace(passwordParam,preloadedParamValue);
+          }
+ else           s=s.replace(passwordParam,"");
+          passwordIx=paramNames.size();
+        }
+        if (equalsIndex > -1) {
+          paramNames.add(currentParamName);
+          paramValues.add(s.substring(equalsIndex + 1));
+        }
+ else {
+          if (logger.isInfoEnabled()) {
+            logger.info("Invalid provisioning request parameter: \"" + s + "\", is replaced by \""+ s+ "=\"");
+          }
+          paramNames.add(s);
+          paramValues.add("");
+        }
+      }
+    }
+    HttpUtils.HTTPResponseResult res=null;
+    Throwable errorWhileProvisioning=null;
+    try {
+      res=HttpUtils.postForm(url,PROPERTY_PROVISIONING_USERNAME,PROPERTY_PROVISIONING_PASSWORD,paramNames,paramValues,usernameIx,passwordIx,new HttpUtils.RedirectHandler(){
+        @Override public boolean handleRedirect(        String location,        List<NameValuePair> parameters){
+          if (!hasParams(location))           return false;
+          retrieveConfigurationFile(location,parameters);
+          return true;
+        }
+        @Override public boolean hasParams(        String location){
+          return location.contains("${");
+        }
+      }
+);
+    }
+ catch (    Throwable t) {
+      logger.error("Error posting form",t);
+      errorWhileProvisioning=t;
+    }
+    if (res == null) {
+      if (ProvisioningActivator.getConfigurationService().getBoolean(PROPERTY_PROVISIONING_MANDATORY,false)) {
+        String errorMsg;
+        if (errorWhileProvisioning != null)         errorMsg=errorWhileProvisioning.getLocalizedMessage();
+ else         errorMsg="";
+        ErrorDialog ed=new ErrorDialog(null,ProvisioningActivator.getResourceService().getI18NString("plugin.provisioning.PROV_FAILED"),ProvisioningActivator.getResourceService().getI18NString("plugin.provisioning.PROV_FAILED_MSG",new String[]{errorMsg}),errorWhileProvisioning);
+        ed.setModal(true);
+        ed.showDialog();
+{
+          for (          Bundle b : ProvisioningActivator.bundleContext.getBundles()) {
+            try {
+              if (ProvisioningActivator.bundleContext.equals(b.getBundleContext())) {
+                continue;
+              }
+              b.stop();
+            }
+ catch (            BundleException ex) {
+              logger.error("Failed to being gentle stop " + b.getLocation(),ex);
+            }
+          }
+        }
+      }
+      return null;
+    }
+    String userPass[]=res.getCredentials();
+    if (userPass[0] != null && userPass[1] != null) {
+      provUsername=userPass[0];
+      provPassword=userPass[1];
+    }
+    InputStream in=res.getContent();
+    if (!OSUtils.IS_ANDROID) {
+      final ProgressMonitorInputStream pin;
+      pin=new ProgressMonitorInputStream(null,u.toString(),in);
+      ProgressMonitor pm=pin.getProgressMonitor();
+      pm.setMaximum((int)res.getContentLength());
+      return pin;
+    }
+    return in;
+  }
+ catch (  Exception e) {
+    if (logger.isInfoEnabled())     logger.info("Error retrieving provisioning file!",e);
+    return null;
+  }
+}

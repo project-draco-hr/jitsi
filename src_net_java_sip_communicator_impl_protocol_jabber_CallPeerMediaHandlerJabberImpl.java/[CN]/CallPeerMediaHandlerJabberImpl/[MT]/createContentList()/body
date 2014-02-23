@@ -1,5 +1,6 @@
 {
   List<ContentPacketExtension> mediaDescs=new ArrayList<ContentPacketExtension>();
+  boolean jitsiVideobridge=getPeer().getCall().getConference().isJitsiVideobridge();
   for (  MediaType mediaType : MediaType.values()) {
     MediaDevice dev=getDefaultDevice(mediaType);
     if (isDeviceActive(dev)) {
@@ -12,8 +13,11 @@
       if (direction != MediaDirection.INACTIVE) {
         ContentPacketExtension content=createContentForOffer(getLocallySupportedFormats(dev),direction,dev.getSupportedExtensions());
         RtpDescriptionPacketExtension description=JingleUtils.getRtpDescription(content);
-        setSDesEncryptionToDescription(mediaType,description,null);
-        setZrtpEncryptionToDescription(mediaType,description,null);
+        setDtlsEncryptionOnContent(mediaType,content,null);
+        if (!jitsiVideobridge) {
+          setSDesEncryptionOnDescription(mediaType,description,null);
+          setZrtpEncryptionOnDescription(mediaType,description,null);
+        }
         if (description.getMedia().equals(MediaType.VIDEO.toString()) && getLocalInputEvtAware()) {
           content.addChildExtension(new InputEvtPacketExtension());
         }
@@ -24,11 +28,5 @@
   if (mediaDescs.isEmpty()) {
     ProtocolProviderServiceJabberImpl.throwOperationFailedException("We couldn't find any active Audio/Video devices" + " and couldn't create a call",OperationFailedException.GENERAL_ERROR,null,logger);
   }
-  TransportInfoSender transportInfoSender=getTransportManager().getXmlNamespace().equals(ProtocolProviderServiceJabberImpl.URN_GOOGLE_TRANSPORT_P2P) ? new TransportInfoSender(){
-    public void sendTransportInfo(    Iterable<ContentPacketExtension> contents){
-      getPeer().sendTransportInfo(contents);
-    }
-  }
- : null;
-  return harvestCandidates(null,mediaDescs,transportInfoSender);
+  return harvestCandidates(null,mediaDescs,null);
 }

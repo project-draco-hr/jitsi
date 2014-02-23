@@ -8,7 +8,6 @@
     boolean done=false;
     ColibriConferenceIQ.Channel channel=null;
     ColibriConferenceIQ.Content content=null;
-    PacketExtensionProvider payloadTypePacketExtensionProvider=null;
     StringBuilder ssrc=null;
     while (!done) {
 switch (parser.next()) {
@@ -23,7 +22,13 @@ case XmlPullParser.END_TAG:
             channel=null;
           }
  else           if (ColibriConferenceIQ.Channel.SSRC_ELEMENT_NAME.equals(name)) {
-            channel.addSSRC(Long.parseLong(ssrc.toString().trim()));
+            String s=ssrc.toString().trim();
+            if (s.length() != 0) {
+              int i;
+              if (s.startsWith("-"))               i=Integer.parseInt(s);
+ else               i=(int)Long.parseLong(s);
+              channel.addSSRC(i);
+            }
             ssrc=null;
           }
  else           if (ColibriConferenceIQ.Content.ELEMENT_NAME.equals(name)) {
@@ -37,16 +42,30 @@ case XmlPullParser.START_TAG:
         String name=parser.getName();
         if (ColibriConferenceIQ.Channel.ELEMENT_NAME.equals(name)) {
           channel=new ColibriConferenceIQ.Channel();
-          String channelID=parser.getAttributeValue("",ColibriConferenceIQ.Channel.ID_ATTR_NAME);
-          if ((channelID != null) && (channelID.length() != 0))           channel.setID(channelID);
-          String host=parser.getAttributeValue("",ColibriConferenceIQ.Channel.HOST_ATTR_NAME);
-          if ((host != null) && (host.length() != 0))           channel.setHost(host);
-          String rtpPort=parser.getAttributeValue("",ColibriConferenceIQ.Channel.RTP_PORT_ATTR_NAME);
-          if ((rtpPort != null) && (rtpPort.length() != 0))           channel.setRTPPort(Integer.parseInt(rtpPort));
-          String rtcpPort=parser.getAttributeValue("",ColibriConferenceIQ.Channel.RTCP_PORT_ATTR_NAME);
-          if ((rtcpPort != null) && (rtcpPort.length() != 0))           channel.setRTCPPort(Integer.parseInt(rtcpPort));
+          String direction=parser.getAttributeValue("",ColibriConferenceIQ.Channel.DIRECTION_ATTR_NAME);
+          if ((direction != null) && (direction.length() != 0)) {
+            channel.setDirection(MediaDirection.parseString(direction));
+          }
+          String endpoint=parser.getAttributeValue("",ColibriConferenceIQ.Channel.ENDPOINT_ATTR_NAME);
+          if ((endpoint != null) && (endpoint.length() != 0))           channel.setEndpoint(endpoint);
           String expire=parser.getAttributeValue("",ColibriConferenceIQ.Channel.EXPIRE_ATTR_NAME);
           if ((expire != null) && (expire.length() != 0))           channel.setExpire(Integer.parseInt(expire));
+          String host=parser.getAttributeValue("",ColibriConferenceIQ.Channel.HOST_ATTR_NAME);
+          if ((host != null) && (host.length() != 0))           channel.setHost(host);
+          String channelID=parser.getAttributeValue("",ColibriConferenceIQ.Channel.ID_ATTR_NAME);
+          if ((channelID != null) && (channelID.length() != 0))           channel.setID(channelID);
+          String initiator=parser.getAttributeValue("",ColibriConferenceIQ.Channel.INITIATOR_ATTR_NAME);
+          if ((initiator != null) && (initiator.length() != 0))           channel.setInitiator(Boolean.valueOf(initiator));
+          String lastN=parser.getAttributeValue("",ColibriConferenceIQ.Channel.LAST_N_ATTR_NAME);
+          if ((lastN != null) && (lastN.length() != 0))           channel.setLastN(Integer.parseInt(lastN));
+          String rtcpPort=parser.getAttributeValue("",ColibriConferenceIQ.Channel.RTCP_PORT_ATTR_NAME);
+          if ((rtcpPort != null) && (rtcpPort.length() != 0))           channel.setRTCPPort(Integer.parseInt(rtcpPort));
+          String rtpLevelRelayType=parser.getAttributeValue("",ColibriConferenceIQ.Channel.RTP_LEVEL_RELAY_TYPE_ATTR_NAME);
+          if ((rtpLevelRelayType != null) && (rtpLevelRelayType.length() != 0)) {
+            channel.setRTPLevelRelayType(rtpLevelRelayType);
+          }
+          String rtpPort=parser.getAttributeValue("",ColibriConferenceIQ.Channel.RTP_PORT_ATTR_NAME);
+          if ((rtpPort != null) && (rtpPort.length() != 0))           channel.setRTPPort(Integer.parseInt(rtpPort));
         }
  else         if (ColibriConferenceIQ.Channel.SSRC_ELEMENT_NAME.equals(name)) {
           ssrc=new StringBuilder();
@@ -56,16 +75,31 @@ case XmlPullParser.START_TAG:
           String contentName=parser.getAttributeValue("",ColibriConferenceIQ.Content.NAME_ATTR_NAME);
           if ((contentName != null) && (contentName.length() != 0))           content.setName(contentName);
         }
- else         if (PayloadTypePacketExtension.ELEMENT_NAME.equals(name)) {
-          if (payloadTypePacketExtensionProvider == null) {
-            payloadTypePacketExtensionProvider=(PacketExtensionProvider)ProviderManager.getInstance().getExtensionProvider(name,namespace);
+ else         if (channel != null) {
+          String peName=null;
+          String peNamespace=null;
+          if (IceUdpTransportPacketExtension.ELEMENT_NAME.equals(name) && IceUdpTransportPacketExtension.NAMESPACE.equals(parser.getNamespace())) {
+            peName=name;
+            peNamespace=IceUdpTransportPacketExtension.NAMESPACE;
           }
-          if (payloadTypePacketExtensionProvider == null) {
-            while ((XmlPullParser.END_TAG != parser.next()) || !name.equals(parser.getName()))             ;
+ else           if (PayloadTypePacketExtension.ELEMENT_NAME.equals(name)) {
+            peName=name;
+            peNamespace=namespace;
+          }
+ else           if (RawUdpTransportPacketExtension.ELEMENT_NAME.equals(name) && RawUdpTransportPacketExtension.NAMESPACE.equals(parser.getNamespace())) {
+            peName=name;
+            peNamespace=RawUdpTransportPacketExtension.NAMESPACE;
+          }
+ else           if (SourcePacketExtension.ELEMENT_NAME.equals(name) && SourcePacketExtension.NAMESPACE.equals(parser.getNamespace())) {
+            peName=name;
+            peNamespace=SourcePacketExtension.NAMESPACE;
+          }
+          if (peName == null) {
+            throwAway(parser,name);
           }
  else {
-            PayloadTypePacketExtension payloadType=(PayloadTypePacketExtension)payloadTypePacketExtensionProvider.parseExtension(parser);
-            if (payloadType != null)             channel.addPayloadType(payloadType);
+            PacketExtension extension=parseExtension(parser,peName,peNamespace);
+            if (extension != null)             addChildExtension(channel,extension);
           }
         }
         break;

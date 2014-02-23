@@ -12,11 +12,12 @@
     return;
   }
   UIGroupImpl groupImpl=(UIGroupImpl)group;
-  GroupNode groupNode=groupImpl.getGroupNode();
-  if (groupNode == null) {
-    GroupNode parentNode=treeModel.getRoot();
-    if (isSorted)     parentNode.sortedAddContactGroup(groupImpl);
- else     parentNode.addContactGroup(groupImpl);
+synchronized (groupImpl) {
+    GroupNode groupNode=groupImpl.getGroupNode();
+    if (groupNode != null)     return;
   }
+  GroupNode parentNode=treeModel.getRoot();
+  if (isSorted)   parentNode.sortedAddContactGroup(groupImpl);
+ else   parentNode.addContactGroup(groupImpl);
   expandGroup(treeModel.getRoot());
 }

@@ -2,14 +2,31 @@
   long startCandidateHarvestTime=System.currentTimeMillis();
   TransportManagerJabberImpl transportManager=getTransportManager();
   if (remote == null) {
-    if (!ProtocolProviderServiceJabberImpl.URN_GOOGLE_TRANSPORT_P2P.equals(transportManager.getXmlNamespace()) && (transportInfoSender != null))     throw new IllegalArgumentException("transportInfoSender");
+    if (transportInfoSender != null)     throw new IllegalArgumentException("transportInfoSender");
     transportManager.startCandidateHarvest(local,transportInfoSender);
   }
  else {
     transportManager.startCandidateHarvest(remote,local,transportInfoSender);
   }
   long stopCandidateHarvestTime=System.currentTimeMillis();
-  long candidateHarvestTime=stopCandidateHarvestTime - startCandidateHarvestTime;
-  if (logger.isInfoEnabled())   logger.info("End candidate harvest within " + candidateHarvestTime + " ms");
+  if (logger.isInfoEnabled()) {
+    long candidateHarvestTime=stopCandidateHarvestTime - startCandidateHarvestTime;
+    logger.info("End candidate harvest within " + candidateHarvestTime + " ms");
+  }
+  setDtlsEncryptionOnTransports(remote,local);
+  if (transportManager.startConnectivityEstablishmentWithJitsiVideobridge) {
+    Map<String,IceUdpTransportPacketExtension> map=new LinkedHashMap<String,IceUdpTransportPacketExtension>();
+    for (    MediaType mediaType : MediaType.values()) {
+      ColibriConferenceIQ.Channel channel=transportManager.getColibriChannel(mediaType,true);
+      if (channel != null) {
+        IceUdpTransportPacketExtension transport=channel.getTransport();
+        if (transport != null)         map.put(mediaType.toString(),transport);
+      }
+    }
+    if (!map.isEmpty()) {
+      transportManager.startConnectivityEstablishmentWithJitsiVideobridge=false;
+      transportManager.startConnectivityEstablishment(map);
+    }
+  }
   return transportManager.wrapupCandidateHarvest();
 }

@@ -1,15 +1,30 @@
 {
-  List<String> result=new ArrayList<String>(2);
-  int savpOption=ProtocolProviderFactory.SAVP_OFF;
-  if (getPeer().getProtocolProvider().getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true)) {
-    savpOption=getPeer().getProtocolProvider().getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF);
-  }
-  if (savpOption == ProtocolProviderFactory.SAVP_MANDATORY)   result.add("RTP/SAVP");
- else   if (savpOption == ProtocolProviderFactory.SAVP_OFF)   result.add(SdpConstants.RTP_AVP);
- else   if (savpOption == ProtocolProviderFactory.SAVP_OPTIONAL) {
-    result.add("RTP/SAVP");
+  AccountID accountID=getPeer().getProtocolProvider().getAccountID();
+  int savpOption=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) ? accountID.getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF) : ProtocolProviderFactory.SAVP_OFF;
+  List<String> result=new ArrayList<String>(3);
+  if (savpOption == ProtocolProviderFactory.SAVP_OFF) {
     result.add(SdpConstants.RTP_AVP);
   }
- else   throw new OperationFailedException("invalid value for SAVP_OPTION",OperationFailedException.GENERAL_ERROR);
+ else {
+    List<String> encryptionProtocols=accountID.getSortedEnabledEncryptionProtocolList();
+    for (int epi=encryptionProtocols.size() - 1; epi >= 0; epi--) {
+      String encryptionProtocol=encryptionProtocols.get(epi);
+      String protoName=encryptionProtocol.substring(ProtocolProviderFactory.ENCRYPTION_PROTOCOL.length() + 1);
+      String[] protos;
+      if (DtlsControl.PROTO_NAME.equals(protoName)) {
+        protos=new String[]{DtlsControl.UDP_TLS_RTP_SAVP,SrtpControl.RTP_SAVPF};
+      }
+ else {
+        protos=new String[]{SrtpControl.RTP_SAVP};
+      }
+      for (int pi=protos.length - 1; pi >= 0; pi--) {
+        String proto=protos[pi];
+        int ri=result.indexOf(proto);
+        if (ri > 0)         result.remove(ri);
+        result.add(0,proto);
+      }
+    }
+    if (savpOption == ProtocolProviderFactory.SAVP_OPTIONAL)     result.add(SdpConstants.RTP_AVP);
+  }
   return result;
 }

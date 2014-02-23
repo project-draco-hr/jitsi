@@ -3,11 +3,13 @@
   UIGroupImpl uiGroup;
   ContactListTreeModel treeModel=GuiActivator.getContactList().getTreeModel();
 synchronized (metaGroup) {
-    if (isRootGroup(metaGroup))     uiGroup=treeModel.getRoot().getGroupDescriptor();
- else     uiGroup=MetaContactListSource.getUIGroup(metaGroup);
+    uiGroup=MetaContactListSource.getUIGroup(metaGroup);
+    if (isRootGroup(metaGroup) && uiGroup == null)     uiGroup=treeModel.getRoot().getGroupDescriptor();
   }
   if (uiGroup != null) {
-    GroupNode groupNode=uiGroup.getGroupNode();
-    if (groupNode != null)     groupNode.sort(treeModel);
+synchronized (uiGroup) {
+      GroupNode groupNode=uiGroup.getGroupNode();
+      if (groupNode != null)       groupNode.sort(treeModel);
+    }
   }
 }

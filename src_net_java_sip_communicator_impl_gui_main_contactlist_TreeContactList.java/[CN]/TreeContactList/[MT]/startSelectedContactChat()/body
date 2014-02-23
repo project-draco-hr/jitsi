@@ -2,6 +2,13 @@
   TreePath selectionPath=getSelectionPath();
   if (selectionPath != null && selectionPath.getLastPathComponent() instanceof ContactNode) {
     UIContact uiContact=((ContactNode)selectionPath.getLastPathComponent()).getContactDescriptor();
-    if (uiContact instanceof MetaUIContact)     GuiActivator.getUIService().getChatWindowManager().startChat((MetaContact)uiContact.getDescriptor());
+    if (uiContact instanceof MetaUIContact) {
+      GuiActivator.getUIService().getChatWindowManager().startChat((MetaContact)uiContact.getDescriptor());
+    }
+ else     if (((SourceContact)uiContact.getDescriptor()).getContactDetails(OperationSetMultiUserChat.class) != null) {
+      SourceContact contact=(SourceContact)uiContact.getDescriptor();
+      ChatRoomWrapper room=GuiActivator.getMUCService().findChatRoomWrapperFromSourceContact(contact);
+      if (room != null)       GuiActivator.getMUCService().openChatRoom(room);
+    }
   }
 }

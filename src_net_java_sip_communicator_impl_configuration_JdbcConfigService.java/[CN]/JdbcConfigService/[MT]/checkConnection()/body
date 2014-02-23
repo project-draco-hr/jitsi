@@ -1,0 +1,21 @@
+{
+  if (this.connection != null && this.connection.isValid(1)) {
+    return;
+  }
+  String filename;
+  try {
+    File f=fas.getPrivatePersistentFile("props.hsql",FileCategory.PROFILE);
+    filename=f.getAbsolutePath();
+  }
+ catch (  Exception e) {
+    throw new SQLException(e);
+  }
+  this.connection=DriverManager.getConnection("jdbc:hsqldb:file:" + filename + ";shutdown=true;hsqldb.write_delay=false;"+ "hsqldb.write_delay_millis=0");
+  Statement st=this.connection.createStatement();
+  st.executeUpdate("CREATE TABLE IF NOT EXISTS Props (" + "k LONGVARCHAR UNIQUE, v LONGVARCHAR" + ")");
+  this.selectExact=this.connection.prepareStatement("SELECT v FROM Props WHERE k=?");
+  this.selectLike=this.connection.prepareStatement("SELECT k, v FROM Props WHERE k LIKE ?");
+  this.selectAll=this.connection.prepareStatement("SELECT k, v FROM Props");
+  this.insertOrUpdate=this.connection.prepareStatement("MERGE INTO Props" + " USING (VALUES(?,?)) AS i(k,v) ON Props.k = i.k" + " WHEN MATCHED THEN UPDATE SET Props.v = i.v"+ " WHEN NOT MATCHED THEN INSERT (k, v) VALUES (i.k, i.v)");
+  this.delete=this.connection.prepareStatement("DELETE FROM Props WHERE k=?");
+}

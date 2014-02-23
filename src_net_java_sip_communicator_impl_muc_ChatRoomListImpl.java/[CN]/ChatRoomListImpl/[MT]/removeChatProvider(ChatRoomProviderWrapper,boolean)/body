@@ -1,0 +1,29 @@
+{
+  providersList.remove(chatRoomProvider);
+  if (permanently) {
+    chatRoomProvider.getProtocolProvider().removeRegistrationStateChangeListener(this);
+    ConfigurationService configService=MUCActivator.getConfigurationService();
+    String prefix="net.java.sip.communicator.impl.gui.accounts";
+    AccountID accountID=chatRoomProvider.getProtocolProvider().getAccountID();
+    if (!MUCActivator.getAccountManager().getStoredAccounts().contains(accountID)) {
+      String providerAccountUID=accountID.getAccountUniqueID();
+      for (      String accountRootPropName : configService.getPropertyNamesByPrefix(prefix,true)) {
+        String accountUID=configService.getString(accountRootPropName);
+        if (accountUID.equals(providerAccountUID)) {
+          List<String> chatRooms=configService.getPropertyNamesByPrefix(accountRootPropName + ".chatRooms",true);
+          for (          String chatRoomPropName : chatRooms) {
+            configService.setProperty(chatRoomPropName + ".chatRoomName",null);
+          }
+          configService.setProperty(accountRootPropName,null);
+        }
+      }
+    }
+  }
+  for (int i=0; i < chatRoomProvider.countChatRooms(); i++) {
+    ChatRoomWrapper wrapper=chatRoomProvider.getChatRoom(i);
+    MUCActivator.getUIService().closeChatRoomWindow(wrapper);
+    wrapper.removeListeners();
+  }
+  chatRoomProvider.getSystemRoomWrapper().removeListeners();
+  fireProviderWrapperRemoved(chatRoomProvider);
+}

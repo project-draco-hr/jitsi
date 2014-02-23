@@ -1,0 +1,17 @@
+{
+  OtrContact otrContact=getOtrContact(sessionID);
+  if (otrContact == null)   return;
+  Contact contact=otrContact.contact;
+  Session session=otrEngine.getSession(sessionID);
+  if (session.isSmpInProgress()) {
+    String warn=OtrActivator.resourceService.getI18NString("plugin.otr.activator.smpaborted",new String[]{contact.getDisplayName()});
+    OtrActivator.uiService.getChat(contact).addMessage(contact.getDisplayName(),new Date(),Chat.SYSTEM_MESSAGE,warn,OperationSetBasicInstantMessaging.DEFAULT_MIME_TYPE);
+    SmpProgressDialog progressDialog=progressDialogMap.get(otrContact);
+    if (progressDialog == null) {
+      progressDialog=new SmpProgressDialog(contact);
+      progressDialogMap.put(otrContact,progressDialog);
+    }
+    progressDialog.setProgressFail();
+    progressDialog.setVisible(true);
+  }
+}

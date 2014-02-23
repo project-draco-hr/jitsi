@@ -2,9 +2,14 @@
   currentChatTransport=new ConferenceChatTransport(this,chatRoomWrapper.getChatRoom());
   chatTransports.clear();
   chatTransports.add(currentChatTransport);
-  sessionRenderer.removeAllChatContacts();
-  for (  ChatRoomMember member : chatRoom.getMembers()) {
-    sessionRenderer.addChatContact(new ConferenceChatContact(member));
+synchronized (this.chatParticipants) {
+    sessionRenderer.removeAllChatContacts();
+    this.chatParticipants.clear();
+    for (    ChatRoomMember member : chatRoom.getMembers()) {
+      ConferenceChatContact contact=new ConferenceChatContact(member);
+      chatParticipants.add(contact);
+      sessionRenderer.addChatContact(contact);
+    }
   }
   chatRoom.addPropertyChangeListener(this);
   chatRoom.addMemberPresenceListener(this);

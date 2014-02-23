@@ -1,0 +1,35 @@
+{
+  MUCUser mucUser=getMUCUserExtension(presence);
+  if (mucUser != null) {
+    String affiliation=mucUser.getItem().getAffiliation();
+    String role=mucUser.getItem().getRole();
+    if (mucUser.getStatus() != null && "201".equals(mucUser.getStatus().getCode())) {
+      try {
+        multiUserChat.sendConfigurationForm(new Form(Form.TYPE_SUBMIT));
+      }
+ catch (      XMPPException e) {
+        logger.error("Failed to send config form.",e);
+      }
+      opSetMuc.addSmackInvitationRejectionListener(multiUserChat,chatRoom);
+      if (affiliation.equalsIgnoreCase(ChatRoomMemberRole.OWNER.getRoleName().toLowerCase())) {
+        setLocalUserRole(ChatRoomMemberRole.OWNER,true);
+      }
+ else       setLocalUserRole(ChatRoomMemberRole.MODERATOR,true);
+    }
+ else {
+      ChatRoomMemberRole jitsiRole=ChatRoomJabberImpl.smackRoleToScRole(role,affiliation);
+      if (jitsiRole == ChatRoomMemberRole.MODERATOR || jitsiRole == ChatRoomMemberRole.OWNER || jitsiRole == ChatRoomMemberRole.ADMINISTRATOR) {
+        setLocalUserRole(jitsiRole,true);
+      }
+      if (!presence.isAvailable() && "none".equalsIgnoreCase(affiliation) && "none".equalsIgnoreCase(role)) {
+        MUCUser.Destroy destroy=mucUser.getDestroy();
+        if (destroy == null) {
+          leave();
+        }
+ else {
+          leave(destroy.getReason(),destroy.getJid());
+        }
+      }
+    }
+  }
+}

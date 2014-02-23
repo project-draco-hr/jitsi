@@ -1,0 +1,19 @@
+{
+  Hashtable<String,String> containerFilter=new Hashtable<String,String>();
+  containerFilter.put(Container.CONTAINER_ID,Container.CONTAINER_CHAT_TOOL_BAR.getID());
+  bundleContext.registerService(PluginComponentFactory.class.getName(),new PluginComponentFactory(Container.CONTAINER_CHAT_TOOL_BAR,Container.RIGHT,-1,false){
+    @Override protected PluginComponent getPluginInstance(){
+      LanguageMenuBarCreator creator=new LanguageMenuBarCreator(this);
+      try {
+        if (!SwingUtilities.isEventDispatchThread())         SwingUtilities.invokeAndWait(creator);
+ else         creator.run();
+        return creator.menuBar;
+      }
+ catch (      Throwable t) {
+        logger.error("Error creating LanguageMenuBar",t);
+      }
+      return null;
+    }
+  }
+,containerFilter);
+}

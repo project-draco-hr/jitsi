@@ -1,0 +1,21 @@
+{
+  OperationSetMultiUserChat groupChatOpSet=chatRoomProvider.getProtocolProvider().getOperationSet(OperationSetMultiUserChat.class);
+  ChatRoom chatRoom=null;
+  try {
+    chatRoom=groupChatOpSet.findRoom(chatRoomName);
+  }
+ catch (  Exception e) {
+    if (logger.isTraceEnabled())     logger.trace("Un exception occurred while searching for room:" + chatRoomName,e);
+  }
+  if (chatRoom != null) {
+    ChatRoomWrapper chatRoomWrapper=chatRoomList.findChatRoomWrapperFromChatRoom(chatRoom);
+    if (chatRoomWrapper == null) {
+      ChatRoomProviderWrapper parentProvider=chatRoomList.findServerWrapperFromProvider(chatRoom.getParentProvider());
+      chatRoomWrapper=new ChatRoomWrapperImpl(parentProvider,chatRoom);
+      chatRoomList.addChatRoom(chatRoomWrapper);
+      fireChatRoomListChangedEvent(chatRoomWrapper,ChatRoomListChangeEvent.CHAT_ROOM_ADDED);
+    }
+    joinChatRoom(chatRoomWrapper);
+  }
+ else   MUCActivator.getAlertUIService().showAlertDialog(MUCActivator.getResources().getI18NString("service.gui.ERROR"),MUCActivator.getResources().getI18NString("service.gui.CHAT_ROOM_NOT_EXIST",new String[]{chatRoomName,chatRoomProvider.getProtocolProvider().getAccountID().getService()}));
+}

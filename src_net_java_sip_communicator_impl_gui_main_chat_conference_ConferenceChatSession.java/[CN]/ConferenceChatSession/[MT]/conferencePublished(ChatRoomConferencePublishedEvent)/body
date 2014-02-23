@@ -1,0 +1,20 @@
+{
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      @Override public void run(){
+        conferencePublished(evt);
+      }
+    }
+);
+    return;
+  }
+  ChatRoom room=evt.getChatRoom();
+  if (!room.equals(chatRoomWrapper.getChatRoom()))   return;
+  ConferenceDescription cd=evt.getConferenceDescription();
+  if (evt.getType() == ChatRoomConferencePublishedEvent.CONFERENCE_DESCRIPTION_SENT) {
+    sessionRenderer.chatConferenceDescriptionSent(cd);
+  }
+ else   if (evt.getType() == ChatRoomConferencePublishedEvent.CONFERENCE_DESCRIPTION_RECEIVED) {
+    updateChatConferences(room,evt.getMember(),cd,room.getCachedConferenceDescriptionSize());
+  }
+}

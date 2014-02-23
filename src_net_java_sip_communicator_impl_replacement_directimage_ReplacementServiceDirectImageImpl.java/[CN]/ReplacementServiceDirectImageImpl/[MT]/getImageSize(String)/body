@@ -1,0 +1,24 @@
+{
+  int length=-1;
+  try {
+    URL url=new URL(sourceString);
+    String protocol=url.getProtocol();
+    if (protocol.equals("http") || protocol.equals("https")) {
+      HttpURLConnection connection=(HttpURLConnection)url.openConnection();
+      length=connection.getContentLength();
+      connection.disconnect();
+    }
+ else     if (protocol.equals("ftp")) {
+      FTPUtils ftp=new FTPUtils(sourceString);
+      length=ftp.getSize();
+      ftp.disconnect();
+    }
+    if (length > imgMaxSize) {
+      length=-1;
+    }
+  }
+ catch (  Exception e) {
+    logger.debug("Failed to get the length of the image in bytes",e);
+  }
+  return length;
+}

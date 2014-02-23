@@ -14,6 +14,7 @@
     logoIcon=Resources.getImage("service.systray.TRAY_ICON_WINDOWS");
     logoIconOffline=Resources.getImage("service.systray.TRAY_ICON_WINDOWS_OFFLINE");
     logoIconAway=Resources.getImage("service.systray.TRAY_ICON_WINDOWS_AWAY");
+    logoIconExtendedAway=Resources.getImage("service.systray.TRAY_ICON_WINDOWS_EXTENDED_AWAY");
     logoIconFFC=Resources.getImage("service.systray.TRAY_ICON_WINDOWS_FFC");
     logoIconDND=Resources.getImage("service.systray.TRAY_ICON_WINDOWS_DND");
     envelopeIcon=Resources.getImage("service.systray.MESSAGE_ICON_WINDOWS");
@@ -28,6 +29,7 @@
     logoIcon=Resources.getImage("service.systray.TRAY_ICON");
     logoIconOffline=Resources.getImage("service.systray.TRAY_ICON_OFFLINE");
     logoIconAway=Resources.getImage("service.systray.TRAY_ICON_AWAY");
+    logoIconExtendedAway=Resources.getImage("service.systray.TRAY_ICON_EXTENDED_AWAY");
     logoIconFFC=Resources.getImage("service.systray.TRAY_ICON_FFC");
     logoIconDND=Resources.getImage("service.systray.TRAY_ICON_DND");
     envelopeIcon=Resources.getImage("service.systray.MESSAGE_ICON");
@@ -39,6 +41,7 @@
     dockIconOnline=Resources.getImageURL("service.systray.DOCK_ICON_ONLINE");
     dockIconOffline=Resources.getImageURL("service.systray.DOCK_ICON_OFFLINE");
     dockIconAway=Resources.getImageURL("service.systray.DOCK_ICON_AWAY");
+    dockIconExtendedAway=Resources.getImageURL("service.systray.DOCK_ICON_EXTENDED_AWAY");
     dockIconFFC=Resources.getImageURL("service.systray.DOCK_ICON_FFC");
     dockIconDND=Resources.getImageURL("service.systray.DOCK_ICON_DND");
   }
@@ -72,40 +75,11 @@
   PopupMessageHandler pmh=null;
   if (!isMac) {
     pmh=new PopupMessageHandlerTrayIconImpl(trayIcon);
-    popupHandlerSet.put(pmh.getClass().getName(),pmh);
+    addPopupHandler(pmh);
     OsDependentActivator.bundleContext.registerService(PopupMessageHandler.class.getName(),pmh,null);
   }
-  try {
-    OsDependentActivator.bundleContext.addServiceListener(new ServiceListenerImpl(),"(objectclass=" + PopupMessageHandler.class.getName() + ")");
-  }
- catch (  Exception e) {
-    logger.warn(e);
-  }
-  ServiceReference[] handlerRefs=null;
-  try {
-    handlerRefs=OsDependentActivator.bundleContext.getServiceReferences(PopupMessageHandler.class.getName(),null);
-  }
- catch (  InvalidSyntaxException ise) {
-    logger.error("Error while retrieving service refs",ise);
-  }
-  if (handlerRefs != null) {
-    String configuredHandler=(String)cfg.getProperty("systray.POPUP_HANDLER");
-    for (    ServiceReference handlerRef : handlerRefs) {
-      PopupMessageHandler handler=(PopupMessageHandler)OsDependentActivator.bundleContext.getService(handlerRef);
-      String handlerName=handler.getClass().getName();
-      if (!popupHandlerSet.containsKey(handlerName)) {
-        popupHandlerSet.put(handlerName,handler);
-        if (logger.isInfoEnabled()) {
-          logger.info("added the following popup handler : " + handler);
-        }
-        if ((configuredHandler != null) && configuredHandler.equals(handler.getClass().getName())) {
-          setActivePopupMessageHandler(handler);
-        }
-      }
-    }
-    if (configuredHandler == null)     selectBestPopupMessageHandler();
-  }
-  if ((activePopupHandler == null) && (pmh != null))   setActivePopupMessageHandler(pmh);
+  initHandlers();
+  if ((getActivePopupMessageHandler() == null) && (pmh != null))   setActivePopupMessageHandler(pmh);
   SwingUtilities.invokeLater(new Runnable(){
     public void run(){
       systray.addTrayIcon(trayIcon);

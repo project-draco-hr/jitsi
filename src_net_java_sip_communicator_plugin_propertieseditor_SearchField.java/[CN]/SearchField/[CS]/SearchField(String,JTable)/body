@@ -1,0 +1,36 @@
+{
+  super(text);
+  this.table=table;
+  ComponentUI ui=getUI();
+  if (ui instanceof SearchFieldUI) {
+    SearchFieldUI searchFieldUI=(SearchFieldUI)ui;
+    searchFieldUI.setCallButtonEnabled(false);
+    searchFieldUI.setDeleteButtonEnabled(true);
+  }
+  setBorder(null);
+  setDragEnabled(true);
+  setOpaque(false);
+  setPreferredSize(new Dimension(100,25));
+  InputMap imap=getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+  imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0),"escape");
+  ActionMap amap=getActionMap();
+  @SuppressWarnings("serial") AbstractAction escapeAction=new AbstractAction(){
+    public void actionPerformed(    ActionEvent e){
+      setText("");
+    }
+  }
+;
+  amap.put("escape",escapeAction);
+  getDocument().addDocumentListener(new DocumentListener(){
+    public void changedUpdate(    DocumentEvent e){
+    }
+    public void insertUpdate(    DocumentEvent e){
+      filter(getText());
+    }
+    public void removeUpdate(    DocumentEvent e){
+      filter(getText());
+    }
+  }
+);
+  loadSkin();
+}

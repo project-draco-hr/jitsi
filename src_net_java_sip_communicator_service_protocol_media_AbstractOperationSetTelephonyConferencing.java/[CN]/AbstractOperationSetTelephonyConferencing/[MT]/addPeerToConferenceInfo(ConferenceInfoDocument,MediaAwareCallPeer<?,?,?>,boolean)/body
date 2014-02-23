@@ -1,0 +1,45 @@
+{
+  String entity=remote ? callPeer.getEntity() : getLocalEntity(callPeer);
+  ConferenceInfoDocument.User user=confInfo.addNewUser(entity);
+  String displayName=remote ? callPeer.getDisplayName() : getLocalDisplayName();
+  user.setDisplayText(displayName);
+  ConferenceInfoDocument.Endpoint endpoint=user.addNewEndpoint(entity);
+  endpoint.setStatus(remote ? getEndpointStatus(callPeer) : ConferenceInfoDocument.EndpointStatusType.connected);
+  CallPeerMediaHandler<?> mediaHandler=callPeer.getMediaHandler();
+  for (  MediaType mediaType : MediaType.values()) {
+    MediaStream stream=mediaHandler.getStream(mediaType);
+    if (stream != null || !remote) {
+      long srcId=-1;
+      if (remote) {
+        srcId=getRemoteSourceID(callPeer,mediaType);
+      }
+ else       if (stream != null) {
+        srcId=stream.getLocalSourceID();
+      }
+ else {
+        for (        MediaAwareCallPeer<?,?,?> otherCallPeer : callPeer.getCall().getCallPeerList()) {
+          MediaStream otherStream=otherCallPeer.getMediaHandler().getStream(mediaType);
+          if (otherStream != null) {
+            srcId=otherStream.getLocalSourceID();
+            break;
+          }
+        }
+      }
+      MediaDirection direction=MediaDirection.INACTIVE;
+      if (remote) {
+        direction=callPeer.getDirection(mediaType).getReverseDirection();
+      }
+ else {
+        if (mediaType == MediaType.AUDIO && callPeer.getMediaHandler().isLocalAudioTransmissionEnabled())         direction=direction.or(MediaDirection.SENDONLY);
+ else         if (mediaType == MediaType.VIDEO && callPeer.isLocalVideoStreaming())         direction=direction.or(MediaDirection.SENDONLY);
+        if (callPeer.getDirection(mediaType).allowsReceiving())         direction=direction.or(MediaDirection.RECVONLY);
+      }
+      if ((srcId != -1) || (direction != MediaDirection.INACTIVE)) {
+        ConferenceInfoDocument.Media media=endpoint.addNewMedia(mediaType.toString());
+        media.setType(mediaType.toString());
+        if (srcId != -1)         media.setSrcId(Long.toString(srcId));
+        media.setStatus(direction.toString());
+      }
+    }
+  }
+}

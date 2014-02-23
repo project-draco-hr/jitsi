@@ -1,4 +1,10 @@
 {
+  long sleepDuration=(System.currentTimeMillis() - lastWakeUp);
+  lastWakeUp=System.currentTimeMillis();
+  if (sleepDuration < MIN_WAKE_UP_INTERVAL) {
+    logger.error(this + " woken up too early !");
+    return;
+  }
   if (!parentProvider.isRegistered()) {
     if (logger.isTraceEnabled())     logger.trace("provider not registered. " + "won't send keep alive for " + parentProvider.getAccountID().getDisplayName());
     parentProvider.unregister(false);
@@ -13,7 +19,7 @@
       return;
     }
     try {
-      KeepAliveEvent ping=new KeepAliveEvent(parentProvider.getOurJID(),parentProvider.getAccountID().getService());
+      KeepAliveEvent ping=new KeepAliveEvent(parentProvider.getOurJID(),StringUtils.parseServer(parentProvider.getAccountID().getAccountAddress()));
       if (logger.isTraceEnabled())       logger.trace("send keepalive for acc: " + parentProvider.getAccountID().getDisplayName());
       waitingForPacketWithID=ping.getPacketID();
       parentProvider.getConnection().sendPacket(ping);

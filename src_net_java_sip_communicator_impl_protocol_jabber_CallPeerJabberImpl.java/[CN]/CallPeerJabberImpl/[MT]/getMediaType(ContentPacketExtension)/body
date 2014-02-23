@@ -1,0 +1,17 @@
+{
+  String contentName=content.getName();
+  if (contentName == null)   return null;
+  MediaType mediaType=JingleUtils.getMediaType(content);
+  if (mediaType == null) {
+    CallPeerMediaHandlerJabberImpl mediaHandler=getMediaHandler();
+    for (    MediaType m : MediaType.values()) {
+      ContentPacketExtension sessionContent=mediaHandler.getRemoteContent(m.toString());
+      if (sessionContent == null)       sessionContent=mediaHandler.getLocalContent(m.toString());
+      if (sessionContent != null && contentName.equals(sessionContent.getName())) {
+        mediaType=m;
+        break;
+      }
+    }
+  }
+  return mediaType;
+}

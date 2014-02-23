@@ -1,0 +1,27 @@
+{
+  if (contact == null) {
+    this.otrContact=null;
+    this.setPolicy(null);
+    this.setStatus(ScSessionStatus.PLAINTEXT);
+    return;
+  }
+  if (resourceName == null) {
+    OtrContact otrContact=OtrContactManager.getOtrContact(contact,null);
+    if (this.otrContact == otrContact)     return;
+    this.otrContact=otrContact;
+    this.setStatus(OtrActivator.scOtrEngine.getSessionStatus(otrContact));
+    this.setPolicy(OtrActivator.scOtrEngine.getContactPolicy(contact));
+    return;
+  }
+  for (  ContactResource resource : contact.getResources()) {
+    if (resource.getResourceName().equals(resourceName)) {
+      OtrContact otrContact=OtrContactManager.getOtrContact(contact,resource);
+      if (this.otrContact == otrContact)       return;
+      this.otrContact=otrContact;
+      this.setStatus(OtrActivator.scOtrEngine.getSessionStatus(otrContact));
+      this.setPolicy(OtrActivator.scOtrEngine.getContactPolicy(contact));
+      return;
+    }
+  }
+  logger.debug("Could not find resource for contact " + contact);
+}

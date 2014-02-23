@@ -1,0 +1,19 @@
+{
+  ProxyConnection connection=provider.getConnection();
+  if (connection == null) {
+    logger.error("No connection found to send CRLF keep alive" + " with " + provider);
+    return;
+  }
+  ListeningPoint lp=provider.getListeningPoint(connection.getTransport());
+  if (!(lp instanceof ListeningPointExt)) {
+    logger.error("ListeningPoint is not ListeningPointExt" + "(or is null)");
+    return;
+  }
+  InetSocketAddress address=connection.getAddress();
+  try {
+    ((ListeningPointExt)lp).sendHeartbeat(address.getAddress().getHostAddress(),address.getPort());
+  }
+ catch (  IOException e) {
+    logger.error("Error while sending a heartbeat",e);
+  }
+}

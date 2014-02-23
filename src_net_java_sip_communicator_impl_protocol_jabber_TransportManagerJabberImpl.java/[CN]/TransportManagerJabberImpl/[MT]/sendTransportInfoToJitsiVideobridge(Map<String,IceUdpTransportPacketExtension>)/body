@@ -1,0 +1,41 @@
+{
+  CallPeerJabberImpl peer=getCallPeer();
+  boolean initiator=!peer.isInitiator();
+  ColibriConferenceIQ conferenceRequest=null;
+  for (  Map.Entry<String,IceUdpTransportPacketExtension> e : map.entrySet()) {
+    String media=e.getKey();
+    MediaType mediaType=MediaType.parseString(media);
+    ColibriConferenceIQ.Channel channel=getColibriChannel(mediaType,false);
+    if (channel != null) {
+      IceUdpTransportPacketExtension transport;
+      try {
+        transport=cloneTransportAndCandidates(e.getValue());
+      }
+ catch (      OperationFailedException ofe) {
+        transport=null;
+      }
+      if (transport == null)       continue;
+      ColibriConferenceIQ.Channel channelRequest=new ColibriConferenceIQ.Channel();
+      channelRequest.setID(channel.getID());
+      channelRequest.setInitiator(initiator);
+      channelRequest.setTransport(transport);
+      if (conferenceRequest == null) {
+        if (colibri == null)         break;
+ else {
+          String id=colibri.getID();
+          if ((id == null) || (id.length() == 0))           break;
+ else {
+            conferenceRequest=new ColibriConferenceIQ();
+            conferenceRequest.setID(id);
+            conferenceRequest.setTo(colibri.getFrom());
+            conferenceRequest.setType(IQ.Type.SET);
+          }
+        }
+      }
+      conferenceRequest.getOrCreateContent(media).addChannel(channelRequest);
+    }
+  }
+  if (conferenceRequest != null) {
+    peer.getProtocolProvider().getConnection().sendPacket(conferenceRequest);
+  }
+}

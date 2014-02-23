@@ -1,20 +1,29 @@
 {
   if (!contact.isPersistent()) {
+    String contactAddress=null;
+    if (contact instanceof VolatileContactJabberImpl && ((VolatileContactJabberImpl)contact).isPrivateMessagingContact()) {
+      contactAddress=contact.getPersistableAddress();
+    }
+ else {
+      contactAddress=contact.getAddress();
+    }
     try {
-      addContact(newParent,contact.getAddress());
+      addContact(newParent,contactAddress);
       return;
     }
  catch (    OperationFailedException ex) {
       logger.error("Cannot move contact! ",ex);
+      throw new OperationFailedException(ex.getMessage(),OperationFailedException.GENERAL_ERROR,ex);
     }
   }
-  newParent.addContact(contact);
   try {
     SmackConfiguration.setPacketReplyTimeout(ProtocolProviderServiceJabberImpl.SMACK_PACKET_REPLY_TIMEOUT);
     roster.createEntry(contact.getSourceEntry().getUser(),contact.getDisplayName(),new String[]{newParent.getGroupName()});
     SmackConfiguration.setPacketReplyTimeout(5000);
+    newParent.addContact(contact);
   }
  catch (  XMPPException ex) {
     logger.error("Cannot move contact! ",ex);
+    throw new OperationFailedException(ex.getMessage(),OperationFailedException.GENERAL_ERROR,ex);
   }
 }

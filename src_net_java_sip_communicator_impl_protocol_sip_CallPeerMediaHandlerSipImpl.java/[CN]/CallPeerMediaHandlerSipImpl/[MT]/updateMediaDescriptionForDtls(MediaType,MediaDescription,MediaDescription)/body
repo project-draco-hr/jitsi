@@ -1,0 +1,38 @@
+{
+  AccountID accountID=getPeer().getProtocolProvider().getAccountID();
+  boolean b=false;
+  if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled(DtlsControl.PROTO_NAME)) {
+    Media localMedia=localMd.getMedia();
+    if (localMedia != null) {
+      String proto;
+      try {
+        proto=localMedia.getProtocol();
+      }
+ catch (      SdpParseException e) {
+        proto=null;
+      }
+      boolean dtls=DtlsControl.UDP_TLS_RTP_SAVP.equals(proto) || DtlsControl.UDP_TLS_RTP_SAVPF.equals(proto) || SrtpControl.RTP_SAVPF.equals(proto);
+      if (dtls && (remoteMd != null))       dtls=isDtlsMediaDescription(remoteMd);
+      SrtpControls srtpControls=getSrtpControls();
+      if (dtls) {
+        DtlsControl dtlsControl=(DtlsControl)srtpControls.getOrCreate(mediaType,SrtpControlType.DTLS_SRTP);
+        @SuppressWarnings("unchecked") Vector<Attribute> attrs=localMd.getAttributes(true);
+        DtlsControl.Setup setup=(remoteMd == null) ? DtlsControl.Setup.ACTPASS : DtlsControl.Setup.ACTIVE;
+        Attribute setupAttr=SdpUtils.createAttribute(DTLS_SRTP_SETUP_ATTR,setup.toString());
+        attrs.add(setupAttr);
+        String hashFunction=dtlsControl.getLocalFingerprintHashFunction();
+        String fingerprint=dtlsControl.getLocalFingerprint();
+        Attribute fingerprintAttr=SdpUtils.createAttribute(DTLS_SRTP_FINGERPRINT_ATTR,hashFunction + " " + fingerprint);
+        attrs.add(fingerprintAttr);
+        dtlsControl.setSetup(setup);
+        if (remoteMd != null)         updateSrtpControlsForDtls(mediaType,localMd,remoteMd);
+        b=true;
+      }
+ else       if (remoteMd != null) {
+        SrtpControl dtlsControl=srtpControls.remove(mediaType,SrtpControlType.DTLS_SRTP);
+        if (dtlsControl != null)         dtlsControl.cleanup();
+      }
+    }
+  }
+  return b;
+}

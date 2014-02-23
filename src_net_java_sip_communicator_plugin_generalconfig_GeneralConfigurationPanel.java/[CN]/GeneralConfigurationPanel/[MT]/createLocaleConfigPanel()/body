@@ -1,25 +1,38 @@
 {
   JPanel localeConfigPanel=GeneralConfigPluginActivator.createConfigSectionComponent(Resources.getString("plugin.generalconfig.DEFAULT_LANGUAGE"));
-  final JComboBox localesConfigComboBox=new JComboBox();
+  LanguagePack lp=ServiceUtils.getService(GeneralConfigPluginActivator.bundleContext,LanguagePack.class);
+  Map<String,String> defaultRes=lp.getResources(Locale.ENGLISH);
+  Locale currentLocale=ConfigurationUtils.getCurrentLanguage();
+  LocaleItem currentLocaleItem=null;
+  java.util.List<LocaleItem> languages=new ArrayList<LocaleItem>();
   Iterator<Locale> iter=Resources.getResources().getAvailableLocales();
   while (iter.hasNext()) {
     Locale locale=iter.next();
-    localesConfigComboBox.addItem(locale.getDisplayLanguage(locale));
+    Set<String> res=lp.getResourceKeys(locale);
+    int count=0;
+    for (    String key : defaultRes.keySet()) {
+      if (res.contains(key)) {
+        count++;
+      }
+    }
+    LocaleItem li=new LocaleItem(locale,count * 100 / defaultRes.size());
+    languages.add(li);
+    if (locale.equals(currentLocale)) {
+      currentLocaleItem=li;
+    }
   }
-  Locale currLocale=ConfigurationUtils.getCurrentLanguage();
-  localesConfigComboBox.setSelectedItem(currLocale.getDisplayLanguage(currLocale));
+  Collections.sort(languages);
+  final JComboBox localesConfigComboBox=new JComboBox();
+  localesConfigComboBox.setRenderer(new LanguageDropDownRenderer());
+  for (  LocaleItem li : languages) {
+    localesConfigComboBox.addItem(li);
+  }
+  localesConfigComboBox.setSelectedItem(currentLocaleItem);
   localesConfigComboBox.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
       GeneralConfigPluginActivator.getUIService().getPopupDialog().showMessagePopupDialog(Resources.getString("plugin.generalconfig.DEFAULT_LANGUAGE_RESTART_WARN"));
-      String language=(String)localesConfigComboBox.getSelectedItem();
-      Iterator<Locale> iter=Resources.getResources().getAvailableLocales();
-      while (iter.hasNext()) {
-        Locale locale=iter.next();
-        if (locale.getDisplayLanguage(locale).equals(language)) {
-          ConfigurationUtils.setLanguage(locale);
-          break;
-        }
-      }
+      LocaleItem li=(LocaleItem)localesConfigComboBox.getSelectedItem();
+      ConfigurationUtils.setLanguage(li.locale);
     }
   }
 );

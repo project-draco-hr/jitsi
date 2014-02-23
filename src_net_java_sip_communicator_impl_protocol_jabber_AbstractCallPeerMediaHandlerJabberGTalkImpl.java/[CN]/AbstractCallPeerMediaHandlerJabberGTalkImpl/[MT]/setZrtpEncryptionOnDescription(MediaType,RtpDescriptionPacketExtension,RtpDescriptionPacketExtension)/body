@@ -1,0 +1,35 @@
+{
+  CallPeer peer=getPeer();
+  Call call=peer.getCall();
+  if (call.getConference().isJitsiVideobridge())   return false;
+  boolean isRemoteZrtpCapable;
+  if (remoteDescription == null)   isRemoteZrtpCapable=true;
+ else {
+    EncryptionPacketExtension remoteEncryption=remoteDescription.getFirstChildOfType(EncryptionPacketExtension.class);
+    isRemoteZrtpCapable=(remoteEncryption != null) && isRemoteZrtpCapable(remoteEncryption);
+  }
+  boolean zrtpHashSet=false;
+  if (isRemoteZrtpCapable) {
+    AccountID accountID=peer.getProtocolProvider().getAccountID();
+    if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled(ZrtpControl.PROTO_NAME) && call.isSipZrtpAttribute()) {
+      ZrtpControl zrtpControl=(ZrtpControl)getSrtpControls().getOrCreate(mediaType,SrtpControlType.ZRTP);
+      int numberSupportedVersions=zrtpControl.getNumberSupportedVersions();
+      for (int i=0; i < numberSupportedVersions; i++) {
+        String helloHash[]=zrtpControl.getHelloHashSep(i);
+        if ((helloHash != null) && (helloHash[1].length() > 0)) {
+          ZrtpHashPacketExtension hash=new ZrtpHashPacketExtension();
+          hash.setVersion(helloHash[0]);
+          hash.setValue(helloHash[1]);
+          EncryptionPacketExtension encryption=description.getFirstChildOfType(EncryptionPacketExtension.class);
+          if (encryption == null) {
+            encryption=new EncryptionPacketExtension();
+            description.addChildExtension(encryption);
+          }
+          encryption.addChildExtension(hash);
+          zrtpHashSet=true;
+        }
+      }
+    }
+  }
+  return zrtpHashSet;
+}

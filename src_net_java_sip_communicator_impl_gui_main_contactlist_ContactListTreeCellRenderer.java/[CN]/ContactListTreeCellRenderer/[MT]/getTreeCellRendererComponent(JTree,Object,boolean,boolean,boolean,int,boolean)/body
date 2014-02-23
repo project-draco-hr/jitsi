@@ -16,8 +16,12 @@
       setBackground(Color.WHITE);
     }
   }
+  this.nameLabel.setIcon(null);
   if (value instanceof ContactNode) {
     UIContactImpl contact=((ContactNode)value).getContactDescriptor();
+    if ((contact.getDescriptor() instanceof SourceContact) && GuiActivator.getMUCService().isMUCSourceContact((SourceContact)contact.getDescriptor())) {
+      setBackground(Constants.CHAT_ROOM_ROW_COLOR);
+    }
     String displayName=contact.getDisplayName();
     if ((displayName == null || displayName.trim().length() < 1) && !(contact instanceof ShowMoreContact)) {
       displayName=GuiActivator.getResources().getI18NString("service.gui.UNKNOWN");
@@ -26,9 +30,13 @@
     if (statusIcon != null && contactList.isContactActive(contact) && statusIcon instanceof ImageIcon)     ((ImageIcon)statusIcon).setImage(msgReceivedImage);
  else     statusIcon=contact.getStatusIcon();
     this.statusLabel.setIcon(statusIcon);
-    this.nameLabel.setFont(this.getFont().deriveFont(Font.PLAIN));
+    this.nameLabel.setFont(this.nameLabel.getFont().deriveFont(Font.PLAIN,13f));
     if (contactForegroundColor != null)     nameLabel.setForeground(contactForegroundColor);
     this.initDisplayDetails(contact.getDisplayDetails());
+    if (contact.getDescriptor() instanceof MetaContact && isMobile((MetaContact)contact.getDescriptor())) {
+      this.nameLabel.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.CONTACT_LIST_MOBILE_INDICATOR)));
+      this.nameLabel.setHorizontalTextPosition(SwingConstants.LEFT);
+    }
     if (this.treeContactList.isContactButtonsVisible())     this.initButtonsPanel(contact);
     int avatarWidth, avatarHeight;
     if (isSelected && treeContactList.isContactButtonsVisible()) {
@@ -57,7 +65,7 @@
  else   if (value instanceof GroupNode) {
     UIGroupImpl groupItem=((GroupNode)value).getGroupDescriptor();
     this.nameLabel.setText(groupItem.getDisplayName());
-    this.nameLabel.setFont(this.getFont().deriveFont(Font.BOLD));
+    this.nameLabel.setFont(this.nameLabel.getFont().deriveFont(Font.BOLD,13f));
     if (groupForegroundColor != null)     this.nameLabel.setForeground(groupForegroundColor);
     this.remove(displayDetailsLabel);
     this.remove(callButton);
@@ -65,9 +73,15 @@
     this.remove(desktopSharingButton);
     this.remove(chatButton);
     this.remove(addContactButton);
+    this.remove(webButton);
     clearCustomActionButtons();
     statusIcon=expanded ? openedGroupIcon : closedGroupIcon;
-    this.statusLabel.setIcon(expanded ? openedGroupIcon : closedGroupIcon);
+    if (groupItem != treeContactList.getRootUIGroup()) {
+      this.statusLabel.setIcon(expanded ? openedGroupIcon : closedGroupIcon);
+    }
+ else {
+      this.statusLabel.setIcon(null);
+    }
     this.rightLabel.setIcon(null);
     this.rightLabel.setText("");
     if (groupItem.countChildContacts() >= 0) {
@@ -77,7 +91,7 @@
     }
     this.initDisplayDetails(groupItem.getDisplayDetails());
     this.initButtonsPanel(groupItem);
-    this.setToolTipText(groupItem.getDescriptor().toString());
+    this.setToolTipText((groupItem.getDescriptor() != null) ? groupItem.getDescriptor().toString() : groupItem.getDisplayName());
   }
   return this;
 }

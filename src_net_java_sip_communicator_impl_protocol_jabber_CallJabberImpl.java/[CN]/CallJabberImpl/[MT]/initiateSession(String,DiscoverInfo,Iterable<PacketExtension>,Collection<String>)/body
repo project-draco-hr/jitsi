@@ -1,0 +1,21 @@
+{
+  CallPeerJabberImpl callPeer=new CallPeerJabberImpl(calleeJID,this);
+  callPeer.setDiscoveryInfo(discoverInfo);
+  addCallPeer(callPeer);
+  callPeer.setState(CallPeerState.INITIATING_CALL);
+  if (getCallPeerCount() == 1)   parentOpSet.fireCallEvent(CallEvent.CALL_INITIATED,this);
+  CallPeerMediaHandlerJabberImpl mediaHandler=callPeer.getMediaHandler();
+  mediaHandler.setSupportedTransports(supportedTransports);
+  mediaHandler.setLocalVideoTransmissionEnabled(localVideoAllowed);
+  mediaHandler.setLocalInputEvtAware(getLocalInputEvtAware());
+  callPeer.setState(CallPeerState.CONNECTING);
+  boolean sessionInitiated=false;
+  try {
+    callPeer.initiateSession(sessionInitiateExtensions);
+    sessionInitiated=true;
+  }
+  finally {
+    if (!sessionInitiated)     callPeer.setState(CallPeerState.FAILED);
+  }
+  return callPeer;
+}

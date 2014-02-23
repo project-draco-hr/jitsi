@@ -1,0 +1,58 @@
+{
+  boolean iceAgentStateIsRunning=IceProcessingState.RUNNING.equals(iceAgent.getState());
+  if (iceAgentStateIsRunning && logger.isInfoEnabled())   logger.info("Update ICE remote candidates");
+  int generation=iceAgent.getGeneration();
+  boolean startConnectivityEstablishment=false;
+  for (  Map.Entry<String,IceUdpTransportPacketExtension> e : remote.entrySet()) {
+    IceUdpTransportPacketExtension transport=e.getValue();
+    List<CandidatePacketExtension> candidates=transport.getChildExtensionsOfType(CandidatePacketExtension.class);
+    if (iceAgentStateIsRunning && (candidates.size() == 0))     return false;
+    Collections.sort(candidates);
+    String media=e.getKey();
+    IceMediaStream stream=iceAgent.getStream(media);
+    String ufrag=transport.getUfrag();
+    if (ufrag != null)     stream.setRemoteUfrag(ufrag);
+    String password=transport.getPassword();
+    if (password != null)     stream.setRemotePassword(password);
+    for (    CandidatePacketExtension candidate : candidates) {
+      if (candidate.getGeneration() != generation)       continue;
+      Component component=stream.getComponent(candidate.getComponent());
+      String relAddr;
+      int relPort;
+      TransportAddress relatedAddress=null;
+      if (((relAddr=candidate.getRelAddr()) != null) && ((relPort=candidate.getRelPort()) != -1)) {
+        relatedAddress=new TransportAddress(relAddr,relPort,Transport.parse(candidate.getProtocol()));
+      }
+      RemoteCandidate relatedCandidate=component.findRemoteCandidate(relatedAddress);
+      RemoteCandidate remoteCandidate=new RemoteCandidate(new TransportAddress(candidate.getIP(),candidate.getPort(),Transport.parse(candidate.getProtocol())),component,org.ice4j.ice.CandidateType.parse(candidate.getType().toString()),candidate.getFoundation(),candidate.getPriority(),relatedCandidate);
+      if (iceAgentStateIsRunning) {
+        component.addUpdateRemoteCandidates(remoteCandidate);
+      }
+ else {
+        component.addRemoteCandidate(remoteCandidate);
+        startConnectivityEstablishment=true;
+      }
+    }
+  }
+  if (iceAgentStateIsRunning) {
+    for (    IceMediaStream stream : iceAgent.getStreams()) {
+      for (      Component component : stream.getComponents())       component.updateRemoteCandidates();
+    }
+  }
+ else   if (startConnectivityEstablishment) {
+    for (    IceMediaStream stream : iceAgent.getStreams()) {
+      for (      Component component : stream.getComponents()) {
+        if (component.getRemoteCandidateCount() < 1) {
+          startConnectivityEstablishment=false;
+          break;
+        }
+      }
+      if (!startConnectivityEstablishment)       break;
+    }
+    if (startConnectivityEstablishment) {
+      iceAgent.startConnectivityEstablishment();
+      return true;
+    }
+  }
+  return false;
+}

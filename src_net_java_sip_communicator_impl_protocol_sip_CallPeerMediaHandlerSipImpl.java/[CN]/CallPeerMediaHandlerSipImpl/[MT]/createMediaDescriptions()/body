@@ -12,20 +12,32 @@
     MediaDirection direction=dev.getDirection().and(getDirectionUserPreference(mediaType));
     if (isLocallyOnHold())     direction=direction.and(MediaDirection.SENDONLY);
     if (direction != MediaDirection.INACTIVE) {
-      boolean hadSavp=false;
-      for (      String profileName : getRtpTransports()) {
-        MediaDescription md=createMediaDescription(profileName,getLocallySupportedFormats(dev,sendQualityPreset,receiveQualityPreset),getTransportManager().getStreamConnector(mediaType),direction,dev.getSupportedExtensions());
+      for (      String proto : getRtpTransports()) {
+        QualityPreset effectiveSendQualityPreset=direction.allowsSending() ? sendQualityPreset : null;
+        MediaDescription md=createMediaDescription(proto,getLocallySupportedFormats(dev,effectiveSendQualityPreset,receiveQualityPreset),getTransportManager().getStreamConnector(mediaType),direction,dev.getSupportedExtensions());
         try {
-          if (mediaType.equals(MediaType.VIDEO) && receiveQualityPreset != null && receiveQualityPreset.getFameRate() > 0)           md.setAttribute("framerate",String.valueOf((int)receiveQualityPreset.getFameRate()));
+          if (mediaType.equals(MediaType.VIDEO) && (receiveQualityPreset != null)) {
+            int frameRate=(int)receiveQualityPreset.getFameRate();
+            if (frameRate > 0) {
+              md.setAttribute("framerate",String.valueOf(frameRate));
+            }
+          }
         }
  catch (        SdpException e) {
         }
-        if (!hadSavp) {
-          updateMediaDescriptionForZrtp(mediaType,md);
-          updateMediaDescriptionForSDes(mediaType,md,null);
+        if (DtlsControl.UDP_TLS_RTP_SAVP.equals(proto) || DtlsControl.UDP_TLS_RTP_SAVPF.equals(proto)) {
+          updateMediaDescriptionForDtls(mediaType,md,null);
+        }
+ else {
+          updateMediaDescriptionForZrtp(mediaType,md,null);
+          if (SrtpControl.RTP_SAVP.equals(proto) || SrtpControl.RTP_SAVPF.equals(proto)) {
+            updateMediaDescriptionForSDes(mediaType,md,null);
+          }
+          if (SrtpControl.RTP_SAVPF.equals(proto)) {
+            updateMediaDescriptionForDtls(mediaType,md,null);
+          }
         }
         mediaDescs.add(md);
-        if (!hadSavp && profileName.contains("SAVP"))         hadSavp=true;
       }
     }
   }

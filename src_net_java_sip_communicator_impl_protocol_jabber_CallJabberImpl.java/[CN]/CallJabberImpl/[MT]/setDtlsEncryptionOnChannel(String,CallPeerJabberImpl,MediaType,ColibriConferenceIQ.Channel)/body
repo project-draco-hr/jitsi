@@ -1,0 +1,12 @@
+{
+  ProtocolProviderServiceJabberImpl protocolProvider=getProtocolProvider();
+  AccountID accountID=protocolProvider.getAccountID();
+  if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled(DtlsControl.PROTO_NAME) && protocolProvider.isFeatureSupported(jitsiVideobridge,ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_DTLS_SRTP)) {
+    CallPeerMediaHandlerJabberImpl mediaHandler=peer.getMediaHandler();
+    DtlsControl dtlsControl=(DtlsControl)mediaHandler.getSrtpControls().getOrCreate(mediaType,SrtpControlType.DTLS_SRTP);
+    if (dtlsControl != null) {
+      IceUdpTransportPacketExtension transport=ensureTransportOnChannel(channel,peer);
+      if (transport != null)       setDtlsEncryptionOnTransport(dtlsControl,transport);
+    }
+  }
+}

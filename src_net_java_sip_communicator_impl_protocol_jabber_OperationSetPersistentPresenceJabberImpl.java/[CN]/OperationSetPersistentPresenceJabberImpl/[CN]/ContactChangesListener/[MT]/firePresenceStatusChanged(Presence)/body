@@ -5,6 +5,13 @@
   }
   try {
     String userID=StringUtils.parseBareAddress(presence.getFrom());
+    List<ChatRoom> chatRooms=parentProvider.getOperationSet(OperationSetMultiUserChat.class).getCurrentlyJoinedChatRooms();
+    for (    ChatRoom chatRoom : chatRooms) {
+      if (chatRoom.getName().equals(userID)) {
+        userID=presence.getFrom();
+        break;
+      }
+    }
     if (logger.isDebugEnabled())     logger.debug("Received a status update for buddy=" + userID);
     TreeSet<Presence> userStats=statuses.get(userID);
     if (userStats == null) {
@@ -42,14 +49,7 @@
       return;
     }
     sourceContact.setStatusMessage(currentPresence.getStatus());
-    sourceContact.updateResources();
-    PresenceStatus oldStatus=sourceContact.getPresenceStatus();
-    PresenceStatus newStatus=jabberStatusToPresenceStatus(currentPresence,parentProvider);
-    if (oldStatus.equals(newStatus))     return;
-    sourceContact.updatePresenceStatus(newStatus);
-    ContactGroup parent=ssContactList.findContactGroup(sourceContact);
-    if (logger.isDebugEnabled())     logger.debug("Will Dispatch the contact status event.");
-    fireContactPresenceStatusChangeEvent(sourceContact,parent,oldStatus,newStatus);
+    updateContactStatus(sourceContact,jabberStatusToPresenceStatus(currentPresence,parentProvider));
   }
  catch (  IllegalStateException ex) {
     logger.error("Failed changing status",ex);

@@ -4,43 +4,20 @@
   Presence.Type presenceType=presence.getType();
   final String fromID=presence.getFrom();
   if (presenceType == Presence.Type.subscribe) {
-    new Thread(new Runnable(){
-      public void run(){
-        if (logger.isTraceEnabled()) {
-          logger.trace(fromID + " wants to add you to its contact list");
-        }
-        ContactJabberImpl srcContact=ssContactList.findContactById(fromID);
-        Presence.Type responsePresenceType=null;
-        if (srcContact == null) {
-          srcContact=createVolatileContact(fromID);
-        }
- else {
-          if (srcContact.isPersistent())           responsePresenceType=Presence.Type.subscribed;
-        }
-        if (responsePresenceType == null) {
-          AuthorizationRequest req=new AuthorizationRequest();
-          AuthorizationResponse response=handler.processAuthorisationRequest(req,srcContact);
-          if (response != null) {
-            if (response.getResponseCode().equals(AuthorizationResponse.ACCEPT)) {
-              responsePresenceType=Presence.Type.subscribed;
-              if (logger.isInfoEnabled())               logger.info("Sending Accepted Subscription");
-            }
- else             if (response.getResponseCode().equals(AuthorizationResponse.REJECT)) {
-              responsePresenceType=Presence.Type.unsubscribed;
-              if (logger.isInfoEnabled())               logger.info("Sending Rejected Subscription");
-            }
-          }
-        }
-        if (responsePresenceType == null)         return;
-        Presence responsePacket=new Presence(responsePresenceType);
-        responsePacket.setTo(fromID);
-        parentProvider.getConnection().sendPacket(responsePacket);
+synchronized (this) {
+      if (handler == null) {
+        earlySubscriptions.add(fromID);
+        return;
       }
     }
-).start();
+    handleSubscribeReceived(fromID);
   }
  else   if (presenceType == Presence.Type.unsubscribed) {
     if (logger.isTraceEnabled())     logger.trace(fromID + " does not allow your subscription");
+    if (handler == null) {
+      logger.warn("No to handle unsubscribed AuthorizationHandler for " + fromID);
+      return;
+    }
     ContactJabberImpl contact=ssContactList.findContactById(fromID);
     if (contact != null) {
       AuthorizationResponse response=new AuthorizationResponse(AuthorizationResponse.REJECT,"");
@@ -54,6 +31,10 @@
     }
   }
  else   if (presenceType == Presence.Type.subscribed) {
+    if (handler == null) {
+      logger.warn("No AuthorizationHandler to handle subscribed for " + fromID);
+      return;
+    }
     ContactJabberImpl contact=ssContactList.findContactById(fromID);
     AuthorizationResponse response=new AuthorizationResponse(AuthorizationResponse.ACCEPT,"");
     handler.processAuthorizationResponse(response,contact);

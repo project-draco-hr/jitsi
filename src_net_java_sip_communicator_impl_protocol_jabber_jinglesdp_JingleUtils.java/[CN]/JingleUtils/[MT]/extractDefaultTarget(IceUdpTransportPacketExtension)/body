@@ -1,0 +1,30 @@
+{
+  CandidatePacketExtension rtpCand=getFirstCandidate(transport,CandidatePacketExtension.RTP_COMPONENT_ID);
+  if (rtpCand == null)   return null;
+  InetAddress rtpAddress=null;
+  try {
+    rtpAddress=NetworkUtils.getInetAddress(rtpCand.getIP());
+  }
+ catch (  UnknownHostException exc) {
+    throw new IllegalArgumentException("Failed to parse address " + rtpCand.getIP(),exc);
+  }
+  int rtpPort=rtpCand.getPort();
+  InetSocketAddress rtpTarget=new InetSocketAddress(rtpAddress,rtpPort);
+  CandidatePacketExtension rtcpCand=getFirstCandidate(transport,CandidatePacketExtension.RTCP_COMPONENT_ID);
+  InetSocketAddress rtcpTarget;
+  if (rtcpCand == null) {
+    rtcpTarget=new InetSocketAddress(rtpAddress,rtpPort + 1);
+  }
+ else {
+    InetAddress rtcpAddress=null;
+    try {
+      rtcpAddress=NetworkUtils.getInetAddress(rtcpCand.getIP());
+    }
+ catch (    UnknownHostException exc) {
+      throw new IllegalArgumentException("Failed to parse address " + rtcpCand.getIP(),exc);
+    }
+    int rtcpPort=rtcpCand.getPort();
+    rtcpTarget=new InetSocketAddress(rtcpAddress,rtcpPort);
+  }
+  return new MediaStreamTarget(rtpTarget,rtcpTarget);
+}

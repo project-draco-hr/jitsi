@@ -1,0 +1,24 @@
+{
+  UserSearchIQ search=new UserSearchIQ();
+  boolean done=false;
+  while (!done) {
+    int eventType=parser.next();
+    if (eventType == XmlPullParser.START_TAG && parser.getName().equals("item")) {
+      search.setData(parseItems(parser));
+      return search;
+    }
+ else     if (eventType == XmlPullParser.START_TAG && parser.getName().equals("instructions")) {
+      continue;
+    }
+ else     if (eventType == XmlPullParser.START_TAG && !parser.getNamespace().equals("jabber:x:data")) {
+      search.addField(parser.getName(),null);
+    }
+ else     if (eventType == XmlPullParser.START_TAG && parser.getNamespace().equals("jabber:x:data")) {
+      search.addExtension(PacketParserUtils.parsePacketExtension(parser.getName(),parser.getNamespace(),parser));
+    }
+ else     if (eventType == XmlPullParser.END_TAG) {
+      if (parser.getName().equals("query"))       done=true;
+    }
+  }
+  return search;
+}

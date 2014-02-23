@@ -1,52 +1,7 @@
 {
-  if (IceProcessingState.RUNNING.equals(iceAgent.getState())) {
-    if (logger.isInfoEnabled()) {
-      logger.info("Update ICE remote candidates");
-    }
-    for (    ContentPacketExtension content : remote) {
-      IceUdpTransportPacketExtension transport=content.getFirstChildOfType(IceUdpTransportPacketExtension.class);
-      List<CandidatePacketExtension> candidates=transport.getChildExtensionsOfType(CandidatePacketExtension.class);
-      Collections.sort(candidates);
-      if (candidates == null || candidates.size() == 0) {
-        return false;
-      }
-      RtpDescriptionPacketExtension description=content.getFirstChildOfType(RtpDescriptionPacketExtension.class);
-      if (description == null) {
-        ContentPacketExtension localContent=findContentByName(cpeList,content.getName());
-        if (localContent != null) {
-          description=localContent.getFirstChildOfType(RtpDescriptionPacketExtension.class);
-        }
-      }
-      if (description == null)       continue;
-      IceMediaStream stream=iceAgent.getStream(description.getMedia());
-      String ufrag=transport.getUfrag();
-      if (ufrag != null)       stream.setRemoteUfrag(ufrag);
-      String password=transport.getPassword();
-      if (password != null)       stream.setRemotePassword(password);
-      for (      CandidatePacketExtension candidate : candidates) {
-        if (candidate.getGeneration() != iceAgent.getGeneration())         continue;
-        Component component=stream.getComponent(candidate.getComponent());
-        TransportAddress relatedAddr=null;
-        if (candidate.getRelAddr() != null && candidate.getRelPort() != -1) {
-          relatedAddr=new TransportAddress(candidate.getRelAddr(),candidate.getRelPort(),Transport.parse(candidate.getProtocol()));
-        }
-        RemoteCandidate relatedCandidate=component.findRemoteCandidate(relatedAddr);
-        component.addUpdateRemoteCandidate(new RemoteCandidate(new TransportAddress(candidate.getIP(),candidate.getPort(),Transport.parse(candidate.getProtocol())),component,org.ice4j.ice.CandidateType.parse(candidate.getType().toString()),candidate.getFoundation(),candidate.getPriority(),relatedCandidate));
-      }
-    }
-    for (    IceMediaStream stream : iceAgent.getStreams()) {
-      for (      Component component : stream.getComponents()) {
-        component.updateRemoteCandidate();
-      }
-    }
-    return false;
-  }
-  int generation=iceAgent.getGeneration();
-  boolean startConnectivityEstablishment=false;
+  Map<String,IceUdpTransportPacketExtension> map=new LinkedHashMap<String,IceUdpTransportPacketExtension>();
   for (  ContentPacketExtension content : remote) {
     IceUdpTransportPacketExtension transport=content.getFirstChildOfType(IceUdpTransportPacketExtension.class);
-    List<CandidatePacketExtension> candidates=transport.getChildExtensionsOfType(CandidatePacketExtension.class);
-    Collections.sort(candidates);
     RtpDescriptionPacketExtension description=content.getFirstChildOfType(RtpDescriptionPacketExtension.class);
     if ((description == null) && (cpeList != null)) {
       ContentPacketExtension localContent=findContentByName(cpeList,content.getName());
@@ -54,38 +9,16 @@
         description=localContent.getFirstChildOfType(RtpDescriptionPacketExtension.class);
       }
     }
-    if (description == null)     continue;
-    IceMediaStream stream=iceAgent.getStream(description.getMedia());
-    String ufrag=transport.getUfrag();
-    if (ufrag != null)     stream.setRemoteUfrag(ufrag);
-    String password=transport.getPassword();
-    if (password != null)     stream.setRemotePassword(password);
-    for (    CandidatePacketExtension candidate : candidates) {
-      if (candidate.getGeneration() != generation)       continue;
-      Component component=stream.getComponent(candidate.getComponent());
-      TransportAddress relatedAddr=null;
-      if (candidate.getRelAddr() != null && candidate.getRelPort() != -1) {
-        relatedAddr=new TransportAddress(candidate.getRelAddr(),candidate.getRelPort(),Transport.parse(candidate.getProtocol()));
-      }
-      RemoteCandidate relatedCandidate=component.findRemoteCandidate(relatedAddr);
-      component.addRemoteCandidate(new RemoteCandidate(new TransportAddress(candidate.getIP(),candidate.getPort(),Transport.parse(candidate.getProtocol())),component,org.ice4j.ice.CandidateType.parse(candidate.getType().toString()),candidate.getFoundation(),candidate.getPriority(),relatedCandidate));
-      startConnectivityEstablishment=true;
+    if (description != null) {
+      String media=description.getMedia();
+      map.put(media,transport);
     }
   }
-  if (startConnectivityEstablishment) {
-    for (    IceMediaStream stream : iceAgent.getStreams()) {
-      for (      Component component : stream.getComponents()) {
-        if (component.getRemoteCandidateCount() < 1) {
-          startConnectivityEstablishment=false;
-          break;
-        }
-      }
-      if (!startConnectivityEstablishment)       break;
-    }
-    if (startConnectivityEstablishment) {
-      iceAgent.startConnectivityEstablishment();
-      return true;
-    }
+  if (getCallPeer().isJitsiVideobridge()) {
+    sendTransportInfoToJitsiVideobridge(map);
+    return false;
   }
-  return false;
+ else {
+    return startConnectivityEstablishment(map);
+  }
 }

@@ -1,0 +1,36 @@
+{
+  animatedPadlockImage.pause();
+  Image image;
+  String tipKey;
+switch (status) {
+case ENCRYPTED:
+    PublicKey pubKey=OtrActivator.scOtrEngine.getRemotePublicKey(otrContact);
+  String fingerprint=OtrActivator.scOtrKeyManager.getFingerprintFromPublicKey(pubKey);
+image=OtrActivator.scOtrKeyManager.isVerified(otrContact.contact,fingerprint) ? verifiedLockedPadlockImage : unverifiedLockedPadlockImage;
+tipKey=OtrActivator.scOtrKeyManager.isVerified(otrContact.contact,fingerprint) ? "plugin.otr.menu.VERIFIED" : "plugin.otr.menu.UNVERIFIED";
+break;
+case FINISHED:
+image=finishedPadlockImage;
+tipKey="plugin.otr.menu.FINISHED";
+break;
+case PLAINTEXT:
+image=unlockedPadlockImage;
+tipKey="plugin.otr.menu.START_OTR";
+break;
+case LOADING:
+image=animatedPadlockImage;
+animatedPadlockImage.start();
+tipKey="plugin.otr.menu.LOADING_OTR";
+break;
+case TIMED_OUT:
+image=timedoutPadlockImage;
+tipKey="plugin.otr.menu.TIMED_OUT";
+break;
+default :
+return;
+}
+SIPCommButton button=getButton();
+button.setIconImage(image);
+button.setToolTipText(OtrActivator.resourceService.getI18NString(tipKey));
+button.repaint();
+}

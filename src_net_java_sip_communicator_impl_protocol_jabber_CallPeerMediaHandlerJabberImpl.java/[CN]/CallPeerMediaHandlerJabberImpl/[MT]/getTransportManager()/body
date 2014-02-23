@@ -9,24 +9,49 @@ synchronized (transportManagerSyncRoot) {
  catch (        InterruptedException e) {
         }
       }
-      if (transportManager == null)       throw new IllegalStateException("The initiator is expected to specify the transport" + " in their offer.");
+      if (transportManager == null) {
+        throw new IllegalStateException("The initiator is expected to specify the transport" + " in their offer.");
+      }
  else       return transportManager;
     }
  else {
       ProtocolProviderServiceJabberImpl protocolProvider=peer.getProtocolProvider();
       ScServiceDiscoveryManager discoveryManager=protocolProvider.getDiscoveryManager();
       DiscoverInfo peerDiscoverInfo=peer.getDiscoveryInfo();
-      boolean google=protocolProvider.isGmailOrGoogleAppsAccount() || ProtocolProviderServiceJabberImpl.isGmailOrGoogleAppsAccount(StringUtils.parseServer(peer.getAddress()));
-      if (google && isFeatureSupported(discoveryManager,peerDiscoverInfo,ProtocolProviderServiceJabberImpl.URN_GOOGLE_TRANSPORT_P2P)) {
-        transportManager=new P2PTransportManager(peer);
+synchronized (supportedTransportsSyncRoot) {
+        if (supportedTransports != null && supportedTransports.length > 0) {
+          for (int i=0; i < supportedTransports.length; i++) {
+            if (ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1.equals(supportedTransports[i])) {
+              transportManager=new IceUdpTransportManager(peer);
+              break;
+            }
+ else             if (ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0.equals(supportedTransports[i])) {
+              transportManager=new RawUdpTransportManager(peer);
+              break;
+            }
+          }
+          if (transportManager == null) {
+            logger.warn("Could not find a supported" + " TransportManager in" + " supportedTransports. Will try to"+ " select one based on disco#info.");
+          }
+        }
       }
- else {
+      if (transportManager == null) {
         String[] transports=new String[]{ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1,ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0};
-        CallJabberImpl call=peer.getCall();
-        if (call.getConference().isJitsiVideoBridge()) {
-          transports=new String[]{ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_RAW_UDP_0};
+        if (peer.isJitsiVideobridge()) {
+          CallJabberImpl call=peer.getCall();
+          if (call != null) {
+            String jitsiVideobridge=peer.getCall().getJitsiVideobridge();
+            if ((jitsiVideobridge != null) && !protocolProvider.isFeatureSupported(jitsiVideobridge,ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1)) {
+              for (int i=transports.length - 1; i >= 0; i--) {
+                if (ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1.equals(transports[i])) {
+                  transports[i]=null;
+                }
+              }
+            }
+          }
         }
         for (        String transport : transports) {
+          if (transport == null)           continue;
           if (isFeatureSupported(discoveryManager,peerDiscoverInfo,transport)) {
             if (ProtocolProviderServiceJabberImpl.URN_XMPP_JINGLE_ICE_UDP_1.equals(transport)) {
               transportManager=new IceUdpTransportManager(peer);
@@ -38,7 +63,7 @@ synchronized (transportManagerSyncRoot) {
           }
         }
         if ((transportManager == null) && logger.isDebugEnabled()) {
-          logger.debug("No known Jingle transport supported" + " by Jabber call peer " + peer);
+          logger.debug("No known Jingle transport supported by Jabber" + " call peer " + peer);
         }
       }
     }

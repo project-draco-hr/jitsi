@@ -1,14 +1,16 @@
 {
   ContentPacketExtension ext=content.getContentList().get(0);
+  MediaType mediaType=getMediaType(ext);
   try {
     boolean modify=(ext.getFirstChildOfType(RtpDescriptionPacketExtension.class) != null);
     getMediaHandler().reinitContent(ext.getName(),ext,modify);
-    if (MediaType.VIDEO.toString().equals(ext.getName()))     getCall().modifyVideoContent();
+    setSenders(mediaType,ext.getSenders());
+    if (MediaType.VIDEO.equals(mediaType))     getCall().modifyVideoContent();
   }
  catch (  Exception e) {
     logger.info("Failed to process an incoming content-modify",e);
     String reason="Error: " + e.getMessage();
-    JingleIQ errResp=JinglePacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getSID(),Reason.INCOMPATIBLE_PARAMETERS,reason);
+    JingleIQ errResp=JinglePacketFactory.createSessionTerminate(getProtocolProvider().getOurJID(),peerJID,sessionInitIQ.getSID(),Reason.INCOMPATIBLE_PARAMETERS,reason);
     setState(CallPeerState.FAILED,reason);
     getProtocolProvider().getConnection().sendPacket(errResp);
     return;

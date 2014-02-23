@@ -1,0 +1,50 @@
+{
+  SrtpControls srtpControls=getSrtpControls();
+  DtlsControl dtlsControl=(DtlsControl)srtpControls.get(mediaType,SrtpControlType.DTLS_SRTP);
+  if (dtlsControl == null)   return;
+  boolean dtls=isDtlsMediaDescription(remoteMd);
+  if (dtls) {
+    if (localMd == null) {
+      String setup;
+      try {
+        setup=remoteMd.getAttribute(DTLS_SRTP_SETUP_ATTR);
+      }
+ catch (      SdpParseException spe) {
+        setup=null;
+      }
+      if (DtlsControl.Setup.PASSIVE.toString().equals(setup))       dtlsControl.setSetup(DtlsControl.Setup.ACTIVE);
+    }
+    @SuppressWarnings("unchecked") Vector<Attribute> attrs=remoteMd.getAttributes(false);
+    Map<String,String> remoteFingerprints=new LinkedHashMap<String,String>();
+    if (attrs != null) {
+      for (      Attribute attr : attrs) {
+        String fingerprint;
+        try {
+          if (DTLS_SRTP_FINGERPRINT_ATTR.equals(attr.getName())) {
+            fingerprint=attr.getValue();
+            if (fingerprint == null)             continue;
+ else             fingerprint=fingerprint.trim();
+          }
+ else {
+            continue;
+          }
+        }
+ catch (        SdpParseException spe) {
+          continue;
+        }
+        int spIndex=fingerprint.indexOf(' ');
+        if ((spIndex > 0) && (spIndex < fingerprint.length() - 1)) {
+          String hashFunction=fingerprint.substring(0,spIndex);
+          fingerprint=fingerprint.substring(spIndex + 1);
+          remoteFingerprints.put(hashFunction,fingerprint);
+        }
+      }
+    }
+    dtlsControl.setRemoteFingerprints(remoteFingerprints);
+    removeAndCleanupOtherSrtpControls(mediaType,SrtpControlType.DTLS_SRTP);
+  }
+ else {
+    srtpControls.remove(mediaType,SrtpControlType.DTLS_SRTP);
+    dtlsControl.cleanup();
+  }
+}

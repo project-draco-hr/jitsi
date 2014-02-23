@@ -41,25 +41,31 @@ synchronized (initializationLock) {
       }
     }
     if (enablePresence) {
-      OperationSetPersistentPresence opSetPersPresence=new OperationSetPresenceSipImpl(this,enablePresence,forceP2P,pollingValue,subscriptionExpiration);
+      this.opSetPersPresence=new OperationSetPresenceSipImpl(this,enablePresence,forceP2P,pollingValue,subscriptionExpiration);
       addSupportedOperationSet(OperationSetPersistentPresence.class,opSetPersPresence);
       addSupportedOperationSet(OperationSetPresence.class,opSetPersPresence);
       boolean isMessagingDisabled=SipActivator.getConfigurationService().getBoolean(IS_MESSAGING_DISABLED,false);
       if (!isMessagingDisabled) {
-        OperationSetBasicInstantMessagingSipImpl opSetBasicIM=new OperationSetBasicInstantMessagingSipImpl(this);
+        this.opSetBasicIM=new OperationSetBasicInstantMessagingSipImpl(this);
         addSupportedOperationSet(OperationSetBasicInstantMessaging.class,opSetBasicIM);
-        addSupportedOperationSet(OperationSetTypingNotifications.class,new OperationSetTypingNotificationsSipImpl(this,opSetBasicIM));
+        this.opSetTypingNotif=new OperationSetTypingNotificationsSipImpl(this,opSetBasicIM);
+        addSupportedOperationSet(OperationSetTypingNotifications.class,opSetTypingNotif);
+        addSupportedOperationSet(OperationSetInstantMessageTransform.class,new OperationSetInstantMessageTransformImpl());
       }
-      OperationSetServerStoredAccountInfoSipImpl opSetSSAccountInfo=new OperationSetServerStoredAccountInfoSipImpl(this);
-      if (opSetSSAccountInfo != null)       opSetSSAccountInfo.setOurDisplayName(ourDisplayName);
+      this.opSetSSAccountInfo=new OperationSetServerStoredAccountInfoSipImpl(this);
+      opSetSSAccountInfo.setOurDisplayName(ourDisplayName);
       addSupportedOperationSet(OperationSetServerStoredAccountInfo.class,opSetSSAccountInfo);
       addSupportedOperationSet(OperationSetAvatar.class,new OperationSetAvatarSipImpl(this,opSetSSAccountInfo));
     }
     if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.VOICEMAIL_ENABLED,true)) {
-      addSupportedOperationSet(OperationSetMessageWaiting.class,new OperationSetMessageWaitingSipImpl(this));
+      this.opSetMWI=new OperationSetMessageWaitingSipImpl(this);
+      addSupportedOperationSet(OperationSetMessageWaiting.class,opSetMWI);
     }
-    new ClientCapabilities(this);
-    this.sipSecurityManager=new SipSecurityManager(accountID);
+    if (getAccountID().getAccountPropertyString(ProtocolProviderFactory.CUSAX_PROVIDER_ACCOUNT_PROP) != null) {
+      addSupportedOperationSet(OperationSetCusaxUtils.class,new OperationSetCusaxUtilsSipImpl(this));
+    }
+    this.capabilities=new ClientCapabilities(this);
+    this.sipSecurityManager=new SipSecurityManager(accountID,this);
     sipSecurityManager.setHeaderFactory(headerFactory);
     ProtocolProviderExtensions.registerCustomOperationSets(this);
     isInitialized=true;

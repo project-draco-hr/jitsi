@@ -1,0 +1,52 @@
+{
+  CallPeer peer=getPeer();
+  if (peer.getCall().getConference().isJitsiVideobridge())   return false;
+  AccountID accountID=peer.getProtocolProvider().getAccountID();
+  if (accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) && accountID.isEncryptionProtocolEnabled(SDesControl.PROTO_NAME)) {
+    SrtpControls srtpControls=getSrtpControls();
+    SDesControl sdesControl=(SDesControl)srtpControls.getOrCreate(mediaType,SrtpControlType.SDES);
+    String ciphers=accountID.getAccountPropertyString(ProtocolProviderFactory.SDES_CIPHER_SUITES);
+    if (ciphers == null) {
+      ciphers=JabberActivator.getResources().getSettingsString(SDesControl.SDES_CIPHER_SUITES);
+    }
+    sdesControl.setEnabledCiphers(Arrays.asList(ciphers.split(",")));
+    if (remoteDescription == null) {
+      EncryptionPacketExtension localEncryption=localDescription.getFirstChildOfType(EncryptionPacketExtension.class);
+      if (localEncryption == null) {
+        localEncryption=new EncryptionPacketExtension();
+        localDescription.addChildExtension(localEncryption);
+      }
+      for (      SrtpCryptoAttribute ca : sdesControl.getInitiatorCryptoAttributes()) {
+        CryptoPacketExtension crypto=new CryptoPacketExtension(ca);
+        localEncryption.addChildExtension(crypto);
+      }
+      return true;
+    }
+ else {
+      EncryptionPacketExtension remoteEncryption=remoteDescription.getFirstChildOfType(EncryptionPacketExtension.class);
+      if (remoteEncryption != null) {
+        SrtpCryptoAttribute selectedSdes=selectSdesCryptoSuite(false,sdesControl,remoteEncryption);
+        if (selectedSdes != null) {
+          EncryptionPacketExtension localEncryption=localDescription.getFirstChildOfType(EncryptionPacketExtension.class);
+          if (localEncryption == null) {
+            localEncryption=new EncryptionPacketExtension();
+            localDescription.addChildExtension(localEncryption);
+          }
+          CryptoPacketExtension crypto=new CryptoPacketExtension(selectedSdes);
+          localEncryption.addChildExtension(crypto);
+          return true;
+        }
+ else {
+          sdesControl.cleanup();
+          srtpControls.remove(mediaType,SrtpControlType.SDES);
+          logger.warn("Received unsupported sdes crypto attribute");
+        }
+      }
+ else {
+        sdesControl.cleanup();
+        srtpControls.remove(mediaType,SrtpControlType.SDES);
+      }
+    }
+  }
+  return false;
+}

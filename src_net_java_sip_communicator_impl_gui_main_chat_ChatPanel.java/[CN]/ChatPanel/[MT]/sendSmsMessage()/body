@@ -18,8 +18,22 @@
     this.addErrorMessage(smsChatTransport.getName(),GuiActivator.getResources().getI18NString("service.gui.SEND_SMS_NOT_SUPPORTED"));
     return;
   }
-  smsChatTransport.addSmsMessageListener(new SmsMessageListener(smsChatTransport));
   SendSmsDialog smsDialog=new SendSmsDialog(this,smsChatTransport,messageText);
-  smsDialog.setPreferredSize(new Dimension(400,200));
-  smsDialog.setVisible(true);
+  if (smsChatTransport.askForSMSNumber()) {
+    Object desc=smsChatTransport.getParentChatSession().getDescriptor();
+    if (desc instanceof MetaContact) {
+      UIPhoneUtil contactPhoneUtil=UIPhoneUtil.getPhoneUtil((MetaContact)desc);
+      List<UIContactDetail> uiContactDetailList=contactPhoneUtil.getAdditionalMobileNumbers();
+      if (uiContactDetailList.size() != 0) {
+        SMSManager.sendSMS(this,uiContactDetailList,messageText,this);
+        return;
+      }
+    }
+    smsDialog.setPreferredSize(new Dimension(400,200));
+    smsDialog.setVisible(true);
+  }
+ else {
+    smsDialog.sendSmsMessage(null,messageText);
+    smsDialog.dispose();
+  }
 }

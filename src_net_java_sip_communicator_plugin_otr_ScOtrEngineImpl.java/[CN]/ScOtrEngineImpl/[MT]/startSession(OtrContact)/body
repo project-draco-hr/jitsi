@@ -1,0 +1,17 @@
+{
+  SessionID sessionID=getSessionID(otrContact);
+  ScSessionStatus scSessionStatus=getSessionStatus(otrContact);
+  scSessionStatus=ScSessionStatus.LOADING;
+  scSessionStatusMap.put(sessionID,scSessionStatus);
+  for (  ScOtrEngineListener l : getListeners()) {
+    l.sessionStatusChanged(otrContact);
+  }
+  scheduler.scheduleScSessionStatusChange(otrContact,ScSessionStatus.TIMED_OUT);
+  try {
+    otrEngine.startSession(sessionID);
+  }
+ catch (  OtrException e) {
+    logger.error("Error starting session",e);
+    showError(sessionID,e.getMessage());
+  }
+}

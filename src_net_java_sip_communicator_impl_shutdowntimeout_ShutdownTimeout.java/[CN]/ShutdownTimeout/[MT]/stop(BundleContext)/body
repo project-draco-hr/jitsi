@@ -1,31 +1,11 @@
 {
   Thread shutdownTimeoutThread=new Thread(){
     @Override public void run(){
-synchronized (this) {
-        try {
-          long shutDownTimeout=SHUTDOWN_TIMEOUT_DEFAULT;
-          try {
-            String shutdownCustomValue=System.getProperty(SHUTDOWN_TIMEOUT_PROP);
-            if (shutdownCustomValue != null && shutdownCustomValue.length() > 0) {
-              long custom=Long.valueOf(shutdownCustomValue);
-              if (custom > 0)               shutDownTimeout=custom;
-            }
-          }
- catch (          Throwable t) {
-          }
-          if (logger.isTraceEnabled())           logger.trace("Starting shutdown countdown of " + shutDownTimeout + "ms.");
-          wait(shutDownTimeout);
-          logger.error("Failed to gently shutdown. Forcing exit.");
-          Runtime.getRuntime().halt(SYSTEM_EXIT_CODE);
-        }
- catch (        InterruptedException ex) {
-          if (logger.isDebugEnabled())           logger.debug("Interrupted shutdown timer.");
-        }
-      }
+      runInShutdownTimeoutThread();
     }
   }
 ;
-  if (logger.isTraceEnabled())   logger.trace("Created the shutdown timer thread.");
   shutdownTimeoutThread.setDaemon(true);
+  shutdownTimeoutThread.setName(ShutdownTimeout.class.getName());
   shutdownTimeoutThread.start();
 }

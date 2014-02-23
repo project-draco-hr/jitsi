@@ -1,11 +1,22 @@
 {
+  if (this.chatSession != null) {
+    this.chatSession.removeChatTransportChangeListener(this);
+  }
   this.chatSession=chatSession;
+  this.chatSession.addChatTransportChangeListener(this);
   if ((this.chatSession != null) && this.chatSession.isContactListSupported()) {
-    topPanel.remove(conversationPanel);
-    TransparentPanel rightPanel=new TransparentPanel(new BorderLayout(5,5));
-    Dimension chatContactPanelSize=new Dimension(150,100);
-    rightPanel.setMinimumSize(chatContactPanelSize);
-    rightPanel.setPreferredSize(chatContactPanelSize);
+    topPanel.remove(conversationPanelContainer);
+    TransparentPanel rightPanel=new TransparentPanel(new BorderLayout());
+    Dimension chatConferencesListsPanelSize=new Dimension(150,25);
+    Dimension chatContactsListsPanelSize=new Dimension(150,175);
+    Dimension rightPanelSize=new Dimension(150,200);
+    rightPanel.setMinimumSize(rightPanelSize);
+    rightPanel.setPreferredSize(rightPanelSize);
+    TransparentPanel contactsPanel=new TransparentPanel(new BorderLayout());
+    contactsPanel.setMinimumSize(chatContactsListsPanelSize);
+    contactsPanel.setPreferredSize(chatContactsListsPanelSize);
+    conferencePanel.setMinimumSize(chatConferencesListsPanelSize);
+    conferencePanel.setPreferredSize(chatConferencesListsPanelSize);
     this.chatContactListPanel=new ChatRoomMemberListPanel(this);
     this.chatContactListPanel.setOpaque(false);
     topSplitPane=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -13,12 +24,32 @@
     topSplitPane.setOneTouchExpandable(true);
     topSplitPane.setOpaque(false);
     topSplitPane.setResizeWeight(1.0D);
+    Color msgNameBackground=Color.decode(ChatHtmlUtils.MSG_NAME_BACKGROUND);
+    if (topSplitPane.getUI() instanceof BasicSplitPaneUI) {
+      ((BasicSplitPaneUI)topSplitPane.getUI()).getDivider().setBorder(BorderFactory.createLineBorder(msgNameBackground));
+    }
     ChatTransport chatTransport=chatSession.getCurrentChatTransport();
+    JPanel localUserLabelPanel=new JPanel(new BorderLayout());
     JLabel localUserLabel=new JLabel(chatTransport.getProtocolProvider().getAccountID().getDisplayName());
     localUserLabel.setFont(localUserLabel.getFont().deriveFont(Font.BOLD));
-    rightPanel.add(localUserLabel,BorderLayout.NORTH);
-    rightPanel.add(chatContactListPanel,BorderLayout.CENTER);
-    topSplitPane.setLeftComponent(conversationPanel);
+    localUserLabel.setHorizontalAlignment(SwingConstants.CENTER);
+    localUserLabel.setBorder(BorderFactory.createEmptyBorder(2,0,3,0));
+    localUserLabel.setForeground(Color.decode(ChatHtmlUtils.MSG_IN_NAME_FOREGROUND));
+    localUserLabelPanel.add(localUserLabel,BorderLayout.CENTER);
+    localUserLabelPanel.setBackground(msgNameBackground);
+    JButton joinConference=new JButton(GuiActivator.getResources().getI18NString("service.gui.JOIN_VIDEO"));
+    joinConference.addActionListener(new ActionListener(){
+      @Override public void actionPerformed(      ActionEvent arg0){
+        showChatConferenceDialog();
+      }
+    }
+);
+    contactsPanel.add(localUserLabelPanel,BorderLayout.NORTH);
+    contactsPanel.add(chatContactListPanel,BorderLayout.CENTER);
+    conferencePanel.add(joinConference,BorderLayout.CENTER);
+    rightPanel.add(conferencePanel,BorderLayout.NORTH);
+    rightPanel.add(contactsPanel,BorderLayout.CENTER);
+    topSplitPane.setLeftComponent(conversationPanelContainer);
     topSplitPane.setRightComponent(rightPanel);
     topPanel.add(topSplitPane);
   }
@@ -31,7 +62,7 @@
       this.messagePane.remove(topSplitPane);
       topSplitPane=null;
     }
-    topPanel.add(conversationPanel);
+    topPanel.add(conversationPanelContainer);
   }
   if (chatSession instanceof MetaContactChatSession) {
     if (subjectPanel != null) {
@@ -40,6 +71,7 @@
       this.revalidate();
       this.repaint();
     }
+    writeMessagePanel.initPluginComponents();
     writeMessagePanel.setTransportSelectorBoxVisible(true);
     ActionMap amap=this.getActionMap();
     amap.put("ChangeProtocol",new ChangeTransportAction());
@@ -51,9 +83,13 @@
     writeMessagePanel.setTransportSelectorBoxVisible(false);
     confSession.addLocalUserRoleListener(this);
     confSession.addMemberRoleListener(this);
-    ((ChatRoomWrapper)chatSession.getDescriptor()).getChatRoom().addMemberPropertyChangeListener(this);
+    ChatRoom room=((ChatRoomWrapper)chatSession.getDescriptor()).getChatRoom();
+    room.addMemberPropertyChangeListener(this);
+    setConferencesPanelVisible(room.getCachedConferenceDescriptionSize() > 0);
     subjectPanel=new ChatRoomSubjectPanel((ConferenceChatSession)chatSession);
     this.add(subjectPanel,BorderLayout.NORTH);
+    this.revalidate();
+    this.repaint();
   }
   if (chatContactListPanel != null) {
     Iterator<ChatContact<?>> chatParticipants=chatSession.getParticipants();

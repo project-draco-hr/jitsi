@@ -1,0 +1,18 @@
+{
+  CallPeerJabberImpl peer=getPeer();
+  if (peer.isJitsiVideobridge()) {
+    this.locallyOnHold=locallyOnHold;
+    if (locallyOnHold || !CallPeerState.ON_HOLD_MUTUALLY.equals(peer.getState())) {
+      for (      MediaType mediaType : MediaType.values()) {
+        ColibriConferenceIQ.Channel channel=getColibriChannel(mediaType);
+        if (channel != null) {
+          MediaDirection direction=locallyOnHold ? MediaDirection.INACTIVE : MediaDirection.SENDRECV;
+          peer.getCall().setChannelDirection(channel.getID(),mediaType,direction);
+        }
+      }
+    }
+  }
+ else {
+    super.setLocallyOnHold(locallyOnHold);
+  }
+}

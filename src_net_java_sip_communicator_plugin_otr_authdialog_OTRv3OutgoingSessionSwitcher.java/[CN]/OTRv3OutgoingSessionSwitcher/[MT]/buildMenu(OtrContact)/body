@@ -1,0 +1,44 @@
+{
+  if (otrContact == null || !this.contact.equals(otrContact)) {
+    return;
+  }
+  menu.removeAll();
+  java.util.List<Session> multipleInstances=OtrActivator.scOtrEngine.getSessionInstances(otrContact);
+  Session outgoingSession=OtrActivator.scOtrEngine.getOutgoingSession(otrContact);
+  int index=0;
+  for (  Session session : multipleInstances) {
+    index++;
+    if (!outgoingSessions.containsKey(session)) {
+      JMenuItem menuItem=new JRadioButtonMenuItem();
+      outgoingSessions.put(session,menuItem);
+      menuItem.addActionListener(this);
+    }
+    JMenuItem menuItem=outgoingSessions.get(session);
+    menuItem.setText("Session " + index);
+    ImageIcon imageIcon=null;
+switch (session.getSessionStatus(session.getReceiverInstanceTag())) {
+case ENCRYPTED:
+      PublicKey pubKey=session.getRemotePublicKey(session.getReceiverInstanceTag());
+    String fingerprint=OtrActivator.scOtrKeyManager.getFingerprintFromPublicKey(pubKey);
+  imageIcon=OtrActivator.scOtrKeyManager.isVerified(otrContact.contact,fingerprint) ? verifiedLockedPadlockImage : unverifiedLockedPadlockImage;
+break;
+case FINISHED:
+imageIcon=finishedPadlockImage;
+break;
+case PLAINTEXT:
+imageIcon=unlockedPadlockImage;
+break;
+}
+menuItem.setIcon(imageIcon);
+menu.add(menuItem);
+SelectedObject selectedObject=new SelectedObject(imageIcon,session);
+buttonGroup.add(menuItem);
+menuItem.repaint();
+if (session == outgoingSession) {
+this.menu.setSelected(selectedObject);
+setSelected(menu.getItem(index - 1));
+}
+}
+updateEnableStatus();
+menu.repaint();
+}

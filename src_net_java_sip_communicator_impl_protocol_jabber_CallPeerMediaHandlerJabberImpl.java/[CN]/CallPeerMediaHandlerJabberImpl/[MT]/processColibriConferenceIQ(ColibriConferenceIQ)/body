@@ -1,24 +1,18 @@
 {
   TransportManagerJabberImpl transportManager=this.transportManager;
-  if (transportManager instanceof RawUdpTransportManager) {
-    RawUdpTransportManager rawUdpTransportManager=(RawUdpTransportManager)transportManager;
+  if (transportManager != null) {
     long oldAudioRemoteSSRC=getRemoteSSRC(MediaType.AUDIO);
     long oldVideoRemoteSSRC=getRemoteSSRC(MediaType.VIDEO);
     for (    MediaType mediaType : MediaType.values()) {
-      ColibriConferenceIQ.Channel dst=rawUdpTransportManager.getColibriChannel(mediaType,false);
+      ColibriConferenceIQ.Channel dst=transportManager.getColibriChannel(mediaType,false);
       if (dst != null) {
         ColibriConferenceIQ.Content content=conferenceIQ.getContent(mediaType.toString());
         if (content != null) {
           ColibriConferenceIQ.Channel src=content.getChannel(dst.getID());
           if (src != null) {
-            long[] ssrcs=src.getSSRCs();
-            long[] dstSsrcs=dst.getSSRCs();
-            if (!Arrays.equals(dstSsrcs,ssrcs)) {
-              dst.setSSRCs(ssrcs);
-              if (logger.isDebugEnabled()) {
-                logger.debug("SSRCs changed for colibri " + mediaType.toString() + " channel "+ dst.getID()+ " from: "+ Arrays.toString(dstSsrcs)+ " to: "+ Arrays.toString(ssrcs));
-              }
-            }
+            int[] ssrcs=src.getSSRCs();
+            int[] dstSSRCs=dst.getSSRCs();
+            if (!Arrays.equals(dstSSRCs,ssrcs))             dst.setSSRCs(ssrcs);
           }
         }
       }

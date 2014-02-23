@@ -1,24 +1,24 @@
 {
   ServiceReference serviceRef=event.getServiceReference();
-  if (serviceRef.getBundle().getState() == Bundle.STOPPING) {
-    return;
-  }
+  if (serviceRef.getBundle().getState() == Bundle.STOPPING)   return;
   Object service=GuiActivator.bundleContext.getService(serviceRef);
-  if (!(service instanceof CustomContactActionsService)) {
-    return;
-  }
-  CustomContactActionsService cContactActionsService=(CustomContactActionsService)service;
+  if (!(service instanceof CustomContactActionsService))   return;
+  @SuppressWarnings("rawtypes") CustomContactActionsService cContactActionsService=(CustomContactActionsService)service;
   if (!cContactActionsService.getContactSourceClass().equals(contactSourceClass))   return;
-  @SuppressWarnings("unchecked") Iterator<ContactAction<SourceContact>> actionIterator=cContactActionsService.getCustomContactActions();
+  @SuppressWarnings("unchecked") Iterator<ContactAction<T>> actionIterator=cContactActionsService.getCustomContactActions();
   while (actionIterator != null && actionIterator.hasNext()) {
-    final ContactAction<SourceContact> ca=actionIterator.next();
+    final ContactAction<T> ca=actionIterator.next();
 switch (event.getType()) {
 case ServiceEvent.REGISTERED:
       initActionButton(ca,contactSourceClass);
     break;
 case ServiceEvent.UNREGISTERING:
-  if (contactSourceClass.equals(SourceContact.class))   customContactActionButtons.remove(ca);
- else   if (contactSourceClass.equals(ContactSourceService.class))   customServiceActionButtons.remove(ca);
+  if (contactSourceClass.equals(SourceContact.class)) {
+    customContactActionButtons.remove(ca);
+  }
+ else   if (contactSourceClass.equals(ContactSourceService.class)) {
+    customServiceActionButtons.remove(ca);
+  }
 break;
 }
 }

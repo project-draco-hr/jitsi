@@ -2,13 +2,17 @@
   if (logger.isDebugEnabled())   logger.debug("Update checker [STARTED]");
   ConfigurationService cfg=getConfiguration();
   if (OSUtils.IS_WINDOWS) {
-    updateService=new Update();
+    updateService=new UpdateServiceImpl();
     bundleContext.registerService(UpdateService.class.getName(),updateService,null);
     if (!cfg.getBoolean(CHECK_FOR_UPDATES_MENU_DISABLED_PROP,false)) {
-      CheckForUpdatesMenuItemComponent checkForUpdatesMenuItemComponent=new CheckForUpdatesMenuItemComponent(Container.CONTAINER_HELP_MENU);
       Hashtable<String,String> toolsMenuFilter=new Hashtable<String,String>();
       toolsMenuFilter.put(Container.CONTAINER_ID,Container.CONTAINER_HELP_MENU.getID());
-      bundleContext.registerService(PluginComponent.class.getName(),checkForUpdatesMenuItemComponent,toolsMenuFilter);
+      bundleContext.registerService(PluginComponentFactory.class.getName(),new PluginComponentFactory(Container.CONTAINER_HELP_MENU){
+        @Override protected PluginComponent getPluginInstance(){
+          return new CheckForUpdatesMenuItemComponent(getContainer(),this);
+        }
+      }
+,toolsMenuFilter);
     }
     if (cfg.getBoolean(UPDATE_ENABLED,true))     updateService.checkForUpdates(false);
   }

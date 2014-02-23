@@ -1,0 +1,27 @@
+{
+  if (inCheckForUpdates > 0) {
+    if (checkForUpdatesDialog != null)     checkForUpdatesDialog.toFront();
+    return;
+  }
+  Thread checkForUpdatesThread=new Thread(){
+    @Override public void run(){
+      try {
+        runInCheckForUpdatesThread(notifyAboutNewestVersion);
+      }
+  finally {
+        exitCheckForUpdates(null);
+      }
+    }
+  }
+;
+  checkForUpdatesThread.setDaemon(true);
+  checkForUpdatesThread.setName(getClass().getName() + ".checkForUpdates");
+  enterCheckForUpdates(null);
+  try {
+    checkForUpdatesThread.start();
+    checkForUpdatesThread=null;
+  }
+  finally {
+    if (checkForUpdatesThread != null)     exitCheckForUpdates(null);
+  }
+}

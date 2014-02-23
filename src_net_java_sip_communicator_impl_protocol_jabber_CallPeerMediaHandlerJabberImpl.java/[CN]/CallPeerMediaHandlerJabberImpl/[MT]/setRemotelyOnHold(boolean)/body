@@ -1,17 +1,27 @@
 {
   this.remotelyOnHold=onHold;
-  MediaStream audioStream=getStream(MediaType.AUDIO);
-  MediaStream videoStream=getStream(MediaType.VIDEO);
-  if (remotelyOnHold) {
-    if (audioStream != null) {
-      audioStream.setDirection(audioStream.getDirection().and(MediaDirection.RECVONLY));
-    }
-    if (videoStream != null) {
-      videoStream.setDirection(videoStream.getDirection().and(MediaDirection.RECVONLY));
-    }
-  }
+  for (  MediaType mediaType : MediaType.values()) {
+    MediaStream stream=getStream(mediaType);
+    if (stream == null)     continue;
+    if (getPeer().isJitsiVideobridge()) {
+      ColibriConferenceIQ.Channel channel=getColibriChannel(mediaType);
+      MediaDirection direction;
+      if (remotelyOnHold) {
+        direction=MediaDirection.INACTIVE;
+      }
  else {
-    if (audioStream != null)     calculatePostHoldDirection(audioStream);
-    if (videoStream != null)     calculatePostHoldDirection(videoStream);
+        direction=MediaDirection.SENDRECV;
+      }
+      getPeer().getCall().setChannelDirection(channel.getID(),mediaType,direction);
+    }
+ else {
+      if (remotelyOnHold) {
+        MediaDirection newDirection=getPeer().getCall().isConferenceFocus() ? MediaDirection.INACTIVE : stream.getDirection().and(MediaDirection.RECVONLY);
+        stream.setDirection(newDirection);
+      }
+ else {
+        stream.setDirection(calculatePostHoldDirection(stream));
+      }
+    }
   }
 }

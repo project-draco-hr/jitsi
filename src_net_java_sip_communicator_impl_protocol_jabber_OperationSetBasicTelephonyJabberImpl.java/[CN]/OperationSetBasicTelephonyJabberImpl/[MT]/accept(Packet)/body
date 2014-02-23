@@ -1,10 +1,7 @@
 {
-  if (!(packet instanceof JingleIQ) && !(packet instanceof SessionIQ)) {
+  if (!(packet instanceof JingleIQ)) {
     String packetID=packet.getPacketID();
     AbstractCallPeer<?,?> callPeer=activeCallsRepository.findCallPeerBySessInitPacketID(packetID);
-    if (callPeer == null) {
-      callPeer=activeGTalkCallsRepository.findCallPeerBySessInitPacketID(packetID);
-    }
     if (callPeer != null) {
       XMPPError error=packet.getError();
       if (error != null) {
@@ -32,16 +29,6 @@
     }
     String sid=jingleIQ.getSID();
     return (activeCallsRepository.findSID(sid) != null);
-  }
- else   if (packet instanceof SessionIQ) {
-    SessionIQ sessionIQ=(SessionIQ)packet;
-    if (sessionIQ.getGTalkType() == GTalkType.INITIATE) {
-      return true;
-    }
- else {
-      String sid=sessionIQ.getID();
-      return (activeGTalkCallsRepository.findSID(sid) != null);
-    }
   }
   return false;
 }

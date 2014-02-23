@@ -7,9 +7,7 @@
     if (imageSearchCanceled)     return;
     ContactSourceService contactSource=contactSources.next().getContactSourceService();
     if (contactSource instanceof ExtendedContactSourceService) {
-      ContactQuery query=((ExtendedContactSourceService)contactSource).queryContactSource(filterPattern);
-      loadedQueries.add(query);
-      query.addContactQueryListener(new ContactQueryListener(){
+      ContactQueryListener queryListener=new ContactQueryListener(){
         public void queryStatusChanged(        ContactQueryStatusEvent event){
         }
         public void contactReceived(        ContactReceivedEvent event){
@@ -28,16 +26,39 @@
  * about the received <tt>SourceContact</tt>
  */
         public void contactRemoved(        ContactRemovedEvent event){
+          final SourceContact sourceContact=event.getContact();
+          ContactSourceService contactSource=sourceContact.getContactSource();
+          UIContactSource sourceUI=getContactSource(contactSource);
+          if (sourceUI == null)           return;
+          UIContact uiContact=sourceUI.getUIContact(sourceContact);
+          if (uiContact == null)           return;
+          if ((contactSource instanceof ExtendedContactSourceService) || currentFilter.isMatching(uiContact)) {
+            removeContact(uiContact,false);
+          }
         }
         /** 
  * Indicates that a contact has been updated after a search.
- * @param event the <tt>ContactQueryEvent</tt> containing information
+ * @param event the <tt>ContactQueryEvent</tt> containing
+ * information
  * about the updated <tt>SourceContact</tt>
  */
         public void contactChanged(        ContactChangedEvent event){
+          final SourceContact sourceContact=event.getContact();
+          ContactSourceService contactSource=sourceContact.getContactSource();
+          UIContactSource sourceUI=getContactSource(contactSource);
+          if (sourceUI == null)           return;
+          UIContact uiContact=sourceUI.getUIContact(sourceContact);
+          if (uiContact == null || !(uiContact instanceof UIContactImpl))           return;
+synchronized (uiContact) {
+            ContactNode contactNode=((UIContactImpl)uiContact).getContactNode();
+            if (contactNode != null)             nodeChanged(contactNode);
+          }
         }
       }
-);
+;
+      ContactQuery query=((ExtendedContactSourceService)contactSource).createContactQuery(filterPattern);
+      loadedQueries.add(query);
+      query.start();
       if (imageSearchCanceled)       return;
       List<SourceContact> results=query.getQueryResults();
       if (results != null && !results.isEmpty()) {

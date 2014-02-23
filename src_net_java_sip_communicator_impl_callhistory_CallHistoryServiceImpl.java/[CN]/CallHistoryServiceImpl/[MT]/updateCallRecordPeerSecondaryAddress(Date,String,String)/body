@@ -1,0 +1,84 @@
+{
+  boolean callRecordFound=false;
+synchronized (currentCallRecords) {
+    for (    CallRecord record : currentCallRecords)     for (    CallPeerRecord peerRecord : record.getPeerRecords()) {
+      if (peerRecord.getPeerAddress().equals(peerAddress) && peerRecord.getStartTime().equals(date)) {
+        callRecordFound=true;
+        peerRecord.setPeerSecondaryAddress(address);
+      }
+    }
+  }
+  if (callRecordFound)   return;
+  History history;
+  try {
+    history=this.getHistory(null,null);
+  }
+ catch (  IOException e) {
+    logger.warn("Failed to get the history object.");
+    return;
+  }
+  HistoryWriter historyWriter=history.getWriter();
+  HistoryWriter.HistoryRecordUpdater updater=new HistoryWriter.HistoryRecordUpdater(){
+    private HistoryRecord record;
+    private int dateIndex;
+    private int peerIDIndex;
+    private int peerSecondaryIDIndex;
+    @Override public void setHistoryRecord(    HistoryRecord historyRecord){
+      record=historyRecord;
+      String propertyNames[]=record.getPropertyNames();
+      for (int i=0; i < propertyNames.length; i++) {
+        if (propertyNames[i].equals(STRUCTURE_NAMES[5])) {
+          dateIndex=i;
+        }
+        if (propertyNames[i].equals(STRUCTURE_NAMES[4])) {
+          peerIDIndex=i;
+        }
+        if (propertyNames[i].equals(STRUCTURE_NAMES[10])) {
+          peerSecondaryIDIndex=i;
+        }
+      }
+    }
+    @Override public boolean isMatching(){
+      String[] propertyVlaues=record.getPropertyValues();
+      List<String> peerIDs=getCSVs(propertyVlaues[peerIDIndex]);
+      int i=peerIDs.indexOf(peerAddress);
+      if (i == -1)       return false;
+      String dateString=getCSVs(propertyVlaues[dateIndex]).get(i);
+      SimpleDateFormat sdf=new SimpleDateFormat(HistoryService.DATE_FORMAT);
+      try {
+        if (!sdf.parse(dateString).equals(date))         return false;
+      }
+ catch (      ParseException e) {
+        logger.warn("Failed to parse the date.");
+        return false;
+      }
+      String secondaryID=getCSVs(propertyVlaues[peerSecondaryIDIndex]).get(i);
+      if (secondaryID != null)       return false;
+      return true;
+    }
+    @Override public Map<String,String> getUpdateChanges(){
+      String[] propertyVlaues=record.getPropertyValues();
+      List<String> peerIDs=getCSVs(propertyVlaues[peerIDIndex]);
+      int i=peerIDs.indexOf(peerAddress);
+      if (i == -1)       return null;
+      List<String> secondaryID=getCSVs(record.getPropertyValues()[peerSecondaryIDIndex]);
+      secondaryID.set(i,peerAddress);
+      String res="";
+      int j=0;
+      for (      String id : secondaryID) {
+        if (j++ != 0)         res+=DELIM;
+        res+=id;
+      }
+      Map<String,String> changesMap=new HashMap<String,String>();
+      changesMap.put(STRUCTURE_NAMES[10],res);
+      return changesMap;
+    }
+  }
+;
+  try {
+    historyWriter.updateRecord(updater);
+  }
+ catch (  IOException e) {
+    logger.warn("Failed to update the record.");
+  }
+}

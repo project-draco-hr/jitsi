@@ -1,0 +1,38 @@
+{
+  ChatRoom sourceChatRoom=evt.getChatRoom();
+  String eventType=evt.getEventType();
+  boolean existingContact=false;
+  ChatRoomSourceContact foundContact=null;
+synchronized (contactResults) {
+    for (    ChatRoomSourceContact contact : contactResults) {
+      if (contact.getContactAddress().equals(sourceChatRoom.getName())) {
+        existingContact=true;
+        foundContact=contact;
+        contactResults.remove(contact);
+        break;
+      }
+    }
+  }
+  if (LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED.equals(eventType)) {
+    if (existingContact) {
+      foundContact.setPresenceStatus(ChatRoomPresenceStatus.CHAT_ROOM_ONLINE);
+synchronized (contactResults) {
+        contactResults.add(foundContact);
+      }
+      fireContactChanged(foundContact);
+    }
+ else {
+      ChatRoomWrapper chatRoom=MUCActivator.getMUCService().findChatRoomWrapperFromChatRoom(sourceChatRoom);
+      if (chatRoom != null)       addChatRoom(sourceChatRoom,false,chatRoom.isAutojoin());
+    }
+  }
+ else   if ((LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT.equals(eventType) || LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_KICKED.equals(eventType) || LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_DROPPED.equals(eventType))) {
+    if (existingContact) {
+      foundContact.setPresenceStatus(ChatRoomPresenceStatus.CHAT_ROOM_OFFLINE);
+synchronized (contactResults) {
+        contactResults.add(foundContact);
+      }
+      fireContactChanged(foundContact);
+    }
+  }
+}

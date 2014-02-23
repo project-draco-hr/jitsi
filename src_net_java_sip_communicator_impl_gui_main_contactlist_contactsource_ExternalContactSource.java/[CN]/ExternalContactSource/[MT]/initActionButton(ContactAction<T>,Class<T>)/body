@@ -1,0 +1,46 @@
+{
+  SIPCommButton actionButton;
+  if (contactSourceClass.equals(SourceContact.class))   actionButton=customContactActionButtons.get(ca);
+ else   if (contactSourceClass.equals(ContactSourceService.class))   actionButton=customServiceActionButtons.get(ca);
+ else   return;
+  if (actionButton == null) {
+    actionButton=new SIPCommButton();
+    actionButton.setToolTipText(ca.getToolTipText());
+    actionButton.setIconImage(new ImageIcon(ca.getIcon()).getImage());
+    actionButton.setRolloverIcon(new ImageIcon(ca.getRolloverIcon()).getImage());
+    actionButton.setPressedIcon(new ImageIcon(ca.getPressedIcon()).getImage());
+    actionButton.addActionListener(new ActionListener(){
+      public void actionPerformed(      ActionEvent event){
+        try {
+          JButton button=(JButton)event.getSource();
+          Point location=new Point(button.getX(),button.getY() + button.getHeight());
+          SwingUtilities.convertPointToScreen(location,contactListTree);
+          TreePath selectionPath=contactListTree.getSelectionPath();
+          if (selectionPath != null) {
+            location.y+=contactListTree.getPathBounds(selectionPath).y;
+          }
+          if (contactSourceClass.equals(SourceContact.class)) {
+            @SuppressWarnings("unchecked") T t=(T)customActionContact;
+            ca.actionPerformed(t,location.x,location.y);
+          }
+ else           if (contactSourceClass.equals(ContactSourceService.class)) {
+            @SuppressWarnings("unchecked") T t=(T)contactSource;
+            ca.actionPerformed(t,location.x,location.y);
+          }
+        }
+ catch (        OperationFailedException e) {
+          new ErrorDialog(null,GuiActivator.getResources().getI18NString("service.gui.ERROR"),e.getMessage());
+        }
+      }
+    }
+);
+    if (contactSourceClass.equals(SourceContact.class)) {
+      @SuppressWarnings("unchecked") ContactAction<SourceContact> casc=(ContactAction<SourceContact>)ca;
+      customContactActionButtons.put(casc,actionButton);
+    }
+ else     if (contactSourceClass.equals(ContactSourceService.class)) {
+      @SuppressWarnings("unchecked") ContactAction<ContactSourceService> cacss=(ContactAction<ContactSourceService>)ca;
+      customServiceActionButtons.put(cacss,actionButton);
+    }
+  }
+}

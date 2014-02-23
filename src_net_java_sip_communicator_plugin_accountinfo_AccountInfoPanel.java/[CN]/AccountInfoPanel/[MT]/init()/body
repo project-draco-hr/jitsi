@@ -1,0 +1,15 @@
+{
+  for (  ProtocolProviderFactory providerFactory : AccountInfoActivator.getProtocolProviderFactories().values()) {
+    ArrayList<AccountID> accountsList=providerFactory.getRegisteredAccounts();
+    ServiceReference serRef;
+    ProtocolProviderService protocolProvider;
+    for (    AccountID accountID : accountsList) {
+      serRef=providerFactory.getProviderForAccount(accountID);
+      protocolProvider=(ProtocolProviderService)AccountInfoActivator.bundleContext.getService(serRef);
+      currentDetailsPanel=new AccountDetailsPanel(protocolProvider);
+      accountsTable.put(protocolProvider.getAccountID(),currentDetailsPanel);
+      accountsComboBox.addItem(currentDetailsPanel);
+      protocolProvider.addRegistrationStateChangeListener(new RegistrationStateChangeListenerImpl());
+    }
+  }
+}

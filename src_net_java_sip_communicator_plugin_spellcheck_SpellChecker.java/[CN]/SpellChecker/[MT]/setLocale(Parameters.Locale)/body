@@ -1,18 +1,52 @@
 {
 synchronized (this.locale) {
-    String path=locale.getDictUrl().getFile();
-    int filenameStart=path.lastIndexOf('/') + 1;
-    String filename=path.substring(filenameStart);
-    File dictLocation=SpellCheckActivator.getFileAccessService().getPrivatePersistentFile(DICT_DIR + filename);
-    if (!dictLocation.exists())     copyDictionary(locale.getDictUrl().openStream(),dictLocation);
+    if (this.locale.equals(locale) && this.dict != null)     return;
+    File dictLocation=getLocalDictForLocale(locale);
+    InputStream dictInput=null;
+    InputStream affInput=null;
+    if (OSUtils.IS_LINUX && !dictLocation.exists()) {
+      String sysDir=SpellCheckActivator.getConfigService().getString(SYSTEM_HUNSPELL_DIR);
+      File systemDict=new File(sysDir,locale.getIcuLocale() + ".dic");
+      if (systemDict.exists()) {
+        dictInput=new FileInputStream(systemDict);
+        affInput=new FileInputStream(new File(sysDir,locale.getIcuLocale() + ".aff"));
+      }
+    }
+    if (!dictLocation.exists() && dictInput == null) {
+      boolean dictFound=false;
+      @SuppressWarnings("unchecked") Enumeration<URL> dictUrls=SpellCheckActivator.bundleContext.getBundle().findEntries(DEFAULT_DICT_PATH,"*.zip",false);
+      if (dictUrls != null) {
+        while (dictUrls.hasMoreElements()) {
+          URL dictUrl=dictUrls.nextElement();
+          if (new File(dictUrl.getFile()).getName().equals(new File(locale.getDictUrl().getFile()).getName())) {
+            dictInput=dictUrl.openStream();
+            dictFound=true;
+            break;
+          }
+        }
+      }
+      if (!dictFound) {
+        copyDictionary(locale.getDictUrl().openStream(),dictLocation);
+      }
+    }
+    if (dictInput == null) {
+      dictInput=new FileInputStream(dictLocation);
+    }
 synchronized (this.attachedChats) {
-      InputStream dictInput=new FileInputStream(dictLocation);
-      SpellDictionary dict=new OpenOfficeSpellDictionary(dictInput,this.personalDictLocation);
+      SpellDictionary dict;
+      if (affInput == null) {
+        dict=new OpenOfficeSpellDictionary(dictInput,this.personalDictLocation);
+      }
+ else {
+        dict=new OpenOfficeSpellDictionary(affInput,dictInput,personalDictLocation,true);
+      }
       this.dict=dict;
       this.dictLocation=dictLocation;
+      Parameters.Locale oldLocale=this.locale;
       this.locale=locale;
       SpellCheckActivator.getConfigService().setProperty(LOCALE_CONFIG_PARAM,locale.getIsoCode());
       for (      ChatAttachments chat : this.attachedChats)       chat.setDictionary(this.dict);
+      firePropertyChangedEvent(LOCALE_CHANGED_PROP,oldLocale,this.locale);
     }
   }
 }

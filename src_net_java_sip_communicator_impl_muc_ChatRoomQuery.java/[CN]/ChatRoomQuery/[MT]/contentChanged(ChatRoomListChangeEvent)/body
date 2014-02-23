@@ -1,0 +1,36 @@
+{
+  ChatRoomWrapper chatRoom=evt.getSourceChatRoom();
+switch (evt.getEventID()) {
+case ChatRoomListChangeEvent.CHAT_ROOM_ADDED:
+    addChatRoom(chatRoom.getChatRoom(),false,chatRoom.isAutojoin());
+  break;
+case ChatRoomListChangeEvent.CHAT_ROOM_REMOVED:
+LinkedList<ChatRoomSourceContact> tmpContactResults;
+synchronized (contactResults) {
+tmpContactResults=new LinkedList<ChatRoomSourceContact>(contactResults);
+for (ChatRoomSourceContact contact : tmpContactResults) {
+  if (contact.getContactAddress().equals(chatRoom.getChatRoomName())) {
+    contactResults.remove(contact);
+    fireContactRemoved(contact);
+    break;
+  }
+}
+}
+break;
+case ChatRoomListChangeEvent.CHAT_ROOM_CHANGED:
+synchronized (contactResults) {
+for (ChatRoomSourceContact contact : contactResults) {
+if (contact.getContactAddress().equals(chatRoom.getChatRoomName())) {
+if (chatRoom.isAutojoin() != contact.isAutoJoin()) {
+  contact.setAutoJoin(chatRoom.isAutojoin());
+  fireContactChanged(contact);
+}
+break;
+}
+}
+}
+break;
+default :
+break;
+}
+}

@@ -12,7 +12,7 @@
   final MetaContactGroup oldParent=evt.getOldParent();
   final MetaContactGroup newParent=evt.getNewParent();
 synchronized (metaContact) {
-    UIContact uiContact=MetaContactListSource.getUIContact(metaContact);
+    UIContactImpl uiContact=MetaContactListSource.getUIContact(metaContact);
     if (uiContact == null)     return;
     UIGroup oldUIGroup;
     if (MetaContactListSource.isRootGroup(oldParent))     oldUIGroup=GuiActivator.getContactList().getTreeModel().getRoot().getGroupDescriptor();
@@ -29,7 +29,9 @@ synchronized (newParent) {
       }
     }
     ContactListFilter currentFilter=GuiActivator.getContactList().getCurrentFilter();
-    if (currentFilter.isMatching(uiContact))     GuiActivator.getContactList().addContact(uiContact,newUIGroup,true,true);
- else     MetaContactListSource.removeUIContact(metaContact);
+synchronized (uiContact) {
+      if (currentFilter.isMatching(uiContact) && uiContact.getContactNode() == null)       GuiActivator.getContactList().addContact(uiContact,newUIGroup,true,true);
+ else       MetaContactListSource.removeUIContact(metaContact);
+    }
   }
 }

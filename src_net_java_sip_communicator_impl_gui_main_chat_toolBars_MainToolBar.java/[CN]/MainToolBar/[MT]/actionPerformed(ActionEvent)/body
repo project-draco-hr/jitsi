@@ -16,28 +16,14 @@
       chatContainer.getCurrentChat().sendFile(selectedFile);
     }
   }
- else   if (buttonText.equals("history")) {
-    HistoryWindow history;
-    HistoryWindowManager historyWindowManager=GuiActivator.getUIService().getHistoryWindowManager();
-    ChatSession chatSession=chatPanel.getChatSession();
-    if (historyWindowManager.containsHistoryWindowForContact(chatSession.getDescriptor())) {
-      history=historyWindowManager.getHistoryWindowForContact(chatSession.getDescriptor());
-      if (history.getState() == JFrame.ICONIFIED)       history.setState(JFrame.NORMAL);
-      history.toFront();
-    }
- else {
-      history=new HistoryWindow(chatPanel.getChatSession().getDescriptor());
-      history.setVisible(true);
-      historyWindowManager.addHistoryWindowForContact(chatSession.getDescriptor(),history);
-    }
-  }
  else   if (buttonText.equals("invite")) {
     ChatInviteDialog inviteDialog=new ChatInviteDialog(chatPanel);
     inviteDialog.setVisible(true);
   }
  else   if (buttonText.equals("leave")) {
-    ConferenceChatManager conferenceManager=GuiActivator.getUIService().getConferenceChatManager();
-    conferenceManager.leaveChatRoom((ChatRoomWrapper)chatPanel.getChatSession().getDescriptor());
+    ChatRoomWrapper chatRoomWrapper=(ChatRoomWrapper)chatPanel.getChatSession().getDescriptor();
+    ChatRoomWrapper leavedRoomWrapped=GuiActivator.getMUCService().leaveChatRoom(chatRoomWrapper);
+    if (leavedRoomWrapped != null)     GuiActivator.getUIService().closeChatRoomWindow(leavedRoomWrapped);
   }
  else   if (buttonText.equals("call")) {
     call(false,false);
@@ -52,4 +38,7 @@
     GuiActivator.getUIService().getConfigurationContainer().setVisible(true);
   }
  else   if (buttonText.equals("font"))   chatPanel.showFontChooserDialog();
+ else   if (buttonText.equals("createConference")) {
+    chatPanel.showChatConferenceDialog();
+  }
 }

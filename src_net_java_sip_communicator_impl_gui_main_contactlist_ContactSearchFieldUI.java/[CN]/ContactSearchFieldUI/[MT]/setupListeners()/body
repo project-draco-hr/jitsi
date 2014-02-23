@@ -1,0 +1,18 @@
+{
+  providerRegListener=new ProtocolProviderRegListener();
+  try {
+    GuiActivator.bundleContext.addServiceListener(providerRegListener,"(objectclass=" + ProtocolProviderService.class.getName() + ")");
+  }
+ catch (  InvalidSyntaxException e) {
+    logger.error(e);
+    return;
+  }
+  for (  ProtocolProviderFactory providerFactory : GuiActivator.getProtocolProviderFactories().values()) {
+    for (    AccountID accountID : providerFactory.getRegisteredAccounts()) {
+      ProtocolProviderService pps=(ProtocolProviderService)GuiActivator.bundleContext.getService(providerFactory.getProviderForAccount(accountID));
+      providers.add(pps);
+      pps.addRegistrationStateChangeListener(providerRegistrationStateListener);
+    }
+  }
+  setCallButtonEnabled(isCallButtonEnabled);
+}

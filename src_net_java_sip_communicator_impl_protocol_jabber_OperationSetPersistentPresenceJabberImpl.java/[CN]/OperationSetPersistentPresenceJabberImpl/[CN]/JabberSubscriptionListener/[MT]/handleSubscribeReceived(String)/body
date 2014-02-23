@@ -1,0 +1,36 @@
+{
+  new Thread(new Runnable(){
+    public void run(){
+      if (logger.isTraceEnabled()) {
+        logger.trace(fromID + " wants to add you to its contact list");
+      }
+      ContactJabberImpl srcContact=ssContactList.findContactById(fromID);
+      Presence.Type responsePresenceType=null;
+      if (srcContact == null) {
+        srcContact=createVolatileContact(fromID);
+      }
+ else {
+        if (srcContact.isPersistent())         responsePresenceType=Presence.Type.subscribed;
+      }
+      if (responsePresenceType == null) {
+        AuthorizationRequest req=new AuthorizationRequest();
+        AuthorizationResponse response=handler.processAuthorisationRequest(req,srcContact);
+        if (response != null) {
+          if (response.getResponseCode().equals(AuthorizationResponse.ACCEPT)) {
+            responsePresenceType=Presence.Type.subscribed;
+            if (logger.isInfoEnabled())             logger.info("Sending Accepted Subscription");
+          }
+ else           if (response.getResponseCode().equals(AuthorizationResponse.REJECT)) {
+            responsePresenceType=Presence.Type.unsubscribed;
+            if (logger.isInfoEnabled())             logger.info("Sending Rejected Subscription");
+          }
+        }
+      }
+      if (responsePresenceType == null)       return;
+      Presence responsePacket=new Presence(responsePresenceType);
+      responsePacket.setTo(fromID);
+      parentProvider.getConnection().sendPacket(responsePacket);
+    }
+  }
+).start();
+}

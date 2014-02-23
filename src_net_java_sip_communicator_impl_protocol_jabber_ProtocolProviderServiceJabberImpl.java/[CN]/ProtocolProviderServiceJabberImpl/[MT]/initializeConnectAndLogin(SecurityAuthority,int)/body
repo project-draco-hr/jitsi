@@ -1,0 +1,65 @@
+{
+synchronized (initializationLock) {
+    if (isRegistered())     return;
+    JabberLoginStrategy loginStrategy=createLoginStrategy();
+    userCredentials=loginStrategy.prepareLogin(authority,reasonCode);
+    if (!loginStrategy.loginPreparationSuccessful())     return;
+    String serviceName=StringUtils.parseServer(getAccountID().getUserID());
+    loadResource();
+    loadProxy();
+    Roster.setDefaultSubscriptionMode(Roster.SubscriptionMode.manual);
+    ConnectState state;
+    boolean[] hadDnsSecException=new boolean[]{false};
+    boolean isServerOverriden=getAccountID().getAccountPropertyBoolean(ProtocolProviderFactory.IS_SERVER_OVERRIDDEN,false);
+    if (!isServerOverriden) {
+      state=connectUsingSRVRecords(serviceName,serviceName,hadDnsSecException,loginStrategy);
+      if (hadDnsSecException[0]) {
+        setDnssecLoginFailure();
+        return;
+      }
+      if (state == ConnectState.ABORT_CONNECTING || state == ConnectState.STOP_TRYING)       return;
+    }
+    String customXMPPDomain=getAccountID().getAccountPropertyString("CUSTOM_XMPP_DOMAIN");
+    if (customXMPPDomain != null && !hadDnsSecException[0]) {
+      logger.info("Connect using custom xmpp domain: " + customXMPPDomain);
+      state=connectUsingSRVRecords(customXMPPDomain,serviceName,hadDnsSecException,loginStrategy);
+      logger.info("state for connectUsingSRVRecords: " + state);
+      if (hadDnsSecException[0]) {
+        setDnssecLoginFailure();
+        return;
+      }
+      if (state == ConnectState.ABORT_CONNECTING || state == ConnectState.STOP_TRYING)       return;
+    }
+    String serverAddressUserSetting=getAccountID().getAccountPropertyString(ProtocolProviderFactory.SERVER_ADDRESS);
+    int serverPort=getAccountID().getAccountPropertyInt(ProtocolProviderFactory.SERVER_PORT,5222);
+    InetSocketAddress[] addrs=null;
+    try {
+      addrs=NetworkUtils.getAandAAAARecords(serverAddressUserSetting,serverPort);
+    }
+ catch (    ParseException e) {
+      logger.error("Domain not resolved",e);
+    }
+catch (    DnssecException e) {
+      logger.error("DNSSEC failure for overridden server",e);
+      setDnssecLoginFailure();
+      return;
+    }
+    if (addrs == null || addrs.length == 0) {
+      logger.error("No server addresses found");
+      eventDuringLogin=null;
+      fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_SERVER_NOT_FOUND,"No server addresses found");
+    }
+ else {
+      for (      InetSocketAddress isa : addrs) {
+        try {
+          state=connectAndLogin(isa,serviceName,loginStrategy);
+          if (state == ConnectState.ABORT_CONNECTING || state == ConnectState.STOP_TRYING)           return;
+        }
+ catch (        XMPPException ex) {
+          disconnectAndCleanConnection();
+          if (isAuthenticationFailed(ex))           throw ex;
+        }
+      }
+    }
+  }
+}

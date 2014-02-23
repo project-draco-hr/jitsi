@@ -2,14 +2,15 @@
   String osgiFilter="(" + net.java.sip.communicator.service.gui.Container.CONTAINER_ID + "="+ net.java.sip.communicator.service.gui.Container.CONTAINER_CALL_DIALOG.getID()+ ")";
   ServiceReference[] serRefs=null;
   try {
-    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponent.class.getName(),osgiFilter);
+    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponentFactory.class.getName(),osgiFilter);
   }
  catch (  InvalidSyntaxException ise) {
     logger.error("Could not obtain plugin reference.",ise);
   }
   if (serRefs != null) {
     for (    ServiceReference serRef : serRefs) {
-      PluginComponent component=(PluginComponent)GuiActivator.bundleContext.getService(serRef);
+      PluginComponentFactory factory=(PluginComponentFactory)GuiActivator.bundleContext.getService(serRef);
+      PluginComponent component=factory.getPluginComponentInstance(CallPanel.this);
       component.setCurrentContact(CallManager.getPeerMetaContact(callConference.getCallPeers().get(0)));
       settingsPanel.add((Component)component.getComponent());
     }

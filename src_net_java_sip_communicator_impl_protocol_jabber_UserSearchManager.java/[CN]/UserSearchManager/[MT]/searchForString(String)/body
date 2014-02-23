@@ -1,0 +1,34 @@
+{
+  if (userSearchForm == null)   getSearchForm();
+  UserSearchIQ search=new UserSearchIQ();
+  search.setType(IQ.Type.SET);
+  search.setTo(searchService);
+  Form form=userSearchForm.getAnswerForm();
+  if (form != null) {
+    Iterator<FormField> fields=form.getFields();
+    while (fields.hasNext()) {
+      FormField formField=fields.next();
+      if (formField.getType().equals(FormField.TYPE_BOOLEAN)) {
+        form.setAnswer(formField.getVariable(),true);
+      }
+ else       if (formField.getType().equals(FormField.TYPE_TEXT_SINGLE)) {
+        form.setAnswer(formField.getVariable(),searchedString);
+      }
+    }
+    search.setForm(form.getDataFormToSend());
+  }
+ else {
+    for (    String field : userSearchForm.getFields())     search.addField(field,searchedString);
+  }
+  PacketCollector collector=con.createPacketCollector(new PacketIDFilter(search.getPacketID()));
+  con.sendPacket(search);
+  UserSearchIQ response=(UserSearchIQ)collector.nextResult(SmackConfiguration.getPacketReplyTimeout());
+  collector.cancel();
+  if (response == null) {
+    throw new XMPPException("No response from server on status set.");
+  }
+  if (response.getError() != null) {
+    throw new XMPPException(response.getError());
+  }
+  return response.getData();
+}

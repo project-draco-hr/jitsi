@@ -1,0 +1,90 @@
+{
+  this.spellChecker=checker;
+  this.spellChecker.addPropertyChangeListener(this);
+  this.parentFactory=parentFactory;
+  setPreferredSize(new Dimension(30,28));
+  setMaximumSize(new Dimension(30,28));
+  setMinimumSize(new Dimension(30,28));
+  menu.setPreferredSize(new Dimension(30,45));
+  menu.setMaximumSize(new Dimension(30,45));
+  menu.setToolTipText(Resources.getString("plugin.spellcheck.SPELLCHECK"));
+  this.add(menu);
+  this.setBorder(null);
+  this.menu.add(createEnableCheckBox());
+  this.menu.addSeparator();
+  this.menu.setBorder(null);
+  this.menu.setOpaque(false);
+  this.setOpaque(false);
+  final DefaultListModel model=new DefaultListModel();
+  list=new JList(model);
+  this.languageSelectionRenderer=new LanguageListRenderer();
+  for (  Parameters.Locale locale : Parameters.getLocales()) {
+    if (!localeAvailabilityCache.containsKey(locale)) {
+      localeAvailabilityCache.put(locale,spellChecker.isLocaleAvailable(locale));
+    }
+    localeList.add(locale);
+  }
+  setModelElements(model);
+  JScrollPane scroll=new JScrollPane(list);
+  scroll.setBorder(null);
+  String localeIso=Parameters.getDefault(Default.LOCALE);
+  Parameters.Locale loc=Parameters.getLocale(localeIso);
+  list.setCellRenderer(languageSelectionRenderer);
+  list.setSelectedIndex(localeList.indexOf(loc) + 1);
+  list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+  removeItem.setPreferredSize(new Dimension(30,28));
+  list.addListSelectionListener(new LanguageListSelectionListener());
+  menu.add(scroll);
+  ImageIcon flagIcon=getLocaleIcon(checker.getLocale(),localeAvailabilityCache.get(checker.getLocale()));
+  SelectedObject selectedObject=new SelectedObject(flagIcon,checker.getLocale());
+  menu.setSelected(selectedObject);
+  this.menu.addSeparator();
+  menu.add(removeItem);
+  list.addKeyListener(new KeyListener(){
+    long time=0;
+    String key="";
+    public void keyTyped(    KeyEvent e){
+      char ch=e.getKeyChar();
+      if (!Character.isLetter(ch))       return;
+      if (time + 1000 < System.currentTimeMillis())       key="";
+      time=System.currentTimeMillis();
+      key+=ch;
+      for (int i=0; i < model.getSize(); i++) {
+        String label=((Parameters.Locale)model.getElementAt(i)).getLabel().toLowerCase();
+        if (label.startsWith(key.toLowerCase())) {
+          list.setSelectedIndex(i);
+          list.ensureIndexIsVisible(i);
+          break;
+        }
+      }
+      list.requestFocusInWindow();
+    }
+    public void keyReleased(    KeyEvent e){
+    }
+    public void keyPressed(    KeyEvent e){
+    }
+  }
+);
+  removeItem.setEnabled(!spellChecker.getLocale().getIsoCode().equals(Parameters.getDefault(Parameters.Default.LOCALE)) && spellChecker.isUserLocale(spellChecker.getLocale()));
+  removeItem.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      try {
+        list.setEnabled(false);
+        Locale locale=(Locale)menu.getSelectedObject();
+        localeAvailabilityCache.put(locale,false);
+        spellChecker.removeLocale(locale);
+        list.setEnabled(true);
+        ImageIcon flagIcon=getLocaleIcon(spellChecker.getLocale(),localeAvailabilityCache.get(spellChecker.getLocale()));
+        SelectedObject selectedObject=new SelectedObject(flagIcon,spellChecker.getLocale());
+        menu.setSelected(selectedObject);
+      }
+ catch (      Exception ex) {
+        PopupDialog dialog=SpellCheckActivator.getUIService().getPopupDialog();
+        String message=Resources.getString("plugin.spellcheck.DICT_ERROR_DELETE") + ex.getMessage();
+        dialog.showMessagePopupDialog(message,Resources.getString("plugin.spellcheck.DICT_ERROR_DELETE_TITLE"),PopupDialog.WARNING_MESSAGE);
+        logger.error("Error removing dict",ex);
+      }
+    }
+  }
+);
+}

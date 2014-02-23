@@ -1,0 +1,82 @@
+{
+  try {
+    logger.logEntry();
+    FromHeader fromHeader=null;
+    try {
+      fromHeader=provider.getHeaderFactory().createFromHeader(provider.getRegistrarConnection().getAddressOfRecord(),SipMessageFactory.generateLocalTag());
+    }
+ catch (    ParseException ex) {
+      logger.error("Failed to generate a from header for " + "our register request.",ex);
+      return;
+    }
+    CallIdHeader callIdHeader=provider.getDefaultJainSipProvider().getNewCallId();
+    CSeqHeader cSeqHeader=null;
+    try {
+      cSeqHeader=provider.getHeaderFactory().createCSeqHeader(getNextCSeqValue(),Request.OPTIONS);
+    }
+ catch (    ParseException ex) {
+      logger.error("Corrupt Sip Stack",ex);
+      return;
+    }
+catch (    InvalidArgumentException ex) {
+      logger.error("The application is corrupt",ex);
+      return;
+    }
+    ToHeader toHeader=null;
+    try {
+      toHeader=provider.getHeaderFactory().createToHeader(fromHeader.getAddress(),null);
+    }
+ catch (    ParseException ex) {
+      logger.error("Could not create a To header for address:" + fromHeader.getAddress(),ex);
+      return;
+    }
+    MaxForwardsHeader maxForwardsHeader=provider.getMaxForwardsHeader();
+    Request request=null;
+    try {
+      String domain=((SipURI)toHeader.getAddress().getURI()).getHost();
+      SipURI requestURI=provider.getAddressFactory().createSipURI(null,domain);
+      ArrayList<ViaHeader> viaHeaders=provider.getLocalViaHeaders(requestURI);
+      request=provider.getMessageFactory().createRequest(requestURI,Request.OPTIONS,callIdHeader,cSeqHeader,fromHeader,toHeader,viaHeaders,maxForwardsHeader);
+      if (logger.isDebugEnabled())       logger.debug("Created OPTIONS request " + request);
+    }
+ catch (    ParseException ex) {
+      logger.error("Could not create an OPTIONS request!",ex);
+      return;
+    }
+    Iterator<String> supportedMethods=provider.getSupportedMethods().iterator();
+    while (supportedMethods.hasNext()) {
+      String method=supportedMethods.next();
+      if (method.equals(Request.REGISTER))       continue;
+      request.addHeader(provider.getHeaderFactory().createAllowHeader(method));
+    }
+    Iterator<String> events=provider.getKnownEventsList().iterator();
+synchronized (provider.getKnownEventsList()) {
+      while (events.hasNext()) {
+        String event=events.next();
+        request.addHeader(provider.getHeaderFactory().createAllowEventsHeader(event));
+      }
+    }
+    ClientTransaction optionsTrans=null;
+    try {
+      optionsTrans=provider.getDefaultJainSipProvider().getNewClientTransaction(request);
+    }
+ catch (    TransactionUnavailableException ex) {
+      logger.error("Could not create options transaction!\n",ex);
+      return;
+    }
+    try {
+      optionsTrans.sendRequest();
+      if (logger.isDebugEnabled())       logger.debug("sent request= " + request);
+    }
+ catch (    SipException ex) {
+      logger.error("Could not send out the options request!",ex);
+      if (ex.getCause() instanceof IOException) {
+        disconnect();
+      }
+      return;
+    }
+  }
+ catch (  Exception ex) {
+    logger.error("Cannot send OPTIONS keep alive",ex);
+  }
+}

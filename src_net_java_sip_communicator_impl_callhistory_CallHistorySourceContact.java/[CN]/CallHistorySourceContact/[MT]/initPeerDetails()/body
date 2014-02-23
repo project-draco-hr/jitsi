@@ -1,10 +1,19 @@
 {
+  boolean stripAddress=false;
+  String stripAddressProp=CallHistoryActivator.getResources().getSettingsString(STRIP_ADDRESSES_TO_NUMBERS);
+  if (stripAddressProp != null && Boolean.parseBoolean(stripAddressProp))   stripAddress=true;
   Iterator<CallPeerRecord> recordsIter=callRecord.getPeerRecords().iterator();
   while (recordsIter.hasNext()) {
     CallPeerRecord peerRecord=recordsIter.next();
     String peerAddress=peerRecord.getPeerAddress();
+    String peerSecondaryAddress=peerRecord.getPeerSecondaryAddress();
     if (peerAddress != null) {
-      ContactDetail contactDetail=new ContactDetail(peerAddress);
+      if (stripAddress && !peerAddress.startsWith("@")) {
+        peerAddress=peerAddress.split("@")[0];
+      }
+      String peerRecordDisplayName=peerRecord.getDisplayName();
+      if (peerRecordDisplayName == null || peerRecordDisplayName.length() == 0)       peerRecordDisplayName=peerAddress;
+      ContactDetail contactDetail=new ContactDetail(peerAddress,peerRecordDisplayName);
       Map<Class<? extends OperationSet>,ProtocolProviderService> preferredProviders=null;
       Map<Class<? extends OperationSet>,String> preferredProtocols=null;
       ProtocolProviderService preferredProvider=callRecord.getProtocolProvider();
@@ -36,6 +45,11 @@
       supportedOpSets.add(OperationSetPersistentPresence.class);
       contactDetail.setSupportedOpSets(supportedOpSets);
       contactDetails.add(contactDetail);
+      if (peerSecondaryAddress != null) {
+        ContactDetail secondaryContactDetail=new ContactDetail(peerSecondaryAddress);
+        secondaryContactDetail.addSupportedOpSet(OperationSetPersistentPresence.class);
+        contactDetails.add(secondaryContactDetail);
+      }
       String name=peerRecord.getDisplayName();
       if (name == null || name.length() <= 0)       name=peerAddress;
       if (displayName == null || displayName.length() <= 0)       if (callRecord.getPeerRecords().size() > 1)       displayName="Conference " + name;

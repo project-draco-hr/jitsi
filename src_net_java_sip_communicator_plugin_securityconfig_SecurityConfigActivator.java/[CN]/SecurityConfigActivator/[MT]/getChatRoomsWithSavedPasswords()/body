@@ -1,0 +1,22 @@
+{
+  Map<?,ProtocolProviderFactory> providerFactoriesMap=getProtocolProviderFactories();
+  if (providerFactoriesMap == null)   return null;
+  CredentialsStorageService credentialsStorageService=getCredentialsStorageService();
+  Map<String,String> chatRoomIDs=new HashMap<String,String>();
+  String prefix="net.java.sip.communicator.impl.gui.accounts";
+  List<String> accounts=getConfigurationService().getPropertyNamesByPrefix(prefix,true);
+  for (  ProtocolProviderFactory providerFactory : providerFactoriesMap.values()) {
+    for (    AccountID accountID : providerFactory.getRegisteredAccounts()) {
+      for (      String accountRootPropName : accounts) {
+        String accountName=getConfigurationService().getString(accountRootPropName);
+        if (!accountID.getAccountUniqueID().equals(accountName))         continue;
+        List<String> chatRooms=getConfigurationService().getPropertyNamesByPrefix(accountRootPropName + ".chatRooms",true);
+        for (        String chatRoomPropName : chatRooms) {
+          String chatRoomName=getConfigurationService().getString(chatRoomPropName);
+          if (credentialsStorageService.isStoredEncrypted(chatRoomPropName + ".password"))           chatRoomIDs.put(chatRoomName + " " + resources.getI18NString("service.gui.VIA")+ " "+ accountID.getUserID(),chatRoomPropName + ".password");
+        }
+      }
+    }
+  }
+  return chatRoomIDs;
+}

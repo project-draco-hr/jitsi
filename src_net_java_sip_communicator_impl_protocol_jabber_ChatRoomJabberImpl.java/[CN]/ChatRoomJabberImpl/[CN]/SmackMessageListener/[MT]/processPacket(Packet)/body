@@ -5,6 +5,17 @@
   DelayInformation delay=(DelayInformation)msg.getExtension("x","jabber:x:delay");
   if (delay != null) {
     timeStamp=delay.getStamp();
+    if (lastSeenDelayedMessage == null) {
+      String timestamp=ConfigurationUtils.getChatRoomProperty(provider,getIdentifier(),LAST_SEEN_DELAYED_MESSAGE_PROP);
+      try {
+        lastSeenDelayedMessage=new Date(Long.parseLong(timestamp));
+      }
+ catch (      Throwable t) {
+      }
+    }
+    if (lastSeenDelayedMessage != null && !timeStamp.after(lastSeenDelayedMessage))     return;
+    ConfigurationUtils.updateChatRoomProperty(provider,getIdentifier(),LAST_SEEN_DELAYED_MESSAGE_PROP,String.valueOf(timeStamp.getTime()));
+    lastSeenDelayedMessage=timeStamp;
   }
  else {
     timeStamp=new Date();
@@ -15,7 +26,6 @@
   String msgFrom=msg.getFrom();
   ChatRoomMember member=null;
   String fromUserName=StringUtils.parseResource(msgFrom);
-  if (getUserNickname().equals(fromUserName))   return;
   if (msgFrom.equals(getName())) {
     messageReceivedEventType=ChatRoomMessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED;
     member=new ChatRoomMemberJabberImpl(ChatRoomJabberImpl.this,getName(),getName());
@@ -30,6 +40,12 @@
     if (logger.isDebugEnabled())     logger.debug("Received from " + fromUserName + " the message "+ msg.toXML());
   }
   Message newMessage=createMessage(msgBody);
+  if (getUserNickname().equals(fromUserName)) {
+    ChatRoomMessageDeliveredEvent msgDeliveredEvt=new ChatRoomMessageDeliveredEvent(ChatRoomJabberImpl.this,timeStamp,newMessage,ChatRoomMessageDeliveredEvent.CONVERSATION_MESSAGE_DELIVERED);
+    if (delay != null)     msgDeliveredEvt.setHistoryMessage(true);
+    fireMessageEvent(msgDeliveredEvt);
+    return;
+  }
   if (msg.getType() == org.jivesoftware.smack.packet.Message.Type.error) {
     if (logger.isInfoEnabled())     logger.info("Message error received from " + fromUserName);
     XMPPError error=packet.getError();
@@ -48,5 +64,8 @@
   }
   ChatRoomMessageReceivedEvent msgReceivedEvt=new ChatRoomMessageReceivedEvent(ChatRoomJabberImpl.this,member,timeStamp,newMessage,messageReceivedEventType);
   if (delay != null)   msgReceivedEvt.setHistoryMessage(true);
+  if (messageReceivedEventType == ChatRoomMessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED && newMessage.getContent().contains(getUserNickname() + ":")) {
+    msgReceivedEvt.setImportantMessage(true);
+  }
   fireMessageEvent(msgReceivedEvt);
 }

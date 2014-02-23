@@ -1,0 +1,30 @@
+{
+  long shutdownTimeout=SHUTDOWN_TIMEOUT_DEFAULT;
+  try {
+    String s=System.getProperty(SHUTDOWN_TIMEOUT_PNAME);
+    if ((s != null) && (s.length() > 0)) {
+      long l=Long.valueOf(s);
+      if (l > 0)       shutdownTimeout=l;
+    }
+  }
+ catch (  Throwable t) {
+  }
+  if (logger.isTraceEnabled()) {
+    logger.trace("Starting shutdown countdown of " + shutdownTimeout + "ms.");
+  }
+  try {
+    Thread.sleep(shutdownTimeout);
+  }
+ catch (  InterruptedException ex) {
+    if (logger.isDebugEnabled())     logger.debug("Interrupted shutdown timer.");
+    return;
+  }
+  try {
+    DeleteOnHaltHook.runHooks();
+  }
+ catch (  Throwable t) {
+    logger.warn("Failed to delete files on halt.",t);
+  }
+  logger.error("Failed to gently shutdown. Forcing exit.");
+  Runtime.getRuntime().halt(SYSTEM_EXIT_CODE);
+}

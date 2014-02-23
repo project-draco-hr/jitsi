@@ -1,0 +1,28 @@
+{
+  TreeSet<EventObject> result=new TreeSet<EventObject>(new MessageEventComparator<EventObject>());
+  List<HistoryID> historyIDs=this.historyService.getExistingHistories(new String[]{"messages","default"});
+  for (  HistoryID id : historyIDs) {
+    if (result.size() >= count)     break;
+    try {
+      Contact contact=getContactForHistory(id);
+      if (contact == null)       continue;
+      History history;
+      if (this.historyService.isHistoryExisting(id)) {
+        history=this.historyService.getHistory(id);
+      }
+ else {
+        history=this.historyService.createHistory(id,recordStructure);
+      }
+      HistoryReader reader=history.getReader();
+      Iterator<HistoryRecord> recs=reader.findLast(1);
+      while (recs.hasNext()) {
+        result.add(convertHistoryRecordToMessageEvent(recs.next(),contact));
+        break;
+      }
+    }
+ catch (    IOException ex) {
+      logger.error("Could not read history",ex);
+    }
+  }
+  return result;
+}

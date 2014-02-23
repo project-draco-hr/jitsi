@@ -1,15 +1,19 @@
 {
   Contact contact=evt.getDestinationContact();
+  OtrContact otrContact=OtrContactManager.getOtrContact(contact,evt.getContactResource());
   OtrPolicy policy=OtrActivator.scOtrEngine.getContactPolicy(contact);
-  SessionStatus sessionStatus=OtrActivator.scOtrEngine.getSessionStatus(contact);
-  if (!policy.getEnableManual() && sessionStatus == SessionStatus.PLAINTEXT)   return evt;
+  ScSessionStatus sessionStatus=OtrActivator.scOtrEngine.getSessionStatus(otrContact);
+  if (!policy.getEnableManual() && sessionStatus != ScSessionStatus.ENCRYPTED && sessionStatus != ScSessionStatus.FINISHED)   return evt;
   if (OtrActivator.scOtrEngine.isMessageUIDInjected(evt.getSourceMessage().getMessageUID()))   return evt;
   String msgContent=evt.getSourceMessage().getContent();
-  String processedMessageContent=OtrActivator.scOtrEngine.transformSending(contact,msgContent);
+  String processedMessageContent=OtrActivator.scOtrEngine.transformSending(otrContact,msgContent);
   if (processedMessageContent == null || processedMessageContent.length() < 1)   return null;
   if (processedMessageContent.equals(msgContent))   return evt;
   OperationSetBasicInstantMessaging imOpSet=contact.getProtocolProvider().getOperationSet(OperationSetBasicInstantMessaging.class);
-  Message processedMessage=imOpSet.createMessage(processedMessageContent);
+  Message processedMessage=imOpSet.createMessage(processedMessageContent,evt.getSourceMessage().getContentType(),evt.getSourceMessage().getEncoding(),evt.getSourceMessage().getSubject());
   MessageDeliveredEvent processedEvent=new MessageDeliveredEvent(processedMessage,contact,evt.getTimestamp());
+  if (processedMessage.getContent().contains(SerializationConstants.HEAD)) {
+    processedEvent.setMessageEncrypted(true);
+  }
   return processedEvent;
 }

@@ -1,5 +1,5 @@
 {
-  if (evt.getNewState() == RegistrationState.UNREGISTERING || evt.getNewState() == RegistrationState.CONNECTION_FAILED) {
+  if (evt.getNewState() == RegistrationState.UNREGISTERING || evt.getNewState() == RegistrationState.UNREGISTERED || evt.getNewState() == RegistrationState.AUTHENTICATION_FAILED || evt.getNewState() == RegistrationState.CONNECTION_FAILED) {
     if (keepAliveTimer != null) {
       keepAliveTimer.cancel();
       keepAliveTimer=null;
@@ -8,13 +8,20 @@
  else   if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
     String keepAliveMethod=provider.getAccountID().getAccountPropertyString(ProtocolProviderFactory.KEEP_ALIVE_METHOD);
     if (logger.isTraceEnabled())     logger.trace("Keep alive method " + keepAliveMethod);
-    if (keepAliveMethod != null && !keepAliveMethod.equalsIgnoreCase("options"))     return;
+    if (keepAliveMethod != null && !(keepAliveMethod.equalsIgnoreCase("options") || keepAliveMethod.equalsIgnoreCase("crlf")))     return;
     int keepAliveInterval=provider.getAccountID().getAccountPropertyInt(ProtocolProviderFactory.KEEP_ALIVE_INTERVAL,-1);
-    if (logger.isTraceEnabled())     logger.trace("Keep alive inerval is " + keepAliveInterval);
+    if (logger.isTraceEnabled())     logger.trace("Keep alive interval is " + keepAliveInterval);
     if (keepAliveInterval > 0 && !provider.getRegistrarConnection().isRegistrarless()) {
       if (keepAliveTimer == null)       keepAliveTimer=new Timer();
-      if (logger.isDebugEnabled())       logger.debug("Scheduling OPTIONS keep alives");
-      keepAliveTimer.schedule(new KeepAliveTask(),0,keepAliveInterval * 1000);
+      TimerTask keepAliveTask;
+      if ((OSUtils.IS_ANDROID && keepAliveMethod == null) || "crlf".equalsIgnoreCase(keepAliveMethod)) {
+        keepAliveTask=new CRLfKeepAliveTask();
+      }
+ else {
+        keepAliveTask=new OptionsKeepAliveTask();
+      }
+      if (logger.isDebugEnabled())       logger.debug("Scheduling keep alives: " + keepAliveTask);
+      keepAliveTimer.schedule(keepAliveTask,0,keepAliveInterval * 1000);
     }
   }
 }

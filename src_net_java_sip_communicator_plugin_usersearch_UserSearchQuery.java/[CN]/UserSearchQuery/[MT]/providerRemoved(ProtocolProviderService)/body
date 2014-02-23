@@ -1,0 +1,20 @@
+{
+synchronized (displayedProviders) {
+    displayedProviders.remove(provider);
+  }
+  OperationSetUserSearch opSetUserSearch=provider.getOperationSet(OperationSetUserSearch.class);
+  if (opSetUserSearch == null)   return;
+  opSetUserSearch.removeSearchManager();
+  List<UserSearchContact> tmpContacts;
+synchronized (contacts) {
+    tmpContacts=new LinkedList<UserSearchContact>(contacts);
+  }
+  for (  UserSearchContact contact : tmpContacts) {
+    if (contact.getProvider().equals(provider)) {
+synchronized (contacts) {
+        contacts.remove(contact);
+      }
+      fireContactRemoved(contact);
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  try {
+    Properties fileProps=new Properties();
+    InputStream fileStream;
+    if (OSUtils.IS_ANDROID) {
+      fileStream=getClass().getClassLoader().getResourceAsStream(fileName);
+    }
+ else {
+      fileStream=ClassLoader.getSystemResourceAsStream(fileName);
+    }
+    fileProps.load(fileStream);
+    fileStream.close();
+    for (    Map.Entry<Object,Object> entry : fileProps.entrySet()) {
+      String name=(String)entry.getKey();
+      String value=(String)entry.getValue();
+      if (name == null || value == null || name.trim().length() == 0) {
+        continue;
+      }
+      if (name.startsWith("*")) {
+        name=name.substring(1);
+        if (name.trim().length() == 0) {
+          continue;
+        }
+        immutableDefaultProperties.put(name,value);
+        defaultProperties.remove(name);
+      }
+ else {
+        defaultProperties.put(name,value);
+        immutableDefaultProperties.remove(name);
+      }
+    }
+  }
+ catch (  Exception ex) {
+    logger.info("No defaults property file loaded: " + fileName + ". Not a problem.");
+    if (logger.isDebugEnabled())     logger.debug("load exception",ex);
+  }
+}

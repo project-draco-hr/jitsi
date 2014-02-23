@@ -1,0 +1,19 @@
+{
+  List<String> preferredEncryptionProtocols=getPeer().getProtocolProvider().getAccountID().getSortedEnabledEncryptionProtocolList();
+  for (  String preferredEncryptionProtocol : preferredEncryptionProtocols) {
+    String protoName=preferredEncryptionProtocol.substring(ProtocolProviderFactory.ENCRYPTION_PROTOCOL.length() + 1);
+    if (DtlsControl.PROTO_NAME.equals(protoName)) {
+      addDtlsAdvertisedEncryptions(false,remoteContent,mediaType);
+      if (setDtlsEncryptionOnContent(mediaType,localContent,remoteContent)) {
+        return;
+      }
+    }
+ else {
+      RtpDescriptionPacketExtension localDescription=(localContent == null) ? null : JingleUtils.getRtpDescription(localContent);
+      RtpDescriptionPacketExtension remoteDescription=(remoteContent == null) ? null : JingleUtils.getRtpDescription(remoteContent);
+      if (setAndAddPreferredEncryptionProtocol(protoName,mediaType,localDescription,remoteDescription)) {
+        return;
+      }
+    }
+  }
+}

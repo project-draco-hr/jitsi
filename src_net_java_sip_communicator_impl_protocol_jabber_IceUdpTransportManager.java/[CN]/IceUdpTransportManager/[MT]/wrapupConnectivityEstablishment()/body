@@ -1,44 +1,50 @@
 {
-  final Object iceProcessingStateSyncRoot=new Object();
-  PropertyChangeListener stateChangeListener=new PropertyChangeListener(){
-    public void propertyChange(    PropertyChangeEvent evt){
-      Object newValue=evt.getNewValue();
-      if (IceProcessingState.COMPLETED.equals(newValue) || IceProcessingState.FAILED.equals(newValue) || IceProcessingState.TERMINATED.equals(newValue)) {
-        if (logger.isTraceEnabled())         logger.trace("ICE " + newValue);
-        Agent iceAgent=(Agent)evt.getSource();
-        iceAgent.removeStateChangeListener(this);
-        if (iceAgent == IceUdpTransportManager.this.iceAgent) {
+  TransportManagerJabberImpl delegate=findTransportManagerEstablishingConnectivityWithJitsiVideobridge();
+  if ((delegate == null) || (delegate == this)) {
+    final Object iceProcessingStateSyncRoot=new Object();
+    PropertyChangeListener stateChangeListener=new PropertyChangeListener(){
+      public void propertyChange(      PropertyChangeEvent evt){
+        Object newValue=evt.getNewValue();
+        if (IceProcessingState.COMPLETED.equals(newValue) || IceProcessingState.FAILED.equals(newValue) || IceProcessingState.TERMINATED.equals(newValue)) {
+          if (logger.isTraceEnabled())           logger.trace("ICE " + newValue);
+          Agent iceAgent=(Agent)evt.getSource();
+          iceAgent.removeStateChangeListener(this);
+          if (iceAgent == IceUdpTransportManager.this.iceAgent) {
 synchronized (iceProcessingStateSyncRoot) {
-            iceProcessingStateSyncRoot.notify();
+              iceProcessingStateSyncRoot.notify();
+            }
           }
         }
       }
     }
-  }
 ;
-  iceAgent.addStateChangeListener(stateChangeListener);
-  boolean interrupted=false;
+    iceAgent.addStateChangeListener(stateChangeListener);
+    boolean interrupted=false;
 synchronized (iceProcessingStateSyncRoot) {
-    while (IceProcessingState.RUNNING.equals(iceAgent.getState())) {
-      try {
-        iceProcessingStateSyncRoot.wait();
-      }
- catch (      InterruptedException ie) {
-        interrupted=true;
+      while (IceProcessingState.RUNNING.equals(iceAgent.getState())) {
+        try {
+          iceProcessingStateSyncRoot.wait();
+        }
+ catch (        InterruptedException ie) {
+          interrupted=true;
+        }
       }
     }
+    if (interrupted)     Thread.currentThread().interrupt();
+    iceAgent.removeStateChangeListener(stateChangeListener);
+    if (IceProcessingState.FAILED.equals(iceAgent.getState())) {
+      throw new OperationFailedException("Could not establish connection (ICE failed)",OperationFailedException.GENERAL_ERROR);
+    }
   }
-  if (interrupted)   Thread.currentThread().interrupt();
-  iceAgent.removeStateChangeListener(stateChangeListener);
-  if (iceAgent.getState().equals(IceProcessingState.FAILED)) {
-    throw new OperationFailedException("Could not establish connection (ICE failed)",OperationFailedException.GENERAL_ERROR);
+ else {
+    delegate.wrapupConnectivityEstablishment();
   }
   if (cpeList != null) {
     for (    ContentPacketExtension content : cpeList) {
       IceUdpTransportPacketExtension transport=content.getFirstChildOfType(IceUdpTransportPacketExtension.class);
       if (transport != null) {
         for (        CandidatePacketExtension candidate : transport.getCandidateList())         transport.removeCandidate(candidate);
-        Collection<?> childExtensions=transport.getChildExtensions();
+        Collection<?> childExtensions=transport.getChildExtensionsOfType(CandidatePacketExtension.class);
         if ((childExtensions == null) || childExtensions.isEmpty()) {
           transport.removeAttribute(IceUdpTransportPacketExtension.UFRAG_ATTR_NAME);
           transport.removeAttribute(IceUdpTransportPacketExtension.PWD_ATTR_NAME);

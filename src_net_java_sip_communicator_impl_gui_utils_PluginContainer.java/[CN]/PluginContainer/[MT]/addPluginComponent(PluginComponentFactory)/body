@@ -1,0 +1,25 @@
+{
+  PluginComponent c=factory.getPluginComponentInstance(PluginContainer.this);
+  if (logger.isInfoEnabled())   logger.info("Will add plugin component: " + c);
+  int cIndex=factory.getPositionIndex();
+  int index=-1;
+  int i=0;
+  for (  PluginComponent pluginComponent : pluginComponents) {
+    if (pluginComponent.equals(c))     return;
+    if (-1 == index) {
+      int pluginComponentIndex=factory.getPositionIndex();
+      if ((0 == cIndex) || (-1 == cIndex)) {
+        if ((0 != pluginComponentIndex) && (cIndex != pluginComponentIndex))         index=i;
+      }
+ else       if (cIndex < pluginComponentIndex)       index=i;
+    }
+    i++;
+  }
+  int pluginComponentCount=pluginComponents.size();
+  if (-1 == index)   index=pluginComponents.size();
+  int containerComponentCount=getComponentCount(container);
+  addComponentToContainer((Component)c.getComponent(),container,(containerComponentCount > pluginComponentCount) ? (index + (containerComponentCount - pluginComponentCount)) : index);
+  pluginComponents.add(index,c);
+  container.revalidate();
+  container.repaint();
+}

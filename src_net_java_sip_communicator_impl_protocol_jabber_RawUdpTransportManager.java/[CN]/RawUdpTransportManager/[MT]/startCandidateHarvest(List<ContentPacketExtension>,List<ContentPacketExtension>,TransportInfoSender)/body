@@ -1,44 +1,4 @@
 {
-  CallPeerJabberImpl peer=getCallPeer();
-  CallJabberImpl call=peer.getCall();
-  List<ContentPacketExtension> cpes=(theirOffer == null) ? ourAnswer : theirOffer;
-  if (call.getConference().isJitsiVideoBridge()) {
-    List<RtpDescriptionPacketExtension> descriptions=new ArrayList<RtpDescriptionPacketExtension>();
-    for (    ContentPacketExtension cpe : cpes) {
-      RtpDescriptionPacketExtension rtpDesc=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
-      MediaType mediaType=MediaType.parseString(rtpDesc.getMedia());
-      if ((colibri == null) || (colibri.getContent(mediaType.toString()) == null)) {
-        if (!descriptions.contains(rtpDesc))         descriptions.add(rtpDesc);
-      }
-    }
-    if (!descriptions.isEmpty()) {
-      if (colibri == null)       colibri=new ColibriConferenceIQ();
-      for (      RtpDescriptionPacketExtension description : descriptions)       colibri.getOrCreateContent(description.getMedia());
-      ColibriConferenceIQ conferenceResult=call.createColibriChannels(peer,descriptions);
-      if (conferenceResult != null) {
-        String videoBridgeID=colibri.getID();
-        String conferenceResultID=conferenceResult.getID();
-        if (videoBridgeID == null)         colibri.setID(conferenceResultID);
- else         if (!videoBridgeID.equals(conferenceResultID))         throw new IllegalStateException("conference.id");
-        for (        ColibriConferenceIQ.Content contentResult : conferenceResult.getContents()) {
-          ColibriConferenceIQ.Content content=colibri.getOrCreateContent(contentResult.getName());
-          for (          ColibriConferenceIQ.Channel channelResult : contentResult.getChannels()) {
-            if (content.getChannel(channelResult.getID()) == null)             content.addChannel(channelResult);
-          }
-        }
-      }
- else {
-        ProtocolProviderServiceJabberImpl.throwOperationFailedException("Failed to allocate colibri channel.",OperationFailedException.GENERAL_ERROR,null,Logger.getLogger(RawUdpTransportManager.class));
-      }
-    }
-  }
-  for (  ContentPacketExtension cpe : cpes) {
-    RtpDescriptionPacketExtension rtpDesc=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
-    MediaType mediaType=MediaType.parseString(rtpDesc.getMedia());
-    StreamConnector connector=getStreamConnector(mediaType);
-    RawUdpTransportPacketExtension ourTransport=createTransport(mediaType,connector);
-    ContentPacketExtension ourCpe=findContentByName(ourAnswer,cpe.getName());
-    if (ourCpe != null)     ourCpe.addChildExtension(ourTransport);
-  }
   this.local=ourAnswer;
+  super.startCandidateHarvest(theirOffer,ourAnswer,transportInfoSender);
 }

@@ -10,13 +10,14 @@
     if (fileName == null)     fileName=DEFAULT_FILE_NAME;
   }
   try {
-    contactlistFile=faService.getPrivatePersistentFile(fileName);
+    contactlistFile=faService.getPrivatePersistentFile(fileName,FileCategory.PROFILE);
     if (!contactlistFile.exists() && !contactlistFile.createNewFile())     throw new IOException("Failed to create file" + contactlistFile.getAbsolutePath());
   }
  catch (  Exception ex) {
     logger.error("Failed to get a reference to the contact list file.",ex);
     throw new IOException("Failed to get a reference to the contact " + "list file=" + fileName + ". error was:"+ ex.getMessage());
   }
+  multiTenantMode=configurationService.getBoolean(MULTI_TENANT_MODE_PROP,multiTenantMode);
   try {
     contactlistTrans=faService.createFailSafeTransaction(this.contactlistFile);
     contactlistTrans.restoreFile();

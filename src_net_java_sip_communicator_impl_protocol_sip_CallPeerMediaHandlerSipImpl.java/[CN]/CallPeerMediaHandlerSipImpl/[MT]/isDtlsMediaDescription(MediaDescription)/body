@@ -1,0 +1,21 @@
+{
+  boolean dtls=false;
+  if (mediaDescription != null) {
+    Media media=mediaDescription.getMedia();
+    if (media != null) {
+      try {
+        String proto=media.getProtocol();
+        if (DtlsControl.UDP_TLS_RTP_SAVP.equals(proto) || DtlsControl.UDP_TLS_RTP_SAVPF.equals(proto) || SrtpControl.RTP_SAVPF.equals(proto)) {
+          String fingerprint=mediaDescription.getAttribute(DTLS_SRTP_FINGERPRINT_ATTR);
+          if ((fingerprint != null) && (fingerprint.length() != 0)) {
+            String setup=mediaDescription.getAttribute(DTLS_SRTP_SETUP_ATTR);
+            if ((setup != null) && (setup.length() != 0))             dtls=true;
+          }
+        }
+      }
+ catch (      SdpParseException e) {
+      }
+    }
+  }
+  return dtls;
+}

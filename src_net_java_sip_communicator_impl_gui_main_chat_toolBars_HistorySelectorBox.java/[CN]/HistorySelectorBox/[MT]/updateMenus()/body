@@ -1,0 +1,29 @@
+{
+  toggleAllHistory.setSelected(false);
+  toggleHistoryPerContact.setSelected(false);
+  MessageHistoryService mhs=GuiActivator.getMessageHistoryService();
+  if (!mhs.isHistoryLoggingEnabled())   toggleAllHistory.setSelected(true);
+  if (chatContainer.getCurrentChat() != null) {
+    ResourceManagementService R=GuiActivator.getResources();
+    Object desc=chatContainer.getCurrentChat().getChatSession().getDescriptor();
+    if (desc instanceof MetaContact) {
+      MetaContact contact=(MetaContact)desc;
+      if (!mhs.isHistoryLoggingEnabled(contact.getMetaUID())) {
+        toggleHistoryPerContact.setSelected(true);
+      }
+      toggleHistoryPerContact.setText(R.getI18NString("service.gui.HISTORY_TOGGLE_PER_CONTACT"));
+      eraseHistoryPerContact.setText(R.getI18NString("service.gui.HISTORY_ERASE_PER_CONTACT"));
+    }
+ else     if (desc instanceof ChatRoomWrapper) {
+      if (!mhs.isHistoryLoggingEnabled(((ChatRoomWrapper)desc).getChatRoom().getIdentifier())) {
+        toggleHistoryPerContact.setSelected(true);
+      }
+      toggleHistoryPerContact.setText(R.getI18NString("service.gui.HISTORY_TOGGLE_PER_CHATROOM"));
+      eraseHistoryPerContact.setText(R.getI18NString("service.gui.HISTORY_ERASE_PER_CHATROOM"));
+    }
+  }
+  if (toggleAllHistory.isSelected() || toggleHistoryPerContact.isSelected()) {
+    this.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.HISTORY_ICON_OFF)));
+  }
+ else   this.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.HISTORY_ICON_ON)));
+}

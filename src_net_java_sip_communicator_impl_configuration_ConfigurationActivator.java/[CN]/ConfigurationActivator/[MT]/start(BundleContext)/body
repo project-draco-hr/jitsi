@@ -1,7 +1,19 @@
 {
-  ConfigurationActivator.bundleContext=bundleContext;
-  ConfigurationService configurationService=LibJitsi.getConfigurationService();
-  if (configurationService != null) {
-    bundleContext.registerService(ConfigurationService.class.getName(),configurationService,null);
+  FileAccessService fas=ServiceUtils.getService(bundleContext,FileAccessService.class);
+  if (fas != null) {
+    File useDatabaseConfig;
+    try {
+      useDatabaseConfig=fas.getPrivatePersistentFile(".usedatabaseconfig",FileCategory.PROFILE);
+    }
+ catch (    IllegalStateException ise) {
+      useDatabaseConfig=null;
+    }
+    if ((useDatabaseConfig != null) && useDatabaseConfig.exists()) {
+      logger.info("Using database configuration store.");
+      this.cs=new JdbcConfigService(fas);
+    }
   }
+  if (this.cs == null)   this.cs=LibJitsi.getConfigurationService();
+  bundleContext.registerService(ConfigurationService.class.getName(),this.cs,null);
+  fixPermissions(this.cs);
 }

@@ -1,0 +1,34 @@
+{
+  try {
+    Object service=bundleContext.getService(serviceEvent.getServiceReference());
+    if (!(service instanceof PopupMessageHandler))     return;
+    PopupMessageHandler handler=(PopupMessageHandler)bundleContext.getService(serviceEvent.getServiceReference());
+    if (serviceEvent.getType() == ServiceEvent.REGISTERED) {
+      if (!containsHandler(handler.getClass().getName())) {
+        if (logger.isInfoEnabled())         logger.info("adding the following popup handler : " + handler);
+        addPopupHandler(handler);
+      }
+ else       logger.warn("the following popup handler has not " + "been added since it is already known : " + handler);
+      ConfigurationService cfg=ServiceUtils.getService(bundleContext,ConfigurationService.class);
+      String configuredHandler=(String)cfg.getProperty("systray.POPUP_HANDLER");
+      if ((configuredHandler == null) && ((getActivePopupHandler() == null) || (handler.getPreferenceIndex() > getActivePopupHandler().getPreferenceIndex()))) {
+        setActivePopupMessageHandler(handler);
+      }
+      if ((configuredHandler != null) && configuredHandler.equals(handler.getClass().getName())) {
+        setActivePopupMessageHandler(handler);
+      }
+    }
+ else     if (serviceEvent.getType() == ServiceEvent.UNREGISTERING) {
+      if (logger.isInfoEnabled())       logger.info("removing the following popup handler : " + handler);
+      removePopupHandler(handler);
+      PopupMessageHandler activeHandler=getActivePopupHandler();
+      if (activeHandler == handler) {
+        setActivePopupMessageHandler(null);
+        selectBestPopupMessageHandler();
+      }
+    }
+  }
+ catch (  IllegalStateException e) {
+    if (logger.isDebugEnabled())     logger.debug(e);
+  }
+}

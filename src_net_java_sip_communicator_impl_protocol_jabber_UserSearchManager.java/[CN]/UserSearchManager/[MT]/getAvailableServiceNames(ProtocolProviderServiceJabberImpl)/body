@@ -1,0 +1,26 @@
+{
+  final List<String> searchServices=new ArrayList<String>();
+  ScServiceDiscoveryManager discoManager=provider.getDiscoveryManager();
+  DiscoverItems items;
+  try {
+    items=discoManager.discoverItems(provider.getConnection().getServiceName());
+  }
+ catch (  XMPPException e) {
+    return searchServices;
+  }
+  Iterator<DiscoverItems.Item> iter=items.getItems();
+  while (iter.hasNext()) {
+    DiscoverItems.Item item=iter.next();
+    try {
+      DiscoverInfo info;
+      info=discoManager.discoverInfo(item.getEntityID());
+      if (info.containsFeature("jabber:iq:search") && !info.containsFeature("http://jabber.org/protocol/muc")) {
+        searchServices.add(item.getEntityID());
+      }
+    }
+ catch (    Exception e) {
+      continue;
+    }
+  }
+  return searchServices;
+}

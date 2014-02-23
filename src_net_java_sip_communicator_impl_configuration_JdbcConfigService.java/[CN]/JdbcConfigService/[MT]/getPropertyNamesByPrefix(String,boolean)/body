@@ -1,0 +1,30 @@
+{
+  try {
+    List<String> resultSet=new ArrayList<String>(50);
+    this.checkConnection();
+    this.selectLike.setString(1,prefix + "%");
+    ResultSet q=this.selectLike.executeQuery();
+    while (q.next()) {
+      String key=q.getString(1);
+      if (exactPrefixMatch) {
+        int ix=key.lastIndexOf('.');
+        if (ix == -1) {
+          continue;
+        }
+        String keyPrefix=key.substring(0,ix);
+        if (prefix.equals(keyPrefix)) {
+          resultSet.add(key);
+        }
+      }
+ else {
+        if (key.startsWith(prefix)) {
+          resultSet.add(key);
+        }
+      }
+    }
+    return resultSet;
+  }
+ catch (  SQLException e) {
+    throw new RuntimeException(e);
+  }
+}

@@ -1,26 +1,4 @@
 {
-  iceAgent.setControlling(false);
-  Collection<ContentPacketExtension> transportInfoContents=(transportInfoSender == null) ? null : new LinkedList<ContentPacketExtension>();
-  for (  ContentPacketExtension theirContent : theirOffer) {
-    ContentPacketExtension ourContent=findContentByName(ourAnswer,theirContent.getName());
-    if (ourContent == null)     continue;
-    RtpDescriptionPacketExtension rtpDesc=ourContent.getFirstChildOfType(RtpDescriptionPacketExtension.class);
-    IceMediaStream stream=createIceStream(rtpDesc.getMedia(),iceAgent);
-    if (transportInfoSender == null) {
-      ourContent.addChildExtension(createTransport(stream));
-    }
- else {
-      ourContent.addChildExtension(getTransportPacketExtension());
-      ContentPacketExtension transportInfoContent=new ContentPacketExtension();
-      for (      String name : ourContent.getAttributeNames()) {
-        Object value=ourContent.getAttribute(name);
-        if (value != null)         transportInfoContent.setAttribute(name,value);
-      }
-      transportInfoContent.addChildExtension(createTransport(stream));
-      transportInfoContents.clear();
-      transportInfoContents.add(transportInfoContent);
-      transportInfoSender.sendTransportInfo(transportInfoContents);
-    }
-  }
   this.cpeList=ourAnswer;
+  super.startCandidateHarvest(theirOffer,ourAnswer,transportInfoSender);
 }

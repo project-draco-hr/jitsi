@@ -1,0 +1,28 @@
+{
+synchronized (filterSyncRoot) {
+    this.filter=filter;
+    if (filterThread == null) {
+      filterThread=new Thread(){
+        @Override public void run(){
+          try {
+            runInFilterThread();
+          }
+  finally {
+synchronized (filterSyncRoot) {
+              if (Thread.currentThread().equals(filterThread)) {
+                filterThread=null;
+              }
+            }
+          }
+        }
+      }
+;
+      filterThread.setDaemon(true);
+      filterThread.setName(SearchField.class.getName() + ".filterThread");
+      filterThread.start();
+    }
+ else {
+      filterSyncRoot.notify();
+    }
+  }
+}

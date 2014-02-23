@@ -11,11 +11,19 @@
   if (!(contact instanceof UIContactImpl))   return;
   UIGroupImpl parentGroup=(UIGroupImpl)contact.getParentGroup();
   if (parentGroup == null)   return;
-  GroupNode parentGroupNode=parentGroup.getGroupNode();
-  if (parentGroupNode == null)   return;
-  parentGroupNode.removeContact((UIContactImpl)contact);
-  if (removeEmptyGroup && parentGroupNode.getChildCount() == 0) {
-    GroupNode parent=(GroupNode)parentGroupNode.getParent();
-    if (parent != null)     parent.removeContactGroup(parentGroup);
+  GroupNode parentGroupNode;
+synchronized (parentGroup) {
+    parentGroupNode=parentGroup.getGroupNode();
+    if (parentGroupNode == null)     return;
+    parentGroupNode.removeContact((UIContactImpl)contact);
+    if (removeEmptyGroup && parentGroupNode.getChildCount() == 0) {
+      GroupNode parent=(GroupNode)parentGroupNode.getParent();
+      if (parent != null) {
+        parent.removeContactGroup(parentGroup);
+      }
+    }
+  }
+  if (rootUIGroup != null && (treeModel.getRoot().getChildAfter(rootUIGroup.getGroupNode()) instanceof GroupNode || treeModel.getRoot().getChildBefore((rootUIGroup).getGroupNode()) == null)) {
+    removeMetaUIRootGroup();
   }
 }

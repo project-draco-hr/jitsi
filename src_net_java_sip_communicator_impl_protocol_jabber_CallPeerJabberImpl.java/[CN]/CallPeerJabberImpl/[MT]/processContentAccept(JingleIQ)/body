@@ -1,17 +1,18 @@
 {
   List<ContentPacketExtension> contents=content.getContentList();
+  CallPeerMediaHandlerJabberImpl mediaHandler=getMediaHandler();
   try {
-    CallPeerMediaHandlerJabberImpl mediaHandler=getMediaHandler();
     mediaHandler.getTransportManager().wrapupConnectivityEstablishment();
     mediaHandler.processAnswer(contents);
+    for (    ContentPacketExtension c : contents)     setSenders(getMediaType(c),c.getSenders());
   }
  catch (  Exception e) {
     logger.warn("Failed to process a content-accept",e);
     String reason="Error: " + e.getMessage();
-    JingleIQ errResp=JinglePacketFactory.createSessionTerminate(sessionInitIQ.getTo(),sessionInitIQ.getFrom(),sessionInitIQ.getSID(),Reason.INCOMPATIBLE_PARAMETERS,reason);
+    JingleIQ errResp=JinglePacketFactory.createSessionTerminate(getProtocolProvider().getOurJID(),peerJID,sessionInitIQ.getSID(),Reason.INCOMPATIBLE_PARAMETERS,reason);
     setState(CallPeerState.FAILED,reason);
     getProtocolProvider().getConnection().sendPacket(errResp);
     return;
   }
-  getMediaHandler().start();
+  mediaHandler.start();
 }

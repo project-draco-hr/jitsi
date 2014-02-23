@@ -1,68 +1,31 @@
 {
+  String subject=null;
   JButton sourceButton=(JButton)e.getSource();
-  if (sourceButton.equals(addButton)) {
-    String chatRoomName=editor.getText();
-    if (StringUtils.isNullOrEmpty(chatRoomName))     return;
-    ChatRoomWrapper chatRoomWrapper=GuiActivator.getUIService().getConferenceChatManager().createChatRoom(chatRoomName,getSelectedProvider().getProtocolProvider(),new ArrayList<String>(),"",false,true);
-    String nickName=null;
-    ChatOperationReasonDialog reasonDialog=new ChatOperationReasonDialog(GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME"),GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME_LABEL"));
-    reasonDialog.setReasonFieldText("");
-    int result=reasonDialog.showDialog();
-    if (result == MessageDialog.OK_RETURN_CODE) {
-      nickName=reasonDialog.getReason().trim();
-      ConfigurationUtils.updateChatRoomProperty(getSelectedProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),"userNickName",nickName);
-    }
-  }
- else   if (sourceButton.equals(removeButton)) {
-    chatRoomsTableUI.removeSelectedRoom();
-  }
- else   if (sourceButton.equals(okButton)) {
-    ChatRoomWrapper selectedRoom=chatRoomsTableUI.getSelectedRoom();
-    if (selectedRoom == null) {
-      if (editor.getText() != null && editor.getText().trim().length() > 0) {
-        ChatRoomWrapper chatRoomWrapper=GuiActivator.getUIService().getConferenceChatManager().createChatRoom(editor.getText(),getSelectedProvider().getProtocolProvider(),new ArrayList<String>(),"",false,false);
-        String nickName=null;
-        ChatOperationReasonDialog reasonDialog=new ChatOperationReasonDialog(GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME"),GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME_LABEL"));
-        reasonDialog.setReasonFieldText(chatRoomWrapper.getChatRoom().getUserNickname());
-        int result=reasonDialog.showDialog();
-        if (result == MessageDialog.OK_RETURN_CODE) {
-          nickName=reasonDialog.getReason().trim();
-          ConfigurationUtils.updateChatRoomProperty(getSelectedProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),"userNickName",nickName);
-        }
-        GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(chatRoomWrapper);
-        ChatWindowManager chatWindowManager=GuiActivator.getUIService().getChatWindowManager();
-        ChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper,true);
-        chatWindowManager.openChat(chatPanel,true);
+  if (sourceButton.equals(okButton)) {
+    if ((chatRoomNameField.getText() != null && chatRoomNameField.getText().trim().length() > 0) && (nicknameField.getText() != null && nicknameField.getText().trim().length() > 0)) {
+      ChatRoomWrapper chatRoomWrapper=GuiActivator.getMUCService().createChatRoom(chatRoomNameField.getText().trim(),getSelectedProvider().getProtocolProvider(),new ArrayList<String>(),"",false,false,false);
+      String nickName=nicknameField.getText().trim();
+      if (!chatRoomWrapper.isPersistent()) {
+        chatRoomWrapper.setPersistent(true);
+        ConfigurationUtils.saveChatRoom(chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),chatRoomWrapper.getChatRoomID(),chatRoomWrapper.getChatRoomName());
       }
-    }
- else {
-      if (selectedRoom.getChatRoom() != null) {
-        if (!selectedRoom.getChatRoom().isJoined()) {
-          String savedNick=ConfigurationUtils.getChatRoomProperty(selectedRoom.getParentProvider().getProtocolProvider(),selectedRoom.getChatRoomID(),"userNickName");
-          GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(selectedRoom,savedNick,null);
-        }
- else         chatRoomsTableUI.openChatForSelection();
-      }
- else {
-        ChatRoomWrapper chatRoomWrapper=GuiActivator.getUIService().getConferenceChatManager().createChatRoom(selectedRoom.getChatRoomName(),getSelectedProvider().getProtocolProvider(),new ArrayList<String>(),"",false,true);
-        String savedNick=ConfigurationUtils.getChatRoomProperty(chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),"userNickName");
-        if (savedNick == null) {
-          String nickName=null;
-          ChatOperationReasonDialog reasonDialog=new ChatOperationReasonDialog(GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME"),GuiActivator.getResources().getI18NString("service.gui.CHANGE_NICKNAME_LABEL"));
-          reasonDialog.setReasonFieldText(chatRoomWrapper.getChatRoom().getUserNickname());
-          int result=reasonDialog.showDialog();
-          if (result == MessageDialog.OK_RETURN_CODE) {
-            nickName=reasonDialog.getReason().trim();
-            ConfigurationUtils.updateChatRoomProperty(getSelectedProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),"userNickName",nickName);
-          }
-          GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(chatRoomWrapper,nickName,null);
-        }
- else         GuiActivator.getUIService().getConferenceChatManager().joinChatRoom(chatRoomWrapper,savedNick,null);
-      }
+      ConfigurationUtils.updateChatRoomProperty(chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),"userNickName",nickName);
+      subject=this.subject.getText();
+      if (nickName == null)       return;
+      GuiActivator.getMUCService().joinChatRoom(chatRoomWrapper,nickName,null,subject);
+      ChatWindowManager chatWindowManager=GuiActivator.getUIService().getChatWindowManager();
+      ChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper,true);
+      chatWindowManager.openChat(chatPanel,true);
     }
     dispose();
   }
  else   if (sourceButton.equals(cancelButton)) {
     dispose();
+  }
+ else   if (sourceButton.equals(listButton)) {
+    if (serverChatRoomsChoiceDialog == null) {
+      serverChatRoomsChoiceDialog=new ServerChatRoomsChoiceDialog(getTitle(),getSelectedProvider());
+    }
+    serverChatRoomsChoiceDialog.setVisible(true);
   }
 }

@@ -1,6 +1,7 @@
 {
   ArrayList<String> nameVals=new ArrayList<String>();
   int len=propertyNodes.getLength();
+  boolean targetNodeFound=false;
   for (int j=0; j < len; j++) {
     Node propertyNode=propertyNodes.item(j);
     if (propertyNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -8,12 +9,16 @@
       Node nestedNode=propertyNode.getFirstChild();
       if (nestedNode == null)       continue;
       String nodeValue=nestedNode.getNodeValue();
-      if (field != null && field.equals(nodeName) && !matchKeyword(nodeValue,keywords,caseSensitive)) {
-        return null;
+      if (field != null && field.equals(nodeName)) {
+        targetNodeFound=true;
+        if (!matchKeyword(nodeValue,keywords,caseSensitive))         return null;
       }
       nameVals.add(nodeName);
       nameVals.add(nodeValue);
     }
+  }
+  if (keywords != null && keywords.length > 0 && !targetNodeFound) {
+    return null;
   }
   String[] propertyNames=new String[nameVals.size() / 2];
   String[] propertyValues=new String[propertyNames.length];

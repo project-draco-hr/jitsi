@@ -1,0 +1,74 @@
+{
+  ConferenceInfoDocument ourDocument=callPeer.getLastConferenceInfoReceived();
+  ConferenceInfoDocument newDocument;
+  ConferenceInfoDocument.State usersState=diff.getUsersState();
+  if (usersState == ConferenceInfoDocument.State.FULL) {
+    try {
+      newDocument=new ConferenceInfoDocument(diff);
+    }
+ catch (    XMLException e) {
+      logger.error("Could not create a new ConferenceInfoDocument");
+      return -1;
+    }
+    newDocument.setState(ConferenceInfoDocument.State.FULL);
+  }
+ else   if (usersState == ConferenceInfoDocument.State.DELETED) {
+    try {
+      newDocument=new ConferenceInfoDocument();
+    }
+ catch (    XMLException e) {
+      logger.error("Could not create a new ConferenceInfoDocument",e);
+      return -1;
+    }
+    newDocument.setVersion(diff.getVersion());
+    newDocument.setEntity(diff.getEntity());
+    newDocument.setUserCount(diff.getUserCount());
+  }
+ else {
+    try {
+      newDocument=new ConferenceInfoDocument(ourDocument);
+    }
+ catch (    XMLException e) {
+      logger.error("Could not create a new ConferenceInfoDocument",e);
+      return -1;
+    }
+    newDocument.setVersion(diff.getVersion());
+    newDocument.setEntity(diff.getEntity());
+    newDocument.setUserCount(diff.getUserCount());
+    for (    ConferenceInfoDocument.User user : diff.getUsers()) {
+      ConferenceInfoDocument.State userState=user.getState();
+      if (userState == ConferenceInfoDocument.State.FULL) {
+        newDocument.removeUser(user.getEntity());
+        newDocument.addUser(user);
+      }
+ else       if (userState == ConferenceInfoDocument.State.DELETED) {
+        newDocument.removeUser(user.getEntity());
+      }
+ else {
+        ConferenceInfoDocument.User ourUser=newDocument.getUser(user.getEntity());
+        ourUser.setDisplayText(user.getDisplayText());
+        for (        ConferenceInfoDocument.Endpoint endpoint : user.getEndpoints()) {
+          ConferenceInfoDocument.State endpointState=endpoint.getState();
+          if (endpointState == ConferenceInfoDocument.State.FULL) {
+            ourUser.removeEndpoint(endpoint.getEntity());
+            ourUser.addEndpoint(endpoint);
+          }
+ else           if (endpointState == ConferenceInfoDocument.State.DELETED) {
+            ourUser.removeEndpoint(endpoint.getEntity());
+          }
+ else {
+            ConferenceInfoDocument.Endpoint ourEndpoint=ourUser.getEndpoint(endpoint.getEntity());
+            for (            ConferenceInfoDocument.Media media : endpoint.getMedias()) {
+              ourEndpoint.removeMedia(media.getId());
+              ourEndpoint.addMedia(media);
+            }
+          }
+        }
+      }
+    }
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Applied a partial conference-info notification. " + " Base: " + ourDocument + "\nDiff: "+ diff+ "\nResult:"+ newDocument);
+  }
+  return setConferenceInfoDocument(callPeer,newDocument);
+}

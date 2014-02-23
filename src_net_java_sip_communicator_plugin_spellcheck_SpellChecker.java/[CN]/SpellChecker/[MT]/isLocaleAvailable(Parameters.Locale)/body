@@ -1,10 +1,20 @@
 {
-  String path=locale.getDictUrl().getFile();
-  int filenameStart=path.lastIndexOf('/') + 1;
-  String filename=path.substring(filenameStart);
   try {
-    File dictLocation=SpellCheckActivator.getFileAccessService().getPrivatePersistentFile(DICT_DIR + filename);
-    return dictLocation.exists();
+    if (getLocalDictForLocale(locale).exists()) {
+      return true;
+    }
+ else {
+      @SuppressWarnings("unchecked") Enumeration<URL> dictUrls=SpellCheckActivator.bundleContext.getBundle().findEntries(DEFAULT_DICT_PATH,"*.zip",false);
+      if (dictUrls != null) {
+        while (dictUrls.hasMoreElements()) {
+          URL dictUrl=dictUrls.nextElement();
+          if (new File(dictUrl.getFile()).getName().equals(new File(locale.getDictUrl().getFile()).getName())) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
  catch (  Exception exc) {
     return false;
