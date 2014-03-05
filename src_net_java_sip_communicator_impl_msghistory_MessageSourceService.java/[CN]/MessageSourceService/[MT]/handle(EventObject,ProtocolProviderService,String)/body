@@ -1,25 +1,28 @@
 {
-  for (  MessageSourceContact msc : getRecentMessages()) {
-    if (msc.getProtocolProviderService().equals(provider) && msc.getContactAddress().equals(id)) {
-      msc.update(obj);
-      if (recentQuery != null)       recentQuery.fireContactChanged(msc);
-      return;
+  List<MessageSourceContact> messages=getRecentMessages();
+synchronized (messages) {
+    for (    MessageSourceContact msc : messages) {
+      if (msc.getProtocolProviderService().equals(provider) && msc.getContactAddress().equals(id)) {
+        msc.update(obj);
+        if (recentQuery != null)         recentQuery.fireContactChanged(msc);
+        return;
+      }
     }
-  }
-  MessageSourceContact newSourceContact=new MessageSourceContact(obj,MessageSourceService.this);
-  recentMessages.add(newSourceContact);
-  Collections.sort(recentMessages);
-  List<MessageSourceContact> removedItems=null;
-  if (recentMessages.size() > numberOfMessages) {
-    removedItems=recentMessages.subList(numberOfMessages,recentMessages.size());
-    recentMessages=recentMessages.subList(0,numberOfMessages);
-  }
-  saveRecentMessagesToHistory();
-  if (recentQuery == null)   return;
-  if (removedItems != null) {
-    for (    MessageSourceContact msc : removedItems) {
-      recentQuery.fireContactRemoved(msc);
+    MessageSourceContact newSourceContact=new MessageSourceContact(obj,MessageSourceService.this);
+    messages.add(newSourceContact);
+    Collections.sort(messages);
+    List<MessageSourceContact> removedItems=null;
+    if (messages.size() > numberOfMessages) {
+      removedItems=messages.subList(numberOfMessages,messages.size());
+      messages.removeAll(removedItems);
     }
+    saveRecentMessagesToHistory();
+    if (recentQuery == null)     return;
+    if (removedItems != null) {
+      for (      MessageSourceContact msc : removedItems) {
+        recentQuery.fireContactRemoved(msc);
+      }
+    }
+    recentQuery.fireContactReceived(newSourceContact);
   }
-  recentQuery.fireContactReceived(newSourceContact);
 }

@@ -13,8 +13,11 @@
     History history=historyService.createHistory(historyID,recordStructure);
     HistoryWriter writer=history.getWriter();
     SimpleDateFormat sdf=new SimpleDateFormat(HistoryService.DATE_FORMAT);
-    for (    MessageSourceContact msc : getRecentMessages()) {
-      writer.addRecord(new String[]{msc.getProtocolProviderService().getAccountID().getAccountUniqueID(),msc.getContactAddress()});
+    List<MessageSourceContact> messages=getRecentMessages();
+synchronized (messages) {
+      for (      MessageSourceContact msc : messages) {
+        writer.addRecord(new String[]{msc.getProtocolProviderService().getAccountID().getAccountUniqueID(),msc.getContactAddress()});
+      }
     }
   }
  catch (  IOException ex) {
