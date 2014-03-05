@@ -1,0 +1,43 @@
+{
+  TreeSet<EventObject> result=new TreeSet<EventObject>(new MessageEventComparator<EventObject>(true));
+  List<HistoryID> historyIDs=this.historyService.getExistingHistories(new String[]{"messages","default"});
+  for (  HistoryID id : historyIDs) {
+    if (result.size() >= count)     break;
+    try {
+      if (id.getID().length != 4)       continue;
+      String accountID=id.getID()[2].replace('_',':');
+      if (providerToFilter != null && !accountID.startsWith(providerToFilter)) {
+        continue;
+      }
+      if (contactToFilter != null && !contactToFilter.equals(id.getID()[3])) {
+        continue;
+      }
+      Object descriptor=getContactOrRoomByID(accountID,id.getID()[3]);
+      if (descriptor == null)       continue;
+      History history;
+      if (this.historyService.isHistoryExisting(id)) {
+        history=this.historyService.getHistory(id);
+      }
+ else {
+        history=this.historyService.createHistory(id,recordStructure);
+      }
+      HistoryReader reader=history.getReader();
+      Iterator<HistoryRecord> recs=reader.findLast(1);
+      while (recs.hasNext()) {
+        if (descriptor instanceof Contact) {
+          EventObject o=convertHistoryRecordToMessageEvent(recs.next(),(Contact)descriptor);
+          result.add(o);
+        }
+        if (descriptor instanceof ChatRoom) {
+          EventObject o=convertHistoryRecordToMessageEvent(recs.next(),(ChatRoom)descriptor);
+          result.add(o);
+        }
+        break;
+      }
+    }
+ catch (    IOException ex) {
+      logger.error("Could not read history",ex);
+    }
+  }
+  return result;
+}

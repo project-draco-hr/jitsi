@@ -1,0 +1,20 @@
+{
+  if (recentQuery == null)   return;
+  MessageSourceContact srcContact=null;
+  for (  MessageSourceContact msg : getRecentMessages()) {
+    if (msg.getRoom() != null && msg.getRoom().equals(evt.getChatRoom())) {
+      srcContact=msg;
+      break;
+    }
+  }
+  if (srcContact == null)   return;
+  String eventType=evt.getEventType();
+  if (LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED.equals(eventType)) {
+    srcContact.setStatus(ChatRoomPresenceStatus.CHAT_ROOM_ONLINE);
+    recentQuery.fireContactChanged(srcContact);
+  }
+ else   if ((LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT.equals(eventType) || LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_KICKED.equals(eventType) || LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_DROPPED.equals(eventType))) {
+    srcContact.setStatus(ChatRoomPresenceStatus.CHAT_ROOM_OFFLINE);
+    recentQuery.fireContactChanged(srcContact);
+  }
+}

@@ -1,0 +1,24 @@
+{
+  HistoryService historyService=MessageHistoryActivator.getMessageHistoryService().getHistoryService();
+  if (historyService.isHistoryExisting(historyID)) {
+    try {
+      historyService.purgeLocallyStoredHistory(historyID);
+    }
+ catch (    IOException ex) {
+      logger.error("Cannot delete recent_messages history",ex);
+      return;
+    }
+  }
+  try {
+    History history=historyService.createHistory(historyID,recordStructure);
+    HistoryWriter writer=history.getWriter();
+    SimpleDateFormat sdf=new SimpleDateFormat(HistoryService.DATE_FORMAT);
+    for (    MessageSourceContact msc : recentMessages) {
+      writer.addRecord(new String[]{msc.getProtocolProviderService().getAccountID().getAccountUniqueID(),msc.getContactAddress()});
+    }
+  }
+ catch (  IOException ex) {
+    logger.error("cannot create recent_messages history",ex);
+    return;
+  }
+}

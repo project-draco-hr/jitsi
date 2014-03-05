@@ -1,0 +1,24 @@
+{
+  if (!evt.getNewStatus().isOnline())   return;
+  MessageHistoryServiceImpl msgHistoryService=MessageHistoryActivator.getMessageHistoryService();
+  Collection<EventObject> res=msgHistoryService.findRecentMessagesPerContact(numberOfMessages,evt.getProvider().getAccountID().getAccountUniqueID(),null);
+  List<String> recentMessagesForProvider=new LinkedList<String>();
+  for (  MessageSourceContact msc : recentMessages) {
+    if (msc.getProtocolProviderService().equals(evt.getProvider()))     recentMessagesForProvider.add(msc.getContactAddress());
+  }
+  List<MessageSourceContact> newContactSources=new LinkedList<MessageSourceContact>();
+  for (  EventObject obj : res) {
+    if (obj instanceof ChatRoomMessageDeliveredEvent || obj instanceof ChatRoomMessageReceivedEvent) {
+      MessageSourceContact msc=new MessageSourceContact(obj,MessageSourceService.this);
+      if (recentMessagesForProvider.contains(msc.getContactAddress()))       continue;
+      recentMessages.add(msc);
+      newContactSources.add(msc);
+    }
+  }
+  Collections.sort(recentMessages);
+  if (recentQuery != null) {
+    for (    MessageSourceContact msc : newContactSources) {
+      recentQuery.addQueryResult(msc);
+    }
+  }
+}

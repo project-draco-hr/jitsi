@@ -1,0 +1,19 @@
+{
+  if (recentMessages == null) {
+    List<MessageSourceContact> cachedRecent=getRecentMessagesFromHistory();
+    if (cachedRecent != null) {
+      recentMessages=cachedRecent;
+      Collections.sort(recentMessages);
+      return recentMessages;
+    }
+    recentMessages=new LinkedList<MessageSourceContact>();
+    MessageHistoryServiceImpl msgHistoryService=MessageHistoryActivator.getMessageHistoryService();
+    Collection<EventObject> res=msgHistoryService.findRecentMessagesPerContact(numberOfMessages,null,null);
+    for (    EventObject obj : res) {
+      recentMessages.add(new MessageSourceContact(obj,MessageSourceService.this));
+    }
+    Collections.sort(recentMessages);
+    saveRecentMessagesToHistory();
+  }
+  return recentMessages;
+}

@@ -2,10 +2,12 @@
   OperationSetBasicInstantMessaging opSetIm=provider.getOperationSet(OperationSetBasicInstantMessaging.class);
   if (opSetIm != null) {
     opSetIm.removeMessageListener(this);
+    if (this.messageSourceService != null)     opSetIm.removeMessageListener(messageSourceService);
   }
   OperationSetSmsMessaging opSetSMS=provider.getOperationSet(OperationSetSmsMessaging.class);
   if (opSetSMS != null) {
     opSetSMS.removeMessageListener(this);
+    if (this.messageSourceService != null)     opSetIm.removeMessageListener(messageSourceService);
   }
   OperationSetMultiUserChat opSetMultiUChat=provider.getOperationSet(OperationSetMultiUserChat.class);
   if (opSetMultiUChat != null) {
@@ -14,5 +16,12 @@
       ChatRoom room=iter.next();
       room.removeMessageListener(this);
     }
+    opSetMultiUChat.removePresenceListener(this);
+    if (messageSourceService != null)     opSetMultiUChat.removePresenceListener(messageSourceService);
+  }
+  OperationSetPresence opSetPresence=provider.getOperationSet(OperationSetPresence.class);
+  if (opSetPresence != null && messageSourceService != null) {
+    opSetPresence.removeContactPresenceStatusListener(messageSourceService);
+    opSetPresence.removeProviderPresenceStatusListener(messageSourceService);
   }
 }

@@ -1,0 +1,19 @@
+{
+  ContactDetail contactDetail=new ContactDetail(this.address,this.displayName);
+  Map<Class<? extends OperationSet>,ProtocolProviderService> preferredProviders;
+  ProtocolProviderService preferredProvider=this.ppService;
+  if (preferredProvider != null) {
+    preferredProviders=new Hashtable<Class<? extends OperationSet>,ProtocolProviderService>();
+    LinkedList<Class<? extends OperationSet>> supportedOpSets=new LinkedList<Class<? extends OperationSet>>();
+    for (    Class<? extends OperationSet> opset : preferredProvider.getSupportedOperationSetClasses()) {
+      if (opset.equals(OperationSetPresence.class) || opset.equals(OperationSetPersistentPresence.class) || (isChatRoom && opset.equals(OperationSetBasicInstantMessaging.class))) {
+        continue;
+      }
+      preferredProviders.put(opset,preferredProvider);
+      supportedOpSets.add(opset);
+    }
+    contactDetail.setPreferredProviders(preferredProviders);
+    contactDetail.setSupportedOpSets(supportedOpSets);
+  }
+  contactDetails.add(contactDetail);
+}
