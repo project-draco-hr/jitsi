@@ -4,7 +4,17 @@
   UIContactSource sourceUI=getContactSource(contactSource);
   if (sourceUI == null)   return;
   UIContact uiContact=sourceUI.getUIContact(sourceContact);
-  if (uiContact == null || !(uiContact instanceof UIContactImpl))   return;
+  if (uiContact == null) {
+    uiContact=sourceUI.createUIContact(sourceContact);
+    if ((contactSource instanceof ExtendedContactSourceService) || currentFilter.isMatching(uiContact)) {
+      addContact(event.getQuerySource(),uiContact,sourceUI.getUIGroup(),(sourceContact.getIndex() > -1));
+    }
+ else {
+      sourceUI.removeUIContact(sourceContact);
+    }
+    return;
+  }
+  if (!(uiContact instanceof UIContactImpl))   return;
   ContactNode contactNode;
 synchronized (uiContact) {
     contactNode=((UIContactImpl)uiContact).getContactNode();
