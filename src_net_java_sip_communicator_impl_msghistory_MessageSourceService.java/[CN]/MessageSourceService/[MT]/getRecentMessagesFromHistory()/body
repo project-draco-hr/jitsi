@@ -1,13 +1,9 @@
 {
   MessageHistoryServiceImpl msgService=MessageHistoryActivator.getMessageHistoryService();
-  HistoryService historyService=msgService.getHistoryService();
-  if (!historyService.isHistoryCreated(historyID))   return null;
-  List<MessageSourceContact> res=new LinkedList<MessageSourceContact>();
   try {
-    SimpleDateFormat sdf=new SimpleDateFormat(HistoryService.DATE_FORMAT);
-    History history;
-    if (historyService.isHistoryExisting(historyID))     history=historyService.getHistory(historyID);
- else     history=historyService.createHistory(historyID,recordStructure);
+    History history=getHistory();
+    if (history == null)     return null;
+    List<MessageSourceContact> res=new LinkedList<MessageSourceContact>();
     Iterator<HistoryRecord> recs=history.getReader().findLast(numberOfMessages);
     while (recs.hasNext()) {
       HistoryRecord hr=recs.next();
@@ -23,10 +19,10 @@
         res.add(new MessageSourceContact(ev,this));
       }
     }
+    return res;
   }
  catch (  IOException ex) {
     logger.error("cannot create recent_messages history",ex);
     return null;
   }
-  return res;
 }
