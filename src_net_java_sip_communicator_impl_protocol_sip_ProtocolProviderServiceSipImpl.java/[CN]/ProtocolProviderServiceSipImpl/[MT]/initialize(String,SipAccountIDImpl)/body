@@ -36,8 +36,10 @@ synchronized (initializationLock) {
       boolean isAccountDesktopStreamingDisabled=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_DESKTOP_STREAMING_DISABLED,false);
       if (!isDesktopStreamingDisabled && !isAccountDesktopStreamingDisabled) {
         addSupportedOperationSet(OperationSetDesktopStreaming.class,new OperationSetDesktopStreamingSipImpl(opSetBasicTelephonySipImpl));
-        addSupportedOperationSet(OperationSetDesktopSharingServer.class,new OperationSetDesktopSharingServerSipImpl(opSetBasicTelephonySipImpl));
-        addSupportedOperationSet(OperationSetDesktopSharingClient.class,new OperationSetDesktopSharingClientSipImpl(this));
+        if (!accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_DESKTOP_REMOTE_CONTROL_DISABLED,false)) {
+          addSupportedOperationSet(OperationSetDesktopSharingServer.class,new OperationSetDesktopSharingServerSipImpl(opSetBasicTelephonySipImpl));
+          addSupportedOperationSet(OperationSetDesktopSharingClient.class,new OperationSetDesktopSharingClientSipImpl(this));
+        }
       }
     }
     if (enablePresence) {
