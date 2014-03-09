@@ -25,7 +25,16 @@
     if (logger.isTraceEnabled())     logger.trace(context + "SipProvider has been created.");
   }
  catch (  InvalidArgumentException ex) {
-    if (tlsLP != null)     this.stack.deleteListeningPoint(tlsLP);
+    if (secure) {
+      if (tlsLP != null)       this.stack.deleteListeningPoint(tlsLP);
+      @SuppressWarnings("rawtypes") Iterator lps=this.stack.getListeningPoints();
+      while (lps.hasNext()) {
+        ListeningPoint lp=(ListeningPoint)lps.next();
+        if (ListeningPoint.TLS.equalsIgnoreCase(lp.getTransport()) && lp.getPort() == preferredPort) {
+          this.stack.deleteListeningPoint(lp);
+        }
+      }
+    }
     if (udpLP != null)     this.stack.deleteListeningPoint(udpLP);
     if (tcpLP != null)     this.stack.deleteListeningPoint(tcpLP);
     if (ex.getCause() instanceof java.io.IOException) {
