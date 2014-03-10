@@ -12,7 +12,7 @@
       if (contactToFilter != null && !contactToFilter.equals(id.getID()[3])) {
         continue;
       }
-      Object descriptor=getContactOrRoomByID(accountID,id.getID()[3]);
+      Object descriptor=getContactOrRoomByID(accountID,id.getID()[3],id,isSMSEnabled);
       if (descriptor == null)       continue;
       History history;
       if (this.historyService.isHistoryExisting(id)) {
@@ -22,7 +22,13 @@
         history=this.historyService.createHistory(id,recordStructure);
       }
       HistoryReader reader=history.getReader();
-      Iterator<HistoryRecord> recs=reader.findLast(1);
+      Iterator<HistoryRecord> recs;
+      if (isSMSEnabled) {
+        recs=reader.findLast(1,new String[]{MessageHistoryServiceImpl.MSG_SUBTYPE_SMS},MessageHistoryServiceImpl.STRUCTURE_NAMES[7],true);
+      }
+ else {
+        recs=reader.findLast(1);
+      }
       while (recs.hasNext()) {
         if (descriptor instanceof Contact) {
           EventObject o=convertHistoryRecordToMessageEvent(recs.next(),(Contact)descriptor);
