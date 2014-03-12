@@ -27,12 +27,16 @@
  catch (  InvalidArgumentException ex) {
     if (secure) {
       if (tlsLP != null)       this.stack.deleteListeningPoint(tlsLP);
+      Set<ListeningPoint> lpsToDelete=new HashSet<ListeningPoint>();
       @SuppressWarnings("rawtypes") Iterator lps=this.stack.getListeningPoints();
       while (lps.hasNext()) {
         ListeningPoint lp=(ListeningPoint)lps.next();
         if (ListeningPoint.TLS.equalsIgnoreCase(lp.getTransport()) && lp.getPort() == preferredPort) {
-          this.stack.deleteListeningPoint(lp);
+          lpsToDelete.add(lp);
         }
+      }
+      for (      ListeningPoint lp : lpsToDelete) {
+        this.stack.deleteListeningPoint(lp);
       }
     }
     if (udpLP != null)     this.stack.deleteListeningPoint(udpLP);
