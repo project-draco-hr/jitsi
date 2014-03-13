@@ -1,0 +1,42 @@
+{
+  MediaDirection direction=MediaDirection.INACTIVE;
+  try {
+    Vector medias=sdp.getMediaDescriptions(false);
+    if (medias != null) {
+      for (      Object o : medias) {
+        if (o instanceof MediaDescription) {
+          MediaDescription md=(MediaDescription)o;
+          if (md.getMedia().getMediaPort() != 0) {
+            direction=direction.or(getDirection((MediaDescription)o));
+          }
+        }
+      }
+    }
+  }
+ catch (  SdpException se) {
+    logger.warn("Failed to get media descriptions.");
+  }
+  Vector attributes=sdp.getAttributes(true);
+  Iterator iter=attributes.iterator();
+  while (iter.hasNext()) {
+    Object o=iter.next();
+    if (o instanceof Attribute) {
+      try {
+        String name=((Attribute)o).getName();
+        if ("inactive".equals(name) || "sendonly".equals(name) || "recvonly".equals(name)|| "sendrecv".equals(name)) {
+          iter.remove();
+        }
+      }
+ catch (      SdpException se) {
+        if (logger.isDebugEnabled())         logger.debug("Failed to get attribute name: ",se);
+      }
+    }
+  }
+  if (!MediaDirection.SENDRECV.equals(direction))   attributes.add(createDirectionAttribute(direction));
+  try {
+    sdp.setAttributes(attributes);
+  }
+ catch (  SdpException se) {
+    logger.warn("Failed to set session direction attribute.");
+  }
+}
