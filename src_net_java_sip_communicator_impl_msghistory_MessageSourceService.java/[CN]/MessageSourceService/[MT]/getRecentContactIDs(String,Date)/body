@@ -1,0 +1,36 @@
+{
+  List<String> res=new ArrayList<String>();
+  try {
+    History history=getHistory();
+    if (history != null) {
+      Iterator<HistoryRecord> recs=history.getReader().findLast(NUMBER_OF_MSGS_IN_HISTORY);
+      SimpleDateFormat sdf=new SimpleDateFormat(DATE_FORMAT);
+      while (recs.hasNext()) {
+        HistoryRecord hr=recs.next();
+        String contact=null;
+        String recordProvider=null;
+        Date timestamp=null;
+        for (int i=0; i < hr.getPropertyNames().length; i++) {
+          String propName=hr.getPropertyNames()[i];
+          if (propName.equals(STRUCTURE_NAMES[0]))           recordProvider=hr.getPropertyValues()[i];
+ else           if (propName.equals(STRUCTURE_NAMES[1]))           contact=hr.getPropertyValues()[i];
+ else           if (propName.equals(STRUCTURE_NAMES[2])) {
+            try {
+              timestamp=sdf.parse(hr.getPropertyValues()[i]);
+            }
+ catch (            ParseException e) {
+              timestamp=new Date(Long.parseLong(hr.getPropertyValues()[i]));
+            }
+          }
+        }
+        if (recordProvider == null || contact == null)         continue;
+        if (after != null && timestamp != null && timestamp.before(after))         continue;
+        if (recordProvider.equals(provider))         res.add(contact);
+      }
+    }
+  }
+ catch (  IOException ex) {
+    logger.error("cannot create recent_messages history",ex);
+  }
+  return res;
+}

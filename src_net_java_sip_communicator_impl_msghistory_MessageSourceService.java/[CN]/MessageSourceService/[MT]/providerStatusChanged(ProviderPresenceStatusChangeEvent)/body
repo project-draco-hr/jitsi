@@ -1,27 +1,4 @@
 {
-  if (!evt.getNewStatus().isOnline())   return;
-  MessageHistoryServiceImpl msgHistoryService=MessageHistoryActivator.getMessageHistoryService();
-  Collection<EventObject> res=msgHistoryService.findRecentMessagesPerContact(numberOfMessages,evt.getProvider().getAccountID().getAccountUniqueID(),null,isSMSEnabled);
-  List<String> recentMessagesForProvider=new LinkedList<String>();
-  List<MessageSourceContact> messages=getRecentMessages();
-synchronized (messages) {
-    for (    MessageSourceContact msc : messages) {
-      if (msc.getProtocolProviderService().equals(evt.getProvider()))       recentMessagesForProvider.add(msc.getContactAddress());
-    }
-    List<MessageSourceContact> newContactSources=new LinkedList<MessageSourceContact>();
-    for (    EventObject obj : res) {
-      if (obj instanceof ChatRoomMessageDeliveredEvent || obj instanceof ChatRoomMessageReceivedEvent) {
-        MessageSourceContact msc=new MessageSourceContact(obj,MessageSourceService.this);
-        if (recentMessagesForProvider.contains(msc.getContactAddress()))         continue;
-        messages.add(msc);
-        newContactSources.add(msc);
-      }
-    }
-    Collections.sort(messages);
-    if (recentQuery != null) {
-      for (      MessageSourceContact msc : newContactSources) {
-        recentQuery.addQueryResult(msc);
-      }
-    }
-  }
+  if (!evt.getNewStatus().isOnline() || evt.getOldStatus().isOnline())   return;
+  handleProviderAdded(evt.getProvider());
 }
