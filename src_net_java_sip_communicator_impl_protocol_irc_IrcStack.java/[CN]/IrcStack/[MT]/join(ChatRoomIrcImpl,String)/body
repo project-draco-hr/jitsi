@@ -9,6 +9,7 @@
   final Result<Object,Exception> joinSignal=new Result<Object,Exception>();
 synchronized (joinSignal) {
     LOGGER.trace("Issue join channel command to IRC library and wait for" + " join operation to complete (un)successfully.");
+    this.joining.put(chatroom.getIdentifier(),joinSignal);
     this.irc.joinChannel(chatroom.getIdentifier(),password,new Callback<IRCChannel>(){
       @Override public void onSuccess(      IRCChannel channel){
         if (LOGGER.isTraceEnabled()) {
@@ -16,37 +17,22 @@ synchronized (joinSignal) {
         }
         ChatRoomIrcImpl actualChatRoom=chatroom;
 synchronized (joinSignal) {
-          try {
-            if (!channel.getName().equalsIgnoreCase(actualChatRoom.getIdentifier())) {
-              actualChatRoom=new ChatRoomIrcImpl(channel.getName(),IrcStack.this.provider);
-              MessageIrcImpl message=new MessageIrcImpl("Forwarding to channel " + channel.getName(),"text/plain","UTF-8",null);
-              IrcStack.this.provider.getMUC().registerChatRoomInstance(actualChatRoom);
-              chatroom.fireMessageReceivedEvent(message,null,new Date(),MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
+          if (channel.getName().equalsIgnoreCase(actualChatRoom.getIdentifier())) {
+            try {
+              IrcStack.this.joined.put(actualChatRoom.getIdentifier(),actualChatRoom);
+              IrcStack.this.joining.remove(actualChatRoom.getIdentifier());
+              IrcStack.this.irc.addListener(new ChatRoomListener(actualChatRoom));
+              prepareChatRoom(actualChatRoom,channel);
             }
-            IrcStack.this.joined.put(actualChatRoom.getIdentifier(),actualChatRoom);
-            IrcStack.this.irc.addListener(new ChatRoomListener(actualChatRoom));
-            IRCTopic topic=channel.getTopic();
-            actualChatRoom.updateSubject(topic.getValue());
-            for (            IRCUser user : channel.getUsers()) {
-              ChatRoomMemberRole role=ChatRoomMemberRole.SILENT_MEMBER;
-              Set<IRCUserStatus> statuses=channel.getStatusesForUser(user);
-              for (              IRCUserStatus status : statuses) {
-                role=convertMemberMode(status.getChanModeType().charValue());
-              }
-              if (IrcStack.this.getNick().equals(user.getNick())) {
-                actualChatRoom.prepUserRole(role);
-              }
- else {
-                ChatRoomMemberIrcImpl member=new ChatRoomMemberIrcImpl(IrcStack.this.provider,actualChatRoom,user.getNick(),role);
-                actualChatRoom.addChatRoomMember(member.getContactAddress(),member);
-              }
+  finally {
+              IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(actualChatRoom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
+              LOGGER.trace("Finished successful join callback " + "for channel '" + chatroom.getIdentifier() + "'. Waking up original thread.");
+              joinSignal.setDone();
+              joinSignal.notifyAll();
             }
           }
-  finally {
-            IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(actualChatRoom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
-            LOGGER.trace("Finished successful join callback " + "for channel '" + chatroom.getIdentifier() + "'. Waking up original thread.");
-            joinSignal.setDone();
-            joinSignal.notifyAll();
+ else {
+            IrcStack.this.joining.remove(chatroom.getIdentifier());
           }
         }
       }
@@ -54,6 +40,7 @@ synchronized (joinSignal) {
         LOGGER.trace("Started callback for failed attempt to " + "join channel '" + chatroom.getIdentifier() + "'.");
 synchronized (joinSignal) {
           try {
+            IrcStack.this.joining.remove(chatroom.getIdentifier());
             MessageIrcImpl message=new MessageIrcImpl("Failed to join channel " + chatroom.getIdentifier() + " ("+ e.getMessage()+ ")","text/plain","UTF-8","Failed to join");
             chatroom.fireMessageReceivedEvent(message,null,new Date(),MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
           }
