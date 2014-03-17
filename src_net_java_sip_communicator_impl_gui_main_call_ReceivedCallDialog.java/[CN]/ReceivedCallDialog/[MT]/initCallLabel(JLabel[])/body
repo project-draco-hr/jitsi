@@ -1,35 +1,28 @@
 {
   Iterator<? extends CallPeer> peersIter=incomingCall.getCallPeers();
-  boolean hasMorePeers=false;
-  String textDisplayName="";
   String textAddress="";
   String textAccount="";
   ImageIcon imageIcon=ImageUtils.scaleIconWithinBounds(ImageLoader.getImage(ImageLoader.DEFAULT_USER_PHOTO),40,45);
+  Hashtable<CallPeer,String> peerNamesTable=new Hashtable<CallPeer,String>();
   while (peersIter.hasNext()) {
     final CallPeer peer=peersIter.next();
     String peerAddress=getPeerDisplayAddress(peer);
     textAccount=peer.getProtocolProvider().getAccountID().getDisplayName();
+    DisplayNameAndImageChangeListener listener=new DisplayNameAndImageChangeListener(peer,peerNamesTable);
+    detailsResolvers.add(listener);
+    String displayName=CallManager.getPeerDisplayName(peer,listener);
+    if (displayName != null)     peerNamesTable.put(peer,displayName);
+    if (!StringUtils.isNullOrEmpty(peerAddress))     textAddress=callLabel[2].getText() + trimPeerAddressToUsername(peerAddress);
     if (peersIter.hasNext()) {
-      textDisplayName=callLabel[1].getText() + CallManager.getPeerDisplayName(peer) + ", ";
-      if (!StringUtils.isNullOrEmpty(peerAddress))       textAddress=callLabel[2].getText() + trimPeerAddressToUsername(peerAddress) + ", ";
-      hasMorePeers=true;
+      textAddress+=", ";
     }
  else {
-      textDisplayName=GuiActivator.getResources().getI18NString("service.gui.IS_CALLING",new String[]{CallManager.getPeerDisplayName(peer)});
-      if (!StringUtils.isNullOrEmpty(peerAddress))       textAddress=callLabel[2].getText() + trimPeerAddressToUsername(peerAddress);
       byte[] image=CallManager.getPeerImage(peer);
       if (image != null && image.length > 0)       imageIcon=ImageUtils.getScaledRoundedIcon(image,50,50);
- else       new Thread(new Runnable(){
-        public void run(){
-          GuiActivator.getContactList().setSourceContactImage(peer.getAddress(),callLabel[0],50,50);
-        }
-      }
-).start();
     }
   }
-  if (hasMorePeers)   textDisplayName=GuiActivator.getResources().getI18NString("service.gui.ARE_CALLING",new String[]{textDisplayName});
+  updateTextDisplayName(peerNamesTable);
   callLabel[0].setIcon(imageIcon);
-  callLabel[1].setText(textDisplayName);
   callLabel[2].setText(textAddress);
   callLabel[2].setForeground(Color.GRAY);
   if (textAccount != null) {

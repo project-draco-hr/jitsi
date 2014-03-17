@@ -1,0 +1,58 @@
+{
+  Vector<ResolveAddressToDisplayNameContactQueryListener> resolvers=new Vector<ResolveAddressToDisplayNameContactQueryListener>(1,1);
+  int index=peerAddress.indexOf("@");
+  String peerUserID=(index > -1) ? peerAddress.substring(0,index) : peerAddress;
+  String quotedPeerUserID=Pattern.quote(peerUserID);
+  Pattern pattern=Pattern.compile("^(" + quotedPeerUserID + "|"+ quotedPeerUserID+ "@.*)$");
+  for (  ContactSourceService css : GuiActivator.getContactSources()) {
+    ContactQuery query;
+    if (css instanceof ExtendedContactSourceService) {
+      query=((ExtendedContactSourceService)css).createContactQuery(pattern);
+    }
+ else {
+      query=css.createContactQuery(peerUserID);
+    }
+    if (query == null)     continue;
+    resolvers.add(new ResolveAddressToDisplayNameContactQueryListener(query));
+    query.start();
+  }
+  long startTime=System.currentTimeMillis();
+  long timeout=listener == null ? 500 : -1;
+  boolean hasRunningResolver=true;
+  while ((displayName == null || displayImage == null) && hasRunningResolver && (listener == null || listener.isInterested())) {
+    hasRunningResolver=false;
+    for (int i=0; i < resolvers.size() && (displayName == null || displayImage == null) && (listener == null || listener.isInterested()); ++i) {
+      ResolveAddressToDisplayNameContactQueryListener resolver=resolvers.get(i);
+      if (!resolver.isRunning()) {
+        if (displayName == null && resolver.isFoundName()) {
+          displayName=resolver.getResolvedName();
+          if (displayName.equals(peerAddress)) {
+            displayName=null;
+          }
+          if (listener != null && displayName != null) {
+            listener.displayNameUpdated(displayName);
+          }
+        }
+        if (displayImage == null && resolver.isFoundImage()) {
+          displayImage=resolver.getResolvedImage();
+          String name=resolver.getResolvedName();
+          if (name != null && name.equals(peerAddress)) {
+            displayImage=null;
+          }
+ else           if (listener != null && displayImage != null) {
+            listener.imageUpdated(displayImage);
+          }
+        }
+      }
+ else       hasRunningResolver=true;
+    }
+    Thread.yield();
+    if (timeout > 0 && System.currentTimeMillis() - startTime >= timeout)     break;
+  }
+  for (int i=0; i < resolvers.size(); ++i) {
+    ResolveAddressToDisplayNameContactQueryListener resolver=resolvers.get(i);
+    if (resolver.isRunning()) {
+      resolver.stop();
+    }
+  }
+}
