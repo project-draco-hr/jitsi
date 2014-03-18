@@ -1,9 +1,21 @@
 {
   List<String> result=new LinkedList<String>();
   if (str == null)   return result;
-  StringTokenizer toks=new StringTokenizer(str,DELIM);
-  while (toks.hasMoreTokens()) {
-    result.add(toks.nextToken());
+  StreamTokenizer stt=new StreamTokenizer(new StringReader(str));
+  stt.resetSyntax();
+  stt.wordChars('\u0000','\uFFFF');
+  stt.eolIsSignificant(false);
+  stt.quoteChar('"');
+  stt.whitespaceChars(DELIM,DELIM);
+  try {
+    while (stt.nextToken() != StreamTokenizer.TT_EOF) {
+      if (stt.sval != null) {
+        result.add(stt.sval.trim());
+      }
+    }
+  }
+ catch (  IOException e) {
+    logger.error("failed to parse " + str,e);
   }
   return result;
 }
