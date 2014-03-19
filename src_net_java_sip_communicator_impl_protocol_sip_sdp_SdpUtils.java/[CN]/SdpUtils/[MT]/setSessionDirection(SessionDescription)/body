@@ -1,34 +1,31 @@
 {
   MediaDirection direction=MediaDirection.INACTIVE;
   try {
-    Vector medias=sdp.getMediaDescriptions(false);
-    if (medias != null) {
-      for (      Object o : medias) {
+    Vector mds=sdp.getMediaDescriptions(false);
+    if (mds != null) {
+      for (      Object o : mds) {
         if (o instanceof MediaDescription) {
           MediaDescription md=(MediaDescription)o;
-          if (md.getMedia().getMediaPort() != 0) {
-            direction=direction.or(getDirection((MediaDescription)o));
-          }
+          if (md.getMedia().getMediaPort() != 0)           direction=direction.or(getDirection(md));
         }
       }
     }
   }
- catch (  SdpException se) {
+ catch (  SdpException e) {
     logger.warn("Failed to get media descriptions.");
   }
   Vector attributes=sdp.getAttributes(true);
-  Iterator iter=attributes.iterator();
-  while (iter.hasNext()) {
-    Object o=iter.next();
+  for (Iterator i=attributes.iterator(); i.hasNext(); ) {
+    Object o=i.next();
     if (o instanceof Attribute) {
       try {
         String name=((Attribute)o).getName();
-        if ("inactive".equals(name) || "sendonly".equals(name) || "recvonly".equals(name)|| "sendrecv".equals(name)) {
-          iter.remove();
+        if ("inactive".equals(name) || "recvonly".equals(name) || "sendonly".equals(name)|| "sendrecv".equals(name)) {
+          i.remove();
         }
       }
- catch (      SdpException se) {
-        if (logger.isDebugEnabled())         logger.debug("Failed to get attribute name: ",se);
+ catch (      SdpException e) {
+        if (logger.isDebugEnabled())         logger.debug("Failed to get attribute name: ",e);
       }
     }
   }
@@ -36,7 +33,7 @@
   try {
     sdp.setAttributes(attributes);
   }
- catch (  SdpException se) {
+ catch (  SdpException e) {
     logger.warn("Failed to set session direction attribute.");
   }
 }
