@@ -3,7 +3,7 @@
   JButton sourceButton=(JButton)e.getSource();
   if (sourceButton.equals(okButton)) {
     if ((chatRoomNameField.getText() != null && chatRoomNameField.getText().trim().length() > 0) && (nicknameField.getText() != null && nicknameField.getText().trim().length() > 0)) {
-      ChatRoomWrapper chatRoomWrapper=GuiActivator.getMUCService().createChatRoom(chatRoomNameField.getText().trim(),getSelectedProvider().getProtocolProvider(),new ArrayList<String>(),"",false,false,false);
+      final ChatRoomWrapper chatRoomWrapper=GuiActivator.getMUCService().createChatRoom(chatRoomNameField.getText().trim(),getSelectedProvider().getProtocolProvider(),new ArrayList<String>(),"",false,false,false);
       if (!chatRoomWrapper.isPersistent()) {
         chatRoomWrapper.setPersistent(true);
         ConfigurationUtils.saveChatRoom(chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),chatRoomWrapper.getChatRoomID(),chatRoomWrapper.getChatRoomName());
@@ -12,6 +12,16 @@
       ConfigurationUtils.updateChatRoomProperty(chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),"userNickName",nickName);
       subject=this.subject.getText();
       if (nickName == null)       return;
+      if (GuiActivator.getConfigurationService().getBoolean(REMOVE_ROOM_ON_FIRST_JOIN_FAILED,false)) {
+        chatRoomWrapper.addPropertyChangeListener(new PropertyChangeListener(){
+          @Override public void propertyChange(          PropertyChangeEvent evt){
+            if (evt.getPropertyName().equals(ChatRoomWrapper.JOIN_SUCCESS_PROP))             return;
+            GuiActivator.getUIService().closeChatRoomWindow(chatRoomWrapper);
+            GuiActivator.getMUCService().removeChatRoom(chatRoomWrapper);
+          }
+        }
+);
+      }
       GuiActivator.getMUCService().joinChatRoom(chatRoomWrapper,nickName,null,subject);
       ChatWindowManager chatWindowManager=GuiActivator.getUIService().getChatWindowManager();
       ChatPanel chatPanel=chatWindowManager.getMultiChat(chatRoomWrapper,true);

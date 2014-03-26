@@ -1,7 +1,7 @@
 {
   ConfigurationUtils.updateChatRoomStatus(chatRoomWrapper.getParentProvider().getProtocolProvider(),chatRoomWrapper.getChatRoomID(),GlobalStatusEnum.ONLINE_STATUS);
   String errorMessage=null;
-  if (AUTHENTICATION_FAILED.equals(returnCode)) {
+  if (JOIN_AUTHENTICATION_FAILED_PROP.equals(returnCode)) {
     chatRoomWrapper.removePassword();
     AuthenticationWindowService authWindowsService=ServiceUtils.getService(MUCActivator.bundleContext,AuthenticationWindowService.class);
     AuthenticationWindowService.AuthenticationWindow authWindow=authWindowsService.create(null,null,null,false,chatRoomWrapper.isPersistent(),AuthenticationWindow.getAuthenticationWindowIcon(chatRoomWrapper.getParentProvider().getProtocolProvider()),resources.getI18NString("service.gui.AUTHENTICATION_WINDOW_TITLE",new String[]{chatRoomWrapper.getParentProvider().getName()}),resources.getI18NString("service.gui.CHAT_ROOM_REQUIRES_PASSWORD",new String[]{chatRoomWrapper.getChatRoomName()}),"",null,isFirstAttempt ? null : resources.getI18NString("service.gui.AUTHENTICATION_FAILED",new String[]{chatRoomWrapper.getChatRoomName()}),null);
@@ -10,22 +10,22 @@
       joinChatRoom(chatRoomWrapper,nickName,new String(authWindow.getPassword()).getBytes(),authWindow.isRememberPassword(),false,subject);
     }
   }
- else   if (REGISTRATION_REQUIRED.equals(returnCode)) {
+ else   if (JOIN_REGISTRATION_REQUIRED_PROP.equals(returnCode)) {
     errorMessage=resources.getI18NString("service.gui.CHAT_ROOM_REGISTRATION_REQUIRED",new String[]{chatRoomWrapper.getChatRoomName()});
   }
- else   if (PROVIDER_NOT_REGISTERED.equals(returnCode)) {
+ else   if (JOIN_PROVIDER_NOT_REGISTERED_PROP.equals(returnCode)) {
     errorMessage=resources.getI18NString("service.gui.CHAT_ROOM_NOT_CONNECTED",new String[]{chatRoomWrapper.getChatRoomName()});
   }
- else   if (SUBSCRIPTION_ALREADY_EXISTS.equals(returnCode)) {
+ else   if (JOIN_SUBSCRIPTION_ALREADY_EXISTS_PROP.equals(returnCode)) {
     errorMessage=resources.getI18NString("service.gui.CHAT_ROOM_ALREADY_JOINED",new String[]{chatRoomWrapper.getChatRoomName()});
   }
  else {
     errorMessage=resources.getI18NString("service.gui.FAILED_TO_JOIN_CHAT_ROOM",new String[]{chatRoomWrapper.getChatRoomName()});
   }
-  if (!SUCCESS.equals(returnCode) && !AUTHENTICATION_FAILED.equals(returnCode)) {
+  if (!JOIN_SUCCESS_PROP.equals(returnCode) && !JOIN_AUTHENTICATION_FAILED_PROP.equals(returnCode)) {
     MUCActivator.getAlertUIService().showAlertPopup(resources.getI18NString("service.gui.ERROR"),errorMessage);
   }
-  if (SUCCESS.equals(returnCode)) {
+  if (JOIN_SUCCESS_PROP.equals(returnCode)) {
     if (rememberPassword) {
       chatRoomWrapper.savePassword(new String(password));
     }
@@ -38,4 +38,5 @@
       }
     }
   }
+  chatRoomWrapper.firePropertyChange(returnCode);
 }
