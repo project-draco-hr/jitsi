@@ -3,12 +3,18 @@
     LOGGER.debug("NUM MSG: " + msg.getNumericCode() + ": "+ msg.getText());
   }
   Integer code=msg.getNumericCode();
-  if (code == null)   return;
+  if (code == null) {
+    LOGGER.trace("No 'code' in numeric message event.");
+    return;
+  }
 switch (code.intValue()) {
 case IRCServerNumerics.CHANNEL_NICKS_END_OF_LIST:
     String text=msg.getText();
   String channelName=text.substring(0,text.indexOf(' '));
-if (IrcStack.this.joining.containsKey(channelName) || IrcStack.this.joined.containsKey(channelName)) break;
+if (IrcStack.this.joining.containsKey(channelName) || IrcStack.this.joined.containsKey(channelName)) {
+  LOGGER.trace("Chat room join event was announced. Stop " + "handling this event.");
+  break;
+}
 LOGGER.trace("Starting unannounced join of chat room '" + channelName);
 IRCChannel channel=IrcStack.this.connectionState.getChannelByName(channelName);
 ChatRoomIrcImpl chatRoom=new ChatRoomIrcImpl(channelName,IrcStack.this.provider);
@@ -17,6 +23,9 @@ IrcStack.this.irc.addListener(new ChatRoomListener(chatRoom));
 IrcStack.this.prepareChatRoom(chatRoom,channel);
 IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(chatRoom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
 LOGGER.trace("Unannounced join of chat room '" + channelName + "' completed.");
+break;
+default :
+LOGGER.trace("This ServerNumericMessage (" + code + ") will not be handled.");
 break;
 }
 }
