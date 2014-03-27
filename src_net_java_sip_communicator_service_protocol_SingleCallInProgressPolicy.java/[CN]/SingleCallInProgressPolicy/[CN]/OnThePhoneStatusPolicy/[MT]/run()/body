@@ -1,0 +1,57 @@
+{
+  if (!ProtocolProviderActivator.getConfigurationService().getBoolean(PNAME_ON_THE_PHONE_STATUS_ENABLED,false)) {
+    forgetPresenceStatuses();
+    return;
+  }
+  ServiceReference[] ppsRefs;
+  try {
+    ppsRefs=bundleContext.getServiceReferences(ProtocolProviderService.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException ise) {
+    ppsRefs=null;
+  }
+  if ((ppsRefs == null) || (ppsRefs.length == 0)) {
+    forgetPresenceStatuses();
+  }
+ else {
+    boolean isOnThePhone=isOnThePhone();
+    for (    ServiceReference ppsRef : ppsRefs) {
+      ProtocolProviderService pps=(ProtocolProviderService)bundleContext.getService(ppsRef);
+      if (pps == null)       continue;
+      OperationSetPresence presence=pps.getOperationSet(OperationSetPresence.class);
+      if (presence == null) {
+        forgetPresenceStatus(pps);
+      }
+ else       if (pps.isRegistered()) {
+        PresenceStatus onThePhonePresenceStatus=findOnThePhonePresenceStatus(presence);
+        if (onThePhonePresenceStatus == null) {
+          forgetPresenceStatus(pps);
+        }
+ else         if (isOnThePhone) {
+          PresenceStatus presenceStatus=presence.getPresenceStatus();
+          if (presenceStatus == null) {
+            forgetPresenceStatus(pps);
+          }
+ else           if (!onThePhonePresenceStatus.equals(presenceStatus)) {
+            publishPresenceStatus(presence,onThePhonePresenceStatus);
+            if (onThePhonePresenceStatus.equals(presence.getPresenceStatus())) {
+              rememberPresenceStatus(pps,presenceStatus);
+            }
+ else {
+              forgetPresenceStatus(pps);
+            }
+          }
+        }
+ else {
+          PresenceStatus presenceStatus=forgetPresenceStatus(pps);
+          if ((presenceStatus != null) && onThePhonePresenceStatus.equals(presence.getPresenceStatus())) {
+            publishPresenceStatus(presence,presenceStatus);
+          }
+        }
+      }
+ else {
+        forgetPresenceStatus(pps);
+      }
+    }
+  }
+}

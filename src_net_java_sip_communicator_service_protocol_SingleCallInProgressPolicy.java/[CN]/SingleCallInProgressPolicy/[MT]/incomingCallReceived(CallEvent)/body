@@ -1,0 +1,42 @@
+{
+  Call call=ev.getSourceCall();
+  if (CallState.CALL_INITIALIZATION.equals(call.getCallState())) {
+    ConfigurationService config=ProtocolProviderActivator.getConfigurationService();
+    if (config.getBoolean(PNAME_CALL_WAITING_DISABLED,false)) {
+      boolean rejectCallWithBusyHere=false;
+synchronized (calls) {
+        for (        Call otherCall : calls) {
+          if (!call.equals(otherCall) && CallState.CALL_IN_PROGRESS.equals(otherCall.getCallState())) {
+            rejectCallWithBusyHere=true;
+            break;
+          }
+        }
+      }
+      if (rejectCallWithBusyHere) {
+        rejectCallWithBusyHere(call);
+        return;
+      }
+    }
+    ProtocolProviderService provider=call.getProtocolProvider();
+    if (config.getBoolean(PNAME_REJECT_IN_CALL_ON_DND,false) || provider.getAccountID().getAccountPropertyBoolean(ACCOUNT_PROPERTY_REJECT_IN_CALL_ON_DND,false)) {
+      OperationSetPresence presence=provider.getOperationSet(OperationSetPresence.class);
+      if (presence == null) {
+        OperationSetCusaxUtils cusaxOpSet=provider.getOperationSet(OperationSetCusaxUtils.class);
+        if (cusaxOpSet != null) {
+          ProtocolProviderService linkedCusaxProvider=cusaxOpSet.getLinkedCusaxProvider();
+          if (linkedCusaxProvider != null) {
+            presence=linkedCusaxProvider.getOperationSet(OperationSetPresence.class);
+          }
+        }
+      }
+      if (presence != null) {
+        int presenceStatus=(presence == null) ? PresenceStatus.AVAILABLE_THRESHOLD : presence.getPresenceStatus().getStatus();
+        if (presenceStatus > PresenceStatus.ONLINE_THRESHOLD && presenceStatus <= PresenceStatus.EXTENDED_AWAY_THRESHOLD) {
+          rejectCallWithBusyHere(call);
+          return;
+        }
+      }
+    }
+  }
+  handleCallEvent(CallEvent.CALL_RECEIVED,ev);
+}
