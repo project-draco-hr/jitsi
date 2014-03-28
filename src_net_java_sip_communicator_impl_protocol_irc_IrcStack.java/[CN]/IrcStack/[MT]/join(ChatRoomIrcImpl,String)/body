@@ -15,24 +15,29 @@ synchronized (joinSignal) {
         if (LOGGER.isTraceEnabled()) {
           LOGGER.trace("Started callback for successful join " + "of channel '" + chatroom.getIdentifier() + "'.");
         }
-        ChatRoomIrcImpl actualChatRoom=chatroom;
+        boolean isRequestedChatRoom=channel.getName().equalsIgnoreCase(chatroom.getIdentifier());
 synchronized (joinSignal) {
-          if (channel.getName().equalsIgnoreCase(actualChatRoom.getIdentifier())) {
-            try {
-              IrcStack.this.joined.put(actualChatRoom.getIdentifier(),actualChatRoom);
-              IrcStack.this.joining.remove(actualChatRoom.getIdentifier());
-              IrcStack.this.irc.addListener(new ChatRoomListener(actualChatRoom));
-              prepareChatRoom(actualChatRoom,channel);
+          IrcStack.this.joining.remove(chatroom.getIdentifier());
+          if (!isRequestedChatRoom) {
+            if (LOGGER.isTraceEnabled()) {
+              LOGGER.trace("Callback for successful join " + "finished prematurely since we " + "got forwarded from '" + chatroom.getIdentifier() + "' to '"+ channel.getName()+ "'. Joining of forwarded channel "+ "gets handled by Server Listener "+ "since that channel was not "+ "announced.");
             }
-  finally {
-              IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(actualChatRoom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
-              LOGGER.trace("Finished successful join callback " + "for channel '" + chatroom.getIdentifier() + "'. Waking up original thread.");
-              joinSignal.setDone();
-              joinSignal.notifyAll();
-            }
-          }
- else {
             IrcStack.this.joining.remove(chatroom.getIdentifier());
+            joinSignal.setDone();
+            joinSignal.notifyAll();
+            return;
+          }
+          try {
+            IrcStack.this.joined.put(chatroom.getIdentifier(),chatroom);
+            IrcStack.this.joining.remove(chatroom.getIdentifier());
+            IrcStack.this.irc.addListener(new ChatRoomListener(chatroom));
+            prepareChatRoom(chatroom,channel);
+          }
+  finally {
+            IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
+            LOGGER.trace("Finished successful join callback " + "for channel '" + chatroom.getIdentifier() + "'. Waking up original thread.");
+            joinSignal.setDone();
+            joinSignal.notifyAll();
           }
         }
       }
