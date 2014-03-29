@@ -9,32 +9,34 @@ switch (control) {
 case ITALICS:
 case UNDERLINE:
 case BOLD:
-case NORMAL:
         builder.apply(control);
       break;
-case COLOR:
-    if (builder.isActive(control)) {
-      builder.apply(control);
-    }
- else {
-      final List<String> adds=new LinkedList<String>();
-      try {
-        final Color foreground=parseForegroundColor(text.substring(i + 1));
-        adds.add("color=\"" + foreground.getHtml() + "\"");
-        i+=2;
-        final Color background=parseBackgroundColor(text.substring(i + 1));
-        adds.add("bgcolor=\"" + background.getHtml() + "\"");
-        i+=3;
-      }
- catch (      IllegalArgumentException e) {
-        LOGGER.debug("Invalid color code: " + text.substring(i + 1),e);
-      }
-catch (      ArrayIndexOutOfBoundsException e) {
-        LOGGER.debug("Unknown color code referenced: " + text.substring(i + 1),e);
-      }
-      builder.apply(control,adds.toArray(new String[adds.size()]));
-    }
+case NORMAL:
+    builder.cancelAll();
   break;
+case COLOR:
+if (builder.isActive(control)) {
+  builder.apply(control);
+}
+ else {
+  final List<String> adds=new LinkedList<String>();
+  try {
+    final Color foreground=parseForegroundColor(text.substring(i + 1));
+    adds.add("color=\"" + foreground.getHtml() + "\"");
+    i+=2;
+    final Color background=parseBackgroundColor(text.substring(i + 1));
+    adds.add("bgcolor=\"" + background.getHtml() + "\"");
+    i+=3;
+  }
+ catch (  IllegalArgumentException e) {
+    LOGGER.debug("Invalid color code: " + text.substring(i + 1),e);
+  }
+catch (  ArrayIndexOutOfBoundsException e) {
+    LOGGER.debug("Unknown color code referenced: " + text.substring(i + 1),e);
+  }
+  builder.apply(control,adds.toArray(new String[adds.size()]));
+}
+break;
 default :
 LOGGER.warn("Unsupported IRC control code encountered: " + control);
 break;
