@@ -12,12 +12,15 @@
       }
  else       toJID=((ContactResourceJabberImpl)toResource).getFullJid();
     }
-    if (toJID == null)     toJID=getJidForAddress(to.getAddress());
+    if (toJID == null) {
+      TargetAddress ta=getJidForAddress(to.getAddress());
+      if (ta != null)       toJID=ta.jid;
+    }
     if (toJID == null) {
       sendToBaseResource=true;
       toJID=to.getAddress();
     }
-    Chat chat=obtainChatInstance(toJID);
+    Chat chat=obtainChatInstance(to.getAddress(),toJID);
     msg.setPacketID(message.getMessageUID());
     msg.setTo(toJID);
     for (    PacketExtension ext : extensions) {
@@ -42,7 +45,7 @@
     }
     MessageEventManager.addNotificationsRequests(msg,true,false,false,true);
     chat.sendMessage(msg);
-    if (sendToBaseResource)     putJidForAddress(to.getAddress(),to.getAddress());
+    putJidForAddress(to.getAddress(),toJID,chat);
     MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(message,to,toResource);
     return msgDeliveredEvt;
   }

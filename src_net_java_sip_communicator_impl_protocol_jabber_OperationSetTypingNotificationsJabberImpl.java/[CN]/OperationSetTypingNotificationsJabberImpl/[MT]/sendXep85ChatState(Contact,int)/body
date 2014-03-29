@@ -1,9 +1,13 @@
 {
+  if (opSetBasicIM == null || parentProvider.getConnection() == null)   return;
   String toJID=null;
-  if (toJID == null)   toJID=opSetBasicIM.getJidForAddress(contact.getAddress());
+  OperationSetBasicInstantMessagingJabberImpl.TargetAddress ta=opSetBasicIM.getJidForAddress(contact.getAddress());
+  if (ta != null)   toJID=ta.jid;
   if (toJID == null)   return;
   if (logger.isTraceEnabled())   logger.trace("Sending XEP-0085 chat state=" + state + " to "+ toJID);
-  Chat chat=parentProvider.getConnection().getChatManager().createChat(toJID,null);
+  Chat chat;
+  if (ta != null && ta.chat != null)   chat=ta.chat;
+ else   chat=parentProvider.getConnection().getChatManager().createChat(toJID,null);
   ChatState chatState=null;
   if (state == STATE_TYPING) {
     chatState=ChatState.composing;
