@@ -13,6 +13,17 @@
   smsButton=new SIPCommToggleButton(ImageLoader.getImage(smsIcon),ImageLoader.getImage(selectedIcon),ImageLoader.getImage(smsIcon),ImageLoader.getImage(selectedIcon));
   smsButton.addActionListener(new ActionListener(){
     @Override public void actionPerformed(    ActionEvent e){
+      if (smsMode) {
+        Object descr=chatPanel.getChatSession().getDescriptor();
+        if (descr instanceof MetaContact) {
+          List<Contact> imContact=((MetaContact)descr).getContactsForOperationSet(OperationSetBasicInstantMessaging.class);
+          if (imContact == null || imContact.size() == 0)           return;
+        }
+ else         if (descr instanceof SourceContact) {
+          List<ContactDetail> imContact=((SourceContact)descr).getContactDetails(OperationSetBasicInstantMessaging.class);
+          if (imContact == null || imContact.size() == 0)           return;
+        }
+      }
       smsMode=smsButton.isSelected();
       Color bgColor;
       if (smsMode) {
