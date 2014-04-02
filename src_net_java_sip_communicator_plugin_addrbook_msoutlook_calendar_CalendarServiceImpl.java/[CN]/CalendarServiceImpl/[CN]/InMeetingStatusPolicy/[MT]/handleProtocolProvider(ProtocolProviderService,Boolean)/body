@@ -1,0 +1,37 @@
+{
+  if (isInMeeting == null)   isInMeeting=isInMeeting();
+  OperationSetPresence presence=pps.getOperationSet(OperationSetPresence.class);
+  if (presence == null) {
+    forgetPresenceStatus(pps);
+  }
+ else   if (pps.isRegistered()) {
+    PresenceStatus inMeetingPresenceStatus=findInMeetingPresenceStatus(presence);
+    if (inMeetingPresenceStatus == null) {
+      forgetPresenceStatus(pps);
+    }
+ else     if (isInMeeting) {
+      PresenceStatus presenceStatus=presence.getPresenceStatus();
+      if (presenceStatus == null) {
+        forgetPresenceStatus(pps);
+      }
+ else       if (!inMeetingPresenceStatus.equals(presenceStatus)) {
+        publishPresenceStatus(presence,inMeetingPresenceStatus);
+        if (inMeetingPresenceStatus.equals(presence.getPresenceStatus())) {
+          rememberPresenceStatus(pps,presenceStatus);
+        }
+ else {
+          forgetPresenceStatus(pps);
+        }
+      }
+    }
+ else {
+      PresenceStatus presenceStatus=forgetPresenceStatus(pps);
+      if ((presenceStatus != null) && inMeetingPresenceStatus.equals(presence.getPresenceStatus())) {
+        publishPresenceStatus(presence,presenceStatus);
+      }
+    }
+  }
+ else {
+    forgetPresenceStatus(pps);
+  }
+}

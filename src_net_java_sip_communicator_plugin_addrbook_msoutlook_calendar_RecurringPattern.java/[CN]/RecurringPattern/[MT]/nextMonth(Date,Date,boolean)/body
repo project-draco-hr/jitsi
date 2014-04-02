@@ -1,0 +1,38 @@
+{
+  long duration=sourceTask.getEndDate().getTime() - sourceTask.getStartDate().getTime();
+  Calendar cal=Calendar.getInstance();
+  cal.setTime(startDate);
+  cal=incrementMonths(cal,lastDay,period);
+  Date currentDate=new Date();
+  if (cal.getTimeInMillis() + duration < currentDate.getTime()) {
+    Calendar cal2=Calendar.getInstance();
+    cal2.setTime(currentDate);
+    int years=cal2.get(Calendar.YEAR) - cal.get(Calendar.YEAR);
+    int months=(years * 12) + (cal2.get(Calendar.MONTH) - cal.get(Calendar.MONTH));
+    int monthsToAdd=months;
+    monthsToAdd-=months % period;
+    cal=incrementMonths(cal,lastDay,monthsToAdd);
+    if (cal.getTimeInMillis() + duration < currentDate.getTime()) {
+      cal=incrementMonths(cal,lastDay,period);
+    }
+  }
+  Calendar cal2=(Calendar)cal.clone();
+  cal.set(Calendar.HOUR_OF_DAY,0);
+  cal.set(Calendar.MINUTE,0);
+  cal.set(Calendar.SECOND,0);
+  cal.set(Calendar.MILLISECOND,0);
+  while (deletedInstances.contains(cal.getTime())) {
+    cal=incrementMonths(cal,lastDay,period);
+    cal2=incrementMonths(cal2,lastDay,period);
+  }
+  startDate=cal2.getTime();
+  endDate=new Date(startDate.getTime() + duration);
+  if (dateOutOfRange(endDate)) {
+    return null;
+  }
+  boolean executeNow=false;
+  if (startDate.before(currentDate)) {
+    executeNow=true;
+  }
+  return new CalendarItemTimerTask(sourceTask.getStatus(),startDate,endDate,sourceTask.getId(),executeNow,this);
+}

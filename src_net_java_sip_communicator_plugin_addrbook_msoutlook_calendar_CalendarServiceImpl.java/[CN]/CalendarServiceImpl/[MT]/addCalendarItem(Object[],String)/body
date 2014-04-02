@@ -1,0 +1,59 @@
+{
+  Date startTime=null, endTime=null;
+  BusyStatusEnum status=BusyStatusEnum.FREE;
+  boolean isRecurring=false;
+  byte[] recurringData=null;
+  for (int i=0; i < props.length; i++) {
+    if (props[i] == null)     continue;
+    MAPICalendarProperties propertyName=MAPICalendarProperties.getByOrderId(i);
+switch (propertyName) {
+case PidLidAppointmentStartWhole:
+      try {
+        long time=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z").parse((String)props[i] + " UTC").getTime();
+        startTime=new Date(time);
+      }
+ catch (      ParseException e) {
+        logger.error("Cannot parse date string: " + props[i]);
+        return;
+      }
+    break;
+case PidLidAppointmentEndWhole:
+  try {
+    long time=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z").parse((String)props[i] + " UTC").getTime();
+    endTime=new Date(time);
+  }
+ catch (  ParseException e) {
+    logger.error("Cannot parse date string: " + props[i]);
+    return;
+  }
+break;
+case PidLidBusyStatus:
+status=BusyStatusEnum.getFromLong((Long)props[i]);
+break;
+case PidLidRecurring:
+isRecurring=(Boolean)props[i];
+break;
+case PidLidAppointmentRecur:
+recurringData=((byte[])props[i]);
+break;
+}
+}
+if (status == BusyStatusEnum.FREE || startTime == null || endTime == null) return;
+Date currentTime=new Date();
+boolean executeNow=false;
+if (startTime.before(currentTime) || startTime.equals(currentTime)) executeNow=true;
+CalendarItemTimerTask task=null;
+if (recurringData != null) {
+task=new CalendarItemTimerTask(status,startTime,endTime,id,executeNow,null);
+RecurringPattern pattern=new RecurringPattern(recurringData,task);
+task.setPattern(pattern);
+}
+if (endTime.before(currentTime) || endTime.equals(currentTime)) {
+if (isRecurring) {
+task=task.getPattern().next(startTime,endTime);
+}
+ else return;
+}
+if (task == null) task=new CalendarItemTimerTask(status,startTime,endTime,id,executeNow,null);
+task.scheduleTasks();
+}

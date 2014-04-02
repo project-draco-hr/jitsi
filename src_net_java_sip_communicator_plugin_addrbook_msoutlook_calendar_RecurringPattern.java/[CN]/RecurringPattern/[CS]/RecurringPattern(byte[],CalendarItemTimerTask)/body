@@ -1,0 +1,93 @@
+{
+  this.sourceTask=sourceTask;
+  dataBuffer=ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN);
+  int offset=4;
+  recurFrequency=dataBuffer.getShort(offset);
+  offset+=2;
+  patternType=PatternType.getFromShort(dataBuffer.getShort(offset));
+  offset+=2;
+  calendarType=dataBuffer.getShort(offset);
+  offset+=2;
+  firstDateTime=dataBuffer.getInt(offset);
+  offset+=4;
+  period=dataBuffer.getInt(offset);
+  offset+=4;
+  slidingFlag=dataBuffer.getInt(offset);
+  offset+=4;
+switch (patternType) {
+case Week:
+case Month:
+case MonthEnd:
+case HjMonth:
+case HjMonthEnd:
+    patternSpecific1=dataBuffer.getInt(offset);
+  patternSpecific2=0;
+offset+=4;
+if (patternType == PatternType.Week) {
+for (int day=firstDow; day < firstDow + 7; day++) {
+  if ((patternSpecific1 & (weekOfDayMask[day % 7])) != 0) {
+    allowedDaysOfWeek.add((day % 7) + 1);
+  }
+}
+}
+break;
+case MonthNth:
+case HjMonthNth:
+patternSpecific1=dataBuffer.getInt(offset);
+patternSpecific2=dataBuffer.getInt(offset + 4);
+if (patternSpecific1 == 0x7f && patternSpecific2 != 0x5) {
+patternType=PatternType.Month;
+}
+for (int day=0; day < 7; day++) {
+if ((patternSpecific1 & (weekOfDayMask[day])) != 0) {
+allowedDaysOfWeek.add((day) + 1);
+}
+}
+offset+=8;
+break;
+default :
+break;
+}
+endType=dataBuffer.getInt(offset);
+offset+=4;
+occurenceCount=dataBuffer.getInt(offset);
+offset+=4;
+firstDow=dataBuffer.getInt(offset);
+offset+=4;
+deletedInstanceCount=dataBuffer.getInt(offset);
+offset+=4;
+for (int i=0; i < deletedInstanceCount; i++) {
+deletedInstances.add(windowsTimeToDateObject(dataBuffer.getInt(offset)));
+offset+=4;
+}
+modifiedInstanceCount=dataBuffer.getInt(offset);
+offset+=4;
+modifiedInstances=new int[modifiedInstanceCount];
+for (int i=0; i < modifiedInstanceCount; i++) {
+modifiedInstances[i]=dataBuffer.getInt(offset);
+offset+=4;
+}
+startDate=dataBuffer.getInt(offset);
+offset+=4;
+endDate=dataBuffer.getInt(offset);
+offset+=4;
+offset+=16;
+short exceptionCount=dataBuffer.getShort(offset);
+offset+=2;
+exceptionInfo=new ArrayList<ExceptionInfo>(exceptionCount);
+for (int i=0; i < exceptionCount; i++) {
+ExceptionInfo tmpExceptionInfo=new ExceptionInfo(offset);
+exceptionInfo.add(tmpExceptionInfo);
+offset+=tmpExceptionInfo.sizeInBytes();
+CalendarService.BusyStatusEnum status=tmpExceptionInfo.getBusyStatus();
+Date startTime=tmpExceptionInfo.getStartDate();
+Date endTime=tmpExceptionInfo.getEndDate();
+if (status == CalendarService.BusyStatusEnum.FREE || startTime == null || endTime == null) continue;
+Date currentTime=new Date();
+if (endTime.before(currentTime) || endTime.equals(currentTime)) return;
+boolean executeNow=false;
+if (startTime.before(currentTime) || startTime.equals(currentTime)) executeNow=true;
+CalendarItemTimerTask task=new CalendarItemTimerTask(status,startTime,endTime,sourceTask.getId(),executeNow,this);
+task.scheduleTasks();
+}
+}

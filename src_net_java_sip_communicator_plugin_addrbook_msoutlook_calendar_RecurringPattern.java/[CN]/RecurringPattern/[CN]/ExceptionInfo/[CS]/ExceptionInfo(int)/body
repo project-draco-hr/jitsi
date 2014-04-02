@@ -1,0 +1,33 @@
+{
+  startDate=windowsTimeToDateObject(dataBuffer.getInt(offset));
+  offset+=4;
+  endDate=windowsTimeToDateObject(dataBuffer.getInt(offset));
+  offset+=4;
+  originalStartDate=windowsTimeToDateObject(dataBuffer.getInt(offset));
+  offset+=4;
+  overrideFlags=dataBuffer.getShort(offset);
+  offset+=2;
+  int[] fieldMasks={0x0001,0x0002,0x0004,0x0008,0x0010,0x0020,0x0040,0x0080};
+  for (  int mask : fieldMasks) {
+    if (mask == 0x0020) {
+      if ((overrideFlags & mask) != 0) {
+        busyStatus=CalendarService.BusyStatusEnum.getFromLong((long)dataBuffer.getInt(offset));
+      }
+      if (busyStatus == null) {
+        busyStatus=sourceTask.getStatus();
+      }
+    }
+    if ((overrideFlags & mask) != 0) {
+      if (mask == 0x0010 || mask == 0x0001) {
+        short size=dataBuffer.getShort(offset + 2);
+        offset+=size;
+        size+=size;
+      }
+      offset+=4;
+      size+=4;
+    }
+  }
+  offset+=4;
+  int reservedBlockSize=dataBuffer.getShort(offset);
+  size+=reservedBlockSize;
+}

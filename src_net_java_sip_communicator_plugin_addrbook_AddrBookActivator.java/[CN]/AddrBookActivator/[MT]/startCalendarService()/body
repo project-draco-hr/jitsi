@@ -1,0 +1,21 @@
+{
+  if (OSUtils.IS_WINDOWS && !getConfigService().getBoolean(CalendarService.PNAME_FREE_BUSY_STATUS_DISABLED,false)) {
+    try {
+      MsOutlookAddrBookContactSourceService.initMAPI(null);
+    }
+ catch (    MsOutlookMAPIHResultException ex) {
+      String msg="Failed to initialize MAPI: " + ex.getMessage();
+      logger.error(msg);
+      if (logger.isDebugEnabled())       logger.debug(msg,ex);
+      return;
+    }
+    bundleContext.addServiceListener(serviceListener);
+    for (    ProtocolProviderService pps : getProtocolProviders()) {
+synchronized (providers) {
+        providers.add(pps);
+      }
+      pps.addRegistrationStateChangeListener(providerListener);
+    }
+    calendarService.start();
+  }
+}
