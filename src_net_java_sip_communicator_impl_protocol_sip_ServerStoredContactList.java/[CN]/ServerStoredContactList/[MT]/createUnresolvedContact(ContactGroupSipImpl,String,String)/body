@@ -5,6 +5,10 @@
   if (contactId == null || contactId.length() == 0) {
     throw new IllegalArgumentException("Creating contact id name cannot be null or empty");
   }
+  ContactSipImpl existingContact=parentOperationSet.resolveContactID(contactId);
+  if (existingContact != null) {
+    return existingContact;
+  }
   Address contactAddress;
   try {
     contactAddress=sipProvider.parseAddressString(contactId);
@@ -14,6 +18,7 @@
   }
   if (logger.isTraceEnabled())   logger.trace("createUnresolvedContact " + contactId);
   ContactSipImpl newUnresolvedContact=new ContactSipImpl(contactAddress,sipProvider);
+  newUnresolvedContact.setPersistent(true);
   parentGroup.addContact(newUnresolvedContact);
   newUnresolvedContact.setPersistentData(persistentData);
   fireContactAdded(parentGroup,newUnresolvedContact);
