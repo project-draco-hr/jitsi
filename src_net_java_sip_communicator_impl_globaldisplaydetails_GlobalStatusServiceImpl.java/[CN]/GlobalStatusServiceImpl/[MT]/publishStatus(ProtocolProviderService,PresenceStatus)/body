@@ -1,13 +1,17 @@
 {
   OperationSetPresence presence=protocolProvider.getOperationSet(OperationSetPresence.class);
-  LoginManager loginManager=GlobalDisplayDetailsActivator.getUIService().getLoginManager();
+  LoginManager loginManager=null;
+  UIService uiService=GlobalDisplayDetailsActivator.getUIService();
+  if (uiService != null) {
+    loginManager=uiService.getLoginManager();
+  }
   RegistrationState registrationState=protocolProvider.getRegistrationState();
   if (registrationState == RegistrationState.REGISTERED && presence != null && !presence.getPresenceStatus().equals(status)) {
     if (status.isOnline()) {
       new PublishPresenceStatusThread(protocolProvider,presence,status).start();
     }
  else {
-      loginManager.setManuallyDisconnected(true);
+      if (loginManager != null)       loginManager.setManuallyDisconnected(true);
       LoginManager.logoff(protocolProvider);
     }
   }
@@ -15,7 +19,7 @@
     GlobalDisplayDetailsActivator.getUIService().getLoginManager().login(protocolProvider);
   }
  else   if (!status.isOnline() && !(registrationState == RegistrationState.UNREGISTERING)) {
-    loginManager.setManuallyDisconnected(true);
+    if (loginManager != null)     loginManager.setManuallyDisconnected(true);
     LoginManager.logoff(protocolProvider);
   }
   saveStatusInformation(protocolProvider,status.getStatusName());
