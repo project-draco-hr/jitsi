@@ -1,18 +1,18 @@
 {
   if (!OSUtils.IS_LINUX && !OSUtils.IS_MAC)   return;
   try {
-    File homeFolder=new File(configurationService.getScHomeDirLocation(),configurationService.getScHomeDirName());
+    File homeFolder=new File(cs.getScHomeDirLocation(),cs.getScHomeDirName());
     CLibrary libc=(CLibrary)Native.loadLibrary("c",CLibrary.class);
     libc.chmod(homeFolder.getAbsolutePath(),0700);
-    String fileName=configurationService.getConfigurationFilename();
+    String fileName=cs.getConfigurationFilename();
     if (fileName != null) {
       File cf=new File(homeFolder,fileName);
-      if (cf.exists()) {
-        libc.chmod(cf.getAbsolutePath(),0600);
-      }
+      if (cf.exists())       libc.chmod(cf.getAbsolutePath(),0600);
     }
   }
  catch (  Throwable t) {
     logger.error("Error creating c lib instance for fixing file permissions",t);
+    if (t instanceof InterruptedException)     Thread.currentThread().interrupt();
+ else     if (t instanceof ThreadDeath)     throw (ThreadDeath)t;
   }
 }
