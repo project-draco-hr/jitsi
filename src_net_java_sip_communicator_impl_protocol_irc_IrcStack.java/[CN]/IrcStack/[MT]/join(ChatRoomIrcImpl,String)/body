@@ -22,6 +22,7 @@ synchronized (joinSignal) {
               LOGGER.trace("Callback for successful join " + "finished prematurely since we " + "got forwarded from '" + chatroom.getIdentifier() + "' to '"+ channel.getName()+ "'. Joining of forwarded channel "+ "gets handled by Server Listener "+ "since that channel was not "+ "announced.");
             }
             IrcStack.this.joining.remove(chatroom.getIdentifier());
+            IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOIN_FAILED,"We got forwarded to channel '" + channel.getName() + "'.");
             joinSignal.setDone();
             joinSignal.notifyAll();
             return;
@@ -45,8 +46,7 @@ synchronized (joinSignal) {
 synchronized (joinSignal) {
           try {
             IrcStack.this.joining.remove(chatroom.getIdentifier());
-            MessageIrcImpl message=new MessageIrcImpl("Failed to join channel " + chatroom.getIdentifier() + " ("+ e.getMessage()+ ")","text/plain","UTF-8","Failed to join");
-            chatroom.fireMessageReceivedEvent(message,null,new Date(),MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
+            IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOIN_FAILED,e.getMessage());
           }
   finally {
             if (LOGGER.isTraceEnabled()) {
@@ -65,10 +65,6 @@ synchronized (joinSignal) {
         joinSignal.wait();
       }
       LOGGER.trace("Finished waiting for join operation for channel '" + chatroom.getIdentifier() + "' to complete.");
-      Exception e=joinSignal.getException();
-      if (e != null) {
-        throw new OperationFailedException(e.getMessage(),OperationFailedException.CHAT_ROOM_NOT_JOINED,e);
-      }
     }
  catch (    InterruptedException e) {
       throw new OperationFailedException(e.getMessage(),OperationFailedException.INTERNAL_ERROR,e);
