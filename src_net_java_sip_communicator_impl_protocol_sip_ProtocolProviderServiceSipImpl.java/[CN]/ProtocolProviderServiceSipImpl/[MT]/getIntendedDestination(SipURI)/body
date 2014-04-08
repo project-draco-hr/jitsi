@@ -1,3 +1,28 @@
 {
-  return getIntendedDestination(destination.getHost());
+  InetSocketAddress destinationInetAddress=null;
+  InetSocketAddress outboundProxy=connection.getAddress();
+  if (outboundProxy != null) {
+    if (logger.isTraceEnabled())     logger.trace("Will use proxy address");
+    destinationInetAddress=outboundProxy;
+  }
+ else {
+    String transport=destination.getTransportParam();
+    if (transport == null) {
+      transport=getDefaultTransport();
+    }
+    int port=destination.getPort();
+    if (port == -1) {
+      port=ListeningPoint.PORT_5060;
+    }
+    ProxyConnection tempConn=new AutoProxyConnection((SipAccountIDImpl)getAccountID(),destination.getHost(),port,transport);
+    try {
+      if (tempConn.getNextAddress())       destinationInetAddress=tempConn.getAddress();
+ else       throw new IllegalArgumentException(destination.getHost() + " could not be resolved to an internet address.");
+    }
+ catch (    DnssecException e) {
+      logger.error("unable to obtain next hop address",e);
+    }
+  }
+  if (logger.isDebugEnabled())   logger.debug("Returning address " + destinationInetAddress + " for destination "+ destination.getHost());
+  return destinationInetAddress;
 }
