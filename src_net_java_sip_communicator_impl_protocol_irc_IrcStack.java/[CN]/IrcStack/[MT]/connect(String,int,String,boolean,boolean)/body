@@ -2,10 +2,16 @@
   if (this.irc != null && this.connectionState != null && this.connectionState.isConnected())   return;
   this.joining.clear();
   this.joined.clear();
+  final IRCServer server;
+  if (secureConnection) {
+    server=new SecureIRCServer(host,port,password,getCustomSSLContext(host));
+  }
+ else {
+    server=new IRCServer(host,port,password,false);
+  }
   this.irc=new IRCApiImpl(true);
 synchronized (this.irc) {
-    this.params.setServer(new IRCServer(host,port,password,secureConnection));
-    this.params.setCustomContext(getCustomSSLContext(host));
+    this.params.setServer(server);
     this.irc.addListener(new ServerListener());
     connectSynchronized();
   }
