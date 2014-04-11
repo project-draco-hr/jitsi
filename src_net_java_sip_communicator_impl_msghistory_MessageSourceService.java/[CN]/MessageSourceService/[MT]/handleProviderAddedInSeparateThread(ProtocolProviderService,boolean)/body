@@ -1,13 +1,10 @@
 {
 synchronized (recentMessages) {
-    List<MessageSourceContact> sourceContactsToAdd=getSourceContacts(provider);
+    List<MessageSourceContact> sourceContactsToAdd=getSourceContacts(provider,isStatusChanged);
     if (sourceContactsToAdd.isEmpty()) {
       Collection<EventObject> res=messageHistoryService.findRecentMessagesPerContact(numberOfMessages,provider.getAccountID().getAccountUniqueID(),null,isSMSEnabled);
       List<MessageSourceContact> newMsc=new ArrayList<MessageSourceContact>();
-      for (      EventObject obj : res) {
-        MessageSourceContact msc=new MessageSourceContact(obj,MessageSourceService.this);
-        if (!recentMessages.contains(msc) && !newMsc.contains(msc))         newMsc.add(msc);
-      }
+      processEventObjects(res,newMsc,isStatusChanged);
       addNewRecentMessages(newMsc);
       for (      MessageSourceContact msc : newMsc) {
         saveRecentMessageToHistory(msc);

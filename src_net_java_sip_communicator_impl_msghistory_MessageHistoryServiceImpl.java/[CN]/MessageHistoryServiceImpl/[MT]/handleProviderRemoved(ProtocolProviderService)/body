@@ -19,11 +19,17 @@
     opSetMultiUChat.removePresenceListener(this);
     if (messageSourceService != null)     opSetMultiUChat.removePresenceListener(messageSourceService);
   }
-  OperationSetPresence opSetPresence=provider.getOperationSet(OperationSetPresence.class);
-  if (opSetPresence != null && messageSourceService != null) {
-    opSetPresence.removeContactPresenceStatusListener(messageSourceService);
-    opSetPresence.removeProviderPresenceStatusListener(messageSourceService);
-    opSetPresence.removeSubscriptionListener(messageSourceService);
+  if (messageSourceService != null) {
+    OperationSetPresence opSetPresence=provider.getOperationSet(OperationSetPresence.class);
+    if (opSetPresence != null) {
+      opSetPresence.removeContactPresenceStatusListener(messageSourceService);
+      opSetPresence.removeProviderPresenceStatusListener(messageSourceService);
+      opSetPresence.removeSubscriptionListener(messageSourceService);
+    }
+    messageSourceService.handleProviderRemoved(provider);
+    OperationSetContactCapabilities capOpSet=provider.getOperationSet(OperationSetContactCapabilities.class);
+    if (capOpSet != null) {
+      capOpSet.removeContactCapabilitiesListener(messageSourceService);
+    }
   }
-  if (messageSourceService != null)   messageSourceService.handleProviderRemoved(provider);
 }
