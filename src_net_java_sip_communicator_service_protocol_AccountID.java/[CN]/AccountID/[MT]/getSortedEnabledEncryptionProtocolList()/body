@@ -5,18 +5,17 @@
     encryptionProtocols.put(ProtocolProviderFactory.ENCRYPTION_PROTOCOL + ".ZRTP",0);
     encryptionProtocolStatus.put(ProtocolProviderFactory.ENCRYPTION_PROTOCOL_STATUS + ".ZRTP",true);
   }
-  List<String> sortedEncryptionProtocols=new ArrayList<String>(encryptionProtocols.size());
+  List<SrtpControlType> sortedEncryptionProtocols=new ArrayList<SrtpControlType>(encryptionProtocols.size());
   for (  Map.Entry<String,Integer> e : encryptionProtocols.entrySet()) {
     int index=e.getValue();
     if (index != -1) {
       if (index > sortedEncryptionProtocols.size())       index=sortedEncryptionProtocols.size();
-      String name=e.getKey();
-      sortedEncryptionProtocols.add(index,name);
+      String name=e.getKey().substring(ProtocolProviderFactory.ENCRYPTION_PROTOCOL.length() + 1);
+      sortedEncryptionProtocols.add(index,SrtpControlType.fromString(name));
     }
   }
-  int namePrefixLength=ProtocolProviderFactory.ENCRYPTION_PROTOCOL.length() + 1;
-  for (Iterator<String> i=sortedEncryptionProtocols.iterator(); i.hasNext(); ) {
-    String name=i.next().substring(namePrefixLength);
+  for (Iterator<SrtpControlType> i=sortedEncryptionProtocols.iterator(); i.hasNext(); ) {
+    String name=i.next().toString();
     if (!encryptionProtocolStatus.get(ProtocolProviderFactory.ENCRYPTION_PROTOCOL_STATUS + "." + name)) {
       i.remove();
     }
