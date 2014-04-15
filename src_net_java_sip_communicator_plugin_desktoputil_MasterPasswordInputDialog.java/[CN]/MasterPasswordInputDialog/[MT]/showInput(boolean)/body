@@ -1,14 +1,19 @@
 {
   try {
-    SwingUtilities.invokeAndWait(new Runnable(){
-      @Override public void run(){
-        if (dialog == null)         dialog=new MasterPasswordInputDialog();
-        dialog.rebuildMainPanel(!prevSuccess);
-        dialog.resetPassword();
-        dialog.setVisible(true);
+    if (!SwingUtilities.isEventDispatchThread()) {
+      SwingUtilities.invokeAndWait(new Runnable(){
+        @Override public void run(){
+          showInput(prevSuccess);
+        }
       }
-    }
 );
+    }
+ else {
+      if (dialog == null)       dialog=new MasterPasswordInputDialog();
+      dialog.rebuildMainPanel(!prevSuccess);
+      dialog.resetPassword();
+      dialog.setVisible(true);
+    }
   }
  catch (  Throwable t) {
     logger.error("Error showing dialog",t);
