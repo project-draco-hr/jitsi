@@ -4,11 +4,14 @@
     props=IMAPIProp_GetProps(id,MAPI_MAILUSER_PROP_IDS,MAPI_UNICODE);
   }
  catch (  MsOutlookMAPIHResultException ex) {
-    if (ex.getHresultString().equals("MAPI_E_0x57") && firstIMAPIPropGetPropFailureLogged == false) {
-      firstIMAPIPropGetPropFailureLogged=true;
-      throw ex;
+    String hresult=ex.getHresultString();
+    if ("MAPI_E_0x57".equals(hresult)) {
+      if (!firstIMAPIPropGetPropFailureLogged) {
+        firstIMAPIPropGetPropFailureLogged=true;
+        throw ex;
+      }
     }
- else     if (!ex.getHresultString().equals("MAPI_E_0x57")) {
+ else {
       throw ex;
     }
     if (logger.isTraceEnabled()) {
@@ -53,7 +56,9 @@
           }
         }
       }
-      if (logger.isTraceEnabled())       logger.trace("For query: " + query + " found contact:"+ sourceContact.getDisplayName()+ ", "+ sourceContact.getContactAddress());
+      if (logger.isTraceEnabled()) {
+        logger.trace("For query: " + query + " found contact:"+ sourceContact.getDisplayName()+ ", "+ sourceContact.getContactAddress());
+      }
       addQueryResult(sourceContact);
     }
   }
