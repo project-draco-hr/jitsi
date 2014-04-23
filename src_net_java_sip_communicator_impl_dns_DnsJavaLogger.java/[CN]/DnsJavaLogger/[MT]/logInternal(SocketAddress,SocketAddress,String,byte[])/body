@@ -1,0 +1,28 @@
+{
+  if (getPacketLoggingService() == null || !(local instanceof InetSocketAddress && remote instanceof InetSocketAddress)) {
+    return;
+  }
+  InetSocketAddress localAddress=(InetSocketAddress)local;
+  InetSocketAddress remoteAddress=(InetSocketAddress)remote;
+  PacketLoggingService.TransportName transportName=PacketLoggingService.TransportName.UDP;
+  if (prefix.contains("TCP"))   transportName=PacketLoggingService.TransportName.TCP;
+  boolean isSender=true;
+  if (prefix.contains("read"))   isSender=false;
+  byte[] srcAddr;
+  int srcPort;
+  byte[] dstAddr;
+  int dstPort;
+  if (isSender) {
+    srcAddr=localAddress.getAddress().getAddress();
+    srcPort=localAddress.getPort();
+    dstAddr=remoteAddress.getAddress().getAddress();
+    dstPort=remoteAddress.getPort();
+  }
+ else {
+    dstAddr=localAddress.getAddress().getAddress();
+    dstPort=localAddress.getPort();
+    srcAddr=remoteAddress.getAddress().getAddress();
+    srcPort=remoteAddress.getPort();
+  }
+  getPacketLoggingService().logPacket(PacketLoggingService.ProtocolName.DNS,srcAddr,srcPort,dstAddr,dstPort,transportName,isSender,data,0,data.length);
+}
