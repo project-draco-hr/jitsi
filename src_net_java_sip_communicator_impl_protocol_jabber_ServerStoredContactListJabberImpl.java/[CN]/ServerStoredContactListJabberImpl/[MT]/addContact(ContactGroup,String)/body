@@ -1,6 +1,6 @@
 {
   if (logger.isTraceEnabled())   logger.trace("Adding contact " + id + " to parent="+ parent);
-  String completeID=parseAddressString(id);
+  final String completeID=parseAddressString(id);
   ContactJabberImpl existingContact=findContactById(completeID);
   if (existingContact != null && existingContact.isPersistent()) {
     if (logger.isDebugEnabled())     logger.debug("Contact " + completeID + " already exists in group "+ findContactGroup(existingContact));
@@ -9,9 +9,21 @@
   try {
     String[] parentNames=null;
     if (parent != null && parent != getRootGroup())     parentNames=new String[]{parent.getGroupName()};
+    PacketInterceptor presenceInterceptor=new PacketInterceptor(){
+      @Override public void interceptPacket(      Packet packet){
+        Presence presence=(Presence)packet;
+        if (presence.getType() == Presence.Type.subscribe && completeID.equals(StringUtils.parseBareAddress(presence.getTo()))) {
+          Nick nicknameExt=new Nick(JabberActivator.getGlobalDisplayDetailsService().getDisplayName(jabberProvider));
+          presence.addExtension(nicknameExt);
+        }
+      }
+    }
+;
+    jabberProvider.getConnection().addPacketInterceptor(presenceInterceptor,new PacketTypeFilter(Presence.class));
     SmackConfiguration.setPacketReplyTimeout(ProtocolProviderServiceJabberImpl.SMACK_PACKET_REPLY_TIMEOUT);
     this.roster.createEntry(completeID,completeID,parentNames);
     SmackConfiguration.setPacketReplyTimeout(5000);
+    jabberProvider.getConnection().removePacketInterceptor(presenceInterceptor);
   }
  catch (  XMPPException ex) {
     String errTxt="Error adding new jabber entry";

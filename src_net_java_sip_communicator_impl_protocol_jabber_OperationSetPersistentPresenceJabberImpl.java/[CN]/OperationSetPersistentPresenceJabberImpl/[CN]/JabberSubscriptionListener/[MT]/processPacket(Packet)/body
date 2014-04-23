@@ -4,13 +4,16 @@
   Presence.Type presenceType=presence.getType();
   final String fromID=presence.getFrom();
   if (presenceType == Presence.Type.subscribe) {
+    String displayName=null;
+    Nick ext=(Nick)presence.getExtension(Nick.NAMESPACE);
+    if (ext != null)     displayName=ext.getName();
 synchronized (this) {
       if (handler == null) {
-        earlySubscriptions.add(fromID);
+        earlySubscriptions.put(fromID,displayName);
         return;
       }
     }
-    handleSubscribeReceived(fromID);
+    handleSubscribeReceived(fromID,displayName);
   }
  else   if (presenceType == Presence.Type.unsubscribed) {
     if (logger.isTraceEnabled())     logger.trace(fromID + " does not allow your subscription");
