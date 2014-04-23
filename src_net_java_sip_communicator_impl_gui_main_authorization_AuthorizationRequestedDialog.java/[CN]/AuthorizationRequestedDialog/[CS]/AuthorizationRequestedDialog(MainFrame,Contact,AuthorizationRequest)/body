@@ -11,9 +11,17 @@
     contactName=contact.getAddress();
   }
  else {
-    contactName=contact.getDisplayName() + " <" + contact.getAddress()+ ">";
+    String displayName=contact.getDisplayName();
+    if (displayName.length() > 64) {
+      displayName=displayName.substring(0,47) + "...";
+    }
+    contactName=displayName + " <" + contact.getAddress()+ ">";
   }
-  infoTextArea.setText(GuiActivator.getResources().getI18NString("service.gui.AUTHORIZATION_REQUESTED_INFO",new String[]{contactName}));
+  String infoText=GuiActivator.getResources().getI18NString("service.gui.AUTHORIZATION_REQUESTED_INFO",new String[]{contactName});
+  if (infoText.length() > 256) {
+    infoText=infoText.substring(0,253) + "...";
+  }
+  infoTextArea.setText(infoText);
   this.infoTextArea.setFont(infoTextArea.getFont().deriveFont(Font.BOLD));
   this.infoTextArea.setLineWrap(true);
   this.infoTextArea.setWrapStyleWord(true);
@@ -33,13 +41,20 @@
     this.requestPane.setText(request.getReason());
     this.requestScrollPane.getViewport().add(requestPane);
     this.reasonsPanel.add(requestScrollPane);
-    this.mainPanel.setPreferredSize(new Dimension(500,250));
+    this.mainPanel.setPreferredSize(new Dimension(700,270));
   }
  else {
-    this.mainPanel.setPreferredSize(new Dimension(500,200));
+    this.mainPanel.setPreferredSize(new Dimension(700,220));
   }
   if (!contact.isPersistent()) {
-    addContactCheckBox=new SIPCommCheckBox(GuiActivator.getResources().getI18NString("service.gui.ADD_AUTHORIZED_CONTACT",new String[]{contactName}),true);
+    String addContactText="";
+    if (contactName.length() > 50) {
+      addContactText=GuiActivator.getResources().getI18NString("service.gui.ADD_CONTACT_TO_CONTACTLIST",new String[]{contactName});
+    }
+ else {
+      addContactText=GuiActivator.getResources().getI18NString("service.gui.ADD_AUTHORIZED_CONTACT",new String[]{contactName});
+    }
+    addContactCheckBox=new SIPCommCheckBox(addContactText,true);
     addContactCheckBox.setBorder(null);
     JPanel checkBoxPanel=new TransparentPanel(new FlowLayout(FlowLayout.LEFT));
     checkBoxPanel.add(addContactCheckBox);
