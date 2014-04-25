@@ -1,10 +1,15 @@
 {
   List<UIContactDetail> resultList=new LinkedList<UIContactDetail>();
   Iterator<ContactDetail> details=sourceContact.getContactDetails().iterator();
+  PhoneNumberI18nService phoneNumberService=GuiActivator.getPhoneNumberI18nService();
+  boolean filterToNumbers=GuiActivator.getConfigurationService().getBoolean(FILTER_CALL_DETAILS_TO_NUMBERS_PROP,false);
   while (details.hasNext()) {
     ContactDetail detail=details.next();
     List<Class<? extends OperationSet>> supportedOperationSets=detail.getSupportedOperationSets();
     if ((supportedOperationSets != null) && supportedOperationSets.contains(opSetClass)) {
+      if (filterToNumbers && opSetClass.equals(OperationSetBasicTelephony.class) && !phoneNumberService.isPhoneNumber(detail.getDetail())) {
+        continue;
+      }
       resultList.add(new SourceContactDetail(detail,getInternationalizedLabel(detail.getCategory()),getInternationalizedLabels(detail.getSubCategories().iterator()),opSetClass,sourceContact));
     }
   }
