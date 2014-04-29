@@ -1,0 +1,36 @@
+{
+synchronized (dtmfToneNotifications) {
+    if ((dtmfToneNotificationThread == null) && !dtmfToneNotifications.isEmpty()) {
+      Thread t=new Thread(){
+        @Override public void run(){
+          try {
+            runInDTMFToneNotificationThread();
+          }
+  finally {
+synchronized (dtmfToneNotifications) {
+              if (dtmfToneNotificationThread == Thread.currentThread()) {
+                dtmfToneNotificationThread=null;
+                startDTMFToneNotificationThreadIfNecessary();
+              }
+            }
+          }
+        }
+      }
+;
+      t.setDaemon(true);
+      t.setName("DTMFHandler: DTMF tone notification player");
+      boolean started=false;
+      dtmfToneNotificationThread=t;
+      try {
+        t.start();
+        started=true;
+      }
+  finally {
+        if (!started && (dtmfToneNotificationThread == t))         dtmfToneNotificationThread=null;
+      }
+    }
+ else {
+      dtmfToneNotifications.notify();
+    }
+  }
+}

@@ -1,25 +1,12 @@
 {
   if (info.sound != null) {
 synchronized (dtmfToneNotifications) {
-      boolean startThread=(dtmfToneNotifications.size() == 0);
       dtmfToneNotifications.add(info);
-      if (startThread) {
-        Thread dtmfToneNotificationThread=new Thread(this);
-        dtmfToneNotificationThread.setDaemon(true);
-        dtmfToneNotificationThread.setName("DTMFHandler: DTMF tone notification player");
-        dtmfToneNotificationThread.start();
-      }
+      startDTMFToneNotificationThreadIfNecessary();
     }
   }
-  if (callContainer != null) {
-    for (    Call c : callContainer.getCallConference().getCalls()) {
-      startSendingDtmfTone(c,info);
-    }
-  }
- else {
-    Collection<Call> activeCalls=CallManager.getInProgressCalls();
-    if (activeCalls != null) {
-      for (      Call activeCall : activeCalls)       startSendingDtmfTone(activeCall,info);
-    }
+  Collection<Call> calls=(callContainer == null) ? CallManager.getInProgressCalls() : callContainer.getCallConference().getCalls();
+  if ((calls != null) && !calls.isEmpty()) {
+    for (    Call call : calls)     startSendingDtmfTone(call,info);
   }
 }

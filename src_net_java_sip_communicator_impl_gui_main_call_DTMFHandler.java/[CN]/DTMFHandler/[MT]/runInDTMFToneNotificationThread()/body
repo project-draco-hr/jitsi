@@ -1,0 +1,34 @@
+{
+  long idleStartTime=-1;
+  do {
+    DTMFToneInfo toneToPlay;
+synchronized (dtmfToneNotifications) {
+      if (dtmfToneNotificationThread != Thread.currentThread())       break;
+      if (dtmfToneNotifications.isEmpty()) {
+        toneToPlay=null;
+        long now=System.currentTimeMillis();
+        if (idleStartTime == -1)         idleStartTime=now;
+        long timeout=DTMF_TONE_NOTIFICATION_THREAD_IDLE_TIMEOUT - (now - idleStartTime);
+        if (timeout <= 0) {
+          break;
+        }
+ else {
+          try {
+            dtmfToneNotifications.wait(timeout);
+          }
+ catch (          InterruptedException ie) {
+          }
+          continue;
+        }
+      }
+ else {
+        toneToPlay=dtmfToneNotifications.remove(0);
+        idleStartTime=-1;
+      }
+    }
+    if ((toneToPlay != null) && (toneToPlay.sound != null)) {
+      GuiActivator.getNotificationService().fireNotification(DTMF_TONE_PREFIX + toneToPlay.tone.getValue());
+    }
+  }
+ while (true);
+}
