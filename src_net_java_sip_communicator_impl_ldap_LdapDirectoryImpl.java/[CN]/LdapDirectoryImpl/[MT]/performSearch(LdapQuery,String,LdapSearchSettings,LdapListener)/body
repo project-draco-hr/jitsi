@@ -4,6 +4,7 @@
     @Override public void run(){
       String filter=buildSearchFilter(realQueryString);
       logger.trace("starting search for " + filter + " (initial query: \""+ query.toString()+ "\") on directory \""+ LdapDirectoryImpl.this+ "\"");
+      Pattern searchPattern=Pattern.compile(query.toString(),Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
       SearchControls searchControls=buildSearchControls(searchSettings);
       LdapEvent endEvent=null;
       InitialDirContext dirContext=null;
@@ -19,6 +20,7 @@
           checkCancel();
           SearchResult searchResult=(SearchResult)results.next();
           Map<String,Set<Object>> retrievedAttributes=retrieveAttributes(searchResult);
+          if (!checkRetrievedAttributes(query.toString(),searchPattern,retrievedAttributes))           continue;
           LdapPersonFound person=buildPerson(query,searchResult.getName(),retrievedAttributes);
           LdapEvent resultEvent=new LdapEvent(LdapDirectoryImpl.this,LdapEvent.LdapEventCause.NEW_SEARCH_RESULT,person);
           fireLdapEvent(resultEvent,caller);
