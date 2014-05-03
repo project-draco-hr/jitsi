@@ -1,17 +1,15 @@
 {
   if (!isThisChatRoom(msg.getChannelName()))   return;
   String kickedUser=msg.getKickedNickname();
+  ChatRoomMember kickedMember=this.chatroom.getChatRoomMember(kickedUser);
+  String user=msg.getSource().getNick();
+  if (kickedMember != null) {
+    ChatRoomMember kicker=this.chatroom.getChatRoomMember(user);
+    this.chatroom.fireMemberPresenceEvent(kickedMember,kicker,ChatRoomMemberPresenceChangeEvent.MEMBER_KICKED,msg.getText());
+  }
   if (isMe(kickedUser)) {
     IrcStack.this.irc.deleteListener(this);
     IrcStack.this.joined.remove(this.chatroom.getIdentifier());
     IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(this.chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_KICKED,msg.getText());
-  }
- else {
-    ChatRoomMember kickedMember=this.chatroom.getChatRoomMember(kickedUser);
-    String user=msg.getSource().getNick();
-    if (kickedMember != null) {
-      ChatRoomMember kicker=this.chatroom.getChatRoomMember(user);
-      this.chatroom.fireMemberPresenceEvent(kickedMember,kicker,ChatRoomMemberPresenceChangeEvent.MEMBER_KICKED,msg.getText());
-    }
   }
 }
