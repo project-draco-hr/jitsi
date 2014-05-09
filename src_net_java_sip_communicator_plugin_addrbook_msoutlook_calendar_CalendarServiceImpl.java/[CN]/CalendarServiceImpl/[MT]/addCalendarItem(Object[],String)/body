@@ -50,8 +50,15 @@ if (startTime.before(currentTime) || startTime.equals(currentTime)) executeNow=t
 CalendarItemTimerTask task=null;
 if (recurringData != null) {
 task=new CalendarItemTimerTask(status,startTime,endTime,id,executeNow,null);
+try {
 RecurringPattern pattern=new RecurringPattern(recurringData,task);
 task.setPattern(pattern);
+}
+ catch (IndexOutOfBoundsException e) {
+logger.error("Error parsing reccuring pattern." + e.getMessage(),e);
+logger.error("Reccuring data:\n" + bytesToHex(recurringData));
+return;
+}
 }
 if (endTime.before(currentTime) || endTime.equals(currentTime)) {
 if (isRecurring) {

@@ -5,6 +5,9 @@
   }
  catch (  MsOutlookMAPIHResultException ex) {
     String hresult=ex.getHresultString();
+    if (logger.isTraceEnabled()) {
+      logger.trace(MsOutlookAddrBookContactQuery.class.getSimpleName() + "#onMailUser(String)",ex);
+    }
     if ("MAPI_E_0x57".equals(hresult)) {
       if (!firstIMAPIPropGetPropFailureLogged) {
         firstIMAPIPropGetPropFailureLogged=true;
@@ -14,9 +17,6 @@
  else {
       throw ex;
     }
-    if (logger.isTraceEnabled()) {
-      logger.trace(MsOutlookAddrBookContactQuery.class.getSimpleName() + "#onMailUser(String)",ex);
-    }
     return true;
   }
   long objType=0;
@@ -24,9 +24,15 @@
     objType=((Long)props[PR_OBJECT_TYPE]).longValue();
   }
  else {
+    logger.error("Wrong object types. We are canceling the query.");
     return false;
   }
-  if ((MAPI_MAILUSER == objType) && (mapiMessageCount != 0))   return false;
+  if ((MAPI_MAILUSER == objType) && (mapiMessageCount != 0)) {
+    if (logger.isTraceEnabled()) {
+      logger.trace("Duplicate contacts. We are canceling the query.");
+    }
+    return false;
+  }
   int propIndex=0;
   boolean matches=false;
   Object prop;
@@ -60,6 +66,9 @@
         logger.trace("For query: " + query + " found contact:"+ sourceContact.getDisplayName()+ ", "+ sourceContact.getContactAddress());
       }
       addQueryResult(sourceContact);
+    }
+ else {
+      logger.error("Error creating the found contact. " + "Contact details are empty.");
     }
   }
   return (getStatus() == QUERY_IN_PROGRESS);
