@@ -1,0 +1,24 @@
+{
+  String sourcePattern=service.getPattern();
+  Pattern pattern=Pattern.compile(sourcePattern,Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  int startPos=0;
+  Matcher plainTextMatcher=TEXT_TO_REPLACE_PATTERN.matcher(msg);
+  while (plainTextMatcher.find()) {
+    String text=plainTextMatcher.group(1);
+    int startMatchPosition=plainTextMatcher.start(1);
+    int endMatchPosition=plainTextMatcher.end(1);
+    boolean skipSmileys=false;
+    if (text == null) {
+      text=plainTextMatcher.group(2);
+      startMatchPosition=plainTextMatcher.start(2);
+      endMatchPosition=plainTextMatcher.end(2);
+      skipSmileys=true;
+    }
+    if (!StringUtils.isNullOrEmpty(text) && !(skipSmileys && text.startsWith("<I"))) {
+      buff.append(msg.substring(startPos,startMatchPosition));
+      processText(text,buff,pattern,service,skipSmileys);
+      startPos=endMatchPosition;
+    }
+  }
+  buff.append(msg.substring(startPos));
+}
