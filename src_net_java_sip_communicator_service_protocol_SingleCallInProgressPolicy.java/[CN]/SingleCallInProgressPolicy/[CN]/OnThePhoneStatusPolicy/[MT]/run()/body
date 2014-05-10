@@ -15,6 +15,11 @@
   }
  else {
     boolean isOnThePhone=isOnThePhone();
+    CalendarService calendar=ProtocolProviderActivator.getCalendarService();
+    if (!isOnThePhone && calendar.onThePhoneStatusChanged(presenceStatuses)) {
+      forgetPresenceStatuses();
+      return;
+    }
     for (    ServiceReference ppsRef : ppsRefs) {
       ProtocolProviderService pps=(ProtocolProviderService)bundleContext.getService(ppsRef);
       if (pps == null)       continue;
@@ -34,7 +39,11 @@
           }
  else           if (!onThePhonePresenceStatus.equals(presenceStatus)) {
             publishPresenceStatus(presence,onThePhonePresenceStatus);
-            if (onThePhonePresenceStatus.equals(presence.getPresenceStatus())) {
+            if (presenceStatus.equals(findInMeetingPresenceStatus(presence))) {
+              Map<ProtocolProviderService,PresenceStatus> statuses=calendar.getRememberedStatuses();
+              for (              ProtocolProviderService provider : statuses.keySet())               rememberPresenceStatus(provider,statuses.get(provider));
+            }
+ else             if (onThePhonePresenceStatus.equals(presence.getPresenceStatus())) {
               rememberPresenceStatus(pps,presenceStatus);
             }
  else {
