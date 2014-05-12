@@ -26,10 +26,12 @@ synchronized (chatRoomConferenceCalls) {
  catch (  Throwable e) {
     logger.warn("Error occured while leaving, maybe just " + "disconnected before leaving",e);
   }
+  Hashtable<String,ChatRoomMemberJabberImpl> membersCopy;
 synchronized (members) {
-    for (    ChatRoomMember member : members.values())     fireMemberPresenceEvent(member,ChatRoomMemberPresenceChangeEvent.MEMBER_LEFT,"Local user has left the chat room.");
+    membersCopy=new Hashtable<String,ChatRoomMemberJabberImpl>(members);
     members.clear();
   }
+  for (  ChatRoomMember member : membersCopy.values())   fireMemberPresenceEvent(member,ChatRoomMemberPresenceChangeEvent.MEMBER_LEFT,"Local user has left the chat room.");
   if (connection != null) {
     connection.removePacketListener(invitationRejectionListeners);
     if (presenceListener != null) {
