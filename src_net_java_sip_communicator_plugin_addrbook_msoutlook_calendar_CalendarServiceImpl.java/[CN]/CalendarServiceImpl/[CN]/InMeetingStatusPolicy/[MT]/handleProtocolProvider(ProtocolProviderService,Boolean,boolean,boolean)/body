@@ -11,11 +11,22 @@
       forgetPresenceStatus(pps);
     }
  else     if (isInMeeting) {
+      if (!dontAddListeners) {
+        presence.addProviderPresenceStatusListener(presenceStatusListener);
+      }
       PresenceStatus presenceStatus=presence.getPresenceStatus();
       if (presenceStatus == null) {
+        logger.info("HANDLE provider 55");
         forgetPresenceStatus(pps);
+        presence.removeProviderPresenceStatusListener(presenceStatusListener);
       }
  else       if (!inMeetingPresenceStatus.equals(presenceStatus) && (!presenceStatus.equals(onThePhone) || onThePhoneStatusChanged)) {
+        if (!dontAddListeners) {
+          if (!presenceStatus.isOnline()) {
+            return;
+          }
+          presence.removeProviderPresenceStatusListener(presenceStatusListener);
+        }
         publishPresenceStatus(presence,inMeetingPresenceStatus);
         if (inMeetingPresenceStatus.equals(presence.getPresenceStatus())) {
           rememberPresenceStatus(pps,presenceStatus);
@@ -23,6 +34,9 @@
  else {
           forgetPresenceStatus(pps);
         }
+      }
+ else {
+        presence.removeProviderPresenceStatusListener(presenceStatusListener);
       }
     }
  else {
