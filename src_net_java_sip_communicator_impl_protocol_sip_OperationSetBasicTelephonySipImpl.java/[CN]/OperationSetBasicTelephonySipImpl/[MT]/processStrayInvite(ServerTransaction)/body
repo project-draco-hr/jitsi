@@ -1,0 +1,20 @@
+{
+  logger.info("got an INVITE for a dead dialog. Rejecting");
+  Request inviteRequest=serverTransaction.getRequest();
+  Response noSuchCall=null;
+  try {
+    noSuchCall=messageFactory.createResponse(Response.CALL_OR_TRANSACTION_DOES_NOT_EXIST,inviteRequest);
+  }
+ catch (  ParseException ex) {
+    logger.error("Error while trying to send a response to an INVITE",ex);
+  }
+  if (noSuchCall != null) {
+    try {
+      serverTransaction.sendResponse(noSuchCall);
+      if (logger.isDebugEnabled())       logger.debug("sent response " + noSuchCall);
+    }
+ catch (    Exception ex) {
+      logger.error("Failed to reject a stray INVITE with a 481, " + "exception was:\n",ex);
+    }
+  }
+}
