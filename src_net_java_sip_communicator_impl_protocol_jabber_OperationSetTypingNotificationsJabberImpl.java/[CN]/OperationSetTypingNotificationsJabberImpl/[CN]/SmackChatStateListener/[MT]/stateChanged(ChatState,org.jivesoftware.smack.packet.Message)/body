@@ -1,6 +1,7 @@
 {
-  if (logger.isTraceEnabled())   logger.trace(chat.getParticipant() + " entered the " + state.name()+ " state.");
-  String fromID=StringUtils.parseBareAddress(chat.getParticipant());
+  String fromJID=message.getFrom();
+  if (logger.isTraceEnabled())   logger.trace(fromJID + " entered the " + state.name()+ " state.");
+  String fromID=StringUtils.parseBareAddress(fromJID);
   List<ChatRoom> chatRooms=parentProvider.getOperationSet(OperationSetMultiUserChat.class).getCurrentlyJoinedChatRooms();
   boolean isPrivateMessagingAddress=false;
   for (  ChatRoom chatRoom : chatRooms) {
@@ -13,7 +14,7 @@
   if (sourceContact == null) {
     if (message.getError() != null)     sourceContact=opSetPersPresence.findContactByID(message.getFrom());
     if (sourceContact == null) {
-      sourceContact=opSetPersPresence.createVolatileContact((isPrivateMessagingAddress ? message.getFrom() : chat.getParticipant()),isPrivateMessagingAddress);
+      sourceContact=opSetPersPresence.createVolatileContact(message.getFrom(),isPrivateMessagingAddress);
     }
   }
   int evtCode=STATE_UNKNOWN;

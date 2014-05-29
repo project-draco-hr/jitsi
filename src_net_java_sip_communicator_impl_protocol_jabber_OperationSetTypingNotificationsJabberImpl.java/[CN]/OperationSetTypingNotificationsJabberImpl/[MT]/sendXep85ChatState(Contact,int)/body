@@ -1,13 +1,8 @@
 {
   if (opSetBasicIM == null || parentProvider.getConnection() == null)   return;
-  String toJID=null;
-  OperationSetBasicInstantMessagingJabberImpl.TargetAddress ta=opSetBasicIM.getJidForAddress(contact.getAddress());
-  if (ta != null)   toJID=ta.jid;
+  String toJID=opSetBasicIM.getRecentJIDForAddress(contact.getAddress());
   if (toJID == null)   return;
   if (logger.isTraceEnabled())   logger.trace("Sending XEP-0085 chat state=" + state + " to "+ toJID);
-  Chat chat;
-  if (ta != null && ta.chat != null)   chat=ta.chat;
- else   chat=parentProvider.getConnection().getChatManager().createChat(toJID,null);
   ChatState chatState=null;
   if (state == STATE_TYPING) {
     chatState=ChatState.composing;
@@ -21,10 +16,5 @@
  else {
     chatState=ChatState.gone;
   }
-  try {
-    ChatStateManager.getInstance(parentProvider.getConnection()).setCurrentState(chatState,chat);
-  }
- catch (  XMPPException exc) {
-    logger.warn("Failed to send state [" + state + "] to ["+ contact.getAddress()+ "].",exc);
-  }
+  setCurrentState(chatState,toJID);
 }
