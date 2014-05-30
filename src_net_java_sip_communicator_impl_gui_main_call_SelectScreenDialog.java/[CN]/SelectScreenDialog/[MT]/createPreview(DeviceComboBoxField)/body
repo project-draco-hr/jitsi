@@ -6,8 +6,8 @@
   preview=createVideoContainer(noPreview);
   preview.setPreferredSize(new Dimension(WIDTH,280));
   preview.setMaximumSize(new Dimension(WIDTH,280));
-  final ActionListener comboBoxListener=new ActionListener(){
-    public void actionPerformed(    ActionEvent event){
+  final DeviceComboBoxField.Listener comboBoxListener=new DeviceComboBoxField.Listener(){
+    public void onAction(){
       MediaDevice device=(MediaDevice)comboBox.getSelectedItem();
       if ((device != null) && device.equals(videoDeviceInPreview))       return;
       Exception exception;
@@ -29,19 +29,19 @@ catch (      MediaException ex) {
     }
   }
 ;
-  comboBox.addActionListener(comboBoxListener);
-  comboBox.addHierarchyListener(new HierarchyListener(){
+  comboBox.addListener(comboBoxListener);
+  comboBox.getComponent().addHierarchyListener(new HierarchyListener(){
     public void hierarchyChanged(    HierarchyEvent event){
-      if (((event.getChangeFlags() & HierarchyEvent.DISPLAYABILITY_CHANGED) != 0) && comboBox.isDisplayable()) {
+      if (((event.getChangeFlags() & HierarchyEvent.DISPLAYABILITY_CHANGED) != 0) && comboBox.getComponent().isDisplayable()) {
         SwingUtilities.invokeLater(new Runnable(){
           public void run(){
-            comboBoxListener.actionPerformed(null);
+            comboBoxListener.onAction();
           }
         }
 );
       }
  else {
-        if (!comboBox.isDisplayable())         videoDeviceInPreview=null;
+        if (!comboBox.getComponent().isDisplayable())         videoDeviceInPreview=null;
       }
     }
   }
