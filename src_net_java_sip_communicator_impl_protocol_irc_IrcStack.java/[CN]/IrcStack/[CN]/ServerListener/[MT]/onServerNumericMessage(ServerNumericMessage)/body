@@ -11,14 +11,18 @@ switch (code.intValue()) {
 case IRCServerNumerics.CHANNEL_NICKS_END_OF_LIST:
     String text=msg.getText();
   String channelName=text.substring(0,text.indexOf(' '));
+final ChatRoomIrcImpl chatRoom;
+final IRCChannel channel;
+synchronized (IrcStack.this.joined) {
 if (IrcStack.this.joining.containsKey(channelName) || IrcStack.this.joined.containsKey(channelName)) {
-  LOGGER.trace("Chat room '" + channelName + "' join event was announced. Stop "+ "handling this event.");
-  break;
+LOGGER.trace("Chat room '" + channelName + "' join event was announced. Stop "+ "handling this event.");
+break;
 }
 LOGGER.trace("Starting unannounced join of chat room '" + channelName);
-IRCChannel channel=IrcStack.this.connectionState.getChannelByName(channelName);
-ChatRoomIrcImpl chatRoom=new ChatRoomIrcImpl(channelName,IrcStack.this.provider);
+channel=IrcStack.this.connectionState.getChannelByName(channelName);
+chatRoom=new ChatRoomIrcImpl(channelName,IrcStack.this.provider);
 IrcStack.this.joined.put(channelName,chatRoom);
+}
 IrcStack.this.irc.addListener(new ChatRoomListener(chatRoom));
 openChatRoomWindow(chatRoom);
 IrcStack.this.prepareChatRoom(chatRoom,channel);

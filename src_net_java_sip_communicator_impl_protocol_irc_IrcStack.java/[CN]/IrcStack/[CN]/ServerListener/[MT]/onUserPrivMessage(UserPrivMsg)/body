@@ -1,10 +1,15 @@
 {
-  ChatRoomIrcImpl chatroom=null;
-  String user=msg.getSource().getNick();
-  String text=Utils.parse(msg.getText());
-  chatroom=IrcStack.this.joined.get(user);
-  if (chatroom == null) {
-    chatroom=initiatePrivateChatRoom(user);
+  final String user=msg.getSource().getNick();
+  final String text=Utils.parse(msg.getText());
+  ChatRoomIrcImpl chatroom;
+synchronized (IrcStack.this.joined) {
+    chatroom=IrcStack.this.joined.get(user);
+    if (chatroom == null) {
+      OperationSetMultiUserChatIrcImpl muc=IrcStack.this.provider.getMUC();
+      chatroom=muc.findOrCreateRoom(user);
+      IrcStack.this.joined.put(chatroom.getIdentifier(),chatroom);
+      chatroom=initiatePrivateChatRoom(user,chatroom);
+    }
   }
   deliverReceivedMessageToPrivateChat(chatroom,user,text);
 }
