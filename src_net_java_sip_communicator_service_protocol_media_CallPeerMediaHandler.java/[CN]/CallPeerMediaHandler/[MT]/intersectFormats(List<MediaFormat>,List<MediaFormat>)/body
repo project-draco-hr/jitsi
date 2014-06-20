@@ -1,16 +1,31 @@
 {
   List<MediaFormat> ret=new ArrayList<MediaFormat>();
   MediaFormat telephoneEvents=null;
+  MediaFormat red=null;
+  MediaFormat ulpfec=null;
   for (  MediaFormat remoteFormat : remoteFormats) {
     MediaFormat localFormat=findMediaFormat(localFormats,remoteFormat);
     if (localFormat != null) {
-      if (Constants.TELEPHONE_EVENT.equals(localFormat.getEncoding())) {
+      String encoding=localFormat.getEncoding();
+      if (Constants.TELEPHONE_EVENT.equals(encoding)) {
         telephoneEvents=localFormat;
+        continue;
+      }
+ else       if (Constants.RED.equals(encoding)) {
+        red=localFormat;
+        continue;
+      }
+ else       if (Constants.ULPFEC.equals(encoding)) {
+        ulpfec=localFormat;
         continue;
       }
       ret.add(localFormat);
     }
   }
-  if ((!ret.isEmpty()) && (telephoneEvents != null))   ret.add(telephoneEvents);
+  if (!ret.isEmpty()) {
+    if (telephoneEvents != null)     ret.add(telephoneEvents);
+    if (red != null)     ret.add(red);
+    if (ulpfec != null)     ret.add(ulpfec);
+  }
   return ret;
 }
