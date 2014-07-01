@@ -1,0 +1,35 @@
+{
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        serviceChanged(event);
+      }
+    }
+);
+    return;
+  }
+  Object service=ConnectionInfoActivator.bundleContext.getService(event.getServiceReference());
+  if (!(service instanceof ProtocolProviderService))   return;
+  ProtocolProviderService protocolProvider=(ProtocolProviderService)service;
+  if (event.getType() == ServiceEvent.REGISTERED) {
+    if (accountsTable.get(protocolProvider.getAccountID()) == null) {
+      ConnectionDetailsPanel panel=new ConnectionDetailsPanel(dialog,protocolProvider);
+      accountsTable.put(protocolProvider.getAccountID(),panel);
+      accountsComboBox.addItem(panel);
+      protocolProvider.addRegistrationStateChangeListener(this);
+    }
+  }
+ else   if (event.getType() == ServiceEvent.UNREGISTERING) {
+    ConnectionDetailsPanel panel=accountsTable.get(protocolProvider.getAccountID());
+    if (panel != null) {
+      accountsTable.remove(protocolProvider.getAccountID());
+      accountsComboBox.removeItem(panel);
+      if (currentDetailsPanel == panel) {
+        currentDetailsPanel=null;
+        centerPanel.removeAll();
+        centerPanel.revalidate();
+        centerPanel.repaint();
+      }
+    }
+  }
+}
