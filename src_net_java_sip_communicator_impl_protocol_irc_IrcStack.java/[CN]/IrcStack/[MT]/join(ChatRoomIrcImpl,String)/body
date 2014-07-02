@@ -9,7 +9,7 @@
   final Result<Object,Exception> joinSignal=new Result<Object,Exception>();
 synchronized (joinSignal) {
     LOGGER.trace("Issue join channel command to IRC library and wait for" + " join operation to complete (un)successfully.");
-    this.joining.put(chatroom.getIdentifier(),joinSignal);
+    this.joined.put(chatroom.getIdentifier(),null);
     this.irc.joinChannel(chatroom.getIdentifier(),password,new Callback<IRCChannel>(){
       @Override public void onSuccess(      IRCChannel channel){
         if (LOGGER.isTraceEnabled()) {
@@ -22,7 +22,7 @@ synchronized (joinSignal) {
             if (LOGGER.isTraceEnabled()) {
               LOGGER.trace("Callback for successful join " + "finished prematurely since we " + "got forwarded from '" + chatRoomId + "' to '"+ channel.getName()+ "'. Joining of forwarded channel "+ "gets handled by Server Listener "+ "since that channel was not "+ "announced.");
             }
-            IrcStack.this.joining.remove(chatRoomId);
+            IrcStack.this.joined.remove(chatRoomId);
             IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOIN_FAILED,"We got forwarded to channel '" + channel.getName() + "'.");
             joinSignal.setDone();
             joinSignal.notifyAll();
@@ -30,7 +30,6 @@ synchronized (joinSignal) {
           }
           try {
             IrcStack.this.joined.put(chatRoomId,chatroom);
-            IrcStack.this.joining.remove(chatRoomId);
             IrcStack.this.irc.addListener(new ChatRoomListener(chatroom));
             prepareChatRoom(chatroom,channel);
           }
@@ -49,7 +48,7 @@ synchronized (joinSignal) {
         String chatRoomId=chatroom.getIdentifier();
 synchronized (joinSignal) {
           try {
-            IrcStack.this.joining.remove(chatRoomId);
+            IrcStack.this.joined.remove(chatRoomId);
             IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOIN_FAILED,e.getMessage());
           }
   finally {
