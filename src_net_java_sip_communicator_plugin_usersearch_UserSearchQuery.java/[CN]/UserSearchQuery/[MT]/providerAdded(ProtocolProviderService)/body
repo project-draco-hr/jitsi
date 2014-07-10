@@ -1,0 +1,29 @@
+{
+synchronized (displayedProviders) {
+    if (displayedProviders.contains(provider))     return;
+    displayedProviders.add(provider);
+  }
+  OperationSetUserSearch opSetUserSearch=provider.getOperationSet(OperationSetUserSearch.class);
+  if (opSetUserSearch == null) {
+    return;
+  }
+  opSetUserSearch.createSearchManager();
+  List<String> jidList=opSetUserSearch.search(queryString);
+  if (jidList == null || jidList.isEmpty())   return;
+  List<Class<? extends OperationSet>> supportedOpSets=new ArrayList<Class<? extends OperationSet>>(1);
+  supportedOpSets.add(OperationSetPersistentPresence.class);
+  ContactDetail detail=new ContactDetail(queryString);
+  for (  String jid : jidList) {
+    List<ContactDetail> contactDetails=new LinkedList<ContactDetail>();
+    ContactDetail jidDetail=new ContactDetail(jid);
+    jidDetail.setSupportedOpSets(supportedOpSets);
+    contactDetails.add(jidDetail);
+    contactDetails.add(detail);
+    UserSearchContact contact=new UserSearchContact(this,getContactSource(),jid,contactDetails,provider);
+    contact.setContactAddress(jid);
+synchronized (contacts) {
+      contacts.add(contact);
+    }
+    fireContactReceived(contact);
+  }
+}

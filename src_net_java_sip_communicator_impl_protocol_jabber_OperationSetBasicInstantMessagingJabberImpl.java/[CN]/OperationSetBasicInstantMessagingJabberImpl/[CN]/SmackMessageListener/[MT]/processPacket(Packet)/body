@@ -47,6 +47,19 @@
   }
   Contact sourceContact=opSetPersPresence.findContactByID((isPrivateMessaging ? userFullId : userBareID));
   if (msg.getType() == org.jivesoftware.smack.packet.Message.Type.error) {
+    if (isPrivateMessaging && sourceContact == null) {
+      if (privateContactRoom != null) {
+        XMPPError error=packet.getError();
+        int errorResultCode=ChatRoomMessageDeliveryFailedEvent.UNKNOWN_ERROR;
+        if (error != null && error.getCode() == 403) {
+          errorResultCode=ChatRoomMessageDeliveryFailedEvent.FORBIDDEN;
+        }
+        String errorReason=error.getMessage();
+        ChatRoomMessageDeliveryFailedEvent evt=new ChatRoomMessageDeliveryFailedEvent(privateContactRoom,null,errorResultCode,errorReason,new Date(),newMessage);
+        ((ChatRoomJabberImpl)privateContactRoom).fireMessageEvent(evt);
+      }
+      return;
+    }
     if (logger.isInfoEnabled())     logger.info("Message error received from " + userBareID);
     int errorCode=packet.getError().getCode();
     int errorResultCode=MessageDeliveryFailedEvent.UNKNOWN_ERROR;
@@ -60,12 +73,7 @@
     if (ev != null)     fireMessageEvent(ev);
     return;
   }
-  String address=userBareID;
-  if (isPrivateMessaging) {
-    address=JabberActivator.getResources().getI18NString("service.gui.FROM",new String[]{StringUtils.parseResource(msg.getFrom()),userBareID});
-  }
-  putJidForAddress(address,userFullId);
-  if (logger.isTraceEnabled())   logger.trace("just mapped: " + userBareID + " to "+ msg.getFrom());
+  putJidForAddress(userFullId,msg.getThread());
   if (sourceContact == null) {
     if (logger.isDebugEnabled())     logger.debug("received a message from an unknown contact: " + userBareID);
     sourceContact=opSetPersPresence.createVolatileContact(userFullId,isPrivateMessaging);

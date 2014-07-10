@@ -1,11 +1,11 @@
 {
   super(new GridBagLayout());
   loadSkin();
-  this.setOpaque(true);
-  this.nameLabel.setOpaque(false);
-  this.displayDetailsLabel.setFont(getFont().deriveFont(9f));
-  this.displayDetailsLabel.setForeground(Color.GRAY);
-  this.rightLabel.setHorizontalAlignment(JLabel.RIGHT);
+  setOpaque(true);
+  nameLabel.setOpaque(false);
+  displayDetailsLabel.setFont(getFont().deriveFont(9f));
+  displayDetailsLabel.setForeground(Color.GRAY);
+  rightLabel.setHorizontalAlignment(JLabel.RIGHT);
   constraints.insets=new Insets(0,0,0,H_GAP);
   constraints.anchor=GridBagConstraints.WEST;
   constraints.fill=GridBagConstraints.NONE;
@@ -14,7 +14,7 @@
   constraints.gridheight=1;
   constraints.weightx=0f;
   constraints.weighty=1f;
-  this.add(statusLabel,constraints);
+  add(statusLabel,constraints);
   addLabels(1);
   callButton.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
@@ -47,10 +47,25 @@
         if (contactDescriptor.getDescriptor() instanceof MetaContact) {
           GuiActivator.getUIService().getChatWindowManager().startChat((MetaContact)contactDescriptor.getDescriptor());
         }
- else         if (((SourceContact)contactDescriptor.getDescriptor()).getContactDetails(OperationSetMultiUserChat.class) != null) {
+ else         if (contactDescriptor.getDescriptor() instanceof SourceContact) {
           SourceContact contact=(SourceContact)contactDescriptor.getDescriptor();
-          ChatRoomWrapper room=GuiActivator.getMUCService().findChatRoomWrapperFromSourceContact(contact);
-          if (room != null)           GuiActivator.getMUCService().openChatRoom(room);
+          List<ContactDetail> imDetails=contact.getContactDetails(OperationSetBasicInstantMessaging.class);
+          List<ContactDetail> mucDetails=contact.getContactDetails(OperationSetMultiUserChat.class);
+          if (imDetails != null && imDetails.size() > 0) {
+            ProtocolProviderService pps=imDetails.get(0).getPreferredProtocolProvider(OperationSetBasicInstantMessaging.class);
+            GuiActivator.getUIService().getChatWindowManager().startChat(contact.getContactAddress(),pps);
+          }
+ else           if (mucDetails != null && mucDetails.size() > 0) {
+            ChatRoomWrapper room=GuiActivator.getMUCService().findChatRoomWrapperFromSourceContact(contact);
+            if (room == null) {
+              ProtocolProviderService pps=mucDetails.get(0).getPreferredProtocolProvider(OperationSetMultiUserChat.class);
+              room=GuiActivator.getMUCService().findChatRoomWrapperFromChatRoomID(contact.getContactAddress(),pps);
+              if (room == null) {
+                GuiActivator.getMUCService().createChatRoom(contact.getContactAddress(),pps,new ArrayList<String>(),"",false,false,false);
+              }
+            }
+            if (room != null)             GuiActivator.getMUCService().openChatRoom(room);
+          }
         }
       }
     }
@@ -74,5 +89,5 @@
   }
 );
   initButtonToolTips();
-  this.setToolTipText("");
+  setToolTipText("");
 }

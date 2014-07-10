@@ -6,14 +6,20 @@
     if (evt.getEventType() != ChatRoomMessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED)     return;
     History history=this.getHistoryForMultiChat(evt.getSourceChatRoom());
     if (evt.isHistoryMessage()) {
-      Collection<EventObject> c=findFirstMessagesAfter(evt.getSourceChatRoom(),evt.getTimestamp(),10);
+      Collection<EventObject> c=findFirstMessagesAfter(evt.getSourceChatRoom(),new Date(evt.getTimestamp().getTime() - 10000),20);
       Iterator<EventObject> iter=c.iterator();
       boolean isPresent=false;
       while (iter.hasNext()) {
         EventObject e=iter.next();
         if (e instanceof ChatRoomMessageReceivedEvent) {
           ChatRoomMessageReceivedEvent cev=(ChatRoomMessageReceivedEvent)e;
-          if (evt.getSourceChatRoomMember().getContactAddress().equals(cev.getSourceChatRoomMember().getContactAddress()) && evt.getTimestamp() != null && evt.getTimestamp().equals(cev.getTimestamp())) {
+          if (evt.getSourceChatRoomMember().getContactAddress() != null && evt.getSourceChatRoomMember().getContactAddress().equals(cev.getSourceChatRoomMember().getContactAddress()) && evt.getTimestamp() != null && evt.getTimestamp().equals(cev.getTimestamp())) {
+            isPresent=true;
+            break;
+          }
+          Message m1=cev.getMessage();
+          Message m2=evt.getMessage();
+          if (m1 != null && m2 != null && m1.getContent().equals(m2.getContent())) {
             isPresent=true;
             break;
           }

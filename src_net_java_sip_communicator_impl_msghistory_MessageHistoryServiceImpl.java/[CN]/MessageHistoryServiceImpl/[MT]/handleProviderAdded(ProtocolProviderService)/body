@@ -3,6 +3,7 @@
   OperationSetBasicInstantMessaging opSetIm=provider.getOperationSet(OperationSetBasicInstantMessaging.class);
   if (opSetIm != null) {
     opSetIm.addMessageListener(this);
+    if (this.messageSourceService != null)     opSetIm.addMessageListener(messageSourceService);
   }
  else {
     if (logger.isTraceEnabled())     logger.trace("Service did not have a im op. set.");
@@ -10,6 +11,7 @@
   OperationSetSmsMessaging opSetSMS=provider.getOperationSet(OperationSetSmsMessaging.class);
   if (opSetSMS != null) {
     opSetSMS.addMessageListener(this);
+    if (this.messageSourceService != null)     opSetSMS.addMessageListener(messageSourceService);
   }
  else {
     if (logger.isTraceEnabled())     logger.trace("Service did not have a sms op. set.");
@@ -22,8 +24,22 @@
       room.addMessageListener(this);
     }
     opSetMultiUChat.addPresenceListener(this);
+    if (messageSourceService != null)     opSetMultiUChat.addPresenceListener(messageSourceService);
   }
  else {
     if (logger.isTraceEnabled())     logger.trace("Service did not have a multi im op. set.");
+  }
+  if (messageSourceService != null) {
+    OperationSetPresence opSetPresence=provider.getOperationSet(OperationSetPresence.class);
+    if (opSetPresence != null) {
+      opSetPresence.addContactPresenceStatusListener(messageSourceService);
+      opSetPresence.addProviderPresenceStatusListener(messageSourceService);
+      opSetPresence.addSubscriptionListener(messageSourceService);
+    }
+    messageSourceService.handleProviderAdded(provider,false);
+    OperationSetContactCapabilities capOpSet=provider.getOperationSet(OperationSetContactCapabilities.class);
+    if (capOpSet != null) {
+      capOpSet.addContactCapabilitiesListener(messageSourceService);
+    }
   }
 }

@@ -1,7 +1,10 @@
 {
   SessionDescription offer=SdpUtils.parseSdpString(offerString);
 synchronized (offerAnswerLock) {
-    if (localSess == null)     return processFirstOffer(offer).toString();
- else     return processUpdateOffer(offer,localSess).toString();
+    SessionDescription answer=(localSess == null) ? processFirstOffer(offer) : processUpdateOffer(offer,localSess);
+    if (getConfigurationService().getBoolean(ProtocolProviderServiceSipImpl.USE_SESSION_LEVEL_DIRECTION_IN_SDP,false)) {
+      SdpUtils.setSessionDirection(answer);
+    }
+    return answer.toString();
   }
 }

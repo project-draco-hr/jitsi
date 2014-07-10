@@ -2,18 +2,7 @@
   super(text,defaultIcon);
   this.protocolProvider=protocolProvider;
   this.presence=protocolProvider.getOperationSet(OperationSetPresence.class);
-  if (this.presence != null) {
-    Iterator<PresenceStatus> statusIterator=this.presence.getSupportedStatusSet();
-    while (statusIterator.hasNext()) {
-      PresenceStatus status=statusIterator.next();
-      int connectivity=status.getStatus();
-      if (connectivity < 1) {
-        this.offlineStatus=status;
-      }
- else       if ((onlineStatus != null && (onlineStatus.getStatus() < connectivity)) || (onlineStatus == null && (connectivity > 50 && connectivity < 80))) {
-        this.onlineStatus=status;
-      }
-    }
-  }
+  this.onlineStatus=AccountStatusUtils.getOnlineStatus(protocolProvider);
+  this.offlineStatus=AccountStatusUtils.getOfflineStatus(protocolProvider);
   loadSkin();
 }

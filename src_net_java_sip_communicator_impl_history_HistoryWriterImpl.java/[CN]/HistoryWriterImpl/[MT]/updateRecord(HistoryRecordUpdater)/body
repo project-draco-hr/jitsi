@@ -1,0 +1,37 @@
+{
+  Iterator<String> fileIterator=this.historyImpl.getFileList();
+  String filename=null;
+  while (fileIterator.hasNext()) {
+    filename=fileIterator.next();
+    Document doc=this.historyImpl.getDocumentForFile(filename);
+    if (doc == null)     continue;
+    NodeList nodes=doc.getElementsByTagName("record");
+    boolean changed=false;
+    Node node;
+    for (int i=0; i < nodes.getLength(); i++) {
+      node=nodes.item(i);
+      updater.setHistoryRecord(createHistoryRecordFromNode(node));
+      if (!updater.isMatching())       continue;
+      SimpleDateFormat sdf=new SimpleDateFormat(DATE_FORMAT);
+      ((Element)node).setAttribute("timestamp",sdf.format(new Date()));
+      Map<String,String> updates=updater.getUpdateChanges();
+      for (      String nodeName : updates.keySet()) {
+        Element changedNode=XMLUtils.findChild((Element)node,nodeName);
+        if (changedNode != null) {
+          Node changedNestedNode=changedNode.getFirstChild();
+          changedNestedNode.setNodeValue(updates.get(nodeName));
+          changed=true;
+        }
+      }
+    }
+    if (changed) {
+synchronized (this.docWriteLock) {
+        this.historyImpl.writeFile(filename,doc);
+      }
+      if (filename.equals(this.currentFile)) {
+        this.currentDoc=doc;
+      }
+      break;
+    }
+  }
+}

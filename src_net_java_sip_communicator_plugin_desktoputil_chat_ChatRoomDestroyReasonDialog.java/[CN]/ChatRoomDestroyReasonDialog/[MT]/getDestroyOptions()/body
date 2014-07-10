@@ -1,0 +1,27 @@
+{
+  final ChatRoomDestroyReasonDialog[] res=new ChatRoomDestroyReasonDialog[1];
+  try {
+    SwingUtilities.invokeAndWait(new Runnable(){
+      @Override public void run(){
+        ResourceManagementService R=DesktopUtilActivator.getResources();
+        res[0]=new ChatRoomDestroyReasonDialog(R.getI18NString("service.gui.DESTROY_CHATROOM"),R.getI18NString("service.gui.DESTROY_MESSAGE"));
+      }
+    }
+);
+  }
+ catch (  Throwable t) {
+    logger.error("Error creating dialog",t);
+    return null;
+  }
+  ChatRoomDestroyReasonDialog reasonDialog=res[0];
+  int result=reasonDialog.showDialog();
+  String destroyOptions[]=new String[2];
+  if (result == MessageDialog.OK_RETURN_CODE) {
+    destroyOptions[0]=proccessFieldValues(reasonDialog.getReason());
+    destroyOptions[1]=proccessFieldValues(reasonDialog.getAlternateAddress());
+  }
+ else {
+    destroyOptions=null;
+  }
+  return destroyOptions;
+}

@@ -1,9 +1,8 @@
 {
-  String toJID=null;
-  if (toJID == null)   toJID=opSetBasicIM.getJidForAddress(contact.getAddress());
+  if (opSetBasicIM == null || parentProvider.getConnection() == null)   return;
+  String toJID=opSetBasicIM.getRecentJIDForAddress(contact.getAddress());
   if (toJID == null)   return;
   if (logger.isTraceEnabled())   logger.trace("Sending XEP-0085 chat state=" + state + " to "+ toJID);
-  Chat chat=parentProvider.getConnection().getChatManager().createChat(toJID,null);
   ChatState chatState=null;
   if (state == STATE_TYPING) {
     chatState=ChatState.composing;
@@ -17,10 +16,5 @@
  else {
     chatState=ChatState.gone;
   }
-  try {
-    ChatStateManager.getInstance(parentProvider.getConnection()).setCurrentState(chatState,chat);
-  }
- catch (  XMPPException exc) {
-    logger.warn("Failed to send state [" + state + "] to ["+ contact.getAddress()+ "].",exc);
-  }
+  setCurrentState(chatState,toJID);
 }

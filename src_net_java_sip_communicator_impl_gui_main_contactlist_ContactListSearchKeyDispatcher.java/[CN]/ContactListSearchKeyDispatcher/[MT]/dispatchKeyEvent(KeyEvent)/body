@@ -1,32 +1,44 @@
 {
+  if (!contactListContainer.isFocused())   return false;
+  int id=e.getID();
+  if (id != KeyEvent.KEY_PRESSED && id != KeyEvent.KEY_TYPED)   return false;
+  SingleWindowContainer singleWindowContainer=GuiActivator.getUIService().getSingleWindowContainer();
+  if ((singleWindowContainer != null) && singleWindowContainer.containsFocusOwner())   return false;
   Component focusOwner=keyManager.getFocusOwner();
-  if (!contactListContainer.isFocused() || (e.getID() != KeyEvent.KEY_PRESSED && e.getID() != KeyEvent.KEY_TYPED) || (GuiActivator.getUIService().getSingleWindowContainer() != null) && GuiActivator.getUIService().getSingleWindowContainer().containsFocus() || (focusOwner != null && !searchField.isFocusOwner() && focusOwner instanceof JTextComponent) || contactListContainer.isMenuSelected())   return false;
-  if (e.getKeyCode() == KeyEvent.VK_ENTER && (e.isControlDown() || e.isMetaDown())) {
+  if (focusOwner != null && !searchField.isFocusOwner() && focusOwner instanceof JTextComponent)   return false;
+  if (contactListContainer.isMenuSelected())   return false;
+  int keyCode=e.getKeyCode();
+  if (keyCode == KeyEvent.VK_ENTER && (e.isControlDown() || e.isMetaDown())) {
     contactListContainer.ctrlEnterKeyTyped();
     return false;
   }
- else   if (e.getKeyCode() == KeyEvent.VK_ENTER && keyManager.getFocusOwner().equals(keyManager.getPermanentFocusOwner())) {
+ else   if (keyCode == KeyEvent.VK_ENTER && focusOwner.equals(keyManager.getPermanentFocusOwner())) {
     contactListContainer.enterKeyTyped();
     return false;
   }
-  if (searchField.isFocusOwner() && (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_PAGE_UP || e.getKeyCode() == KeyEvent.VK_PAGE_DOWN)) {
+  if (searchField.isFocusOwner() && (keyCode == KeyEvent.VK_UP || keyCode == KeyEvent.VK_DOWN || keyCode == KeyEvent.VK_PAGE_UP || keyCode == KeyEvent.VK_PAGE_DOWN)) {
     contactList.selectFirstContact();
+    if (contactList instanceof TreeContactList) {
+      ((TreeContactList)contactList).setAutoSectionAllowed(false);
+    }
     contactList.getComponent().requestFocus();
     return false;
   }
-  if (contactList.getComponent().isFocusOwner() && e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+  if (contactList.getComponent().isFocusOwner() && keyCode == KeyEvent.VK_ESCAPE) {
     contactList.removeSelection();
-    if (searchField.getText() != null) {
-      searchField.requestFocus();
+    if (contactList instanceof TreeContactList) {
+      ((TreeContactList)contactList).setAutoSectionAllowed(false);
     }
+    if (searchField.getText() != null)     searchField.requestFocus();
     return false;
   }
+  char keyChar=e.getKeyChar();
   UIGroup selectedGroup=contactList.getSelectedGroup();
-  if (e.getKeyChar() == KeyEvent.CHAR_UNDEFINED || e.getKeyCode() == KeyEvent.VK_ENTER || e.getKeyCode() == KeyEvent.VK_DELETE || e.getKeyCode() == KeyEvent.VK_BACK_SPACE || e.getKeyCode() == KeyEvent.VK_TAB || e.getKeyChar() == '\t' || e.getKeyCode() == KeyEvent.VK_SPACE || (selectedGroup != null && (e.getKeyChar() == '+' || e.getKeyChar() == '-'))) {
+  if (keyChar == KeyEvent.CHAR_UNDEFINED || keyCode == KeyEvent.VK_ENTER || keyCode == KeyEvent.VK_DELETE || keyCode == KeyEvent.VK_BACK_SPACE || keyCode == KeyEvent.VK_TAB || e.getKeyChar() == '\t' || keyCode == KeyEvent.VK_SPACE || (selectedGroup != null && (keyChar == '+' || keyChar == '-'))) {
     return false;
   }
-  boolean singleWindowRule=GuiActivator.getUIService().getSingleWindowContainer() == null || contactList.getComponent().isFocusOwner();
-  if (!searchField.isFocusOwner() && keyManager.getFocusOwner() != null && singleWindowRule && keyManager.getFocusOwner().equals(keyManager.getPermanentFocusOwner())) {
+  boolean singleWindowRule=singleWindowContainer == null || contactList.getComponent().isFocusOwner();
+  if (!searchField.isFocusOwner() && focusOwner != null && singleWindowRule && focusOwner.equals(keyManager.getPermanentFocusOwner())) {
     searchField.requestFocusInWindow();
     keyManager.redispatchEvent(searchField,e);
     return true;

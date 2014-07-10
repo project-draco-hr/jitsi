@@ -1,15 +1,23 @@
 {
-  Object service=bundleContext.getService(serviceEvent.getServiceReference());
+  Object service=bundleContext.getService(ev.getServiceReference());
   if (service instanceof ProtocolProviderService) {
+    if (logger.isTraceEnabled()) {
+      logger.trace("Protocol provider service changed.");
+    }
     OperationSetBasicTelephony<?> telephony=((ProtocolProviderService)service).getOperationSet(OperationSetBasicTelephony.class);
     if (telephony != null) {
-switch (serviceEvent.getType()) {
+switch (ev.getType()) {
 case ServiceEvent.REGISTERED:
         addOperationSetBasicTelephonyListener(telephony);
       break;
 case ServiceEvent.UNREGISTERING:
     removeOperationSetBasicTelephonyListener(telephony);
   break;
+}
+}
+ else {
+if (logger.isTraceEnabled()) {
+logger.trace("The protocol provider service doesn't support " + "telephony.");
 }
 }
 }

@@ -1,35 +1,3 @@
 {
-  OperationSetBasicTelephonyJabberImpl basicTelephony=(OperationSetBasicTelephonyJabberImpl)provider.getOperationSet(OperationSetBasicTelephony.class);
-  ActiveCallsRepositoryJabberGTalkImpl<CallJabberImpl,CallPeerJabberImpl> activeRepository=basicTelephony.getActiveCallsRepository();
-  if (this.publishedConference != null) {
-    String callid=publishedConference.getCallId();
-    if (callid != null) {
-      CallJabberImpl call=activeRepository.findCallId(callid);
-      for (      CallPeerJabberImpl peer : call.getCallPeerList()) {
-        peer.hangup(false,null,null);
-      }
-    }
-  }
-  List<CallJabberImpl> tmpConferenceCalls;
-synchronized (chatRoomConferenceCalls) {
-    tmpConferenceCalls=new ArrayList<CallJabberImpl>(chatRoomConferenceCalls);
-    chatRoomConferenceCalls.clear();
-  }
-  for (  CallJabberImpl call : tmpConferenceCalls) {
-    for (    CallPeerJabberImpl peer : call.getCallPeerList())     peer.hangup(false,null,null);
-  }
-  clearCachedConferenceDescriptionList();
-  XMPPConnection connection=this.provider.getConnection();
-  try {
-    if (connection != null)     multiUserChat.leave();
-  }
- catch (  Throwable e) {
-    logger.warn("Error occured while leaving, maybe just " + "disconnected before leaving",e);
-  }
-synchronized (members) {
-    for (    ChatRoomMember member : members.values())     fireMemberPresenceEvent(member,ChatRoomMemberPresenceChangeEvent.MEMBER_LEFT,"Local user has left the chat room.");
-    members.clear();
-  }
-  if (connection != null)   connection.removePacketListener(invitationRejectionListeners);
-  opSetMuc.fireLocalUserPresenceEvent(this,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT,null);
+  this.leave(null,null);
 }

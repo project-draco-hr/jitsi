@@ -1,0 +1,33 @@
+{
+  String fromJID=message.getFrom();
+  if (logger.isTraceEnabled())   logger.trace(fromJID + " entered the " + state.name()+ " state.");
+  String fromID=StringUtils.parseBareAddress(fromJID);
+  List<ChatRoom> chatRooms=parentProvider.getOperationSet(OperationSetMultiUserChat.class).getCurrentlyJoinedChatRooms();
+  boolean isPrivateMessagingAddress=false;
+  for (  ChatRoom chatRoom : chatRooms) {
+    if (chatRoom.getName().equals(fromID)) {
+      isPrivateMessagingAddress=true;
+      break;
+    }
+  }
+  Contact sourceContact=opSetPersPresence.findContactByID((isPrivateMessagingAddress ? message.getFrom() : fromID));
+  if (sourceContact == null) {
+    if (message.getError() != null)     sourceContact=opSetPersPresence.findContactByID(message.getFrom());
+    if (sourceContact == null) {
+      sourceContact=opSetPersPresence.createVolatileContact(message.getFrom(),isPrivateMessagingAddress);
+    }
+  }
+  int evtCode=STATE_UNKNOWN;
+  if (ChatState.composing.equals(state)) {
+    evtCode=STATE_TYPING;
+  }
+ else   if (ChatState.paused.equals(state) || ChatState.active.equals(state)) {
+    evtCode=STATE_PAUSED;
+  }
+ else   if (ChatState.inactive.equals(state) || ChatState.gone.equals(state)) {
+    evtCode=STATE_STOPPED;
+  }
+  if (message.getError() != null)   fireTypingNotificationsDeliveryFailedEvent(sourceContact,evtCode);
+ else   if (evtCode != STATE_UNKNOWN)   fireTypingNotificationsEvent(sourceContact,evtCode);
+ else   logger.warn("Unknown typing state!");
+}

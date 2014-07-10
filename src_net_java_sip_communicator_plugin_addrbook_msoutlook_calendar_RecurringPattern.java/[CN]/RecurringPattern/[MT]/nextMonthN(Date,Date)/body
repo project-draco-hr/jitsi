@@ -1,0 +1,54 @@
+{
+  int dayOfWeekInMonth=(patternSpecific2 == 5 ? -1 : patternSpecific2);
+  long duration=sourceTask.getEndDate().getTime() - sourceTask.getStartDate().getTime();
+  Calendar cal=Calendar.getInstance();
+  cal.setTime(startDate);
+  cal.set(Calendar.DAY_OF_MONTH,1);
+  cal.add(Calendar.MONTH,period);
+  cal.setTime(getMonthNStartDate(cal.getTime(),dayOfWeekInMonth));
+  Date currentDate=new Date();
+  if (cal.getTimeInMillis() + duration < currentDate.getTime()) {
+    Calendar cal2=Calendar.getInstance();
+    cal2.setTime(currentDate);
+    int years=cal2.get(Calendar.YEAR) - cal.get(Calendar.YEAR);
+    int months=(years * 12) + (cal2.get(Calendar.MONTH) - cal.get(Calendar.MONTH));
+    int monthsToAdd=months;
+    monthsToAdd-=months % period;
+    cal.set(Calendar.DAY_OF_MONTH,1);
+    cal.add(Calendar.MONTH,monthsToAdd);
+    cal.setTime(getMonthNStartDate(cal.getTime(),dayOfWeekInMonth));
+    if (cal.getTimeInMillis() + duration < currentDate.getTime()) {
+      cal.set(Calendar.DAY_OF_MONTH,1);
+      cal.add(Calendar.MONTH,monthsToAdd);
+      cal.setTime(getMonthNStartDate(cal.getTime(),dayOfWeekInMonth));
+    }
+  }
+  Calendar cal2=(Calendar)cal.clone();
+  cal.set(Calendar.HOUR_OF_DAY,0);
+  cal.set(Calendar.MINUTE,0);
+  cal.set(Calendar.SECOND,0);
+  cal.set(Calendar.MILLISECOND,0);
+  while (deletedInstances.contains(cal.getTime())) {
+    cal.set(Calendar.DAY_OF_MONTH,1);
+    cal.add(Calendar.MONTH,period);
+    startDate=null;
+    for (    int dayOfWeek : allowedDaysOfWeek) {
+      cal.set(Calendar.DAY_OF_WEEK,dayOfWeek);
+      cal.set(Calendar.DAY_OF_WEEK_IN_MONTH,dayOfWeekInMonth);
+      if ((cal.after(startDate) && dayOfWeekInMonth == -1) || (cal.before(startDate) && dayOfWeekInMonth != -1) || startDate == null) {
+        startDate=cal.getTime();
+        cal2.set(Calendar.YEAR,cal.get(Calendar.YEAR));
+        cal2.set(Calendar.MONTH,cal.get(Calendar.MONTH));
+        cal2.set(Calendar.DATE,cal.get(Calendar.DATE));
+      }
+    }
+  }
+  startDate=cal2.getTime();
+  endDate=new Date(startDate.getTime() + duration);
+  if (dateOutOfRange(endDate))   return null;
+  boolean executeNow=false;
+  if (startDate.before(currentDate)) {
+    executeNow=true;
+  }
+  return new CalendarItemTimerTask(sourceTask.getStatus(),startDate,endDate,sourceTask.getId(),executeNow,this);
+}

@@ -1,0 +1,44 @@
+{
+  this.getContentPane().setLayout(new BorderLayout());
+  contentPane=new TransparentPanel(new BorderLayout(5,5));
+  TransparentPanel northPanel=new TransparentPanel(new BorderLayout(5,5));
+  northPanel.setBorder(BorderFactory.createEmptyBorder(10,5,5,5));
+  JLabel imgLabel=new JLabel(R.getImage("service.gui.icons.CERTIFICATE_WARNING"));
+  imgLabel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+  northPanel.add(imgLabel,BorderLayout.WEST);
+  StyledHTMLEditorPane descriptionPane=new StyledHTMLEditorPane();
+  descriptionPane.setOpaque(false);
+  descriptionPane.setEditable(false);
+  descriptionPane.setContentType("text/html");
+  descriptionPane.setText(message);
+  descriptionPane.setSize(new Dimension(MAX_MSG_PANE_WIDTH,MAX_MSG_PANE_HEIGHT));
+  int height=descriptionPane.getPreferredSize().height;
+  descriptionPane.setPreferredSize(new Dimension(MAX_MSG_PANE_WIDTH,height));
+  northPanel.add(descriptionPane,BorderLayout.CENTER);
+  contentPane.add(northPanel,BorderLayout.NORTH);
+  certPanel=new TransparentPanel(new BorderLayout());
+  contentPane.add(certPanel,BorderLayout.CENTER);
+  this.getContentPane().add(contentPane,BorderLayout.CENTER);
+  Component certInfoPane;
+  if (cert instanceof X509Certificate) {
+    certInfoPane=new X509CertificatePanel((X509Certificate)cert);
+  }
+ else {
+    JTextArea textArea=new JTextArea();
+    textArea.setOpaque(false);
+    textArea.setEditable(false);
+    textArea.setText(cert.toString());
+    certInfoPane=textArea;
+  }
+  final JScrollPane certScroll=new JScrollPane(certInfoPane);
+  certScroll.setPreferredSize(new Dimension(300,600));
+  certPanel.add(certScroll,BorderLayout.CENTER);
+  SwingUtilities.invokeLater(new Runnable(){
+    public void run(){
+      certScroll.getVerticalScrollBar().setValue(0);
+    }
+  }
+);
+  setPreferredSize(null);
+  pack();
+}

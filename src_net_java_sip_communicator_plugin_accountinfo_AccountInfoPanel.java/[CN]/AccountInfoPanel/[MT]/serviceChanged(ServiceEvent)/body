@@ -1,13 +1,22 @@
 {
+  if (!SwingUtilities.isEventDispatchThread()) {
+    SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        serviceChanged(event);
+      }
+    }
+);
+    return;
+  }
   Object service=AccountInfoActivator.bundleContext.getService(event.getServiceReference());
   if (!(service instanceof ProtocolProviderService))   return;
   ProtocolProviderService protocolProvider=(ProtocolProviderService)service;
   if (event.getType() == ServiceEvent.REGISTERED) {
     if (accountsTable.get(protocolProvider.getAccountID()) == null) {
-      AccountDetailsPanel panel=new AccountDetailsPanel(protocolProvider);
+      AccountDetailsPanel panel=new AccountDetailsPanel(dialog,protocolProvider);
       accountsTable.put(protocolProvider.getAccountID(),panel);
       accountsComboBox.addItem(panel);
-      protocolProvider.addRegistrationStateChangeListener(new RegistrationStateChangeListenerImpl());
+      protocolProvider.addRegistrationStateChangeListener(this);
     }
   }
  else   if (event.getType() == ServiceEvent.UNREGISTERING) {

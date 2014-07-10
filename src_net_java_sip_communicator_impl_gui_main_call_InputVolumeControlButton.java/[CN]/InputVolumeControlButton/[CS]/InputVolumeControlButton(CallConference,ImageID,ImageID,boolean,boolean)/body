@@ -1,0 +1,32 @@
+{
+  super(null,inSettingsPanel,selected,iconImageID,pressedIconImageID,"service.gui.MUTE_BUTTON_TOOL_TIP");
+  this.callConference=callConference;
+  this.mute=selected;
+  volumeControl=getVolumeControl();
+  sliderMenu=new VolumeControlSlider(volumeControl,JSlider.VERTICAL).getPopupMenu();
+  sliderMenu.setInvoker(this);
+  addMouseListener(new MouseAdapter(){
+    TimerTask timerTask;
+    @Override public void mousePressed(    MouseEvent mouseevent){
+      Timer timer=new Timer();
+      timerTask=new TimerTask(){
+        @Override public void run(){
+          showSliderMenu();
+        }
+      }
+;
+      timer.schedule(timerTask,1000);
+    }
+    @Override public void mouseReleased(    MouseEvent mouseevent){
+      if (!sliderMenuIsVisible) {
+        if (timerTask != null) {
+          timerTask.cancel();
+        }
+      }
+ else {
+        setSelected(!isSelected());
+      }
+    }
+  }
+);
+}

@@ -1,11 +1,15 @@
 {
-  for (  CallRecordImpl currentCallRecord : currentCallRecords) {
-    if (currentCallRecord.getSourceCall().equals(sourceCall))     return;
+synchronized (currentCallRecords) {
+    for (    CallRecordImpl currentCallRecord : currentCallRecords) {
+      if (currentCallRecord.getSourceCall().equals(sourceCall))       return;
+    }
   }
   CallRecordImpl newRecord=new CallRecordImpl(direction,new Date(),null);
   newRecord.setSourceCall(sourceCall);
   sourceCall.addCallChangeListener(historyCallChangeListener);
-  currentCallRecords.add(newRecord);
+synchronized (currentCallRecords) {
+    currentCallRecords.add(newRecord);
+  }
   Iterator<? extends CallPeer> iter=sourceCall.getCallPeers();
   while (iter.hasNext()) {
     handlePeerAdded(iter.next());

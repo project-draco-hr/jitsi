@@ -1,0 +1,37 @@
+{
+  List<MessageSourceContact> duplicates=new ArrayList<MessageSourceContact>();
+  for (  MessageSourceContact msc : recentMessages) {
+    for (    MessageSourceContact mscToAdd : contactsToAdd) {
+      if (mscToAdd.equals(msc)) {
+        duplicates.add(msc);
+        updateRecentMessageToHistory(msc);
+      }
+    }
+  }
+  if (!duplicates.isEmpty()) {
+    contactsToAdd.removeAll(duplicates);
+    Collections.sort(recentMessages);
+    if (recentQuery != null) {
+      for (      MessageSourceContact msc : duplicates)       recentQuery.fireContactChanged(msc);
+    }
+    return;
+  }
+  recentMessages.addAll(contactsToAdd);
+  Collections.sort(recentMessages);
+  if (!recentMessages.isEmpty())   oldestRecentMessage=recentMessages.get(recentMessages.size() - 1).getTimestamp();
+  List<MessageSourceContact> removedItems=null;
+  if (recentMessages.size() > numberOfMessages) {
+    removedItems=new ArrayList<MessageSourceContact>(recentMessages.subList(numberOfMessages,recentMessages.size()));
+    recentMessages.removeAll(removedItems);
+  }
+  if (recentQuery != null) {
+    if (removedItems != null) {
+      for (      MessageSourceContact msc : removedItems) {
+        if (!contactsToAdd.contains(msc))         recentQuery.fireContactRemoved(msc);
+      }
+    }
+    for (    MessageSourceContact msc : contactsToAdd) {
+      if (removedItems == null || !removedItems.contains(msc))       recentQuery.fireContactReceived(msc);
+    }
+  }
+}

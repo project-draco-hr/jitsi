@@ -59,6 +59,7 @@ synchronized (providerCreationLock) {
     providerManager.addExtensionProvider(ConferenceDescriptionPacketExtension.ELEMENT_NAME,ConferenceDescriptionPacketExtension.NAMESPACE,new ConferenceDescriptionPacketExtension.Provider());
     providerManager.addExtensionProvider(CarbonPacketExtension.RECEIVED_ELEMENT_NAME,CarbonPacketExtension.NAMESPACE,new CarbonPacketExtension.Provider(CarbonPacketExtension.RECEIVED_ELEMENT_NAME));
     providerManager.addExtensionProvider(CarbonPacketExtension.SENT_ELEMENT_NAME,CarbonPacketExtension.NAMESPACE,new CarbonPacketExtension.Provider(CarbonPacketExtension.SENT_ELEMENT_NAME));
+    providerManager.addExtensionProvider(Nick.ELEMENT_NAME,Nick.NAMESPACE,new Nick.Provider());
     boolean isCallingDisabled=JabberActivator.getConfigurationService().getBoolean(IS_CALLING_DISABLED,false);
     boolean isCallingDisabledForAccount=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_CALLING_DISABLED_FOR_ACCOUNT,false);
     if (!isCallingDisabled && !isCallingDisabledForAccount) {
@@ -82,10 +83,12 @@ synchronized (providerCreationLock) {
       boolean isAccountDesktopStreamingDisabled=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_DESKTOP_STREAMING_DISABLED,false);
       if (!isDesktopStreamingDisabled && !isAccountDesktopStreamingDisabled) {
         addSupportedOperationSet(OperationSetDesktopStreaming.class,new OperationSetDesktopStreamingJabberImpl(basicTelephony));
-        addSupportedOperationSet(OperationSetDesktopSharingServer.class,new OperationSetDesktopSharingServerJabberImpl(basicTelephony));
-        supportedFeatures.add(InputEvtIQ.NAMESPACE_SERVER);
-        addSupportedOperationSet(OperationSetDesktopSharingClient.class,new OperationSetDesktopSharingClientJabberImpl(this));
-        supportedFeatures.add(InputEvtIQ.NAMESPACE_CLIENT);
+        if (!accountID.getAccountPropertyBoolean(ProtocolProviderFactory.IS_DESKTOP_REMOTE_CONTROL_DISABLED,false)) {
+          addSupportedOperationSet(OperationSetDesktopSharingServer.class,new OperationSetDesktopSharingServerJabberImpl(basicTelephony));
+          supportedFeatures.add(InputEvtIQ.NAMESPACE_SERVER);
+          addSupportedOperationSet(OperationSetDesktopSharingClient.class,new OperationSetDesktopSharingClientJabberImpl(this));
+          supportedFeatures.add(InputEvtIQ.NAMESPACE_CLIENT);
+        }
       }
     }
     opsetContactCapabilities=new OperationSetContactCapabilitiesJabberImpl(this);
@@ -100,6 +103,14 @@ synchronized (providerCreationLock) {
     addSupportedOperationSet(OperationSetChangePassword.class,opsetChangePassword);
     OperationSetCusaxUtils opsetCusaxCusaxUtils=new OperationSetCusaxUtilsJabberImpl(this);
     addSupportedOperationSet(OperationSetCusaxUtils.class,opsetCusaxCusaxUtils);
+    boolean isUserSearchEnabled=accountID.getAccountPropertyBoolean(IS_USER_SEARCH_ENABLED_PROPERTY,false);
+    if (isUserSearchEnabled) {
+      addSupportedOperationSet(OperationSetUserSearch.class,new OperationSetUserSearchJabberImpl(this));
+    }
+    OperationSetTLS opsetTLS=new OperationSetTLSJabberImpl(this);
+    addSupportedOperationSet(OperationSetTLS.class,opsetTLS);
+    OperationSetConnectionInfo opsetConnectionInfo=new OperationSetConnectionInfoJabberImpl();
+    addSupportedOperationSet(OperationSetConnectionInfo.class,opsetConnectionInfo);
     isInitialized=true;
   }
 }

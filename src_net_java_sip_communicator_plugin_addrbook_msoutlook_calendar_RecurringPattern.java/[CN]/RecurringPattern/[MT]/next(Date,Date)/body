@@ -1,0 +1,126 @@
+{
+  if (dateOutOfRange(new Date())) {
+    return null;
+  }
+  Date startDate=previousStartDate;
+  Date endDate=null;
+  boolean executeNow=false;
+  long duration=sourceTask.getEndDate().getTime() - sourceTask.getStartDate().getTime();
+switch (patternType) {
+case Day:
+{
+      startDate=new Date(startDate.getTime() + period * 60000);
+      endDate=new Date(previousEndDate.getTime() + period * 60000);
+      Date currentDate=new Date();
+      if (endDate.before(currentDate)) {
+        long offset=currentDate.getTime() - endDate.getTime();
+        offset-=offset % (period * 60000);
+        if (endDate.getTime() + offset < currentDate.getTime()) {
+          offset+=period * 60000;
+        }
+        startDate=new Date(startDate.getTime() + offset);
+      }
+      Calendar cal=Calendar.getInstance();
+      cal.setTime(startDate);
+      Calendar cal2=(Calendar)cal.clone();
+      cal.set(Calendar.HOUR_OF_DAY,0);
+      cal.set(Calendar.MINUTE,0);
+      cal.set(Calendar.SECOND,0);
+      cal.set(Calendar.MILLISECOND,0);
+      while (deletedInstances.contains(cal.getTime())) {
+        cal.add(Calendar.MINUTE,period);
+        cal2.add(Calendar.MINUTE,period);
+      }
+      if (dateOutOfRange(cal.getTime())) {
+        return null;
+      }
+      startDate=cal2.getTime();
+      endDate=new Date(startDate.getTime() + duration);
+      if (startDate.before(currentDate)) {
+        executeNow=true;
+      }
+      return new CalendarItemTimerTask(sourceTask.getStatus(),startDate,endDate,sourceTask.getId(),executeNow,this);
+    }
+case Week:
+{
+    Calendar cal=Calendar.getInstance();
+    cal.setFirstDayOfWeek(firstDow + 1);
+    cal.setTime(startDate);
+    int dayOfWeek=cal.get(Calendar.DAY_OF_WEEK);
+    int index=allowedDaysOfWeek.indexOf(dayOfWeek);
+    if (++index < allowedDaysOfWeek.size()) {
+      cal.set(Calendar.DAY_OF_WEEK,allowedDaysOfWeek.get(index));
+      startDate=cal.getTime();
+      endDate=new Date(startDate.getTime() + duration);
+    }
+ else {
+      cal.set(Calendar.DAY_OF_WEEK,allowedDaysOfWeek.get(0));
+      cal.add(Calendar.WEEK_OF_YEAR,period);
+      startDate=cal.getTime();
+      endDate=new Date(startDate.getTime() + duration);
+    }
+    Date currentDate=new Date();
+    if (endDate.before(currentDate)) {
+      cal.set(Calendar.DAY_OF_WEEK,allowedDaysOfWeek.get(0));
+      endDate=new Date(cal.getTimeInMillis() + duration);
+      long offset=(currentDate.getTime() - endDate.getTime());
+      offset-=offset % (period * 604800000);
+      if (endDate.getTime() + offset < currentDate.getTime()) {
+        cal.add(Calendar.WEEK_OF_YEAR,(int)(offset / (period * 604800000)));
+        int i=1;
+        while (((cal.getTimeInMillis() + duration) < (currentDate.getTime()))) {
+          if (i == allowedDaysOfWeek.size()) {
+            cal.add(Calendar.WEEK_OF_YEAR,period);
+            i=0;
+          }
+          cal.set(Calendar.DAY_OF_WEEK,allowedDaysOfWeek.get(i));
+          i++;
+        }
+        startDate=cal.getTime();
+      }
+ else {
+        startDate=new Date(cal.getTimeInMillis() + offset);
+      }
+    }
+    cal.setTime(startDate);
+    Calendar cal2=(Calendar)cal.clone();
+    cal.set(Calendar.HOUR_OF_DAY,0);
+    cal.set(Calendar.MINUTE,0);
+    cal.set(Calendar.SECOND,0);
+    cal.set(Calendar.MILLISECOND,0);
+    dayOfWeek=cal.get(Calendar.DAY_OF_WEEK);
+    index=allowedDaysOfWeek.indexOf(dayOfWeek) + 1;
+    while (deletedInstances.contains(cal.getTime())) {
+      if (index >= allowedDaysOfWeek.size()) {
+        index=0;
+        cal.add(Calendar.WEEK_OF_YEAR,period);
+        cal2.add(Calendar.WEEK_OF_YEAR,period);
+      }
+      cal.set(Calendar.DAY_OF_WEEK,allowedDaysOfWeek.get(index));
+      cal2.set(Calendar.DAY_OF_WEEK,allowedDaysOfWeek.get(index));
+      index++;
+    }
+    startDate=cal2.getTime();
+    endDate=new Date(startDate.getTime() + duration);
+    if (dateOutOfRange(endDate))     return null;
+    if (startDate.before(currentDate)) {
+      executeNow=true;
+    }
+    return new CalendarItemTimerTask(sourceTask.getStatus(),startDate,endDate,sourceTask.getId(),executeNow,this);
+  }
+case Month:
+case MonthEnd:
+case HjMonth:
+case HjMonthEnd:
+{
+  return nextMonth(startDate,endDate,false);
+}
+case MonthNth:
+case HjMonthNth:
+{
+if (patternSpecific1 == 0x7f && patternSpecific2 == 0x05) return nextMonth(startDate,endDate,true);
+ else return nextMonthN(startDate,endDate);
+}
+}
+return null;
+}

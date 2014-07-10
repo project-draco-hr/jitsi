@@ -1,0 +1,115 @@
+{
+  if (logger.isTraceEnabled()) {
+    logger.trace("On the phone status policy run.");
+  }
+  if (!ProtocolProviderActivator.getConfigurationService().getBoolean(PNAME_ON_THE_PHONE_STATUS_ENABLED,false)) {
+    if (logger.isTraceEnabled()) {
+      logger.trace("On the phone status is not enabled.");
+    }
+    forgetPresenceStatuses();
+    return;
+  }
+  ServiceReference[] ppsRefs;
+  try {
+    ppsRefs=bundleContext.getServiceReferences(ProtocolProviderService.class.getName(),null);
+  }
+ catch (  InvalidSyntaxException ise) {
+    if (logger.isTraceEnabled()) {
+      logger.trace("Can't access protocol providers refences.");
+    }
+    ppsRefs=null;
+  }
+  if ((ppsRefs == null) || (ppsRefs.length == 0)) {
+    forgetPresenceStatuses();
+  }
+ else {
+    boolean isOnThePhone=isOnThePhone();
+    CalendarService calendar=ProtocolProviderActivator.getCalendarService();
+    if (!isOnThePhone && calendar != null && calendar.onThePhoneStatusChanged(presenceStatuses)) {
+      if (logger.isTraceEnabled()) {
+        logger.trace("We are not on the phone.");
+      }
+      forgetPresenceStatuses();
+      return;
+    }
+    for (    ServiceReference ppsRef : ppsRefs) {
+      ProtocolProviderService pps=(ProtocolProviderService)bundleContext.getService(ppsRef);
+      if (pps == null) {
+        if (logger.isTraceEnabled()) {
+          logger.trace("Provider is null.");
+        }
+        continue;
+      }
+      OperationSetPresence presence=pps.getOperationSet(OperationSetPresence.class);
+      if (presence == null) {
+        if (logger.isTraceEnabled()) {
+          logger.trace("Presence is null.");
+        }
+        forgetPresenceStatus(pps);
+      }
+ else       if (pps.isRegistered()) {
+        if (logger.isTraceEnabled()) {
+          logger.trace("Provider is registered.");
+        }
+        PresenceStatus onThePhonePresenceStatus=findOnThePhonePresenceStatus(presence);
+        if (onThePhonePresenceStatus == null) {
+          if (logger.isTraceEnabled()) {
+            logger.trace("Can't find on the phone status.");
+          }
+          forgetPresenceStatus(pps);
+        }
+ else         if (isOnThePhone) {
+          if (logger.isTraceEnabled()) {
+            logger.trace("Setting the status to on the phone.");
+          }
+          PresenceStatus presenceStatus=presence.getPresenceStatus();
+          if (presenceStatus == null) {
+            if (logger.isTraceEnabled()) {
+              logger.trace("Presence status is null.");
+            }
+            forgetPresenceStatus(pps);
+          }
+ else           if (!onThePhonePresenceStatus.equals(presenceStatus)) {
+            if (logger.isTraceEnabled()) {
+              logger.trace("On the phone status is published.");
+            }
+            publishPresenceStatus(presence,onThePhonePresenceStatus);
+            if (presenceStatus.equals(findInMeetingPresenceStatus(presence)) && calendar != null) {
+              Map<ProtocolProviderService,PresenceStatus> statuses=calendar.getRememberedStatuses();
+              for (              ProtocolProviderService provider : statuses.keySet())               rememberPresenceStatus(provider,statuses.get(provider));
+            }
+ else             if (onThePhonePresenceStatus.equals(presence.getPresenceStatus())) {
+              rememberPresenceStatus(pps,presenceStatus);
+            }
+ else {
+              forgetPresenceStatus(pps);
+            }
+          }
+ else {
+            if (logger.isTraceEnabled()) {
+              logger.trace("Currently the status is on the phone.");
+            }
+          }
+        }
+ else {
+          if (logger.isTraceEnabled()) {
+            logger.trace("Unset on the phone status.");
+          }
+          PresenceStatus presenceStatus=forgetPresenceStatus(pps);
+          if ((presenceStatus != null) && onThePhonePresenceStatus.equals(presence.getPresenceStatus())) {
+            if (logger.isTraceEnabled()) {
+              logger.trace("Unset on the phone status.[2]");
+            }
+            publishPresenceStatus(presence,presenceStatus);
+          }
+        }
+      }
+ else {
+        if (logger.isTraceEnabled()) {
+          logger.trace("Protocol provider is not registered");
+        }
+        forgetPresenceStatus(pps);
+      }
+    }
+  }
+}

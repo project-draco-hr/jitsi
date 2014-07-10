@@ -1,13 +1,17 @@
 {
   if (!OSUtils.IS_WINDOWS)   return;
+  if (logger.isInfoEnabled())   logger.info("MsOfficeComm plugin ... [STARTED]");
+  MsOfficeCommActivator.bundleContext=bundleContext;
   Messenger.start(bundleContext);
   boolean stopMessenger=true;
   try {
     int hresult=OutOfProcessServer.start();
+    if (logger.isInfoEnabled())     logger.info("MsOfficeComm started OutOfProcessServer HRESULT:" + hresult);
     if (hresult < 0)     throw new RuntimeException("HRESULT " + hresult);
  else     stopMessenger=false;
   }
   finally {
+    RegistryHandler.checkRegistryKeys();
     if (stopMessenger)     Messenger.stop(bundleContext);
   }
 }

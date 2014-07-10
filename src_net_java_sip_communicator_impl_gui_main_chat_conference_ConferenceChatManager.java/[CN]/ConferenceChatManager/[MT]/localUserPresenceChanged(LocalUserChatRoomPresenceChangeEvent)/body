@@ -41,7 +41,19 @@
   }
  else   if (LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT.equals(eventType) || LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_KICKED.equals(eventType) || LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_DROPPED.equals(eventType)) {
     if (chatRoomWrapper != null) {
-      GuiActivator.getUIService().closeChatRoomWindow(chatRoomWrapper);
+      if (StringUtils.isNullOrEmpty(evt.getReason())) {
+        GuiActivator.getUIService().closeChatRoomWindow(chatRoomWrapper);
+      }
+ else {
+        ChatWindowManager chatWindowManager=GuiActivator.getUIService().getChatWindowManager();
+        ChatPanel chatPanel=chatWindowManager.getMultiChat(sourceChatRoom,false);
+        if (chatPanel != null) {
+          chatPanel.addMessage(sourceChatRoom.getName(),null,new Date(),Chat.SYSTEM_MESSAGE,evt.getReason(),OperationSetBasicInstantMessaging.DEFAULT_MIME_TYPE,null,null);
+          if (!StringUtils.isNullOrEmpty(evt.getAlternateAddress())) {
+            chatPanel.addMessage(sourceChatRoom.getName(),null,new Date(),Chat.SYSTEM_MESSAGE,GuiActivator.getResources().getI18NString("service.gui.CHAT_ROOM_ALTERNATE_ADDRESS",new String[]{evt.getAlternateAddress()}),OperationSetBasicInstantMessaging.DEFAULT_MIME_TYPE,null,null);
+          }
+        }
+      }
       GuiActivator.getMUCService().fireChatRoomListChangedEvent(chatRoomWrapper,ChatRoomListChangeEvent.CHAT_ROOM_CHANGED);
     }
     sourceChatRoom.removeMessageListener(this);

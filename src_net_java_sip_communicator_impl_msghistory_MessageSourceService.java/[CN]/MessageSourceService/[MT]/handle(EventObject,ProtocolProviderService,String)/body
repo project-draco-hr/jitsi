@@ -1,0 +1,36 @@
+{
+synchronized (recentMessages) {
+    MessageSourceContact existingMsc=null;
+    for (    MessageSourceContact msc : recentMessages) {
+      if (msc.getProtocolProviderService().equals(provider) && msc.getContactAddress().equals(id)) {
+        msc.update(obj);
+        updateRecentMessageToHistory(msc);
+        existingMsc=msc;
+      }
+    }
+    if (existingMsc != null) {
+      Collections.sort(recentMessages);
+      oldestRecentMessage=recentMessages.get(recentMessages.size() - 1).getTimestamp();
+      if (recentQuery != null)       recentQuery.fireContactChanged(existingMsc);
+      return;
+    }
+    MessageSourceContact newSourceContact=new MessageSourceContact(obj,MessageSourceService.this);
+    newSourceContact.initDetails(obj);
+    recentMessages.add(newSourceContact);
+    Collections.sort(recentMessages);
+    oldestRecentMessage=recentMessages.get(recentMessages.size() - 1).getTimestamp();
+    List<MessageSourceContact> removedItems=null;
+    if (recentMessages.size() > numberOfMessages) {
+      removedItems=new ArrayList<MessageSourceContact>(recentMessages.subList(numberOfMessages,recentMessages.size()));
+      recentMessages.removeAll(removedItems);
+    }
+    saveRecentMessageToHistory(newSourceContact);
+    if (recentQuery == null)     return;
+    if (removedItems != null) {
+      for (      MessageSourceContact msc : removedItems) {
+        recentQuery.fireContactRemoved(msc);
+      }
+    }
+    recentQuery.fireContactReceived(newSourceContact);
+  }
+}

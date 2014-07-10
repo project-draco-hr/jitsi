@@ -6,8 +6,11 @@
   if ((answerRR != null && answerRR.length > 0) || (authorityRR != null && authorityRR.length > 0) || (additionalRR != null && additionalRR.length > 0)) {
     return true;
   }
-  if (response.getRcode() == Rcode.NXDOMAIN)   return true;
-  if (response.getRcode() == Rcode.NOERROR && (response.getQuestion().getType() == Type.AAAA || response.getQuestion().getType() == Type.NAPTR)) {
+  int rcode=response.getRcode();
+  if (rcode == Rcode.NXDOMAIN)   return false;
+  Record question=response.getQuestion();
+  int questionType=(question == null) ? 0 : question.getType();
+  if (rcode == Rcode.NOERROR && question != null && (questionType == Type.AAAA || questionType == Type.NAPTR)) {
     return true;
   }
   return false;

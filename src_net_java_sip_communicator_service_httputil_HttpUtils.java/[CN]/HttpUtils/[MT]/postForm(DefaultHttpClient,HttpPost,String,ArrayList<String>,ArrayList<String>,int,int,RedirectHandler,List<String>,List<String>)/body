@@ -1,0 +1,38 @@
+{
+  Credentials creds=null;
+  if (usernameParamIx != -1 && usernameParamIx < formParamNames.size() && passwordParamIx != -1 && passwordParamIx < formParamNames.size() && (formParamValues.get(usernameParamIx) == null || formParamValues.get(usernameParamIx).length() == 0) && (formParamValues.get(passwordParamIx) == null || formParamValues.get(passwordParamIx).length() == 0)) {
+    URL url=new URL(address);
+    HTTPCredentialsProvider prov=(HTTPCredentialsProvider)httpClient.getCredentialsProvider();
+    while (creds == null || creds.getUserPrincipal() == null || StringUtils.isNullOrEmpty(creds.getUserPrincipal().getName())) {
+      creds=prov.getCredentials(new AuthScope(url.getHost(),url.getPort()));
+      if (creds == null && !prov.retry()) {
+        return null;
+      }
+    }
+  }
+  List<NameValuePair> parameters=new ArrayList<NameValuePair>();
+  if (formParamNames != null) {
+    for (int i=0; i < formParamNames.size(); i++) {
+      if (i == usernameParamIx && creds != null) {
+        parameters.add(new BasicNameValuePair(formParamNames.get(i),creds.getUserPrincipal().getName()));
+      }
+ else       if (i == passwordParamIx && creds != null) {
+        parameters.add(new BasicNameValuePair(formParamNames.get(i),creds.getPassword()));
+      }
+ else {
+        parameters.add(new BasicNameValuePair(formParamNames.get(i),formParamValues.get(i)));
+      }
+    }
+  }
+  httpClient.setRedirectStrategy(new CustomRedirectStrategy(redirectHandler,parameters));
+  String s=URLEncodedUtils.format(parameters,"UTF-8");
+  StringEntity entity=new StringEntity(s,"UTF-8");
+  entity.setContentType(URLEncodedUtils.CONTENT_TYPE);
+  postMethod.setEntity(entity);
+  if (headerParamNames != null) {
+    for (int i=0; i < headerParamNames.size(); i++) {
+      postMethod.addHeader(headerParamNames.get(i),headerParamValues.get(i));
+    }
+  }
+  return executeMethod(httpClient,postMethod,redirectHandler,parameters);
+}

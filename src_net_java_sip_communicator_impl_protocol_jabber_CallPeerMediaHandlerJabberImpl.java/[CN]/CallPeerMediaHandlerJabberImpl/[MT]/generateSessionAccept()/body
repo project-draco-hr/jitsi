@@ -27,8 +27,8 @@
     MediaFormat format=null;
     List<MediaFormat> localFormats=getLocallySupportedFormats(dev);
     for (    PayloadTypePacketExtension payload : theirDescription.getPayloadTypes()) {
-      format=JingleUtils.payloadTypeToMediaFormat(payload,getDynamicPayloadTypes());
-      if (format != null && localFormats.contains(format))       break;
+      MediaFormat remoteFormat=JingleUtils.payloadTypeToMediaFormat(payload,getDynamicPayloadTypes());
+      if (remoteFormat != null && (format=findMediaFormat(localFormats,remoteFormat)) != null)       break;
     }
     if (format == null) {
       ProtocolProviderServiceJabberImpl.throwOperationFailedException("No matching codec.",OperationFailedException.ILLEGAL_ARGUMENT,null,logger);
@@ -53,7 +53,12 @@
         masterStreamSet=true;
       }
     }
-    initStream(contentName,connector,dev,format,target,direction,rtpExtensions,masterStream);
+    MediaStream stream=initStream(contentName,connector,dev,format,target,direction,rtpExtensions,masterStream);
+    long ourSsrc=stream.getLocalSourceID();
+    if (direction.allowsSending() && ourSsrc != -1) {
+      description.setSsrc(Long.toString(ourSsrc));
+      addSourceExtension(description,ourSsrc);
+    }
   }
   return sessAccept;
 }

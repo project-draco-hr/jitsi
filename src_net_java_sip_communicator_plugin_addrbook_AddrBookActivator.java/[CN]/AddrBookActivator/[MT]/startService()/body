@@ -1,14 +1,32 @@
 {
   String cssClassName;
-  if (OSUtils.IS_WINDOWS && getConfigService().getBoolean(PNAME_ENABLE_MICROSOFT_OUTLOOK_SEARCH,true)) {
+  ConfigurationService configService=getConfigService();
+  if (OSUtils.IS_WINDOWS && configService.getBoolean(PNAME_ENABLE_MICROSOFT_OUTLOOK_SEARCH,true)) {
     cssClassName="net.java.sip.communicator.plugin.addrbook" + ".msoutlook.MsOutlookAddrBookContactSourceService";
   }
- else   if (OSUtils.IS_MAC && getConfigService().getBoolean(PNAME_ENABLE_MACOSX_ADDRESS_BOOK_SEARCH,true)) {
+ else   if (OSUtils.IS_MAC && configService.getBoolean(PNAME_ENABLE_MACOSX_ADDRESS_BOOK_SEARCH,true)) {
     cssClassName="net.java.sip.communicator.plugin.addrbook" + ".macosx.MacOSXAddrBookContactSourceService";
   }
  else   return;
+  if (OSUtils.IS_WINDOWS && configService.getBoolean(PNAME_ENABLE_DEFAULT_IM_APPLICATION_CHANGE,true)) {
+    String isDefaultIMAppString=configService.getString(PNAME_MAKE_JITSI_DEFAULT_IM_APPLICATION);
+    if (isDefaultIMAppString == null) {
+      configService.setProperty(PNAME_MAKE_JITSI_DEFAULT_IM_APPLICATION,RegistryHandler.isJitsiDefaultIMApp());
+    }
+ else {
+      boolean isDefaultIMApp=Boolean.parseBoolean(isDefaultIMAppString);
+      if (RegistryHandler.isJitsiDefaultIMApp() != isDefaultIMApp) {
+        if (isDefaultIMApp)         setAsDefaultIMApplication();
+ else         unsetDefaultIMApplication();
+      }
+    }
+  }
   try {
     css=(ContactSourceService)Class.forName(cssClassName).newInstance();
+    if (cssClassName.equals("net.java.sip.communicator.plugin.addrbook" + ".msoutlook.MsOutlookAddrBookContactSourceService")) {
+      MsOutlookAddrBookContactSourceService contactSource=(MsOutlookAddrBookContactSourceService)css;
+      MsOutlookAddrBookContactSourceService.initMAPI(contactSource.createNotificationDelegate());
+    }
   }
  catch (  Exception ex) {
     String msg="Failed to instantiate " + cssClassName + ": "+ ex.getMessage();
@@ -24,8 +42,8 @@
       if (css instanceof AsyncContactSourceService)       ((AsyncContactSourceService)css).stop();
       css=null;
     }
- else {
-      if (logger.isInfoEnabled())       logger.info("Address book \"" + css.getDisplayName() + "\" ... [REGISTERED]");
+ else     if (logger.isInfoEnabled()) {
+      logger.info("Address book \"" + css.getDisplayName() + "\" ... [REGISTERED]");
     }
   }
 }

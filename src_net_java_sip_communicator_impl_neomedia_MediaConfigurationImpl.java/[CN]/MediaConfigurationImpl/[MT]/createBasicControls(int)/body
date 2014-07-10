@@ -1,22 +1,19 @@
 {
   final boolean setAudioSystemIsDisabled=(type == DeviceConfigurationComboBoxModel.AUDIO) && NeomediaActivator.getConfigurationService().getBoolean(MediaServiceImpl.DISABLE_SET_AUDIO_SYSTEM_PNAME,false);
-  final JComboBox deviceComboBox;
+  final DeviceComboBoxField deviceComboBox;
   final Container devicePanel;
   if (setAudioSystemIsDisabled) {
     deviceComboBox=null;
     devicePanel=null;
   }
  else {
-    deviceComboBox=new JComboBox();
-    deviceComboBox.setEditable(false);
-    deviceComboBox.setModel(new DeviceConfigurationComboBoxModel(mediaService.getDeviceConfiguration(),type));
     JLabel deviceLabel=new JLabel(getLabelText(type));
     deviceLabel.setDisplayedMnemonic(getDisplayedMnemonic(type));
-    deviceLabel.setLabelFor(deviceComboBox);
     devicePanel=new TransparentPanel(new FlowLayout(FlowLayout.CENTER));
     devicePanel.setMaximumSize(new Dimension(WIDTH,25));
     devicePanel.add(deviceLabel);
-    devicePanel.add(deviceComboBox);
+    deviceComboBox=new DeviceComboBoxField(type,devicePanel);
+    deviceLabel.setLabelFor(deviceComboBox.getComponent());
   }
   final JPanel deviceAndPreviewPanel=new TransparentPanel(new BorderLayout());
   int preferredDeviceAndPreviewPanelHeight;
@@ -35,8 +32,8 @@ if (preferredDeviceAndPreviewPanelHeight > 0) {
 deviceAndPreviewPanel.setPreferredSize(new Dimension(WIDTH,preferredDeviceAndPreviewPanelHeight));
 }
 if (devicePanel != null) deviceAndPreviewPanel.add(devicePanel,BorderLayout.NORTH);
-final ActionListener deviceComboBoxActionListener=new ActionListener(){
-public void actionPerformed(ActionEvent ev){
+final DeviceComboBoxField.Listener deviceComboBoxActionListener=new DeviceComboBoxField.Listener(){
+public void onAction(){
 boolean revalidateAndRepaint=false;
 for (int i=deviceAndPreviewPanel.getComponentCount() - 1; i >= 0; i--) {
 Component c=deviceAndPreviewPanel.getComponent(i);
@@ -46,7 +43,7 @@ revalidateAndRepaint=true;
 }
 }
 Component preview=null;
-if ((deviceComboBox == null) || ((deviceComboBox.getSelectedItem() != null) && deviceComboBox.isShowing())) {
+if ((deviceComboBox == null) || ((deviceComboBox.getSelectedItem() != null) && deviceComboBox.getComponent().isShowing())) {
 preview=createPreview(type,deviceComboBox,deviceAndPreviewPanel.getPreferredSize());
 }
 if (preview != null) {
@@ -60,13 +57,13 @@ deviceAndPreviewPanel.repaint();
 }
 }
 ;
-if (deviceComboBox != null) deviceComboBox.addActionListener(deviceComboBoxActionListener);
+if (deviceComboBox != null) deviceComboBox.addListener(deviceComboBoxActionListener);
 deviceAndPreviewPanel.addHierarchyListener(new HierarchyListener(){
 public void hierarchyChanged(HierarchyEvent event){
 if ((event.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
 SwingUtilities.invokeLater(new Runnable(){
 public void run(){
-deviceComboBoxActionListener.actionPerformed(null);
+deviceComboBoxActionListener.onAction();
 }
 }
 );

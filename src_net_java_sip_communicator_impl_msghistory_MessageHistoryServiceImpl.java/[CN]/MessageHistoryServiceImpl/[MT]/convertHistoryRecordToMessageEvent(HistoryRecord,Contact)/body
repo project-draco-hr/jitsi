@@ -9,7 +9,17 @@
   }
  else   timestamp=hrTimestamp;
   if (msg.isOutgoing) {
-    return new MessageDeliveredEvent(msg,contact,timestamp);
+    MessageDeliveredEvent evt=new MessageDeliveredEvent(msg,contact,timestamp);
+    if (msg.getMsgSubType() != null && msg.getMsgSubType().equals(MSG_SUBTYPE_SMS)) {
+      evt.setSmsMessage(true);
+    }
+    return evt;
   }
- else   return new MessageReceivedEvent(msg,contact,timestamp);
+ else {
+    int eventType=MessageReceivedEvent.CONVERSATION_MESSAGE_RECEIVED;
+    if (msg.getMsgSubType() != null && msg.getMsgSubType().equals(MSG_SUBTYPE_SMS)) {
+      eventType=MessageReceivedEvent.SMS_MESSAGE_RECEIVED;
+    }
+    return new MessageReceivedEvent(msg,contact,timestamp,eventType);
+  }
 }

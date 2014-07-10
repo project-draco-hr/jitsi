@@ -8,10 +8,27 @@
     disconnectAndCleanConnection();
   }
   connection=new XMPPConnection(confConn);
+  this.address=address;
   try {
     CertificateService cvs=getCertificateVerificationService();
     if (cvs != null) {
       SSLContext sslContext=loginStrategy.createSslContext(cvs,getTrustManager(cvs,serviceName));
+      if (logger.isDebugEnabled()) {
+        final StringBuilder buff=new StringBuilder();
+        buff.append("Available TLS protocols and algorithms:\n");
+        buff.append("Default protocols: ");
+        buff.append(Arrays.toString(sslContext.getDefaultSSLParameters().getProtocols()));
+        buff.append("\n");
+        buff.append("Supported protocols: ");
+        buff.append(Arrays.toString(sslContext.getSupportedSSLParameters().getProtocols()));
+        buff.append("\n");
+        buff.append("Default cipher suites: ");
+        buff.append(Arrays.toString(sslContext.getDefaultSSLParameters().getCipherSuites()));
+        buff.append("\n");
+        buff.append("Supported cipher suites: ");
+        buff.append(Arrays.toString(sslContext.getSupportedSSLParameters().getCipherSuites()));
+        logger.debug(buff.toString());
+      }
       connection.setCustomSslContext(sslContext);
     }
  else     if (tlsRequired)     throw new XMPPException("Certificate verification service is " + "unavailable and TLS is required");
@@ -46,6 +63,23 @@
     return ConnectState.ABORT_CONNECTING;
   }
  else {
+    if (connection.getSocket() instanceof SSLSocket) {
+      final SSLSocket sslSocket=(SSLSocket)connection.getSocket();
+      StringBuilder buff=new StringBuilder();
+      buff.append("Chosen TLS protocol and algorithm:\n").append("Protocol: ").append(sslSocket.getSession().getProtocol()).append("\n").append("Cipher suite: ").append(sslSocket.getSession().getCipherSuite());
+      logger.info(buff.toString());
+      if (logger.isDebugEnabled()) {
+        buff=new StringBuilder();
+        buff.append("Server TLS certificate chain:\n");
+        try {
+          buff.append(Arrays.toString(sslSocket.getSession().getPeerCertificates()));
+        }
+ catch (        SSLPeerUnverifiedException ex) {
+          buff.append("<unavailable: ").append(ex.getLocalizedMessage()).append(">");
+        }
+        logger.debug(buff.toString());
+      }
+    }
     connection.addConnectionListener(connectionListener);
   }
   if (abortConnecting) {
@@ -63,13 +97,6 @@
   if (connection.isAuthenticated()) {
     eventDuringLogin=null;
     fireRegistrationStateChanged(getRegistrationState(),RegistrationState.REGISTERED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,null);
-    OperationSetPersistentPresenceJabberImpl opSet=(OperationSetPersistentPresenceJabberImpl)this.getOperationSet(OperationSetPersistentPresence.class);
-    try {
-      opSet.publishPresenceStatus(getJabberStatusEnum().getStatus(JabberStatusEnum.AVAILABLE),"");
-    }
- catch (    Exception e) {
-      logger.error("Failed to publish presence status");
-    }
     return ConnectState.STOP_TRYING;
   }
  else {

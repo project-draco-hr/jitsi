@@ -1,0 +1,29 @@
+{
+synchronized (historyID) {
+    HistoryService historyService=MessageHistoryActivator.getMessageHistoryService().getHistoryService();
+    if (history == null) {
+      if (historyService.isHistoryExisting(historyID))       history=historyService.getHistory(historyID);
+ else       history=historyService.createHistory(historyID,recordStructure);
+      HistoryReader reader=history.getReader();
+      boolean delete=false;
+      QueryResultSet<HistoryRecord> res=reader.findLast(1);
+      if (res != null && res.hasNext()) {
+        HistoryRecord hr=res.next();
+        if (hr.getPropertyValues().length >= 4) {
+          if (!hr.getPropertyValues()[3].equals(RECENT_MSGS_VER))           delete=true;
+        }
+ else         delete=true;
+      }
+      if (delete) {
+        try {
+          historyService.purgeLocallyStoredHistory(historyID);
+          history=historyService.createHistory(historyID,recordStructure);
+        }
+ catch (        IOException ex) {
+          logger.error("Cannot delete recent_messages history",ex);
+        }
+      }
+    }
+    return history;
+  }
+}

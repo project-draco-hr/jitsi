@@ -1,8 +1,11 @@
 {
   if (logger.isDebugEnabled())   logger.debug("Demux query contact source: " + contactSource + " for string "+ queryString);
   if (queryString == null)   queryString="";
+  ContactQuery sourceQuery;
   if (contactSource instanceof ExtendedContactSourceService) {
-    return new DemuxContactQuery(((ExtendedContactSourceService)contactSource).createContactQuery(Pattern.compile(Pattern.quote(queryString),Pattern.MULTILINE | Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)));
+    sourceQuery=((ExtendedContactSourceService)contactSource).createContactQuery(Pattern.compile(Pattern.quote(queryString),Pattern.MULTILINE | Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
   }
- else   return new DemuxContactQuery(contactSource.createContactQuery(queryString));
+ else   sourceQuery=contactSource.createContactQuery(queryString);
+  if (sourceQuery != null)   return new DemuxContactQuery(sourceQuery);
+ else   return null;
 }

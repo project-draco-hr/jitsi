@@ -20,7 +20,8 @@ synchronized (contactImpl) {
         GroupNode parentNode=treeModel.getRoot();
         if (isGroupSorted)         groupNode=parentNode.sortedAddContactGroup(contactImpl);
  else         groupNode=parentNode.addContactGroup(contactImpl);
-        if (group.getSourceIndex() < GuiActivator.getContactListService().getSourceIndex() && rootUIGroup == null && (!(treeModel.getRoot().getChildAfter(groupNode) instanceof GroupNode))) {
+        TreeNode node=treeModel.getRoot().getChildAfter(groupNode);
+        if (group.getSourceIndex() < (GuiActivator.getContactListService().getSourceIndex() * UIGroup.MAX_GROUPS) && rootUIGroup == null && (!(node instanceof GroupNode)) && (node != null) && !currentFilter.equals(historyFilter)) {
           createMetaUIRootGroup();
         }
       }
@@ -38,6 +39,11 @@ synchronized (contactImpl) {
   }
   if (isContactSorted)   contactNode=groupNode.sortedAddContact(contactImpl);
  else   contactNode=groupNode.addContact(contactImpl);
+synchronized (setAutoSelectionAllowed) {
+    if (setAutoSelectionAllowed) {
+      selectFirstContact();
+    }
+  }
   if (rootUIGroup == null && groupNode == treeModel.getRoot() && treeModel.getRoot().getChildBefore(contactNode) instanceof GroupNode) {
     createMetaUIRootGroup();
   }

@@ -5,7 +5,7 @@
     }
     History history=this.getHistoryForMultiChat(evt.getSourceChatRoom());
     if (evt.isHistoryMessage()) {
-      Collection<EventObject> c=findFirstMessagesAfter(evt.getSourceChatRoom(),evt.getTimestamp(),10);
+      Collection<EventObject> c=findFirstMessagesAfter(evt.getSourceChatRoom(),new Date(evt.getTimestamp().getTime() - 10000),20);
       Iterator<EventObject> iter=c.iterator();
       boolean isPresent=false;
       while (iter.hasNext()) {
@@ -16,11 +16,17 @@
             isPresent=true;
             break;
           }
+          Message m1=cev.getMessage();
+          Message m2=evt.getMessage();
+          if (m1 != null && m2 != null && m1.getContent().equals(m2.getContent())) {
+            isPresent=true;
+            break;
+          }
         }
       }
       if (isPresent)       return;
     }
-    writeMessage(history,"out",evt.getMessage(),evt.getTimestamp());
+    writeMessage(history,"out",evt.getMessage(),evt.getTimestamp(),false);
   }
  catch (  IOException e) {
     logger.error("Could not add message to history",e);

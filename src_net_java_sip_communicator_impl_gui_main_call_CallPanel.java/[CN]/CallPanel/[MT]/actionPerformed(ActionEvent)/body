@@ -42,4 +42,23 @@
     }
     callInfoFrame.setVisible(callInfoFrame.hasCallInfo() && !callInfoFrame.isVisible());
   }
+ else   if (buttonName.equals(CRM_BUTTON)) {
+    String command=GuiActivator.getConfigurationService().getString("net.java.sip.communicator.impl.gui.main.call.CRM_COMMAND");
+    if (command == null) {
+      return;
+    }
+    List<CallPeer> callPeers=callConference.getCallPeers();
+    if (callPeers.isEmpty()) {
+      logger.info("No CallPeer for CRM application found.");
+      return;
+    }
+    command=String.format(command,callPeers.get(0).getAddress());
+    try {
+      logger.info("Launching CRM application: " + command);
+      Runtime.getRuntime().exec(command);
+    }
+ catch (    IOException e) {
+      logger.error("Unable launch CRM application",e);
+    }
+  }
 }

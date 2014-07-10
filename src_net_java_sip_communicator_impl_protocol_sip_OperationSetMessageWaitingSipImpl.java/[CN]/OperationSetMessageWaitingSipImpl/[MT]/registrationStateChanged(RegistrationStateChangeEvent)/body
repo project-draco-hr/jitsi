@@ -1,5 +1,13 @@
 {
   if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
+    Address subscribeAddress=null;
+    try {
+      subscribeAddress=getSubscribeAddress();
+    }
+ catch (    ParseException e) {
+      logger.error("Failed to parse mailbox subscribe address.",e);
+    }
+    final MessageSummarySubscriber defaultSubscriber=new MessageSummarySubscriber(subscribeAddress);
     messageWaitingSubscriber=new EventPackageSubscriber(provider,EVENT_PACKAGE,SUBSCRIPTION_DURATION,CONTENT_SUB_TYPE,timer,REFRESH_MARGIN){
       /** 
  * We may receive some message-waiting notifications
@@ -17,18 +25,17 @@
         if (resultSub != null)         return resultSub;
         Object[] subs=getSubscriptions();
         for (        Object s : subs)         if (s instanceof MessageSummarySubscriber)         return (MessageSummarySubscriber)s;
-        return null;
+        return defaultSubscriber;
       }
     }
 ;
-    try {
-      final Address subscribeAddress=getSubscribeAddress();
-      if (subscribeAddress != null) {
-        messageWaitingSubscriber.subscribe(new MessageSummarySubscriber(subscribeAddress));
+    if (subscribeAddress != null) {
+      try {
+        messageWaitingSubscriber.subscribe(defaultSubscriber);
       }
-    }
- catch (    Throwable e) {
-      logger.error("Error subscribing for mailbox",e);
+ catch (      Throwable e) {
+        logger.error("Error subscribing for mailbox",e);
+      }
     }
   }
  else   if (evt.getNewState().equals(RegistrationState.UNREGISTERING)) {

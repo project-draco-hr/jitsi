@@ -1,10 +1,12 @@
 {
+  if (this.settings.isPhotoInline()) {
+    return null;
+  }
   byte[] photo=null;
   InitialDirContext dirContext=null;
   final SearchControls searchCtl=new SearchControls();
   searchCtl.setSearchScope(SearchControls.OBJECT_SCOPE);
-  String[] returningAttributes={PHOTO_ATTRIBUTE};
-  searchCtl.setReturningAttributes(returningAttributes);
+  searchCtl.setReturningAttributes(PHOTO_ATTRIBUTES);
   logger.trace("starting photo retrieval...");
   try {
     dirContext=connect();
@@ -15,11 +17,13 @@
     if (result.hasMore()) {
       SearchResult searchResult=(SearchResult)result.next();
       Attributes attributes=searchResult.getAttributes();
-      Attribute attribute=attributes.get(PHOTO_ATTRIBUTE);
-      if (attribute != null) {
-        NamingEnumeration<?> values=attribute.getAll();
-        if (values.hasMore()) {
-          photo=(byte[])values.next();
+      for (      String a : PHOTO_ATTRIBUTES) {
+        Attribute attribute=attributes.get(a);
+        if (attribute != null) {
+          NamingEnumeration<?> values=attribute.getAll();
+          if (values.hasMore()) {
+            photo=(byte[])values.next();
+          }
         }
       }
     }

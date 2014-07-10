@@ -1,0 +1,66 @@
+{
+  Matcher m=pattern.matcher(plainText);
+  ConfigurationService cfg=GuiActivator.getConfigurationService();
+  boolean isSmiley=rService instanceof SmiliesReplacementService;
+  boolean isDirectImage=rService instanceof DirectImageReplacementService;
+  boolean isEnabledForSource=cfg.getBoolean(ReplacementProperty.getPropertyName(rService.getSourceName()),true);
+  int startPos=0;
+  while (m.find()) {
+    msgBuff.append(plainText.substring(startPos,m.start()));
+    startPos=m.end();
+    String group=m.group();
+    String temp=rService.getReplacement(group);
+    String group0=m.group(0);
+    if (!temp.equals(group0) || isDirectImage) {
+      if (isSmiley) {
+        if (cfg.getBoolean(ReplacementProperty.getPropertyName("SMILEY"),true) && !skipSmileys) {
+          msgBuff.append(ChatHtmlUtils.createEndPlainTextTag(contentType));
+          msgBuff.append("<IMG SRC=\"");
+          msgBuff.append(temp);
+          msgBuff.append("\" BORDER=\"0\" ALT=\"");
+          msgBuff.append(group0);
+          msgBuff.append("\"></IMG>");
+          msgBuff.append(ChatHtmlUtils.createStartPlainTextTag(contentType));
+        }
+ else {
+          msgBuff.append(group);
+        }
+      }
+ else       if (isEnabled && isEnabledForSource) {
+        if (isDirectImage) {
+          DirectImageReplacementService service=(DirectImageReplacementService)rService;
+          if (service.isDirectImage(group) && service.getImageSize(group) != -1) {
+            msgBuff.append("<IMG HEIGHT=\"90\" " + "WIDTH=\"120\" SRC=\"");
+            msgBuff.append(temp);
+            msgBuff.append("\" BORDER=\"0\" ALT=\"");
+            msgBuff.append(group0);
+            msgBuff.append("\"></IMG>");
+          }
+ else {
+            msgBuff.append(group);
+          }
+        }
+ else {
+          msgBuff.append("<IMG HEIGHT=\"90\" " + "WIDTH=\"120\" SRC=\"");
+          msgBuff.append(temp);
+          msgBuff.append("\" BORDER=\"0\" ALT=\"");
+          msgBuff.append(group0);
+          msgBuff.append("\"></IMG>");
+        }
+      }
+ else       if (isProposalEnabled) {
+        msgBuff.append(group);
+        msgBuff.append("</A> <A href=\"jitsi://" + showPreview.getClass().getName() + "/SHOWPREVIEW?"+ messageID+ "#"+ linkCounter+ "\">"+ GuiActivator.getResources().getI18NString("service.gui.SHOW_PREVIEW"));
+        showPreview.getMsgIDandPositionToLink().put(messageID + "#" + linkCounter++,group);
+        showPreview.getLinkToReplacement().put(group,temp);
+      }
+ else {
+        msgBuff.append(group);
+      }
+    }
+ else {
+      msgBuff.append(group);
+    }
+  }
+  msgBuff.append(plainText.substring(startPos));
+}

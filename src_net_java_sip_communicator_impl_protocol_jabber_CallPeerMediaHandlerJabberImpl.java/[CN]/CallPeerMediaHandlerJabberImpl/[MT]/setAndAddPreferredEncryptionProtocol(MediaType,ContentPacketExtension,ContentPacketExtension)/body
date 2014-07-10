@@ -1,8 +1,7 @@
 {
-  List<String> preferredEncryptionProtocols=getPeer().getProtocolProvider().getAccountID().getSortedEnabledEncryptionProtocolList();
-  for (  String preferredEncryptionProtocol : preferredEncryptionProtocols) {
-    String protoName=preferredEncryptionProtocol.substring(ProtocolProviderFactory.ENCRYPTION_PROTOCOL.length() + 1);
-    if (DtlsControl.PROTO_NAME.equals(protoName)) {
+  List<SrtpControlType> preferredEncryptionProtocols=getPeer().getProtocolProvider().getAccountID().getSortedEnabledEncryptionProtocolList();
+  for (  SrtpControlType srtpControlType : preferredEncryptionProtocols) {
+    if (srtpControlType == SrtpControlType.DTLS_SRTP) {
       addDtlsAdvertisedEncryptions(false,remoteContent,mediaType);
       if (setDtlsEncryptionOnContent(mediaType,localContent,remoteContent)) {
         return;
@@ -11,7 +10,7 @@
  else {
       RtpDescriptionPacketExtension localDescription=(localContent == null) ? null : JingleUtils.getRtpDescription(localContent);
       RtpDescriptionPacketExtension remoteDescription=(remoteContent == null) ? null : JingleUtils.getRtpDescription(remoteContent);
-      if (setAndAddPreferredEncryptionProtocol(protoName,mediaType,localDescription,remoteDescription)) {
+      if (setAndAddPreferredEncryptionProtocol(srtpControlType,mediaType,localDescription,remoteDescription)) {
         return;
       }
     }

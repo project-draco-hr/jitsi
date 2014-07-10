@@ -1,0 +1,16 @@
+{
+  UserSearchIQ search=new UserSearchIQ();
+  search.setType(IQ.Type.GET);
+  search.setTo(searchService);
+  PacketCollector collector=con.createPacketCollector(new PacketIDFilter(search.getPacketID()));
+  con.sendPacket(search);
+  IQ response=(IQ)collector.nextResult(SmackConfiguration.getPacketReplyTimeout());
+  collector.cancel();
+  if (response == null) {
+    throw new XMPPException("No response from server on status set.");
+  }
+  if (response.getError() != null) {
+    throw new XMPPException(response.getError());
+  }
+  userSearchForm=(UserSearchIQ)response;
+}

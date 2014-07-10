@@ -1,0 +1,57 @@
+{
+synchronized (historyID) {
+    try {
+      History history=getHistory();
+      HistoryWriter writer=history.getWriter();
+synchronized (recentMessages) {
+        writer.updateRecord(new HistoryWriter.HistoryRecordUpdater(){
+          HistoryRecord hr;
+          @Override public void setHistoryRecord(          HistoryRecord historyRecord){
+            this.hr=historyRecord;
+          }
+          @Override public boolean isMatching(){
+            boolean providerFound=false;
+            boolean contactFound=false;
+            for (int i=0; i < hr.getPropertyNames().length; i++) {
+              String propName=hr.getPropertyNames()[i];
+              if (propName.equals(STRUCTURE_NAMES[0])) {
+                if (msc.getProtocolProviderService().getAccountID().getAccountUniqueID().equals(hr.getPropertyValues()[i])) {
+                  providerFound=true;
+                }
+              }
+ else               if (propName.equals(STRUCTURE_NAMES[1])) {
+                if (msc.getContactAddress().equals(hr.getPropertyValues()[i])) {
+                  contactFound=true;
+                }
+              }
+            }
+            return contactFound && providerFound;
+          }
+          @Override public Map<String,String> getUpdateChanges(){
+            HashMap<String,String> map=new HashMap<String,String>();
+            SimpleDateFormat sdf=new SimpleDateFormat(DATE_FORMAT);
+            for (int i=0; i < hr.getPropertyNames().length; i++) {
+              String propName=hr.getPropertyNames()[i];
+              if (propName.equals(STRUCTURE_NAMES[0])) {
+                map.put(propName,msc.getProtocolProviderService().getAccountID().getAccountUniqueID());
+              }
+ else               if (propName.equals(STRUCTURE_NAMES[1])) {
+                map.put(propName,msc.getContactAddress());
+              }
+ else               if (propName.equals(STRUCTURE_NAMES[2])) {
+                map.put(propName,sdf.format(msc.getTimestamp()));
+              }
+ else               if (propName.equals(STRUCTURE_NAMES[3]))               map.put(propName,RECENT_MSGS_VER);
+            }
+            return map;
+          }
+        }
+);
+      }
+    }
+ catch (    IOException ex) {
+      logger.error("cannot create recent_messages history",ex);
+      return;
+    }
+  }
+}

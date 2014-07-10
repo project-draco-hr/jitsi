@@ -5,5 +5,16 @@
   while (m.find()) {
     thumbUrl="http://twitpic.com/show/thumb/" + m.group(1);
   }
+  try {
+    HttpURLConnection con=(HttpURLConnection)(new URL(thumbUrl).openConnection());
+    con.setInstanceFollowRedirects(false);
+    con.connect();
+    int responseCode=con.getResponseCode();
+    if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP || responseCode == HttpURLConnection.HTTP_MOVED_PERM) {
+      return con.getHeaderField("Location");
+    }
+  }
+ catch (  Throwable t) {
+  }
   return thumbUrl;
 }

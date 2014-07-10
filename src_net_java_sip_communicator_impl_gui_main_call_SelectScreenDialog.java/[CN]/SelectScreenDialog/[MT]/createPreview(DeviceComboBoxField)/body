@@ -1,0 +1,50 @@
+{
+  final JComponent preview;
+  JLabel noPreview=new JLabel(GuiActivator.getResources().getI18NString("impl.media.configform.NO_PREVIEW"));
+  noPreview.setHorizontalAlignment(SwingConstants.CENTER);
+  noPreview.setVerticalAlignment(SwingConstants.CENTER);
+  preview=createVideoContainer(noPreview);
+  preview.setPreferredSize(new Dimension(WIDTH,280));
+  preview.setMaximumSize(new Dimension(WIDTH,280));
+  final DeviceComboBoxField.Listener comboBoxListener=new DeviceComboBoxField.Listener(){
+    public void onAction(){
+      MediaDevice device=(MediaDevice)comboBox.getSelectedItem();
+      if ((device != null) && device.equals(videoDeviceInPreview))       return;
+      Exception exception;
+      try {
+        createPreview(device,preview);
+        exception=null;
+      }
+ catch (      IOException ex) {
+        exception=ex;
+      }
+catch (      MediaException ex) {
+        exception=ex;
+      }
+      if (exception != null) {
+        logger.error("Failed to create preview for device " + device,exception);
+        device=null;
+      }
+      videoDeviceInPreview=device;
+    }
+  }
+;
+  comboBox.addListener(comboBoxListener);
+  comboBox.getComponent().addHierarchyListener(new HierarchyListener(){
+    public void hierarchyChanged(    HierarchyEvent event){
+      if (((event.getChangeFlags() & HierarchyEvent.DISPLAYABILITY_CHANGED) != 0) && comboBox.getComponent().isDisplayable()) {
+        SwingUtilities.invokeLater(new Runnable(){
+          public void run(){
+            comboBoxListener.onAction();
+          }
+        }
+);
+      }
+ else {
+        if (!comboBox.getComponent().isDisplayable())         videoDeviceInPreview=null;
+      }
+    }
+  }
+);
+  return preview;
+}

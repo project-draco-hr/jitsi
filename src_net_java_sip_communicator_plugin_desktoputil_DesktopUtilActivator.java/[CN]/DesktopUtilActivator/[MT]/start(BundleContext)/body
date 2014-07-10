@@ -11,7 +11,17 @@
     public AuthenticationWindow create(    String userName,    char[] password,    String server,    boolean isUserNameEditable,    boolean isRememberPassword,    Object icon,    String windowTitle,    String windowText,    String usernameLabelText,    String passwordLabelText,    String errorMessage,    String signupLink){
       ImageIcon imageIcon=null;
       if (icon instanceof ImageIcon)       imageIcon=(ImageIcon)icon;
-      return new net.java.sip.communicator.plugin.desktoputil.AuthenticationWindow(userName,password,server,isUserNameEditable,isRememberPassword,imageIcon,windowTitle,windowText,usernameLabelText,passwordLabelText,errorMessage,signupLink);
+      AuthenticationWindowCreator creator=new AuthenticationWindowCreator(userName,password,server,isUserNameEditable,isRememberPassword,imageIcon,windowTitle,windowText,usernameLabelText,passwordLabelText,errorMessage,signupLink);
+      try {
+        SwingUtilities.invokeAndWait(creator);
+      }
+ catch (      InterruptedException e) {
+        logger.error("Error creating dialog",e);
+      }
+catch (      InvocationTargetException e) {
+        logger.error("Error creating dialog",e);
+      }
+      return creator.authenticationWindow;
     }
   }
 ,null);

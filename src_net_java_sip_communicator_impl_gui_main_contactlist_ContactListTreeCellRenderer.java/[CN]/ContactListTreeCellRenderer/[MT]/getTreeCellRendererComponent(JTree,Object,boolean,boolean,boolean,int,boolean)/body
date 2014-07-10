@@ -3,7 +3,7 @@
   this.row=row;
   this.isSelected=selected;
   this.treeNode=(TreeNode)value;
-  this.rightLabel.setIcon(null);
+  rightLabel.setIcon(null);
   DefaultTreeContactList contactList=(DefaultTreeContactList)tree;
   setBorder();
   addLabels(1);
@@ -16,28 +16,31 @@
       setBackground(Color.WHITE);
     }
   }
-  this.nameLabel.setIcon(null);
+  nameLabel.setIcon(null);
+  nameLabel.setText(value.toString());
   if (value instanceof ContactNode) {
     UIContactImpl contact=((ContactNode)value).getContactDescriptor();
-    if ((contact.getDescriptor() instanceof SourceContact) && ((SourceContact)contact.getDescriptor()).getPreferredContactDetail(OperationSetMultiUserChat.class) != null) {
+    MUCService mucService;
+    if ((contact.getDescriptor() instanceof SourceContact) && (mucService=GuiActivator.getMUCService()) != null && mucService.isMUCSourceContact((SourceContact)contact.getDescriptor())) {
       setBackground(Constants.CHAT_ROOM_ROW_COLOR);
     }
     String displayName=contact.getDisplayName();
     if ((displayName == null || displayName.trim().length() < 1) && !(contact instanceof ShowMoreContact)) {
       displayName=GuiActivator.getResources().getI18NString("service.gui.UNKNOWN");
     }
-    this.nameLabel.setText(displayName);
+    nameLabel.setText(displayName);
     if (statusIcon != null && contactList.isContactActive(contact) && statusIcon instanceof ImageIcon)     ((ImageIcon)statusIcon).setImage(msgReceivedImage);
  else     statusIcon=contact.getStatusIcon();
-    this.statusLabel.setIcon(statusIcon);
-    this.nameLabel.setFont(this.getFont().deriveFont(Font.PLAIN));
+    statusLabel.setIcon(statusIcon);
+    Font nameLabelFont=nameLabel.getFont();
+    nameLabel.setFont(nameLabelFont.deriveFont(Font.PLAIN,Math.max(nameLabelFont.getSize2D(),OSUtils.IS_WINDOWS ? 0F : 13F)));
     if (contactForegroundColor != null)     nameLabel.setForeground(contactForegroundColor);
-    this.initDisplayDetails(contact.getDisplayDetails());
+    initDisplayDetails(contact.getDisplayDetails());
     if (contact.getDescriptor() instanceof MetaContact && isMobile((MetaContact)contact.getDescriptor())) {
-      this.nameLabel.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.CONTACT_LIST_MOBILE_INDICATOR)));
-      this.nameLabel.setHorizontalTextPosition(SwingConstants.LEFT);
+      nameLabel.setIcon(new ImageIcon(ImageLoader.getImage(ImageLoader.CONTACT_LIST_MOBILE_INDICATOR)));
+      nameLabel.setHorizontalTextPosition(SwingConstants.LEFT);
     }
-    if (this.treeContactList.isContactButtonsVisible())     this.initButtonsPanel(contact);
+    if (treeContactList.isContactButtonsVisible())     initButtonsPanel(contact);
     int avatarWidth, avatarHeight;
     if (isSelected && treeContactList.isContactButtonsVisible()) {
       avatarWidth=EXTENDED_AVATAR_WIDTH;
@@ -48,9 +51,7 @@
       avatarHeight=AVATAR_HEIGHT;
     }
     Icon avatar=contact.getScaledAvatar(isSelected,avatarWidth,avatarHeight);
-    if (avatar != null) {
-      this.rightLabel.setIcon(avatar);
-    }
+    if (avatar != null)     rightLabel.setIcon(avatar);
     if (contact instanceof ShowMoreContact) {
       rightLabel.setFont(rightLabel.getFont().deriveFont(12f));
       rightLabel.setForeground(Color.GRAY);
@@ -60,38 +61,48 @@
       rightLabel.setFont(rightLabel.getFont().deriveFont(9f));
       rightLabel.setText("");
     }
-    this.setToolTipText(contact.getDescriptor().toString());
+    setToolTipText(contact.getDescriptor().toString());
+    if (preferredNotSelectedContactNodeHeight == null) {
+      preferredNotSelectedContactNodeHeight=ComponentUtils.getStringHeight(nameLabel) + V_GAP + ComponentUtils.getStringHeight(displayDetailsLabel);
+      preferredSelectedContactNodeHeight=preferredNotSelectedContactNodeHeight + V_GAP + BUTTON_HEIGHT;
+    }
   }
  else   if (value instanceof GroupNode) {
     UIGroupImpl groupItem=((GroupNode)value).getGroupDescriptor();
-    this.nameLabel.setText(groupItem.getDisplayName());
-    this.nameLabel.setFont(this.getFont().deriveFont(Font.BOLD));
-    if (groupForegroundColor != null)     this.nameLabel.setForeground(groupForegroundColor);
-    this.remove(displayDetailsLabel);
-    this.remove(callButton);
-    this.remove(callVideoButton);
-    this.remove(desktopSharingButton);
-    this.remove(chatButton);
-    this.remove(addContactButton);
-    this.remove(webButton);
+    Font nameLabelFont=nameLabel.getFont();
+    nameLabel.setFont(nameLabelFont.deriveFont(Font.BOLD,Math.max(nameLabelFont.getSize2D(),OSUtils.IS_WINDOWS ? 0F : 13F)));
+    nameLabel.setText(groupItem.getDisplayName());
+    if (groupForegroundColor != null)     nameLabel.setForeground(groupForegroundColor);
+    remove(displayDetailsLabel);
+    remove(callButton);
+    remove(callVideoButton);
+    remove(desktopSharingButton);
+    remove(chatButton);
+    remove(addContactButton);
+    remove(webButton);
     clearCustomActionButtons();
     statusIcon=expanded ? openedGroupIcon : closedGroupIcon;
     if (groupItem != treeContactList.getRootUIGroup()) {
-      this.statusLabel.setIcon(expanded ? openedGroupIcon : closedGroupIcon);
+      statusLabel.setIcon(expanded ? openedGroupIcon : closedGroupIcon);
     }
  else {
-      this.statusLabel.setIcon(null);
+      statusLabel.setIcon(null);
     }
-    this.rightLabel.setIcon(null);
-    this.rightLabel.setText("");
-    if (groupItem.countChildContacts() >= 0) {
+    rightLabel.setIcon(null);
+    rightLabel.setText("");
+    int groupItemCountChildContacts=groupItem.countChildContacts();
+    if (groupItemCountChildContacts >= 0) {
       rightLabel.setFont(rightLabel.getFont().deriveFont(9f));
-      this.rightLabel.setForeground(Color.BLACK);
-      this.rightLabel.setText(groupItem.countOnlineChildContacts() + "/" + groupItem.countChildContacts());
+      rightLabel.setForeground(Color.BLACK);
+      rightLabel.setText(groupItem.countOnlineChildContacts() + "/" + groupItemCountChildContacts);
     }
-    this.initDisplayDetails(groupItem.getDisplayDetails());
-    this.initButtonsPanel(groupItem);
-    this.setToolTipText((groupItem.getDescriptor() != null) ? groupItem.getDescriptor().toString() : groupItem.getDisplayName());
+    initDisplayDetails(groupItem.getDisplayDetails());
+    initButtonsPanel(groupItem);
+    Object groupItemDescriptor=groupItem.getDescriptor();
+    setToolTipText((groupItemDescriptor != null) ? groupItemDescriptor.toString() : groupItem.getDisplayName());
+    if (preferredGroupNodeHeight == null) {
+      preferredGroupNodeHeight=ComponentUtils.getStringHeight(nameLabel);
+    }
   }
   return this;
 }

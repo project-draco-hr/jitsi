@@ -1,0 +1,35 @@
+{
+  AccountID account=null;
+  for (  AccountID acc : AccountUtils.getStoredAccounts()) {
+    if (!acc.isHidden() && acc.isEnabled() && accountID.startsWith(acc.getAccountUniqueID())) {
+      account=acc;
+      break;
+    }
+  }
+  if (account == null)   return null;
+  ProtocolProviderService pps=AccountUtils.getRegisteredProviderForAccount(account);
+  if (pps == null)   return null;
+  OperationSetPersistentPresence opSetPresence=pps.getOperationSet(OperationSetPersistentPresence.class);
+  if (opSetPresence == null)   return null;
+  Contact contact=opSetPresence.findContactByID(id);
+  if (isSMSEnabled) {
+    if (contact != null && hasMessages(historyID,new String[]{MessageHistoryServiceImpl.MSG_SUBTYPE_SMS},MessageHistoryServiceImpl.STRUCTURE_NAMES[7],true)) {
+      return contact;
+    }
+    OperationSetSmsMessaging opSetSMS=pps.getOperationSet(OperationSetSmsMessaging.class);
+    if (opSetSMS == null || !hasMessages(historyID,new String[]{MessageHistoryServiceImpl.MSG_SUBTYPE_SMS},MessageHistoryServiceImpl.STRUCTURE_NAMES[7],true)) {
+      return null;
+    }
+    return opSetSMS.getContact(id);
+  }
+  if (contact != null)   return contact;
+  OperationSetMultiUserChat opSetMuc=pps.getOperationSet(OperationSetMultiUserChat.class);
+  if (opSetMuc == null)   return null;
+  try {
+    id=id.substring(0,id.lastIndexOf('@'));
+    return opSetMuc.findRoom(id);
+  }
+ catch (  Exception e) {
+    return null;
+  }
+}
