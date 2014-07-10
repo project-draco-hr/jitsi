@@ -1,5 +1,33 @@
 {
   System.setSecurityManager(null);
+  String chainMain=System.getProperty("chain.main.class");
+  if (chainMain != null) {
+    String chainArgs=System.getProperty("chain.main.args");
+    if (chainArgs == null) {
+      chainArgs="";
+    }
+    final String[] _chainArgs=chainArgs.split("\\s");
+    try {
+      Class<?> c=Class.forName(chainMain);
+      final Method m=c.getMethod("main",_chainArgs.getClass());
+      new Thread(){
+        public void run(){
+          try {
+            m.invoke(null,new Object[]{_chainArgs});
+          }
+ catch (          Exception ex) {
+            ex.printStackTrace();
+            System.err.println("Exception running the " + "chained main class, will continue anyway.");
+          }
+        }
+      }
+.start();
+    }
+ catch (    Exception ex) {
+      ex.printStackTrace();
+      System.err.println("Exception finding the chained main " + "class, will continue anyway.");
+    }
+  }
   SIPCommunicator.setScHomeDir(System.getProperty("os.name"));
   LogManager.getLogManager().readConfiguration(SIPCommunicatorJWS.class.getResourceAsStream("/logging.properties"));
   for (  Handler h : LogManager.getLogManager().getLogger("").getHandlers())   LogManager.getLogManager().getLogger("").removeHandler(h);
