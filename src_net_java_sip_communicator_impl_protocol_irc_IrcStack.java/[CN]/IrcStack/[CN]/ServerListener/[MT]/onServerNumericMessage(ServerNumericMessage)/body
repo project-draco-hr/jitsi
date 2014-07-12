@@ -24,7 +24,12 @@ chatRoom=new ChatRoomIrcImpl(channelName,IrcStack.this.provider);
 IrcStack.this.joined.put(channelName,chatRoom);
 }
 IrcStack.this.irc.addListener(new ChatRoomListener(chatRoom));
-openChatRoomWindow(chatRoom);
+try {
+IrcStack.this.provider.getMUC().openChatRoomWindow(chatRoom);
+}
+ catch (NullPointerException e) {
+LOGGER.error("failed to open chat room window",e);
+}
 IrcStack.this.prepareChatRoom(chatRoom,channel);
 IrcStack.this.provider.getMUC().fireLocalUserPresenceEvent(chatRoom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
 LOGGER.trace("Unannounced join of chat room '" + channelName + "' completed.");
