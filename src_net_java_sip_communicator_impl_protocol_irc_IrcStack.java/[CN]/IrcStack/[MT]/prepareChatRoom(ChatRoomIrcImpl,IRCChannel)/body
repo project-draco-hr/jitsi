@@ -1,17 +1,16 @@
 {
   final IRCTopic topic=channel.getTopic();
   chatRoom.updateSubject(topic.getValue());
-  OperationSetPersistentPresenceIrcImpl opSetPersistentPresence=this.provider.getPersistentPresence();
-  ContactGroupIrcImpl nonPersistentGroup=opSetPersistentPresence.getNonPersistentGroup();
   for (  IRCUser user : channel.getUsers()) {
     ChatRoomMemberRole role=ChatRoomMemberRole.SILENT_MEMBER;
+    ChatRoomMemberIrcImpl member=new ChatRoomMemberIrcImpl(this.provider,chatRoom,user.getNick(),role);
     for (    IRCUserStatus status : channel.getStatusesForUser(user)) {
       role=convertMemberMode(status.getChanModeType().charValue());
+      member.addRole(role);
     }
     if (this.getNick().equals(user.getNick())) {
-      chatRoom.prepUserRole(role);
+      chatRoom.prepUserRole(member.getRole());
     }
-    ChatRoomMemberIrcImpl member=new ChatRoomMemberIrcImpl(this.provider,chatRoom,user.getNick(),role);
     chatRoom.addChatRoomMember(member.getContactAddress(),member);
   }
 }

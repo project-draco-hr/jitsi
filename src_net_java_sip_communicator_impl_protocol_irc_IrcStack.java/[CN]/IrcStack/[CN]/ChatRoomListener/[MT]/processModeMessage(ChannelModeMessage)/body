@@ -2,72 +2,35 @@
   ChatRoomMemberIrcImpl sourceMember=extractChatRoomMember(msg);
   ModeParser parser=new ModeParser(msg.getModeStr());
   for (  ModeEntry mode : parser.getModes()) {
+    String targetNick=mode.getParams()[0];
+    ChatRoomMemberIrcImpl targetMember=(ChatRoomMemberIrcImpl)this.chatroom.getChatRoomMember(targetNick);
+    ChatRoomMemberRole originalRole=targetMember.getRole();
 switch (mode.getMode()) {
 case OWNER:
-      String ownerUserName=mode.getParams()[0];
-    if (isMe(ownerUserName)) {
-      ChatRoomLocalUserRoleChangeEvent event;
+case OPERATOR:
+case HALFOP:
+case VOICE:
       if (mode.isAdded()) {
-        event=new ChatRoomLocalUserRoleChangeEvent(this.chatroom,ChatRoomMemberRole.SILENT_MEMBER,ChatRoomMemberRole.OWNER,false);
+        targetMember.addRole(mode.getMode().getRole());
       }
  else {
-        event=new ChatRoomLocalUserRoleChangeEvent(this.chatroom,ChatRoomMemberRole.OWNER,ChatRoomMemberRole.SILENT_MEMBER,false);
+        targetMember.removeRole(mode.getMode().getRole());
       }
+    ChatRoomMemberRole newRole=targetMember.getRole();
+  if (newRole != originalRole) {
+    ChatRoomLocalUserRoleChangeEvent event=new ChatRoomLocalUserRoleChangeEvent(this.chatroom,originalRole,newRole,false);
+    if (isMe(targetMember.getContactAddress())) {
       this.chatroom.fireLocalUserRoleChangedEvent(event);
     }
-  ChatRoomMember owner=this.chatroom.getChatRoomMember(mode.getParams()[0]);
-if (owner != null) {
-  if (mode.isAdded()) {
-    this.chatroom.fireMemberRoleEvent(owner,ChatRoomMemberRole.OWNER);
+ else {
+      this.chatroom.fireMemberRoleEvent(targetMember,newRole);
+    }
   }
  else {
-    this.chatroom.fireMemberRoleEvent(owner,ChatRoomMemberRole.SILENT_MEMBER);
+    String text=sourceMember.getName() + (mode.isAdded() ? " gives " + mode.getMode().name().toLowerCase() + " to " : " removes " + mode.getMode().name().toLowerCase() + " from ") + targetMember.getName();
+    MessageIrcImpl message=new MessageIrcImpl(text,MessageIrcImpl.DEFAULT_MIME_TYPE,MessageIrcImpl.DEFAULT_MIME_TYPE,"");
+    this.chatroom.fireMessageReceivedEvent(message,sourceMember,new Date(),ChatRoomMessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
   }
-}
-break;
-case OPERATOR:
-String opUserName=mode.getParams()[0];
-if (isMe(opUserName)) {
-ChatRoomLocalUserRoleChangeEvent event;
-if (mode.isAdded()) {
-event=new ChatRoomLocalUserRoleChangeEvent(this.chatroom,ChatRoomMemberRole.SILENT_MEMBER,ChatRoomMemberRole.ADMINISTRATOR,false);
-}
- else {
-event=new ChatRoomLocalUserRoleChangeEvent(this.chatroom,ChatRoomMemberRole.ADMINISTRATOR,ChatRoomMemberRole.SILENT_MEMBER,false);
-}
-this.chatroom.fireLocalUserRoleChangedEvent(event);
-}
-ChatRoomMember op=this.chatroom.getChatRoomMember(opUserName);
-if (op != null) {
-if (mode.isAdded()) {
-this.chatroom.fireMemberRoleEvent(op,ChatRoomMemberRole.ADMINISTRATOR);
-}
- else {
-this.chatroom.fireMemberRoleEvent(op,ChatRoomMemberRole.SILENT_MEMBER);
-}
-}
-break;
-case VOICE:
-String voiceUserName=mode.getParams()[0];
-if (isMe(voiceUserName)) {
-ChatRoomLocalUserRoleChangeEvent event;
-if (mode.isAdded()) {
-event=new ChatRoomLocalUserRoleChangeEvent(this.chatroom,ChatRoomMemberRole.SILENT_MEMBER,ChatRoomMemberRole.MEMBER,false);
-}
- else {
-event=new ChatRoomLocalUserRoleChangeEvent(this.chatroom,ChatRoomMemberRole.MEMBER,ChatRoomMemberRole.SILENT_MEMBER,false);
-}
-this.chatroom.fireLocalUserRoleChangedEvent(event);
-}
-ChatRoomMember voice=this.chatroom.getChatRoomMember(voiceUserName);
-if (voice != null) {
-if (mode.isAdded()) {
-this.chatroom.fireMemberRoleEvent(voice,ChatRoomMemberRole.MEMBER);
-}
- else {
-this.chatroom.fireMemberRoleEvent(voice,ChatRoomMemberRole.SILENT_MEMBER);
-}
-}
 break;
 case LIMIT:
 MessageIrcImpl limitMessage;
