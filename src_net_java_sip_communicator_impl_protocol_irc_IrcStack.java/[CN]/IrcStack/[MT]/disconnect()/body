@@ -1,5 +1,5 @@
 {
-  if (this.connectionState == null && this.irc == null)   return;
+  if (this.connectionState == null && this.session.get() == null)   return;
 synchronized (this.joined) {
     for (    ChatRoomIrcImpl channel : this.joined.values()) {
       if (channel == null) {
@@ -8,14 +8,15 @@ synchronized (this.joined) {
       leave(channel);
     }
   }
-synchronized (this.irc) {
+synchronized (this.session) {
+    final IRCApi irc=this.session.get();
     try {
-      this.irc.disconnect();
+      irc.disconnect();
     }
  catch (    RuntimeException e) {
       LOGGER.debug("exception occurred while disconnecting",e);
     }
-    this.irc=null;
+    this.session.set(null);
     this.connectionState=null;
   }
   this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED);

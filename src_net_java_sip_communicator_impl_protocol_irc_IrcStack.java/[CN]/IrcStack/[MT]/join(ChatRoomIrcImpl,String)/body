@@ -2,6 +2,10 @@
   if (!isConnected())   throw new IllegalStateException("Please connect to an IRC server first");
   if (chatroom == null || chatroom.getIdentifier() == null || chatroom.getIdentifier().isEmpty())   throw new IllegalArgumentException("chatroom cannot be null or emtpy");
   if (password == null)   throw new IllegalArgumentException("password cannot be null");
+  final IRCApi irc=this.session.get();
+  if (irc == null) {
+    throw new IllegalStateException("irc instance is not available");
+  }
   final String chatRoomId=chatroom.getIdentifier();
   if (!getChannelTypes().contains(chatRoomId.charAt(0))) {
     LOGGER.warn("Is chat room '" + chatRoomId + "' really an IRC channel? It does not start with any of "+ "the channel type symbols.");
@@ -14,7 +18,7 @@
 synchronized (joinSignal) {
     LOGGER.trace("Issue join channel command to IRC library and wait for" + " join operation to complete (un)successfully.");
     this.joined.put(chatRoomId,null);
-    this.irc.joinChannel(chatRoomId,password,new Callback<IRCChannel>(){
+    irc.joinChannel(chatRoomId,password,new Callback<IRCChannel>(){
       @Override public void onSuccess(      IRCChannel channel){
         if (LOGGER.isTraceEnabled()) {
           LOGGER.trace("Started callback for successful join " + "of channel '" + chatroom.getIdentifier() + "'.");
@@ -33,7 +37,7 @@ synchronized (joinSignal) {
           }
           try {
             IrcStack.this.joined.put(chatRoomId,chatroom);
-            IrcStack.this.irc.addListener(new ChatRoomListener(chatroom));
+            irc.addListener(new ChatRoomListener(chatroom));
             prepareChatRoom(chatroom,channel);
           }
   finally {

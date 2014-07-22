@@ -1,5 +1,9 @@
 {
   LOGGER.trace("Start retrieve server chat room list.");
+  final IRCApi irc=this.session.get();
+  if (irc == null) {
+    throw new IllegalStateException("irc instance is not available");
+  }
 synchronized (this.channellist) {
     List<String> list=this.channellist.get(CHAT_ROOM_LIST_CACHE_EXPIRATION);
     if (list == null) {
@@ -7,8 +11,8 @@ synchronized (this.channellist) {
       Result<List<String>,Exception> listSignal=new Result<List<String>,Exception>(new LinkedList<String>());
 synchronized (listSignal) {
         try {
-          this.irc.addListener(new ChannelListListener(this.irc,listSignal));
-          this.irc.rawMessage("LIST");
+          irc.addListener(new ChannelListListener(irc,listSignal));
+          irc.rawMessage("LIST");
           while (!listSignal.isDone()) {
             LOGGER.trace("Start waiting for list ...");
             listSignal.wait();

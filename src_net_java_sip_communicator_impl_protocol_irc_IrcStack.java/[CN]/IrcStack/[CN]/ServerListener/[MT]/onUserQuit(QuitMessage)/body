@@ -1,8 +1,12 @@
 {
   final String userNick=msg.getSource().getNick();
   final Contact user=IrcStack.this.provider.getPersistentPresence().findContactByID(userNick);
+  if (user == null) {
+    LOGGER.trace("User not in contact list. Not updating user presence status.");
+    return;
+  }
   final PresenceStatus previousStatus=user.getPresenceStatus();
-  if (user == null || previousStatus == IrcStatusEnum.OFFLINE) {
+  if (previousStatus == IrcStatusEnum.OFFLINE) {
     LOGGER.trace("User already off-line, not updating user " + "presence status.");
     return;
   }

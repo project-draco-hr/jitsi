@@ -1,5 +1,5 @@
 {
-  if (this.irc != null && this.connectionState != null && this.connectionState.isConnected())   return;
+  if (this.session.get() != null && this.connectionState != null && this.connectionState.isConnected())   return;
   this.joined.clear();
   final IRCServer server;
   if (secureConnection) {
@@ -8,12 +8,13 @@
  else {
     server=new IRCServer(host,port,password,false);
   }
-  this.irc=new IRCApiImpl(true);
-synchronized (this.irc) {
+synchronized (this.session) {
+    final IRCApi irc=new IRCApiImpl(true);
     this.params.setServer(server);
-    this.irc.addListener(new ServerListener());
+    irc.addListener(new ServerListener());
+    this.session.set(irc);
     if (LOGGER.isTraceEnabled()) {
-      this.irc.addListener(new IMessageListener(){
+      irc.addListener(new IMessageListener(){
         @Override public void onMessage(        IMessage aMessage){
           LOGGER.trace("(" + aMessage + ") "+ aMessage.asRaw());
         }
