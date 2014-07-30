@@ -1,0 +1,16 @@
+{
+  final MessageIrcImpl limitMessage;
+  if (mode.isAdded()) {
+    try {
+      limitMessage=new MessageIrcImpl("channel limit set to " + Integer.parseInt(mode.getParams()[0]) + " by "+ (sourceMember.getContactAddress().length() == 0 ? "server" : sourceMember.getContactAddress()),"text/plain","UTF-8",null);
+    }
+ catch (    NumberFormatException e) {
+      LOGGER.warn("server sent incorrect limit: " + "limit is not a number",e);
+      return;
+    }
+  }
+ else {
+    limitMessage=new MessageIrcImpl("channel limit removed by " + (sourceMember.getContactAddress().length() == 0 ? "server" : sourceMember.getContactAddress()),"text/plain","UTF-8",null);
+  }
+  this.chatroom.fireMessageReceivedEvent(limitMessage,sourceMember,new Date(),ChatRoomMessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
+}

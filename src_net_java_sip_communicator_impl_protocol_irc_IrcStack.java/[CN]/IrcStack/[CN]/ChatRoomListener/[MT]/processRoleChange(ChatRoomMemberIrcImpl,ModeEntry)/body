@@ -1,0 +1,26 @@
+{
+  final String targetNick=mode.getParams()[0];
+  final ChatRoomMemberIrcImpl targetMember=(ChatRoomMemberIrcImpl)this.chatroom.getChatRoomMember(targetNick);
+  final ChatRoomMemberRole originalRole=targetMember.getRole();
+  if (mode.isAdded()) {
+    targetMember.addRole(mode.getMode().getRole());
+  }
+ else {
+    targetMember.removeRole(mode.getMode().getRole());
+  }
+  final ChatRoomMemberRole newRole=targetMember.getRole();
+  if (newRole != originalRole) {
+    final ChatRoomLocalUserRoleChangeEvent event=new ChatRoomLocalUserRoleChangeEvent(this.chatroom,originalRole,newRole,false);
+    if (isMe(targetMember.getContactAddress())) {
+      this.chatroom.fireLocalUserRoleChangedEvent(event);
+    }
+ else {
+      this.chatroom.fireMemberRoleEvent(targetMember,newRole);
+    }
+  }
+ else {
+    final String text=sourceMember.getName() + (mode.isAdded() ? " gives " + mode.getMode().name().toLowerCase() + " to " : " removes " + mode.getMode().name().toLowerCase() + " from ") + targetMember.getName();
+    final MessageIrcImpl message=new MessageIrcImpl(text,MessageIrcImpl.DEFAULT_MIME_TYPE,MessageIrcImpl.DEFAULT_MIME_ENCODING,null);
+    this.chatroom.fireMessageReceivedEvent(message,sourceMember,new Date(),ChatRoomMessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
+  }
+}

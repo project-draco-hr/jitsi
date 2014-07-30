@@ -1,56 +1,19 @@
 {
-  ChatRoomMemberIrcImpl sourceMember=extractChatRoomMember(msg);
-  ModeParser parser=new ModeParser(msg.getModeStr());
+  final ChatRoomMemberIrcImpl source=extractChatRoomMember(msg);
+  final ModeParser parser=new ModeParser(msg.getModeStr());
   for (  ModeEntry mode : parser.getModes()) {
 switch (mode.getMode()) {
 case OWNER:
 case OPERATOR:
 case HALFOP:
 case VOICE:
-      String targetNick=mode.getParams()[0];
-    ChatRoomMemberIrcImpl targetMember=(ChatRoomMemberIrcImpl)this.chatroom.getChatRoomMember(targetNick);
-  ChatRoomMemberRole originalRole=targetMember.getRole();
-if (mode.isAdded()) {
-  targetMember.addRole(mode.getMode().getRole());
-}
- else {
-  targetMember.removeRole(mode.getMode().getRole());
-}
-ChatRoomMemberRole newRole=targetMember.getRole();
-if (newRole != originalRole) {
-ChatRoomLocalUserRoleChangeEvent event=new ChatRoomLocalUserRoleChangeEvent(this.chatroom,originalRole,newRole,false);
-if (isMe(targetMember.getContactAddress())) {
-this.chatroom.fireLocalUserRoleChangedEvent(event);
-}
- else {
-this.chatroom.fireMemberRoleEvent(targetMember,newRole);
-}
-}
- else {
-String text=sourceMember.getName() + (mode.isAdded() ? " gives " + mode.getMode().name().toLowerCase() + " to " : " removes " + mode.getMode().name().toLowerCase() + " from ") + targetMember.getName();
-MessageIrcImpl message=new MessageIrcImpl(text,MessageIrcImpl.DEFAULT_MIME_TYPE,MessageIrcImpl.DEFAULT_MIME_ENCODING,null);
-this.chatroom.fireMessageReceivedEvent(message,sourceMember,new Date(),ChatRoomMessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
-}
-break;
+      processRoleChange(source,mode);
+    break;
 case LIMIT:
-MessageIrcImpl limitMessage;
-if (mode.isAdded()) {
-try {
-limitMessage=new MessageIrcImpl("channel limit set to " + Integer.parseInt(mode.getParams()[0]) + " by "+ (sourceMember.getContactAddress().length() == 0 ? "server" : sourceMember.getContactAddress()),"text/plain","UTF-8",null);
-}
- catch (NumberFormatException e) {
-LOGGER.warn("server sent incorrect limit: " + "limit is not a number",e);
-break;
-}
-}
- else {
-limitMessage=new MessageIrcImpl("channel limit removed by " + (sourceMember.getContactAddress().length() == 0 ? "server" : sourceMember.getContactAddress()),"text/plain","UTF-8",null);
-}
-this.chatroom.fireMessageReceivedEvent(limitMessage,sourceMember,new Date(),ChatRoomMessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
+  processLimitChange(source,mode);
 break;
 case BAN:
-MessageIrcImpl banMessage=new MessageIrcImpl("channel ban mask was " + (mode.isAdded() ? "added" : "removed") + ": "+ mode.getParams()[0]+ " by "+ (sourceMember.getContactAddress().length() == 0 ? "server" : sourceMember.getContactAddress()),MessageIrcImpl.DEFAULT_MIME_TYPE,MessageIrcImpl.DEFAULT_MIME_ENCODING,null);
-this.chatroom.fireMessageReceivedEvent(banMessage,sourceMember,new Date(),ChatRoomMessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
+processBanChange(source,mode);
 break;
 case UNKNOWN:
 if (LOGGER.isInfoEnabled()) {
