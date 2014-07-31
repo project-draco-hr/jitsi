@@ -6,7 +6,7 @@
   for (int i=0; i < text.length(); i++) {
     char val=text.charAt(i);
 switch (val) {
-case '\u0002':
+case ControlChar.Bold.CODE:
       if (builder.isActive(ControlChar.Bold.class)) {
         builder.cancel(ControlChar.Bold.class,true);
       }
@@ -14,7 +14,7 @@ case '\u0002':
         builder.apply(new ControlChar.Bold());
       }
     break;
-case '\u0016':
+case ControlChar.Italics.CODE:
   if (builder.isActive(ControlChar.Italics.class)) {
     builder.cancel(ControlChar.Italics.class,true);
   }
@@ -22,7 +22,7 @@ case '\u0016':
     builder.apply(new ControlChar.Italics());
   }
 break;
-case '\u001F':
+case ControlChar.Underline.CODE:
 if (builder.isActive(ControlChar.Underline.class)) {
 builder.cancel(ControlChar.Underline.class,true);
 }
@@ -30,24 +30,21 @@ builder.cancel(ControlChar.Underline.class,true);
 builder.apply(new ControlChar.Underline());
 }
 break;
-case '\u0003':
-Color background=null;
+case ControlChar.ColorFormat.CODE:
 Color foreground=parseForegroundColor(text.substring(i + 1));
 if (foreground != null) {
 i+=2;
-background=parseBackgroundColor(text.substring(i + 1));
+Color background=parseBackgroundColor(text.substring(i + 1));
 if (background != null) {
 i+=INDEX_END_COLOR_CODE;
 }
-}
-if (foreground == null && background == null) {
-builder.cancel(ControlChar.ColorFormat.class,false);
-}
- else {
 builder.apply(new ControlChar.ColorFormat(foreground,background));
 }
+ else {
+builder.cancel(ControlChar.ColorFormat.class,false);
+}
 break;
-case '\u000F':
+case ControlChar.Normal.CODE:
 builder.cancelAll();
 break;
 default :
