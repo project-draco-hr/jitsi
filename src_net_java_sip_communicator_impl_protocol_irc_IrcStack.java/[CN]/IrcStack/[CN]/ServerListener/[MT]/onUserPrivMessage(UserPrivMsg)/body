@@ -1,12 +1,11 @@
 {
   final String user=msg.getSource().getNick();
-  final String text=Utils.styleAsMessage(Utils.parseIrcMessage(msg.getText()));
-  final MessageIrcImpl message=new MessageIrcImpl(text,OperationSetBasicInstantMessaging.HTML_MIME_TYPE,OperationSetBasicInstantMessaging.DEFAULT_MIME_ENCODING,null);
+  final MessageIrcImpl message=MessageIrcImpl.newMessageFromIRC(msg.getText());
   final Contact from=IrcStack.this.provider.getPersistentPresence().findOrCreateContactByID(user);
   try {
     IrcStack.this.provider.getBasicInstantMessaging().fireMessageReceived(message,from);
   }
  catch (  RuntimeException e) {
-    LOGGER.error("Error occurred while delivering private message from user" + " '" + user + "': "+ text,e);
+    LOGGER.error("Error occurred while delivering private message from user" + " '" + user + "': "+ msg.getText(),e);
   }
 }
