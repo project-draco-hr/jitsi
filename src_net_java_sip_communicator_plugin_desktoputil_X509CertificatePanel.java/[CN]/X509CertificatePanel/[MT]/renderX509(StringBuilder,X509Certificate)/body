@@ -1,0 +1,75 @@
+{
+  X500Principal issuer=certificate.getIssuerX500Principal();
+  X500Principal subject=certificate.getSubjectX500Principal();
+  sb.append("<table cellspacing='1' cellpadding='1'>\n");
+  addTitle(sb,R.getI18NString("service.gui.CERT_INFO_ISSUED_TO"));
+  try {
+    for (    Rdn name : new LdapName(subject.getName()).getRdns()) {
+      String nameType=name.getType();
+      String lblKey="service.gui.CERT_INFO_" + nameType;
+      String lbl=R.getI18NString(lblKey);
+      if ((lbl == null) || ("!" + lblKey + "!").equals(lbl))       lbl=nameType;
+      final String value;
+      Object nameValue=name.getValue();
+      if (nameValue instanceof byte[]) {
+        byte[] nameValueAsByteArray=(byte[])nameValue;
+        value=getHex(nameValueAsByteArray) + " (" + new String(nameValueAsByteArray)+ ")";
+      }
+ else       value=nameValue.toString();
+      addField(sb,lbl,value);
+    }
+  }
+ catch (  InvalidNameException ine) {
+    addField(sb,R.getI18NString("service.gui.CERT_INFO_CN"),subject.getName());
+  }
+  addTitle(sb,R.getI18NString("service.gui.CERT_INFO_ISSUED_BY"));
+  try {
+    for (    Rdn name : new LdapName(issuer.getName()).getRdns()) {
+      String nameType=name.getType();
+      String lblKey="service.gui.CERT_INFO_" + nameType;
+      String lbl=R.getI18NString(lblKey);
+      if ((lbl == null) || ("!" + lblKey + "!").equals(lbl))       lbl=nameType;
+      final String value;
+      Object nameValue=name.getValue();
+      if (nameValue instanceof byte[]) {
+        byte[] nameValueAsByteArray=(byte[])nameValue;
+        value=getHex(nameValueAsByteArray) + " (" + new String(nameValueAsByteArray)+ ")";
+      }
+ else       value=nameValue.toString();
+      addField(sb,lbl,value);
+    }
+  }
+ catch (  InvalidNameException ine) {
+    addField(sb,R.getI18NString("service.gui.CERT_INFO_CN"),issuer.getName());
+  }
+  addTitle(sb,R.getI18NString("service.gui.CERT_INFO_VALIDITY"));
+  addField(sb,R.getI18NString("service.gui.CERT_INFO_ISSUED_ON"),certificate.getNotBefore().toString());
+  addField(sb,R.getI18NString("service.gui.CERT_INFO_EXPIRES_ON"),certificate.getNotAfter().toString());
+  addTitle(sb,R.getI18NString("service.gui.CERT_INFO_FINGERPRINTS"));
+  try {
+    String sha1String=getThumbprint(certificate,"SHA1");
+    String md5String=getThumbprint(certificate,"MD5");
+    addField(sb,"SHA1:",sha1String);
+    addField(sb,"MD5:",md5String);
+  }
+ catch (  CertificateException e) {
+  }
+  addTitle(sb,R.getI18NString("service.gui.CERT_INFO_CERT_DETAILS"));
+  addField(sb,R.getI18NString("service.gui.CERT_INFO_SER_NUM"),certificate.getSerialNumber().toString());
+  addField(sb,R.getI18NString("service.gui.CERT_INFO_VER"),String.valueOf(certificate.getVersion()));
+  addField(sb,R.getI18NString("service.gui.CERT_INFO_SIGN_ALG"),String.valueOf(certificate.getSigAlgName()));
+  addTitle(sb,R.getI18NString("service.gui.CERT_INFO_PUB_KEY_INFO"));
+  addField(sb,R.getI18NString("service.gui.CERT_INFO_ALG"),certificate.getPublicKey().getAlgorithm());
+  if (certificate.getPublicKey().getAlgorithm().equals("RSA")) {
+    RSAPublicKey key=(RSAPublicKey)certificate.getPublicKey();
+    addField(sb,R.getI18NString("service.gui.CERT_INFO_PUB_KEY"),R.getI18NString("service.gui.CERT_INFO_KEY_BYTES_PRINT",new String[]{String.valueOf(key.getModulus().toByteArray().length - 1),key.getModulus().toString(16)}));
+    addField(sb,R.getI18NString("service.gui.CERT_INFO_EXP"),key.getPublicExponent().toString());
+    addField(sb,R.getI18NString("service.gui.CERT_INFO_KEY_SIZE"),R.getI18NString("service.gui.CERT_INFO_KEY_BITS_PRINT",new String[]{String.valueOf(key.getModulus().bitLength())}));
+  }
+ else   if (certificate.getPublicKey().getAlgorithm().equals("DSA")) {
+    DSAPublicKey key=(DSAPublicKey)certificate.getPublicKey();
+    addField(sb,"Y:",key.getY().toString(16));
+  }
+  addField(sb,R.getI18NString("service.gui.CERT_INFO_SIGN"),R.getI18NString("service.gui.CERT_INFO_KEY_BYTES_PRINT",new String[]{String.valueOf(certificate.getSignature().length),getHex(certificate.getSignature())}));
+  sb.append("</table>\n");
+}

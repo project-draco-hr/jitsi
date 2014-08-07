@@ -81,6 +81,22 @@
     }
     MediaDescription md=createMediaDescription(proto,mutuallySupportedFormats,connector,direction,rtpExtensions);
     setAndAddPreferredEncryptionProtocol(mediaType,md,mediaDescription);
+    String rtcpxr;
+    try {
+      rtcpxr=mediaDescription.getAttribute(RTCPExtendedReport.SDP_ATTRIBUTE);
+      if (rtcpxr != null) {
+        if (rtcpxr.contains(RTCPExtendedReport.VoIPMetricsReportBlock.SDP_PARAMETER)) {
+          rtcpxr=RTCPExtendedReport.VoIPMetricsReportBlock.SDP_PARAMETER;
+        }
+ else {
+          rtcpxr="";
+        }
+        md.setAttribute(RTCPExtendedReport.SDP_ATTRIBUTE,rtcpxr);
+      }
+    }
+ catch (    SdpException se) {
+      rtcpxr=null;
+    }
     MediaFormat fmt=findMediaFormat(remoteFormats,mutuallySupportedFormats.get(0));
     boolean masterStream=false;
     if (!masterStreamSet) {
@@ -95,7 +111,8 @@
         masterStreamSet=true;
       }
     }
-    initStream(connector,dev,fmt,target,direction,rtpExtensions,masterStream);
+    MediaStream stream=initStream(connector,dev,fmt,target,direction,rtpExtensions,masterStream);
+    if (stream != null)     stream.setProperty(RTCPExtendedReport.SDP_ATTRIBUTE,rtcpxr);
     answerDescriptions.add(md);
     atLeastOneValidDescription=true;
   }

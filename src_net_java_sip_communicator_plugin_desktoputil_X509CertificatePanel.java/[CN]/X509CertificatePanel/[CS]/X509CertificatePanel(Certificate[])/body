@@ -1,0 +1,59 @@
+{
+  setLayout(new BorderLayout(5,5));
+  TransparentPanel topPanel=new TransparentPanel(new BorderLayout());
+  topPanel.add(new JLabel("<html><body><b>" + R.getI18NString("service.gui.CERT_INFO_CHAIN") + "</b></body></html>"),BorderLayout.NORTH);
+  DefaultMutableTreeNode top=new DefaultMutableTreeNode();
+  DefaultMutableTreeNode previous=top;
+  for (int i=certificates.length - 1; i >= 0; i--) {
+    Certificate cert=certificates[i];
+    DefaultMutableTreeNode next=new DefaultMutableTreeNode(cert);
+    previous.add(next);
+    previous=next;
+  }
+  JTree tree=new JTree(top);
+  tree.setBorder(new BevelBorder(BevelBorder.LOWERED));
+  tree.setRootVisible(false);
+  tree.setExpandsSelectedPaths(true);
+  tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+  tree.setCellRenderer(new DefaultTreeCellRenderer(){
+    @Override public Component getTreeCellRendererComponent(    JTree tree,    Object value,    boolean sel,    boolean expanded,    boolean leaf,    int row,    boolean hasFocus){
+      JLabel component=(JLabel)super.getTreeCellRendererComponent(tree,value,sel,expanded,leaf,row,hasFocus);
+      if (value instanceof DefaultMutableTreeNode) {
+        Object o=((DefaultMutableTreeNode)value).getUserObject();
+        if (o instanceof X509Certificate) {
+          component.setText(getSimplifiedName((X509Certificate)o));
+        }
+ else {
+          String text=o.toString();
+          if (text.length() > 20) {
+            text=text.substring(0,20);
+          }
+          component.setText(text);
+        }
+      }
+      return component;
+    }
+  }
+);
+  tree.getSelectionModel().addTreeSelectionListener(new TreeSelectionListener(){
+    @Override public void valueChanged(    TreeSelectionEvent e){
+      valueChangedPerformed(e);
+    }
+  }
+);
+  tree.setSelectionPath(new TreePath((((DefaultTreeModel)tree.getModel()).getPathToRoot(previous))));
+  topPanel.add(tree,BorderLayout.CENTER);
+  add(topPanel,BorderLayout.NORTH);
+  Caret caret=infoTextPane.getCaret();
+  if (caret instanceof DefaultCaret) {
+    ((DefaultCaret)caret).setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
+  }
+  infoTextPane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES,true);
+  infoTextPane.setOpaque(false);
+  infoTextPane.setEditable(false);
+  infoTextPane.setContentType("text/html");
+  infoTextPane.setText(toString(certificates[0]));
+  final JScrollPane certScroll=new JScrollPane(infoTextPane);
+  certScroll.setPreferredSize(new Dimension(300,500));
+  add(certScroll,BorderLayout.CENTER);
+}

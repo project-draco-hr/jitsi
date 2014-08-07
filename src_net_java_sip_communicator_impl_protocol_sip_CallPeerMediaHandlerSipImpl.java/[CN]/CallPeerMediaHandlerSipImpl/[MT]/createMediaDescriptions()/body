@@ -16,33 +16,45 @@
         QualityPreset effectiveSendQualityPreset=direction.allowsSending() ? sendQualityPreset : null;
         MediaDescription md=createMediaDescription(proto,getLocallySupportedFormats(dev,effectiveSendQualityPreset,receiveQualityPreset),getTransportManager().getStreamConnector(mediaType),direction,dev.getSupportedExtensions());
         try {
-          if (mediaType.equals(MediaType.VIDEO) && (receiveQualityPreset != null)) {
-            int frameRate=(int)receiveQualityPreset.getFameRate();
-            if (frameRate > 0) {
-              md.setAttribute("framerate",String.valueOf(frameRate));
-            }
+switch (mediaType) {
+case AUDIO:
+            String rtcpxr=md.getAttribute(RTCPExtendedReport.SDP_ATTRIBUTE);
+          if (rtcpxr == null) {
+            md.setAttribute(RTCPExtendedReport.SDP_ATTRIBUTE,RTCPExtendedReport.VoIPMetricsReportBlock.SDP_PARAMETER);
           }
+        break;
+case VIDEO:
+      if (receiveQualityPreset != null) {
+        int frameRate=(int)receiveQualityPreset.getFameRate();
+        if (frameRate > 0) {
+          md.setAttribute("framerate",String.valueOf(frameRate));
         }
- catch (        SdpException e) {
-        }
-        if (DtlsControl.UDP_TLS_RTP_SAVP.equals(proto) || DtlsControl.UDP_TLS_RTP_SAVPF.equals(proto)) {
-          updateMediaDescriptionForDtls(mediaType,md,null);
-        }
- else {
-          updateMediaDescriptionForZrtp(mediaType,md,null);
-          if (SrtpControl.RTP_SAVP.equals(proto) || SrtpControl.RTP_SAVPF.equals(proto)) {
-            updateMediaDescriptionForSDes(mediaType,md,null);
-          }
-          if (SrtpControl.RTP_SAVPF.equals(proto)) {
-            updateMediaDescriptionForDtls(mediaType,md,null);
-          }
-        }
-        mediaDescs.add(md);
       }
-    }
-  }
-  if (mediaDescs.isEmpty()) {
-    ProtocolProviderServiceSipImpl.throwOperationFailedException("We couldn't find any active Audio/Video devices and " + "couldn't create a call",OperationFailedException.GENERAL_ERROR,null,logger);
-  }
-  return mediaDescs;
+    break;
+default :
+  break;
+}
+}
+ catch (SdpException e) {
+}
+if (DtlsControl.UDP_TLS_RTP_SAVP.equals(proto) || DtlsControl.UDP_TLS_RTP_SAVPF.equals(proto)) {
+updateMediaDescriptionForDtls(mediaType,md,null);
+}
+ else {
+updateMediaDescriptionForZrtp(mediaType,md,null);
+if (SrtpControl.RTP_SAVP.equals(proto) || SrtpControl.RTP_SAVPF.equals(proto)) {
+updateMediaDescriptionForSDes(mediaType,md,null);
+}
+if (SrtpControl.RTP_SAVPF.equals(proto)) {
+updateMediaDescriptionForDtls(mediaType,md,null);
+}
+}
+mediaDescs.add(md);
+}
+}
+}
+if (mediaDescs.isEmpty()) {
+ProtocolProviderServiceSipImpl.throwOperationFailedException("We couldn't find any active Audio/Video devices and " + "couldn't create a call",OperationFailedException.GENERAL_ERROR,null,logger);
+}
+return mediaDescs;
 }
