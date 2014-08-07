@@ -1,9 +1,9 @@
 {
-  String contentType=chatMessage.getContentType();
   if (isConsecutiveMessage(chatMessage)) {
-    appendConsecutiveMessage(chatMessage,keyword,contentType);
+    appendConsecutiveMessage(chatMessage,keyword);
     return null;
   }
+  String contentType=chatMessage.getContentType();
   lastMessageTimestamp=chatMessage.getDate();
   String contactName=chatMessage.getContactName();
   String contactDisplayName=chatMessage.getContactDisplayName();
@@ -20,43 +20,45 @@
   lastMessageUID=chatMessage.getMessageUID();
   if (messageType.equals(Chat.INCOMING_MESSAGE)) {
     this.lastIncomingMsgTimestamp=new Date();
-    chatString=ChatHtmlUtils.createIncomingMessageTag(lastMessageUID,contactName,contactDisplayName,getContactAvatar(protocolProvider,contactAddress),date,formatMessage(message,contentType,keyword),contentType,false,isSimpleTheme);
+    chatString=ChatHtmlUtils.createIncomingMessageTag(lastMessageUID,contactName,contactDisplayName,getContactAvatar(protocolProvider,contactAddress),date,formatMessageAsHTML(message,contentType,keyword),ChatHtmlUtils.HTML_CONTENT_TYPE,false,isSimpleTheme);
   }
  else   if (messageType.equals(Chat.OUTGOING_MESSAGE)) {
-    chatString=ChatHtmlUtils.createOutgoingMessageTag(lastMessageUID,contactName,contactDisplayName,getContactAvatar(protocolProvider),date,formatMessage(message,contentType,keyword),contentType,false,isSimpleTheme);
+    chatString=ChatHtmlUtils.createOutgoingMessageTag(lastMessageUID,contactName,contactDisplayName,getContactAvatar(protocolProvider),date,formatMessageAsHTML(message,contentType,keyword),ChatHtmlUtils.HTML_CONTENT_TYPE,false,isSimpleTheme);
   }
  else   if (messageType.equals(Chat.HISTORY_INCOMING_MESSAGE)) {
-    chatString=ChatHtmlUtils.createIncomingMessageTag(lastMessageUID,contactName,contactDisplayName,getContactAvatar(protocolProvider,contactAddress),date,formatMessage(message,contentType,keyword),contentType,true,isSimpleTheme);
+    chatString=ChatHtmlUtils.createIncomingMessageTag(lastMessageUID,contactName,contactDisplayName,getContactAvatar(protocolProvider,contactAddress),date,formatMessageAsHTML(message,contentType,keyword),ChatHtmlUtils.HTML_CONTENT_TYPE,true,isSimpleTheme);
   }
  else   if (messageType.equals(Chat.HISTORY_OUTGOING_MESSAGE)) {
-    chatString=ChatHtmlUtils.createOutgoingMessageTag(lastMessageUID,contactName,contactDisplayName,getContactAvatar(protocolProvider),date,formatMessage(message,contentType,keyword),contentType,true,isSimpleTheme);
+    chatString=ChatHtmlUtils.createOutgoingMessageTag(lastMessageUID,contactName,contactDisplayName,getContactAvatar(protocolProvider),date,formatMessageAsHTML(message,contentType,keyword),ChatHtmlUtils.HTML_CONTENT_TYPE,true,isSimpleTheme);
   }
  else   if (messageType.equals(Chat.SMS_MESSAGE)) {
-    chatString=ChatHtmlUtils.createIncomingMessageTag(lastMessageUID,contactName,contactDisplayName,getContactAvatar(protocolProvider,contactAddress),date,ConfigurationUtils.isSmsNotifyTextDisabled() ? formatMessage(message,contentType,keyword) : formatMessage("SMS: " + message,contentType,keyword),contentType,false,isSimpleTheme);
+    chatString=ChatHtmlUtils.createIncomingMessageTag(lastMessageUID,contactName,contactDisplayName,getContactAvatar(protocolProvider,contactAddress),date,ConfigurationUtils.isSmsNotifyTextDisabled() ? formatMessageAsHTML(message,contentType,keyword) : formatMessageAsHTML("SMS: " + message,contentType,keyword),ChatHtmlUtils.HTML_CONTENT_TYPE,false,isSimpleTheme);
   }
  else   if (messageType.equals(Chat.STATUS_MESSAGE)) {
     chatString="<h4 id=\"statusMessage\" date=\"" + date + "\">";
     endHeaderTag="</h4>";
-    chatString+=GuiUtils.formatTime(date) + " " + contactName+ " "+ message+ endHeaderTag;
+    chatString+=GuiUtils.formatTime(date) + " " + processLinksAndHTMLChars(contactName,true,ChatHtmlUtils.TEXT_CONTENT_TYPE)+ " "+ formatMessageAsHTML(message,contentType,keyword)+ endHeaderTag;
   }
  else   if (messageType.equals(Chat.ACTION_MESSAGE)) {
     chatString="<p id=\"actionMessage\" date=\"" + date + "\">";
     endHeaderTag="</p>";
-    chatString+="* " + GuiUtils.formatTime(date) + " "+ contactName+ " "+ message+ endHeaderTag;
+    chatString+="* " + GuiUtils.formatTime(date) + " "+ processLinksAndHTMLChars(contactName,true,ChatHtmlUtils.TEXT_CONTENT_TYPE)+ " "+ formatMessageAsHTML(message,contentType,keyword)+ endHeaderTag;
   }
  else   if (messageType.equals(Chat.SYSTEM_MESSAGE)) {
     String startSystemDivTag="<DIV id=\"systemMessage\" style=\"color:#627EB7;\">";
     String endDivTag="</DIV>";
-    String startPlainTextTag=ChatHtmlUtils.createStartPlainTextTag(contentType);
-    String endPlainTextTag=ChatHtmlUtils.createEndPlainTextTag(contentType);
-    chatString+=startSystemDivTag + startPlainTextTag + formatMessage(message,contentType,keyword)+ endPlainTextTag+ endDivTag;
+    chatString+=startSystemDivTag + formatMessageAsHTML(message,contentType,keyword) + endDivTag;
   }
  else   if (messageType.equals(Chat.ERROR_MESSAGE)) {
     chatString="<h6 id=\"" + ChatHtmlUtils.MESSAGE_HEADER_ID + "\" date=\""+ date+ "\">";
     endHeaderTag="</h6>";
     String errorIcon="<IMG SRC='" + ImageLoader.getImageUri(ImageLoader.EXCLAMATION_MARK) + "' </IMG>";
-    if (messageTitle != null)     chatString+=errorIcon + messageTitle + endHeaderTag+ "<h5>"+ message+ "</h5>";
- else     chatString+=endHeaderTag + "<h5>" + errorIcon+ " "+ message+ "</h5>";
+    if (messageTitle != null) {
+      chatString+=errorIcon + processLinksAndHTMLChars(messageTitle,true,ChatHtmlUtils.TEXT_CONTENT_TYPE) + endHeaderTag+ "<h5>"+ formatMessageAsHTML(message,contentType,keyword)+ "</h5>";
+    }
+ else {
+      chatString+=endHeaderTag + "<h5>" + errorIcon+ " "+ formatMessageAsHTML(message,contentType,keyword)+ "</h5>";
+    }
   }
   return chatString;
 }

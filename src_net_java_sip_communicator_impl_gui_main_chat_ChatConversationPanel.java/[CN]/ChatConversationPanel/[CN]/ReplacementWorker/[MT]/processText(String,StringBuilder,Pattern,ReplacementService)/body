@@ -6,29 +6,27 @@
   boolean isEnabledForSource=cfg.getBoolean(ReplacementProperty.getPropertyName(rService.getSourceName()),true);
   int startPos=0;
   while (m.find()) {
-    msgBuff.append(plainText.substring(startPos,m.start()));
+    msgBuff.append(StringEscapeUtils.escapeHtml4(plainText.substring(startPos,m.start())));
     startPos=m.end();
     String group=m.group();
     String temp=rService.getReplacement(group);
     String group0=m.group(0);
     if (!temp.equals(group0) || isDirectImage) {
       if (isSmiley) {
-        if (cfg.getBoolean(ReplacementProperty.getPropertyName("SMILEY"),true) && !skipSmileys) {
-          msgBuff.append(ChatHtmlUtils.createEndPlainTextTag(contentType));
+        if (cfg.getBoolean(ReplacementProperty.getPropertyName("SMILEY"),true)) {
           msgBuff.append("<IMG SRC=\"");
           msgBuff.append(temp);
           msgBuff.append("\" BORDER=\"0\" ALT=\"");
           msgBuff.append(group0);
           msgBuff.append("\"></IMG>");
-          msgBuff.append(ChatHtmlUtils.createStartPlainTextTag(contentType));
         }
  else {
-          msgBuff.append(group);
+          msgBuff.append(StringEscapeUtils.escapeHtml4(group));
         }
       }
  else       if (isProposalEnabled) {
-        msgBuff.append(group);
-        msgBuff.append("</A> <A href=\"jitsi://" + showPreview.getClass().getName() + "/SHOWPREVIEW?"+ messageID+ "#"+ linkCounter+ "\">"+ GuiActivator.getResources().getI18NString("service.gui.SHOW_PREVIEW"));
+        msgBuff.append(StringEscapeUtils.escapeHtml4(group));
+        msgBuff.append("</A> <A href=\"jitsi://" + showPreview.getClass().getName() + "/SHOWPREVIEW?"+ messageID+ "#"+ linkCounter+ "\">"+ StringEscapeUtils.escapeHtml4(GuiActivator.getResources().getI18NString("service.gui.SHOW_PREVIEW")));
         showPreview.getMsgIDandPositionToLink().put(messageID + "#" + linkCounter++,group);
         showPreview.getLinkToReplacement().put(group,temp);
       }
@@ -43,7 +41,7 @@
             msgBuff.append("\"></IMG>");
           }
  else {
-            msgBuff.append(group);
+            msgBuff.append(StringEscapeUtils.escapeHtml4(group));
           }
         }
  else {
@@ -55,12 +53,12 @@
         }
       }
  else {
-        msgBuff.append(group);
+        msgBuff.append(StringEscapeUtils.escapeHtml4(group));
       }
     }
  else {
-      msgBuff.append(group);
+      msgBuff.append(StringEscapeUtils.escapeHtml4(group));
     }
   }
-  msgBuff.append(plainText.substring(startPos));
+  msgBuff.append(StringEscapeUtils.escapeHtml4(plainText.substring(startPos)));
 }

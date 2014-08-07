@@ -2,13 +2,22 @@
   if (!SwingUtilities.isEventDispatchThread()) {
     SwingUtilities.invokeLater(new Runnable(){
       public void run(){
-        appendMessageToEnd(message,contentType);
+        appendMessageToEnd(original,contentType);
       }
     }
 );
     return;
   }
-  if (message == null)   return;
+  if (original == null) {
+    return;
+  }
+  final String message;
+  if (ChatHtmlUtils.HTML_CONTENT_TYPE.equalsIgnoreCase(contentType)) {
+    message=original;
+  }
+ else {
+    message=StringEscapeUtils.escapeHtml4(original);
+  }
 synchronized (scrollToBottomRunnable) {
     Element root=document.getDefaultRootElement();
     try {
@@ -23,5 +32,7 @@ catch (    IOException e) {
     }
   }
   String lastElemContent=getElementContent(lastMessageUID,message);
-  if (lastElemContent != null)   finishMessageAdd(getElementContent(lastMessageUID,message),contentType);
+  if (lastElemContent != null) {
+    finishMessageAdd(lastElemContent);
+  }
 }

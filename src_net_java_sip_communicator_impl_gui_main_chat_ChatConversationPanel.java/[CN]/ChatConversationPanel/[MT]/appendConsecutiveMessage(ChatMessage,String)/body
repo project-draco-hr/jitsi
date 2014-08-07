@@ -4,7 +4,7 @@
   if (!SwingUtilities.isEventDispatchThread()) {
     SwingUtilities.invokeLater(new Runnable(){
       public void run(){
-        appendConsecutiveMessage(chatMessage,keyword,contentType);
+        appendConsecutiveMessage(chatMessage,keyword);
       }
     }
 );
@@ -13,7 +13,7 @@
   Element lastMsgElement=document.getElement(ChatHtmlUtils.MESSAGE_TEXT_ID + previousMessageUID);
   String contactAddress=(String)lastMsgElement.getAttributes().getAttribute(Attribute.NAME);
   boolean isHistory=(chatMessage.getMessageType().equals(Chat.HISTORY_INCOMING_MESSAGE) || chatMessage.getMessageType().equals(Chat.HISTORY_OUTGOING_MESSAGE)) ? true : false;
-  String newMessage=ChatHtmlUtils.createMessageTag(chatMessage.getMessageUID(),contactAddress,formatMessage(chatMessage.getMessage(),contentType,keyword),contentType,chatMessage.getDate(),false,isHistory,isSimpleTheme);
+  String newMessage=ChatHtmlUtils.createMessageTag(chatMessage.getMessageUID(),contactAddress,formatMessageAsHTML(chatMessage.getMessage(),chatMessage.getContentType(),keyword),ChatHtmlUtils.HTML_CONTENT_TYPE,chatMessage.getDate(),false,isHistory,isSimpleTheme);
 synchronized (scrollToBottomRunnable) {
     try {
       Element parentElement=lastMsgElement.getParentElement();
@@ -27,5 +27,5 @@ catch (    IOException ex) {
       logger.error("Could not replace chat message",ex);
     }
   }
-  finishMessageAdd(newMessage,contentType);
+  finishMessageAdd(newMessage);
 }

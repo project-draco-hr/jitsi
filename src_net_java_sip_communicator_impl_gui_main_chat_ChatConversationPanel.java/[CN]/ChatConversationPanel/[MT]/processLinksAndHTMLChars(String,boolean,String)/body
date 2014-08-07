@@ -3,24 +3,32 @@
   StringBuffer msgBuffer=new StringBuffer();
   int prevEnd=0;
   while (m.find()) {
-    String fromPrevEndToStart=message.substring(prevEnd,m.start());
+    final String rawMessage=message.substring(prevEnd,m.start());
+    final String fromPrevEndToStart;
     if (processHTMLChars) {
-      fromPrevEndToStart=GuiUtils.escapeHTMLChars(fromPrevEndToStart);
+      fromPrevEndToStart=StringEscapeUtils.escapeHtml4(rawMessage);
+    }
+ else {
+      fromPrevEndToStart=rawMessage;
     }
     msgBuffer.append(fromPrevEndToStart);
     prevEnd=m.end();
     String url=m.group().trim();
-    msgBuffer.append(ChatHtmlUtils.createEndPlainTextTag(contentType));
     msgBuffer.append("<A href=\"");
     if (url.startsWith("www"))     msgBuffer.append("http://");
     msgBuffer.append(url);
     msgBuffer.append("\">");
-    msgBuffer.append(url);
+    msgBuffer.append(StringEscapeUtils.escapeHtml4(url));
     msgBuffer.append("</A>");
-    msgBuffer.append(ChatHtmlUtils.createStartPlainTextTag(contentType));
   }
-  String fromPrevEndToEnd=message.substring(prevEnd);
-  if (processHTMLChars)   fromPrevEndToEnd=GuiUtils.escapeHTMLChars(fromPrevEndToEnd);
+  final String rawMessage=message.substring(prevEnd);
+  final String fromPrevEndToEnd;
+  if (processHTMLChars) {
+    fromPrevEndToEnd=StringEscapeUtils.escapeHtml4(rawMessage);
+  }
+ else {
+    fromPrevEndToEnd=rawMessage;
+  }
   msgBuffer.append(fromPrevEndToEnd);
   return msgBuffer.toString();
 }
