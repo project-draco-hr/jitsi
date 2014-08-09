@@ -20,21 +20,11 @@ synchronized (storedAccountsAreLoaded) {
     showErrorMessage("You need to configure at least one SIP account \n" + "to be able to call " + uri,null);
     return;
   }
-  if (uri != null)   uri=uri.replace("sip://","sip:");
-  OperationSetBasicTelephony<?> telephonyOpSet=provider.getOperationSet(OperationSetBasicTelephony.class);
-  try {
-    telephonyOpSet.createCall(uri);
+  if (provider.getRegistrationState() == RegistrationState.REGISTERED) {
+    handleUri(uri,provider);
   }
- catch (  OperationFailedException exc) {
-    boolean handled=false;
-    if (exc.getErrorCode() == OperationFailedException.PROVIDER_NOT_REGISTERED) {
-      handled=promptForRegistration(uri,provider);
-    }
-    if (!handled) {
-      showErrorMessage("Failed to create a call to " + uri,exc);
-    }
-  }
-catch (  ParseException exc) {
-    showErrorMessage(uri + " does not appear to be a valid SIP address",exc);
+ else {
+    DelayedHandler task=new DelayedHandler(uri,provider);
+    task.schedule();
   }
 }
