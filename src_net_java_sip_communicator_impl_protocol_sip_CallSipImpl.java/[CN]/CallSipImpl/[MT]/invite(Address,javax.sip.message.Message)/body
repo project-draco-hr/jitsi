@@ -1,7 +1,28 @@
 {
   Request invite=messageFactory.createInviteRequest(calleeAddress,cause);
+  String forceTransport=null;
+  javax.sip.address.URI calleeURI=calleeAddress.getURI();
+  if (calleeURI.getScheme().toLowerCase().equals("sips")) {
+    forceTransport="TLS";
+    logger.trace("detected SIPS URI, must use TLS");
+  }
+ else   if (calleeURI.isSipURI() && calleeURI instanceof SipURI) {
+    SipURI _calleeURI=(SipURI)calleeURI;
+    forceTransport=_calleeURI.getTransportParam();
+    if (forceTransport != null) {
+      logger.trace("got transport parameter: " + forceTransport);
+    }
+  }
   ClientTransaction inviteTransaction=null;
-  SipProvider jainSipProvider=getProtocolProvider().getDefaultJainSipProvider();
+  SipProvider jainSipProvider;
+  if (forceTransport != null) {
+    logger.trace("trying to use transport: " + forceTransport);
+    jainSipProvider=getProtocolProvider().getJainSipProvider(forceTransport);
+  }
+ else {
+    logger.trace("trying default transport");
+    jainSipProvider=getProtocolProvider().getDefaultJainSipProvider();
+  }
   try {
     inviteTransaction=jainSipProvider.getNewClientTransaction(invite);
   }
