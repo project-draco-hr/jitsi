@@ -1,0 +1,17 @@
+{
+  final String newSubject="My test subject!";
+  this.stackMock.setSubject(EasyMock.anyObject(ChatRoomIrcImpl.class),EasyMock.eq(newSubject));
+  EasyMock.expectLastCall().andThrow(new RuntimeException("Some error",new IOException("Real cause")));
+  EasyMock.expect(this.providerMock.getIrcStack()).andReturn(this.stackMock);
+  this.stackMock.setSubject(EasyMock.anyObject(ChatRoomIrcImpl.class),EasyMock.eq(newSubject));
+  EasyMock.expectLastCall();
+  EasyMock.replay(this.providerMock,this.stackMock);
+  ChatRoomIrcImpl room=new ChatRoomIrcImpl("#my-cool-channel",this.providerMock);
+  Assert.assertEquals("",room.getSubject());
+  try {
+    room.setSubject(newSubject);
+    Assert.fail("Should have failed with OFE.");
+  }
+ catch (  OperationFailedException e) {
+  }
+}
