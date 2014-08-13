@@ -1,11 +1,21 @@
 {
-  BundleContext context=IrcActivator.bundleContext;
-  if (context == null)   throw new NullPointerException("The specified BundleContext was null");
-  if (userIDStr == null)   throw new NullPointerException("The specified AccountID was null");
-  if (accountProperties == null)   throw new NullPointerException("The specified property map was null");
+  BundleContext context=IrcActivator.getBundleContext();
+  if (context == null) {
+    throw new NullPointerException("The specified BundleContext was null");
+  }
+  if (userIDStr == null) {
+    throw new NullPointerException("The specified AccountID was null");
+  }
+  if (accountProperties == null) {
+    throw new NullPointerException("The specified property map was null");
+  }
   accountProperties.put(USER_ID,userIDStr);
-  AccountID accountID=new IrcAccountID(userIDStr,accountProperties);
-  if (registeredAccounts.containsKey(accountID))   throw new IllegalStateException("An account for id " + userIDStr + " was already installed!");
+  final String host=accountProperties.get(ProtocolProviderFactory.SERVER_ADDRESS);
+  final String port=accountProperties.get(ProtocolProviderFactory.SERVER_PORT);
+  AccountID accountID=new IrcAccountID(userIDStr,host,port,accountProperties);
+  if (registeredAccounts.containsKey(accountID)) {
+    throw new IllegalStateException("An account for id " + userIDStr + " was already installed!");
+  }
   this.storeAccount(accountID,false);
   accountID=loadAccount(accountProperties);
   return accountID;

@@ -1,0 +1,20 @@
+{
+  if (!isThisChatRoom(msg.getChannelName())) {
+    return;
+  }
+  final IRCUser user=msg.getSource();
+  if (isMe(user)) {
+    leaveChatRoom();
+    return;
+  }
+  final String userNick=msg.getSource().getNick();
+  final ChatRoomMember member=this.chatroom.getChatRoomMember(userNick);
+  if (member != null) {
+    try {
+      this.chatroom.fireMemberPresenceEvent(member,null,ChatRoomMemberPresenceChangeEvent.MEMBER_LEFT,msg.getPartMsg());
+    }
+ catch (    NullPointerException e) {
+      LOGGER.warn("This should not have happened. Please report this " + "as it is a bug.",e);
+    }
+  }
+}

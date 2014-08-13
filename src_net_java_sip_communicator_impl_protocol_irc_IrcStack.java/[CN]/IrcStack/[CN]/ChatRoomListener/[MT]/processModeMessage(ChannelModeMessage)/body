@@ -1,0 +1,30 @@
+{
+  final ChatRoomMemberIrcImpl source=extractChatRoomMember(msg);
+  final ModeParser parser=new ModeParser(msg.getModeStr());
+  for (  ModeEntry mode : parser.getModes()) {
+switch (mode.getMode()) {
+case OWNER:
+case OPERATOR:
+case HALFOP:
+case VOICE:
+      processRoleChange(source,mode);
+    break;
+case LIMIT:
+  processLimitChange(source,mode);
+break;
+case BAN:
+processBanChange(source,mode);
+break;
+case UNKNOWN:
+if (LOGGER.isInfoEnabled()) {
+LOGGER.info("Unknown mode: " + (mode.isAdded() ? "+" : "-") + mode.getParams()[0]+ ". Original mode string: '"+ msg.getModeStr()+ "'");
+}
+break;
+default :
+if (LOGGER.isInfoEnabled()) {
+LOGGER.info("Unsupported mode '" + (mode.isAdded() ? "+" : "-") + mode.getMode()+ "' (from modestring '"+ msg.getModeStr()+ "')");
+}
+break;
+}
+}
+}

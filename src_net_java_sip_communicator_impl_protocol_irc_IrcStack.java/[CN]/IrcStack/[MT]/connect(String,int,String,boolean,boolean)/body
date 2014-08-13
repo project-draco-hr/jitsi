@@ -1,0 +1,23 @@
+{
+  if (isConnected()) {
+    return;
+  }
+  this.joined.clear();
+  final IRCServer server;
+  if (secureConnection) {
+    server=new SecureIRCServer(host,port,password,getCustomSSLContext(host));
+  }
+ else {
+    server=new IRCServer(host,port,password,false);
+  }
+synchronized (this.session) {
+    final IRCApi irc=new IRCApiImpl(true);
+    this.params.setServer(server);
+    this.session.set(irc);
+    irc.addListener(new ServerListener(irc));
+    if (LOGGER.isTraceEnabled()) {
+      irc.addListener(new DebugListener());
+    }
+    connectSynchronized();
+  }
+}

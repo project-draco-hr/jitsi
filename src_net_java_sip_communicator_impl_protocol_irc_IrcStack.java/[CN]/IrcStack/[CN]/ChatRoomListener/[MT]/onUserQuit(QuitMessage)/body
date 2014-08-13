@@ -1,0 +1,15 @@
+{
+  String user=msg.getSource().getNick();
+  if (user == null) {
+    return;
+  }
+  if (user.equals(IrcStack.this.connectionState.getNickname())) {
+    LOGGER.debug("Local user QUIT message received: removing chat " + "room listener.");
+    this.irc.deleteListener(this);
+    return;
+  }
+  final ChatRoomMember member=this.chatroom.getChatRoomMember(user);
+  if (member != null) {
+    this.chatroom.fireMemberPresenceEvent(member,null,ChatRoomMemberPresenceChangeEvent.MEMBER_QUIT,msg.getQuitMsg());
+  }
+}
