@@ -8,7 +8,7 @@ synchronized (storedAccountsAreLoaded) {
       return;
     }
   }
-  ProtocolProviderService provider;
+  final ProtocolProviderService provider;
   try {
     provider=selectHandlingProvider(uri);
   }
@@ -24,7 +24,13 @@ synchronized (storedAccountsAreLoaded) {
     handleUri(uri,provider);
   }
  else {
-    DelayedHandler task=new DelayedHandler(uri,provider);
-    task.schedule();
+    final DelayRegistrationStateChangeListener listener=new DelayRegistrationStateChangeListener(uri,provider);
+    provider.addRegistrationStateChangeListener(listener);
+    new Timer().schedule(new TimerTask(){
+      @Override public void run(){
+        provider.removeRegistrationStateChangeListener(listener);
+      }
+    }
+,2000);
   }
 }
