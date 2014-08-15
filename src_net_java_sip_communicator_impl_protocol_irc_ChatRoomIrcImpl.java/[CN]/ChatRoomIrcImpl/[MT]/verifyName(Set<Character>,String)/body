@@ -1,6 +1,9 @@
 {
+  if (name == null || name.isEmpty() || name.length() > MAXIMUM_LENGTH_OF_CHANNEL_NAME) {
+    throw new IllegalArgumentException("Invalid chat room name.");
+  }
   final char prefix=name.charAt(0);
-  if (channelTypes.contains(prefix)) {
+  if (channelTypes.contains(prefix) || prefix == DEFAULT_CHANNEL_PREFIX) {
     for (    char c : IrcStack.SPECIAL_CHARACTERS) {
       if (name.contains("" + c)) {
         throw new IllegalArgumentException("chat room identifier contains illegal character: " + c);
@@ -9,7 +12,9 @@
     return name;
   }
  else {
-    LOGGER.trace("Automatically added # channel prefix.");
-    return verifyName(channelTypes,"#" + name);
+    if (LOGGER.isTraceEnabled()) {
+      LOGGER.trace("Automatically added " + DEFAULT_CHANNEL_PREFIX + " channel prefix.");
+    }
+    return verifyName(channelTypes,DEFAULT_CHANNEL_PREFIX + name);
   }
 }
