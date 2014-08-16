@@ -52,6 +52,16 @@ MessageIrcImpl message=new MessageIrcImpl("",OperationSetBasicInstantMessaging.H
 final Contact to=IrcStack.this.provider.getPersistentPresence().findOrCreateContactByID(targetNick);
 IrcStack.this.provider.getBasicInstantMessaging().fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.OFFLINE_MESSAGES_NOT_SUPPORTED);
 break;
+case IRC_RPL_UNAWAY:
+final IrcStatusEnum previousUnAway=IrcStack.this.away.get() ? IrcStatusEnum.AWAY : IrcStatusEnum.ONLINE;
+IrcStack.this.away.set(false);
+IrcStack.this.provider.getPersistentPresence().updatePresenceStatus(previousUnAway,IrcStatusEnum.ONLINE);
+break;
+case IRC_RPL_NOWAWAY:
+final IrcStatusEnum previousNowAway=IrcStack.this.away.get() ? IrcStatusEnum.AWAY : IrcStatusEnum.ONLINE;
+IrcStack.this.away.set(true);
+IrcStack.this.provider.getPersistentPresence().updatePresenceStatus(previousNowAway,IrcStatusEnum.AWAY);
+break;
 default :
 if (LOGGER.isTraceEnabled()) {
 LOGGER.trace("This ServerNumericMessage (" + code + ") will not be handled by the ServerListener.");
