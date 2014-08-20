@@ -26,7 +26,7 @@ case XmlPullParser.END_TAG:
             channel=null;
           }
  else           if (ColibriConferenceIQ.SctpConnection.ELEMENT_NAME.equals(name)) {
-            content.addSctpConnection(sctpConnection);
+            if (sctpConnection != null)             content.addSctpConnection(sctpConnection);
             sctpConnection=null;
           }
  else           if (ColibriConferenceIQ.Endpoint.ELEMENT_NAME.equals(name)) {
@@ -112,13 +112,14 @@ case XmlPullParser.START_TAG:
         }
  else         if (ColibriConferenceIQ.SctpConnection.ELEMENT_NAME.equals(name)) {
           String endpoint=parser.getAttributeValue("",ColibriConferenceIQ.SctpConnection.ENDPOINT_ATTR_NAME);
-          if (!StringUtils.isNullOrEmpty(endpoint)) {
-            sctpConnection=new ColibriConferenceIQ.SctpConnection();
+          String connID=parser.getAttributeValue("",ColibriConferenceIQ.ChannelCommon.ID_ATTR_NAME);
+          if (StringUtils.isNullOrEmpty(connID) && StringUtils.isNullOrEmpty(endpoint)) {
+            sctpConnection=null;
+            continue;
           }
- else {
-            throw new RuntimeException("Endpoint is mandatory attribute" + " for SCTP connection");
-          }
-          sctpConnection.setEndpoint(endpoint);
+          sctpConnection=new ColibriConferenceIQ.SctpConnection();
+          if (!StringUtils.isNullOrEmpty(connID))           sctpConnection.setID(connID);
+          if (!StringUtils.isNullOrEmpty(endpoint))           sctpConnection.setEndpoint(endpoint);
           String port=parser.getAttributeValue("",ColibriConferenceIQ.SctpConnection.PORT_ATTR_NAME);
           if (!StringUtils.isNullOrEmpty(port))           sctpConnection.setPort(Integer.parseInt(port));
           String channelBundleId=parser.getAttributeValue("",ColibriConferenceIQ.ChannelCommon.CHANNEL_BUNDLE_ID_ATTR_NAME);
