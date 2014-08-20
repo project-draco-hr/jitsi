@@ -1,0 +1,38 @@
+{
+  List<ComparableEvtObj> duplicates=new ArrayList<ComparableEvtObj>();
+  for (  ComparableEvtObj msgToAdd : contactsToAdd) {
+    if (recentMessages.contains(msgToAdd)) {
+      duplicates.add(msgToAdd);
+      updateRecentMessageToHistory(msgToAdd);
+    }
+  }
+  recentMessages.removeAll(duplicates);
+  boolean changed=recentMessages.addAll(contactsToAdd);
+  if (changed) {
+    Collections.sort(recentMessages);
+    if (recentQuery != null) {
+      for (      ComparableEvtObj obj : duplicates)       recentQuery.updateContact(obj,obj.getEventObject());
+    }
+  }
+  if (!recentMessages.isEmpty())   oldestRecentMessage=recentMessages.get(recentMessages.size() - 1).getTimestamp();
+  List<ComparableEvtObj> removedItems=null;
+  if (recentMessages.size() > numberOfMessages) {
+    removedItems=new ArrayList<ComparableEvtObj>(recentMessages.subList(numberOfMessages,recentMessages.size()));
+    recentMessages.removeAll(removedItems);
+  }
+  if (recentQuery != null) {
+    if (removedItems != null) {
+      for (      ComparableEvtObj msc : removedItems) {
+        if (!contactsToAdd.contains(msc))         recentQuery.fireContactRemoved(msc);
+      }
+    }
+    for (    ComparableEvtObj msc : contactsToAdd) {
+      if ((removedItems == null || !removedItems.contains(msc)) && !duplicates.contains(msc)) {
+        MessageSourceContact newSourceContact=new MessageSourceContact(msc.getEventObject(),MessageSourceService.this);
+        newSourceContact.initDetails(msc.getEventObject());
+        recentQuery.addQueryResult(newSourceContact);
+      }
+    }
+    if (changed)     recentQuery.fireContactChanged(recentMessages.get(recentMessages.size() - 1));
+  }
+}

@@ -1,8 +1,8 @@
 {
   if (recentQuery == null)   return;
-  MessageSourceContact srcContact=null;
+  ComparableEvtObj srcContact=null;
 synchronized (recentMessages) {
-    for (    MessageSourceContact msg : recentMessages) {
+    for (    ComparableEvtObj msg : recentMessages) {
       if (msg.getRoom() != null && msg.getRoom().equals(evt.getChatRoom())) {
         srcContact=msg;
         break;
@@ -12,11 +12,9 @@ synchronized (recentMessages) {
   if (srcContact == null)   return;
   String eventType=evt.getEventType();
   if (LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED.equals(eventType)) {
-    srcContact.setStatus(ChatRoomPresenceStatus.CHAT_ROOM_ONLINE);
-    recentQuery.fireContactChanged(srcContact);
+    recentQuery.updateContactStatus(srcContact,ChatRoomPresenceStatus.CHAT_ROOM_ONLINE);
   }
  else   if ((LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_LEFT.equals(eventType) || LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_KICKED.equals(eventType) || LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_DROPPED.equals(eventType))) {
-    srcContact.setStatus(ChatRoomPresenceStatus.CHAT_ROOM_OFFLINE);
-    recentQuery.fireContactChanged(srcContact);
+    recentQuery.updateContactStatus(srcContact,ChatRoomPresenceStatus.CHAT_ROOM_OFFLINE);
   }
 }
