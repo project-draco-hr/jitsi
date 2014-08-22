@@ -1,15 +1,15 @@
 {
 synchronized (recentMessages) {
-    List<MessageSourceContact> sourceContactsToAdd=getSourceContacts(provider,isStatusChanged);
-    if (sourceContactsToAdd.isEmpty()) {
+    List<ComparableEvtObj> cachedRecentMessages=getCachedRecentMessages(provider,isStatusChanged);
+    if (cachedRecentMessages.isEmpty()) {
       Collection<EventObject> res=messageHistoryService.findRecentMessagesPerContact(numberOfMessages,provider.getAccountID().getAccountUniqueID(),null,isSMSEnabled);
-      List<MessageSourceContact> newMsc=new ArrayList<MessageSourceContact>();
+      List<ComparableEvtObj> newMsc=new ArrayList<ComparableEvtObj>();
       processEventObjects(res,newMsc,isStatusChanged);
       addNewRecentMessages(newMsc);
-      for (      MessageSourceContact msc : newMsc) {
+      for (      ComparableEvtObj msc : newMsc) {
         saveRecentMessageToHistory(msc);
       }
     }
- else     addNewRecentMessages(sourceContactsToAdd);
+ else     addNewRecentMessages(cachedRecentMessages);
   }
 }
