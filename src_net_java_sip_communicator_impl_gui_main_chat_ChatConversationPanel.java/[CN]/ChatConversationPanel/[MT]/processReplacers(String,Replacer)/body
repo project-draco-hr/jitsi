@@ -1,0 +1,35 @@
+{
+  StringBuilder source=new StringBuilder(content);
+  for (  Replacer replacer : replacers) {
+    final StringBuilder target=new StringBuilder();
+    if (replacer.expectsPlainText()) {
+      int startPos=0;
+      final Matcher plainTextInHtmlMatcher=TEXT_TO_REPLACE_PATTERN.matcher(source);
+      while (plainTextInHtmlMatcher.find()) {
+        final String plainTextAsHtml=plainTextInHtmlMatcher.group(1);
+        final int startMatchPosition=plainTextInHtmlMatcher.start(1);
+        final int endMatchPosition=plainTextInHtmlMatcher.end(1);
+        target.append(source.substring(startPos,startMatchPosition));
+        final String plaintext=StringEscapeUtils.unescapeHtml4(plainTextAsHtml);
+        try {
+          replacer.replace(target,plaintext);
+        }
+ catch (        RuntimeException e) {
+          logger.error("An error occurred in replacer: " + replacer.getClass().getName(),e);
+        }
+        startPos=endMatchPosition;
+      }
+      target.append(source.substring(startPos));
+    }
+ else {
+      try {
+        replacer.replace(target,source.toString());
+      }
+ catch (      RuntimeException e) {
+        logger.error("An error occurred in replacer: " + replacer.getClass().getName(),e);
+      }
+    }
+    source=target;
+  }
+  return source.toString();
+}

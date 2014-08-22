@@ -1,35 +1,14 @@
 {
-  if (original == null)   return "";
-  String message=original;
-  if (!ChatHtmlUtils.HTML_CONTENT_TYPE.equals(contentType)) {
-    boolean processHTMLChars;
-    if ((keyword != null) && (keyword.length() != 0)) {
-      String messageWithProcessedKeyword=processKeyword(message,contentType,keyword);
-      processHTMLChars=(messageWithProcessedKeyword == message);
-      message=messageWithProcessedKeyword;
-    }
- else     processHTMLChars=true;
-    message=processNewLines(processLinksAndHTMLChars(message,processHTMLChars,contentType),contentType);
+  if (original == null) {
+    return "";
+  }
+  String source;
+  if (ChatHtmlUtils.HTML_CONTENT_TYPE.equals(contentType)) {
+    source=original;
   }
  else {
-    int startPos=0;
-    final StringBuilder buff=new StringBuilder();
-    final Matcher plainTextInHtmlMatcher=TEXT_TO_REPLACE_PATTERN.matcher(message);
-    while (plainTextInHtmlMatcher.find()) {
-      final String plainTextAsHtml=plainTextInHtmlMatcher.group(1);
-      final int startMatchPosition=plainTextInHtmlMatcher.start(1);
-      final int endMatchPosition=plainTextInHtmlMatcher.end(1);
-      if (!StringUtils.isNullOrEmpty(plainTextAsHtml)) {
-        buff.append(message.substring(startPos,startMatchPosition));
-        final String plaintext=StringEscapeUtils.unescapeHtml4(plainTextAsHtml);
-        buff.append(processLinksAndHTMLChars(plaintext,true,ChatHtmlUtils.TEXT_CONTENT_TYPE));
-        startPos=endMatchPosition;
-      }
-    }
-    buff.append(message.substring(startPos));
-    message=buff.toString();
-    if ((keyword != null) && (keyword.length() != 0))     message=processKeyword(message,contentType,keyword);
-    message=processImgTags(processBrTags(message));
+    source=StringEscapeUtils.escapeHtml4(original);
   }
-  return message;
+  final Replacer[] replacers=new Replacer[]{new NewlineReplacer(),new URLReplacer(),new KeywordReplacer(keyword),new BrTagReplacer(),new ImgTagReplacer()};
+  return processReplacers(source,replacers);
 }
