@@ -8,7 +8,7 @@ synchronized (storedAccountsAreLoaded) {
       return;
     }
   }
-  ProtocolProviderService provider;
+  final ProtocolProviderService provider;
   try {
     provider=selectHandlingProvider(uri);
   }
@@ -20,21 +20,19 @@ synchronized (storedAccountsAreLoaded) {
     showErrorMessage("You need to configure at least one SIP account \n" + "to be able to call " + uri,null);
     return;
   }
-  if (uri != null)   uri=uri.replace("sip://","sip:");
-  OperationSetBasicTelephony<?> telephonyOpSet=provider.getOperationSet(OperationSetBasicTelephony.class);
-  try {
-    telephonyOpSet.createCall(uri);
+  if (provider.getRegistrationState() == RegistrationState.REGISTERED) {
+    handleUri(uri,provider);
   }
- catch (  OperationFailedException exc) {
-    boolean handled=false;
-    if (exc.getErrorCode() == OperationFailedException.PROVIDER_NOT_REGISTERED) {
-      handled=promptForRegistration(uri,provider);
+ else {
+    long initialRegistrationTimeout=SipActivator.getConfigurationService().getLong(INITIAL_REGISTRATION_TIMEOUT_PROP,DEFAULT_INITIAL_REGISTRATION_TIMEOUT);
+    final DelayRegistrationStateChangeListener listener=new DelayRegistrationStateChangeListener(uri,provider);
+    provider.addRegistrationStateChangeListener(listener);
+    new Timer().schedule(new TimerTask(){
+      @Override public void run(){
+        provider.removeRegistrationStateChangeListener(listener);
+        handleUri(uri,provider);
+      }
     }
-    if (!handled) {
-      showErrorMessage("Failed to create a call to " + uri,exc);
-    }
-  }
-catch (  ParseException exc) {
-    showErrorMessage(uri + " does not appear to be a valid SIP address",exc);
+,initialRegistrationTimeout);
   }
 }

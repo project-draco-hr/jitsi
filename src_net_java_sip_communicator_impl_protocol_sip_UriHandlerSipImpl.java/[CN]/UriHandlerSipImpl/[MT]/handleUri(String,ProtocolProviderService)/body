@@ -1,0 +1,19 @@
+{
+  if (uri != null)   uri=uri.replace("sip://","sip:");
+  OperationSetBasicTelephony<?> telephonyOpSet=provider.getOperationSet(OperationSetBasicTelephony.class);
+  try {
+    telephonyOpSet.createCall(uri);
+  }
+ catch (  OperationFailedException exc) {
+    boolean handled=false;
+    if (exc.getErrorCode() == OperationFailedException.PROVIDER_NOT_REGISTERED) {
+      handled=promptForRegistration(uri,provider);
+    }
+    if (!handled) {
+      showErrorMessage("Failed to create a call to " + uri,exc);
+    }
+  }
+catch (  ParseException exc) {
+    showErrorMessage(uri + " does not appear to be a valid SIP address",exc);
+  }
+}
