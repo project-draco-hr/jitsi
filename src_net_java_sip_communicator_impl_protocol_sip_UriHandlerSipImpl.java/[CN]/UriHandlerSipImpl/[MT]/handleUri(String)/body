@@ -24,13 +24,15 @@ synchronized (storedAccountsAreLoaded) {
     handleUri(uri,provider);
   }
  else {
+    long initialRegistrationTimeout=SipActivator.getConfigurationService().getLong(INITIAL_REGISTRATION_TIMEOUT_PROP,DEFAULT_INITIAL_REGISTRATION_TIMEOUT);
     final DelayRegistrationStateChangeListener listener=new DelayRegistrationStateChangeListener(uri,provider);
     provider.addRegistrationStateChangeListener(listener);
     new Timer().schedule(new TimerTask(){
       @Override public void run(){
         provider.removeRegistrationStateChangeListener(listener);
+        handleUri(uri,provider);
       }
     }
-,2000);
+,initialRegistrationTimeout);
   }
 }
