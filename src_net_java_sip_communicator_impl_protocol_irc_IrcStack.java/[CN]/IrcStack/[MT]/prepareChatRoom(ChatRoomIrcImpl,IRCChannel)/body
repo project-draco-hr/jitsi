@@ -1,0 +1,20 @@
+{
+  final IRCTopic topic=channel.getTopic();
+  chatRoom.updateSubject(topic.getValue());
+  for (  IRCUser user : channel.getUsers()) {
+    ChatRoomMemberIrcImpl member=new ChatRoomMemberIrcImpl(this.provider,chatRoom,user.getNick(),ChatRoomMemberRole.SILENT_MEMBER);
+    ChatRoomMemberRole role;
+    for (    IRCUserStatus status : channel.getStatusesForUser(user)) {
+      role=convertMemberMode(status.getChanModeType().charValue());
+      member.addRole(role);
+    }
+    chatRoom.addChatRoomMember(member.getContactAddress(),member);
+    if (this.getNick().equals(user.getNick())) {
+      chatRoom.setLocalUser(member);
+      if (member.getRole() != ChatRoomMemberRole.SILENT_MEMBER) {
+        ChatRoomLocalUserRoleChangeEvent event=new ChatRoomLocalUserRoleChangeEvent(chatRoom,ChatRoomMemberRole.SILENT_MEMBER,member.getRole(),true);
+        chatRoom.fireLocalUserRoleChangedEvent(event);
+      }
+    }
+  }
+}

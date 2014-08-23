@@ -1,22 +1,23 @@
 {
+  List<ComparableEvtObj> toRemove=null;
 synchronized (recentMessages) {
-    List<MessageSourceContact> toRemove=new ArrayList<MessageSourceContact>();
+    toRemove=new ArrayList<ComparableEvtObj>();
     Iterator<Contact> iter=contact.getContacts();
     while (iter.hasNext()) {
       Contact item=iter.next();
       String id=item.getAddress();
       ProtocolProviderService provider=item.getProtocolProvider();
-      for (      MessageSourceContact msc : recentMessages) {
+      for (      ComparableEvtObj msc : recentMessages) {
         if (msc.getProtocolProviderService().equals(provider) && msc.getContactAddress().equals(id)) {
           toRemove.add(msc);
         }
       }
     }
     recentMessages.removeAll(toRemove);
-    if (recentQuery != null) {
-      for (      MessageSourceContact msc : toRemove) {
-        recentQuery.fireContactRemoved(msc);
-      }
+  }
+  if (recentQuery != null) {
+    for (    ComparableEvtObj msc : toRemove) {
+      recentQuery.fireContactRemoved(msc);
     }
   }
 }

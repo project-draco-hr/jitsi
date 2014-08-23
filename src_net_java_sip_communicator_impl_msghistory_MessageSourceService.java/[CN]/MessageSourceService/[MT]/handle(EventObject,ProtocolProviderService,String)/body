@@ -1,7 +1,7 @@
 {
 synchronized (recentMessages) {
-    MessageSourceContact existingMsc=null;
-    for (    MessageSourceContact msc : recentMessages) {
+    ComparableEvtObj existingMsc=null;
+    for (    ComparableEvtObj msc : recentMessages) {
       if (msc.getProtocolProviderService().equals(provider) && msc.getContactAddress().equals(id)) {
         msc.update(obj);
         updateRecentMessageToHistory(msc);
@@ -16,21 +16,22 @@ synchronized (recentMessages) {
     }
     MessageSourceContact newSourceContact=new MessageSourceContact(obj,MessageSourceService.this);
     newSourceContact.initDetails(obj);
-    recentMessages.add(newSourceContact);
+    ComparableEvtObj newMsg=new ComparableEvtObj(obj);
+    recentMessages.add(newMsg);
     Collections.sort(recentMessages);
     oldestRecentMessage=recentMessages.get(recentMessages.size() - 1).getTimestamp();
-    List<MessageSourceContact> removedItems=null;
+    List<ComparableEvtObj> removedItems=null;
     if (recentMessages.size() > numberOfMessages) {
-      removedItems=new ArrayList<MessageSourceContact>(recentMessages.subList(numberOfMessages,recentMessages.size()));
+      removedItems=new ArrayList<ComparableEvtObj>(recentMessages.subList(numberOfMessages,recentMessages.size()));
       recentMessages.removeAll(removedItems);
     }
-    saveRecentMessageToHistory(newSourceContact);
+    saveRecentMessageToHistory(newMsg);
     if (recentQuery == null)     return;
     if (removedItems != null) {
-      for (      MessageSourceContact msc : removedItems) {
+      for (      ComparableEvtObj msc : removedItems) {
         recentQuery.fireContactRemoved(msc);
       }
     }
-    recentQuery.fireContactReceived(newSourceContact);
+    recentQuery.addQueryResult(newSourceContact);
   }
 }

@@ -1,0 +1,11 @@
+{
+  final String user=msg.getSource().getNick();
+  final MessageIrcImpl message=MessageIrcImpl.newMessageFromIRC(msg.getText());
+  final Contact from=IrcStack.this.provider.getPersistentPresence().findOrCreateContactByID(user);
+  try {
+    IrcStack.this.provider.getBasicInstantMessaging().fireMessageReceived(message,from);
+  }
+ catch (  RuntimeException e) {
+    LOGGER.error("Error occurred while delivering private message from user" + " '" + user + "': "+ msg.getText(),e);
+  }
+}

@@ -1,0 +1,67 @@
+{
+  String namespace=parser.getNamespace();
+  if (!NAMESPACE.equals(namespace)) {
+    return null;
+  }
+  String rootElement=parser.getName();
+  RayoIq iq;
+  DialIq dial;
+  RefIq ref;
+  if (DialIq.ELEMENT_NAME.equals(rootElement)) {
+    iq=dial=new DialIq();
+    String src=parser.getAttributeValue("",DialIq.SRC_ATTR_NAME);
+    String dst=parser.getAttributeValue("",DialIq.DST_ATTR_NAME);
+    if (StringUtils.isNullOrEmpty(dst))     return null;
+    dial.setSource(src);
+    dial.setDestination(dst);
+  }
+ else   if (RefIq.ELEMENT_NAME.equals(rootElement)) {
+    iq=ref=new RefIq();
+    String uri=parser.getAttributeValue("",RefIq.URI_ATTR_NAME);
+    if (StringUtils.isNullOrEmpty(uri))     return null;
+    ref.setUri(uri);
+  }
+ else   if (HangUp.ELEMENT_NAME.equals(rootElement)) {
+    iq=new HangUp();
+  }
+ else {
+    return null;
+  }
+  boolean done=false;
+  HeaderExtension header=null;
+  while (!done) {
+switch (parser.next()) {
+case XmlPullParser.END_TAG:
+{
+        String name=parser.getName();
+        if (rootElement.equals(name)) {
+          done=true;
+        }
+ else         if (HeaderExtension.ELEMENT_NAME.equals(name)) {
+          if (header != null) {
+            iq.addExtension(header);
+            header=null;
+          }
+        }
+        break;
+      }
+case XmlPullParser.START_TAG:
+{
+      String name=parser.getName();
+      if (HeaderExtension.ELEMENT_NAME.equals(name)) {
+        header=new HeaderExtension();
+        String nameAttr=parser.getAttributeValue("",HeaderExtension.NAME_ATTR_NAME);
+        header.setName(nameAttr);
+        String valueAttr=parser.getAttributeValue("",HeaderExtension.VALUE_ATTR_NAME);
+        header.setValue(valueAttr);
+      }
+      break;
+    }
+case XmlPullParser.TEXT:
+{
+    break;
+  }
+}
+}
+return iq;
+}

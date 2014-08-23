@@ -5,14 +5,15 @@
   String id=getID();
   if (id != null)   xml.append(' ').append(ID_ATTR_NAME).append("='").append(id).append('\'');
   List<Content> contents=getContents();
-  int childrenCount=contents.size();
-  if (recording != null)   childrenCount++;
-  if (childrenCount == 0) {
+  List<ChannelBundle> channelBundles=getChannelBundles();
+  boolean hasChildren=(recording != null) || (rtcpTerminationStrategy != null) || (contents.size() > 0)|| (channelBundles.size() > 0);
+  if (!hasChildren) {
     xml.append(" />");
   }
  else {
     xml.append('>');
     for (    Content content : contents)     content.toXML(xml);
+    for (    ChannelBundle channelBundle : channelBundles)     channelBundle.toXML(xml);
     if (recording != null)     recording.toXML(xml);
     if (rtcpTerminationStrategy != null)     rtcpTerminationStrategy.toXML(xml);
     xml.append("</").append(ELEMENT_NAME).append('>');

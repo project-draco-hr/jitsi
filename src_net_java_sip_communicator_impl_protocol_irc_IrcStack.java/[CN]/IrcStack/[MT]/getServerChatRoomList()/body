@@ -1,3 +1,36 @@
 {
-  return serverChatRoomList;
+  LOGGER.trace("Start retrieve server chat room list.");
+  if (!isConnected()) {
+    throw new IllegalStateException("Not connected to an IRC server.");
+  }
+  final IRCApi irc=this.session.get();
+synchronized (this.channellist) {
+    List<String> list=this.channellist.get(CHAT_ROOM_LIST_CACHE_EXPIRATION);
+    if (list == null) {
+      LOGGER.trace("Chat room list null or outdated. Start retrieving " + "new chat room list.");
+      Result<List<String>,Exception> listSignal=new Result<List<String>,Exception>(new LinkedList<String>());
+synchronized (listSignal) {
+        try {
+          irc.addListener(new ChannelListListener(irc,listSignal));
+          irc.rawMessage("LIST");
+          while (!listSignal.isDone()) {
+            LOGGER.trace("Waiting for list ...");
+            listSignal.wait();
+          }
+          LOGGER.trace("Done waiting for list.");
+        }
+ catch (        InterruptedException e) {
+          LOGGER.warn("INTERRUPTED while waiting for list.",e);
+        }
+      }
+      list=listSignal.getValue();
+      this.channellist.set(list);
+      LOGGER.trace("Finished retrieving server chat room list.");
+      createCleanUpJob(this.channellist);
+    }
+ else {
+      LOGGER.trace("Using cached list of server chat rooms.");
+    }
+    return Collections.unmodifiableList(list);
+  }
 }

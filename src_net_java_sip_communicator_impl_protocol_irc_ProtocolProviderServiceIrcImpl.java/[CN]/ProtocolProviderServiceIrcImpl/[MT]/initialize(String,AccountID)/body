@@ -1,10 +1,16 @@
 {
 synchronized (initializationLock) {
     this.accountID=accountID;
+    addSupportedOperationSet(OperationSetInstantMessageTransform.class,new OperationSetInstantMessageTransformImpl());
     multiUserChat=new OperationSetMultiUserChatIrcImpl(this);
     addSupportedOperationSet(OperationSetMultiUserChat.class,multiUserChat);
-    userID=getAccountID().getUserID();
-    ircStack=new IrcStack(this,userID,userID,"SIP Communicator 1.0","");
+    this.instantMessaging=new OperationSetBasicInstantMessagingIrcImpl(this);
+    addSupportedOperationSet(OperationSetBasicInstantMessaging.class,this.instantMessaging);
+    persistentPresence=new OperationSetPersistentPresenceIrcImpl(this);
+    addSupportedOperationSet(OperationSetPersistentPresence.class,persistentPresence);
+    addSupportedOperationSet(OperationSetPresence.class,persistentPresence);
+    final String user=getAccountID().getUserID();
+    ircStack=new IrcStack(this,user,user,"Jitsi",user);
     isInitialized=true;
   }
 }

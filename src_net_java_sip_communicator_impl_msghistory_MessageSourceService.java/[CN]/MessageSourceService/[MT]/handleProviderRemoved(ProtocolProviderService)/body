@@ -1,22 +1,22 @@
 {
 synchronized (recentMessages) {
     if (provider != null) {
-      List<MessageSourceContact> removedItems=new ArrayList<MessageSourceContact>();
-      for (      MessageSourceContact msc : recentMessages) {
+      List<ComparableEvtObj> removedItems=new ArrayList<ComparableEvtObj>();
+      for (      ComparableEvtObj msc : recentMessages) {
         if (msc.getProtocolProviderService().equals(provider))         removedItems.add(msc);
       }
       recentMessages.removeAll(removedItems);
       if (!recentMessages.isEmpty())       oldestRecentMessage=recentMessages.get(recentMessages.size() - 1).getTimestamp();
  else       oldestRecentMessage=null;
       if (recentQuery != null) {
-        for (        MessageSourceContact msc : removedItems) {
+        for (        ComparableEvtObj msc : removedItems) {
           recentQuery.fireContactRemoved(msc);
         }
       }
     }
-    List<MessageSourceContact> contactsToAdd=new ArrayList<MessageSourceContact>();
+    List<ComparableEvtObj> contactsToAdd=new ArrayList<ComparableEvtObj>();
     for (    ProtocolProviderService pps : messageHistoryService.getCurrentlyAvailableProviders()) {
-      contactsToAdd.addAll(getSourceContacts(pps,true));
+      contactsToAdd.addAll(getCachedRecentMessages(pps,true));
     }
     addNewRecentMessages(contactsToAdd);
   }

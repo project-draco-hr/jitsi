@@ -1,0 +1,56 @@
+{
+  if (text == null) {
+    return null;
+  }
+  FormattedTextBuilder builder=new FormattedTextBuilder();
+  for (int i=0; i < text.length(); i++) {
+    char val=text.charAt(i);
+switch (val) {
+case ControlChar.Bold.CODE:
+      if (builder.isActive(ControlChar.Bold.class)) {
+        builder.cancel(ControlChar.Bold.class,true);
+      }
+ else {
+        builder.apply(new ControlChar.Bold());
+      }
+    break;
+case ControlChar.Italics.CODE:
+  if (builder.isActive(ControlChar.Italics.class)) {
+    builder.cancel(ControlChar.Italics.class,true);
+  }
+ else {
+    builder.apply(new ControlChar.Italics());
+  }
+break;
+case ControlChar.Underline.CODE:
+if (builder.isActive(ControlChar.Underline.class)) {
+builder.cancel(ControlChar.Underline.class,true);
+}
+ else {
+builder.apply(new ControlChar.Underline());
+}
+break;
+case ControlChar.ColorFormat.CODE:
+Color foreground=parseForegroundColor(text.substring(i + 1));
+if (foreground == null) {
+builder.cancel(ControlChar.ColorFormat.class,false);
+}
+ else {
+i+=INDEX_END_FOREGROUND_COLOR_CODE;
+Color background=parseBackgroundColor(text.substring(i + 1));
+if (background != null) {
+i+=INDEX_END_BACKGROUND_COLOR_CODE;
+}
+builder.apply(new ControlChar.ColorFormat(foreground,background));
+}
+break;
+case ControlChar.Normal.CODE:
+builder.cancelAll();
+break;
+default :
+builder.append(StringEscapeUtils.escapeHtml4("" + val));
+break;
+}
+}
+return builder.done();
+}
