@@ -5,49 +5,36 @@
   }
   final Result<IIRCState,Exception> result=new Result<IIRCState,Exception>();
 synchronized (result) {
-    try {
-      irc.connect(this.params,new Callback<IIRCState>(){
-        @Override public void onSuccess(        final IIRCState state){
+    irc.connect(this.params,new Callback<IIRCState>(){
+      @Override public void onSuccess(      final IIRCState state){
 synchronized (result) {
-            LOGGER.trace("IRC connected successfully!");
-            result.setDone(state);
-            result.notifyAll();
-          }
-        }
-        @Override public void onFailure(        final Exception e){
-synchronized (result) {
-            LOGGER.trace("IRC connection FAILED!",e);
-            result.setDone(e);
-            result.notifyAll();
-          }
+          LOGGER.trace("IRC connected successfully!");
+          result.setDone(state);
+          result.notifyAll();
         }
       }
+      @Override public void onFailure(      final Exception e){
+synchronized (result) {
+          LOGGER.trace("IRC connection FAILED!",e);
+          result.setDone(e);
+          result.notifyAll();
+        }
+      }
+    }
 );
-      this.provider.setCurrentRegistrationState(RegistrationState.REGISTERING);
-      while (!result.isDone()) {
-        LOGGER.trace("Waiting for the connection to be " + "established ...");
-        result.wait();
-      }
-      this.connectionState=result.getValue();
-      if (this.connectionState != null && this.connectionState.isConnected()) {
-        this.presence=new PresenceManager(irc,this.connectionState,this.provider.getPersistentPresence());
-        this.provider.setCurrentRegistrationState(RegistrationState.REGISTERED);
-      }
- else {
-        this.provider.setCurrentRegistrationState(RegistrationState.CONNECTION_FAILED);
-        Exception e=result.getException();
-        if (e != null) {
-          throw e;
-        }
-      }
+    this.provider.setCurrentRegistrationState(RegistrationState.REGISTERING);
+    while (!result.isDone()) {
+      LOGGER.trace("Waiting for the connection to be " + "established ...");
+      result.wait();
     }
- catch (    IOException e) {
-      this.provider.setCurrentRegistrationState(RegistrationState.CONNECTION_FAILED);
-      throw e;
+    final Exception e=result.getException();
+    if (e != null) {
+      throw new IOException(e);
     }
-catch (    InterruptedException e) {
-      this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED);
-      throw e;
+    final IIRCState connectionState=result.getValue();
+    if (connectionState == null) {
+      throw new IOException("Failed to connect: no connection state available.");
     }
+    this.connectionState=connectionState;
   }
 }

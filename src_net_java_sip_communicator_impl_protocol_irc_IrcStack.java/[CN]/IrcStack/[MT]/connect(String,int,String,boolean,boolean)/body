@@ -18,7 +18,19 @@ synchronized (this.session) {
     if (LOGGER.isTraceEnabled()) {
       irc.addListener(new DebugListener());
     }
-    connectSynchronized();
-    queryIdentity();
+    try {
+      connectSynchronized();
+      this.presence=new PresenceManager(irc,this.connectionState,this.provider.getPersistentPresence());
+      queryIdentity();
+      this.provider.setCurrentRegistrationState(RegistrationState.REGISTERED);
+    }
+ catch (    IOException e) {
+      this.provider.setCurrentRegistrationState(RegistrationState.CONNECTION_FAILED);
+      throw e;
+    }
+catch (    InterruptedException e) {
+      this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED);
+      throw e;
+    }
   }
 }
