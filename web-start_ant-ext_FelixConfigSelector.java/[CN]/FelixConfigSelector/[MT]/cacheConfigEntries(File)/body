@@ -1,0 +1,32 @@
+{
+  if (referencedBundleCache != null)   return;
+  referencedBundleCache=new HashSet<File>();
+  Properties pIn=new Properties();
+  try {
+    pIn.load(new FileInputStream(felixConfig));
+  }
+ catch (  FileNotFoundException e) {
+    throw new BuildException(e);
+  }
+catch (  IOException e) {
+    throw new BuildException(e);
+  }
+  for (  Map.Entry<Object,Object> e : pIn.entrySet()) {
+    if (((String)e.getKey()).startsWith("felix.auto.start.")) {
+      String[] refs=((String)e.getValue()).split("\\s");
+      for (      String jar : refs) {
+        if (jar.startsWith("reference:file:")) {
+          String relPath=jar.substring("reference:file:".length());
+          String absPath=basedir.getPath() + File.separator + relPath;
+          File f=new File(absPath);
+          if (f.isFile()) {
+            referencedBundleCache.add(f);
+          }
+ else {
+            System.out.println("WARNING: Referenced file does not exist: " + f.getPath());
+          }
+        }
+      }
+    }
+  }
+}
