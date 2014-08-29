@@ -9,7 +9,7 @@
     final String[] _chainArgs=chainArgs.split("\\s");
     try {
       Class c=Class.forName(chainMain);
-      final Method m=c.getMethod("main",_chainArgs.getClass());
+      final Method m=c.getMethod("main",new Class[]{_chainArgs.getClass()});
       new Thread(){
         public void run(){
           try {
@@ -34,10 +34,11 @@
   for (int i=0; i < hs.length; i++)   LogManager.getLogManager().getLogger("").removeHandler(hs[i]);
   LogManager.getLogManager().getLogger("").addHandler(new FileHandler());
   LogManager.getLogManager().getLogger("").addHandler(new ConsoleHandler());
-  for (  Handler h : LogManager.getLogManager().getLogger("").getHandlers())   h.setFormatter(new ScLogFormatter());
-  Method findLibrary=SIPCommunicatorJWS.class.getClassLoader().getClass().getDeclaredMethod("findLibrary",String.class);
+  Handler[] h=LogManager.getLogManager().getLogger("").getHandlers();
+  for (int i=0; i < h.length; i++)   h[i].setFormatter(new ScLogFormatter());
+  Method findLibrary=SIPCommunicatorJWS.class.getClassLoader().getClass().getDeclaredMethod("findLibrary",new Class[]{String.class});
   findLibrary.setAccessible(true);
-  File path=new File((String)findLibrary.invoke(SIPCommunicatorJWS.class.getClassLoader(),"hid")).getParentFile();
+  File path=new File((String)findLibrary.invoke(SIPCommunicatorJWS.class.getClassLoader(),new Object[]{"hid"})).getParentFile();
   System.setProperty("java.library.path",System.getProperty("java.library.path") + File.pathSeparator + path.getAbsolutePath());
   Field sys_paths=ClassLoader.class.getDeclaredField("sys_paths");
   sys_paths.setAccessible(true);
@@ -47,14 +48,17 @@
   pIn.load(SIPCommunicatorJWS.class.getResourceAsStream(System.getProperty("felix.config.properties")));
   String baseServerUrl=System.getProperty("net.java.sip.communicator.SC_JWS_BASEDIR");
   ClassLoader cl=SIPCommunicatorJWS.class.getClassLoader();
-  Method getJarFile=cl.getClass().getDeclaredMethod("getJarFile",URL.class);
+  Method getJarFile=cl.getClass().getDeclaredMethod("getJarFile",new Class[]{URL.class});
   getJarFile.setAccessible(true);
-  for (  Map.Entry<Object,Object> e : pIn.entrySet()) {
+  Iterator propIt=pIn.entrySet().iterator();
+  while (propIt.hasNext()) {
+    Map.Entry e=(Map.Entry)propIt.next();
     if (((String)e.getKey()).startsWith("felix.auto.start.")) {
       String[] refs=((String)e.getValue()).split("\\s");
       StringBuilder sb=new StringBuilder();
-      for (      String ref : refs) {
-        JarFile localFile=(JarFile)getJarFile.invoke(cl,new URL(baseServerUrl + ref.replace("@URL@","")));
+      for (int i=0; i < refs.length; i++) {
+        String ref=refs[i];
+        JarFile localFile=(JarFile)getJarFile.invoke(cl,new Object[]{new URL(baseServerUrl + ref.replace("@URL@",""))});
         if (localFile != null) {
           String localFileName=new File(localFile.getName()).toURI().toString();
           sb.append("reference:");
@@ -79,7 +83,8 @@
     if (System.getProperty("os.name").equals("Linux")) {
       File desktop=new File(System.getProperty("user.home") + "/Desktop");
       File[] files=desktop.listFiles();
-      for (      File file : files) {
+      for (int i=0; i < files.length; i++) {
+        File file=files[i];
         if (file.getName().contains("jws_app_shortcut_")) {
           file.setExecutable(true,false);
         }
@@ -88,7 +93,7 @@
   }
  catch (  Exception e) {
   }
-  Vector<String> _args=new Vector<String>();
+  Vector _args=new Vector();
   for (int i=0; i < args.length; i++) {
     String arg=args[i];
     if (arg.equalsIgnoreCase("-open")) {
@@ -101,5 +106,5 @@
       _args.add(arg);
     }
   }
-  SIPCommunicator.main(_args.toArray(new String[]{}));
+  SIPCommunicator.main((String[])_args.toArray(new String[_args.size()]));
 }
