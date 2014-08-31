@@ -1,9 +1,15 @@
 {
   MessageDeliveredEvent msgDeliveryPendingEvt=new MessageDeliveredEvent(message,to);
-  msgDeliveryPendingEvt=messageDeliveryPendingTransform(msgDeliveryPendingEvt);
-  if (msgDeliveryPendingEvt == null)   return null;
-  String content=msgDeliveryPendingEvt.getSourceMessage().getContent();
+  MessageDeliveredEvent[] msgDeliveryPendingEvts=messageDeliveryPendingTransform(msgDeliveryPendingEvt);
+  if (msgDeliveryPendingEvts == null || msgDeliveryPendingEvts.length == 0) {
+    return new Message[0];
+  }
   OperationSetBasicInstantMessaging opSetBasicIM=(OperationSetBasicInstantMessaging)sipProvider.getSupportedOperationSets().get(OperationSetBasicInstantMessaging.class.getName());
-  Message transformedMesssage=opSetBasicIM.createMessage(content,message.getContentType(),message.getEncoding(),message.getSubject());
-  return transformedMesssage;
+  Message[] transformedMessages=new Message[msgDeliveryPendingEvts.length];
+  for (int i=0; i < msgDeliveryPendingEvts.length; i++) {
+    MessageDeliveredEvent event=msgDeliveryPendingEvts[i];
+    String content=event.getSourceMessage().getContent();
+    transformedMessages[i]=opSetBasicIM.createMessage(content,message.getContentType(),message.getEncoding(),message.getSubject());
+  }
+  return transformedMessages;
 }

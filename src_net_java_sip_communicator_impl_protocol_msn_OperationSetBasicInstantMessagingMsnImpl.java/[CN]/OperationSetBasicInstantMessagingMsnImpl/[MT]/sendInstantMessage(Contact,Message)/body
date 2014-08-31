@@ -1,13 +1,15 @@
 {
   assertConnected();
   if (!(to instanceof ContactMsnImpl))   throw new IllegalArgumentException("The specified contact is not an MSN contact." + to);
-  final MessageDeliveredEvent msgDeliveryPendingEvt=messageDeliveryPendingTransform(new MessageDeliveredEvent(message,to));
-  if (msgDeliveryPendingEvt == null)   return;
+  MessageDeliveredEvent[] transformedEvents=messageDeliveryPendingTransform(new MessageDeliveredEvent(message,to));
+  if (transformedEvents == null || transformedEvents.length == 0)   return;
   MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(message,to);
   fireMessageEvent(msgDeliveredEvt);
   if (senderThread == null) {
     senderThread=new SenderThread();
     senderThread.start();
   }
-  senderThread.sendMessage((ContactMsnImpl)to,msgDeliveryPendingEvt.getSourceMessage().getContent());
+  for (  MessageDeliveredEvent event : transformedEvents) {
+    senderThread.sendMessage((ContactMsnImpl)to,event.getSourceMessage().getContent());
+  }
 }

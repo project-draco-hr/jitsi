@@ -6,27 +6,29 @@
     fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.OFFLINE_MESSAGES_NOT_SUPPORTED);
     return;
   }
-  Request mes;
-  try {
-    Message transformedMessage=transformSIPMessage(to,message);
-    mes=createMessageRequest(to,transformedMessage);
-  }
- catch (  OperationFailedException ex) {
-    logger.error("Failed to create the message.",ex);
-    fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR);
-    return;
-  }
-  try {
-    sendMessageRequest(mes,to,message);
-  }
- catch (  TransactionUnavailableException ex) {
-    logger.error("Failed to create messageTransaction.\n" + "This is most probably a network connection error.",ex);
-    fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.NETWORK_FAILURE);
-    return;
-  }
-catch (  SipException ex) {
-    logger.error("Failed to send the message.",ex);
-    fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR);
-    return;
+  Message[] transformedMessages=transformSIPMessage(to,message);
+  for (  Message msg : transformedMessages) {
+    Request mes;
+    try {
+      mes=createMessageRequest(to,msg);
+    }
+ catch (    OperationFailedException ex) {
+      logger.error("Failed to create the message.",ex);
+      fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR);
+      continue;
+    }
+    try {
+      sendMessageRequest(mes,to,message);
+    }
+ catch (    TransactionUnavailableException ex) {
+      logger.error("Failed to create messageTransaction.\n" + "This is most probably a network connection error.",ex);
+      fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.NETWORK_FAILURE);
+      continue;
+    }
+catch (    SipException ex) {
+      logger.error("Failed to send the message.",ex);
+      fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR);
+      continue;
+    }
   }
 }

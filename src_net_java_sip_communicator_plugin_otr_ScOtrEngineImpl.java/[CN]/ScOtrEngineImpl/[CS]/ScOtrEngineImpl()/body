@@ -1,5 +1,5 @@
 {
-  otrEngine=new OtrEngineImpl(otrEngineHost);
+  otrEngine=new OtrSessionManagerImpl(otrEngineHost);
   contactsMap.clear();
   scSessionStatusMap.clear();
   this.otrEngine.addOtrEngineListener(new OtrEngineListener(){
@@ -11,11 +11,12 @@
       scheduler.cancel(otrContact);
       ScSessionStatus scSessionStatus=getSessionStatus(otrContact);
       String message="";
-switch (otrEngine.getSessionStatus(sessionID)) {
+      final Session session=otrEngine.getSession(sessionID);
+switch (session.getSessionStatus()) {
 case ENCRYPTED:
         scSessionStatus=ScSessionStatus.ENCRYPTED;
       scSessionStatusMap.put(sessionID,scSessionStatus);
-    PublicKey remotePubKey=otrEngine.getRemotePublicKey(sessionID);
+    PublicKey remotePubKey=session.getRemotePublicKey();
   String remoteFingerprint=null;
 try {
   remoteFingerprint=new OtrCryptoEngineImpl().getFingerprint(remotePubKey);

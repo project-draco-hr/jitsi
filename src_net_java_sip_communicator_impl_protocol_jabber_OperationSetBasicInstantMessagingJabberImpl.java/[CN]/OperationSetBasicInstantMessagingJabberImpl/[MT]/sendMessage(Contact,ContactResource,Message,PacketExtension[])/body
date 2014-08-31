@@ -19,29 +19,31 @@
   }
   if (logger.isTraceEnabled())   logger.trace("Will send a message to:" + toJID + " chat.jid="+ toJID);
   MessageDeliveredEvent msgDeliveryPendingEvt=new MessageDeliveredEvent(message,to,toResource);
-  msgDeliveryPendingEvt=messageDeliveryPendingTransform(msgDeliveryPendingEvt);
-  if (msgDeliveryPendingEvt == null)   return null;
-  String content=msgDeliveryPendingEvt.getSourceMessage().getContent();
-  if (message.getContentType().equals(HTML_MIME_TYPE)) {
-    msg.setBody(Html2Text.extractText(content));
-    if (jabberProvider.isFeatureListSupported(toJID,HTML_NAMESPACE)) {
-      XHTMLManager.addBody(msg,OPEN_BODY_TAG + content + CLOSE_BODY_TAG);
+  MessageDeliveredEvent[] transformedEvents=messageDeliveryPendingTransform(msgDeliveryPendingEvt);
+  if (transformedEvents == null || transformedEvents.length == 0)   return null;
+  for (  MessageDeliveredEvent event : transformedEvents) {
+    String content=event.getSourceMessage().getContent();
+    if (message.getContentType().equals(HTML_MIME_TYPE)) {
+      msg.setBody(Html2Text.extractText(content));
+      if (jabberProvider.isFeatureListSupported(toJID,HTML_NAMESPACE)) {
+        XHTMLManager.addBody(msg,OPEN_BODY_TAG + content + CLOSE_BODY_TAG);
+      }
     }
-  }
  else {
-    msg.setBody(content);
+      msg.setBody(content);
+    }
+    if (event.isMessageEncrypted()) {
+      msg.addExtension(new CarbonPacketExtension.PrivateExtension());
+    }
+    MessageEventManager.addNotificationsRequests(msg,true,false,false,true);
+    String threadID=getThreadIDForAddress(toJID);
+    if (threadID == null)     threadID=nextThreadID();
+    msg.setThread(threadID);
+    msg.setType(org.jivesoftware.smack.packet.Message.Type.chat);
+    msg.setFrom(jabberProvider.getConnection().getUser());
+    jabberProvider.getConnection().sendPacket(msg);
+    putJidForAddress(toJID,threadID);
   }
-  if (msgDeliveryPendingEvt.isMessageEncrypted()) {
-    msg.addExtension(new CarbonPacketExtension.PrivateExtension());
-  }
-  MessageEventManager.addNotificationsRequests(msg,true,false,false,true);
-  String threadID=getThreadIDForAddress(toJID);
-  if (threadID == null)   threadID=nextThreadID();
-  msg.setThread(threadID);
-  msg.setType(org.jivesoftware.smack.packet.Message.Type.chat);
-  msg.setFrom(jabberProvider.getConnection().getUser());
-  jabberProvider.getConnection().sendPacket(msg);
-  putJidForAddress(toJID,threadID);
   MessageDeliveredEvent msgDeliveredEvt=new MessageDeliveredEvent(message,to,toResource);
   return msgDeliveredEvt;
 }

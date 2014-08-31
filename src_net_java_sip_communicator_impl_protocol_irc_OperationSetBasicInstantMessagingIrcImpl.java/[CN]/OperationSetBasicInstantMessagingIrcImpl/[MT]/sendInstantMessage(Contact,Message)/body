@@ -1,8 +1,33 @@
 {
-  if (message instanceof MessageIrcImpl && ((MessageIrcImpl)message).isCommand()) {
-    this.provider.getIrcStack().command(to,(MessageIrcImpl)message);
+  if (!(original instanceof MessageIrcImpl)) {
+    LOGGER.error("Invalid class of Message implementation received. " + "Not sending message.");
+    return;
   }
+  final MessageDeliveredEvent[] msgDeliveryPendingEvts=messageDeliveryPendingTransform(new MessageDeliveredEvent(original,to));
+  try {
+    for (    MessageDeliveredEvent event : msgDeliveryPendingEvts) {
+      if (event == null) {
+        return;
+      }
+      String transformedContent=event.getSourceMessage().getContent();
+      MessageIrcImpl message=this.createMessage(transformedContent,original.getContentType(),original.getEncoding(),"");
+      try {
+        if (message.isCommand()) {
+          this.provider.getIrcStack().command(to,message);
+        }
  else {
-    this.provider.getIrcStack().message(to,message);
+          this.provider.getIrcStack().message(to,message);
+        }
+      }
+ catch (      RuntimeException e) {
+        LOGGER.debug("Failed to deliver (raw) message: " + message);
+        throw e;
+      }
+    }
+    fireMessageDelivered(original,to);
+  }
+ catch (  RuntimeException e) {
+    LOGGER.warn("Failed to deliver message: " + original,e);
+    fireMessageDeliveryFailed(original,to,MessageDeliveryFailedEvent.NETWORK_FAILURE);
   }
 }

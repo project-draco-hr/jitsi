@@ -14,19 +14,20 @@ synchronized (this.messageListeners) {
  else   if (evt instanceof MessageDeliveryFailedEvent) {
     eventType=MessageEventType.MessageDeliveryFailed;
   }
-  try {
-    evt=messageTransform(evt,eventType);
-    if (evt == null)     return;
-    for (    MessageListener listener : listeners) {
+  EventObject[] events=messageTransform(evt,eventType);
+  for (  EventObject event : events) {
+    try {
+      if (event == null)       return;
+      for (      MessageListener listener : listeners) {
 switch (eventType) {
 case MessageDelivered:
-        listener.messageDelivered((MessageDeliveredEvent)evt);
-      break;
+          listener.messageDelivered((MessageDeliveredEvent)event);
+        break;
 case MessageDeliveryFailed:
-    listener.messageDeliveryFailed((MessageDeliveryFailedEvent)evt);
-  break;
+      listener.messageDeliveryFailed((MessageDeliveryFailedEvent)event);
+    break;
 case MessageReceived:
-listener.messageReceived((MessageReceivedEvent)evt);
+  listener.messageReceived((MessageReceivedEvent)event);
 break;
 default :
 break;
@@ -35,5 +36,6 @@ break;
 }
  catch (Throwable e) {
 logger.error("Error delivering message",e);
+}
 }
 }
