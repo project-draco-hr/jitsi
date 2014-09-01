@@ -7,9 +7,13 @@
     IceUdpTransportPacketExtension transport=e.getValue();
     List<CandidatePacketExtension> candidates=transport.getChildExtensionsOfType(CandidatePacketExtension.class);
     if (iceAgentStateIsRunning && (candidates.size() == 0))     return false;
-    Collections.sort(candidates);
     String media=e.getKey();
     IceMediaStream stream=iceAgent.getStream(media);
+    if (stream == null) {
+      logger.warn("No ICE media stream for media: " + media + " - ignored candidates.");
+      continue;
+    }
+    Collections.sort(candidates);
     String ufrag=transport.getUfrag();
     if (ufrag != null)     stream.setRemoteUfrag(ufrag);
     String password=transport.getPassword();
