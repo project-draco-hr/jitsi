@@ -17,8 +17,12 @@
     imppAddress=(protocolPartIndex >= 0) ? imppAddress.substring(protocolPartIndex + 1) : imppAddress;
     Collection<ProtocolProviderService> cusaxProviders=AccountUtils.getRegisteredProviders(OperationSetCusaxUtils.class);
     if (cusaxProviders != null && cusaxProviders.size() > 0) {
-      Contact contact=getPeerContact(peer,cusaxProviders.iterator().next(),imppAddress);
-      return GuiActivator.getContactListService().findMetaContactByContact(contact);
+      Iterator<ProtocolProviderService> iter=cusaxProviders.iterator();
+      while (iter.hasNext()) {
+        Contact contact=getPeerContact(peer,iter.next(),imppAddress);
+        MetaContact res=GuiActivator.getContactListService().findMetaContactByContact(contact);
+        if (res != null)         return res;
+      }
     }
  else {
       return getPeerMetaContact(peer,imppAddress);
