@@ -1,0 +1,21 @@
+{
+  if (!allowsFileTransfer())   return null;
+  if (FileUtils.isImage(file.getName())) {
+    OperationSetThumbnailedFileFactory tfOpSet=contact.getProtocolProvider().getOperationSet(OperationSetThumbnailedFileFactory.class);
+    if (tfOpSet != null) {
+      byte[] thumbnail=getFileThumbnail(file);
+      if (thumbnail != null && thumbnail.length > 0) {
+        file=tfOpSet.createFileWithThumbnail(file,THUMBNAIL_WIDTH,THUMBNAIL_HEIGHT,"image/png",thumbnail);
+      }
+    }
+  }
+  if (isMultimediaMessage) {
+    OperationSetSmsMessaging smsOpSet=contact.getProtocolProvider().getOperationSet(OperationSetSmsMessaging.class);
+    if (smsOpSet == null)     return null;
+    return smsOpSet.sendMultimediaFile(contact,file);
+  }
+ else {
+    OperationSetFileTransfer ftOpSet=contact.getProtocolProvider().getOperationSet(OperationSetFileTransfer.class);
+    return ftOpSet.sendFile(contact,file);
+  }
+}
