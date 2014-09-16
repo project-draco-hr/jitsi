@@ -1,0 +1,17 @@
+{
+  RegistrationStateChangeEvent event=new RegistrationStateChangeEvent(this,oldState,newState,reasonCode,reason);
+  event.setUserRequest(userRequest);
+  RegistrationStateChangeListener[] listeners;
+synchronized (registrationListeners) {
+    listeners=registrationListeners.toArray(new RegistrationStateChangeListener[registrationListeners.size()]);
+  }
+  if (logger.isDebugEnabled())   logger.debug("Dispatching " + event + " to "+ listeners.length+ " listeners.");
+  for (  RegistrationStateChangeListener listener : listeners)   try {
+    listener.registrationStateChanged(event);
+  }
+ catch (  Throwable throwable) {
+    if (throwable instanceof ThreadDeath)     throw (ThreadDeath)throwable;
+    logger.error("An error occurred while executing " + "RegistrationStateChangeListener" + "#registrationStateChanged"+ "(RegistrationStateChangeEvent) of "+ listener,throwable);
+  }
+  if (logger.isTraceEnabled())   logger.trace("Done.");
+}

@@ -1,0 +1,53 @@
+{
+  if (getRegistrationState() == RegistrationState.UNREGISTERED) {
+    if (logger.isTraceEnabled())     logger.trace("Trying to unregister when already unresgistered");
+    return;
+  }
+  cancelPendingRegistrations();
+  if (this.registerRequest == null) {
+    logger.error("Couldn't find the initial register request");
+    setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,"Could not find the initial regiest request.");
+    throw new OperationFailedException("Could not find the initial register request.",OperationFailedException.INTERNAL_ERROR);
+  }
+  setRegistrationState(RegistrationState.UNREGISTERING,RegistrationStateChangeEvent.REASON_USER_REQUEST,"");
+  if (!sendUnregister)   return;
+  Request unregisterRequest;
+  try {
+    unregisterRequest=sipProvider.getMessageFactory().createUnRegisterRequest(registerRequest,getNextCSeqValue());
+  }
+ catch (  InvalidArgumentException ex) {
+    logger.error("Unable to create an unREGISTER request.",ex);
+    setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,"Unable to set Expires Header");
+    throw new OperationFailedException("Unable to set Expires Header",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  if (userRequest) {
+    SipApplicationData.setApplicationData(unregisterRequest,SipApplicationData.KEY_USER_REQUEST,userRequest);
+  }
+  ClientTransaction unregisterTransaction=null;
+  try {
+    unregisterTransaction=getJainSipProvider().getNewClientTransaction(unregisterRequest);
+  }
+ catch (  TransactionUnavailableException ex) {
+    logger.error("Unable to create a unregister transaction",ex);
+    setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,"Unable to create a unregister transaction");
+    throw new OperationFailedException("Unable to create a unregister transaction",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+  try {
+    callIdHeader=null;
+    unregisterTransaction.sendRequest();
+    if (!(getRegistrationState().equals(RegistrationState.REGISTERED) || getRegistrationState().equals(RegistrationState.UNREGISTERING))) {
+      if (logger.isInfoEnabled())       logger.info("Setting state to UNREGISTERED.");
+      setRegistrationState(RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST,null);
+      if (regTrans != null && regTrans.getState().getValue() <= TransactionState.PROCEEDING.getValue()) {
+        if (logger.isTraceEnabled())         logger.trace("Will try to terminate reg tran ...");
+        regTrans.terminate();
+        if (logger.isTraceEnabled())         logger.trace("Transaction terminated!");
+      }
+    }
+  }
+ catch (  SipException ex) {
+    logger.error("Failed to send unregister request",ex);
+    setRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_INTERNAL_ERROR,"Unable to create a unregister transaction");
+    throw new OperationFailedException("Failed to send unregister request",OperationFailedException.INTERNAL_ERROR,ex);
+  }
+}
