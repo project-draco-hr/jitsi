@@ -1,6 +1,9 @@
 {
+  ComparableEvtObj existingMsc=null;
+  MessageSourceContact newSourceContact=null;
+  List<ComparableEvtObj> removedItems=null;
+  ComparableEvtObj newMsg=null;
 synchronized (recentMessages) {
-    ComparableEvtObj existingMsc=null;
     for (    ComparableEvtObj msc : recentMessages) {
       if (msc.getProtocolProviderService().equals(provider) && msc.getContactAddress().equals(id)) {
         msc.update(obj);
@@ -11,30 +14,33 @@ synchronized (recentMessages) {
     if (existingMsc != null) {
       Collections.sort(recentMessages);
       oldestRecentMessage=recentMessages.get(recentMessages.size() - 1).getTimestamp();
-      if (recentQuery != null) {
-        recentQuery.updateContact(existingMsc,existingMsc.getEventObject());
-        recentQuery.fireContactChanged(existingMsc);
-      }
-      return;
     }
-    MessageSourceContact newSourceContact=new MessageSourceContact(obj,MessageSourceService.this);
-    newSourceContact.initDetails(obj);
-    ComparableEvtObj newMsg=new ComparableEvtObj(obj);
-    recentMessages.add(newMsg);
-    Collections.sort(recentMessages);
-    oldestRecentMessage=recentMessages.get(recentMessages.size() - 1).getTimestamp();
-    List<ComparableEvtObj> removedItems=null;
-    if (recentMessages.size() > numberOfMessages) {
-      removedItems=new ArrayList<ComparableEvtObj>(recentMessages.subList(numberOfMessages,recentMessages.size()));
-      recentMessages.removeAll(removedItems);
-    }
-    saveRecentMessageToHistory(newMsg);
-    if (recentQuery == null)     return;
-    if (removedItems != null) {
-      for (      ComparableEvtObj msc : removedItems) {
-        recentQuery.fireContactRemoved(msc);
+ else {
+      newSourceContact=new MessageSourceContact(obj,MessageSourceService.this);
+      newSourceContact.initDetails(obj);
+      newMsg=new ComparableEvtObj(obj);
+      recentMessages.add(newMsg);
+      Collections.sort(recentMessages);
+      oldestRecentMessage=recentMessages.get(recentMessages.size() - 1).getTimestamp();
+      if (recentMessages.size() > numberOfMessages) {
+        removedItems=new ArrayList<ComparableEvtObj>(recentMessages.subList(numberOfMessages,recentMessages.size()));
+        recentMessages.removeAll(removedItems);
       }
     }
-    recentQuery.addQueryResult(newSourceContact);
   }
+  if (existingMsc != null) {
+    if (recentQuery != null) {
+      recentQuery.updateContact(existingMsc,existingMsc.getEventObject());
+      recentQuery.fireContactChanged(existingMsc);
+    }
+    return;
+  }
+  if (newMsg != null)   saveRecentMessageToHistory(newMsg);
+  if (recentQuery == null)   return;
+  if (removedItems != null) {
+    for (    ComparableEvtObj msc : removedItems) {
+      recentQuery.fireContactRemoved(msc);
+    }
+  }
+  recentQuery.addQueryResult(newSourceContact);
 }
