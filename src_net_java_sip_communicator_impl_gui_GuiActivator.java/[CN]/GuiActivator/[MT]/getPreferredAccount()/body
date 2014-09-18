@@ -1,25 +1,25 @@
 {
   String prefWName=GuiActivator.getResources().getSettingsString("impl.gui.PREFERRED_ACCOUNT_WIZARD");
   if (prefWName == null || prefWName.length() <= 0)   return null;
-  ServiceReference[] accountWizardRefs=null;
+  Collection<ServiceReference<AccountRegistrationWizard>> accountWizardRefs;
   try {
-    accountWizardRefs=GuiActivator.bundleContext.getServiceReferences(AccountRegistrationWizard.class.getName(),null);
+    accountWizardRefs=GuiActivator.bundleContext.getServiceReferences(AccountRegistrationWizard.class,null);
   }
  catch (  InvalidSyntaxException ex) {
     logger.error("Error while retrieving service refs",ex);
     return null;
   }
   if (accountWizardRefs != null) {
-    if (logger.isDebugEnabled())     logger.debug("Found " + accountWizardRefs.length + " already installed providers.");
-    for (int i=0; i < accountWizardRefs.length; i++) {
-      AccountRegistrationWizard wizard=(AccountRegistrationWizard)GuiActivator.bundleContext.getService(accountWizardRefs[i]);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Found " + accountWizardRefs.size() + " already installed providers.");
+    }
+    for (    ServiceReference<AccountRegistrationWizard> accountWizardRef : accountWizardRefs) {
+      AccountRegistrationWizard wizard=GuiActivator.bundleContext.getService(accountWizardRef);
       if (wizard.getClass().getName().equals(prefWName)) {
         for (        ProtocolProviderFactory providerFactory : GuiActivator.getProtocolProviderFactories().values()) {
-          ServiceReference serRef;
-          ProtocolProviderService protocolProvider;
           for (          AccountID accountID : providerFactory.getRegisteredAccounts()) {
-            serRef=providerFactory.getProviderForAccount(accountID);
-            protocolProvider=(ProtocolProviderService)GuiActivator.bundleContext.getService(serRef);
+            ServiceReference<ProtocolProviderService> serRef=providerFactory.getProviderForAccount(accountID);
+            ProtocolProviderService protocolProvider=GuiActivator.bundleContext.getService(serRef);
             if (protocolProvider.getAccountID().getProtocolDisplayName().equals(wizard.getProtocolName())) {
               return protocolProvider;
             }

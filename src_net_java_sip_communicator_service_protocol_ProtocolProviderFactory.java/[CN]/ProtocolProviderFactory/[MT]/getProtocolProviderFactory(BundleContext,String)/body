@@ -1,12 +1,13 @@
 {
-  ServiceReference[] serRefs=null;
+  Collection<ServiceReference<ProtocolProviderFactory>> serRefs;
   String osgiFilter="(" + ProtocolProviderFactory.PROTOCOL + "="+ protocolName+ ")";
   try {
-    serRefs=bundleContext.getServiceReferences(ProtocolProviderFactory.class.getName(),osgiFilter);
+    serRefs=bundleContext.getServiceReferences(ProtocolProviderFactory.class,osgiFilter);
   }
  catch (  InvalidSyntaxException ex) {
+    serRefs=null;
     logger.error(ex);
-    return null;
   }
-  return (ProtocolProviderFactory)bundleContext.getService(serRefs[0]);
+  if ((serRefs == null) || serRefs.isEmpty())   return null;
+ else   return bundleContext.getService(serRefs.iterator().next());
 }
