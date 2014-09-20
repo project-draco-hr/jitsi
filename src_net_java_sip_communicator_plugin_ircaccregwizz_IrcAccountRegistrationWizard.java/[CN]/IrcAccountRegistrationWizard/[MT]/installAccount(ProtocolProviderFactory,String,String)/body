@@ -12,13 +12,13 @@
   accountProperties.put(ProtocolProviderFactory.NO_PASSWORD_REQUIRED,new Boolean(!registration.isRequiredPassword()).toString());
   accountProperties.put(ProtocolProviderFactory.DEFAULT_ENCRYPTION,new Boolean(registration.isSecureConnection()).toString());
   if (isModification()) {
-    providerFactory.uninstallAccount(protocolProvider.getAccountID());
-    this.protocolProvider=null;
+    providerFactory.modifyAccount(this.protocolProvider,accountProperties);
     setModification(false);
+    return this.protocolProvider;
   }
   try {
     AccountID accountID=providerFactory.installAccount(user,accountProperties);
-    ServiceReference serRef=providerFactory.getProviderForAccount(accountID);
+    ServiceReference<ProtocolProviderService> serRef=providerFactory.getProviderForAccount(accountID);
     protocolProvider=(ProtocolProviderService)IrcAccRegWizzActivator.bundleContext.getService(serRef);
   }
  catch (  IllegalStateException exc) {
