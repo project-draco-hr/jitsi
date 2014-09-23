@@ -1,11 +1,22 @@
 {
   final OtrContact otrContact=getOtrContact(sessionID);
-  if (ProtocolNames.IRC.equals(otrContact.contact.getProtocolProvider().getProtocolName())) {
-    final String identity=((ProtocolProviderServiceIrcImpl)otrContact.contact.getProtocolProvider()).getIrcStack().getIdentityString();
-    final int size=510 - (":" + identity + " PRIVMSG "+ otrContact.contact.getAddress()+ " :").length();
-    return new FragmenterInstructions(FragmenterInstructions.UNLIMITED,size);
+  final OperationSetBasicInstantMessagingTransport transport=otrContact.contact.getProtocolProvider().getOperationSet(OperationSetBasicInstantMessagingTransport.class);
+  if (transport == null) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("No implementation of " + "BasicInstantMessagingTransport available. Assuming " + "OTR defaults for OTR fragmentation instructions.");
+    }
+    return null;
   }
- else {
-    return new FragmenterInstructions(FragmenterInstructions.UNLIMITED,FragmenterInstructions.UNLIMITED);
+  int messageSize=transport.maximumMessageSize(otrContact.contact);
+  if (messageSize == OperationSetBasicInstantMessagingTransport.UNLIMITED) {
+    messageSize=FragmenterInstructions.UNLIMITED;
   }
+  int numberOfMessages=transport.numberOfMessages(otrContact.contact);
+  if (numberOfMessages == OperationSetBasicInstantMessagingTransport.UNLIMITED) {
+    numberOfMessages=FragmenterInstructions.UNLIMITED;
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("OTR fragmentation instructions for sending a " + "message to " + otrContact.contact.getDisplayName() + " ("+ otrContact.contact.getAddress()+ "). Maximum number of "+ "messages: "+ numberOfMessages+ ", maximum message size: "+ messageSize);
+  }
+  return new FragmenterInstructions(numberOfMessages,messageSize);
 }
