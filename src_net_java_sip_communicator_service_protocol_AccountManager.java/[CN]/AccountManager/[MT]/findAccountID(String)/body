@@ -1,15 +1,16 @@
 {
-  ServiceReference[] factoryRefs=null;
+  Collection<ServiceReference<ProtocolProviderFactory>> factoryRefs;
   try {
-    factoryRefs=bundleContext.getServiceReferences(ProtocolProviderFactory.class.getName(),null);
+    factoryRefs=bundleContext.getServiceReferences(ProtocolProviderFactory.class,null);
   }
  catch (  InvalidSyntaxException ex) {
+    factoryRefs=null;
     logger.error("Failed to retrieve the registered ProtocolProviderFactories",ex);
   }
-  if ((factoryRefs != null) && (factoryRefs.length > 0)) {
+  if ((factoryRefs != null) && !factoryRefs.isEmpty()) {
     ConfigurationService configService=ProtocolProviderActivator.getConfigurationService();
-    for (    ServiceReference factoryRef : factoryRefs) {
-      ProtocolProviderFactory factory=(ProtocolProviderFactory)bundleContext.getService(factoryRef);
+    for (    ServiceReference<ProtocolProviderFactory> factoryRef : factoryRefs) {
+      ProtocolProviderFactory factory=bundleContext.getService(factoryRef);
       String factoryPackage=getFactoryImplPackageName(factory);
       List<String> storedAccountsProps=configService.getPropertyNamesByPrefix(factoryPackage,true);
       for (Iterator<String> storedAccountIter=storedAccountsProps.iterator(); storedAccountIter.hasNext(); ) {

@@ -1,16 +1,17 @@
 {
   bc.removeServiceListener(this);
-  ServiceReference[] protocolProviderRefs=null;
+  Collection<ServiceReference<ProtocolProviderService>> ppsRefs;
   try {
-    protocolProviderRefs=bc.getServiceReferences(ProtocolProviderService.class.getName(),null);
+    ppsRefs=bc.getServiceReferences(ProtocolProviderService.class,null);
   }
  catch (  InvalidSyntaxException ex) {
+    ppsRefs=null;
     logger.error("Error while retrieving service refs",ex);
   }
-  if (protocolProviderRefs != null) {
-    for (    ServiceReference protocolProviderRef : protocolProviderRefs) {
-      ProtocolProviderService provider=(ProtocolProviderService)bc.getService(protocolProviderRef);
-      this.handleProviderRemoved(provider);
+  if (ppsRefs != null) {
+    for (    ServiceReference<ProtocolProviderService> ppsRef : ppsRefs) {
+      ProtocolProviderService pps=bc.getService(ppsRef);
+      this.handleProviderRemoved(pps);
     }
   }
 }

@@ -9,18 +9,20 @@
       if (factory != null) {
         BundleContext bundleContext=bundleToStart.getBundleContext();
         if (bundleContext == null)         return;
-        ServiceReference[] factoryRefs;
+        Collection<ServiceReference<ProtocolProviderFactory>> factoryRefs;
         try {
-          factoryRefs=bundleContext.getServiceReferences(ProtocolProviderFactory.class.getName(),"(" + ProtocolProviderFactory.PROTOCOL + "="+ protocolNameToWait+ ")");
+          factoryRefs=bundleContext.getServiceReferences(ProtocolProviderFactory.class,"(" + ProtocolProviderFactory.PROTOCOL + "="+ protocolNameToWait+ ")");
         }
  catch (        InvalidSyntaxException isex) {
           factoryRefs=null;
         }
         if (factoryRefs != null) {
           boolean factoryIsRegistered=false;
-          for (          ServiceReference factoryRef : factoryRefs)           if (factory == bundleContext.getService(factoryRef)) {
-            factoryIsRegistered=true;
-            break;
+          for (          ServiceReference<ProtocolProviderFactory> factoryRef : factoryRefs) {
+            if (factory == bundleContext.getService(factoryRef)) {
+              factoryIsRegistered=true;
+              break;
+            }
           }
           if (!factoryIsRegistered)           return;
         }
