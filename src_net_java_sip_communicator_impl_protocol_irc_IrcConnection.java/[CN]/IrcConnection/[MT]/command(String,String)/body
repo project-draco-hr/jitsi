@@ -1,0 +1,48 @@
+{
+  if (!isConnected()) {
+    throw new IllegalStateException("Not connected to IRC server.");
+  }
+  final String msg=message.toLowerCase();
+  if (msg.startsWith("/msg ")) {
+    final String part=message.substring(5);
+    int endOfNick=part.indexOf(' ');
+    if (endOfNick == -1) {
+      throw new IllegalArgumentException("Invalid private message " + "format. Message was not sent.");
+    }
+    final String target=part.substring(0,endOfNick);
+    final String command=part.substring(endOfNick + 1);
+synchronized (this.irc) {
+      this.irc.message(target,command);
+    }
+  }
+ else   if (msg.startsWith("/me ")) {
+    final String command=message.substring(4);
+synchronized (this.irc) {
+      this.irc.act(source,command);
+    }
+  }
+ else   if (msg.startsWith("/join ")) {
+    final String part=message.substring(6);
+    final String channel;
+    final String password;
+    int indexOfSep=part.indexOf(' ');
+    if (indexOfSep == -1) {
+      channel=part;
+      password="";
+    }
+ else {
+      channel=part.substring(0,indexOfSep);
+      password=part.substring(indexOfSep + 1);
+    }
+    if (channel.matches("[^,\\n\\r\\s\\a]+")) {
+synchronized (this.irc) {
+        this.irc.joinChannel(channel,password);
+      }
+    }
+  }
+ else {
+synchronized (this.irc) {
+      this.irc.message(source,message);
+    }
+  }
+}

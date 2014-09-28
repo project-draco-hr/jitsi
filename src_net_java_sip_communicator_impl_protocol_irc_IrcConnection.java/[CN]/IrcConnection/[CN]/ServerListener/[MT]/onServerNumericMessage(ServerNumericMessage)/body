@@ -1,0 +1,83 @@
+{
+  if (LOGGER.isDebugEnabled()) {
+    LOGGER.debug("NUM MSG: " + msg.getNumericCode() + ": "+ msg.getText());
+  }
+  final Integer code=msg.getNumericCode();
+  if (code == null) {
+    LOGGER.debug("No 'code' in numeric message event.");
+    return;
+  }
+  if (!IrcConnection.this.isConnected()) {
+    return;
+  }
+switch (code.intValue()) {
+case RPL_LISTEND:
+    final String text=msg.getText();
+  final String channelName=text.substring(0,text.indexOf(' '));
+final ChatRoomIrcImpl chatRoom;
+final IRCChannel channel;
+synchronized (IrcConnection.this.joined) {
+if (IrcConnection.this.joined.containsKey(channelName)) {
+LOGGER.trace("Chat room '" + channelName + "' join event was announced or already "+ "finished. Stop handling this event.");
+break;
+}
+LOGGER.trace("Starting unannounced join of chat room '" + channelName);
+channel=IrcConnection.this.connectionState.getChannelByName(channelName);
+chatRoom=new ChatRoomIrcImpl(channelName,IrcConnection.this.provider);
+IrcConnection.this.joined.put(channelName,chatRoom);
+}
+this.irc.addListener(new ChatRoomListener(this.irc,chatRoom));
+try {
+IrcConnection.this.provider.getMUC().openChatRoomWindow(chatRoom);
+}
+ catch (NullPointerException e) {
+LOGGER.error("failed to open chat room window",e);
+}
+IrcConnection.this.prepareChatRoom(chatRoom,channel);
+IrcConnection.this.provider.getMUC().fireLocalUserPresenceEvent(chatRoom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
+LOGGER.trace("Unannounced join of chat room '" + channelName + "' completed.");
+break;
+case ERR_NO_SUCH_NICK_CHANNEL:
+if (LOGGER.isTraceEnabled()) {
+LOGGER.trace("Message did not get delivered: " + msg.asRaw());
+}
+final String msgText=msg.getText();
+final int endOfTargetIndex=msgText.indexOf(' ');
+if (endOfTargetIndex == -1) {
+LOGGER.trace("Expected target nick in error message, but " + "it cannot be found. Stop parsing.");
+break;
+}
+final String targetNick=msgText.substring(0,endOfTargetIndex);
+MessageIrcImpl message=new MessageIrcImpl("",OperationSetBasicInstantMessaging.HTML_MIME_TYPE,OperationSetBasicInstantMessaging.DEFAULT_MIME_ENCODING,null);
+final Contact to=IrcConnection.this.provider.getPersistentPresence().findOrCreateContactByID(targetNick);
+IrcConnection.this.provider.getBasicInstantMessaging().fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.OFFLINE_MESSAGES_NOT_SUPPORTED);
+break;
+case RPL_AWAY:
+final String rawAwayText=msg.getText();
+final String awayUserNick=rawAwayText.substring(0,rawAwayText.indexOf(' '));
+final String awayText=rawAwayText.substring(rawAwayText.indexOf(' ') + 2);
+final MessageIrcImpl awayMessage=MessageIrcImpl.newAwayMessageFromIRC(awayText);
+final Contact awayUser=IrcConnection.this.provider.getPersistentPresence().findOrCreateContactByID(awayUserNick);
+IrcConnection.this.provider.getBasicInstantMessaging().fireMessageReceived(awayMessage,awayUser);
+break;
+case RPL_WHOISUSER:
+final String whoismsg=msg.getText();
+final int endNickIndex=whoismsg.indexOf(' ');
+final String nick=whoismsg.substring(0,endNickIndex);
+if (!IrcConnection.this.connectionState.getNickname().equals(nick)) {
+return;
+}
+final int endUserIndex=whoismsg.indexOf(' ',endNickIndex + 1);
+final int endHostIndex=whoismsg.indexOf(' ',endUserIndex + 1);
+final String user=whoismsg.substring(endNickIndex + 1,endUserIndex);
+final String host=whoismsg.substring(endUserIndex + 1,endHostIndex);
+LOGGER.debug(String.format("Current identity: %s!%s@%s",IrcConnection.this.connectionState.getNickname(),user,host));
+IrcConnection.this.identity=new IrcConnection.Identity(user,host);
+break;
+default :
+if (LOGGER.isTraceEnabled()) {
+LOGGER.trace("This ServerNumericMessage (" + code + ") will not be handled by the ServerListener.");
+}
+break;
+}
+}

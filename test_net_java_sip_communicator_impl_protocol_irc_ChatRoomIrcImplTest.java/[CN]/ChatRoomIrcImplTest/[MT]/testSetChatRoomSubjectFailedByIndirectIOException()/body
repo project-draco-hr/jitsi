@@ -1,11 +1,12 @@
 {
   final String newSubject="My test subject!";
-  this.stackMock.setSubject(EasyMock.anyObject(ChatRoomIrcImpl.class),EasyMock.eq(newSubject));
+  this.connectionMock.setSubject(EasyMock.anyObject(ChatRoomIrcImpl.class),EasyMock.eq(newSubject));
   EasyMock.expectLastCall().andThrow(new RuntimeException("Some error",new IOException("Real cause")));
   EasyMock.expect(this.providerMock.getIrcStack()).andReturn(this.stackMock);
-  this.stackMock.setSubject(EasyMock.anyObject(ChatRoomIrcImpl.class),EasyMock.eq(newSubject));
+  EasyMock.expect(this.stackMock.getConnection()).andReturn(this.connectionMock);
+  this.connectionMock.setSubject(EasyMock.anyObject(ChatRoomIrcImpl.class),EasyMock.eq(newSubject));
   EasyMock.expectLastCall();
-  EasyMock.replay(this.providerMock,this.stackMock);
+  EasyMock.replay(this.providerMock,this.stackMock,this.connectionMock);
   ChatRoomIrcImpl room=new ChatRoomIrcImpl("#my-cool-channel",this.providerMock);
   Assert.assertEquals("",room.getSubject());
   try {
