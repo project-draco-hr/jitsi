@@ -2,18 +2,11 @@
   bundleContext.removeServiceListener(this);
   if (scOtrEngine != null)   bundleContext.removeServiceListener(scOtrEngine);
   if (otrContactManager != null)   bundleContext.removeServiceListener(otrContactManager);
-  ServiceReference[] protocolProviderRefs;
-  try {
-    protocolProviderRefs=bundleContext.getServiceReferences(ProtocolProviderService.class.getName(),null);
-  }
- catch (  InvalidSyntaxException ex) {
-    logger.error("Error while retrieving service refs",ex);
-    return;
-  }
-  if (protocolProviderRefs != null && protocolProviderRefs.length > 0) {
-    for (    ServiceReference protocolProviderRef : protocolProviderRefs) {
-      ProtocolProviderService provider=(ProtocolProviderService)bundleContext.getService(protocolProviderRef);
-      this.handleProviderRemoved(provider);
+  Collection<ServiceReference<ProtocolProviderService>> protocolProviderRefs=ServiceUtils.getServiceReferences(bundleContext,ProtocolProviderService.class);
+  if (!protocolProviderRefs.isEmpty()) {
+    for (    ServiceReference<ProtocolProviderService> protocolProviderRef : protocolProviderRefs) {
+      ProtocolProviderService provider=bundleContext.getService(protocolProviderRef);
+      handleProviderRemoved(provider);
     }
   }
 }

@@ -1,12 +1,13 @@
 {
-  ServiceReference[] serRefs=null;
+  Collection<ServiceReference<ContactEventHandler>> serRefs;
   String osgiFilter="(" + ProtocolProviderFactory.PROTOCOL + "="+ protocolProvider.getProtocolName()+ ")";
   try {
-    serRefs=GuiActivator.bundleContext.getServiceReferences(ContactEventHandler.class.getName(),osgiFilter);
+    serRefs=GuiActivator.bundleContext.getServiceReferences(ContactEventHandler.class,osgiFilter);
   }
  catch (  InvalidSyntaxException ex) {
+    serRefs=null;
     logger.error("GuiActivator : " + ex);
   }
-  if (serRefs == null)   return null;
-  return (ContactEventHandler)GuiActivator.bundleContext.getService(serRefs[0]);
+  if ((serRefs == null) || serRefs.isEmpty())   return null;
+  return GuiActivator.bundleContext.getService(serRefs.iterator().next());
 }

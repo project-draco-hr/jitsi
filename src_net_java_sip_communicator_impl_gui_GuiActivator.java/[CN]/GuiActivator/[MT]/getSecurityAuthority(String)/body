@@ -2,8 +2,11 @@
   String osgiFilter="(" + ProtocolProviderFactory.PROTOCOL + "="+ protocolName+ ")";
   SecurityAuthority securityAuthority=null;
   try {
-    ServiceReference[] serRefs=bundleContext.getServiceReferences(SecurityAuthority.class.getName(),osgiFilter);
-    if (serRefs != null && serRefs.length > 0)     securityAuthority=(SecurityAuthority)bundleContext.getService(serRefs[0]);
+    Collection<ServiceReference<SecurityAuthority>> serRefs=bundleContext.getServiceReferences(SecurityAuthority.class,osgiFilter);
+    if (!serRefs.isEmpty()) {
+      ServiceReference<SecurityAuthority> serRef=serRefs.iterator().next();
+      securityAuthority=bundleContext.getService(serRef);
+    }
   }
  catch (  InvalidSyntaxException ex) {
     logger.error("GuiActivator : " + ex);

@@ -3,20 +3,22 @@
   this.setTitle(GuiActivator.getResources().getI18NString("service.gui.ACCOUNT_REGISTRATION_WIZARD"));
   this.summaryPage=new AccountRegSummaryPage(this);
   this.registerWizardPage(summaryPage.getIdentifier(),summaryPage);
-  ServiceReference[] accountWizardRefs=null;
+  Collection<ServiceReference<AccountRegistrationWizard>> accountWizardRefs;
   try {
-    accountWizardRefs=GuiActivator.bundleContext.getServiceReferences(AccountRegistrationWizard.class.getName(),null);
+    accountWizardRefs=GuiActivator.bundleContext.getServiceReferences(AccountRegistrationWizard.class,null);
   }
  catch (  InvalidSyntaxException ex) {
     logger.error("Error while retrieving service refs",ex);
     return;
   }
-  if (accountWizardRefs != null) {
-    if (logger.isDebugEnabled())     logger.debug("Found " + accountWizardRefs.length + " already installed providers.");
-    for (    ServiceReference serRef : accountWizardRefs) {
+  if ((accountWizardRefs != null) && !accountWizardRefs.isEmpty()) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Found " + accountWizardRefs.size() + " already installed providers.");
+    }
+    for (    ServiceReference<AccountRegistrationWizard> serRef : accountWizardRefs) {
       String protocolName=(String)serRef.getProperty(ProtocolProviderFactory.PROTOCOL);
-      AccountRegistrationWizard wizard=(AccountRegistrationWizard)GuiActivator.bundleContext.getService(serRef);
-      this.addAccountRegistrationWizard(protocolName,wizard);
+      AccountRegistrationWizard wizard=GuiActivator.bundleContext.getService(serRef);
+      addAccountRegistrationWizard(protocolName,wizard);
     }
   }
   GuiActivator.bundleContext.addServiceListener(this);

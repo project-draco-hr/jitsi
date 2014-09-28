@@ -1,9 +1,7 @@
 {
   bundleContext=bc;
-  ServiceReference faServiceReference=bundleContext.getServiceReference(FileAccessService.class.getName());
-  faService=(FileAccessService)bundleContext.getService(faServiceReference);
-  ServiceReference confServiceRefs=bundleContext.getServiceReference(ConfigurationService.class.getName());
-  ConfigurationService configurationService=(ConfigurationService)bundleContext.getService(confServiceRefs);
+  faService=ServiceUtils.getService(bundleContext,FileAccessService.class);
+  ConfigurationService configurationService=ServiceUtils.getService(bundleContext,ConfigurationService.class);
   String fileName=configurationService.getString(FILE_NAME_PROPERTY);
   if (fileName == null) {
     fileName=System.getProperty(FILE_NAME_PROPERTY);
@@ -11,7 +9,9 @@
   }
   try {
     contactlistFile=faService.getPrivatePersistentFile(fileName,FileCategory.PROFILE);
-    if (!contactlistFile.exists() && !contactlistFile.createNewFile())     throw new IOException("Failed to create file" + contactlistFile.getAbsolutePath());
+    if (!contactlistFile.exists() && !contactlistFile.createNewFile()) {
+      throw new IOException("Failed to create file" + contactlistFile.getAbsolutePath());
+    }
   }
  catch (  Exception ex) {
     logger.error("Failed to get a reference to the contact list file.",ex);

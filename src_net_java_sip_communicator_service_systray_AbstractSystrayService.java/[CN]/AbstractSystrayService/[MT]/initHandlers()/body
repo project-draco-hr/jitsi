@@ -5,12 +5,12 @@
  catch (  Exception e) {
     logger.warn(e);
   }
-  ServiceReference[] handlerRefs=ServiceUtils.getServiceReferences(bundleContext,PopupMessageHandler.class);
-  if (handlerRefs != null) {
+  Collection<ServiceReference<PopupMessageHandler>> handlerRefs=ServiceUtils.getServiceReferences(bundleContext,PopupMessageHandler.class);
+  if (!handlerRefs.isEmpty()) {
     ConfigurationService config=ServiceUtils.getService(bundleContext,ConfigurationService.class);
-    String configuredHandler=(String)config.getProperty("systray.POPUP_HANDLER");
-    for (    ServiceReference handlerRef : handlerRefs) {
-      PopupMessageHandler handler=(PopupMessageHandler)bundleContext.getService(handlerRef);
+    String configuredHandler=config.getString("systray.POPUP_HANDLER");
+    for (    ServiceReference<PopupMessageHandler> handlerRef : handlerRefs) {
+      PopupMessageHandler handler=bundleContext.getService(handlerRef);
       String handlerName=handler.getClass().getName();
       if (!containsHandler(handlerName)) {
         addPopupHandler(handler);

@@ -1,14 +1,15 @@
 {
+  Collection<ServiceReference<ConfigurationForm>> confFormsRefs;
   String osgiFilter="(" + ConfigurationForm.FORM_TYPE + "="+ ConfigurationForm.SECURITY_TYPE+ ")";
-  ServiceReference[] confFormsRefs=null;
   try {
-    confFormsRefs=SecurityConfigActivator.bundleContext.getServiceReferences(ConfigurationForm.class.getName(),osgiFilter);
+    confFormsRefs=SecurityConfigActivator.bundleContext.getServiceReferences(ConfigurationForm.class,osgiFilter);
   }
  catch (  InvalidSyntaxException ex) {
+    confFormsRefs=null;
   }
-  if (confFormsRefs != null) {
-    for (int i=0; i < confFormsRefs.length; i++) {
-      ConfigurationForm form=(ConfigurationForm)SecurityConfigActivator.bundleContext.getService(confFormsRefs[i]);
+  if ((confFormsRefs != null) && !confFormsRefs.isEmpty()) {
+    for (    ServiceReference<ConfigurationForm> sr : confFormsRefs) {
+      ConfigurationForm form=SecurityConfigActivator.bundleContext.getService(sr);
       Object formComponent=form.getForm();
       if (formComponent instanceof Component)       addConfigForm(form);
     }

@@ -1,15 +1,12 @@
 {
-  ServiceReference[] ppsRefs=null;
-  try {
-    ppsRefs=bundleContext.getServiceReferences(ProtocolProviderService.class.getName(),null);
-  }
- catch (  InvalidSyntaxException ise) {
-    logger.error("Failed to get ProtocolProviderService ServiceReferences",ise);
-  }
-  if (ppsRefs == null)   return;
-  for (  ServiceReference ppsRef : ppsRefs) {
-    ProtocolProviderService pps=(ProtocolProviderService)bundleContext.getService(ppsRef);
-    OperationSetBasicTelephony<?> opSet=pps.getOperationSet(OperationSetBasicTelephony.class);
-    if (opSet != null)     opSet.addCallListener(globalShortcutService.getCallShortcut());
+  Collection<ServiceReference<ProtocolProviderService>> ppsRefs=ServiceUtils.getServiceReferences(bundleContext,ProtocolProviderService.class);
+  if (!ppsRefs.isEmpty()) {
+    for (    ServiceReference<ProtocolProviderService> ppsRef : ppsRefs) {
+      ProtocolProviderService pps=bundleContext.getService(ppsRef);
+      OperationSetBasicTelephony<?> opSet=pps.getOperationSet(OperationSetBasicTelephony.class);
+      if (opSet != null) {
+        opSet.addCallListener(globalShortcutService.getCallShortcut());
+      }
+    }
   }
 }

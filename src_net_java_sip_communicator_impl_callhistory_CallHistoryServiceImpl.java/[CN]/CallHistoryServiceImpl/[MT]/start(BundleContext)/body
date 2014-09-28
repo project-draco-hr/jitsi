@@ -2,21 +2,14 @@
   if (logger.isDebugEnabled())   logger.debug("Starting the call history implementation.");
   this.bundleContext=bc;
   bc.addServiceListener(this);
-  Collection<ServiceReference<ProtocolProviderService>> ppsRefs;
-  try {
-    ppsRefs=bc.getServiceReferences(ProtocolProviderService.class,null);
-  }
- catch (  InvalidSyntaxException ex) {
-    ppsRefs=null;
-    logger.error("Error while retrieving service refs",ex);
-  }
-  if (ppsRefs != null) {
+  Collection<ServiceReference<ProtocolProviderService>> ppsRefs=ServiceUtils.getServiceReferences(bc,ProtocolProviderService.class);
+  if (!ppsRefs.isEmpty()) {
     if (logger.isDebugEnabled()) {
       logger.debug("Found " + ppsRefs.size() + " already installed providers.");
     }
     for (    ServiceReference<ProtocolProviderService> ppsRef : ppsRefs) {
       ProtocolProviderService pps=bc.getService(ppsRef);
-      this.handleProviderAdded(pps);
+      handleProviderAdded(pps);
     }
   }
 }

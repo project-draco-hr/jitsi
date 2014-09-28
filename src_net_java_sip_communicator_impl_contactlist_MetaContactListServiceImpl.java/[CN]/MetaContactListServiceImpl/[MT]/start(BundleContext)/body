@@ -4,23 +4,18 @@
   try {
     storageManager.start(bundleContext,this);
   }
- catch (  Exception exc) {
-    logger.error("Failed loading the stored contact list.",exc);
+ catch (  Exception ex) {
+    logger.error("Failed loading the stored contact list.",ex);
   }
   bc.addServiceListener(this);
-  ServiceReference[] protocolProviderRefs=null;
-  try {
-    protocolProviderRefs=bc.getServiceReferences(ProtocolProviderService.class.getName(),null);
-  }
- catch (  InvalidSyntaxException ex) {
-    logger.error("Error while retrieving service refs",ex);
-    return;
-  }
-  if (protocolProviderRefs != null) {
-    if (logger.isDebugEnabled())     logger.debug("Found " + protocolProviderRefs.length + " already installed providers.");
-    for (    ServiceReference providerRef : protocolProviderRefs) {
-      ProtocolProviderService provider=(ProtocolProviderService)bc.getService(providerRef);
-      this.handleProviderAdded(provider);
+  Collection<ServiceReference<ProtocolProviderService>> ppsRefs=ServiceUtils.getServiceReferences(bc,ProtocolProviderService.class);
+  if (!ppsRefs.isEmpty()) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Found " + ppsRefs.size() + " already installed providers.");
+    }
+    for (    ServiceReference<ProtocolProviderService> ppsRef : ppsRefs) {
+      ProtocolProviderService pps=bc.getService(ppsRef);
+      handleProviderAdded(pps);
     }
   }
 }

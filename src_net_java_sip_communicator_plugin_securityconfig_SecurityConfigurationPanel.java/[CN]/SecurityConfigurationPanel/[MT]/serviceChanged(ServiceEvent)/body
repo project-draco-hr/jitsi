@@ -1,19 +1,25 @@
 {
-  ServiceReference serviceRef=event.getServiceReference();
-  Object property=serviceRef.getProperty(ConfigurationForm.FORM_TYPE);
-  if (property != ConfigurationForm.SECURITY_TYPE)   return;
-  Object sService=SecurityConfigActivator.bundleContext.getService(serviceRef);
-  if (!(sService instanceof ConfigurationForm))   return;
-  ConfigurationForm configForm=(ConfigurationForm)sService;
-  if (!configForm.isAdvanced())   return;
+  ServiceReference<?> ref=event.getServiceReference();
+  Object property=ref.getProperty(ConfigurationForm.FORM_TYPE);
+  if (!ConfigurationForm.SECURITY_TYPE.equals(property))   return;
+  Object service;
+  try {
+    service=SecurityConfigActivator.bundleContext.getService(ref);
+  }
+ catch (  IllegalStateException ex) {
+    return;
+  }
+  if (!(service instanceof ConfigurationForm))   return;
+  ConfigurationForm cfgForm=(ConfigurationForm)service;
+  if (!cfgForm.isAdvanced())   return;
   Object formComponent;
 switch (event.getType()) {
 case ServiceEvent.REGISTERED:
-    formComponent=configForm.getForm();
-  if (formComponent instanceof Component)   addConfigForm(configForm);
+    formComponent=cfgForm.getForm();
+  if (formComponent instanceof Component)   addConfigForm(cfgForm);
 break;
 case ServiceEvent.UNREGISTERING:
-formComponent=configForm.getForm();
+formComponent=cfgForm.getForm();
 if (formComponent instanceof Component) remove((Component)formComponent);
 break;
 }

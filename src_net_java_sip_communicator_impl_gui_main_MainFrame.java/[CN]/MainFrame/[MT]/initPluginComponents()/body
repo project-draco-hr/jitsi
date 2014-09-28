@@ -8,16 +8,17 @@
   contentPane.add(pluginPanelEast,BorderLayout.EAST);
   contentPane.add(pluginPanelWest,BorderLayout.WEST);
   this.mainPanel.add(pluginPanelSouth,BorderLayout.SOUTH);
-  ServiceReference[] serRefs=null;
+  Collection<ServiceReference<PluginComponentFactory>> serRefs;
   try {
-    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponentFactory.class.getName(),"(|(" + Container.CONTAINER_ID + "="+ Container.CONTAINER_MAIN_WINDOW.getID()+ ")("+ Container.CONTAINER_ID+ "="+ Container.CONTAINER_STATUS_BAR.getID()+ "))");
+    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponentFactory.class,"(|(" + Container.CONTAINER_ID + "="+ Container.CONTAINER_MAIN_WINDOW.getID()+ ")("+ Container.CONTAINER_ID+ "="+ Container.CONTAINER_STATUS_BAR.getID()+ "))");
   }
  catch (  InvalidSyntaxException exc) {
+    serRefs=null;
     logger.error("Could not obtain plugin reference.",exc);
   }
-  if (serRefs != null) {
-    for (    ServiceReference serRef : serRefs) {
-      PluginComponentFactory factory=(PluginComponentFactory)GuiActivator.bundleContext.getService(serRef);
+  if ((serRefs != null) && !serRefs.isEmpty()) {
+    for (    ServiceReference<PluginComponentFactory> serRef : serRefs) {
+      PluginComponentFactory factory=GuiActivator.bundleContext.getService(serRef);
       if (factory.isNativeComponent())       nativePluginsTable.add(factory);
  else {
         String pluginConstraints=factory.getConstraints();

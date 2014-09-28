@@ -1,21 +1,11 @@
 {
-  Collection<ServiceReference<UriHandler>> uriHandlerRefs;
-  try {
-    uriHandlerRefs=bundleContext.getServiceReferences(UriHandler.class,null);
-  }
- catch (  InvalidSyntaxException ex) {
-    if (logger.isInfoEnabled()) {
-      logger.info("An error occurred while retrieving UriHandlers",ex);
-    }
-    return;
-  }
-  if ((uriHandlerRefs == null) || uriHandlerRefs.isEmpty()) {
-    return;
-  }
+  Collection<ServiceReference<UriHandler>> uriHandlerRefs=ServiceUtils.getServiceReferences(bundleContext,UriHandler.class);
+  if (!uriHandlerRefs.isEmpty()) {
 synchronized (uriHandlers) {
-    for (    ServiceReference<UriHandler> uriHandlerRef : uriHandlerRefs) {
-      UriHandler uriHandler=bundleContext.getService(uriHandlerRef);
-      uriHandlers.put(uriHandler.getProtocol(),uriHandler);
+      for (      ServiceReference<UriHandler> uriHandlerRef : uriHandlerRefs) {
+        UriHandler uriHandler=bundleContext.getService(uriHandlerRef);
+        uriHandlers.put(uriHandler.getProtocol(),uriHandler);
+      }
     }
   }
 }

@@ -3,15 +3,8 @@
   chatRoomProviders=new LinkedList<ProtocolProviderService>();
   protocolProviderRegListener=new ProtocolProviderRegListener();
   bundleContext.addServiceListener(protocolProviderRegListener);
-  Collection<ServiceReference<ProtocolProviderFactory>> serRefs;
-  try {
-    serRefs=bundleContext.getServiceReferences(ProtocolProviderFactory.class,null);
-  }
- catch (  InvalidSyntaxException e) {
-    serRefs=null;
-    logger.error("LoginManager : " + e);
-  }
-  if (serRefs != null) {
+  Collection<ServiceReference<ProtocolProviderFactory>> serRefs=ServiceUtils.getServiceReferences(bundleContext,ProtocolProviderFactory.class);
+  if (!serRefs.isEmpty()) {
     for (    ServiceReference<ProtocolProviderFactory> ppfSerRef : serRefs) {
       ProtocolProviderFactory providerFactory=bundleContext.getService(ppfSerRef);
       for (      AccountID accountID : providerFactory.getRegisteredAccounts()) {
