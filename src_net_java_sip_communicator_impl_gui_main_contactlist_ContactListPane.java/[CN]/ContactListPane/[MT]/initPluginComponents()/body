@@ -1,15 +1,16 @@
 {
-  ServiceReference[] serRefs=null;
+  Collection<ServiceReference<PluginComponentFactory>> serRefs;
   String osgiFilter="(" + Container.CONTAINER_ID + "="+ Container.CONTAINER_CONTACT_LIST.getID()+ ")";
   try {
-    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponentFactory.class.getName(),osgiFilter);
+    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponentFactory.class,osgiFilter);
   }
- catch (  InvalidSyntaxException exc) {
-    logger.error("Could not obtain plugin reference.",exc);
+ catch (  InvalidSyntaxException ex) {
+    serRefs=null;
+    logger.error("Could not obtain plugin reference.",ex);
   }
-  if (serRefs != null) {
-    for (    ServiceReference serRef : serRefs) {
-      PluginComponentFactory factory=(PluginComponentFactory)GuiActivator.bundleContext.getService(serRef);
+  if ((serRefs != null) && !serRefs.isEmpty()) {
+    for (    ServiceReference<PluginComponentFactory> serRef : serRefs) {
+      PluginComponentFactory factory=GuiActivator.bundleContext.getService(serRef);
       PluginComponent component=factory.getPluginComponentInstance(this);
       Object selectedValue=getContactList().getSelectedValue();
       if (selectedValue instanceof MetaContact) {
@@ -20,10 +21,12 @@
       }
       String pluginConstraints=factory.getConstraints();
       Object constraints;
-      if (pluginConstraints != null)       constraints=UIServiceImpl.getBorderLayoutConstraintsFromContainer(pluginConstraints);
+      if (pluginConstraints != null) {
+        constraints=UIServiceImpl.getBorderLayoutConstraintsFromContainer(pluginConstraints);
+      }
  else       constraints=BorderLayout.SOUTH;
-      this.add((Component)component.getComponent(),constraints);
-      this.repaint();
+      add((Component)component.getComponent(),constraints);
+      repaint();
     }
   }
   GuiActivator.getUIService().addPluginComponentListener(this);

@@ -1,15 +1,16 @@
 {
-  ServiceReference[] serRefs=null;
+  Collection<ServiceReference<PluginComponentFactory>> serRefs;
   String osgiFilter="(" + net.java.sip.communicator.service.gui.Container.CONTAINER_ID + "="+ net.java.sip.communicator.service.gui.Container.CONTAINER_CHAT_WRITE_PANEL.getID()+ ")";
   try {
-    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponentFactory.class.getName(),osgiFilter);
+    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponentFactory.class,osgiFilter);
   }
- catch (  InvalidSyntaxException exc) {
-    logger.error("Could not obtain plugin reference.",exc);
+ catch (  InvalidSyntaxException ex) {
+    serRefs=null;
+    logger.error("Could not obtain plugin reference.",ex);
   }
-  if (serRefs != null) {
-    for (int i=0; i < serRefs.length; i++) {
-      PluginComponentFactory factory=(PluginComponentFactory)GuiActivator.bundleContext.getService(serRefs[i]);
+  if ((serRefs != null) && !serRefs.isEmpty()) {
+    for (    ServiceReference<PluginComponentFactory> serRef : serRefs) {
+      PluginComponentFactory factory=GuiActivator.bundleContext.getService(serRef);
       PluginComponent component=factory.getPluginComponentInstance(this);
       ChatSession chatSession=chatPanel.getChatSession();
       if (chatSession != null) {
@@ -20,7 +21,8 @@
           component.setCurrentContact(contact,currentTransport.getResourceName());
         }
       }
-      if (component.getComponent() == null)       continue;
+      Object c=component.getComponent();
+      if (c == null)       continue;
       GridBagConstraints constraints=new GridBagConstraints();
       constraints.anchor=GridBagConstraints.NORTHEAST;
       constraints.fill=GridBagConstraints.NONE;
@@ -29,7 +31,7 @@
       constraints.weightx=0f;
       constraints.weighty=0f;
       constraints.insets=new Insets(0,3,0,0);
-      centerPanel.add((Component)component.getComponent(),constraints);
+      centerPanel.add((Component)c,constraints);
     }
   }
   GuiActivator.getUIService().addPluginComponentListener(this);

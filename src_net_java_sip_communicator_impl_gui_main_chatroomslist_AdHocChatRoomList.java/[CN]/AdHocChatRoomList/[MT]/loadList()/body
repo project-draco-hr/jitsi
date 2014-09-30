@@ -1,16 +1,10 @@
 {
-  try {
-    ServiceReference[] serRefs=GuiActivator.bundleContext.getServiceReferences(ProtocolProviderService.class.getName(),null);
-    if (serRefs == null)     return;
-    for (    ServiceReference serRef : serRefs) {
-      ProtocolProviderService protocolProvider=(ProtocolProviderService)GuiActivator.bundleContext.getService(serRef);
+  Collection<ServiceReference<ProtocolProviderService>> serRefs=ServiceUtils.getServiceReferences(GuiActivator.bundleContext,ProtocolProviderService.class);
+  if ((serRefs != null) && !serRefs.isEmpty()) {
+    for (    ServiceReference<ProtocolProviderService> serRef : serRefs) {
+      ProtocolProviderService protocolProvider=GuiActivator.bundleContext.getService(serRef);
       Object adHocMultiUserChatOpSet=protocolProvider.getOperationSet(OperationSetAdHocMultiUserChat.class);
-      if (adHocMultiUserChatOpSet != null) {
-        this.addChatProvider(protocolProvider);
-      }
+      if (adHocMultiUserChatOpSet != null)       addChatProvider(protocolProvider);
     }
-  }
- catch (  InvalidSyntaxException e) {
-    logger.error("Failed to obtain service references.",e);
   }
 }

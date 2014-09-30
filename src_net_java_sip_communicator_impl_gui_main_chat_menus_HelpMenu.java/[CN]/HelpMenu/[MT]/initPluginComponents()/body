@@ -1,17 +1,18 @@
 {
-  ServiceReference[] serRefs=null;
+  Collection<ServiceReference<PluginComponentFactory>> serRefs;
   String osgiFilter="(" + Container.CONTAINER_ID + "="+ Container.CONTAINER_CHAT_HELP_MENU.getID()+ ")";
   try {
-    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponentFactory.class.getName(),osgiFilter);
+    serRefs=GuiActivator.bundleContext.getServiceReferences(PluginComponentFactory.class,osgiFilter);
   }
- catch (  InvalidSyntaxException exc) {
-    logger.error("Could not obtain plugin reference.",exc);
+ catch (  InvalidSyntaxException ex) {
+    serRefs=null;
+    logger.error("Could not obtain plugin reference.",ex);
   }
-  if (serRefs != null) {
-    for (int i=0; i < serRefs.length; i++) {
-      PluginComponentFactory factory=(PluginComponentFactory)GuiActivator.bundleContext.getService(serRefs[i]);
+  if ((serRefs != null) && !serRefs.isEmpty()) {
+    for (    ServiceReference<PluginComponentFactory> serRef : serRefs) {
+      PluginComponentFactory factory=GuiActivator.bundleContext.getService(serRef);
       PluginComponent component=factory.getPluginComponentInstance(HelpMenu.this);
-      this.add((Component)component.getComponent());
+      add((Component)component.getComponent());
     }
   }
   GuiActivator.getUIService().addPluginComponentListener(this);

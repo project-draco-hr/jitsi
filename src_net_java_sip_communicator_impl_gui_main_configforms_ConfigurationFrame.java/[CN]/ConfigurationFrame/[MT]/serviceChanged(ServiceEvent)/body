@@ -1,19 +1,21 @@
 {
   if (!GuiActivator.isStarted)   return;
-  ServiceReference serRef=event.getServiceReference();
+  ServiceReference<?> serRef=event.getServiceReference();
   Object property=serRef.getProperty(ConfigurationForm.FORM_TYPE);
   if (property != ConfigurationForm.GENERAL_TYPE)   return;
-  Object sService=GuiActivator.bundleContext.getService(event.getServiceReference());
-  if (!(sService instanceof ConfigurationForm))   return;
-  ConfigurationForm configForm=(ConfigurationForm)sService;
-  if (configForm.isAdvanced())   return;
+  Object service=GuiActivator.bundleContext.getService(serRef);
+  if (!(service instanceof ConfigurationForm))   return;
+  ConfigurationForm cfgForm=(ConfigurationForm)service;
+  if (cfgForm.isAdvanced())   return;
 switch (event.getType()) {
 case ServiceEvent.REGISTERED:
-    if (logger.isInfoEnabled())     logger.info("Handling registration of a new Configuration Form.");
-  this.addConfigurationForm(configForm);
+    if (logger.isInfoEnabled()) {
+      logger.info("Handling registration of a new Configuration Form.");
+    }
+  addConfigurationForm(cfgForm);
 break;
 case ServiceEvent.UNREGISTERING:
-this.removeConfigurationForm(configForm);
+removeConfigurationForm(cfgForm);
 break;
 }
 }
