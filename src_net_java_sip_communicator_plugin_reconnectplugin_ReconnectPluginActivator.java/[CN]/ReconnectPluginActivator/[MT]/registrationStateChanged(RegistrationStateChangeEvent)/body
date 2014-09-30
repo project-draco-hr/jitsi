@@ -3,7 +3,8 @@
 synchronized (this) {
     try {
       ProtocolProviderService pp=(ProtocolProviderService)evt.getSource();
-      if (evt.getNewState().equals(RegistrationState.CONNECTION_FAILED)) {
+      boolean isServerReturnedErroneousInputEvent=evt.getNewState().equals(RegistrationState.CONNECTION_FAILED) && evt.getReasonCode() == RegistrationStateChangeEvent.REASON_SERVER_RETURNED_ERRONEOUS_INPUT;
+      if (evt.getNewState().equals(RegistrationState.CONNECTION_FAILED) && !isServerReturnedErroneousInputEvent) {
         if (!hasAtLeastOneSuccessfulConnection(pp)) {
           if (evt.getReasonCode() == RegistrationStateChangeEvent.REASON_NON_EXISTING_USER_ID) {
             notify(getResources().getI18NString("service.gui.ERROR"),"service.gui.NON_EXISTING_USER_ID",new String[]{pp.getAccountID().getService()},pp.getAccountID());
@@ -39,8 +40,8 @@ synchronized (this) {
           traceCurrentPPState();
         }
       }
- else       if (evt.getNewState().equals(RegistrationState.UNREGISTERED)) {
-        if (evt.isUserRequest())         autoReconnEnabledProviders.remove(pp);
+ else       if (evt.getNewState().equals(RegistrationState.UNREGISTERED) || isServerReturnedErroneousInputEvent) {
+        if (evt.isUserRequest() || isServerReturnedErroneousInputEvent)         autoReconnEnabledProviders.remove(pp);
         if (!unregisteringProviders.contains(pp) && currentlyReconnecting.containsKey(pp)) {
           currentlyReconnecting.remove(pp).cancel();
         }

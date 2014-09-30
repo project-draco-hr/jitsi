@@ -1,5 +1,6 @@
 {
   logger.error("connectionClosedOnError " + exception.getLocalizedMessage(),exception);
+  int reason=RegistrationStateChangeEvent.REASON_NOT_SPECIFIED;
   if (exception instanceof XMPPException) {
     StreamError err=((XMPPException)exception).getStreamError();
     if (err != null && err.getCode().equals(XMPPError.Condition.conflict.toString())) {
@@ -17,12 +18,15 @@ synchronized (connectAndLoginLock) {
  else   if (exception instanceof SSLHandshakeException && exception.getCause() instanceof CertificateException) {
     return;
   }
+ else   if (exception instanceof XmlPullParserException) {
+    reason=RegistrationStateChangeEvent.REASON_SERVER_RETURNED_ERRONEOUS_INPUT;
+  }
 synchronized (connectAndLoginLock) {
     if (inConnectAndLogin) {
-      eventDuringLogin=new RegistrationStateChangeEvent(ProtocolProviderServiceJabberImpl.this,getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,exception.getMessage());
+      eventDuringLogin=new RegistrationStateChangeEvent(ProtocolProviderServiceJabberImpl.this,getRegistrationState(),RegistrationState.CONNECTION_FAILED,reason,exception.getMessage());
       return;
     }
   }
   disconnectAndCleanConnection();
-  fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED,exception.getMessage());
+  fireRegistrationStateChanged(getRegistrationState(),RegistrationState.CONNECTION_FAILED,reason,exception.getMessage());
 }
