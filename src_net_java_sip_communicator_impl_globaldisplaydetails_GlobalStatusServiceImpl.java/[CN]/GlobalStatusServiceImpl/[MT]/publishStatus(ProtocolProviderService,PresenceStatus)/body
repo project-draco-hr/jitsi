@@ -1,26 +1,3 @@
 {
-  OperationSetPresence presence=protocolProvider.getOperationSet(OperationSetPresence.class);
-  LoginManager loginManager=null;
-  UIService uiService=GlobalDisplayDetailsActivator.getUIService();
-  if (uiService != null) {
-    loginManager=uiService.getLoginManager();
-  }
-  RegistrationState registrationState=protocolProvider.getRegistrationState();
-  if (registrationState == RegistrationState.REGISTERED && presence != null && !presence.getPresenceStatus().equals(status)) {
-    if (status.isOnline()) {
-      new PublishPresenceStatusThread(protocolProvider,presence,status).start();
-    }
- else {
-      if (loginManager != null)       loginManager.setManuallyDisconnected(true);
-      LoginManager.logoff(protocolProvider);
-    }
-  }
- else   if (registrationState != RegistrationState.REGISTERED && registrationState != RegistrationState.REGISTERING && registrationState != RegistrationState.AUTHENTICATING && status.isOnline()) {
-    logger.warn("Called publish status for provider in wrong state " + " provider: " + protocolProvider + " registrationState: "+ registrationState+ " status: "+ status);
-  }
- else   if (!status.isOnline() && !(registrationState == RegistrationState.UNREGISTERING)) {
-    if (loginManager != null)     loginManager.setManuallyDisconnected(true);
-    LoginManager.logoff(protocolProvider);
-  }
-  saveStatusInformation(protocolProvider,status.getStatusName());
+  publishStatusInternal(protocolProvider,status,false);
 }
