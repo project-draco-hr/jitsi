@@ -60,20 +60,6 @@ final MessageIrcImpl awayMessage=MessageIrcImpl.newAwayMessageFromIRC(awayText);
 final Contact awayUser=IrcConnection.this.provider.getPersistentPresence().findOrCreateContactByID(awayUserNick);
 IrcConnection.this.provider.getBasicInstantMessaging().fireMessageReceived(awayMessage,awayUser);
 break;
-case RPL_WHOISUSER:
-final String whoismsg=msg.getText();
-final int endNickIndex=whoismsg.indexOf(' ');
-final String nick=whoismsg.substring(0,endNickIndex);
-if (!IrcConnection.this.connectionState.getNickname().equals(nick)) {
-return;
-}
-final int endUserIndex=whoismsg.indexOf(' ',endNickIndex + 1);
-final int endHostIndex=whoismsg.indexOf(' ',endUserIndex + 1);
-final String user=whoismsg.substring(endNickIndex + 1,endUserIndex);
-final String host=whoismsg.substring(endUserIndex + 1,endHostIndex);
-LOGGER.debug(String.format("Current identity: %s!%s@%s",IrcConnection.this.connectionState.getNickname(),user,host));
-IrcConnection.this.identity=new IrcConnection.Identity(user,host);
-break;
 default :
 if (LOGGER.isTraceEnabled()) {
 LOGGER.trace("This ServerNumericMessage (" + code + ") will not be handled by the ServerListener.");
