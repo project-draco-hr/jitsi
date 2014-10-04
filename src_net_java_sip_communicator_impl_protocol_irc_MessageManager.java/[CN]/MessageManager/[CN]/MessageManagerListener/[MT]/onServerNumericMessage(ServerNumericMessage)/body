@@ -1,0 +1,29 @@
+{
+switch (msg.getNumericCode().intValue()) {
+case ERR_NO_SUCH_NICK_CHANNEL:
+    if (LOGGER.isTraceEnabled()) {
+      LOGGER.trace("Message did not get delivered: " + msg.asRaw());
+    }
+  final String msgText=msg.getText();
+final int endOfTargetIndex=msgText.indexOf(' ');
+if (endOfTargetIndex == -1) {
+LOGGER.trace("Expected target nick in error message, but " + "it cannot be found. Stop parsing.");
+break;
+}
+final String targetNick=msgText.substring(0,endOfTargetIndex);
+MessageIrcImpl message=new MessageIrcImpl("",OperationSetBasicInstantMessaging.HTML_MIME_TYPE,OperationSetBasicInstantMessaging.DEFAULT_MIME_ENCODING,null);
+final Contact to=MessageManager.this.provider.getPersistentPresence().findOrCreateContactByID(targetNick);
+MessageManager.this.provider.getBasicInstantMessaging().fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.OFFLINE_MESSAGES_NOT_SUPPORTED);
+break;
+case RPL_AWAY:
+final String rawAwayText=msg.getText();
+final String awayUserNick=rawAwayText.substring(0,rawAwayText.indexOf(' '));
+final String awayText=rawAwayText.substring(rawAwayText.indexOf(' ') + 2);
+final MessageIrcImpl awayMessage=MessageIrcImpl.newAwayMessageFromIRC(awayText);
+final Contact awayUser=MessageManager.this.provider.getPersistentPresence().findOrCreateContactByID(awayUserNick);
+MessageManager.this.provider.getBasicInstantMessaging().fireMessageReceived(awayMessage,awayUser);
+break;
+default :
+break;
+}
+}
