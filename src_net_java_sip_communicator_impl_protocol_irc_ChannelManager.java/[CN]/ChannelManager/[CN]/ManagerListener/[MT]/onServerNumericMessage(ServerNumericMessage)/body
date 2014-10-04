@@ -1,0 +1,32 @@
+{
+switch (msg.getNumericCode().intValue()) {
+case RPL_LISTEND:
+    final String text=msg.getText();
+  final String channelName=text.substring(0,text.indexOf(' '));
+final ChatRoomIrcImpl chatRoom;
+final IRCChannel channel;
+synchronized (ChannelManager.this.joined) {
+if (ChannelManager.this.joined.containsKey(channelName)) {
+LOGGER.trace("Chat room '" + channelName + "' join event was announced or already "+ "finished. Stop handling this event.");
+break;
+}
+LOGGER.trace("Starting unannounced join of chat room '" + channelName);
+channel=ChannelManager.this.connectionState.getChannelByName(channelName);
+chatRoom=new ChatRoomIrcImpl(channelName,ChannelManager.this.provider);
+ChannelManager.this.joined.put(channelName,chatRoom);
+}
+this.irc.addListener(new ChatRoomListener(this.irc,chatRoom));
+try {
+ChannelManager.this.provider.getMUC().openChatRoomWindow(chatRoom);
+}
+ catch (NullPointerException e) {
+LOGGER.error("failed to open chat room window",e);
+}
+ChannelManager.this.prepareChatRoom(chatRoom,channel);
+ChannelManager.this.provider.getMUC().fireLocalUserPresenceEvent(chatRoom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
+LOGGER.trace("Unannounced join of chat room '" + channelName + "' completed.");
+break;
+default :
+break;
+}
+}

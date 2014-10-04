@@ -11,37 +11,11 @@
     return;
   }
 switch (code.intValue()) {
-case RPL_LISTEND:
-    final String text=msg.getText();
-  final String channelName=text.substring(0,text.indexOf(' '));
-final ChatRoomIrcImpl chatRoom;
-final IRCChannel channel;
-synchronized (IrcConnection.this.joined) {
-if (IrcConnection.this.joined.containsKey(channelName)) {
-LOGGER.trace("Chat room '" + channelName + "' join event was announced or already "+ "finished. Stop handling this event.");
-break;
-}
-LOGGER.trace("Starting unannounced join of chat room '" + channelName);
-channel=IrcConnection.this.connectionState.getChannelByName(channelName);
-chatRoom=new ChatRoomIrcImpl(channelName,IrcConnection.this.provider);
-IrcConnection.this.joined.put(channelName,chatRoom);
-}
-this.irc.addListener(new ChatRoomListener(this.irc,chatRoom));
-try {
-IrcConnection.this.provider.getMUC().openChatRoomWindow(chatRoom);
-}
- catch (NullPointerException e) {
-LOGGER.error("failed to open chat room window",e);
-}
-IrcConnection.this.prepareChatRoom(chatRoom,channel);
-IrcConnection.this.provider.getMUC().fireLocalUserPresenceEvent(chatRoom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
-LOGGER.trace("Unannounced join of chat room '" + channelName + "' completed.");
-break;
 case ERR_NO_SUCH_NICK_CHANNEL:
-if (LOGGER.isTraceEnabled()) {
-LOGGER.trace("Message did not get delivered: " + msg.asRaw());
-}
-final String msgText=msg.getText();
+    if (LOGGER.isTraceEnabled()) {
+      LOGGER.trace("Message did not get delivered: " + msg.asRaw());
+    }
+  final String msgText=msg.getText();
 final int endOfTargetIndex=msgText.indexOf(' ');
 if (endOfTargetIndex == -1) {
 LOGGER.trace("Expected target nick in error message, but " + "it cannot be found. Stop parsing.");
