@@ -17,58 +17,56 @@
 synchronized (joinSignal) {
     LOGGER.trace("Issue join channel command to IRC library and wait " + "for join operation to complete (un)successfully.");
     this.joined.put(chatRoomId,null);
-synchronized (this.irc) {
-      this.irc.joinChannel(chatRoomId,password,new Callback<IRCChannel>(){
-        @Override public void onSuccess(        final IRCChannel channel){
-          if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("Started callback for successful " + "join of channel '" + chatroom.getIdentifier() + "'.");
-          }
-          boolean isRequestedChatRoom=channel.getName().equalsIgnoreCase(chatRoomId);
-synchronized (joinSignal) {
-            if (!isRequestedChatRoom) {
-              if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Callback for successful " + "join finished prematurely " + "since we got forwarded from "+ "'" + chatRoomId + "' to '"+ channel.getName()+ "'. Joining of forwarded channel "+ "gets handled by Server Listener "+ "since that channel was not "+ "announced.");
-              }
-              ChannelManager.this.joined.remove(chatRoomId);
-              ChannelManager.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOIN_FAILED,"We got forwarded to channel '" + channel.getName() + "'.");
-              joinSignal.setDone();
-              joinSignal.notifyAll();
-              return;
-            }
-            try {
-              ChannelManager.this.joined.put(chatRoomId,chatroom);
-              ChannelManager.this.irc.addListener(new ChatRoomListener(chatroom));
-              prepareChatRoom(chatroom,channel);
-            }
-  finally {
-              ChannelManager.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
-              if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Finished successful join " + "callback for channel '" + chatRoomId + "'. Waking up original "+ "thread.");
-              }
-              joinSignal.setDone();
-              joinSignal.notifyAll();
-            }
-          }
+    this.irc.joinChannel(chatRoomId,password,new Callback<IRCChannel>(){
+      @Override public void onSuccess(      final IRCChannel channel){
+        if (LOGGER.isTraceEnabled()) {
+          LOGGER.trace("Started callback for successful " + "join of channel '" + chatroom.getIdentifier() + "'.");
         }
-        @Override public void onFailure(        final Exception e){
-          LOGGER.trace("Started callback for failed attempt to " + "join channel '" + chatRoomId + "'.");
+        boolean isRequestedChatRoom=channel.getName().equalsIgnoreCase(chatRoomId);
 synchronized (joinSignal) {
-            try {
-              ChannelManager.this.joined.remove(chatRoomId);
-              ChannelManager.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOIN_FAILED,e.getMessage());
+          if (!isRequestedChatRoom) {
+            if (LOGGER.isTraceEnabled()) {
+              LOGGER.trace("Callback for successful " + "join finished prematurely " + "since we got forwarded from '" + chatRoomId + "' to '"+ channel.getName()+ "'. Joining of forwarded channel "+ "gets handled by Server Listener "+ "since that channel was not "+ "announced.");
             }
+            ChannelManager.this.joined.remove(chatRoomId);
+            ChannelManager.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOIN_FAILED,"We got forwarded to channel '" + channel.getName() + "'.");
+            joinSignal.setDone();
+            joinSignal.notifyAll();
+            return;
+          }
+          try {
+            ChannelManager.this.joined.put(chatRoomId,chatroom);
+            ChannelManager.this.irc.addListener(new ChatRoomListener(chatroom));
+            prepareChatRoom(chatroom,channel);
+          }
   finally {
-              if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Finished callback for " + "failed attempt to join " + "channel '" + chatRoomId + "'. Waking up original "+ "thread.");
-              }
-              joinSignal.setDone(e);
-              joinSignal.notifyAll();
+            ChannelManager.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOINED,null);
+            if (LOGGER.isTraceEnabled()) {
+              LOGGER.trace("Finished successful join " + "callback for channel '" + chatRoomId + "'. Waking up original thread.");
             }
+            joinSignal.setDone();
+            joinSignal.notifyAll();
           }
         }
       }
-);
+      @Override public void onFailure(      final Exception e){
+        LOGGER.trace("Started callback for failed attempt to " + "join channel '" + chatRoomId + "'.");
+synchronized (joinSignal) {
+          try {
+            ChannelManager.this.joined.remove(chatRoomId);
+            ChannelManager.this.provider.getMUC().fireLocalUserPresenceEvent(chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_JOIN_FAILED,e.getMessage());
+          }
+  finally {
+            if (LOGGER.isTraceEnabled()) {
+              LOGGER.trace("Finished callback for " + "failed attempt to join " + "channel '" + chatRoomId + "'. Waking up original thread.");
+            }
+            joinSignal.setDone(e);
+            joinSignal.notifyAll();
+          }
+        }
+      }
     }
+);
     try {
       while (!joinSignal.isDone()) {
         LOGGER.trace("Waiting for channel join message ...");
