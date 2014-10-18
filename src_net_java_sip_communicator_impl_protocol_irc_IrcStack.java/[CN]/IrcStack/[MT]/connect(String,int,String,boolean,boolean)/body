@@ -6,27 +6,27 @@
  else {
     server=new IRCServer(host,port,password,false);
   }
+  try {
 synchronized (this.session) {
-    final IrcConnection current=this.session.get();
-    if (current != null && current.isConnected()) {
-      return;
-    }
-    this.params.setServer(server);
-    try {
+      final IrcConnection current=this.session.get();
+      if (current != null && current.isConnected()) {
+        return;
+      }
+      this.params.setServer(server);
       final IRCApi irc=new IRCApiImpl(true);
       if (LOGGER.isTraceEnabled()) {
         irc.addListener(new DebugListener());
       }
       this.session.set(new IrcConnection(this.provider,this.params,new SynchronizedIRCApi(irc)));
     }
- catch (    IOException e) {
-      this.provider.setCurrentRegistrationState(RegistrationState.CONNECTION_FAILED);
-      throw e;
-    }
-catch (    InterruptedException e) {
-      this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED);
-      throw e;
-    }
+  }
+ catch (  IOException e) {
+    this.provider.setCurrentRegistrationState(RegistrationState.CONNECTION_FAILED);
+    throw e;
+  }
+catch (  InterruptedException e) {
+    this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED);
+    throw e;
   }
   this.provider.setCurrentRegistrationState(RegistrationState.REGISTERED);
 }
