@@ -12,8 +12,12 @@
   if (this.joined.containsKey(chatRoomId)) {
     return;
   }
-  if (this.isupportChannelLen != null && chatRoomId.length() > this.isupportChannelLen.intValue()) {
+  if (this.isupportChannelLen != null && chatRoomId.length() > this.isupportChannelLen) {
     throw new IllegalArgumentException("the channel name must not be " + "longer than " + this.isupportChannelLen.intValue() + " characters according to server parameters.");
+  }
+  final Integer limit=this.isupportChanLimit.get(chatRoomId.charAt(0));
+  if (limit != null && this.joined.size() >= limit) {
+    throw new IllegalStateException("already joined to the maximum " + "allowed number of channels (" + this.isupportChanLimit.toString() + ") according to "+ "server parameters.");
   }
   LOGGER.trace("Start joining channel " + chatRoomId);
   final Result<Object,Exception> joinSignal=new Result<Object,Exception>();
