@@ -1,8 +1,11 @@
 {
   final String user=msg.getSource().getNick();
-  if (IrcConnection.this.connectionState.getNickname().equals(user)) {
-    LOGGER.debug("Local user's QUIT message received: removing " + "server listener.");
-    IrcConnection.this.irc.deleteListener(this);
+  if (!IrcConnection.this.connectionState.getNickname().equals(user)) {
     return;
+  }
+  LOGGER.debug("Local user's QUIT message received: removing " + "server listener.");
+  IrcConnection.this.irc.deleteListener(this);
+  if (IrcConnection.this.connectionListener != null) {
+    IrcConnection.this.connectionListener.connectionInterrupted(IrcConnection.this);
   }
 }
