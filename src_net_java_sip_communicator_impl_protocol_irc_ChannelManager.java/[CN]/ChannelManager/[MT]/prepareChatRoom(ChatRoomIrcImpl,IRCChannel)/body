@@ -5,8 +5,13 @@
     final ChatRoomMemberIrcImpl member=new ChatRoomMemberIrcImpl(this.provider,chatRoom,user.getNick(),user.getIdent(),user.getHostname(),ChatRoomMemberRole.SILENT_MEMBER);
     ChatRoomMemberRole role;
     for (    final IRCUserStatus status : channel.getStatusesForUser(user)) {
-      role=convertMemberMode(status.getChanModeType());
-      member.addRole(role);
+      try {
+        role=convertMemberMode(status.getChanModeType());
+        member.addRole(role);
+      }
+ catch (      UnknownModeException e) {
+        LOGGER.info("Unknown mode encountered. This mode will be ignored.",e);
+      }
     }
     chatRoom.addChatRoomMember(member.getContactAddress(),member);
     if (this.connectionState.getNickname().equals(user.getNick())) {
