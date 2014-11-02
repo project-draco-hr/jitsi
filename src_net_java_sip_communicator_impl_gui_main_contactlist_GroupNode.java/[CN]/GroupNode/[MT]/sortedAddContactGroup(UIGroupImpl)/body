@@ -4,9 +4,17 @@ synchronized (uiGroup) {
     groupNode=new GroupNode(treeModel,uiGroup);
     uiGroup.setGroupNode(groupNode);
   }
-  add(groupNode);
-  Collections.sort(children,nodeComparator);
-  int contactIndex=getIndex(groupNode);
-  if (contactIndex > -1)   fireNodeInserted(contactIndex);
+  if (children == null) {
+    add(groupNode);
+    fireNodeInserted(0);
+  }
+ else {
+    final int insertionPoint=Collections.binarySearch(children,groupNode,nodeComparator);
+    if (insertionPoint < 0) {
+      final int index=(insertionPoint + 1) * -1;
+      insert(groupNode,index);
+      fireNodeInserted(index);
+    }
+  }
   return groupNode;
 }

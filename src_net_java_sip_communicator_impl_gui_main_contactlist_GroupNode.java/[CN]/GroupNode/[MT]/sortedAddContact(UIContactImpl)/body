@@ -2,9 +2,17 @@
   if (logger.isDebugEnabled())   logger.debug("Group node sorted add contact: " + uiContact.getDisplayName());
   ContactNode contactNode=new ContactNode(uiContact);
   uiContact.setContactNode(contactNode);
-  add(contactNode);
-  Collections.sort(children,nodeComparator);
-  int contactIndex=getIndex(contactNode);
-  if (contactIndex > -1)   fireNodeInserted(contactIndex);
+  if (children == null) {
+    add(contactNode);
+    fireNodeInserted(0);
+  }
+ else {
+    final int insertionPoint=Collections.binarySearch(children,contactNode,nodeComparator);
+    if (insertionPoint < 0) {
+      final int index=(insertionPoint + 1) * -1;
+      insert(contactNode,index);
+      fireNodeInserted(index);
+    }
+  }
   return contactNode;
 }
