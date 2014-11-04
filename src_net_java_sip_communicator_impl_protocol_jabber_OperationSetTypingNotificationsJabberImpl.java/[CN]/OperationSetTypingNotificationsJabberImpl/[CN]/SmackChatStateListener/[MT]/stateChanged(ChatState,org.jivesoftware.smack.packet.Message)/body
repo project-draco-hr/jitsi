@@ -2,12 +2,15 @@
   String fromJID=message.getFrom();
   if (logger.isTraceEnabled())   logger.trace(fromJID + " entered the " + state.name()+ " state.");
   String fromID=StringUtils.parseBareAddress(fromJID);
-  List<ChatRoom> chatRooms=parentProvider.getOperationSet(OperationSetMultiUserChat.class).getCurrentlyJoinedChatRooms();
   boolean isPrivateMessagingAddress=false;
-  for (  ChatRoom chatRoom : chatRooms) {
-    if (chatRoom.getName().equals(fromID)) {
-      isPrivateMessagingAddress=true;
-      break;
+  OperationSetMultiUserChat mucOpSet=parentProvider.getOperationSet(OperationSetMultiUserChat.class);
+  if (mucOpSet != null) {
+    List<ChatRoom> chatRooms=mucOpSet.getCurrentlyJoinedChatRooms();
+    for (    ChatRoom chatRoom : chatRooms) {
+      if (chatRoom.getName().equals(fromID)) {
+        isPrivateMessagingAddress=true;
+        break;
+      }
     }
   }
   Contact sourceContact=opSetPersPresence.findContactByID((isPrivateMessagingAddress ? message.getFrom() : fromID));
