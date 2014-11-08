@@ -1,7 +1,20 @@
 {
   X509TrustManager defaultTm=null;
   TrustManagerFactory tmFactory=TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-  tmFactory.init((KeyStore)null);
+  KeyStore ks=null;
+  String tsType=System.getProperty("javax.net.ssl.trustStoreType",null);
+  if ("Windows-ROOT".equals(tsType)) {
+    try {
+      ks=KeyStore.getInstance(tsType);
+      ks.load(null,null);
+      int numEntries=keyStoreAppendIndex(ks);
+      logger.info("Using Windows-ROOT. Aliases sucessfully renamed on " + numEntries + " root certificates.");
+    }
+ catch (    Exception e) {
+      logger.error("Could not rename Windows-ROOT aliases",e);
+    }
+  }
+  tmFactory.init(ks);
   for (  TrustManager m : tmFactory.getTrustManagers()) {
     if (m instanceof X509TrustManager) {
       defaultTm=(X509TrustManager)m;
