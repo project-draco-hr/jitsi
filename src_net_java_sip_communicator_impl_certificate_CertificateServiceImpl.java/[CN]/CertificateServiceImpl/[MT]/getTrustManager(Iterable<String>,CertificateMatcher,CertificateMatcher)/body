@@ -72,18 +72,19 @@
         if (!storedCerts.contains(thumbprint)) {
 switch (verify(chain,message)) {
 case DO_NOT_TRUST:
-            throw new CertificateException("The peer provided certificate with Subject <" + chain[0].getSubjectDN() + "> is not trusted");
+            logger.info("Untrusted certificate",e);
+          throw new CertificateException("The peer provided certificate with Subject <" + chain[0].getSubjectDN() + "> is not trusted",e);
 case TRUST_ALWAYS:
-          for (          String propName : propNames) {
-            String current=config.getString(propName);
-            String newValue=thumbprint;
-            if (current != null)             newValue+="," + current;
-            config.setProperty(propName,newValue);
-          }
-        break;
+        for (        String propName : propNames) {
+          String current=config.getString(propName);
+          String newValue=thumbprint;
+          if (current != null)           newValue+="," + current;
+          config.setProperty(propName,newValue);
+        }
+      break;
 case TRUST_THIS_SESSION_ONLY:
-      for (      String propName : propNames)       getSessionCertEntry(propName).add(thumbprint);
-    break;
+    for (    String propName : propNames)     getSessionCertEntry(propName).add(thumbprint);
+  break;
 }
 }
 }
@@ -113,27 +114,27 @@ if (!(uri.getScheme().equalsIgnoreCase("http") || uri.getScheme().equals("https"
 X509Certificate cert=null;
 AiaCacheEntry cache=aiaCache.get(uri);
 if (cache != null && cache.cacheDate.after(new Date())) {
-  cert=cache.cert;
+cert=cache.cert;
 }
  else {
-  if (logger.isDebugEnabled())   logger.debug("Downloading parent certificate for <" + current.getSubjectDN() + "> from <"+ uri+ ">");
-  try {
-    InputStream is=HttpUtils.openURLConnection(uri.toString()).getContent();
-    cert=(X509Certificate)certFactory.generateCertificate(is);
-  }
- catch (  Exception e) {
-    logger.debug("Could not download from <" + uri + ">");
-  }
-  aiaCache.put(uri,new AiaCacheEntry(new Date(new Date().getTime() + 10 * 60 * 1000),cert));
+if (logger.isDebugEnabled()) logger.debug("Downloading parent certificate for <" + current.getSubjectDN() + "> from <"+ uri+ ">");
+try {
+  InputStream is=HttpUtils.openURLConnection(uri.toString()).getContent();
+  cert=(X509Certificate)certFactory.generateCertificate(is);
+}
+ catch (Exception e) {
+  logger.debug("Could not download from <" + uri + ">");
+}
+aiaCache.put(uri,new AiaCacheEntry(new Date(new Date().getTime() + 10 * 60 * 1000),cert));
 }
 if (cert != null) {
-  if (!cert.getIssuerDN().equals(cert.getSubjectDN())) {
-    newChain.add(cert);
-    foundParent=true;
-    current=cert;
-    break;
-  }
- else   logger.debug("Parent is self-signed, ignoring");
+if (!cert.getIssuerDN().equals(cert.getSubjectDN())) {
+  newChain.add(cert);
+  foundParent=true;
+  current=cert;
+  break;
+}
+ else logger.debug("Parent is self-signed, ignoring");
 }
 }
 chainLookupCount++;
