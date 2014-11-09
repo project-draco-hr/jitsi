@@ -1,0 +1,20 @@
+{
+  Command anotherType=new Command(){
+    @Override public void init(    ProtocolProviderServiceIrcImpl provider,    IrcConnection connection){
+    }
+    @Override public void execute(    String source,    String line){
+    }
+  }
+;
+  CommandFactory.registerCommand("test",Test.class);
+  CommandFactory.registerCommand("foo",anotherType.getClass());
+  CommandFactory.registerCommand("bla",Test.class);
+  Assert.assertEquals(Test.class,CommandFactory.getCommands().get("test"));
+  Assert.assertEquals(Test.class,CommandFactory.getCommands().get("bla"));
+  Assert.assertNotNull(CommandFactory.getCommands().get("foo"));
+  Assert.assertEquals(3,CommandFactory.getCommands().size());
+  CommandFactory.unregisterCommand(Test.class,null);
+  Assert.assertEquals(1,CommandFactory.getCommands().size());
+  Assert.assertNotSame(Test.class,CommandFactory.getCommands().get("foo"));
+  CommandFactory.unregisterCommand(anotherType.getClass(),null);
+}
