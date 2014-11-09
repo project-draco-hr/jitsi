@@ -1,5 +1,8 @@
 {
-  final String part=line.substring(6);
+  if (line.length() < END_OF_COMMAND_PREFIX) {
+    return;
+  }
+  final String part=line.substring(END_OF_COMMAND_PREFIX);
   final String channel;
   final String password;
   int indexOfSep=part.indexOf(' ');
@@ -11,7 +14,8 @@
     channel=part.substring(0,indexOfSep);
     password=part.substring(indexOfSep + 1);
   }
-  if (channel.matches("[^,\\n\\r\\s\\a]+")) {
-    this.connection.getClient().joinChannel(channel,password);
+  if (!channel.matches("[^,\\n\\r\\s\\a]+")) {
+    throw new IllegalArgumentException("Invalid chat room name specified.");
   }
+  this.connection.getClient().joinChannel(channel,password);
 }
