@@ -13,6 +13,11 @@ synchronized (messageListeners) {
     listeners=new ArrayList<ChatRoomMessageListener>(messageListeners);
   }
   for (  ChatRoomMessageListener listener : listeners) {
-    listener.messageDelivered(msgDeliveredEvt);
+    try {
+      listener.messageDelivered(msgDeliveredEvt);
+    }
+ catch (    RuntimeException e) {
+      LOGGER.error(String.format("Listener '%s' threw a runtime exception during execution." + " This is probably due to a bug in the listener's " + "implementation.",listener.getClass().getCanonicalName()),e);
+    }
   }
 }
