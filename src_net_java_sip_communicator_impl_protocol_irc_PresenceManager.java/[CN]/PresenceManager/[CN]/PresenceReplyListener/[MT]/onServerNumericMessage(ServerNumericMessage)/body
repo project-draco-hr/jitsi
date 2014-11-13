@@ -1,0 +1,31 @@
+{
+  if (msg == null) {
+    return;
+  }
+switch (msg.getNumericCode()) {
+case RPL_ISON:
+    LOGGER.debug(msg.getText());
+  final HashSet<String> offline=new HashSet<String>(PresenceManager.this.nickWatchList);
+String[] nicks=msg.getText().substring(1).split(" ");
+for (String nick : nicks) {
+PresenceManager.this.operationSet.updateNickContactPresence(nick,IrcStatusEnum.ONLINE);
+offline.remove(nick);
+}
+for (String nick : offline) {
+PresenceManager.this.operationSet.updateNickContactPresence(nick,IrcStatusEnum.OFFLINE);
+}
+break;
+case ERR_NOSUCHNICK:
+final String errortext=msg.getText();
+final int idx=errortext.indexOf(' ');
+if (idx == -1) {
+LOGGER.debug("ERR_NOSUCHNICK message does not have " + "expected format.");
+return;
+}
+final String errNick=errortext.substring(0,idx);
+PresenceManager.this.operationSet.updateNickContactPresence(errNick,IrcStatusEnum.OFFLINE);
+break;
+default :
+break;
+}
+}
