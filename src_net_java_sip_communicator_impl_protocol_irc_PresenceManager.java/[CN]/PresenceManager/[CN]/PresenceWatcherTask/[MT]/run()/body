@@ -2,13 +2,21 @@
   if (this.watchList.isEmpty()) {
     return;
   }
-  final StringBuilder query=new StringBuilder("ISON ");
+  TreeSet<String> nicks=new TreeSet<String>();
+  StringBuilder query=new StringBuilder();
   for (  String nick : this.watchList) {
+    if (query.length() + nick.length() >= MAX_ISON_QUERY_LENGTH) {
+      this.irc.rawMessage("ISON " + query.toString());
+      this.queryList.add(nicks);
+      query.delete(0,query.length());
+      nicks=new TreeSet<String>();
+    }
     query.append(nick);
     query.append(' ');
+    nicks.add(nick);
   }
-  if (LOGGER.isTraceEnabled()) {
-    LOGGER.trace("Querying presence of nicks on watch list: " + query.toString());
+  if (query.length() > 0) {
+    this.irc.rawMessage("ISON " + query.toString());
+    this.queryList.add(nicks);
   }
-  this.irc.rawMessage(query.toString());
 }

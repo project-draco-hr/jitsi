@@ -1,9 +1,17 @@
 {
   final String user=msg.getSource().getNick();
-  if (user == null || !user.equals(PresenceManager.this.connectionState.getNickname())) {
+  if (user == null) {
     return;
   }
-  LOGGER.debug("Local user's QUIT message received: removing " + "PresenceReplyListener.");
-  PresenceManager.this.irc.deleteListener(this);
-  this.timer.cancel();
+  if (user.equals(PresenceManager.this.connectionState.getNickname())) {
+    LOGGER.debug("Local user's QUIT message received: removing " + "PresenceReplyListener.");
+    PresenceManager.this.irc.deleteListener(this);
+    this.timer.cancel();
+  }
+ else {
+    if (!PresenceManager.this.nickWatchList.contains(user)) {
+      return;
+    }
+    PresenceManager.this.operationSet.updateNickContactPresence(user,IrcStatusEnum.OFFLINE);
+  }
 }

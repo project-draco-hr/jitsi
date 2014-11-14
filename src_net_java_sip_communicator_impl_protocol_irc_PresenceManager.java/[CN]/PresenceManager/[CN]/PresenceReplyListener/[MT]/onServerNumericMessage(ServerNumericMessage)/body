@@ -4,9 +4,17 @@
   }
 switch (msg.getNumericCode()) {
 case RPL_ISON:
-    LOGGER.debug(msg.getText());
-  final HashSet<String> offline=new HashSet<String>(PresenceManager.this.nickWatchList);
-String[] nicks=msg.getText().substring(1).split(" ");
+    if (LOGGER.isTraceEnabled()) {
+      LOGGER.debug("RPL_ISON received: " + msg.asRaw());
+    }
+  final String[] nicks=msg.getText().substring(1).split(" ");
+final SortedSet<String> offline;
+if (this.queryList.isEmpty()) {
+offline=new TreeSet<String>();
+}
+ else {
+offline=this.queryList.remove(0);
+}
 for (String nick : nicks) {
 PresenceManager.this.operationSet.updateNickContactPresence(nick,IrcStatusEnum.ONLINE);
 offline.remove(nick);
