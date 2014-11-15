@@ -10,10 +10,11 @@ synchronized (this.watchList) {
     list=new LinkedList<String>(this.watchList);
   }
   LinkedList<String> nicks=new LinkedList<String>();
+  final int maxQueryLength=MessageManager.IRC_PROTOCOL_MAXIMUM_MESSAGE_SIZE - overhead();
   for (  String nick : list) {
-    if (query.length() + nick.length() >= MAX_ISON_QUERY_LENGTH) {
-      this.irc.rawMessage(createQuery(query));
+    if (query.length() + nick.length() >= maxQueryLength) {
       this.queryList.add(nicks);
+      this.irc.rawMessage(createQuery(query));
       query.delete(0,query.length());
       nicks=new LinkedList<String>();
     }
@@ -22,7 +23,7 @@ synchronized (this.watchList) {
     nicks.add(nick);
   }
   if (query.length() > 0) {
-    this.irc.rawMessage(createQuery(query));
     this.queryList.add(nicks);
+    this.irc.rawMessage(createQuery(query));
   }
 }
