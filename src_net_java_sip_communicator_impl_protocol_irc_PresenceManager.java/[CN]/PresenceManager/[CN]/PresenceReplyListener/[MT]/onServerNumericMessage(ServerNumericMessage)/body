@@ -8,30 +8,30 @@ case RPL_ISON:
       LOGGER.debug("RPL_ISON received: " + msg.asRaw());
     }
   final String[] nicks=msg.getText().substring(1).split(" ");
-final SortedSet<String> offline;
+final List<String> offline;
 if (this.queryList.isEmpty()) {
-offline=new TreeSet<String>();
+offline=new LinkedList<String>();
 }
  else {
 offline=this.queryList.remove(0);
 }
 for (String nick : nicks) {
-PresenceManager.this.operationSet.updateNickContactPresence(nick,IrcStatusEnum.ONLINE);
+update(nick,IrcStatusEnum.ONLINE);
 offline.remove(nick);
 }
 for (String nick : offline) {
-PresenceManager.this.operationSet.updateNickContactPresence(nick,IrcStatusEnum.OFFLINE);
+update(nick,IrcStatusEnum.OFFLINE);
 }
 break;
 case ERR_NOSUCHNICK:
 final String errortext=msg.getText();
 final int idx=errortext.indexOf(' ');
 if (idx == -1) {
-LOGGER.debug("ERR_NOSUCHNICK message does not have " + "expected format.");
+LOGGER.info("ERR_NOSUCHNICK message does not have " + "expected format.");
 return;
 }
 final String errNick=errortext.substring(0,idx);
-PresenceManager.this.operationSet.updateNickContactPresence(errNick,IrcStatusEnum.OFFLINE);
+update(errNick,IrcStatusEnum.OFFLINE);
 break;
 default :
 break;
