@@ -18,15 +18,22 @@ synchronized (this.session) {
         irc.addListener(new DebugListener());
       }
       this.session.set(new IrcConnection(this.provider,this.params,new SynchronizedIRCApi(irc),this));
-      this.provider.setCurrentRegistrationState(RegistrationState.REGISTERED);
+      this.provider.setCurrentRegistrationState(RegistrationState.REGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST);
     }
   }
  catch (  IOException e) {
-    this.provider.setCurrentRegistrationState(RegistrationState.CONNECTION_FAILED);
-    throw e;
+    if (isCausedByCertificateException(e)) {
+      LOGGER.info("Connection aborted due to server certificate.");
+      this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST);
+      throw new OperationFailedException("Failed certificate verification.",OperationFailedException.OPERATION_CANCELED);
+    }
+ else {
+      this.provider.setCurrentRegistrationState(RegistrationState.CONNECTION_FAILED,RegistrationStateChangeEvent.REASON_NOT_SPECIFIED);
+      throw e;
+    }
   }
 catch (  InterruptedException e) {
-    this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED);
+    this.provider.setCurrentRegistrationState(RegistrationState.UNREGISTERED,RegistrationStateChangeEvent.REASON_USER_REQUEST);
     throw e;
   }
 }
