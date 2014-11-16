@@ -2,7 +2,7 @@
   if (!isThisChatRoom(msg.getChannelName())) {
     return;
   }
-  if (!ChannelManager.this.connectionState.isConnected()) {
+  if (!this.connectionState.isConnected()) {
     LOGGER.error("Not currently connected to IRC Server. " + "Aborting message handling.");
     return;
   }
@@ -13,9 +13,9 @@
     ChatRoomMember kicker=this.chatroom.getChatRoomMember(user);
     this.chatroom.fireMemberPresenceEvent(kickedMember,kicker,ChatRoomMemberPresenceChangeEvent.MEMBER_KICKED,msg.getText());
   }
-  if (isMe(kickedUser)) {
+  if (localUser(kickedUser)) {
     LOGGER.debug("Local user is kicked. Removing chat room listener.");
-    ChannelManager.this.irc.deleteListener(this);
+    this.irc.deleteListener(this);
     ChannelManager.this.joined.remove(this.chatroom.getIdentifier());
     ChannelManager.this.provider.getMUC().fireLocalUserPresenceEvent(this.chatroom,LocalUserChatRoomPresenceChangeEvent.LOCAL_USER_KICKED,msg.getText());
   }
