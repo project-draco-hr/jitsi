@@ -6,16 +6,23 @@
   if (type == null) {
     throw new UnsupportedCommandException(command);
   }
-  final Command cmd;
   try {
-    cmd=type.newInstance();
-    cmd.init(this.provider,this.connection);
-    return cmd;
+    Constructor<? extends Command> cmdCtor=type.getConstructor(ProtocolProviderServiceIrcImpl.class,IrcConnection.class);
+    return cmdCtor.newInstance(this.provider,this.connection);
   }
- catch (  InstantiationException ex) {
-    throw new IllegalStateException("A bad command implementation has been registered. It fails" + " to instantiate.",ex);
+ catch (  NoSuchMethodException e) {
+    throw new BadCommandException(command,type,"There is no compatible constructor for instantiating this " + "command.",e);
   }
-catch (  IllegalAccessException ex) {
-    throw new IllegalStateException("A bad command implementation has been registered. It does " + "not allow access to its constructor and therefore cannot" + " be instantiated.",ex);
+catch (  InstantiationException e) {
+    throw new BadCommandException(command,type,"Unable to instantiate this command class.",e);
+  }
+catch (  IllegalAccessException e) {
+    throw new BadCommandException(command,type,"Unable to access the constructor of this command class.",e);
+  }
+catch (  InvocationTargetException e) {
+    throw new BadCommandException(command,type,"An exception occurred while executing the constructor.",e);
+  }
+catch (  IllegalArgumentException e) {
+    throw new BadCommandException(command,type,"Invalid arguments were passed to the " + "constructor. This may be a bug in the CommandFactory " + "implementation.",e);
   }
 }
