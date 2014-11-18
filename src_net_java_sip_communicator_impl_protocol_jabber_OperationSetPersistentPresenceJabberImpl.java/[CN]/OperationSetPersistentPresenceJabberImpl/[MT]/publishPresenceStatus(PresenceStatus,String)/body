@@ -11,9 +11,11 @@
   if (!isValidStatus)   throw new IllegalArgumentException(status + " is not a valid Jabber status");
   if (status.equals(jabberStatusEnum.getStatus(JabberStatusEnum.OFFLINE))) {
     parentProvider.unregister();
+    clearLocalContactResources();
   }
  else {
     Presence presence=new Presence(Presence.Type.available);
+    currentPresence=presence;
     presence.setMode(presenceStatusToJabberMode(status));
     presence.setPriority(getPriorityForPresenceStatus(status.getStatusName()));
     if (status.equals(jabberStatusEnum.getStatus(JabberStatusEnum.ON_THE_PHONE))) {
@@ -24,6 +26,7 @@
     }
  else     presence.setStatus(statusMessage);
     parentProvider.getConnection().sendPacket(presence);
+    if (localContact != null)     updateResource(localContact,parentProvider.getOurJID(),presence);
   }
   fireProviderStatusChangeEvent(currentStatus,status);
   String oldStatusMessage=getCurrentStatusMessage();

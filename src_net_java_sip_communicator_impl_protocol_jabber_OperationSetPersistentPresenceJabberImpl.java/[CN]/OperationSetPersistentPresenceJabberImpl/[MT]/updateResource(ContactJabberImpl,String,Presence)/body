@@ -1,0 +1,31 @@
+{
+  if (fullJid == null)   fullJid=presence.getFrom();
+  String resource=StringUtils.parseResource(fullJid);
+  if (resource != null && resource.length() > 0) {
+    Map<String,ContactResourceJabberImpl> resources=contact.getResourcesMap();
+    ContactResourceJabberImpl contactResource=resources.get(fullJid);
+    PresenceStatus newPresenceStatus=OperationSetPersistentPresenceJabberImpl.jabberStatusToPresenceStatus(presence,parentProvider);
+    if (contactResource == null) {
+      contactResource=createResource(presence,fullJid,contact);
+      resources.put(fullJid,contactResource);
+      contact.fireContactResourceEvent(new ContactResourceEvent(contact,contactResource,ContactResourceEvent.RESOURCE_ADDED));
+      return true;
+    }
+ else {
+      boolean oldIndicator=contactResource.isMobile();
+      boolean newIndicator=mobileIndicator.isMobileResource(resource,fullJid);
+      int oldPriority=contactResource.getPriority();
+      contactResource.setMobile(newIndicator);
+      contactResource.setPriority(presence.getPriority());
+      if (oldPriority != contactResource.getPriority()) {
+        mobileIndicator.resourcesUpdated(contact);
+      }
+      if (contactResource.getPresenceStatus().getStatus() != newPresenceStatus.getStatus() || (oldIndicator != newIndicator) || (oldPriority != contactResource.getPriority())) {
+        contactResource.setPresenceStatus(newPresenceStatus);
+        contact.fireContactResourceEvent(new ContactResourceEvent(contact,contactResource,ContactResourceEvent.RESOURCE_MODIFIED));
+        return true;
+      }
+    }
+  }
+  return false;
+}

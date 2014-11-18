@@ -1,3 +1,27 @@
 {
-  return null;
+  if (localContact != null)   return localContact;
+  final String id=parentProvider.getAccountID().getUserID();
+  localContact=new ContactJabberImpl(null,ssContactList,false,true);
+  localContact.setLocal(true);
+  localContact.updatePresenceStatus(currentStatus);
+  localContact.setJid(parentProvider.getOurJID());
+  Map<String,ContactResourceJabberImpl> rs=localContact.getResourcesMap();
+  if (currentPresence != null)   rs.put(parentProvider.getOurJID(),createResource(currentPresence,parentProvider.getOurJID(),localContact));
+  Iterator<Presence> presenceIterator=ssContactList.getPresences(id);
+  while (presenceIterator.hasNext()) {
+    Presence p=presenceIterator.next();
+    String fullJid=p.getFrom();
+    rs.put(fullJid,createResource(p,p.getFrom(),localContact));
+  }
+  PacketFilter presenceFilter=new PacketTypeFilter(Presence.class);
+  parentProvider.getConnection().addPacketListener(new PacketListener(){
+    @Override public void processPacket(    Packet packet){
+      Presence presence=(Presence)packet;
+      String from=presence.getFrom();
+      if (from == null || !StringUtils.parseBareAddress(from).equals(id))       return;
+      updateResource(localContact,null,presence);
+    }
+  }
+,presenceFilter);
+  return localContact;
 }

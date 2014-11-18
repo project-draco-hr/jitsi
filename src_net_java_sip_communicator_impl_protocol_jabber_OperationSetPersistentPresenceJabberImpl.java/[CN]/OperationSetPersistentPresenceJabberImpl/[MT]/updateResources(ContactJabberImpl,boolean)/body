@@ -17,45 +17,14 @@
   Iterator<Presence> it=parentProvider.getConnection().getRoster().getPresences(contact.getAddress());
   while (it.hasNext()) {
     Presence presence=it.next();
-    String resource=StringUtils.parseResource(presence.getFrom());
-    if (resource != null && resource.length() > 0) {
-      String fullJid=presence.getFrom();
-      ContactResourceJabberImpl contactResource=resources.get(fullJid);
-      PresenceStatus newPresenceStatus=OperationSetPersistentPresenceJabberImpl.jabberStatusToPresenceStatus(presence,parentProvider);
-      if (contactResource == null) {
-        contactResource=new ContactResourceJabberImpl(fullJid,contact,resource,newPresenceStatus,presence.getPriority(),mobileIndicator.isMobileResource(resource,fullJid));
-        resources.put(fullJid,contactResource);
-        contact.fireContactResourceEvent(new ContactResourceEvent(contact,contactResource,ContactResourceEvent.RESOURCE_ADDED));
-        eventFired=true;
-      }
- else {
-        boolean oldIndicator=contactResource.isMobile();
-        boolean newIndicator=mobileIndicator.isMobileResource(resource,fullJid);
-        int oldPriority=contactResource.getPriority();
-        contactResource.setMobile(newIndicator);
-        contactResource.setPriority(presence.getPriority());
-        if (oldPriority != contactResource.getPriority()) {
-          mobileIndicator.resourcesUpdated(contact);
-        }
-        if (contactResource.getPresenceStatus().getStatus() != newPresenceStatus.getStatus() || (oldIndicator != newIndicator) || (oldPriority != contactResource.getPriority())) {
-          contactResource.setPresenceStatus(newPresenceStatus);
-          contact.fireContactResourceEvent(new ContactResourceEvent(contact,contactResource,ContactResourceEvent.RESOURCE_MODIFIED));
-          eventFired=true;
-        }
-      }
-    }
+    eventFired=updateResource(contact,null,presence) || eventFired;
   }
   if (!removeUnavailable)   return eventFired;
   Iterator<String> resourceIter=resources.keySet().iterator();
   while (resourceIter.hasNext()) {
     String fullJid=resourceIter.next();
     if (!parentProvider.getConnection().getRoster().getPresenceResource(fullJid).isAvailable()) {
-      ContactResource removedResource=resources.get(fullJid);
-      if (resources.containsKey(fullJid)) {
-        resources.remove(fullJid);
-        contact.fireContactResourceEvent(new ContactResourceEvent(contact,removedResource,ContactResourceEvent.RESOURCE_REMOVED));
-        eventFired=true;
-      }
+      eventFired=removeResource(contact,fullJid) || eventFired;
     }
   }
   return eventFired;
