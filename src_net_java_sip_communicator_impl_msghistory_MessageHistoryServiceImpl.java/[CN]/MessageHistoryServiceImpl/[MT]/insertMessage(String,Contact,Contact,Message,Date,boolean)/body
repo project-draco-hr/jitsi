@@ -1,0 +1,15 @@
+{
+  try {
+    MetaContact metaContact=MessageHistoryActivator.getContactListService().findMetaContactByContact(destination);
+    if (metaContact != null && !isHistoryLoggingEnabled(metaContact.getMetaUID())) {
+      return;
+    }
+    History history=this.getHistory(source,destination);
+    HistoryWriter historyWriter=history.getWriter();
+    SimpleDateFormat sdf=new SimpleDateFormat(HistoryService.DATE_FORMAT);
+    historyWriter.insertRecord(new String[]{direction,message.getContent(),message.getContentType(),message.getEncoding(),message.getMessageUID(),message.getSubject(),sdf.format(messageTimestamp),isSmsSubtype ? MSG_SUBTYPE_SMS : null},messageTimestamp,STRUCTURE_NAMES[6]);
+  }
+ catch (  IOException e) {
+    logger.error("Could not add message to history",e);
+  }
+}

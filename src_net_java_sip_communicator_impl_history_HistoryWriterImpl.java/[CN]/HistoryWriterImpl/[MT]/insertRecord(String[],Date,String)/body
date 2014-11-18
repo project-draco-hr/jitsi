@@ -1,0 +1,42 @@
+{
+  SimpleDateFormat sdf=new SimpleDateFormat(DATE_FORMAT);
+  Iterator<String> fileIterator=HistoryReaderImpl.filterFilesByDate(this.historyImpl.getFileList(),timestamp,null).iterator();
+  String filename=null;
+  while (fileIterator.hasNext()) {
+    filename=fileIterator.next();
+    Document doc=this.historyImpl.getDocumentForFile(filename);
+    if (doc == null)     continue;
+    NodeList nodes=doc.getElementsByTagName("record");
+    boolean changed=false;
+    Node node;
+    for (int i=0; i < nodes.getLength(); i++) {
+      node=nodes.item(i);
+      Element idNode=XMLUtils.findChild((Element)node,timestampProperty);
+      if (idNode == null)       continue;
+      Node nestedNode=idNode.getFirstChild();
+      if (nestedNode == null)       continue;
+      String nodeValue=nestedNode.getNodeValue();
+      Date nodeTimeStamp;
+      try {
+        nodeTimeStamp=sdf.parse(nodeValue);
+      }
+ catch (      ParseException e) {
+        nodeTimeStamp=new Date(Long.parseLong(nodeValue));
+      }
+      if (nodeTimeStamp.before(timestamp))       continue;
+      Element newElem=createRecord(doc,structPropertyNames,propertyValues,timestamp);
+      doc.getFirstChild().insertBefore(newElem,node);
+      changed=true;
+      break;
+    }
+    if (changed) {
+synchronized (this.docWriteLock) {
+        this.historyImpl.writeFile(filename,doc);
+      }
+      if (filename.equals(this.currentFile)) {
+        this.currentDoc=doc;
+      }
+      break;
+    }
+  }
+}
