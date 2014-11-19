@@ -1,0 +1,42 @@
+{
+  String namespace=parser.getNamespace();
+  if (!NAMESPACE.equals(namespace)) {
+    return null;
+  }
+  String rootElement=parser.getName();
+  JireconIq iq;
+  if (JireconIq.ELEMENT_NAME.equals(rootElement)) {
+    iq=new JireconIq();
+    String action=parser.getAttributeValue("",JireconIq.ACTION_ATTR_NAME);
+    String mucjid=parser.getAttributeValue("",JireconIq.MUCJID_ATTR_NAME);
+    String output=parser.getAttributeValue("",JireconIq.OUTPUT_ATTR_NAME);
+    String rid=parser.getAttributeValue("",JireconIq.RID_ATTR_NAME);
+    String status=parser.getAttributeValue("",JireconIq.STATUS_ATTR_NAME);
+    iq.setAction(JireconIq.Action.parse(action));
+    iq.setStatus(JireconIq.Status.parse(status));
+    iq.setMucJid(mucjid);
+    iq.setOutput(output);
+    iq.setRid(rid);
+  }
+ else {
+    return null;
+  }
+  boolean done=false;
+  while (!done) {
+switch (parser.next()) {
+case XmlPullParser.END_TAG:
+{
+        String name=parser.getName();
+        if (rootElement.equals(name)) {
+          done=true;
+        }
+        break;
+      }
+case XmlPullParser.TEXT:
+{
+      break;
+    }
+}
+}
+return iq;
+}
