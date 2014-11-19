@@ -14,6 +14,7 @@
     ColibriConferenceIQ.Recording recording=null;
     ColibriConferenceIQ.Endpoint conferenceEndpoint=null;
     StringBuilder ssrc=null;
+    SourcePacketExtension ssrcPe=null;
     while (!done) {
 switch (parser.next()) {
 case XmlPullParser.END_TAG:
@@ -49,6 +50,12 @@ case XmlPullParser.END_TAG:
               channel.addSSRC(i);
             }
             ssrc=null;
+          }
+ else           if (SourcePacketExtension.ELEMENT_NAME.equals(name)) {
+            if (channel != null && ssrcPe != null) {
+              channel.addSource(ssrcPe);
+            }
+            ssrcPe=null;
           }
  else           if (ColibriConferenceIQ.Content.ELEMENT_NAME.equals(name)) {
             conference.addContent(content);
@@ -116,6 +123,13 @@ case XmlPullParser.START_TAG:
         }
  else         if (ColibriConferenceIQ.Channel.SSRC_ELEMENT_NAME.equals(name)) {
           ssrc=new StringBuilder();
+        }
+ else         if (SourcePacketExtension.ELEMENT_NAME.equals(name)) {
+          ssrcPe=new SourcePacketExtension();
+          String ssrcStr=parser.getAttributeValue("",SourcePacketExtension.SSRC_ATTR_NAME);
+          if (!StringUtils.isNullOrEmpty(ssrcStr)) {
+            ssrcPe.setSSRC(Long.parseLong(ssrcStr));
+          }
         }
  else         if (ColibriConferenceIQ.Content.ELEMENT_NAME.equals(name)) {
           content=new ColibriConferenceIQ.Content();
