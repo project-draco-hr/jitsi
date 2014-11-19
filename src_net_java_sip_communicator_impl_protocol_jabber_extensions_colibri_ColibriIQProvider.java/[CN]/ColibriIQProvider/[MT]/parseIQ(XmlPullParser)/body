@@ -62,6 +62,9 @@ case XmlPullParser.END_TAG:
             conference.setRecording(recording);
             recording=null;
           }
+ else           if (ColibriConferenceIQ.GracefulShutdown.ELEMENT_NAME.equals(name)) {
+            conference.setGracefulShutdown(true);
+          }
           break;
         }
 case XmlPullParser.START_TAG:
@@ -196,6 +199,27 @@ case XmlPullParser.TEXT:
 }
 }
 iq=conference;
+}
+ else if (GracefulShutdownIQ.ELEMENT_NAME.equals(parser.getName()) && GracefulShutdownIQ.NAMESPACE.equals(namespace)) {
+String rootElement=parser.getName();
+iq=new GracefulShutdownIQ();
+boolean done=false;
+while (!done) {
+switch (parser.next()) {
+case XmlPullParser.END_TAG:
+{
+    String name=parser.getName();
+    if (rootElement.equals(name)) {
+      done=true;
+    }
+    break;
+  }
+case XmlPullParser.TEXT:
+{
+  break;
+}
+}
+}
 }
  else iq=null;
 return iq;

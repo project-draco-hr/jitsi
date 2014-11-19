@@ -1,0 +1,19 @@
+{
+  if (!(request.getType() == Type.GET || request.getType() == Type.SET)) {
+    throw new IllegalArgumentException("IQ must be of type 'set' or 'get'. Original IQ: " + request.toXML());
+  }
+  final XMPPError error=new XMPPError(XMPPError.Condition.service_unavailable);
+  error.addExtension(new GracefulShutdown());
+  final IQ result=new IQ(){
+    public String getChildElementXML(){
+      return request.getChildElementXML() + error.toXML();
+    }
+  }
+;
+  result.setType(Type.ERROR);
+  result.setPacketID(request.getPacketID());
+  result.setFrom(request.getTo());
+  result.setTo(request.getFrom());
+  result.setError(error);
+  return result;
+}
