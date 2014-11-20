@@ -6,8 +6,7 @@
   if (isJitsiVideobridge) {
     Map<ContentPacketExtension,ContentPacketExtension> contentMap=new LinkedHashMap<ContentPacketExtension,ContentPacketExtension>();
     for (    ContentPacketExtension cpe : cpes) {
-      RtpDescriptionPacketExtension rdpe=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
-      MediaType mediaType=MediaType.parseString(rdpe.getMedia());
+      MediaType mediaType=JingleUtils.getMediaType(cpe);
       if ((colibri == null) || (colibri.getContent(mediaType.toString()) == null)) {
         ContentPacketExtension local, remote;
         if (cpes == ourAnswer) {
@@ -26,8 +25,7 @@
       for (      Map.Entry<ContentPacketExtension,ContentPacketExtension> e : contentMap.entrySet()) {
         ContentPacketExtension cpe=e.getValue();
         if (cpe == null)         cpe=e.getKey();
-        RtpDescriptionPacketExtension rdpe=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
-        colibri.getOrCreateContent(rdpe.getMedia());
+        colibri.getOrCreateContent(JingleUtils.getMediaType(cpe).toString());
       }
       ColibriConferenceIQ conferenceResult=call.createColibriChannels(peer,contentMap);
       if (conferenceResult != null) {

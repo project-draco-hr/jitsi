@@ -1,0 +1,20 @@
+{
+  if (src == null)   return null;
+  IceUdpTransportPacketExtension dst=AbstractPacketExtension.clone(src);
+  for (  CandidatePacketExtension srcCand : src.getCandidateList()) {
+    if (!(srcCand instanceof RemoteCandidatePacketExtension))     dst.addCandidate(AbstractPacketExtension.clone(srcCand));
+  }
+  if (src.isRtcpMux()) {
+    dst.addChildExtension(new RtcpmuxPacketExtension());
+  }
+  if (copyDtls) {
+    for (    DtlsFingerprintPacketExtension dtlsFingerprint : src.getChildExtensionsOfType(DtlsFingerprintPacketExtension.class)) {
+      DtlsFingerprintPacketExtension copy=new DtlsFingerprintPacketExtension();
+      copy.setFingerprint(dtlsFingerprint.getFingerprint());
+      copy.setHash(dtlsFingerprint.getHash());
+      copy.setRequired(dtlsFingerprint.getRequired());
+      dst.addChildExtension(copy);
+    }
+  }
+  return dst;
+}
