@@ -1,0 +1,44 @@
+{
+  assertRequestType(RequestType.ALLOCATE_CHANNELS);
+  request.setType(IQ.Type.GET);
+  for (  ContentPacketExtension cpe : contents) {
+    MediaType mediaType=JingleUtils.getMediaType(cpe);
+    String contentName=mediaType.toString();
+    ColibriConferenceIQ.Content contentRequest=request.getOrCreateContent(contentName);
+    ColibriConferenceIQ.ChannelCommon remoteChannelRequest=mediaType != MediaType.DATA ? new ColibriConferenceIQ.Channel() : new ColibriConferenceIQ.SctpConnection();
+    remoteChannelRequest.setEndpoint(endpointName);
+    remoteChannelRequest.setInitiator(peerIsInitiator);
+    if (useBundle) {
+      remoteChannelRequest.setChannelBundleId(endpointName);
+    }
+    if (mediaType != MediaType.DATA) {
+      RtpDescriptionPacketExtension rdpe=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
+      ColibriConferenceIQ.Channel remoteRtpChannelRequest=(ColibriConferenceIQ.Channel)remoteChannelRequest;
+      for (      PayloadTypePacketExtension ptpe : rdpe.getPayloadTypes())       remoteRtpChannelRequest.addPayloadType(ptpe);
+    }
+    if (!useBundle) {
+      copyTransportOnChannel(cpe,remoteChannelRequest);
+    }
+    if (mediaType != MediaType.DATA) {
+      contentRequest.addChannel((ColibriConferenceIQ.Channel)remoteChannelRequest);
+    }
+ else {
+      contentRequest.addSctpConnection((ColibriConferenceIQ.SctpConnection)remoteChannelRequest);
+    }
+  }
+  if (useBundle) {
+    ColibriConferenceIQ.ChannelBundle bundle=new ColibriConferenceIQ.ChannelBundle(endpointName);
+    ContentPacketExtension firstContent=contents.get(0);
+    IceUdpTransportPacketExtension transport=firstContent.getFirstChildOfType(IceUdpTransportPacketExtension.class);
+    if (transport != null) {
+      try {
+        bundle.setTransport(IceUdpTransportPacketExtension.cloneTransportAndCandidates(transport,true));
+      }
+ catch (      Exception e) {
+        logger.error("Error cloning transport",e);
+      }
+    }
+    request.addChannelBundle(bundle);
+  }
+  return this;
+}

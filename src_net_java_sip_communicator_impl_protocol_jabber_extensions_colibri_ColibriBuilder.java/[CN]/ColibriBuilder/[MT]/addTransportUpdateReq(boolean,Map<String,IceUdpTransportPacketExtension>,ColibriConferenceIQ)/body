@@ -1,0 +1,33 @@
+{
+  if (conferenceState == null || StringUtils.isNullOrEmpty(conferenceState.getID())) {
+    return null;
+  }
+  assertRequestType(RequestType.TRANSPORT_UPDATE);
+  request.setType(IQ.Type.SET);
+  for (  Map.Entry<String,IceUdpTransportPacketExtension> e : map.entrySet()) {
+    String contentName=e.getKey();
+    ColibriConferenceIQ.ChannelCommon channel=getColibriChannel(localChannelsInfo,contentName);
+    if (channel != null) {
+      IceUdpTransportPacketExtension transport;
+      try {
+        transport=IceUdpTransportPacketExtension.cloneTransportAndCandidates(e.getValue(),true);
+      }
+ catch (      Exception ofe) {
+        transport=null;
+      }
+      if (transport == null)       continue;
+      ColibriConferenceIQ.ChannelCommon channelRequest=channel instanceof ColibriConferenceIQ.Channel ? new ColibriConferenceIQ.Channel() : new ColibriConferenceIQ.SctpConnection();
+      channelRequest.setID(channel.getID());
+      channelRequest.setEndpoint(channel.getEndpoint());
+      channelRequest.setInitiator(initiator);
+      channelRequest.setTransport(transport);
+      if (channelRequest instanceof ColibriConferenceIQ.Channel) {
+        request.getOrCreateContent(contentName).addChannel((ColibriConferenceIQ.Channel)channelRequest);
+      }
+ else {
+        request.getOrCreateContent(contentName).addSctpConnection((ColibriConferenceIQ.SctpConnection)channelRequest);
+      }
+    }
+  }
+  return this;
+}

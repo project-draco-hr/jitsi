@@ -1,0 +1,32 @@
+{
+  ColibriConferenceIQ conferenceResult=new ColibriConferenceIQ();
+  conferenceResult.setFrom(conferenceResponse.getFrom());
+  conferenceResult.setID(conferenceResponse.getID());
+  String bundleId=null;
+  for (  ContentPacketExtension content : peerContents) {
+    MediaType mediaType=JingleUtils.getMediaType(content);
+    ColibriConferenceIQ.Content contentResponse=conferenceResponse.getContent(mediaType.toString());
+    if (contentResponse != null) {
+      String contentName=contentResponse.getName();
+      ColibriConferenceIQ.Content contentResult=new ColibriConferenceIQ.Content(contentName);
+      conferenceResult.addContent(contentResult);
+      for (      ColibriConferenceIQ.Channel channelResponse : contentResponse.getChannels()) {
+        contentResult.addChannel(channelResponse);
+        bundleId=readChannelBundle(channelResponse,bundleId);
+      }
+      for (      ColibriConferenceIQ.SctpConnection sctpConnResponse : contentResponse.getSctpConnections()) {
+        contentResult.addSctpConnection(sctpConnResponse);
+        bundleId=readChannelBundle(sctpConnResponse,bundleId);
+      }
+    }
+  }
+  if (bundleId != null) {
+    for (    ColibriConferenceIQ.ChannelBundle bundle : conferenceResponse.getChannelBundles()) {
+      if (bundleId.equals(bundle.getId())) {
+        conferenceResult.addChannelBundle(bundle);
+        break;
+      }
+    }
+  }
+  return conferenceResult;
+}

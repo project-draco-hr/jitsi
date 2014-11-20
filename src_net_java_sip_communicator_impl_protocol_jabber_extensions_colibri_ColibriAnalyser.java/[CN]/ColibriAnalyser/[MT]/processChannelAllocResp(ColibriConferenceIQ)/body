@@ -1,0 +1,20 @@
+{
+  String conferenceResponseID=allocateResponse.getID();
+  String colibriID=conferenceState.getID();
+  if (colibriID == null)   conferenceState.setID(conferenceResponseID);
+ else   if (!colibriID.equals(conferenceResponseID))   throw new IllegalStateException("conference.id");
+  conferenceState.setFrom(allocateResponse.getFrom());
+  for (  ColibriConferenceIQ.Content contentResponse : allocateResponse.getContents()) {
+    String contentName=contentResponse.getName();
+    ColibriConferenceIQ.Content content=conferenceState.getOrCreateContent(contentName);
+    for (    ColibriConferenceIQ.Channel channelResponse : contentResponse.getChannels()) {
+      content.addChannel(channelResponse);
+    }
+    for (    ColibriConferenceIQ.SctpConnection sctpConnResponse : contentResponse.getSctpConnections()) {
+      content.addSctpConnection(sctpConnResponse);
+    }
+  }
+  for (  ColibriConferenceIQ.ChannelBundle bundle : allocateResponse.getChannelBundles()) {
+    conferenceState.addChannelBundle(bundle);
+  }
+}

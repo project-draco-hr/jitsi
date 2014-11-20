@@ -1,0 +1,46 @@
+{
+  if (conferenceState == null || StringUtils.isNullOrEmpty(conferenceState.getID())) {
+    return null;
+  }
+  assertRequestType(RequestType.EXPIRE_CHANNELS);
+  request.setType(IQ.Type.SET);
+  for (  ColibriConferenceIQ.Content expiredContent : channelInfo.getContents()) {
+    ColibriConferenceIQ.Content stateContent=conferenceState.getContent(expiredContent.getName());
+    if (stateContent != null) {
+      ColibriConferenceIQ.Content requestContent=request.getOrCreateContent(stateContent.getName());
+      for (      ColibriConferenceIQ.Channel expiredChannel : expiredContent.getChannels()) {
+        ColibriConferenceIQ.Channel stateChannel=stateContent.getChannel(expiredChannel.getID());
+        if (stateChannel != null) {
+          ColibriConferenceIQ.Channel channelRequest=new ColibriConferenceIQ.Channel();
+          channelRequest.setExpire(0);
+          channelRequest.setID(stateChannel.getID());
+          requestContent.addChannel(channelRequest);
+          hasAnyChannelsToExpire=true;
+        }
+      }
+      for (      ColibriConferenceIQ.SctpConnection expiredConn : expiredContent.getSctpConnections()) {
+        ColibriConferenceIQ.SctpConnection stateConn=stateContent.getSctpConnection(expiredConn.getID());
+        if (stateConn != null) {
+          ColibriConferenceIQ.SctpConnection connRequest=new ColibriConferenceIQ.SctpConnection();
+          connRequest.setID(stateConn.getID());
+          connRequest.setExpire(0);
+          connRequest.setEndpoint(stateConn.getEndpoint());
+          requestContent.addSctpConnection(connRequest);
+          hasAnyChannelsToExpire=true;
+        }
+      }
+    }
+  }
+  for (  ColibriConferenceIQ.Content requestContent : request.getContents()) {
+    ColibriConferenceIQ.Content stateContent=conferenceState.getContent(requestContent.getName());
+    for (    ColibriConferenceIQ.Channel requestChannel : requestContent.getChannels()) {
+      ColibriConferenceIQ.Channel stateChannel=stateContent.getChannel(requestChannel.getID());
+      stateContent.removeChannel(stateChannel);
+    }
+    for (    ColibriConferenceIQ.SctpConnection requestConn : requestContent.getSctpConnections()) {
+      ColibriConferenceIQ.SctpConnection stateConn=stateContent.getSctpConnection(requestConn.getID());
+      stateContent.removeSctpConnection(stateConn);
+    }
+  }
+  return this;
+}
