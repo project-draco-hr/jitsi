@@ -63,13 +63,18 @@
       return;
     }
     if (logger.isInfoEnabled())     logger.info("Message error received from " + userBareID);
-    int errorCode=packet.getError().getCode();
     int errorResultCode=MessageDeliveryFailedEvent.UNKNOWN_ERROR;
-    if (errorCode == 503) {
-      org.jivesoftware.smackx.packet.MessageEvent msgEvent=(org.jivesoftware.smackx.packet.MessageEvent)packet.getExtension("x","jabber:x:event");
-      if (msgEvent != null && msgEvent.isOffline()) {
-        errorResultCode=MessageDeliveryFailedEvent.OFFLINE_MESSAGES_NOT_SUPPORTED;
+    if (packet.getError() != null) {
+      int errorCode=packet.getError().getCode();
+      if (errorCode == 503) {
+        org.jivesoftware.smackx.packet.MessageEvent msgEvent=(org.jivesoftware.smackx.packet.MessageEvent)packet.getExtension("x","jabber:x:event");
+        if (msgEvent != null && msgEvent.isOffline()) {
+          errorResultCode=MessageDeliveryFailedEvent.OFFLINE_MESSAGES_NOT_SUPPORTED;
+        }
       }
+    }
+    if (sourceContact == null) {
+      sourceContact=opSetPersPresence.createVolatileContact(userFullId,isPrivateMessaging);
     }
     MessageDeliveryFailedEvent ev=new MessageDeliveryFailedEvent(newMessage,sourceContact,correctedMessageUID,errorResultCode);
     if (ev != null)     fireMessageEvent(ev);
