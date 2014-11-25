@@ -3,7 +3,15 @@
     LOGGER.error("Invalid class of Message implementation received. " + "Not sending message.");
     return;
   }
+  final IrcConnection connection=this.provider.getIrcStack().getConnection();
+  if (connection == null) {
+    throw new IllegalStateException("Connection is not available.");
+  }
   final MessageDeliveredEvent[] msgDeliveryPendingEvts=messageDeliveryPendingTransform(new MessageDeliveredEvent(original,to));
+  if (msgDeliveryPendingEvts.length == 0) {
+    LOGGER.warn("Message transformation result does not contain a " + "single message. Nothing to send.");
+    return;
+  }
   try {
     for (    MessageDeliveredEvent event : msgDeliveryPendingEvts) {
       if (event == null) {
@@ -11,16 +19,10 @@
       }
       String transformedContent=event.getSourceMessage().getContent();
       MessageIrcImpl message=this.createMessage(transformedContent,original.getContentType(),original.getEncoding(),"");
-      final IrcConnection connection=this.provider.getIrcStack().getConnection();
-      if (connection == null) {
-        throw new IllegalStateException("Connection is not available.");
-      }
       try {
         if (!event.isMessageEncrypted() && message.isCommand()) {
           try {
             connection.getMessageManager().command(to,message);
-            MessageReceivedEvent systemEvent=new MessageReceivedEvent(message,to,new Date(),MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
-            fireMessageEvent(systemEvent);
           }
  catch (          final UnsupportedCommandException e) {
             fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.UNSUPPORTED_OPERATION);
@@ -37,7 +39,6 @@ catch (          BadCommandInvocationException e) {
         }
  else {
           connection.getMessageManager().message(to,message);
-          fireMessageDelivered(original,to);
         }
       }
  catch (      RuntimeException e) {
@@ -45,6 +46,7 @@ catch (          BadCommandInvocationException e) {
         throw e;
       }
     }
+    fireMessageDelivered(original,to);
   }
  catch (  RuntimeException e) {
     LOGGER.warn("Failed to deliver message: " + original,e);
