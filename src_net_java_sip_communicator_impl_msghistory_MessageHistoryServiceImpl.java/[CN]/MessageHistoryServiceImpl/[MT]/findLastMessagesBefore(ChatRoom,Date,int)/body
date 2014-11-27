@@ -1,5 +1,5 @@
 {
-  TreeSet<EventObject> result=new TreeSet<EventObject>(new ChatRoomMessageEventComparator<EventObject>());
+  LinkedList<EventObject> result=new LinkedList<EventObject>();
   try {
     HistoryReader reader=this.getHistoryForMultiChat(room).getReader();
     Iterator<HistoryRecord> recs=reader.findLastRecordsBefore(date,count);
@@ -10,8 +10,8 @@
  catch (  IOException e) {
     logger.error("Could not read history",e);
   }
-  LinkedList<EventObject> resultAsList=new LinkedList<EventObject>(result);
-  int startIndex=resultAsList.size() - count;
+  Collections.sort(result,new ChatRoomMessageEventComparator<EventObject>());
+  int startIndex=result.size() - count;
   if (startIndex < 0)   startIndex=0;
-  return resultAsList.subList(startIndex,resultAsList.size());
+  return result.subList(startIndex,result.size());
 }
