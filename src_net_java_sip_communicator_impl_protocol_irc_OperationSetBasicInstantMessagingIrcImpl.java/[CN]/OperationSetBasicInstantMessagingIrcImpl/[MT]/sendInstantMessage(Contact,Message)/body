@@ -32,7 +32,13 @@ catch (          BadCommandException e) {
             fireMessageDeliveryFailed(message,to,MessageDeliveryFailedEvent.INTERNAL_ERROR);
           }
 catch (          BadCommandInvocationException e) {
-            MessageIrcImpl helpMessage=new MessageIrcImpl(e.getHelp(),OperationSetBasicInstantMessaging.DEFAULT_MIME_TYPE,OperationSetBasicInstantMessaging.DEFAULT_MIME_ENCODING,"Command usage:");
+            StringBuilder helpText=new StringBuilder();
+            if (e.getCause() != null) {
+              helpText.append(e.getCause().getMessage());
+              helpText.append('\n');
+            }
+            helpText.append(e.getHelp());
+            MessageIrcImpl helpMessage=new MessageIrcImpl(helpText.toString(),OperationSetBasicInstantMessaging.DEFAULT_MIME_TYPE,OperationSetBasicInstantMessaging.DEFAULT_MIME_ENCODING,"Command usage:");
             MessageReceivedEvent helpEvent=new MessageReceivedEvent(helpMessage,to,new Date(),MessageReceivedEvent.SYSTEM_MESSAGE_RECEIVED);
             fireMessageEvent(helpEvent);
           }
