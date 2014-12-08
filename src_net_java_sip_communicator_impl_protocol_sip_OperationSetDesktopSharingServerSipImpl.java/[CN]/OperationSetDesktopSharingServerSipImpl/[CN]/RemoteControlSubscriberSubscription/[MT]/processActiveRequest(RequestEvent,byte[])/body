@@ -1,5 +1,15 @@
 {
-  if (requestEvent.getDialog() != callPeer.getDialog())   return;
+  if (requestEvent.getDialog() != callPeer.getDialog()) {
+    if (callPeer.getCall() instanceof DesktopSharingCallSipImpl) {
+      Header dssidHeader=requestEvent.getRequest().getHeader(DesktopSharingCallSipImpl.DSSID_HEADER);
+      if (dssidHeader != null) {
+        String dssid=dssidHeader.toString().replaceAll(dssidHeader.getName() + ":","").trim();
+        if (!dssid.equals(((DesktopSharingCallSipImpl)callPeer.getCall()).getDesktopSharingSessionID()))         return;
+      }
+ else       return;
+    }
+ else     return;
+  }
   if (rawContent != null) {
     Document document=null;
     Throwable exception=null;

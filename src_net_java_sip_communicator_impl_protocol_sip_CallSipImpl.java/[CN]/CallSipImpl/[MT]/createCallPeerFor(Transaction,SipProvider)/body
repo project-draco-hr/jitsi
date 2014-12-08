@@ -1,5 +1,19 @@
 {
-  CallPeerSipImpl callPeer=new CallPeerSipImpl(containingTransaction.getDialog().getRemoteParty(),this,containingTransaction,sourceProvider);
+  CallPeerSipImpl callPeer=new CallPeerSipImpl(containingTransaction.getDialog().getRemoteParty(),this,containingTransaction,sourceProvider){
+    /** 
+ * A place where we can handle any headers we need for requests
+ * and responses.
+ * @param message the SIP <tt>Message</tt> in which a header change
+ * is to be reflected
+ * @throws ParseException if modifying the specified SIP
+ * <tt>Message</tt> to reflect the header change fails
+ */
+    protected void processExtraHeaders(    javax.sip.message.Message message) throws ParseException {
+      super.processExtraHeaders(message);
+      CallSipImpl.this.processExtraHeaders(message);
+    }
+  }
+;
   addCallPeer(callPeer);
   boolean incomingCall=(containingTransaction instanceof ServerTransaction);
   callPeer.setState(incomingCall ? CallPeerState.INCOMING_CALL : CallPeerState.INITIATING_CALL);
