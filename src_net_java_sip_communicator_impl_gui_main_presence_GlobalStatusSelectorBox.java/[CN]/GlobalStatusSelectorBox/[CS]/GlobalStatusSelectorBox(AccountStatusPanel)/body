@@ -11,17 +11,19 @@
   firstStatusIndex=getItemCount();
   if (isPresenceOpSetForProvidersAvailable())   addAvailableStatuses();
   group.add(createMenuItem(GlobalStatusEnum.OFFLINE,-1));
-  this.addSeparator();
-  globalStatusMessageMenu=new GlobalStatusMessageMenu(true);
-  globalStatusMessageMenu.addPropertyChangeListener(new PropertyChangeListener(){
-    @Override public void propertyChange(    PropertyChangeEvent evt){
-      if (evt.getPropertyName().equals(GlobalStatusMessageMenu.STATUS_MESSAGE_UPDATED_PROP)) {
-        changeTooltip((String)evt.getNewValue());
+  if (!GuiActivator.getConfigurationService().getBoolean(HIDE_GLOBAL_STATUS_MESSAGE,false)) {
+    this.addSeparator();
+    globalStatusMessageMenu=new GlobalStatusMessageMenu(true);
+    globalStatusMessageMenu.addPropertyChangeListener(new PropertyChangeListener(){
+      @Override public void propertyChange(      PropertyChangeEvent evt){
+        if (evt.getPropertyName().equals(GlobalStatusMessageMenu.STATUS_MESSAGE_UPDATED_PROP)) {
+          changeTooltip((String)evt.getNewValue());
+        }
       }
     }
-  }
 );
-  this.add((JMenu)globalStatusMessageMenu.getMenu());
+    this.add((JMenu)globalStatusMessageMenu.getMenu());
+  }
   if (!ConfigurationUtils.isHideAccountStatusSelectorsEnabled())   this.addSeparator();
   this.setFont(titleLabel.getFont().deriveFont(Font.PLAIN,11f));
   if (offlineStatus != null)   this.setIcon(new ImageIcon(offlineStatus.getStatusIcon()));
