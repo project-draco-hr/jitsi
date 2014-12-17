@@ -19,6 +19,17 @@ final MessageIrcImpl message=new MessageIrcImpl("","text/plain","UTF-8",null);
 this.chatroom.fireMessageDeliveryFailedEvent(ChatRoomMessageDeliveryFailedEvent.FORBIDDEN,"This channel is moderated.",new Date(),message);
 }
 break;
+case IRC_RPL_WHOREPLY:
+final String[] messageComponents=msg.getText().split(" ");
+final String nick=messageComponents[4];
+final ChatRoomMemberIrcImpl member=(ChatRoomMemberIrcImpl)this.chatroom.getChatRoomMember(nick);
+if (member != null) {
+final IrcStatusEnum status=determineStatus(messageComponents[5]);
+final IrcStatusEnum previous=member.setPresenceStatus(status);
+final ChatRoomMemberPropertyChangeEvent presenceEvent=new ChatRoomMemberPropertyChangeEvent(member,this.chatroom,ChatRoomMemberPropertyChangeEvent.MEMBER_PRESENCE,previous,status);
+this.chatroom.fireMemberPropertyChangeEvent(presenceEvent);
+}
+break;
 default :
 break;
 }
