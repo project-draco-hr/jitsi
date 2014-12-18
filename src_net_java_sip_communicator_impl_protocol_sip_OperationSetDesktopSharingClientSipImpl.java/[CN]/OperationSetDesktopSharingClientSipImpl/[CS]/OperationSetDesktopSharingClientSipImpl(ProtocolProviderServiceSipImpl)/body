@@ -4,7 +4,9 @@
   notifier=new EventPackageNotifier(this.parentProvider,DesktopSharingProtocolSipImpl.EVENT_PACKAGE,DesktopSharingProtocolSipImpl.SUBSCRIPTION_DURATION,DesktopSharingProtocolSipImpl.CONTENT_SUB_TYPE,this.timer){
     private String dssid=null;
     @Override protected Subscription createSubscription(    Address fromAddress,    String eventId){
-      return new RemoteControlNotifierSubscription(fromAddress,eventId);
+      RemoteControlNotifierSubscription rcNotifierSubscription=new RemoteControlNotifierSubscription(fromAddress,eventId);
+      if (dssid != null)       rcNotifierSubscription.setDSSID(dssid);
+      return rcNotifierSubscription;
     }
     /** 
  * {@inheritedDocs}.
@@ -21,7 +23,9 @@
       String callId=requestEvent.getDialog().getCallId().getCallId();
       Subscription subs=this.getSubscription(callId);
       if (subs instanceof RemoteControlNotifierSubscription) {
-        fireRemoteControlGranted(((RemoteControlNotifierSubscription)subs).getCallPeer());
+        RemoteControlNotifierSubscription rcnSub=(RemoteControlNotifierSubscription)subs;
+        fireRemoteControlGranted(rcnSub.getCallPeer());
+        if (dssid != null)         rcnSub.setDSSID(dssid);
       }
       return ret;
     }

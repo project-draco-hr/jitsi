@@ -4,7 +4,11 @@
     if (dialog != null) {
       OperationSetBasicTelephony<?> basicTelephony=parentProvider.getOperationSet(OperationSetBasicTelephony.class);
       if (basicTelephony != null) {
-        callPeer=((OperationSetBasicTelephonySipImpl)basicTelephony).getActiveCallsRepository().findCallPeer(dialog);
+        ActiveCallsRepositorySipImpl callRepo=((OperationSetBasicTelephonySipImpl)basicTelephony).getActiveCallsRepository();
+        callPeer=callRepo.findCallPeer(dialog);
+        if (callPeer == null && dssid != null) {
+          callPeer=findCallPeerByDSSID(callRepo);
+        }
         if (callPeer != null)         callPeer.addCallPeerListener(callPeerListener);
       }
     }
