@@ -6,6 +6,8 @@
   boolean autoNickChange=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.AUTO_CHANGE_USER_NAME,true);
   boolean passwordRequired=!accountID.getAccountPropertyBoolean(ProtocolProviderFactory.NO_PASSWORD_REQUIRED,true);
   boolean secureConnection=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true);
+  boolean channelPresenceTask=accountID.getAccountPropertyBoolean(ProtocolProviderFactoryIrcImpl.CHANNEL_PRESENCE_TASK,true);
+  boolean contactPresenceTask=accountID.getAccountPropertyBoolean(ProtocolProviderFactoryIrcImpl.CONTACT_PRESENCE_TASK,true);
   if (serverPassword == null && passwordRequired) {
     UserCredentials credentials=new UserCredentials();
     credentials.setUserName(getAccountID().getUserID());
@@ -23,8 +25,11 @@
       IrcActivator.getProtocolProviderFactory().storePassword(getAccountID(),serverPassword);
     }
   }
+  final ClientConfigImpl config=new ClientConfigImpl();
+  config.setContactPresenceTaskEnabled(contactPresenceTask);
+  config.setChannelPresenceTaskEnabled(channelPresenceTask);
   try {
-    this.ircstack.connect(serverAddress,serverPort,serverPassword,secureConnection,autoNickChange);
+    this.ircstack.connect(serverAddress,serverPort,serverPassword,secureConnection,autoNickChange,config);
   }
  catch (  OperationFailedException e) {
     throw e;
