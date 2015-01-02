@@ -12,8 +12,15 @@
   }
   this.irc=irc;
   this.connectionListener=connectionListener;
+  final CapabilityNegotiator negotiator;
+  if (config.isVersion3Allowed()) {
+    negotiator=determineNegotiator(params.getNickname(),password);
+  }
+ else {
+    negotiator=null;
+  }
   this.irc.addListener(new ServerListener());
-  this.connectionState=connectSynchronized(this.context.provider,params,this.irc);
+  this.connectionState=connectSynchronized(this.context.provider,params,password,this.irc,negotiator);
   this.identity=new IdentityManager(this.irc,this.connectionState,this.context.provider);
   this.message=new MessageManager(this,this.irc,this.connectionState,this.context.provider,this.identity);
   this.channel=new ChannelManager(this.irc,this.connectionState,this.context.provider,this.config);
