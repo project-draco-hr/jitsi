@@ -1,0 +1,20 @@
+{
+  final ConfigurationService configSvc=IrcActivator.getConfigurationService();
+  if (configSvc == null) {
+    return null;
+  }
+  final String globalProxyType=configSvc.getString(ProxyInfo.CONNECTION_PROXY_TYPE_PROPERTY_NAME);
+  if (globalProxyType == null || (!globalProxyType.equals(ProxyInfo.ProxyType.SOCKS4.name()) && !globalProxyType.equals(ProxyInfo.ProxyType.SOCKS5.name()))) {
+    return null;
+  }
+  final String globalProxyAddress=configSvc.getString(ProxyInfo.CONNECTION_PROXY_ADDRESS_PROPERTY_NAME);
+  final String globalProxyPortStr=configSvc.getString(ProxyInfo.CONNECTION_PROXY_PORT_PROPERTY_NAME);
+  final int globalProxyPort;
+  try {
+    globalProxyPort=Integer.parseInt(globalProxyPortStr);
+  }
+ catch (  NumberFormatException e) {
+    throw new OperationFailedException("invalid proxy port",OperationFailedException.INVALID_ACCOUNT_PROPERTIES,e);
+  }
+  return new Proxy(Proxy.Type.SOCKS,new InetSocketAddress(globalProxyAddress,globalProxyPort));
+}
