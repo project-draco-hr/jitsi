@@ -1,0 +1,37 @@
+{
+  if (message instanceof Response)   return;
+  Request request=(Request)message;
+  Map<String,String> props=protocolProvider.getAccountID().getAccountProperties();
+  Map<String,Map<String,String>> headers=new HashMap<String,Map<String,String>>();
+  for (  Map.Entry<String,String> entry : props.entrySet()) {
+    String pName=entry.getKey();
+    String prefStr=entry.getValue().trim();
+    String name;
+    String ix;
+    if (!pName.startsWith(ACC_PROPERTY_CONFIG_HEADER))     continue;
+    if (pName.contains(".")) {
+      pName=pName.replaceAll(ACC_PROPERTY_CONFIG_HEADER + ".","");
+      name=pName.substring(pName.lastIndexOf('.') + 1).trim();
+      if (!pName.contains("."))       continue;
+      ix=pName.substring(0,pName.lastIndexOf('.')).trim();
+    }
+ else     continue;
+    Map<String,String> headerValues=headers.get(ix);
+    if (headerValues == null) {
+      headerValues=new HashMap<String,String>();
+      headers.put(ix,headerValues);
+    }
+    headerValues.put(name,prefStr);
+  }
+  for (  Map<String,String> headerValues : headers.values()) {
+    String method=headerValues.get(ACC_PROPERTY_CONFIG_HEADER_METHOD);
+    if ((method != null && !request.getMethod().equalsIgnoreCase(method)) || !headerValues.containsKey(ACC_PROPERTY_CONFIG_HEADER_NAME) || !headerValues.containsKey(ACC_PROPERTY_CONFIG_HEADER_VALUE))     continue;
+    try {
+      Header customHeader=protocolProvider.getHeaderFactory().createHeader(headerValues.get(ACC_PROPERTY_CONFIG_HEADER_NAME),headerValues.get(ACC_PROPERTY_CONFIG_HEADER_VALUE));
+      request.setHeader(customHeader);
+    }
+ catch (    ParseException e) {
+      logger.error("Cannot create custom header",e);
+    }
+  }
+}
