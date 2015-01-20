@@ -1,10 +1,23 @@
 {
-  if (contactIdentifier == null) {
-    throw new IllegalArgumentException("contactIdentifier cannot be null");
+  if (contactIdentifier == null || contactIdentifier.isEmpty()) {
+    throw new IllegalArgumentException("contactIdentifier cannot be null or empty");
   }
+  if (!(parent instanceof ContactGroupIrcImpl)) {
+    throw new IllegalArgumentException("parent group must be an instance of ContactGroupIrcImpl");
+  }
+  final ContactGroupIrcImpl contactGroup=(ContactGroupIrcImpl)parent;
   final IrcConnection connection=this.parentProvider.getIrcStack().getConnection();
   if (connection == null) {
-    return;
+    throw new IllegalStateException("not currently connected");
   }
-  connection.getPresenceManager().addNickWatch(contactIdentifier);
+  final ContactIrcImpl newContact=new ContactIrcImpl(this.parentProvider,contactIdentifier,contactGroup,IrcStatusEnum.OFFLINE);
+  try {
+    contactGroup.addContact(newContact);
+    connection.getPresenceManager().addNickWatch(contactIdentifier);
+    fireSubscriptionEvent(newContact,contactGroup,SubscriptionEvent.SUBSCRIPTION_CREATED);
+  }
+ catch (  RuntimeException e) {
+    LOGGER.debug("Failed to subscribe to contact.",e);
+    fireSubscriptionEvent(newContact,contactGroup,SubscriptionEvent.SUBSCRIPTION_FAILED);
+  }
 }

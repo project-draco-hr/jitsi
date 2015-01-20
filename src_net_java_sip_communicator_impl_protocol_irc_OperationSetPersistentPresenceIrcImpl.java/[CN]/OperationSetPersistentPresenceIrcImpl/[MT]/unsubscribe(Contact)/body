@@ -1,10 +1,19 @@
 {
-  if (contact == null) {
-    throw new IllegalArgumentException("contact cannot be null");
+  if (!(contact instanceof ContactIrcImpl)) {
+    throw new IllegalArgumentException("contact must be instance of ContactIrcImpl");
   }
-  final IrcConnection connection=this.parentProvider.getIrcStack().getConnection();
-  if (connection == null) {
-    return;
+  final ContactIrcImpl ircContact=(ContactIrcImpl)contact;
+  final ContactGroupIrcImpl parentGroup=(ContactGroupIrcImpl)ircContact.getParentContactGroup();
+  try {
+    final IrcConnection connection=this.parentProvider.getIrcStack().getConnection();
+    if (connection != null) {
+      connection.getPresenceManager().removeNickWatch(contact.getAddress());
+    }
+    parentGroup.removeContact(ircContact);
+    fireSubscriptionEvent(ircContact,parentGroup,SubscriptionEvent.SUBSCRIPTION_REMOVED);
   }
-  connection.getPresenceManager().removeNickWatch(contact.getAddress());
+ catch (  RuntimeException e) {
+    LOGGER.debug("Failed to unsubscribe from contact.",e);
+    fireSubscriptionEvent(ircContact,parentGroup,SubscriptionEvent.SUBSCRIPTION_FAILED);
+  }
 }
