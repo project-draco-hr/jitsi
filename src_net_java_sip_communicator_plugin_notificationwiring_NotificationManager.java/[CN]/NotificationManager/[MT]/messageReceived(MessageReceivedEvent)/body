@@ -1,7 +1,15 @@
 {
   try {
     String title=NotificationWiringActivator.getResources().getI18NString("service.gui.MSG_RECEIVED",new String[]{evt.getSourceContact().getDisplayName()});
-    fireChatNotification(evt.getSourceContact(),INCOMING_MESSAGE,title,evt.getSourceMessage().getContent(),evt.getSourceMessage().getMessageUID());
+    final Message sourceMsg=evt.getSourceMessage();
+    final String htmlContent;
+    if (HTML_CONTENT_TYPE.equals(sourceMsg.getContentType())) {
+      htmlContent=sourceMsg.getContent();
+    }
+ else {
+      htmlContent=StringEscapeUtils.escapeHtml4(sourceMsg.getContent());
+    }
+    fireChatNotification(evt.getSourceContact(),INCOMING_MESSAGE,title,htmlContent,sourceMsg.getMessageUID());
   }
  catch (  Throwable t) {
     logger.error("Error notifying for message received",t);

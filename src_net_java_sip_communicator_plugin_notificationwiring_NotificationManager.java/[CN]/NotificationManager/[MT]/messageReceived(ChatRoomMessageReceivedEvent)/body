@@ -3,7 +3,8 @@
     ChatRoom sourceChatRoom=evt.getSourceChatRoom();
     ChatRoomMember sourceMember=evt.getSourceChatRoomMember();
     boolean fireChatNotification;
-    String messageContent=evt.getMessage().getContent();
+    final Message sourceMsg=evt.getMessage();
+    String messageContent=sourceMsg.getContent();
     if (sourceChatRoom.isSystem() || isPrivate(sourceChatRoom) || (messageContent == null))     fireChatNotification=true;
  else {
       String nickname=sourceChatRoom.getUserNickname();
@@ -13,7 +14,14 @@
     }
     if (fireChatNotification) {
       String title=NotificationWiringActivator.getResources().getI18NString("service.gui.MSG_RECEIVED",new String[]{sourceMember.getName()});
-      fireChatNotification(sourceChatRoom,INCOMING_MESSAGE,title,messageContent,evt.getMessage().getMessageUID());
+      final String htmlContent;
+      if (HTML_CONTENT_TYPE.equals(sourceMsg.getContentType())) {
+        htmlContent=messageContent;
+      }
+ else {
+        htmlContent=StringEscapeUtils.escapeHtml4(messageContent);
+      }
+      fireChatNotification(sourceChatRoom,INCOMING_MESSAGE,title,htmlContent,sourceMsg.getMessageUID());
     }
   }
  catch (  Throwable t) {
