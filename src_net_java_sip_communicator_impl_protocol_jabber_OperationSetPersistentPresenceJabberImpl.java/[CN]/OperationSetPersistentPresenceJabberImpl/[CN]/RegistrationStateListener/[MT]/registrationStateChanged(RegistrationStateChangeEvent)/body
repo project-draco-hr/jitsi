@@ -2,6 +2,7 @@
   if (logger.isDebugEnabled())   logger.debug("The Jabber provider changed state from: " + evt.getOldState() + " to: "+ evt.getNewState());
   if (evt.getNewState() == RegistrationState.REGISTERING) {
     parentProvider.getConnection().addPacketListener(new ServerStoredListInit(),new PacketTypeFilter(RosterPacket.class));
+    contactChangesListener=new ContactChangesListener();
     if (subscribtionPacketListener == null) {
       subscribtionPacketListener=new JabberSubscriptionListener();
       parentProvider.getConnection().addPacketListener(subscribtionPacketListener,new PacketTypeFilter(Presence.class));
@@ -18,11 +19,12 @@
     clearLocalContactResources();
     fireProviderStatusChangeEvent(oldStatus,currentStatus);
     ssContactList.cleanup();
-    subscribtionPacketListener=null;
     XMPPConnection connection=parentProvider.getConnection();
     if (connection != null) {
+      connection.removePacketListener(subscribtionPacketListener);
       connection.getRoster().removeRosterListener(contactChangesListener);
     }
+    subscribtionPacketListener=null;
     contactChangesListener=null;
   }
 }
