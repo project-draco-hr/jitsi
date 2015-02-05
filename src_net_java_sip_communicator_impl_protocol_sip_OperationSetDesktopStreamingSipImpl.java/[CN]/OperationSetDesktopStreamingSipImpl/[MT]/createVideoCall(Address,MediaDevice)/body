@@ -1,5 +1,22 @@
 {
-  CallSipImpl call=basicTelephony.createOutgoingCall();
+  basicTelephony.assertRegistered();
+  CallSipImpl call;
+  if (desktopControlOutOfDialogEnabled) {
+    call=new DesktopSharingCallSipImpl(basicTelephony){
+      @Override protected void processExtraHeaders(      javax.sip.message.Message message) throws ParseException {
+        addDesktopShareHeader(message);
+      }
+    }
+;
+  }
+ else {
+    call=new CallSipImpl(basicTelephony){
+      @Override protected void processExtraHeaders(      javax.sip.message.Message message) throws ParseException {
+        addDesktopShareHeader(message);
+      }
+    }
+;
+  }
   MediaUseCase useCase=getMediaUseCase();
   call.setVideoDevice(mediaDevice,useCase);
   call.setLocalVideoAllowed(true,useCase);

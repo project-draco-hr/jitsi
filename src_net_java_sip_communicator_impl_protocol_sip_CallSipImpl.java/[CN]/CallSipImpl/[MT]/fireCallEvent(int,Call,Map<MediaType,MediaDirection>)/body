@@ -1,3 +1,13 @@
 {
-  getParentOperationSet().fireCallEvent(eventID,sourceCall,mediaDirections);
+  CallEvent callEvent=new CallEvent(sourceCall,eventID,mediaDirections);
+  if (sourceCall.getCallPeerCount() == 1) {
+    CallSipImpl callSip=(CallSipImpl)sourceCall;
+    CallPeerSipImpl callPeer=callSip.getCallPeers().next();
+    Request request=callPeer.getLatestInviteTransaction().getRequest();
+    Header dsHeader=request.getHeader(DS_SHARING_HEADER);
+    if (dsHeader != null) {
+      callEvent.setDesktopStreaming(true);
+    }
+  }
+  getParentOperationSet().fireCallEvent(callEvent);
 }
