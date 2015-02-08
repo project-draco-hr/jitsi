@@ -1,0 +1,18 @@
+{
+  final Result<IrcStatusEnum,IllegalStateException> result=new Result<IrcStatusEnum,IllegalStateException>(IrcStatusEnum.OFFLINE);
+synchronized (result) {
+    this.irc.addListener(new WhoisReplyListener(nick,result));
+    this.irc.rawMessage("WHOIS " + IdentityManager.checkNick(nick,null));
+    while (!result.isDone()) {
+      LOGGER.debug("Waiting for presence status based on WHOIS " + "reply ...");
+      result.wait();
+    }
+  }
+  final Exception exception=result.getException();
+  if (exception == null) {
+    return result.getValue();
+  }
+ else {
+    throw new IOException("An exception occured while querying whois info.",result.getException());
+  }
+}
