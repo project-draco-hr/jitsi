@@ -1,0 +1,21 @@
+{
+  final List<String> current;
+synchronized (nickWatchList) {
+    current=new LinkedList<String>(nickWatchList);
+  }
+  final int maxLength=400;
+  final StringBuilder query=new StringBuilder();
+  for (  String nick : current) {
+    if (nick.length() + 1 > maxLength) {
+      irc.rawMessage(createMonitorCmd(query));
+      query.delete(0,query.length());
+    }
+ else     if (query.length() > 0) {
+      query.append(",");
+    }
+    query.append(nick);
+  }
+  if (query.length() > 0) {
+    irc.rawMessage(createMonitorCmd(query));
+  }
+}
