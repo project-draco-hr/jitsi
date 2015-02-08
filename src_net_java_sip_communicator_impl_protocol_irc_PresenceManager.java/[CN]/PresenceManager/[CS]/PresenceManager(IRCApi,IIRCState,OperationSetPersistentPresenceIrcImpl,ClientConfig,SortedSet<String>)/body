@@ -11,15 +11,19 @@
     throw new IllegalArgumentException("irc cannot be null");
   }
   this.irc=irc;
+  final SortedSet<String> nickWatchList;
   if (persistentNickWatchList == null) {
-    this.nickWatchList=Collections.synchronizedSortedSet(new TreeSet<String>());
+    nickWatchList=Collections.synchronizedSortedSet(new TreeSet<String>());
   }
  else {
-    this.nickWatchList=persistentNickWatchList;
+    nickWatchList=persistentNickWatchList;
   }
-  this.irc.addListener(new PresenceListener());
+  this.irc.addListener(new LocalUserPresenceListener());
   this.isupportAwayLen=parseISupportAwayLen(this.connectionState);
   if (config.isContactPresenceTaskEnabled()) {
-    setUpPresenceWatcher();
+    this.watcher=new BasicPollerPresenceWatcher(this.irc,this.connectionState,this.operationSet,nickWatchList,this.serverIdentity);
+  }
+ else {
+    this.watcher=null;
   }
 }
