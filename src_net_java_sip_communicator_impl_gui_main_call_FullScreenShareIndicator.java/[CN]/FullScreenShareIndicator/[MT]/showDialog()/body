@@ -1,0 +1,39 @@
+{
+  if (dialog != null)   return;
+  dialog=new JDialog((Window)null){
+    @Override public void setVisible(    boolean b){
+      setLocationByPlatform(false);
+      Dimension screenSize=Toolkit.getDefaultToolkit().getScreenSize();
+      setLocation(screenSize.width / 2 - getWidth() / 2,getLocation().y);
+      super.setVisible(b);
+    }
+  }
+;
+  dialog.setUndecorated(true);
+  dialog.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
+  dialog.setAlwaysOnTop(true);
+  JLabel label=new JLabel(GuiActivator.getResources().getI18NString("service.gui.DESKTOP_SHARING_DIALOG_INDICATE"));
+  label.setBorder(BorderFactory.createEmptyBorder(0,0,0,8));
+  Color backgroundColor=new ColorUIResource(GuiActivator.getResources().getColor("service.gui.DESKTOP_BACKGROUND"));
+  JPanel panel=new JPanel(new FlowLayout());
+  panel.setBackground(backgroundColor);
+  JPanel linePanel=new TransparentPanel(new BorderLayout());
+  linePanel.add(label,BorderLayout.CENTER);
+  linePanel.setBorder(BorderFactory.createMatteBorder(0,0,0,1,Color.lightGray));
+  panel.add(linePanel);
+  SIPCommTextButton stopButton=new SIPCommTextButton("Stop");
+  stopButton.setBackground(backgroundColor);
+  panel.add(stopButton);
+  stopButton.addActionListener(new ActionListener(){
+    @Override public void actionPerformed(    ActionEvent e){
+      if (CallManager.isDesktopSharingEnabled(call)) {
+        CallManager.enableDesktopSharing(call,false);
+      }
+    }
+  }
+);
+  panel.setBorder(BorderFactory.createEmptyBorder(0,10,0,10));
+  dialog.getContentPane().add(panel);
+  dialog.pack();
+  dialog.setVisible(true);
+}
