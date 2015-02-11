@@ -26,7 +26,10 @@
       this.watcher=new BasicPollerPresenceWatcher(this.irc,this.connectionState,this.operationSet,nickWatchList,this.serverIdentity);
     }
  else {
-      this.watcher=new MonitorPresenceWatcher(this.irc,this.connectionState,nickWatchList,this.operationSet,this.isupportMonitor);
+      final SortedSet<String> monitoredNicks=Collections.synchronizedSortedSet(new TreeSet<String>());
+      this.watcher=new MonitorPresenceWatcher(this.irc,this.connectionState,nickWatchList,monitoredNicks,this.operationSet,this.isupportMonitor);
+      final Set<String> unmonitoredNicks=new DynamicDifferenceSet<String>(nickWatchList,monitoredNicks);
+      new BasicPollerPresenceWatcher(this.irc,this.connectionState,this.operationSet,unmonitoredNicks,this.serverIdentity);
     }
   }
  else {
