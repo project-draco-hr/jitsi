@@ -9,6 +9,13 @@
     }
   }
   if (!isValidStatus)   throw new IllegalArgumentException(status + " is not a valid Jabber status");
+synchronized (ssContactList.getRosterInitLock()) {
+    if (!ssContactList.isRosterInitialized()) {
+      ssContactList.setInitialStatus(status);
+      ssContactList.setInitialStatusMessage(statusMessage);
+      return;
+    }
+  }
   if (status.equals(jabberStatusEnum.getStatus(JabberStatusEnum.OFFLINE))) {
     parentProvider.unregister();
     clearLocalContactResources();
