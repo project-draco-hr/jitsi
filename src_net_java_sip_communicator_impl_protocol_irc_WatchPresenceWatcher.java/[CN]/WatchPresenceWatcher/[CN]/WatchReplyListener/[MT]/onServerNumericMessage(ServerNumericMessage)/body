@@ -1,0 +1,30 @@
+{
+  final String nick;
+switch (msg.getNumericCode()) {
+case IRC_RPL_NOWON:
+    nick=parseWatchResponse(msg.getText());
+  monitoredNickList.add(nick);
+update(nick,IrcStatusEnum.ONLINE);
+break;
+case IRC_RPL_LOGON:
+nick=parseWatchResponse(msg.getText());
+update(nick,IrcStatusEnum.ONLINE);
+break;
+case IRC_RPL_NOWOFF:
+nick=parseWatchResponse(msg.getText());
+monitoredNickList.add(nick);
+update(nick,IrcStatusEnum.OFFLINE);
+break;
+case IRC_RPL_LOGOFF:
+nick=parseWatchResponse(msg.getText());
+update(nick,IrcStatusEnum.OFFLINE);
+break;
+case IRC_RPL_WATCHOFF:
+nick=parseWatchResponse(msg.getText());
+monitoredNickList.remove(nick);
+break;
+case IRC_ERR_LISTFULL:
+LOGGER.debug("WATCH list is full. Nick was not added. " + "Fall back Basic Poller will be used if it is enabled. (" + msg.getText() + ")");
+break;
+}
+}
