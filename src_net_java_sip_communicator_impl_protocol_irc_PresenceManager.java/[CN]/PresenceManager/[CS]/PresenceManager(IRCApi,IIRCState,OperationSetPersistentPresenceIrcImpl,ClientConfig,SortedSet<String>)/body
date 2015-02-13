@@ -22,19 +22,24 @@
   this.isupportAwayLen=parseISupportAwayLen(this.connectionState);
   this.isupportMonitor=parseISupportMonitor(this.connectionState);
   this.isupportWatch=parseISupportWatch(this.connectionState);
+  final boolean enablePresencePolling=config.isContactPresenceTaskEnabled();
   if (this.isupportMonitor != null) {
     final SortedSet<String> monitoredNicks=Collections.synchronizedSortedSet(new TreeSet<String>());
     this.watcher=new MonitorPresenceWatcher(this.irc,this.connectionState,nickWatchList,monitoredNicks,this.operationSet,this.isupportMonitor);
-    final Set<String> unmonitoredNicks=new DynamicDifferenceSet<String>(nickWatchList,monitoredNicks);
-    new BasicPollerPresenceWatcher(this.irc,this.connectionState,this.operationSet,unmonitoredNicks,this.serverIdentity);
+    if (enablePresencePolling) {
+      final Set<String> unmonitoredNicks=new DynamicDifferenceSet<String>(nickWatchList,monitoredNicks);
+      new BasicPollerPresenceWatcher(this.irc,this.connectionState,this.operationSet,unmonitoredNicks,this.serverIdentity);
+    }
   }
  else   if (this.isupportWatch != null) {
     final SortedSet<String> monitoredNicks=Collections.synchronizedSortedSet(new TreeSet<String>());
     this.watcher=new WatchPresenceWatcher(this.irc,this.connectionState,nickWatchList,monitoredNicks,this.operationSet,this.isupportWatch);
-    final Set<String> unmonitoredNicks=new DynamicDifferenceSet<String>(nickWatchList,monitoredNicks);
-    new BasicPollerPresenceWatcher(this.irc,this.connectionState,this.operationSet,unmonitoredNicks,this.serverIdentity);
+    if (enablePresencePolling) {
+      final Set<String> unmonitoredNicks=new DynamicDifferenceSet<String>(nickWatchList,monitoredNicks);
+      new BasicPollerPresenceWatcher(this.irc,this.connectionState,this.operationSet,unmonitoredNicks,this.serverIdentity);
+    }
   }
- else   if (config.isContactPresenceTaskEnabled()) {
+ else   if (enablePresencePolling) {
     this.watcher=new BasicPollerPresenceWatcher(this.irc,this.connectionState,this.operationSet,nickWatchList,this.serverIdentity);
   }
  else {
