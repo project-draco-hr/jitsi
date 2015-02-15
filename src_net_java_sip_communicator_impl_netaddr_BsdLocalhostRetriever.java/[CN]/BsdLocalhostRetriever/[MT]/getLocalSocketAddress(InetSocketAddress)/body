@@ -1,0 +1,23 @@
+{
+  sockaddr addr=sockaddr.create(dest);
+  int fd=LibC.INSTANCE.socket(addr.getFamily(),LibC.SOCK_DGRAM,0);
+  if (fd == -1) {
+    throw new LibC.CException();
+  }
+  try {
+    int err=LibC.INSTANCE.connect(fd,addr,addr.getSize());
+    if (err != 0) {
+      throw new LibC.CException();
+    }
+    sockaddr local=addr.createEmpty();
+    IntByReference size=new IntByReference(local.getSize());
+    err=LibC.INSTANCE.getsockname(fd,local,size);
+    if (err != 0) {
+      throw new LibC.CException();
+    }
+    return local.getAddress();
+  }
+  finally {
+    LibC.INSTANCE.close(fd);
+  }
+}
