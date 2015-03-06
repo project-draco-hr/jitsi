@@ -1,0 +1,29 @@
+{
+  List<PluginComponent> components;
+synchronized (this.pluginComponents) {
+    components=new ArrayList<PluginComponent>(this.pluginComponents);
+  }
+  final Contact contact;
+  if (chatSession.getDescriptor() instanceof MetaContact) {
+    MetaContact meta=(MetaContact)chatSession.getDescriptor();
+    if (meta == null) {
+      for (      PluginComponent c : components) {
+        c.setCurrentContact((MetaContact)null);
+      }
+      return;
+    }
+    contact=meta.getDefaultContact();
+  }
+ else {
+    contact=(Contact)chatSession.getDescriptor();
+  }
+  final String resourceName=chatSession.getCurrentChatTransport().getResourceName();
+  for (  PluginComponent c : components) {
+    try {
+      c.setCurrentContact(contact,resourceName);
+    }
+ catch (    RuntimeException e) {
+      logger.error("BUG: setCurrentContact of PluginComponent instance: " + c.getClass().getCanonicalName() + " throws a RuntimeException.",e);
+    }
+  }
+}
