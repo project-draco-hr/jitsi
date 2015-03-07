@@ -4,18 +4,22 @@ synchronized (this.pluginComponents) {
     components=new ArrayList<PluginComponent>(this.pluginComponents);
   }
   final Contact contact;
-  if (chatSession.getDescriptor() instanceof MetaContact) {
-    MetaContact meta=(MetaContact)chatSession.getDescriptor();
-    if (meta == null) {
-      for (      PluginComponent c : components) {
-        c.setCurrentContact((MetaContact)null);
-      }
-      return;
+  final Object descriptor=chatSession.getDescriptor();
+  if (descriptor instanceof MetaContact) {
+    contact=((MetaContact)descriptor).getDefaultContact();
+  }
+ else   if (descriptor instanceof Contact) {
+    contact=(Contact)descriptor;
+  }
+ else   if (descriptor == null) {
+    for (    PluginComponent c : components) {
+      c.setCurrentContact((Contact)null);
     }
-    contact=meta.getDefaultContact();
+    return;
   }
  else {
-    contact=(Contact)chatSession.getDescriptor();
+    logger.warn(String.format("Unsupported descriptor type %s (%s)," + "this event will not be propagated.",descriptor,descriptor.getClass().getCanonicalName()));
+    return;
   }
   final String resourceName=chatSession.getCurrentChatTransport().getResourceName();
   for (  PluginComponent c : components) {
