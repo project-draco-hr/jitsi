@@ -11,5 +11,18 @@
       value=value.replace("${to.address}",toHeader.getAddress().getURI().toString());
     }
   }
+  if (value.indexOf("${to.userID}") != -1) {
+    ToHeader toHeader=(ToHeader)request.getHeader(ToHeader.NAME);
+    if (toHeader != null) {
+      URI toURI=toHeader.getAddress().getURI();
+      String toAddr=toURI.toString();
+      if (toURI.isSipURI()) {
+        toAddr=toAddr.replaceFirst(toURI.getScheme() + ":","");
+      }
+      int index=toAddr.indexOf('@');
+      if (index > -1)       toAddr=toAddr.substring(0,index);
+      value=value.replace("${to.userID}",toAddr);
+    }
+  }
   return value;
 }
