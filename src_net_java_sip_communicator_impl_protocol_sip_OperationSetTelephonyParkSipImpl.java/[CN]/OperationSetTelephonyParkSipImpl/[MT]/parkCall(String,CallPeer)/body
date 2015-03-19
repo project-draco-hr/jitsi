@@ -1,0 +1,19 @@
+{
+  CallPeerSipImpl sipPeer=(CallPeerSipImpl)peer;
+  Dialog dialog=sipPeer.getDialog();
+  Request refer=protocolProvider.getMessageFactory().createRequest(dialog,Request.REFER);
+  HeaderFactory headerFactory=protocolProvider.getHeaderFactory();
+  String addressString=parkSlot;
+  String callParkPrefix=protocolProvider.getAccountID().getAccountPropertyString(CALL_PARK_PREFIX_PROPERTY,null);
+  if (callParkPrefix != null)   addressString=callParkPrefix + addressString;
+  Address address=null;
+  try {
+    address=protocolProvider.parseAddressString(addressString);
+  }
+ catch (  ParseException ex) {
+    ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to parse address string " + addressString,OperationFailedException.ILLEGAL_ARGUMENT,ex,logger);
+  }
+  refer.setHeader(headerFactory.createReferToHeader(address));
+  refer.addHeader(((HeaderFactoryImpl)headerFactory).createReferredByHeader(dialog.getLocalParty()));
+  protocolProvider.sendInDialogRequest(sipPeer.getJainSipProvider(),refer,dialog);
+}

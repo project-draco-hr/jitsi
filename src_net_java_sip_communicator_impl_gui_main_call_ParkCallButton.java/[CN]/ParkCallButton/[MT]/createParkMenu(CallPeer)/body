@@ -1,0 +1,35 @@
+{
+  final SIPCommTextField textField=new SIPCommTextField("");
+  textField.setColumns(10);
+  final JPopupMenu popupMenu=new SIPCommPopupMenu(){
+    @Override public void setVisible(    boolean b){
+      super.setVisible(b);
+      if (b)       textField.requestFocus();
+    }
+  }
+;
+  popupMenu.setInvoker(this);
+  popupMenu.setFocusable(true);
+  TransparentPanel content=new TransparentPanel();
+  JLabel parkingSlot=new JLabel(GuiActivator.getResources().getI18NString("service.gui.PARKING_SLOT"));
+  content.add(parkingSlot);
+  content.add(textField);
+  textField.requestFocus();
+  JButton button=new JButton(GuiActivator.getResources().getI18NString("service.gui.PARK"));
+  content.add(button);
+  popupMenu.add(content);
+  button.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      popupMenu.setVisible(false);
+      OperationSetTelephonyPark parkOpSet=call.getProtocolProvider().getOperationSet(OperationSetTelephonyPark.class);
+      try {
+        parkOpSet.parkCall(textField.getText(),peer);
+      }
+ catch (      OperationFailedException ex) {
+        logger.error("Failed to park " + peer.getAddress() + " to "+ textField.getText(),ex);
+      }
+    }
+  }
+);
+  return popupMenu;
+}
