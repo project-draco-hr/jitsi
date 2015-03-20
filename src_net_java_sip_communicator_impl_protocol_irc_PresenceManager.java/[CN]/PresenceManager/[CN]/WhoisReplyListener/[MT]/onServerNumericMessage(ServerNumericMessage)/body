@@ -1,0 +1,24 @@
+{
+  if (!this.nick.equals(msg.getTarget())) {
+    return;
+  }
+switch (msg.getNumericCode()) {
+case IRC_RPL_WHOISUSER:
+    if (this.presence != IrcStatusEnum.AWAY) {
+      this.presence=IrcStatusEnum.ONLINE;
+    }
+  break;
+case IRC_RPL_AWAY:
+this.presence=IrcStatusEnum.AWAY;
+break;
+case IRC_RPL_ENDOFWHOIS:
+this.irc.deleteListener(this);
+synchronized (this.result) {
+this.result.setDone(this.presence);
+this.result.notifyAll();
+}
+break;
+default :
+break;
+}
+}

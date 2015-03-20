@@ -1,0 +1,22 @@
+{
+  final List<String> acknowledged;
+switch (msg.getNumericCode()) {
+case IRC_RPL_MONONLINE:
+    acknowledged=parseMonitorResponse(msg.getText());
+  for (  String nick : acknowledged) {
+    update(nick,IrcStatusEnum.ONLINE);
+  }
+monitoredNickList.addAll(acknowledged);
+break;
+case IRC_RPL_MONOFFLINE:
+acknowledged=parseMonitorResponse(msg.getText());
+for (String nick : acknowledged) {
+update(nick,IrcStatusEnum.OFFLINE);
+}
+monitoredNickList.addAll(acknowledged);
+break;
+case IRC_ERR_MONLISTFULL:
+LOGGER.debug("MONITOR list full. Nick was not added. " + "Fall back Basic Poller will be used if it is enabled. (" + msg.getText() + ")");
+break;
+}
+}

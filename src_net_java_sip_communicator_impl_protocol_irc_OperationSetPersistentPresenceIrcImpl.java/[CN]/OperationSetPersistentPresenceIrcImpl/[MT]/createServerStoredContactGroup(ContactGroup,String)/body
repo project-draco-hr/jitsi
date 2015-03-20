@@ -1,4 +1,13 @@
 {
   LOGGER.trace("createServerStoredContactGroup(...) called");
-  throw new OperationFailedException("Not implemented.",OperationFailedException.NOT_SUPPORTED_OPERATION);
+  if (!(parent instanceof ContactGroupIrcImpl)) {
+    throw new IllegalArgumentException("parent is not an instance of ContactGroupIrcImpl");
+  }
+  if (groupName == null || groupName.isEmpty()) {
+    throw new IllegalArgumentException("groupName cannot be null or empty");
+  }
+  final ContactGroupIrcImpl parentGroup=(ContactGroupIrcImpl)parent;
+  final ContactGroupIrcImpl newGroup=new ContactGroupIrcImpl(this.parentProvider,parentGroup,groupName);
+  parentGroup.addSubGroup(newGroup);
+  fireServerStoredGroupEvent(newGroup,ServerStoredGroupEvent.GROUP_CREATED_EVENT);
 }

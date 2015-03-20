@@ -1,6 +1,13 @@
 {
+  if (address == null || address.isEmpty()) {
+    throw new IllegalArgumentException("address cannot be null or empty");
+  }
   if (!(parentGroup instanceof ContactGroupIrcImpl)) {
     throw new IllegalArgumentException("Provided contact group is not an IRC contact group instance.");
   }
-  return new ContactIrcImpl(this.parentProvider,address,(ContactGroupIrcImpl)parentGroup);
+  final ContactGroupIrcImpl group=(ContactGroupIrcImpl)parentGroup;
+  final ContactIrcImpl unresolvedContact=new ContactIrcImpl(this.parentProvider,address,(ContactGroupIrcImpl)parentGroup,IrcStatusEnum.OFFLINE);
+  group.addContact(unresolvedContact);
+  this.parentProvider.getIrcStack().getContext().nickWatchList.add(address);
+  return unresolvedContact;
 }

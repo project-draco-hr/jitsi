@@ -1,0 +1,19 @@
+{
+  if (msg == null || msg.getSource() == null) {
+    return;
+  }
+  final String oldNick=msg.getSource().getNick();
+  final String newNick=msg.getNewNick();
+  if (oldNick == null || newNick == null) {
+    LOGGER.error("Incomplete nick change message. Old nick: '" + oldNick + "', new nick: '"+ newNick+ "'.");
+    return;
+  }
+synchronized (BasicPollerPresenceWatcher.this.nickWatchList) {
+    if (BasicPollerPresenceWatcher.this.nickWatchList.contains(oldNick)) {
+      update(oldNick,IrcStatusEnum.OFFLINE);
+    }
+    if (BasicPollerPresenceWatcher.this.nickWatchList.contains(newNick)) {
+      update(newNick,IrcStatusEnum.ONLINE);
+    }
+  }
+}

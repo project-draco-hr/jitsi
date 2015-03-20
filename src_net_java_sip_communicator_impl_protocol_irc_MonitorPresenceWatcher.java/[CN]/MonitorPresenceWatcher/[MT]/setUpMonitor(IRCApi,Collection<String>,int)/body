@@ -1,0 +1,24 @@
+{
+  List<String> current;
+synchronized (nickWatchList) {
+    current=new LinkedList<String>(nickWatchList);
+  }
+  if (current.size() > maxListSize) {
+    current=current.subList(0,maxListSize);
+  }
+  final int maxLength=510 - MONITOR_ADD_CMD_STATIC_OVERHEAD;
+  final StringBuilder query=new StringBuilder();
+  for (  String nick : current) {
+    if (query.length() + nick.length() + 1 > maxLength) {
+      irc.rawMessage("MONITOR + " + query);
+      query.delete(0,query.length());
+    }
+ else     if (query.length() > 0) {
+      query.append(",");
+    }
+    query.append(nick);
+  }
+  if (query.length() > 0) {
+    irc.rawMessage("MONITOR + " + query);
+  }
+}
