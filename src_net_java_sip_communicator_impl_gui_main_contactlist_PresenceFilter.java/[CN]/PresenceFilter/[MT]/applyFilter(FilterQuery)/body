@@ -1,19 +1,26 @@
 {
   MetaContactQuery query=new MetaContactQuery();
   filterQuery.addContactQuery(query);
-  for (  int cssType : contactSourcePreferences.keySet()) {
-    Iterator<UIContactSource> filterSources=GuiActivator.getContactList().getContactSources(cssType).iterator();
-    while (filterSources.hasNext()) {
-      UIContactSource filterSource=filterSources.next();
-      Integer prefValue=contactSourcePreferences.get(cssType);
-      if (prefValue != null)       filterSource.setContactSourceIndex(prefValue);
-      ContactSourceService sourceService=filterSource.getContactSourceService();
-      ContactQuery contactQuery=sourceService.createContactQuery(null);
-      if (contactQuery == null)       continue;
-      filterQuery.addContactQuery(contactQuery);
-      contactQuery.addContactQueryListener(GuiActivator.getContactList());
-      contactQuery.start();
-    }
+  TreeContactList contactList=GuiActivator.getContactList();
+  Collection<UIContactSource> uiContactSourceCollection=contactList.getContactSources(ContactSourceService.CONTACT_LIST_TYPE);
+  Iterator<UIContactSource> filterSources=uiContactSourceCollection.iterator();
+  int maxIndex=0;
+  while (filterSources.hasNext()) {
+    UIContactSource filterSource=filterSources.next();
+    int currIx=filterSource.getContactSourceService().getIndex();
+    if (maxIndex < currIx)     maxIndex=currIx;
+  }
+  contactList.getMetaContactListSource().setIndex(maxIndex + 1);
+  filterSources=uiContactSourceCollection.iterator();
+  while (filterSources.hasNext()) {
+    UIContactSource filterSource=filterSources.next();
+    filterSource.setContactSourceIndex(filterSource.getContactSourceService().getIndex());
+    ContactSourceService sourceService=filterSource.getContactSourceService();
+    ContactQuery contactQuery=sourceService.createContactQuery(null);
+    if (contactQuery == null)     continue;
+    filterQuery.addContactQuery(contactQuery);
+    contactQuery.addContactQueryListener(contactList);
+    contactQuery.start();
   }
   filterQuery.close();
   query.addContactQueryListener(GuiActivator.getContactList());
