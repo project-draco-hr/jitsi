@@ -1,0 +1,28 @@
+{
+  if (conferenceState == null || StringUtils.isNullOrEmpty(conferenceState.getID())) {
+    return null;
+  }
+  assertRequestType(RequestType.RTP_DESCRIPTION_UPDATE);
+  request.setType(IQ.Type.SET);
+  for (  Map.Entry<String,RtpDescriptionPacketExtension> e : map.entrySet()) {
+    String contentName=e.getKey();
+    ColibriConferenceIQ.ChannelCommon channel=getColibriChannel(localChannelsInfo,contentName);
+    if (channel != null && channel instanceof ColibriConferenceIQ.Channel) {
+      RtpDescriptionPacketExtension rtpPE=e.getValue();
+      if (rtpPE == null) {
+        continue;
+      }
+      List<PayloadTypePacketExtension> pts=rtpPE.getPayloadTypes();
+      if (pts == null || pts.isEmpty()) {
+        continue;
+      }
+      ColibriConferenceIQ.Channel channelRequest=new ColibriConferenceIQ.Channel();
+      channelRequest.setID(channel.getID());
+      for (      PayloadTypePacketExtension ptPE : rtpPE.getPayloadTypes()) {
+        channelRequest.addPayloadType(ptPE);
+      }
+      request.getOrCreateContent(contentName).addChannel(channelRequest);
+    }
+  }
+  return this;
+}
