@@ -1,0 +1,12 @@
+{
+  OperationSetTelephonyBLF opset=protocolProvider.getOperationSet(OperationSetTelephonyBLF.class);
+  if (opset == null)   return;
+  opset.removeStatusListener(this);
+  for (  OperationSetTelephonyBLF.Line line : opset.getCurrentlyMonitoredLines()) {
+    String groupName=line.getGroup();
+    if (groupName == null)     groupName=BLF_DEFAULT_GROUP_NAME;
+    ServiceRegistration<ContactSourceService> serviceReg=currentBLFGroups.remove(groupName);
+    if (serviceReg == null)     continue;
+    serviceReg.unregister();
+  }
+}

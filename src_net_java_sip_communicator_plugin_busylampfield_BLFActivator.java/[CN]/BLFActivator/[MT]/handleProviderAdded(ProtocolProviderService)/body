@@ -1,0 +1,21 @@
+{
+  OperationSetTelephonyBLF opset=protocolProvider.getOperationSet(OperationSetTelephonyBLF.class);
+  if (opset == null)   return;
+  opset.addStatusListener(this);
+  for (  OperationSetTelephonyBLF.Line line : opset.getCurrentlyMonitoredLines()) {
+    String groupName=line.getGroup();
+    if (groupName == null)     groupName=BLF_DEFAULT_GROUP_NAME;
+    ServiceRegistration<ContactSourceService> serviceReg=currentBLFGroups.get(groupName);
+    if (serviceReg != null) {
+      BLFContactSourceService css=(BLFContactSourceService)bundleContext.getService(serviceReg.getReference());
+      css.addLine(line);
+      continue;
+    }
+ else {
+      BLFContactSourceService css=new BLFContactSourceService(groupName,currentBLFGroups.size() + 1);
+      serviceReg=(ServiceRegistration<ContactSourceService>)bundleContext.registerService(ContactSourceService.class.getName(),css,null);
+      currentBLFGroups.put(groupName,serviceReg);
+      css.addLine(line);
+    }
+  }
+}
