@@ -1,0 +1,28 @@
+{
+  LineDetails details=(LineDetails)line.getData(DATA_PROP);
+  if (details == null)   return;
+  if (StringUtils.isNullOrEmpty(details.callID) || StringUtils.isNullOrEmpty(details.localTag) || StringUtils.isNullOrEmpty(details.remoteTag))   return;
+  Address targetAddress=null;
+  try {
+    targetAddress=provider.parseAddressString(line.getAddress());
+  }
+ catch (  ParseException ex) {
+    ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to parse address string " + line.getAddress(),OperationFailedException.ILLEGAL_ARGUMENT,ex,logger);
+  }
+  Replaces replacesHeader=null;
+  SipURI sipURI=(SipURI)targetAddress.getURI();
+  try {
+    replacesHeader=(Replaces)((HeaderFactoryImpl)provider.getHeaderFactory()).createReplacesHeader(details.callID,details.remoteTag,details.localTag);
+  }
+ catch (  ParseException ex) {
+    ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to create Replaces header for target call-id " + details.callID,OperationFailedException.ILLEGAL_ARGUMENT,ex,logger);
+  }
+  try {
+    sipURI.setHeader(ReplacesHeader.NAME,URLEncoder.encode(replacesHeader.encodeBody(new StringBuilder()).toString(),"UTF-8"));
+  }
+ catch (  Exception ex) {
+    ProtocolProviderServiceSipImpl.throwOperationFailedException("Failed to set Replaces header " + replacesHeader + " to SipURI "+ sipURI,OperationFailedException.INTERNAL_ERROR,ex,logger);
+  }
+  OperationSetBasicTelephonySipImpl telOpSet=(OperationSetBasicTelephonySipImpl)provider.getOperationSet(OperationSetBasicTelephony.class);
+  CallSipImpl call=telOpSet.createOutgoingCall(targetAddress,null,null);
+}

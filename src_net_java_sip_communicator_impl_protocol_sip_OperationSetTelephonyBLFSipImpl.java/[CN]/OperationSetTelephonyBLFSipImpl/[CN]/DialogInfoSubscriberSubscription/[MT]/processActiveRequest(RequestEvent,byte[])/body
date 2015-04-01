@@ -1,0 +1,26 @@
+{
+  if (rawContent == null)   return;
+  Document doc=convertDocument(rawContent);
+  if (doc == null)   return;
+  if (logger.isTraceEnabled())   logger.trace("parsing:\n" + new String(rawContent));
+  LineDetails details=(LineDetails)line.getData(DATA_PROP);
+  if (details == null) {
+    details=new LineDetails();
+    line.setData(DATA_PROP,details);
+  }
+  NodeList dialogList=doc.getElementsByTagNameNS(ANY_NS,"dialog");
+  if (dialogList.getLength() == 0) {
+    updateLineState(details,"Terminated");
+    return;
+  }
+  for (int i=0; i < dialogList.getLength(); i++) {
+    Node dialogNode=dialogList.item(i);
+    Element dialogElem=(Element)dialogNode;
+    details.callID=dialogElem.getAttribute("call-id");
+    details.localTag=dialogElem.getAttribute("local-tag");
+    details.remoteTag=dialogElem.getAttribute("remote-tag");
+    NodeList states=((Element)dialogNode).getElementsByTagNameNS(ANY_NS,"state");
+    if (states.getLength() == 0)     continue;
+    updateLineState(details,getTextContent((Element)states.item(0)));
+  }
+}

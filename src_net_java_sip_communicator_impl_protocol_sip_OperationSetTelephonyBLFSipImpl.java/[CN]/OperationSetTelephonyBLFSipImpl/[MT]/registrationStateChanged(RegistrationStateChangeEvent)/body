@@ -1,0 +1,34 @@
+{
+  if (evt.getNewState().equals(RegistrationState.REGISTERED)) {
+    for (    Line line : this.lines) {
+      try {
+        subscriber.poll(new DialogInfoSubscriberSubscription(provider.parseAddressString(line.getAddress()),line));
+      }
+ catch (      OperationFailedException ex) {
+        logger.error("Failed to create and send the subscription",ex);
+      }
+catch (      ParseException ex) {
+        logger.error("Failed to create and send the subscription",ex);
+      }
+    }
+  }
+ else   if (evt.getNewState().equals(RegistrationState.UNREGISTERING)) {
+    timer.cancel();
+  }
+ else   if (evt.getNewState().equals(RegistrationState.CONNECTION_FAILED) || evt.getNewState().equals(RegistrationState.AUTHENTICATION_FAILED) || evt.getNewState().equals(RegistrationState.UNREGISTERED)) {
+    if (subscriber != null) {
+      for (      Line line : this.lines) {
+        try {
+          subscriber.removeSubscription(provider.parseAddressString(line.getAddress()));
+        }
+ catch (        ParseException ex) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Failed to remove subscription for " + line.getAddress());
+          }
+        }
+        fireEvent(line,BLFStatusEvent.STATUS_OFFLINE);
+      }
+    }
+    timer.cancel();
+  }
+}

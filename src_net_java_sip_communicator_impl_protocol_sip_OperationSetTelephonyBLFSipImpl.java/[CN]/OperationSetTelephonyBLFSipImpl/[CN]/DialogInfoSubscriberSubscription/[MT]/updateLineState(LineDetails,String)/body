@@ -1,0 +1,49 @@
+{
+  int newEvent=BLFStatusEvent.STATUS_OFFLINE;
+switch (details.lastStatusEvent) {
+case BLFStatusEvent.STATUS_OFFLINE:
+    if (state.equalsIgnoreCase("Trying") || state.equalsIgnoreCase("Proceeding") || state.equalsIgnoreCase("Early")) {
+      newEvent=BLFStatusEvent.STATUS_RINGING;
+    }
+ else     if (state.equalsIgnoreCase("Confirmed")) {
+      newEvent=BLFStatusEvent.STATUS_BUSY;
+    }
+ else     if (state.equalsIgnoreCase("Terminated")) {
+      newEvent=BLFStatusEvent.STATUS_FREE;
+    }
+  break;
+case BLFStatusEvent.STATUS_FREE:
+if (state.equalsIgnoreCase("Trying") || state.equalsIgnoreCase("Proceeding") || state.equalsIgnoreCase("Early")) {
+  newEvent=BLFStatusEvent.STATUS_RINGING;
+}
+ else if (state.equalsIgnoreCase("Confirmed")) {
+  newEvent=BLFStatusEvent.STATUS_BUSY;
+}
+ else if (state.equalsIgnoreCase("Terminated")) {
+  return;
+}
+break;
+case BLFStatusEvent.STATUS_BUSY:
+if (state.equalsIgnoreCase("Terminated")) {
+newEvent=BLFStatusEvent.STATUS_FREE;
+}
+ else {
+return;
+}
+break;
+case BLFStatusEvent.STATUS_RINGING:
+if (state.equalsIgnoreCase("Confirmed")) {
+newEvent=BLFStatusEvent.STATUS_BUSY;
+}
+ else if (state.equalsIgnoreCase("Terminated")) {
+newEvent=BLFStatusEvent.STATUS_FREE;
+}
+ else {
+return;
+}
+break;
+default :
+return;
+}
+fireEvent(line,newEvent);
+}

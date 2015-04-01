@@ -1,0 +1,33 @@
+{
+  Map<String,String> props=provider.getAccountID().getAccountProperties();
+  Map<String,String[]> lines=new HashMap<String,String[]>();
+  for (  Map.Entry<String,String> entry : props.entrySet()) {
+    String pName=entry.getKey();
+    String entryValue=entry.getValue();
+    String ix;
+    if (!pName.startsWith(BLF_LINE_ACC_PROP_PREFIX) || entryValue == null)     continue;
+    entryValue=entryValue.trim();
+    if (!pName.contains("."))     continue;
+    pName=pName.replaceAll(BLF_LINE_ACC_PROP_PREFIX + ".","");
+    if (!pName.contains("."))     continue;
+    ix=pName.substring(0,pName.lastIndexOf('.')).trim();
+    String[] lineValues=lines.get(ix);
+    if (lineValues == null) {
+      lineValues=new String[3];
+      lines.put(ix,lineValues);
+    }
+    if (pName.contains(BLF_LINE_ADDR_ACC_PROP_SUFFIX)) {
+      lineValues[0]=entryValue;
+    }
+ else     if (pName.contains(BLF_LINE_NAME_ACC_PROP_PREFIX)) {
+      lineValues[1]=entryValue;
+    }
+ else     if (pName.contains(BLF_LINE_GROUP_ACC_PROP_PREFIX)) {
+      lineValues[2]=entryValue;
+    }
+  }
+  for (  Map.Entry<String,String[]> en : lines.entrySet()) {
+    String[] vals=en.getValue();
+    this.lines.add(new Line(vals[0],vals[1],vals[2],this.provider));
+  }
+}

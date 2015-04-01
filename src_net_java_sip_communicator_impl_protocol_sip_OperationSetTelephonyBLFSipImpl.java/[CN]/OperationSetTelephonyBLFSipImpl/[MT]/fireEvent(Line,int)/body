@@ -1,0 +1,15 @@
+{
+  LineDetails details=(LineDetails)line.getData(DATA_PROP);
+  if (details == null) {
+    details=new LineDetails();
+    line.setData(DATA_PROP,details);
+  }
+  details.lastStatusEvent=eventType;
+  BLFStatusEvent evt=new BLFStatusEvent(line,eventType);
+  Collection<BLFStatusListener> listeners;
+synchronized (this.listeners) {
+    listeners=new ArrayList<BLFStatusListener>(this.listeners);
+  }
+  if (logger.isInfoEnabled())   logger.info("Dispatching BLF change. Listeners=" + listeners.size() + " evt="+ evt+ " line="+ line.getAddress());
+  for (  BLFStatusListener listener : listeners)   listener.blfStatusChanged(evt);
+}
