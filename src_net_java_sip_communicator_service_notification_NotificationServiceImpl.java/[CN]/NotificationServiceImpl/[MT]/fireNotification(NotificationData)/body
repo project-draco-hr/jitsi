@@ -6,24 +6,29 @@
     if (!action.isEnabled())     continue;
     NotificationHandler handler=handlers.get(actionType);
     if (handler == null)     continue;
-    if (actionType.equals(ACTION_POPUP_MESSAGE)) {
-      ((PopupMessageNotificationHandler)handler).popupMessage((PopupMessageNotificationAction)action,data.getTitle(),data.getMessage(),data.getIcon(),data.getExtra(NotificationData.POPUP_MESSAGE_HANDLER_TAG_EXTRA));
-    }
- else     if (actionType.equals(ACTION_LOG_MESSAGE)) {
-      ((LogMessageNotificationHandler)handler).logMessage((LogMessageNotificationAction)action,data.getMessage());
-    }
- else     if (actionType.equals(ACTION_SOUND)) {
-      SoundNotificationAction soundNotificationAction=(SoundNotificationAction)action;
-      if (soundNotificationAction.isSoundNotificationEnabled() || soundNotificationAction.isSoundPlaybackEnabled() || soundNotificationAction.isSoundPCSpeakerEnabled()) {
-        ((SoundNotificationHandler)handler).start((SoundNotificationAction)action,data);
+    try {
+      if (actionType.equals(ACTION_POPUP_MESSAGE)) {
+        ((PopupMessageNotificationHandler)handler).popupMessage((PopupMessageNotificationAction)action,data.getTitle(),data.getMessage(),data.getIcon(),data.getExtra(NotificationData.POPUP_MESSAGE_HANDLER_TAG_EXTRA));
+      }
+ else       if (actionType.equals(ACTION_LOG_MESSAGE)) {
+        ((LogMessageNotificationHandler)handler).logMessage((LogMessageNotificationAction)action,data.getMessage());
+      }
+ else       if (actionType.equals(ACTION_SOUND)) {
+        SoundNotificationAction soundNotificationAction=(SoundNotificationAction)action;
+        if (soundNotificationAction.isSoundNotificationEnabled() || soundNotificationAction.isSoundPlaybackEnabled() || soundNotificationAction.isSoundPCSpeakerEnabled()) {
+          ((SoundNotificationHandler)handler).start((SoundNotificationAction)action,data);
+        }
+      }
+ else       if (actionType.equals(ACTION_COMMAND)) {
+        @SuppressWarnings("unchecked") Map<String,String> cmdargs=(Map<String,String>)data.getExtra(NotificationData.COMMAND_NOTIFICATION_HANDLER_CMDARGS_EXTRA);
+        ((CommandNotificationHandler)handler).execute((CommandNotificationAction)action,cmdargs);
+      }
+ else       if (actionType.equals(ACTION_VIBRATE)) {
+        ((VibrateNotificationHandler)handler).vibrate((VibrateNotificationAction)action);
       }
     }
- else     if (actionType.equals(ACTION_COMMAND)) {
-      @SuppressWarnings("unchecked") Map<String,String> cmdargs=(Map<String,String>)data.getExtra(NotificationData.COMMAND_NOTIFICATION_HANDLER_CMDARGS_EXTRA);
-      ((CommandNotificationHandler)handler).execute((CommandNotificationAction)action,cmdargs);
-    }
- else     if (actionType.equals(ACTION_VIBRATE)) {
-      ((VibrateNotificationHandler)handler).vibrate((VibrateNotificationAction)action);
+ catch (    Exception e) {
+      logger.error("Error dispatching notification of type" + actionType + " from "+ handler,e);
     }
   }
 }
