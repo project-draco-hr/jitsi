@@ -1,12 +1,6 @@
 {
-  final IRCServer server;
-  final String plainPass=config.getSASL() == null ? password : null;
-  if (secureConnection) {
-    server=new SecureIRCServer(host,port,plainPass,getCustomSSLContext(host),config.getProxy(),config.isResolveByProxy());
-  }
- else {
-    server=new IRCServer(host,port,plainPass,false,config.getProxy(),config.isResolveByProxy());
-  }
+  final String plainPass=determinePlainPassword(password,config);
+  final IRCServer server=createServer(config,host,port,secureConnection,plainPass);
   try {
 synchronized (this.session) {
       final IrcConnection current=this.session.get();

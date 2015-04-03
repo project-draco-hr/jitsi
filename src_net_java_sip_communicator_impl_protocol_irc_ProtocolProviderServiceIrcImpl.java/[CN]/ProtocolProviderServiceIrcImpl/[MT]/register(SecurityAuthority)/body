@@ -4,6 +4,7 @@
   int serverPort=accountID.getAccountPropertyInt(ProtocolProviderFactory.SERVER_PORT,DEFAULT_SECURE_IRC_PORT);
   String serverPassword=IrcActivator.getProtocolProviderFactory().loadPassword(getAccountID());
   boolean autoNickChange=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.AUTO_CHANGE_USER_NAME,true);
+  boolean resolveDnsThroughProxy=accountID.getAccountPropertyBoolean(ProtocolProviderFactoryIrcImpl.RESOLVE_DNS_THROUGH_PROXY,true);
   boolean passwordRequired=!accountID.getAccountPropertyBoolean(ProtocolProviderFactory.NO_PASSWORD_REQUIRED,true);
   boolean secureConnection=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true);
   boolean channelPresenceTask=accountID.getAccountPropertyBoolean(ProtocolProviderFactoryIrcImpl.CHAT_ROOM_PRESENCE_TASK,true);
@@ -32,8 +33,9 @@
   config.setVersion3Allowed(true);
   config.setContactPresenceTaskEnabled(contactPresenceTask);
   config.setChannelPresenceTaskEnabled(channelPresenceTask);
-  config.setProxy(loadProxy());
-  config.setResolveByProxy(loadDNSThroughProxySetting());
+  final Proxy proxy=loadProxy();
+  config.setProxy(proxy);
+  config.setResolveByProxy(resolveDnsThroughProxy);
   if (saslEnabled) {
     final SASLImpl sasl=new ClientConfigImpl.SASLImpl(saslUser,serverPassword,saslRole);
     config.setSASL(sasl);
