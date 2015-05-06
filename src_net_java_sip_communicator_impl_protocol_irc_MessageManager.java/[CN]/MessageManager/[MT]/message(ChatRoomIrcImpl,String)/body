@@ -5,7 +5,15 @@
   final String target=chatroom.getIdentifier();
   final int maxMsgSize=calculateMaximumMessageSize(0,target);
   if (maxMsgSize < message.length()) {
-    LOGGER.warn("Message for " + target + " is too large. At best only sent message up to: "+ message.substring(0,maxMsgSize));
+    LOGGER.warn("Message for " + target + " is too large. At best you can send the message up to: "+ message.substring(0,maxMsgSize));
+    throw new OperationFailedException("Message is too large for this IRC server.",OperationFailedException.ILLEGAL_ARGUMENT);
   }
-  this.irc.message(target,message);
+  try {
+    this.irc.message(target,message);
+    LOGGER.trace("Message delivered to server successfully.");
+  }
+ catch (  RuntimeException e) {
+    LOGGER.trace("Failed to deliver message: " + e.getMessage(),e);
+    throw e;
+  }
 }
