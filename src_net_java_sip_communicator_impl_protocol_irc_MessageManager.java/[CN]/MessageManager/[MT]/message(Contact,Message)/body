@@ -3,6 +3,10 @@
     throw new IllegalStateException("Not connected to an IRC server.");
   }
   final String target=contact.getAddress();
+  final int maxMsgSize=calculateMaximumMessageSize(0,target);
+  if (maxMsgSize < message.getContent().length()) {
+    LOGGER.warn("Message for " + target + " is too large. At best only sent message up to: "+ message.getContent().substring(0,maxMsgSize));
+  }
   try {
     this.irc.message(target,message.getContent());
     LOGGER.trace("Message delivered to server successfully.");
