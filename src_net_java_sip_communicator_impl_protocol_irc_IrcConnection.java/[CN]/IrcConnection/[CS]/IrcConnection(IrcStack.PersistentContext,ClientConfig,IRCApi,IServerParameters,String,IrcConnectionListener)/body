@@ -13,8 +13,9 @@
   this.irc=irc;
   this.connectionListener=connectionListener;
   final CapabilityNegotiator negotiator;
+  final NegotiationHandler handler=new NegotiationHandler();
   if (config.isVersion3Allowed()) {
-    negotiator=determineNegotiator(params.getNickname(),password,config);
+    negotiator=determineNegotiator(params.getNickname(),password,config,handler);
   }
  else {
     negotiator=null;
@@ -23,7 +24,7 @@
   this.connectionState=connectSynchronized(this.context.provider,params,this.irc,negotiator);
   this.identity=new IdentityManager(this.irc,this.connectionState,this.context.provider);
   this.message=new MessageManager(this,this.irc,this.connectionState,this.context.provider,this.identity);
-  this.channel=new ChannelManager(this.irc,this.connectionState,this.context.provider,this.config);
+  this.channel=new ChannelManager(this.irc,this.connectionState,this.context.provider,this.config,handler.awayNotify);
   this.presence=new PresenceManager(this.irc,this.connectionState,this.context.provider.getPersistentPresence(),this.config,this.context.nickWatchList);
   this.channelLister=new ServerChannelLister(this.irc,this.connectionState);
 }
