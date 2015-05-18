@@ -5,6 +5,19 @@
       value=value.replace("${from.address}",fromHeader.getAddress().getURI().toString());
     }
   }
+  if (value.indexOf("${from.userID}") != -1) {
+    FromHeader fromHeader=(FromHeader)request.getHeader(FromHeader.NAME);
+    if (fromHeader != null) {
+      URI fromURI=fromHeader.getAddress().getURI();
+      String fromAddr=fromURI.toString();
+      if (fromURI.isSipURI()) {
+        fromAddr=fromAddr.replaceFirst(fromURI.getScheme() + ":","");
+      }
+      int index=fromAddr.indexOf('@');
+      if (index > -1)       fromAddr=fromAddr.substring(0,index);
+      value=value.replace("${from.userID}",fromAddr);
+    }
+  }
   if (value.indexOf("${to.address}") != -1) {
     ToHeader toHeader=(ToHeader)request.getHeader(ToHeader.NAME);
     if (toHeader != null) {
