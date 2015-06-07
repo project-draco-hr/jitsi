@@ -1,0 +1,32 @@
+{
+  final Credential.Builder builder=new Credential.Builder(BearerToken.authorizationHeaderAccessMethod());
+  builder.setTokenServerUrl(tokenServerURL);
+  builder.setTransport(new NetHttpTransport());
+  builder.setJsonFactory(new JacksonFactory());
+  builder.setClientAuthentication(new HttpExecuteInterceptor(){
+    @Override public void intercept(    HttpRequest request) throws IOException {
+      final RefreshTokenRequest content=(RefreshTokenRequest)((UrlEncodedContent)request.getContent()).getData();
+      content.put("client_id",GOOGLE_API_CLIENT_ID);
+      content.put("client_secret",GOOGLE_API_CLIENT_SECRET);
+      logger.warn("Refresh token request: " + content.toString());
+    }
+  }
+);
+  builder.addRefreshListener(new CredentialRefreshListener(){
+    final AtomicReference<Credential> store=GoogleContactsConnectionImpl.this.credential;
+    @Override public void onTokenResponse(    Credential credential,    TokenResponse tokenResponse) throws IOException {
+      logger.debug("Successful token refresh response: " + tokenResponse.toPrettyString());
+      store.set(credential);
+    }
+    @Override public void onTokenErrorResponse(    Credential credential,    TokenErrorResponse tokenErrorResponse) throws IOException {
+      logger.debug("Failed token refresh response: " + tokenErrorResponse.toPrettyString());
+      logger.error("Failed to refresh OAuth2 token: " + tokenErrorResponse.getError() + ": "+ tokenErrorResponse.getErrorDescription());
+    }
+  }
+);
+  final Credential credential=builder.build();
+  credential.setAccessToken("ya29.iwG37LYEgB4FCwfPLq8vV6Q-CX1vQ5sJrb_2AGydhLAiUT4wmz4iW4FlVkZE57s1B6NgA3BJAspLIw");
+  credential.setRefreshToken(TEMP_REFRESH_TOKEN);
+  credential.setExpiresInSeconds(3600L);
+  this.credential.set(credential);
+}
