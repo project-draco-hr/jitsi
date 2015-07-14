@@ -1,0 +1,17 @@
+{
+  final TokenData token;
+  String refreshToken=restoreRefreshToken(identity);
+  if (refreshToken == null) {
+    LOGGER.info("No credentials available yet. Requesting user to " + "approve access to Contacts API for identity " + identity + " using URL: "+ APPROVAL_URL);
+    final OAuthApprovalDialog dialog=new OAuthApprovalDialog(identity);
+    dialog.setVisible(true);
+    final String approvalCode=dialog.getApprovalCode();
+    LOGGER.debug("Approval code from user: " + approvalCode);
+    token=requestAuthenticationToken(approvalCode);
+    saveRefreshToken(token,identity);
+  }
+ else {
+    token=new TokenData("TOKEN_NOT_AVAILABLE",refreshToken,0);
+  }
+  store.set(createCredential(store,token));
+}

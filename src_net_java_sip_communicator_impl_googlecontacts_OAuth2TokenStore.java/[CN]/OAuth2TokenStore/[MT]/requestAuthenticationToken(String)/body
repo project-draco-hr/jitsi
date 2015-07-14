@@ -1,3 +1,30 @@
 {
-  return new TokenData("","",3600L);
+  final HttpClient client=new DefaultHttpClient();
+  final HttpPost post=new HttpPost(GOOGLE_OAUTH2_TOKEN_SERVER.toURI());
+  final UrlEncodedFormEntity entity=new UrlEncodedFormEntity(Arrays.asList(new BasicNameValuePair("code",approvalCode),new BasicNameValuePair("client_id",GOOGLE_API_CLIENT_ID),new BasicNameValuePair("client_secret",GOOGLE_API_CLIENT_SECRET),new BasicNameValuePair("redirect_uri",GOOGLE_API_OAUTH2_REDIRECT_URI),new BasicNameValuePair("grant_type",GOOGLE_API_GRANT_TYPE)));
+  post.setEntity(entity);
+  final HttpResponse httpResponse=client.execute(post);
+  final JsonParser parser=JacksonFactory.getDefaultInstance().createJsonParser(httpResponse.getEntity().getContent());
+  try {
+    String accessToken="";
+    String refreshToken="";
+    long expiresIn=3600;
+    String found;
+    while (parser.nextToken() != JsonToken.END_OBJECT) {
+      found=parser.skipToKey(TOKEN_RESPONSE_FIELDS);
+      if (REFRESH_TOKEN_SYMBOL.equals(found)) {
+        refreshToken=parser.getText();
+      }
+ else       if (ACCESS_TOKEN_SYMBOL.equals(found)) {
+        accessToken=parser.getText();
+      }
+ else       if (EXPIRES_IN_SYMBOL.equals(found)) {
+        expiresIn=parser.getLongValue();
+      }
+    }
+    return new TokenData(accessToken,refreshToken,expiresIn);
+  }
+  finally {
+    parser.close();
+  }
 }
