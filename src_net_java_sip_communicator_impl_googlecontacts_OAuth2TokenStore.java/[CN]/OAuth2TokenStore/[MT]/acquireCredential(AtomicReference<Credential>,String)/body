@@ -5,13 +5,21 @@
     LOGGER.info("No credentials available yet. Requesting user to " + "approve access to Contacts API for identity " + identity + " using URL: "+ APPROVAL_URL);
     final OAuthApprovalDialog dialog=new OAuthApprovalDialog(identity);
     dialog.setVisible(true);
-    final String approvalCode=dialog.getApprovalCode();
+switch (dialog.getResponse()) {
+case CONFIRMED:
+      final String approvalCode=dialog.getApprovalCode();
     LOGGER.debug("Approval code from user: " + approvalCode);
-    token=requestAuthenticationToken(approvalCode);
-    saveRefreshToken(token,identity);
-  }
+  token=requestAuthenticationToken(approvalCode);
+saveRefreshToken(token,identity);
+break;
+case CANCELLED:
+default :
+token=null;
+break;
+}
+}
  else {
-    token=new TokenData("TOKEN_NOT_AVAILABLE",refreshToken,0);
-  }
-  store.set(createCredential(store,token));
+token=new TokenData("TOKEN_NOT_AVAILABLE",refreshToken,0);
+}
+store.set(createCredential(store,token));
 }
