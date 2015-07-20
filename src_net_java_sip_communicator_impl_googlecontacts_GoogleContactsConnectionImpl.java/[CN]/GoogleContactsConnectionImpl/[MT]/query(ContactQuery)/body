@@ -2,8 +2,12 @@
   try {
     return this.googleService.query(query,ContactFeed.class);
   }
- catch (  Exception e) {
-    logger.info("Failed to execute query. Going to refresh token" + " and try again.",e);
+ catch (  NullPointerException e) {
+    logger.info("Executing query failed with NPE. " + "Refreshing access token and trying again.");
+    this.store.refresh();
+  }
+catch (  Exception e) {
+    logger.warn("Query failed with unexpected exception. Going to try " + "refreshing token anyways ...",e);
     this.store.refresh();
   }
   try {
