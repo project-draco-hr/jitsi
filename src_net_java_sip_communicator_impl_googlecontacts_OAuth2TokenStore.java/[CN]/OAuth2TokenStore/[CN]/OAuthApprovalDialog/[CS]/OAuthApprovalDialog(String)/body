@@ -1,19 +1,34 @@
 {
+  final ResourceManagementService resources=GoogleContactsActivator.getResourceManagementService();
+  final String instructionsText=resources.getI18NString("impl.googlecontacts.INSTRUCTIONS");
+  this.setMinimumSize(new Dimension(20,20));
+  this.setPreferredSize(new Dimension(650,200));
+  this.setBounds(10,10,this.getWidth() - 20,this.getHeight() - 20);
   this.setModal(true);
-  this.label=new SIPCommLinkButton("Approve Jitsi's access to " + identity);
-  this.label.addActionListener(new ActionListener(){
+  this.setLayout(new BorderLayout());
+  final JPanel instructionPanel=new JPanel(new BorderLayout());
+  instructionPanel.setOpaque(false);
+  this.add(instructionPanel,BorderLayout.NORTH);
+  final JPanel buttonPanel=new JPanel(new BorderLayout());
+  buttonPanel.setOpaque(false);
+  this.add(buttonPanel,BorderLayout.SOUTH);
+  final JLabel instructionLabel=new JLabel(instructionsText);
+  instructionPanel.add(instructionLabel,BorderLayout.CENTER);
+  this.link=new SIPCommLinkButton(resources.getI18NString("impl.googlecontacts.HYPERLINK_TEXT",new String[]{identity}));
+  this.link.addActionListener(new ActionListener(){
     @Override public void actionPerformed(    ActionEvent e){
-      LOGGER.info("Request user for approval via web page: " + APPROVAL_URL);
+      LOGGER.info("Requesting user for approval via web page: " + APPROVAL_URL);
       GoogleContactsActivator.getBrowserLauncherService().openURL(APPROVAL_URL);
     }
   }
 );
-  this.setLayout(new BorderLayout());
-  this.add(this.label,BorderLayout.NORTH);
-  this.add(new JLabel("Code"),BorderLayout.WEST);
+  instructionPanel.add(this.link,BorderLayout.SOUTH);
+  final JLabel codeLabel=new JLabel(resources.getI18NString("impl.googlecontacts.CODE"));
+  codeLabel.setOpaque(false);
+  this.add(codeLabel,BorderLayout.WEST);
   this.add(this.code,BorderLayout.CENTER);
-  final JPanel buttonPanel=new JPanel(new BorderLayout());
-  final JButton doneButton=new JButton("Done");
+  final JButton doneButton=new JButton(resources.getI18NString("service.gui.SAVE"));
+  doneButton.setMnemonic('s');
   doneButton.addActionListener(new ActionListener(){
     @Override public void actionPerformed(    ActionEvent e){
       OAuthApprovalDialog.this.response=UserResponseType.CONFIRMED;
@@ -22,6 +37,5 @@
   }
 );
   buttonPanel.add(doneButton,BorderLayout.EAST);
-  this.add(buttonPanel,BorderLayout.SOUTH);
   this.pack();
 }
