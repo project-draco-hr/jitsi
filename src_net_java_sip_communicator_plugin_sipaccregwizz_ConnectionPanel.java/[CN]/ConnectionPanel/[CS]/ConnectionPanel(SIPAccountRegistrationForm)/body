@@ -14,6 +14,18 @@
     }
   }
 );
+  proxyForceBypassCheckBox=new SIPCommCheckBox(Resources.getString("plugin.sipaccregwizz.PROXY_FORCE_BYPASS"),regform.getRegistration().isProxyForceBypassConfigure());
+  enablesProxyForceBypassConfigure(proxyForceBypassCheckBox.isSelected());
+  proxyForceBypassCheckBox.addActionListener(new ActionListener(){
+    /** 
+ * Invoked when an action occurs.
+ */
+    public void actionPerformed(    ActionEvent e){
+      enablesProxyForceBypassConfigure(proxyForceBypassCheckBox.isSelected());
+      ConnectionPanel.this.regform.reValidateInput();
+    }
+  }
+);
   this.transportCombo.addItemListener(this);
   transportCombo.setSelectedItem(regform.getRegistration().getPreferredTransport());
   JPanel mainPanel=new TransparentPanel();
@@ -45,6 +57,7 @@
   registrarMainPanel.setBorder(BorderFactory.createEmptyBorder(10,5,10,5));
   mainPanel.add(registrarMainPanel);
   proxyAutoCheckBox.setSelected(regform.getRegistration().isProxyAutoConfigure());
+  proxyForceBypassCheckBox.setSelected(regform.getRegistration().isProxyForceBypassConfigure());
   if (!StringUtils.isNullOrEmpty(regform.getRegistration().getProxy()))   proxyField.setText(regform.getRegistration().getProxy());
   if (!StringUtils.isNullOrEmpty(regform.getRegistration().getProxyPort()))   proxyPortField.setText(regform.getRegistration().getProxyPort());
   JLabel proxyLabel=new JLabel(Resources.getString("plugin.sipaccregwizz.PROXY"));
@@ -59,13 +72,16 @@
   proxyPortPanel.add(proxyPortLabel,BorderLayout.WEST);
   proxyPortPanel.add(proxyPortField,BorderLayout.EAST);
   proxyPanel.add(proxyPortPanel,BorderLayout.EAST);
+  JPanel proxyNorthPanel=new TransparentPanel(new GridLayout(2,1,10,1));
   labelsPanel=new TransparentPanel(new GridLayout(0,1,10,10));
   valuesPanel=new TransparentPanel(new GridLayout(0,1,10,10));
   labelsPanel.add(proxyLabel);
   labelsPanel.add(transportLabel);
   valuesPanel.add(proxyPanel);
   valuesPanel.add(transportCombo);
-  proxyMainPanel.add(proxyAutoCheckBox,BorderLayout.NORTH);
+  proxyNorthPanel.add(proxyForceBypassCheckBox);
+  proxyNorthPanel.add(proxyAutoCheckBox);
+  proxyMainPanel.add(proxyNorthPanel,BorderLayout.NORTH);
   proxyMainPanel.add(labelsPanel,BorderLayout.WEST);
   proxyMainPanel.add(valuesPanel,BorderLayout.CENTER);
   proxyMainPanel.setBorder(BorderFactory.createTitledBorder(Resources.getString("plugin.sipaccregwizz.PROXY_OPTIONS")));
