@@ -1,0 +1,25 @@
+{
+  if (!JabberActivator.getConfigurationService().getBoolean(PROP_XMPP_USE_ALL_RESOURCES_FOR_CAPABILITIES,USE_ALL_RESOURCES_FOR_CAPABILITIES_DEFAULT) || fullJids.isEmpty()) {
+    OperationSetPresence opsetPresence=parentProvider.getOperationSet(OperationSetPresence.class);
+    if (opsetPresence != null) {
+      String userID=StringUtils.parseBareAddress(user);
+      Contact contact=opsetPresence.findContactByID(userID);
+      boolean online=false;
+      Presence presence=parentProvider.getConnection().getRoster().getPresence(user);
+      if (presence != null)       online=presence.isAvailable();
+      if (contact != null) {
+        fireContactCapabilitiesEvent(contact,ContactCapabilitiesEvent.SUPPORTED_OPERATION_SETS_CHANGED,getSupportedOperationSets(user,online));
+      }
+    }
+  }
+ else {
+    OperationSetPresence opsetPresence=parentProvider.getOperationSet(OperationSetPresence.class);
+    if (opsetPresence != null) {
+      String bareJid=StringUtils.parseBareAddress(user);
+      Contact contact=opsetPresence.findContactByID(bareJid);
+      if (contact != null) {
+        fireContactCapabilitiesEvent(contact,ContactCapabilitiesEvent.SUPPORTED_OPERATION_SETS_CHANGED,getLargestSupportedOperationSet(fullJids));
+      }
+    }
+  }
+}

@@ -1,14 +1,23 @@
 {
   OperationSetPresence opsetPresence=parentProvider.getOperationSet(OperationSetPresence.class);
   if (opsetPresence != null) {
-    String bareJid=StringUtils.parseBareAddress(user);
-    Contact contact=opsetPresence.findContactByID(bareJid);
-    if (contact != null) {
-      if (online) {
+    if (JabberActivator.getConfigurationService().getBoolean(PROP_XMPP_USE_ALL_RESOURCES_FOR_CAPABILITIES,USE_ALL_RESOURCES_FOR_CAPABILITIES_DEFAULT)) {
+      String bareJid=StringUtils.parseBareAddress(user);
+      Contact contact=opsetPresence.findContactByID(bareJid);
+      if (contact != null) {
         fireContactCapabilitiesEvent(contact,ContactCapabilitiesEvent.SUPPORTED_OPERATION_SETS_CHANGED,getLargestSupportedOperationSet(fullJids));
       }
+    }
  else {
-        fireContactCapabilitiesEvent(contact,ContactCapabilitiesEvent.SUPPORTED_OPERATION_SETS_CHANGED,getLargestSupportedOperationSet(fullJids));
+      String jid=StringUtils.parseBareAddress(user);
+      Contact contact=opsetPresence.findContactByID(jid);
+      if (contact != null) {
+        if (online) {
+          fireContactCapabilitiesEvent(contact,ContactCapabilitiesEvent.SUPPORTED_OPERATION_SETS_CHANGED,getSupportedOperationSets(user,online));
+        }
+ else {
+          fireContactCapabilitiesEvent(contact,ContactCapabilitiesEvent.SUPPORTED_OPERATION_SETS_CHANGED,getSupportedOperationSets(contact));
+        }
       }
     }
   }
