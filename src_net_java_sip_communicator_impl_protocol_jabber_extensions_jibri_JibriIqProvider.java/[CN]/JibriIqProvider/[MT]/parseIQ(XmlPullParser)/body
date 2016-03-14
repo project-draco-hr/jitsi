@@ -1,0 +1,38 @@
+{
+  String namespace=parser.getNamespace();
+  if (!JibriIq.NAMESPACE.equals(namespace)) {
+    return null;
+  }
+  String rootElement=parser.getName();
+  JibriIq iq;
+  if (JibriIq.ELEMENT_NAME.equals(rootElement)) {
+    iq=new JibriIq();
+    String action=parser.getAttributeValue("",JibriIq.ACTION_ATTR_NAME);
+    iq.setAction(JibriIq.Action.parse(action));
+    String status=parser.getAttributeValue("",JibriIq.STATUS_ATTR_NAME);
+    iq.setStatus(JibriIq.Status.parse(status));
+    String url=parser.getAttributeValue("",JibriIq.URL_ATTR_NAME);
+    if (!StringUtils.isNullOrEmpty(url))     iq.setUrl(url);
+    String streamId=parser.getAttributeValue("",JibriIq.STREAM_ID_ATTR_NAME);
+    if (!StringUtils.isNullOrEmpty(streamId))     iq.setStreamId(streamId);
+    String followEntity=parser.getAttributeValue("",JibriIq.FOLLOW_ENTITY_ATTR_NAME);
+    if (!StringUtils.isNullOrEmpty(followEntity))     iq.setFollowEntity(followEntity);
+  }
+ else {
+    return null;
+  }
+  boolean done=false;
+  while (!done) {
+switch (parser.next()) {
+case XmlPullParser.END_TAG:
+{
+        String name=parser.getName();
+        if (rootElement.equals(name)) {
+          done=true;
+        }
+        break;
+      }
+  }
+}
+return iq;
+}
