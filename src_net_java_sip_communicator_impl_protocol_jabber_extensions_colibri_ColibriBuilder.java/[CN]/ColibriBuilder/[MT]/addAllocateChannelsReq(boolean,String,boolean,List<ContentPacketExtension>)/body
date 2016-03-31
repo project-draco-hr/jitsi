@@ -1,6 +1,9 @@
 {
+  Objects.requireNonNull(endpointName,"endpointName");
+  Objects.requireNonNull(contents,"contents");
   assertRequestType(RequestType.ALLOCATE_CHANNELS);
   request.setType(IQ.Type.GET);
+  boolean hasAnyChanges=false;
   for (  ContentPacketExtension cpe : contents) {
     MediaType mediaType=JingleUtils.getMediaType(cpe);
     String contentName=mediaType.toString();
@@ -11,7 +14,7 @@
     if (useBundle) {
       remoteChannelRequest.setChannelBundleId(endpointName);
     }
-    if (mediaType != MediaType.DATA) {
+    if (remoteChannelRequest instanceof ColibriConferenceIQ.Channel) {
       RtpDescriptionPacketExtension rdpe=cpe.getFirstChildOfType(RtpDescriptionPacketExtension.class);
       ColibriConferenceIQ.Channel remoteRtpChannelRequest=(ColibriConferenceIQ.Channel)remoteChannelRequest;
       for (      PayloadTypePacketExtension ptpe : rdpe.getPayloadTypes())       remoteRtpChannelRequest.addPayloadType(ptpe);
@@ -24,10 +27,12 @@
     if (!useBundle) {
       copyTransportOnChannel(cpe,remoteChannelRequest);
     }
-    if (mediaType != MediaType.DATA) {
+    if (remoteChannelRequest instanceof ColibriConferenceIQ.Channel) {
+      hasAnyChanges=true;
       contentRequest.addChannel((ColibriConferenceIQ.Channel)remoteChannelRequest);
     }
  else {
+      hasAnyChanges=true;
       contentRequest.addSctpConnection((ColibriConferenceIQ.SctpConnection)remoteChannelRequest);
     }
   }
@@ -36,9 +41,10 @@
     ContentPacketExtension firstContent=contents.get(0);
     IceUdpTransportPacketExtension transport=firstContent.getFirstChildOfType(IceUdpTransportPacketExtension.class);
     if (transport != null) {
+      hasAnyChanges=true;
       bundle.setTransport(IceUdpTransportPacketExtension.cloneTransportAndCandidates(transport,true));
     }
     request.addChannelBundle(bundle);
   }
-  return this;
+  return hasAnyChanges;
 }

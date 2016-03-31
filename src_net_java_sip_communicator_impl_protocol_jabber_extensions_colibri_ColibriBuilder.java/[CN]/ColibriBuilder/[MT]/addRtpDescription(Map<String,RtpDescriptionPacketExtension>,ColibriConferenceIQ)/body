@@ -1,9 +1,12 @@
 {
+  Objects.requireNonNull(map,"map");
+  Objects.requireNonNull(localChannelsInfo,"localChannelsInfo");
   if (conferenceState == null || StringUtils.isNullOrEmpty(conferenceState.getID())) {
-    return null;
+    return false;
   }
-  assertRequestType(RequestType.RTP_DESCRIPTION_UPDATE);
+  assertRequestType(RequestType.CHANNEL_INFO_UPDATE);
   request.setType(IQ.Type.SET);
+  boolean anyUpdates=false;
   for (  Map.Entry<String,RtpDescriptionPacketExtension> e : map.entrySet()) {
     String contentName=e.getKey();
     ColibriConferenceIQ.ChannelCommon channel=getColibriChannel(localChannelsInfo,contentName);
@@ -16,13 +19,16 @@
       if (pts == null || pts.isEmpty()) {
         continue;
       }
-      ColibriConferenceIQ.Channel channelRequest=new ColibriConferenceIQ.Channel();
-      channelRequest.setID(channel.getID());
-      for (      PayloadTypePacketExtension ptPE : rtpPE.getPayloadTypes()) {
+      anyUpdates=true;
+      ColibriConferenceIQ.Channel channelRequest=request.getOrCreateContent(contentName).getChannel(channel.getID());
+      if (channelRequest == null) {
+        channelRequest=new ColibriConferenceIQ.Channel();
+        channelRequest.setID(channel.getID());
+      }
+      for (      PayloadTypePacketExtension ptPE : pts) {
         channelRequest.addPayloadType(ptPE);
       }
-      request.getOrCreateContent(contentName).addChannel(channelRequest);
     }
   }
-  return this;
+  return anyUpdates;
 }

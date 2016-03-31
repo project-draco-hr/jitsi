@@ -1,0 +1,27 @@
+{
+  Objects.requireNonNull(ssrcMap,"ssrcMap");
+  Objects.requireNonNull(localChannelsInfo,"localChannelsInfo");
+  if (conferenceState == null || StringUtils.isNullOrEmpty(conferenceState.getID())) {
+    return false;
+  }
+  assertRequestType(RequestType.CHANNEL_INFO_UPDATE);
+  request.setType(IQ.Type.SET);
+  boolean anyUpdates=false;
+  for (  String contentName : ssrcMap.keySet()) {
+    ColibriConferenceIQ.ChannelCommon rtpChanel=getRtpChannel(localChannelsInfo,contentName);
+    if (rtpChanel == null) {
+      continue;
+    }
+    anyUpdates=true;
+    ColibriConferenceIQ.Channel reqChannel=(ColibriConferenceIQ.Channel)getRequestChannel(request.getOrCreateContent(contentName),rtpChanel);
+    for (    SourcePacketExtension ssrc : ssrcMap.get(contentName)) {
+      reqChannel.addSource(ssrc.copy());
+    }
+    if (reqChannel.getSources() == null || reqChannel.getSources().isEmpty()) {
+      SourcePacketExtension emptySource=new SourcePacketExtension();
+      emptySource.setSSRC(-1L);
+      reqChannel.addSource(emptySource);
+    }
+  }
+  return anyUpdates;
+}

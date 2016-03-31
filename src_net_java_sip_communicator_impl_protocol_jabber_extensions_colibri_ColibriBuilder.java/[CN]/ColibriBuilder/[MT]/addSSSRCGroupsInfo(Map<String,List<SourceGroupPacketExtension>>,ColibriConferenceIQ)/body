@@ -1,0 +1,27 @@
+{
+  Objects.requireNonNull(ssrcGroupMap,"ssrcGroupMap");
+  Objects.requireNonNull(localChannelsInfo,"localChannelsInfo");
+  if (conferenceState == null || StringUtils.isNullOrEmpty(conferenceState.getID())) {
+    return false;
+  }
+  assertRequestType(RequestType.CHANNEL_INFO_UPDATE);
+  request.setType(IQ.Type.SET);
+  boolean anyUpdates=false;
+  for (  String contentName : ssrcGroupMap.keySet()) {
+    ColibriConferenceIQ.Channel rtpChannel=getRtpChannel(localChannelsInfo,contentName);
+    if (rtpChannel == null) {
+      continue;
+    }
+    List<SourceGroupPacketExtension> groups=ssrcGroupMap.get(contentName);
+    ColibriConferenceIQ.Channel reqChannel=(ColibriConferenceIQ.Channel)getRequestChannel(request.getOrCreateContent(contentName),rtpChannel);
+    if (groups.isEmpty() && "video".equalsIgnoreCase(contentName)) {
+      anyUpdates=true;
+      reqChannel.addSourceGroup(SourceGroupPacketExtension.createSimulcastGroup());
+    }
+    for (    SourceGroupPacketExtension group : groups) {
+      anyUpdates=true;
+      reqChannel.addSourceGroup(group);
+    }
+  }
+  return anyUpdates;
+}
