@@ -22,15 +22,24 @@
   boolean done=false;
   while (!done) {
 switch (parser.next()) {
-case XmlPullParser.END_TAG:
+case XmlPullParser.START_TAG:
 {
         String name=parser.getName();
-        if (rootElement.equals(name)) {
-          done=true;
+        if ("error".equals(name)) {
+          XMPPError error=PacketParserUtils.parseError(parser);
+          iq.setXMPPError(error);
         }
         break;
       }
-  }
+case XmlPullParser.END_TAG:
+{
+      String name=parser.getName();
+      if (rootElement.equals(name)) {
+        done=true;
+      }
+      break;
+    }
+}
 }
 return iq;
 }
