@@ -1,0 +1,40 @@
+{
+  if (result == null) {
+    throw new IllegalArgumentException("result must be an empty list");
+  }
+  result.clear();
+  try {
+    contactId=contactId.trim();
+    if (contactId.length() == 0) {
+      result.add(JabberActivator.getResources().getI18NString("impl.protocol.jabber.INVALID_ADDRESS",new String[]{contactId}));
+      return false;
+    }
+    String user=contactId;
+    String remainder="";
+    int at=contactId.indexOf('@');
+    if (at > -1) {
+      user=contactId.substring(0,at);
+      remainder=contactId.substring(at);
+    }
+    boolean valid=true;
+    String suggestion="";
+    for (    char c : user.toCharArray()) {
+      if (!(c == 0x21 || (c >= 0x23 && c <= 0x25) || (c >= 0x28 && c <= 0x2e) || (c >= 0x30 && c <= 0x39) || c == 0x3b || c == 0x3d || c == 0x3f || (c >= 0x41 && c <= 0x7e) || (c >= 0x80 && c <= 0xd7ff) || (c >= 0xe000 && c <= 0xfffd))) {
+        valid=false;
+      }
+ else {
+        suggestion+=c;
+      }
+    }
+    if (!valid) {
+      result.add(JabberActivator.getResources().getI18NString("impl.protocol.jabber.INVALID_ADDRESS",new String[]{contactId}));
+      result.add(suggestion + remainder);
+      return false;
+    }
+    return true;
+  }
+ catch (  Exception ex) {
+    result.add(JabberActivator.getResources().getI18NString("impl.protocol.jabber.INVALID_ADDRESS",new String[]{contactId}));
+  }
+  return false;
+}

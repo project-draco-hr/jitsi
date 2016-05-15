@@ -1,0 +1,33 @@
+{
+  if (result == null) {
+    throw new IllegalArgumentException("result must be an empty list");
+  }
+  result.clear();
+  try {
+    Address address=parseAddressString(contactId);
+    if (address.toString().equals(contactId)) {
+      return true;
+    }
+ else     if (((SipUri)address.getURI()).getUser().equals(contactId)) {
+      return true;
+    }
+ else {
+      result.add(SipActivator.getResources().getI18NString("impl.protocol.sip.INVALID_ADDRESS",new String[]{contactId}));
+      result.add(((SipUri)address.getURI()).getUser());
+    }
+  }
+ catch (  Exception ex) {
+    logger.error("Validating SIP address failed for " + contactId,ex);
+    result.add(SipActivator.getResources().getI18NString("impl.protocol.sip.INVALID_ADDRESS",new String[]{contactId}));
+    String user=contactId;
+    String remainder="";
+    int at=contactId.indexOf('@');
+    if (at > -1) {
+      user=contactId.substring(0,at);
+      remainder=contactId.substring(at);
+    }
+    String banned="([^a-z0-9-_.!~*'()&=+$,;?/])+";
+    result.add(user.replaceAll(banned,"") + remainder);
+  }
+  return false;
+}

@@ -1,11 +1,21 @@
 {
   uriStr=uriStr.trim();
-  if (uriStr.toLowerCase().startsWith("tel:"))   uriStr="sip:" + uriStr.substring("tel:".length());
- else   if (uriStr.toLowerCase().startsWith("callto:"))   uriStr="sip:" + uriStr.substring("callto:".length());
-  if (uriStr.indexOf('@') == -1) {
+  if (uriStr.toLowerCase().startsWith("tel:"))   uriStr=uriStr.substring("tel:".length());
+ else   if (uriStr.toLowerCase().startsWith("callto:"))   uriStr=uriStr.substring("callto:".length());
+ else   if (uriStr.toLowerCase().startsWith("sips:"))   uriStr=uriStr.substring("sips:".length());
+  String user=uriStr;
+  String remainder="";
+  int at=uriStr.indexOf('@');
+  if (at > -1) {
+    user=uriStr.substring(0,at);
+    remainder=uriStr.substring(at);
+  }
+  String banned="([^a-z0-9-_.!~*'()&=+$,;?/])+";
+  user=user.replaceAll(banned,"") + remainder;
+  if (at == -1) {
     SipRegistrarConnection src=sipRegistrarConnection;
     if (src != null && !src.isRegistrarless()) {
-      uriStr=uriStr + "@" + ((SipURI)src.getAddressOfRecord().getURI()).getHost();
+      uriStr=user + "@" + ((SipURI)src.getAddressOfRecord().getURI()).getHost();
     }
   }
   if (!uriStr.toLowerCase().startsWith("sip:")) {
