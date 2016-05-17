@@ -84,156 +84,179 @@
     Contact contact=resolveContactID(contactID);
     updateContactIcon((ContactSipImpl)contact,personStatusIcon);
   }
-  List<Object[]> newPresenceStates=new Vector<Object[]>(3,2);
-  NodeList tupleList=getPidfChilds(presence,TUPLE_ELEMENT);
-  for (int i=0; i < tupleList.getLength(); i++) {
-    Node tupleNode=tupleList.item(i);
-    if (tupleNode.getNodeType() != Node.ELEMENT_NODE)     continue;
-    Element tuple=(Element)tupleNode;
-    NodeList contactList=getPidfChilds(tuple,CONTACT_ELEMENT);
-    List<Object[]> sipcontact=new Vector<Object[]>(1,3);
-    String contactID=null;
-    if (contactList.getLength() == 0) {
-      contactID=XMLUtils.getAttribute(presNode,ENTITY_ATTRIBUTE);
-      if (contactID.startsWith("pres:")) {
-        contactID=contactID.substring("pres:".length());
-      }
-      Contact tmpContact=resolveContactID(contactID);
-      if (tmpContact != null) {
-        sipcontact.add(new Object[]{tmpContact,new Float(0f)});
-      }
-    }
- else {
-      for (int j=0; j < contactList.getLength(); j++) {
-        Node contactNode=contactList.item(j);
-        if (contactNode.getNodeType() != Node.ELEMENT_NODE)         continue;
-        Element contact=(Element)contactNode;
-        contactID=getTextContent(contact);
-        if (contactID.startsWith("pres:")) {
-          contactID=contactID.substring("pres:".length());
-        }
-        Contact tmpContact=resolveContactID(contactID);
-        if (tmpContact == null)         continue;
-        Object tab[]=new Object[2];
-        String prioStr=contact.getAttribute(PRIORITY_ATTRIBUTE);
-        Float prio=null;
-        try {
-          if (prioStr == null || prioStr.length() == 0) {
-            prio=new Float(0f);
-          }
- else {
-            prio=Float.valueOf(prioStr);
-          }
-        }
- catch (        NumberFormatException e) {
-          if (logger.isDebugEnabled())           logger.debug("contact priority is not a valid float",e);
-          prio=new Float(0f);
-        }
-        if (prio.floatValue() < 0) {
-          prio=new Float(0f);
-        }
-        if (prio.floatValue() > 1) {
-          prio=new Float(1f);
-        }
-        tab[0]=tmpContact;
-        tab[1]=prio;
-        boolean contactAlreadyListed=false;
-        for (int k=0; k < sipcontact.size(); k++) {
-          Object[] tmp=sipcontact.get(k);
-          if (tmp[0].equals(tmpContact)) {
-            contactAlreadyListed=true;
-            if (((Float)tmp[1]).floatValue() < prio.floatValue()) {
-              sipcontact.remove(k);
-              sipcontact.add(tab);
-            }
-            break;
-          }
-        }
-        if (!contactAlreadyListed) {
-          sipcontact.add(tab);
-        }
-      }
-    }
-    if (sipcontact.isEmpty()) {
-      if (logger.isDebugEnabled())       logger.debug("no contact found for id: " + contactID);
-      continue;
-    }
-    NodeList statusList=getPidfChilds(tuple,STATUS_ELEMENT);
-    int index=statusList.getLength() - 1;
-    Node statusNode=null;
-    do {
-      Node temp=statusList.item(index);
-      if (temp.getNodeType() == Node.ELEMENT_NODE) {
-        statusNode=temp;
+  NodeList presNoteList=getPidfChilds(presence,NOTE_ELEMENT);
+  if (presNoteList.getLength() >= 1) {
+    Node noteNode=presNoteList.item(presNoteList.getLength() - 1);
+    if (noteNode.getNodeType() == Node.ELEMENT_NODE) {
+      String state=getTextContent((Element)noteNode);
+      if (state != null) {
+switch (state.toLowerCase()) {
+case "ready":
+case "available":
+          personStatus=sipStatusEnum.getStatus(SipStatusEnum.ONLINE);
         break;
-      }
-      index--;
-    }
+case "ringing":
+case "on the phone":
+case "on hold":
+      personStatus=sipStatusEnum.getStatus(SipStatusEnum.ON_THE_PHONE);
+    break;
+case "unavailable":
+  personStatus=sipStatusEnum.getStatus(SipStatusEnum.OFFLINE);
+break;
+}
+}
+}
+}
+List<Object[]> newPresenceStates=new Vector<Object[]>(3,2);
+NodeList tupleList=getPidfChilds(presence,TUPLE_ELEMENT);
+for (int i=0; i < tupleList.getLength(); i++) {
+Node tupleNode=tupleList.item(i);
+if (tupleNode.getNodeType() != Node.ELEMENT_NODE) continue;
+Element tuple=(Element)tupleNode;
+NodeList contactList=getPidfChilds(tuple,CONTACT_ELEMENT);
+List<Object[]> sipcontact=new Vector<Object[]>(1,3);
+String contactID=null;
+if (contactList.getLength() == 0) {
+contactID=XMLUtils.getAttribute(presNode,ENTITY_ATTRIBUTE);
+if (contactID.startsWith("pres:")) {
+contactID=contactID.substring("pres:".length());
+}
+Contact tmpContact=resolveContactID(contactID);
+if (tmpContact != null) {
+sipcontact.add(new Object[]{tmpContact,new Float(0f)});
+}
+}
+ else {
+for (int j=0; j < contactList.getLength(); j++) {
+Node contactNode=contactList.item(j);
+if (contactNode.getNodeType() != Node.ELEMENT_NODE) continue;
+Element contact=(Element)contactNode;
+contactID=getTextContent(contact);
+if (contactID.startsWith("pres:")) {
+contactID=contactID.substring("pres:".length());
+}
+Contact tmpContact=resolveContactID(contactID);
+if (tmpContact == null) continue;
+Object tab[]=new Object[2];
+String prioStr=contact.getAttribute(PRIORITY_ATTRIBUTE);
+Float prio=null;
+try {
+if (prioStr == null || prioStr.length() == 0) {
+prio=new Float(0f);
+}
+ else {
+prio=Float.valueOf(prioStr);
+}
+}
+ catch (NumberFormatException e) {
+if (logger.isDebugEnabled()) logger.debug("contact priority is not a valid float",e);
+prio=new Float(0f);
+}
+if (prio.floatValue() < 0) {
+prio=new Float(0f);
+}
+if (prio.floatValue() > 1) {
+prio=new Float(1f);
+}
+tab[0]=tmpContact;
+tab[1]=prio;
+boolean contactAlreadyListed=false;
+for (int k=0; k < sipcontact.size(); k++) {
+Object[] tmp=sipcontact.get(k);
+if (tmp[0].equals(tmpContact)) {
+contactAlreadyListed=true;
+if (((Float)tmp[1]).floatValue() < prio.floatValue()) {
+  sipcontact.remove(k);
+  sipcontact.add(tab);
+}
+break;
+}
+}
+if (!contactAlreadyListed) {
+sipcontact.add(tab);
+}
+}
+}
+if (sipcontact.isEmpty()) {
+if (logger.isDebugEnabled()) logger.debug("no contact found for id: " + contactID);
+continue;
+}
+NodeList statusList=getPidfChilds(tuple,STATUS_ELEMENT);
+int index=statusList.getLength() - 1;
+Node statusNode=null;
+do {
+Node temp=statusList.item(index);
+if (temp.getNodeType() == Node.ELEMENT_NODE) {
+statusNode=temp;
+break;
+}
+index--;
+}
  while (index >= 0);
-    Element basic=null;
-    if (statusNode == null) {
-      if (logger.isDebugEnabled())       logger.debug("no valid status in this tuple");
-    }
+Element basic=null;
+if (statusNode == null) {
+if (logger.isDebugEnabled()) logger.debug("no valid status in this tuple");
+}
  else {
-      Element status=(Element)statusNode;
-      NodeList basicList=getPidfChilds(status,BASIC_ELEMENT);
-      index=basicList.getLength() - 1;
-      Node basicNode=null;
-      do {
-        Node temp=basicList.item(index);
-        if (temp.getNodeType() == Node.ELEMENT_NODE) {
-          basicNode=temp;
-          break;
-        }
-        index--;
-      }
+Element status=(Element)statusNode;
+NodeList basicList=getPidfChilds(status,BASIC_ELEMENT);
+index=basicList.getLength() - 1;
+Node basicNode=null;
+do {
+Node temp=basicList.item(index);
+if (temp.getNodeType() == Node.ELEMENT_NODE) {
+basicNode=temp;
+break;
+}
+index--;
+}
  while (index >= 0);
-      if (basicNode == null) {
-        if (logger.isDebugEnabled())         logger.debug("no valid <basic> in this status");
-      }
+if (basicNode == null) {
+if (logger.isDebugEnabled()) logger.debug("no valid <basic> in this status");
+}
  else {
-        basic=(Element)basicNode;
-      }
-    }
-    NodeList noteList=getPidfChilds(tuple,NOTE_ELEMENT);
-    boolean changed=false;
-    for (int k=0; k < noteList.getLength() && !changed; k++) {
-      Node noteNode=noteList.item(k);
-      if (noteNode.getNodeType() != Node.ELEMENT_NODE)       continue;
-      Element note=(Element)noteNode;
-      String state=getTextContent(note);
-      Iterator<PresenceStatus> states=sipStatusEnum.getSupportedStatusSet();
-      while (states.hasNext()) {
-        PresenceStatus current=states.next();
-        if (current.getStatusName().equalsIgnoreCase(state)) {
-          changed=true;
-          newPresenceStates=setStatusForContacts(current,sipcontact,newPresenceStates);
-          break;
-        }
-      }
-    }
-    if (changed == false && basic != null) {
-      if (getTextContent(basic).equalsIgnoreCase(ONLINE_STATUS)) {
-        if (personStatus != null) {
-          newPresenceStates=setStatusForContacts(personStatus,sipcontact,newPresenceStates);
-        }
+basic=(Element)basicNode;
+}
+}
+NodeList noteList=getPidfChilds(tuple,NOTE_ELEMENT);
+boolean changed=false;
+for (int k=0; k < noteList.getLength() && !changed; k++) {
+Node noteNode=noteList.item(k);
+if (noteNode.getNodeType() != Node.ELEMENT_NODE) continue;
+Element note=(Element)noteNode;
+String state=getTextContent(note);
+Iterator<PresenceStatus> states=sipStatusEnum.getSupportedStatusSet();
+while (states.hasNext()) {
+PresenceStatus current=states.next();
+if (current.getStatusName().equalsIgnoreCase(state)) {
+changed=true;
+newPresenceStates=setStatusForContacts(current,sipcontact,newPresenceStates);
+break;
+}
+}
+}
+if (changed == false && basic != null) {
+if (getTextContent(basic).equalsIgnoreCase(ONLINE_STATUS)) {
+if (personStatus != null) {
+newPresenceStates=setStatusForContacts(personStatus,sipcontact,newPresenceStates);
+}
  else {
-          newPresenceStates=setStatusForContacts(sipStatusEnum.getStatus(SipStatusEnum.ONLINE),sipcontact,newPresenceStates);
-        }
-      }
- else       if (getTextContent(basic).equalsIgnoreCase(OFFLINE_STATUS)) {
-        newPresenceStates=setStatusForContacts(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE),sipcontact,newPresenceStates);
-      }
-    }
+newPresenceStates=setStatusForContacts(sipStatusEnum.getStatus(SipStatusEnum.ONLINE),sipcontact,newPresenceStates);
+}
+}
+ else if (getTextContent(basic).equalsIgnoreCase(OFFLINE_STATUS)) {
+newPresenceStates=setStatusForContacts(sipStatusEnum.getStatus(SipStatusEnum.OFFLINE),sipcontact,newPresenceStates);
+}
+}
  else {
-      if (changed == false) {
-        if (logger.isDebugEnabled())         logger.debug("no suitable presence state found in this " + "tuple");
-      }
-    }
-  }
-  for (  Object[] tab : newPresenceStates) {
-    ContactSipImpl contact=(ContactSipImpl)tab[0];
-    PresenceStatus status=(PresenceStatus)tab[2];
-    changePresenceStatusForContact(contact,status);
-  }
+if (changed == false) {
+if (logger.isDebugEnabled()) logger.debug("no suitable presence state found in this " + "tuple");
+}
+}
+}
+for (Object[] tab : newPresenceStates) {
+ContactSipImpl contact=(ContactSipImpl)tab[0];
+PresenceStatus status=(PresenceStatus)tab[2];
+changePresenceStatusForContact(contact,status);
+}
 }
