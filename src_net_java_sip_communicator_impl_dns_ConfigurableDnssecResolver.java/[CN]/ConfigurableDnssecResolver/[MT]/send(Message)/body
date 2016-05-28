@@ -1,11 +1,12 @@
 {
+  SecureMessage msg=new SecureMessage(super.send(query));
   String fqdn=msg.getQuestion().getName().toString();
   String type=Type.string(msg.getQuestion().getType());
   String propName=createPropNameUnsigned(fqdn,type);
   SecureResolveMode defaultAction=Enum.valueOf(SecureResolveMode.class,config.getString(PNAME_DNSSEC_VALIDATION_MODE,SecureResolveMode.WarnIfBogus.name()));
   SecureResolveMode pinned=Enum.valueOf(SecureResolveMode.class,config.getString(propName,defaultAction.name()));
   if (pinned == defaultAction)   config.setProperty(propName,pinned.name());
-  if (pinned == SecureResolveMode.IgnoreDnssec || msg.isSecure())   return;
+  if (pinned == SecureResolveMode.IgnoreDnssec || msg.isSecure())   return msg;
   if ((pinned == SecureResolveMode.SecureOnly && !msg.isSecure()) || (pinned == SecureResolveMode.SecureOrUnsigned && msg.isBogus())) {
     String text=getExceptionMessage(msg);
     Date last=lastNotifications.get(text);
@@ -15,8 +16,8 @@
     }
     throw new DnssecRuntimeException(text);
   }
-  if (pinned == SecureResolveMode.SecureOrUnsigned && !msg.isBogus())   return;
-  if (pinned == SecureResolveMode.WarnIfBogus && !msg.isBogus())   return;
+  if (pinned == SecureResolveMode.SecureOrUnsigned && !msg.isBogus())   return msg;
+  if (pinned == SecureResolveMode.WarnIfBogus && !msg.isBogus())   return msg;
   String reason=msg.isBogus() ? R.getI18NString("util.dns.DNSSEC_ADVANCED_REASON_BOGUS",new String[]{fqdn,msg.getBogusReason()}) : R.getI18NString("util.dns.DNSSEC_ADVANCED_REASON_UNSIGNED",new String[]{type,fqdn});
   DnssecDialog dlg=new DnssecDialog(fqdn,reason);
   dlg.setVisible(true);
@@ -34,4 +35,5 @@ case AlwaysDeny:
 config.setProperty(propName,SecureResolveMode.SecureOnly);
 throw new DnssecRuntimeException(getExceptionMessage(msg));
 }
+return msg;
 }

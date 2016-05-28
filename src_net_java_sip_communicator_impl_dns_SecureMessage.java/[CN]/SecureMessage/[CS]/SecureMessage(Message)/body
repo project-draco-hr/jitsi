@@ -1,0 +1,10 @@
+{
+  super(msg.toWire());
+  secure=msg.getHeader().getFlag(Flags.AD);
+  bogus=!secure && msg.getRcode() == Rcode.SERVFAIL;
+  for (  RRset set : msg.getSectionRRsets(Section.ADDITIONAL)) {
+    if (set.getName().equals(Name.root) && set.getType() == Type.TXT && set.getDClass() == ValidatingResolver.VALIDATION_REASON_QCLASS) {
+      bogusReason=((TXTRecord)set.first()).getStrings().get(0).toString();
+    }
+  }
+}
