@@ -1,0 +1,36 @@
+{
+  Name n;
+  try {
+    n=new Name(host);
+    if (addressesLoaded) {
+      if (n.equals(localhostName)) {
+        return localhostNamedAddresses;
+      }
+ else       if (host.equals("localhost")) {
+        return localhostAddresses;
+      }
+    }
+  }
+ catch (  TextParseException e) {
+    throw new UnknownHostException(host);
+  }
+  Lookup l=new Lookup(n,v6first ? Type.AAAA : Type.A);
+  Record[] r=l.run();
+  if (r == null || r.length == 0) {
+    l=new Lookup(n,v6first ? Type.A : Type.AAAA);
+    r=l.run();
+  }
+  if (r == null || r.length == 0) {
+    throw new UnknownHostException(host);
+  }
+  InetAddress[] results=new InetAddress[r.length];
+  for (int i=0; i < r.length; i++) {
+    if (r[i] instanceof AAAARecord) {
+      results[i]=((AAAARecord)r[i]).getAddress();
+    }
+ else     if (r[i] instanceof ARecord) {
+      results[i]=((ARecord)r[i]).getAddress();
+    }
+  }
+  return results;
+}

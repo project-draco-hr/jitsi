@@ -1,0 +1,21 @@
+{
+  super(headResolver);
+  List<String> propNames=config.getPropertyNamesByPrefix("org.jitsi.dnssec",false);
+  Properties config=new Properties();
+  for (  String propName : propNames) {
+    String value=config.getProperty(propName);
+    if (!StringUtils.isNullOrEmpty(value)) {
+      config.put(propName,value);
+    }
+  }
+  try {
+    super.init(config);
+  }
+ catch (  IOException e) {
+    logger.error("Extended dnssec properties contained an error",e);
+  }
+  this.headResolver=headResolver;
+  reset();
+  Lookup.setDefaultResolver(this);
+  DnsUtilActivator.getNotificationService().registerDefaultNotificationForEvent(ConfigurableDnssecResolver.EVENT_TYPE,NotificationAction.ACTION_POPUP_MESSAGE,null,null);
+}
