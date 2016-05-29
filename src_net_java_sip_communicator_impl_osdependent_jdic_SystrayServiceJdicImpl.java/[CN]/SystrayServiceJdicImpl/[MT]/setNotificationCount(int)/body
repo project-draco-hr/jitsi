@@ -1,0 +1,26 @@
+{
+  if (OSUtils.IS_MAC) {
+    Application application=Application.getApplication();
+    application.setDockIconBadge(new Integer(count).toString());
+  }
+ else   if (OSUtils.IS_WINDOWS) {
+    UIService uiService=OsDependentActivator.getUIService();
+    if (uiService == null) {
+      return;
+    }
+    ExportedWindow mainWindow=uiService.getExportedWindow(ExportedWindow.MAIN_WINDOW);
+    if (mainWindow == null || !(mainWindow.getSource() instanceof Component)) {
+      return;
+    }
+    BufferedImage img=null;
+    if (count > 0) {
+      img=createOverlayImage(new Integer(count).toString());
+    }
+    try {
+      TaskBarList3.getInstance().SetOverlayIcon((Component)mainWindow.getSource(),img,null);
+    }
+ catch (    Exception ex) {
+      logger.error("Could not set the notification count.",ex);
+    }
+  }
+}
