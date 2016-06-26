@@ -15,21 +15,26 @@ catch (  DnssecRuntimeException e) {
     if (logger.isTraceEnabled())     logger.trace("No NAPTRs found for " + domain);
     return null;
   }
-  String[][] recVals=new String[records.length][4];
+  List<String[]> recVals=new ArrayList<>(records.length);
   for (int i=0; i < records.length; i++) {
+    String[] recVal=new String[4];
     NAPTRRecord r=(NAPTRRecord)records[i];
-    recVals[i][0]="" + r.getOrder();
-    recVals[i][1]=getProtocolFromNAPTRRecords(r.getService());
+    recVal[0]="" + r.getOrder();
+    recVal[1]=getProtocolFromNAPTRRecords(r.getService());
+    if (recVal[1] == null) {
+      continue;
+    }
     String replacement=r.getReplacement().toString();
     if (replacement.endsWith(".")) {
-      recVals[i][2]=replacement.substring(0,replacement.length() - 1);
+      recVal[2]=replacement.substring(0,replacement.length() - 1);
     }
  else {
-      recVals[i][2]=replacement;
+      recVal[2]=replacement;
     }
-    recVals[i][3]="" + r.getPreference();
+    recVal[3]="" + r.getPreference();
+    recVals.add(recVal);
   }
-  Arrays.sort(recVals,new Comparator<String[]>(){
+  Collections.sort(recVals,new Comparator<String[]>(){
     public int compare(    String array1[],    String array2[]){
       int order=Integer.parseInt(array1[0]) - Integer.parseInt(array2[0]);
       if (order != 0) {
@@ -44,6 +49,8 @@ catch (  DnssecRuntimeException e) {
     }
   }
 );
-  if (logger.isTraceEnabled())   logger.trace("NAPTRs for " + domain + "="+ Arrays.toString(recVals));
-  return recVals;
+  String[][] arrayResult=new String[recVals.size()][4];
+  arrayResult=recVals.toArray(arrayResult);
+  if (logger.isTraceEnabled())   logger.trace("NAPTRs for " + domain + "="+ Arrays.toString(arrayResult));
+  return arrayResult;
 }
