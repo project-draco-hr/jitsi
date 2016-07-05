@@ -6,9 +6,12 @@
     sendQualityPreset=qualityControls.getRemoteReceivePreset();
     receiveQualityPreset=qualityControls.getRemoteSendMaxPreset();
   }
-  for (  MediaType mediaType : MediaType.values()) {
+  for (  MediaType mediaType : new MediaType[]{MediaType.AUDIO,MediaType.VIDEO}) {
     MediaDevice dev=getDefaultDevice(mediaType);
-    if (!isDeviceActive(dev,sendQualityPreset,receiveQualityPreset))     continue;
+    if (!isDeviceActive(dev,sendQualityPreset,receiveQualityPreset)) {
+      logger.warn("No active device for " + mediaType.toString() + " was found!");
+      continue;
+    }
     MediaDirection direction=dev.getDirection().and(getDirectionUserPreference(mediaType));
     if (isLocallyOnHold())     direction=direction.and(MediaDirection.SENDONLY);
     if (direction != MediaDirection.INACTIVE) {
@@ -45,7 +48,7 @@ if (DtlsControl.UDP_TLS_RTP_SAVP.equals(proto) || DtlsControl.UDP_TLS_RTP_SAVPF.
 updateMediaDescriptionForDtls(mediaType,md,null);
 }
  else {
-updateMediaDescriptionForZrtp(mediaType,md,null);
+updateMediaDescriptionForZrtp(mediaType,md);
 if (SrtpControl.RTP_SAVP.equals(proto) || SrtpControl.RTP_SAVPF.equals(proto)) {
 updateMediaDescriptionForSDes(mediaType,md,null);
 }

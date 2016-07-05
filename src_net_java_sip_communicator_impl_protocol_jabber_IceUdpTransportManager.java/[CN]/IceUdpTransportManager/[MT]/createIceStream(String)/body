@@ -9,7 +9,12 @@
     throw new OperationFailedException("Failed to initialize stream " + media,OperationFailedException.INTERNAL_ERROR,ex);
   }
   try {
-    portTracker.setNextPort(1 + stream.getComponent(Component.RTCP).getLocalCandidates().get(0).getTransportAddress().getPort());
+    int maxAllocatedPort=getMaxAllocatedPort(stream,portTracker.getMinPort(),portTracker.getMaxPort());
+    if (maxAllocatedPort > 0) {
+      int nextPort=1 + maxAllocatedPort;
+      portTracker.setNextPort(nextPort);
+      logger.debug("Updating the port tracker min port: " + nextPort);
+    }
   }
  catch (  Throwable t) {
     logger.debug("Determining next port didn't work: ",t);

@@ -5,7 +5,8 @@
   boolean atLeastOneValidDescription=false;
   boolean rejectedAvpOfferDueToSavpMandatory=false;
   AccountID accountID=getPeer().getProtocolProvider().getAccountID();
-  int savpOption=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true) ? accountID.getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF) : ProtocolProviderFactory.SAVP_OFF;
+  boolean useDefaultEncryption=accountID.getAccountPropertyBoolean(ProtocolProviderFactory.DEFAULT_ENCRYPTION,true);
+  int savpOption=useDefaultEncryption ? accountID.getAccountPropertyInt(ProtocolProviderFactory.SAVP_OPTION,ProtocolProviderFactory.SAVP_OFF) : ProtocolProviderFactory.SAVP_OFF;
   boolean masterStreamSet=false;
   List<MediaType> seenMediaTypes=new ArrayList<MediaType>();
   for (  MediaDescription mediaDescription : remoteDescriptions) {
@@ -41,7 +42,7 @@
     if (dev == null) {
       mutuallySupportedFormats=null;
     }
- else     if (mediaType.equals(MediaType.VIDEO) && (qualityControls != null)) {
+ else     if (MediaType.VIDEO.equals(mediaType) && (qualityControls != null)) {
       QualityPreset sendQualityPreset=direction.allowsSending() ? qualityControls.getRemoteReceivePreset() : null;
       QualityPreset receiveQualityPreset=qualityControls.getRemoteSendMaxPreset();
       mutuallySupportedFormats=intersectFormats(remoteFormats,getLocallySupportedFormats(dev,sendQualityPreset,receiveQualityPreset));
@@ -60,11 +61,11 @@
     List<RTPExtension> supportedExtensions=getExtensionsForType(mediaType);
     List<RTPExtension> rtpExtensions=intersectRTPExtensions(offeredRTPExtensions,supportedExtensions);
     StreamConnector connector=getTransportManager().getStreamConnector(mediaType);
-    if (mediaType.equals(MediaType.VIDEO)) {
+    if (MediaType.VIDEO.equals(mediaType)) {
       MediaStream stream=getStream(MediaType.VIDEO);
-      if (stream != null && dev != null) {
+      if (stream != null) {
         List<MediaFormat> fmts=intersectFormats(getLocallySupportedFormats(dev),remoteFormats);
-        if (fmts.size() > 0) {
+        if (!fmts.isEmpty()) {
           MediaFormat fmt=fmts.get(0);
           ((VideoMediaStream)stream).updateQualityControl(fmt.getAdvancedAttributes());
         }
@@ -101,7 +102,7 @@
     boolean masterStream=false;
     if (!masterStreamSet) {
       if (remoteDescriptions.size() > 1) {
-        if (mediaType.equals(MediaType.AUDIO)) {
+        if (MediaType.AUDIO.equals(mediaType)) {
           masterStream=true;
           masterStreamSet=true;
         }

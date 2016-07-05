@@ -16,9 +16,15 @@
       credentials=new UserCredentials();
       credentials.setUserName(accID.getUserID());
       credentials=provider.getAuthority().obtainCredentials(accID.getDisplayName(),credentials,SecurityAuthority.AUTHENTICATION_REQUIRED);
-      if (credentials == null)       return null;
+      if (credentials == null) {
+        logger.info("Credentials were null. User has most likely canceled the login operation");
+        return null;
+      }
       char[] pass=credentials.getPassword();
-      if (pass == null)       return null;
+      if (pass == null) {
+        logger.info("Password was null. User has most likely canceled the login operation");
+        return null;
+      }
       password=new String(pass);
       if (credentials.isPasswordPersistent()) {
         JabberActivator.getProtocolProviderFactory().storePassword(accID,password);
