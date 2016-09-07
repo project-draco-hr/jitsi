@@ -1,14 +1,12 @@
 {
+  boolean online=(packet instanceof Presence) && ((Presence)packet).isAvailable();
   CapsPacketExtension ext=(CapsPacketExtension)packet.getExtension(CapsPacketExtension.ELEMENT_NAME,CapsPacketExtension.NAMESPACE);
-  String hash=ext.getHash();
-  if (hash == null)   hash="";
-  if (hash != null) {
-    boolean online=(packet instanceof Presence) && ((Presence)packet).isAvailable();
-    if (online) {
-      addUserCapsNode(packet.getFrom(),ext.getNode(),hash,ext.getVersion(),ext.getExtensions(),online);
-    }
- else {
-      removeUserCapsNode(packet.getFrom());
-    }
+  if (ext != null && online) {
+    String hash=ext.getHash();
+    if (hash == null)     hash="";
+    addUserCapsNode(packet.getFrom(),ext.getNode(),hash,ext.getVersion(),ext.getExtensions(),online);
+  }
+ else   if (!online) {
+    removeUserCapsNode(packet.getFrom());
   }
 }
